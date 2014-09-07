@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Main Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>
+      </Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
+    <ClInclude Include="settingsDlg.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
+    <ClCompile Include="prompt.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="plugin.def">
+      <Filter>Main Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="prompt.rc">
+      <Filter>Main Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

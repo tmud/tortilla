@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FDCB8C3B-117D-42E9-BB60-04BFCE5EA051}</ProjectGuid>
+    <RootNamespace>mudclient</RootNamespace>
+    <ProjectName>mainapp-client</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v120_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>11.0.61030.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <GenerateManifest>true</GenerateManifest>
+    <TargetName>tortilla</TargetName>
+    <ExecutablePath>$(ExecutablePath)</ExecutablePath>
+    <IncludePath>$(VCInstallDir)wtl\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <ExcludePath>$(ExcludePath)</ExcludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>tortilla</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)mudclient.tlb</TypeLibraryName>
+      <HeaderFileName>mudclient.h</HeaderFileName>
+      <DllDataFileName />
+      <InterfaceIdentifierFileName>mudclient_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>mudclient_p.c</ProxyFileName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>res;src;..\;..\libs\include;..\libs\wtl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);..\..\libs\wtl\include;..\libs\wtl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <TargetEnvironment>Win32</TargetEnvironment>
+      <GenerateStublessProxies>true</GenerateStublessProxies>
+      <TypeLibraryName>$(IntDir)mudclient.tlb</TypeLibraryName>
+      <HeaderFileName>mudclient.h</HeaderFileName>
+      <DllDataFileName />
+      <InterfaceIdentifierFileName>mudclient_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>mudclient_p.c</ProxyFileName>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>res;src;..\;..\libs\include;..\libs\wtl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;STRICT;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat />
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);..\..\libs\wtl\include;..\libs\wtl\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>libxml2.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ModuleDefinitionFile>
+      </ModuleDefinitionFile>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy ..\api\api.h ..\sdk\api
+copy ..\api\base.h ..\sdk\api
+copy ..\Release\api.lib ..\sdk\api
+copy ..\Release\lua.lib ..\sdk\api
+copy ..\libs\lua\src\lua.h ..\sdk\api
+copy ..\libs\lua\src\lualib.h ..\sdk\api
+copy ..\libs\lua\src\lauxlib.h ..\sdk\api
+copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\libs\common\dataQueue.h" />
+    <ClInclude Include="..\libs\common\memoryBuffer.h" />
+    <ClInclude Include="..\libs\common\pcreHelper.h" />
+    <ClInclude Include="..\libs\common\elapsedTimeCounter.h" />
+    <ClInclude Include="src\AboutDlg.h" />
+    <ClInclude Include="src\common\criticalSection.h" />
+    <ClInclude Include="src\common\replaceColor.h" />
+    <ClInclude Include="src\common\tempThread.h" />
+    <ClInclude Include="src\common\tokenizer.h" />
+    <ClInclude Include="src\common\toolbarEx.h" />
+    <ClInclude Include="src\compareObject.h" />
+    <ClInclude Include="src\helpManager.h" />
+    <ClInclude Include="src\highlightHelper.h" />
+    <ClInclude Include="src\hotkeyTable.h" />
+    <ClInclude Include="src\ifProcessor.h" />
+    <ClInclude Include="src\logsProcessor.h" />
+    <ClInclude Include="src\MainFrm.h" />
+    <ClInclude Include="src\mudCommandBar.h" />
+    <ClInclude Include="src\mudGameView.h" />
+    <ClInclude Include="src\mudView.h" />
+    <ClInclude Include="src\mudViewParser.h" />
+    <ClInclude Include="src\mudViewString.h" />
+    <ClInclude Include="src\plugins\plugin.h" />
+    <ClInclude Include="src\plugins\pluginsActiveObjects.h" />
+    <ClInclude Include="src\plugins\pluginsApi.h" />
+    <ClInclude Include="src\plugins\pluginsDlg.h" />
+    <ClInclude Include="src\plugins\pluginsManager.h" />
+    <ClInclude Include="src\plugins\pluginSupport.h" />
+    <ClInclude Include="src\plugins\pluginsView.h" />
+    <ClInclude Include="src\plugins\pluginsParseData.h" />
+    <ClInclude Include="src\profiles\profileDlgs.h" />
+    <ClInclude Include="src\profiles\profileHelpers.h" />
+    <ClInclude Include="src\profiles\profilesPath.h" />
+    <ClInclude Include="src\propertiesPages\propertiesData.h" />
+    <ClInclude Include="src\propertiesPages\propertiesDlg.h" />
+    <ClInclude Include="src\propertiesPages\propertiesElements.h" />
+    <ClInclude Include="src\propertiesPages\propertiesManager.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageColors.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageCommon.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageGroups.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageHighlights.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageHotkeys.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageOneParam.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPagesElements.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageTabwords.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageTimers.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageTwoParams.h" />
+    <ClInclude Include="src\propertiesPages\propertyList.h" />
+    <ClInclude Include="src\stdafx.h" />
+    <ClInclude Include="src\network\network.h" />
+    <ClInclude Include="src\network\network_init.h" />
+    <ClInclude Include="src\inputProcessor.h" />
+    <ClInclude Include="src\logicElements.h" />
+    <ClInclude Include="src\logicHelper.h" />
+    <ClInclude Include="src\logicProcessor.h" />
+    <ClInclude Include="src\logicScripts.h" />
+    <ClInclude Include="res\resource.h" />
+    <ClInclude Include="src\common\atldock.h" />
+    <ClInclude Include="src\common\bevelLine.h" />
+    <ClInclude Include="src\common\changeDir.h" />
+    <ClInclude Include="src\common\common.h" />
+    <ClInclude Include="src\common\luaSupport.h" />
+    <ClInclude Include="src\common\paramsHelper.h" />
+    <ClInclude Include="src\common\splitterEx.h" />
+    <ClInclude Include="src\common\wideToAnsi.h" />
+    <ClInclude Include="src\common\wideToUtf8.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\libs\common\pcreHelper.cpp" />
+    <ClCompile Include="src\common\toolbarEx.cpp" />
+    <ClCompile Include="src\compareObject.cpp" />
+    <ClCompile Include="src\helpManager.cpp" />
+    <ClCompile Include="src\logsProcessor.cpp" />
+    <ClCompile Include="src\mudGameView.cpp" />
+    <ClCompile Include="src\mudView.cpp" />
+    <ClCompile Include="src\mudViewParser.cpp" />
+    <ClCompile Include="src\plugins\plugin.cpp" />
+    <ClCompile Include="src\plugins\pluginsApi.cpp" />
+    <ClCompile Include="src\plugins\pluginsApi2.cpp" />
+    <ClCompile Include="src\plugins\pluginsManager.cpp" />
+    <ClCompile Include="src\plugins\pluginsModules.cpp" />
+    <ClCompile Include="src\plugins\pluginSupport.cpp" />
+    <ClCompile Include="src\profiles\profileHelpers.cpp" />
+    <ClCompile Include="src\profiles\profilesPath.cpp" />
+    <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />
+    <ClCompile Include="src\propertiesPages\propertiesManager.cpp" />
+    <ClCompile Include="src\mudclient.cpp" />
+    <ClCompile Include="src\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\network\network.cpp" />
+    <ClCompile Include="src\inputProcessor.cpp" />
+    <ClCompile Include="src\logicElements.cpp" />
+    <ClCompile Include="src\logicHelper.cpp" />
+    <ClCompile Include="src\logicProcessor.cpp" />
+    <ClCompile Include="src\logicProcessor2.cpp" />
+    <ClCompile Include="src\common\common.cpp" />
+    <ClCompile Include="src\common\luaSupport.cpp" />
+    <ClCompile Include="src\common\paramsHelper.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\mudclient.ico" />
+    <Image Include="res\toolbar.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\mudclient.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="res\mudclient.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

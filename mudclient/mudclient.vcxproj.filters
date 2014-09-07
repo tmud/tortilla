@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{517206ca-8890-4930-b4ac-89f8f58beae1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\PropertiesPages">
+      <UniqueIdentifier>{955ba0dd-16f0-4c63-94e9-913c7030d7f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Main">
+      <UniqueIdentifier>{ab0c2ef1-67c2-41c1-85bf-d4d648ad0066}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{f5d41049-9b0b-451d-ac73-91f3325952df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\LogicProcessor">
+      <UniqueIdentifier>{e7cd4324-eb02-4209-8f2b-5bf6fdccb438}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{83b78ee0-fe53-436d-916f-e60acabab1a6}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;jpg;jpeg;jpe;manifest</Extensions>
+    </Filter>
+    <Filter Include="Libs">
+      <UniqueIdentifier>{e156e372-6ae3-4cd9-aa58-03ebc013dac3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External Common Libs">
+      <UniqueIdentifier>{ba9d0458-69ac-4d5f-ae55-415b9ab855e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Logs">
+      <UniqueIdentifier>{0be9a49e-2639-4c05-94b5-d1df723ecb54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Plugins">
+      <UniqueIdentifier>{f0ab2046-9972-41b0-b218-5fef112cc00a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Profiles">
+      <UniqueIdentifier>{e9c79636-8982-4bcc-a30e-a6462c0df900}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\AboutDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compareObject.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hotkeyTable.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MainFrm.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudCommandBar.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudGameView.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudView.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudViewParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudViewString.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesData.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesDlg.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesElements.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesManager.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageColors.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageCommon.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageGroups.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageHighlights.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageHotkeys.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageOneParam.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPagesElements.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageTabwords.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageTimers.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageTwoParams.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertyList.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdafx.h">
+      <Filter>Source Files\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="src\network\network.h">
+      <Filter>Source Files\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="src\network\network_init.h">
+      <Filter>Source Files\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inputProcessor.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logicElements.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logicHelper.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logicProcessor.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logicScripts.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="res\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\atldock.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\bevelLine.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\changeDir.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\common.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\luaSupport.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\paramsHelper.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\splitterEx.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\wideToAnsi.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\wideToUtf8.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helpManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\highlightHelper.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\tempThread.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\criticalSection.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\dataQueue.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\memoryBuffer.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\pcreHelper.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logsProcessor.h">
+      <Filter>Source Files\Logs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsDlg.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsManager.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\plugin.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginSupport.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsApi.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\tokenizer.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\toolbarEx.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\common\replaceColor.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\profiles\profileDlgs.h">
+      <Filter>Source Files\Profiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\profiles\profileHelpers.h">
+      <Filter>Source Files\Profiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\profiles\profilesPath.h">
+      <Filter>Source Files\Profiles</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsView.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsParseData.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsActiveObjects.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\elapsedTimeCounter.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ifProcessor.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\compareObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mudGameView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mudView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mudViewParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\propertiesPages\propertiesElements.cpp">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClCompile>
+    <ClCompile Include="src\propertiesPages\propertiesManager.cpp">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mudclient.cpp">
+      <Filter>Source Files\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stdafx.cpp">
+      <Filter>Source Files\Main</Filter>
+    </ClCompile>
+    <ClCompile Include="src\network\network.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\inputProcessor.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logicElements.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logicHelper.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logicProcessor.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logicProcessor2.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\common.cpp">
+      <Filter>Libs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\luaSupport.cpp">
+      <Filter>Libs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\paramsHelper.cpp">
+      <Filter>Libs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\helpManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libs\common\pcreHelper.cpp">
+      <Filter>External Common Libs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logsProcessor.cpp">
+      <Filter>Source Files\Logs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsManager.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\plugin.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginSupport.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsApi.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\toolbarEx.cpp">
+      <Filter>Libs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiles\profileHelpers.cpp">
+      <Filter>Source Files\Profiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\profiles\profilesPath.cpp">
+      <Filter>Source Files\Profiles</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsApi2.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsModules.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\mudclient.ico">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\toolbar.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="res\mudclient.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
