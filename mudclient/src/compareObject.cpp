@@ -81,9 +81,16 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
 {
     //mask regexp special symbols
     tstring tmp;
-    const WCHAR *symbols = L"*+/?[]()\\";
+    const WCHAR *symbols = L"*+/?|^$.[]()\\";
     const WCHAR *b = key.c_str();
     const WCHAR *e = b + key.length();
+
+    // skip first ^ - it a part of regexp
+    if (*b == '^')
+    {
+        tmp.append(L"^");
+        b++;
+    }
 
     const WCHAR* p = b + wcscspn(b, symbols);
     while (p != e)
