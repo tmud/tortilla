@@ -4,10 +4,8 @@
 #include "profiles/profilesPath.h"
 
 #ifdef _DEBUG
-//#pragma comment(lib, "libxml2d.lib")
 #pragma comment(lib, "zlibd.lib")
 #else
-//#pragma comment(lib, "libxml2.lib")
 #pragma comment(lib, "zlib.lib")
 #endif
 

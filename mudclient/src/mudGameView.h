@@ -519,7 +519,7 @@ private:
             WideToUtf8Converter w2u;
             w2u.convert(&buffer, data.c_str(), data.length());
         }
-        m_network.send((tbyte*)buffer.getData(), buffer.getSize());
+        m_network.send((tbyte*)buffer.getData(), buffer.getSize() - 1); // don't send last byte(0) of string
     }
 
     LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&)
