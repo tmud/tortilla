@@ -50,13 +50,6 @@ void LogicProcessor::processSystemCommand(const tstring& cmd)
         main_cmd.append(scmd.substr(1, pos-1));
 
     tstring params(scmd.substr(1));
-    /*{
-        tstring tmp(scmd.substr(1));
-        //tstring_replace(&tmp, L"\"", L"\\\"");
-        //params.append(L"(\"");
-        params.append(tmp);
-        //params.append(L"\")");
-    }*/
 
     tstring error;    
     std::map<tstring, syscmd_fun>::iterator it = m_syscmds.find(main_cmd);

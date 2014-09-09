@@ -17,7 +17,7 @@ InputCommand::InputCommand(const tstring& cmd)
     tstring& fcmd = full_command;
 
     // trim command
-    tstring_trim(&fcmd);
+    tstring_trimleft(&fcmd);
     if (fcmd.empty())
         return;
         
