@@ -65,12 +65,12 @@ void LogicProcessor::processCommand(const tstring& cmd)
         tstring msg;
         int size = loops.size();
         if (size == 1) {
-            msg.append(L"пїЅпїЅпїЅпїЅпїЅпїЅ '"); msg.append(loops[0]); msg.append(L"' пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.");
+            msg.append(L"Макрос '"); msg.append(loops[0]); msg.append(L"' зациклен. Выполнение невозможно.");
         }
         else {
-            msg.append(L"пїЅпїЅпїЅпїЅпїЅпїЅпїЅ '");
+            msg.append(L"Макросы '");
             for (int i = 0; i < size; ++i) { if (i != 0) msg.append(L","); msg.append(loops[i]); }
-            msg.append(L"' пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.");
+            msg.append(L"' зациклены. Их выполнение невозможно.");
         }
         tmcLog(msg);
     }
@@ -158,25 +158,25 @@ void LogicProcessor::updateProps()
 
 void LogicProcessor::processNetworkDisconnect()
 {
-    tmcLog(L"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ(пїЅпїЅпїЅпїЅпїЅ).");
+    tmcLog(L"Соединение завершено(обрыв).");
     m_connected = false;
 }
 
 void LogicProcessor::processNetworkConnectError()
 {
-    tmcLog(L"пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.");
+    tmcLog(L"Не удалось подключиться.");
     m_connected = false;
 }
 
 void LogicProcessor::processNetworkError()
 {
-    tmcLog(L"пїЅпїЅпїЅпїЅпїЅпїЅ cпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.");
+    tmcLog(L"Ошибка cети. Соединение завершено.");
     m_connected = false;
 }
 
 void LogicProcessor::processNetworkMccpError()
 {
-    tmcLog(L"пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.");
+    tmcLog(L"Ошибка в протоколе сжатия. Соединение завершено.");
     m_connected = false;
 }
 
@@ -252,6 +252,6 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
         m_pHost->sendToNetwork(cmd);
         return true;
     }    
-    tmcLog(L"пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.");
+    tmcLog(L"Нет подключения.");
     return false;
 }
