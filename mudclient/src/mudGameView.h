@@ -68,21 +68,25 @@ public:
                 return TRUE;
             if (GetKeyState(VK_CONTROL) < 0)
             {
-                if (pMsg->wParam == 'V') // paste
+                if (pMsg->wParam == 'A') // select all
+                {
+                    m_bar.selecttext();
+                }
+                else if (pMsg->wParam == 'V') // paste
                 {
                     tstring cmd;
                     getFromClipboard(m_hWnd, &cmd);
                     if (!cmd.empty())
                         m_bar.insert(cmd);
                 }
-                if (pMsg->wParam == 'C') // copy
+                else if (pMsg->wParam == 'C') // copy
                 {
                     tstring cmd;
                     m_bar.getSelected(&cmd);
                     if (!cmd.empty())
                         sendToClipboard(m_hWnd, cmd);
                 }
-                if (pMsg->wParam == 'X') // cut
+                else if (pMsg->wParam == 'X') // cut
                 {
                     tstring cmd;
                     m_bar.getSelected(&cmd);
@@ -92,7 +96,7 @@ public:
                         sendToClipboard(m_hWnd, cmd);
                     }                    
                 }
-                if (pMsg->wParam == 'Z') // undo
+                else if (pMsg->wParam == 'Z') // undo
                 {
                     m_bar.undo();
                 }
