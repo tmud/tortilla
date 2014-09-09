@@ -42,9 +42,9 @@ private:
         m_cmd_size.Attach(GetDlgItem(IDC_EDIT_CMD_HISTORY));
         m_cmd_size.SetLimitText(2);
         m_show_system_cmds.Attach(GetDlgItem(IDC_CHECK_SHOW_SYSTEM_CMDS));
-        m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));
-        m_disable_ya.Attach(GetDlgItem(IDC_CHECK_DISABLE_DOUBLE_YA));
+        m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));        
         m_history_tab.Attach(GetDlgItem(IDC_CHECK_HISTORYTAB));
+        m_disable_ya.Attach(GetDlgItem(IDC_CHECK_DISABLE_DOUBLE_YA));
         m_plugins_logs.Attach(GetDlgItem(IDC_CHECK_PLUGINSLOGS));
         m_plugins_logs_window.Attach(GetDlgItem(IDC_EDIT_PLUGINSLOGS));
         m_plugins_logs_window.SetLimitText(1);
@@ -63,7 +63,8 @@ private:
         m_cmd_size.SetWindowText(buffer);
         m_show_system_cmds.SetCheck(propData->show_system_commands ? BST_CHECKED : BST_UNCHECKED);
         m_clear_bar.SetCheck(propData->clear_bar ? BST_CHECKED : BST_UNCHECKED);
-        m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);
+        m_history_tab.SetCheck(propData->history_tab ? BST_CHECKED : BST_UNCHECKED);
+        m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);        
         m_plugins_logs.SetCheck(propData->plugins_logs ? BST_CHECKED : BST_UNCHECKED);
         _itow(propData->plugins_logs_window, buffer, 10);
         m_plugins_logs_window.SetWindowText(buffer);

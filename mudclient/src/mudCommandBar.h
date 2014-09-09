@@ -4,10 +4,9 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CEdit>
 {       
     PropertiesData* propData;
     MemoryBuffer m_cmdBar;
-    int m_history_index;    
+    int m_history_index;
     tstring m_tab;
     int m_lasttab;
-    tstring m_historytab;
     int m_lasthistorytab;
     tstring m_undo;
     int m_undo_cursor;
@@ -24,7 +23,7 @@ public:
         cmd->assign(buffer);
         buffer[0] = 0;
         if (propData->clear_bar)
-            clear();        
+            clear();
         else
             selecttext();
     }
@@ -148,7 +147,7 @@ private:
     {
         if (wparam == VK_DOWN)
             onHistoryDown();
-        else if (wparam == VK_UP)        
+        else if (wparam == VK_UP)
             onHistoryUp();
         else if (wparam == VK_ESCAPE)
             { clear(); }
@@ -210,7 +209,7 @@ private:
             return;
 
         std::vector<tstring> &h = propData->cmd_history;
-        if (m_history_index != -1)        
+        if (m_history_index != -1)
         {
             if (h[m_history_index] == cmd)
                 h.erase(h.begin() + m_history_index);
@@ -235,6 +234,7 @@ private:
 
     void onTab()
     {
+        // tabbing simplest variants
         WCHAR prefix = propData->cmd_prefix;
         WCHAR cmd_prefix[2] = { prefix, 0 };
         int len = GetWindowTextLength();
@@ -255,6 +255,7 @@ private:
             return;
         }
 
+        // check system/not is command
         bool syscmd = false;
         int i=lastidx;
         for (; i>=0; --i)
@@ -262,37 +263,43 @@ private:
             if (text.at(i) == propData->cmd_separator) break;
             if (text.at(i) == prefix) { syscmd = true; break; }
         }
-        i = i + 1;  // i - first letter for tabbing cmd
+        i = i + 1;                          // i - first letter of tab part
 
-        if (!m_historytab.empty())
-            i = (text.at(0) == prefix) ? 1 : 0;
-
-        tstring cmd(text.substr(0, i));
-        text = text.substr(i);
+        tstring cmd(text.substr(0, i));     // const part
         if (m_tab.empty())
-            m_tab = text;
-        
-        bool canTabHistory = (cmd.empty() || cmd == cmd_prefix) ? true : false;
-        if (canTabHistory && !m_historytab.empty())
+            m_tab.assign(text.substr(i));   // tabbing part
+ 
+        if (propData->history_tab)
         {
-            int min_len = m_historytab.length();
-            std::vector<tstring> &h = propData->cmd_history;
-            for (int i=m_lasthistorytab,e=h.size(); i<e; ++i)
+            bool extra = false;
+            bool canTabHistory = (cmd.empty() || cmd == cmd_prefix) ? true : false;
+            if (!canTabHistory && m_lasthistorytab != 0)
             {
-                const tstring& tab = h[i];
-                if (!tab.compare(0, min_len, m_historytab))
-                {
-                    if (!tab.compare(m_historytab))
-                        continue;
-                    m_lasthistorytab = i+1;
-                    setText(tab);
-                    return;
-                }
+                tstring &tab = propData->cmd_history[m_lasthistorytab - 1];
+                if (tab == text) { canTabHistory = true; extra = true; }
             }
-            m_historytab.clear();
-        }      
-        
-        bool full_cmd = false;
+            if (canTabHistory)
+            {
+                tstring ctab(syscmd ? cmd_prefix : L"");
+                ctab.append(m_tab);
+                int min_len = ctab.length();
+                std::vector<tstring> &h = propData->cmd_history;
+                for (int i = m_lasthistorytab, e = h.size(); i < e; ++i)
+                {
+                    const tstring& tab = h[i];
+                    if (!tab.compare(0, min_len, ctab))
+                    {
+                        if (!tab.compare(ctab))
+                            continue;
+                        m_lasthistorytab = i + 1;
+                        setText(tab);
+                        return;
+                    }
+                }
+                if (extra) { syscmd = (cmd.at(0) == prefix); cmd.assign(syscmd ? cmd_prefix : L""); }
+            }         
+        }
+
         int min_len = m_tab.length();
         int index = -1;
         PropertiesList &list = (syscmd) ? propData->tabwords_commands : propData->tabwords;
@@ -302,7 +309,7 @@ private:
             if (!tab.compare(0,min_len, m_tab))
             {
                 if (!tab.compare(m_tab))
-                    { full_cmd = true; continue; }
+                    continue;
                 index = i;
                 break;
             }
@@ -312,26 +319,14 @@ private:
         {
             cmd.append(m_tab);
             m_lasttab = 0;
+            m_lasthistorytab = 0;
         }
         else
         {
-            const tstring& tab = list.get(index);                
+            const tstring& tab = list.get(index);
             cmd.append(tab);
             m_lasttab = index+1;
-            full_cmd = true;
         }
-
-        if (propData->history_tab && full_cmd)
-        {            
-            int dp = (cmd.at(0) == prefix) ? 1 : 0;
-            const WCHAR *p = cmd.c_str() + dp;
-            if (wcschr(p, prefix))
-                m_historytab.clear();
-            else
-                m_historytab.assign(cmd);
-            m_lasthistorytab = 0;
-        }
-
         setText(cmd);
     }
 
@@ -339,7 +334,6 @@ private:
     {
         m_tab.clear();
         m_lasttab = 0;
-        m_historytab.clear();
         m_lasthistorytab = 0;
     }
 };
