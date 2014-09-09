@@ -42,7 +42,7 @@
     <hotkey key="NUM7" value="вв" group="base"/>
     <hotkey key="NUM1" value="вн" group="base"/>
     <hotkey key="NUM0" value="см" group="test"/>
-    <hotkey key="F12" value="#conn adan.ru 4000" group="test"/>
+    <hotkey key="F12" value="#connect adan.ru 4000" group="test"/>
   </hotkeys>
   <subs/>
   <asubs/>
@@ -68,13 +68,7 @@
   </windows>
   <mainwindow left="2194" right="3477" top="105" bottom="986" width="3840" height="1080" fullscreen="0"/>
   <plugins>
-    <plugin key="mapper.dll" value="0">
-      <windows>
-        <window name="Карта" left="1277" right="1677" top="385" bottom="785" side="4" lastside="4" width="400" height="400"/>
-      </windows>
-    </plugin>
     <plugin key="prompt.dll" value="0"/>
-    <plugin key="jmc3import.dll" value="0"/>
-    <plugin key="test.lua" value="0"/>
+    <plugin key="jmc3import.dll" value="1"/>
   </plugins>
 </profile>

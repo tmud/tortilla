@@ -63,44 +63,7 @@
     <group key="off" value="0"/>
   </groups>
   <tabwords/>
-  <variables>
-    <var key="GroupStatus" value="0"/>
-    <var key="chest" value="0"/>
-    <var key="lider" value="0"/>
-    <var key="armorarms" value="0"/>
-    <var key="armorbelt" value="0"/>
-    <var key="armorbody" value="0"/>
-    <var key="armorfingers" value="0"/>
-    <var key="armorfoots" value="0"/>
-    <var key="armorhead" value="0"/>
-    <var key="armorlegs" value="0"/>
-    <var key="armorneck" value="0"/>
-    <var key="armoronback" value="0"/>
-    <var key="armoronbody" value="0"/>
-    <var key="armorshield" value="0"/>
-    <var key="light" value="0"/>
-    <var key="weaponPrime" value="0"/>
-    <var key="weaponSecond" value="0"/>
-    <var key="ring1" value="0"/>
-    <var key="ring2" value="0"/>
-    <var key="prof" value="0"/>
-    <var key="rasa" value="0"/>
-    <var key="name" value="0"/>
-    <var key="myLvl" value="0"/>
-    <var key="castProf" value="0"/>
-    <var key="curMoney" value="0"/>
-    <var key="oldMoney" value="0"/>
-    <var key="tellMV" value="0"/>
-    <var key="curMV" value="0"/>
-    <var key="food" value="0"/>
-    <var key="watcap" value="0"/>
-    <var key="suhost" value="0"/>
-    <var key="golod" value="0"/>
-    <var key="fight" value="0"/>
-    <var key="curTime" value="0"/>
-    <var key="nighttime" value="0"/>
-    <var key="123" value="45"/>
-  </variables>
+  <variables/>
   <windows>
     <window name="Окно 1" left="0" right="1265" top="0" bottom="116" side="1" lastside="1" width="489" height="116"/>
     <window name="Окно 2" left="210" right="560" top="399" bottom="599" side="5" lastside="4" width="350" height="200"/>
@@ -111,13 +74,7 @@
   </windows>
   <mainwindow left="2169" right="3452" top="98" bottom="979" width="3840" height="1080" fullscreen="0"/>
   <plugins>
-    <plugin key="mapper.dll" value="0">
-      <windows>
-        <window name="Карта" left="1241" right="1810" top="347" bottom="866" side="4" lastside="4" width="569" height="519"/>
-      </windows>
-    </plugin>
     <plugin key="prompt.dll" value="1"/>
     <plugin key="jmc3import.dll" value="1"/>
-    <plugin key="test.lua" value="1"/>
   </plugins>
 </profile>

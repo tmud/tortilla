@@ -68,9 +68,7 @@
   </windows>
   <mainwindow left="2194" right="3477" top="105" bottom="986" width="3840" height="1080" fullscreen="0"/>
   <plugins>
-    <plugin key="mapper.dll" value="0"/>
     <plugin key="prompt.dll" value="0"/>
-    <plugin key="jmc3import.dll" value="0"/>
-    <plugin key="test.lua" value="0"/>
+    <plugin key="jmc3import.dll" value="1"/>
   </plugins>
 </profile>
