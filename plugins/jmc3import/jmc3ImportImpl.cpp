@@ -239,6 +239,7 @@ void Jmc3Import::replaceLegacy(u8string *legacy)
 void Jmc3Import::initLegacy()
 {
     std::map<u8string, u8string>& l = m_legacy;
+    l["#conn"] = "#connect";
     l["#daa"] = "#hide";
     l["#restorewindow"] = "#showwindow";
     l["#showme"] = "#output";

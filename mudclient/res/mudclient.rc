@@ -161,7 +161,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,124,44,42,14
     LTEXT           "Tortilla MUD Client",IDC_STATIC,58,7,58,8
-    LTEXT           "Версия 0.9",IDC_STATIC,69,15,36,8
+    LTEXT           "Версия 0.91",IDC_STATIC,68,15,38,8
     LTEXT           "Сайт программы:",IDC_STATIC,7,32,58,9
     LTEXT           "https://github.com/tmud/tortilla",IDC_APP_SITE,71,32,92,8
 END
@@ -450,8 +450,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,0,0
- PRODUCTVERSION 0,9,0,0
+ FILEVERSION 0,9,1,0
+ PRODUCTVERSION 0,9,1,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -467,12 +467,12 @@ BEGIN
         BLOCK "080004b0"
         BEGIN
             VALUE "FileDescription", "Client for Multi User Dangeon games"
-            VALUE "FileVersion", "0.9.0.0"
+            VALUE "FileVersion", "0.9.1.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
             VALUE "OriginalFilename", "tortilla.exe"
             VALUE "ProductName", "Tortilla Mud Client"
-            VALUE "ProductVersion", "0.9.0.0"
+            VALUE "ProductVersion", "0.9.1.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -522,7 +522,7 @@ IDR_MAINFRAME           ICON                    "mudclient.ico"
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "Tortilla Mud Client v0.9"
+    IDR_MAINFRAME           "Tortilla Mud Client v0.91"
     IDS_RESET_COLORS_CONFIRM 
                             "Вы уверены что хотите сбросить цвета и шрифт и вернуть их к первоначальному состоянию?"
     IDS_NETWORK_FAILED      "Ошибка инициализации сети! Дальнейшая работа невозможна."
