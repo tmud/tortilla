@@ -15,7 +15,7 @@ bool CompareObject::init(const tstring& key)
     createCheckPcre(key, &regexp);
     checkVars(&regexp);
     bool result = m_pcre.setRegExp(regexp, true);
-    assert(result);   
+    assert(result);
     return result;
 }
 
@@ -41,7 +41,7 @@ bool CompareObject::checkToCompare(const tstring& str, const CompareVar* object)
         bool result = m_pcre.setRegExp(regexp, true);
         assert(result);
         if (!result)
-            return false;        
+            return false;
     }
     m_pcre.find(str);
     if (m_pcre.getSize() == 0)
@@ -62,7 +62,7 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     if (maxid <= 0)
         maxid = 1;
     p.resize(maxid);
-    
+
     int begin =  m_pcre.getFirst(0);
     int end =  m_pcre.getLast(0);
     p[0] = m_str.substr(begin, end-begin);  //default value of %0 parameter
@@ -95,8 +95,15 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
     const WCHAR* p = b + wcscspn(b, symbols);
     while (p != e)
     {
+        bool skip_slash = false;
         tmp.append( tstring(b, p-b) );
-        tmp.append(L"\\");
+        if (*p == L'$' && p+1!=e)
+        {
+            if (*(p + 1) == L'$') p++;
+            else {  skip_slash = true; }
+        }
+        if (!skip_slash)
+            tmp.append(L"\\");
         WCHAR x[2] = { *p, 0 };
         tmp.append(x);
         b = p + 1;
@@ -145,6 +152,10 @@ void CompareObject::checkVars(tstring *pcre_template)
     int pos = 0;
     for (int i = 0, e = vars.getSize(); i < e; ++i)
     {
+        int dp = vars.getFirst(i);
+        if (dp > 1 && tmp.at(dp - 1) == L'\\' && tmp.at(dp - 2) != L'\\')
+            continue;            
+
         pcre_template->append(tmp.substr(pos, vars.getFirst(i) - pos));
         int first = vars.getFirst(i);
         int last = vars.getLast(i);
@@ -181,7 +192,7 @@ void CompareObject::checkVars(tstring *pcre_template)
                 m_vars_pcre_parts.push_back( tstring(b, p-b) ); 
         }
         m_vars_pcre_parts.push_back(vars_list[index++]);
-        b = p + 6; // len (?var)        
+        b = p + 6; // len (?var)
     }  
 }
 

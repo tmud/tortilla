@@ -77,8 +77,8 @@ bool pcre_find(pcre8 handle, const utf8* string)
         
     hpcre->str.assign(string);
     hpcre->indexes.clear();
-    int params[16];
-    int count = pcre_exec(hpcre->regexp, hpcre->extra, string, strlen(string), 0, 0, params, 48);
+    int params[30];
+    int count = pcre_exec(hpcre->regexp, hpcre->extra, string, strlen(string), 0, 0, params, 30);
     for (int i = 0; i<count; i++)
     {
         hpcre->indexes.push_back(params[2 * i]);
@@ -95,12 +95,12 @@ bool pcre_findall(pcre8 handle, const utf8* string)
 
     hpcre->str.assign(string);
     hpcre->indexes.clear();
-    int params[16];
+    int params[30];
     int pos = 0;
     int len = strlen(string);
     while (1)
     {
-        int count = pcre_exec(hpcre->regexp, hpcre->extra, string, len, pos, 0, params, 48);
+        int count = pcre_exec(hpcre->regexp, hpcre->extra, string, len, pos, 0, params, 30);
         if (count <= 0)
             break;
         hpcre->indexes.push_back(params[0]);
