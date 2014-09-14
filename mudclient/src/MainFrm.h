@@ -50,7 +50,8 @@ private:
         COMMAND_ID_HANDLER(ID_MUDCLIENT_EXIT, OnAppExit)
         MESSAGE_HANDLER(WM_USER, OnSetMenuCheck);
         MESSAGE_HANDLER(WM_USER+1, OnSetMenuText);
-        COMMAND_ID_HANDLER(ID_MUDCLIENT_HELP, OnHelp)        
+        COMMAND_ID_HANDLER(ID_MUDCLIENT_HELP, OnHelp)
+        COMMAND_ID_HANDLER(ID_CHECK_UPDATES, OnCheckUpdates)
         CHAIN_MSG_MAP_ALT_MEMBER(m_gameview, 1)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
@@ -152,6 +153,12 @@ private:
     LRESULT OnHelp(WORD, WORD, HWND, BOOL&)
     {
         openHelp(m_hWnd, L"");
+        return 0;
+    }
+
+    LRESULT OnCheckUpdates(WORD, WORD, HWND, BOOL&)
+    {
+        openURL(L"https://github.com/tmud/tortilla/releases");
         return 0;
     }
    

@@ -120,6 +120,7 @@
 #define ID_MUDCLIENT_ABOUT              32797
 #define ID_MUDCLIENT_HELP               32798
 #define ID_NEWWORLD                     32799
+#define ID_CHECK_UPDATES                32800
 
 // Next default values for new objects
 // 
