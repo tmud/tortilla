@@ -50,17 +50,49 @@ void LogicProcessor::processSystemCommand(const tstring& cmd)
         main_cmd.append(scmd.substr(1, pos-1));
 
     tstring params(scmd.substr(1));
-
-    tstring error;    
-    std::map<tstring, syscmd_fun>::iterator it = m_syscmds.find(main_cmd);
-    if (it != m_syscmds.end())
+    tstring error;
+    typedef std::map<tstring, syscmd_fun>::iterator iterator;
+    iterator it = m_syscmds.find(main_cmd);
+    iterator it_end = m_syscmds.end();
+    if (it != it_end)
     {
         parser p(params, &error);
         it->second(&p);
     }
     else
     {
-        error.append(L"Неизвестная команда");
+        // пробуем подобрать по сокращенному имени
+        int len = main_cmd.size();
+        if (len >= 3)
+        {
+            std::vector<tstring> cmds;
+            for (it = m_syscmds.begin(); it != it_end; ++it)
+            {
+                if (!it->first.compare(0, len, main_cmd))
+                    cmds.push_back(it->first);
+            }
+
+            int count = cmds.size();
+            if (count == 1)
+            {
+                it = m_syscmds.find(cmds[0]);
+                parser p(params, &error);
+                it->second(&p);
+            }
+            else if (count == 0)
+            {
+                error.append(L"Неизвестная команда");
+            }
+            else
+            {
+                error.append(L"Уточните команду (варианты): ");
+                for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
+            }
+        }
+        else
+        {
+            error.append(L"Неизвестная команда");
+        }
     }
 
     if (!error.empty())
