@@ -60,6 +60,14 @@ int pluginError(lua_State *L, const utf8* error)
     pluginLog(plugin_buffer);
     return 0;
 }
+
+int pluginLog(lua_State *L, const utf8* msg)
+{
+    Utf8ToWide e(msg);
+    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::NAME), (const wchar_t*)e);
+    pluginLog(plugin_buffer);
+    return 0;
+}
 //---------------------------------------------------------------------
 int addcommand(lua_State *L)
 {
@@ -596,7 +604,7 @@ int pluginlog(lua_State *L)
 {
     if (!luaT_check(L, 1, LUA_TSTRING))
         return pluginInvArgs(L, "log");
-    pluginError(L, lua_tostring(L, 1));
+    pluginLog(L, lua_tostring(L, 1));
     return 0;
 }
 //---------------------------------------------------------------------

@@ -44,12 +44,16 @@ int menucmd(lua_State *L)
             if (!errors.empty())
             {
                 luaT_log(L, "Ошибки импорта из JMC3 (синтаксис / уже есть такой элемент):");
-                for (int i=0,e=errors.size(); i<e; ++i)
-                    luaT_log(L, errors[i].c_str() );
+                for (int i = 0, e = errors.size(); i < e; ++i)
+                {
+                    u8string msg("Ошибка: ");
+                    msg.append(errors[i].c_str());
+                    luaT_log(L, msg.c_str());
+                }
             }
             else
             {
-                luaT_log(L, "Импорт из JMC3 прошел успешно.");
+                luaT_log(L, "Импорт прошел без ошибок.");
             }
         }        
     }
