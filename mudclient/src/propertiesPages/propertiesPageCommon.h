@@ -40,7 +40,7 @@ private:
         m_history_size.Attach(GetDlgItem(IDC_EDIT_VIEW_HISTORY));
         m_history_size.SetLimitText(5);
         m_cmd_size.Attach(GetDlgItem(IDC_EDIT_CMD_HISTORY));
-        m_cmd_size.SetLimitText(2);
+        m_cmd_size.SetLimitText(3);
         m_show_system_cmds.Attach(GetDlgItem(IDC_CHECK_SHOW_SYSTEM_CMDS));
         m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));        
         m_history_tab.Attach(GetDlgItem(IDC_CHECK_HISTORYTAB));
