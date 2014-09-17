@@ -29,7 +29,7 @@ public:
 };
 
 class LogicWrapperTimers : public std::vector<Timer*>
-{    
+{
 public:
     LogicWrapperTimers() {}
     ~LogicWrapperTimers() 
@@ -80,7 +80,7 @@ public:
             if (!exist)
                 todelete.push_back(j);
         }
-        
+
         int last=todelete.size()-1;
         for (int i=last; i>=0; --i)
         {
@@ -109,10 +109,10 @@ public:
     void processGags(parseData *parse_data);
     void processHighlights(parseData *parse_data);
     void processTimers(std::vector<tstring>* new_cmds);
-    void resetTimers();   
+    void resetTimers();
     void processVars(tstring *cmdline);
 
-private:        
+private:
     // current workable elements
     LogicWrapper<Alias> m_aliases;
     LogicWrapper<Hotkey> m_hotkeys;

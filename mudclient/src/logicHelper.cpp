@@ -5,7 +5,6 @@
 LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
 {
     m_ticker = GetTickCount();
-    m_vars_regexp.setRegExp(L"\\$[^ ]+", true);
 }
 
 bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
@@ -45,7 +44,7 @@ void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* ne
             if (m_actions[i]->processing(cd, &newcmd))
             {
                processVars(&newcmd);
-               new_cmds->push_back(newcmd);               
+               new_cmds->push_back(newcmd);
                break;
             }
         }
@@ -56,7 +55,7 @@ void LogicHelper::processSubs(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);        
+        CompareData cd(parse_data->strings[j]);
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
             while (m_subs[i]->processing(cd))
@@ -85,7 +84,7 @@ void LogicHelper::processGags(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);        
+        CompareData cd(parse_data->strings[j]);
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
             while (m_gags[i]->processing(cd))
@@ -113,7 +112,7 @@ void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
     DWORD tick = GetTickCount();
     if (tick >= m_ticker)
     {
-        diff = tick - m_ticker;        
+        diff = tick - m_ticker;
     }
     else
     {   // overflow 49.7 days (MSDN GetTickCount)
@@ -136,7 +135,7 @@ void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
 
 void LogicHelper::resetTimers()
 {
-    for (int i=0,e=m_timers.size(); i<e; ++i)    
+    for (int i=0,e=m_timers.size(); i<e; ++i)
         m_timers[i]->reset();
     m_ticker = GetTickCount();
 }
@@ -170,7 +169,7 @@ void LogicHelper::processVars(tstring *cmdline)
         {
             int end = m_vars_regexp.getLast(i);
             new_cmd_line.append(cmd.substr(end));
-        }        
+        }
     }
     cmdline->assign(new_cmd_line);
 }
@@ -201,4 +200,10 @@ void LogicHelper::updateProps(int what)
         m_highlights.init(&m_propData->highlights, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_TIMERS)
         m_timers.init(&m_propData->timers, active_groups);
+
+    tchar separator[2] = { m_propData->cmd_separator, 0 };
+    tstring regexp(L"\\$[^ ");
+    regexp.append(separator);
+    regexp.append(L"]+");
+    m_vars_regexp.setRegExp(regexp, true);
 }
