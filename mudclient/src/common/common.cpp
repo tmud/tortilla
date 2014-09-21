@@ -87,6 +87,24 @@ void tstring_trim(tstring *str)
     tstring_trimright(str);
 }
 
+void tstring_trimsymbols(tstring *str, const tstring& symbols)
+{
+    if (str->empty() || symbols.empty()) return;
+
+    tstring newstr;
+    const tchar *b = str->c_str();
+    const tchar *e = b + str->length();
+    const tchar *p  = b + wcscspn(b, symbols.c_str());
+    while (p != e)
+    {
+        newstr.append(b, p-b);
+        b = p + 1;
+        p = b + wcscspn(b, symbols.c_str());
+    }
+    newstr.append(b);
+    str->swap(newstr);
+}
+
 void tstring_toupper(tstring *str)
 {
     std::transform(str->begin(), str->end(), str->begin(), ::toupper);

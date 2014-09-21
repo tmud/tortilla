@@ -59,10 +59,14 @@ public:
 
     void insert(const tstring& cmd)
     {
+        tstring str(cmd);
+        tstring_trimsymbols(&str, L"\r\n");
+
         int from = 0, to = 0;
         GetSel(from, to);
         tstring text;
         gettext(&text);
+
         m_undo = text;
         m_undo_cursor = to;
         if (from != to)
@@ -71,9 +75,9 @@ public:
             new_cmd.append(text.substr(to));
             text.assign(new_cmd);
         }
-        text.insert(from, cmd);
+        text.insert(from, str);
         SetWindowText(text.c_str());
-        int cursor_pos = from + cmd.length();
+        int cursor_pos = from + str.length();
         SetSel(cursor_pos, cursor_pos);
     }
 

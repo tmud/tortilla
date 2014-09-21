@@ -14,6 +14,7 @@ bool getFromClipboard(HWND owner, tstring* text);
 void tstring_trimleft(tstring *str);
 void tstring_trimright(tstring *str);
 void tstring_trim(tstring *str);
+void tstring_trimsymbols(tstring *str, const tstring& symbols);
 void tstring_toupper(tstring *str);
 void tstring_tolower(tstring *str);
 void tstring_replace(tstring *str, const tstring& what, const tstring& forr);
