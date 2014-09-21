@@ -59,7 +59,7 @@ void LogicProcessor::processCommand(const tstring& cmd)
     std::vector<tstring> loops;
     WCHAR cmd_prefix = propData->cmd_prefix;
     m_input.process(cmd, &m_helper, &loops);
-    
+
     if (!loops.empty())
     {
         tstring msg;
@@ -74,20 +74,20 @@ void LogicProcessor::processCommand(const tstring& cmd)
         }
         tmcLog(msg);
     }
-    
+
     for (int i=0,e=m_input.commands.size(); i<e; ++i)
     {
         tstring cmd = m_input.commands[i]->full_command;
         if (!cmd.empty() && cmd.at(0) == cmd_prefix)
         {
             //it is system command for client (not game command)
-            m_pHost->preprocessGameCmd(cmd);
+            m_pHost->preprocessGameCmd(&cmd);
             processSystemCommand(cmd);
         }
         else
         {
             // it is game command
-            m_pHost->preprocessGameCmd(cmd);
+            m_pHost->preprocessGameCmd(&cmd);
             WCHAR br[2] = { 10, 0 };
             cmd.append(br);
             processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);

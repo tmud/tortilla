@@ -540,7 +540,11 @@ private:
     LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         tstring cmd;
-        m_bar.getCommand(&cmd);        
+        m_bar.getCommand(&cmd);
+        m_plugins.processBarCmd(&cmd);
+        tstring history(cmd);
+        m_plugins.processHistoryCmd(&history);
+        m_bar.addToHistory(history);
         m_processor.processCommand(cmd);
         return 0;
     }
@@ -691,12 +695,12 @@ private:
 
     void preprocessText(int view, parseData* parse_data)
     {
-        m_plugins.processGameStrings("before", view, parse_data);
+        m_plugins.processViewData("before", view, parse_data);
     }
 
     void postprocessText(int view, parseData* parse_data)
     {
-        m_plugins.processGameStrings("after", view, parse_data);
+        m_plugins.processViewData("after", view, parse_data);
     }
     
     void addText(int view, parseData* parse_data)
@@ -820,7 +824,7 @@ private:
         return m_parent;
     }
 
-    void preprocessGameCmd(tstring& cmd);
+    void preprocessGameCmd(tstring* cmd);
 
     void checkHistorySize()
     {

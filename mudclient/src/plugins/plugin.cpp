@@ -93,11 +93,14 @@ bool Plugin::runMethod(const char* method, int args, int results)
 {
     lua_getglobal(L, module.c_str());
     if (!lua_istable(L, -1))
-        { lua_pop(L,1); return false; }
+        { lua_pop(L, 1); return false; }
     lua_pushstring(L, method);
     lua_gettable(L, -2);
-    if (!lua_isfunction(L, -1))
-        { lua_pop(L, 2); return true;  } // not supported function in plugin
+    if (!lua_isfunction(L, -1)) // not supported function in plugin
+    {
+        lua_pop(L, 2);
+        return true;
+    }
     lua_insert(L, -(args + 2));
     lua_pop(L, 1);
     Plugin *old = _cp;
@@ -118,12 +121,13 @@ bool Plugin::runMethod(const char* method, int args, int results)
 
 void Plugin::getparam(const char* state, tstring* value)
 {
-    if (!runMethod(state, 1, 1))
+    if (!runMethod(state, 0, 1))
         return;
     if (!lua_isstring(L, -1))
-        { lua_pop(L,1); return; }
+        { lua_pop(L,1); value->clear(); return; }
     Utf8ToWide u2w;
     u2w.convert(lua_tostring(L, -1));
+    lua_pop(L, 1);
     value->assign(u2w);
 }
 
@@ -140,7 +144,7 @@ bool Plugin::loadDllPlugin(const wchar_t* fname)
     plugin_open popen = (plugin_open)GetProcAddress(hmod, "plugin_open");
     if (popen)
     {
-        popen(L);        
+        popen(L);
         loaded = initLoadedPlugin(fname);
         if (loaded)
             hModule = hmod;

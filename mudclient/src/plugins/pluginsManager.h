@@ -18,10 +18,14 @@ public:
     Plugin* findPlugin(HWND view);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
-    void processGameCmd(tstring& cmd);
-    void processGameStrings(const char* method, int view, parseData* data);
+    void processGameCmd(tstring* cmd);
+    void processViewData(const char* method, int view, parseData* data);
+    void processBarCmd(tstring *cmd);
+    void processHistoryCmd(tstring *cmd);
 
 private:
     void initPlugins();
-    bool doAllPluginsMethod(const char* method, const wchar_t *text);
+    bool doPluginsStringMethod(const char* method, tstring *str);
+    bool doPluginsTableMethod(const char* method, std::vector<tstring>* cmds);
+    void turnoffPlugin(const char* method, int plugin_index);
 };

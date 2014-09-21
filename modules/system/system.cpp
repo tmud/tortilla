@@ -3,8 +3,8 @@
 
 int system_test(lua_State *L)
 {
-    lua_pushnumber(L, 1);
-    return 1;
+    //MessageBox(NULL, L"1", L"test", MB_OK);
+    return 0;
 }
 
 int luaopen_system(lua_State *L)

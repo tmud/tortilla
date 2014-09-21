@@ -150,7 +150,7 @@ void MudGameView::unloadPlugins()
     m_plugins.unloadPlugins();
 }
 
-void MudGameView::preprocessGameCmd(tstring& cmd)
+void MudGameView::preprocessGameCmd(tstring* cmd)
 {
     m_plugins.processGameCmd(cmd);
 }

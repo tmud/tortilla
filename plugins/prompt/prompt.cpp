@@ -46,7 +46,6 @@ int init(lua_State *L)
 int release(lua_State *L)
 {
     xml::node s("prompt");
-    
     s.set("pcre/value", m_regexp.c_str());
     luaT_run(L, "getPath", "s", "config.xml");
     u8string path(lua_tostring(L, -1));
@@ -166,7 +165,6 @@ static const luaL_Reg prompt_methods[] =
     { "init", init },
     { "release", release },
     { "menucmd", menucmd },
-    //{ "before", gamestr },
     { "after", afterstr },
     { NULL, NULL }
 };

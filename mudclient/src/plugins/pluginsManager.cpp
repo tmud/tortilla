@@ -5,6 +5,7 @@
 #include "api/api.h"
 #include "pluginsParseData.h"
 extern luaT_State L;
+extern Plugin* _cp;
 
 void collectGarbage()
 {
@@ -93,7 +94,7 @@ void PluginsManager::initPlugins()
             if (new_modules[j].name == name) { exist = true; break; }
         if (!exist) { PluginData pd; pd.name = name; pd.state = 0; new_modules.push_back(pd); }
     }
-    modules.swap(new_modules);      
+    modules.swap(new_modules);
 
     // sort and set initial state
     PluginsList new_plugins;
@@ -104,7 +105,7 @@ void PluginsManager::initPlugins()
         if (v.name == m_plugins[j]->get(Plugin::FILE))
         {
             new_plugins.push_back(m_plugins[j]); break;
-        }       
+        }
         bool state = (v.state == 1) ? true : false;
         new_plugins[i]->setOn(state);
     }
@@ -135,7 +136,7 @@ void PluginsManager::pluginsPropsDlg()
             if (new_state)
                 turn_on.push_back(p);
             else
-                turn_off.push_back(p);            
+                turn_off.push_back(p);
         }
     }
 
@@ -155,7 +156,7 @@ void PluginsManager::pluginsPropsDlg()
             tmcLog(error.c_str());
        }
     }
-        
+
     PluginsDataValues &modules = m_propData->plugins;
     PluginsDataValues new_modules;
     for (int i=0,e=m_plugins.size(); i<e; ++i)
@@ -196,85 +197,195 @@ void PluginsManager::updateProps()
 
 void PluginsManager::processStreamData(MemoryBuffer *data)
 {
-    if (doAllPluginsMethod("streamdata", (wchar_t*)data->getData()))
+    tstring stream((tchar*)data->getData());
+    if (doPluginsStringMethod("streamdata", &stream))
     {
-        const char* newdata = lua_tostring(L, -1);
-        int newdata_len = strlen(newdata);
-        Utf8ToWideConverter u2w;
-        u2w.convert(data, newdata, newdata_len);
-        lua_pop(L, 1);
+        data->alloc((stream.length()+1) * sizeof(tchar));
+        tchar *out = (tchar*)data->getData();
+        wcscpy(out, stream.c_str());
     }
 }
 
-void PluginsManager::processGameCmd(tstring& cmd)
+void PluginsManager::processGameCmd(tstring* cmd)
 {
-    if (!cmd.empty() && cmd.at(0) == m_propData->cmd_prefix)
+    if (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix)
     {
-        if (doAllPluginsMethod("syscmd", cmd.c_str() + 1))
+        tstring excmd(cmd->substr(1));
+        if (doPluginsStringMethod("syscmd", &excmd))
         {
-            Utf8ToWide u2w(lua_tostring(L, -1));
-            lua_pop(L, 1);
             tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-            cmd.assign(prefix);
-            cmd.append(u2w);
+            cmd->assign(prefix);
+            cmd->append(excmd);
         }
         return;
     }
-
-    if (doAllPluginsMethod("gamecmd", cmd.c_str()))
-    {
-        Utf8ToWide u2w(lua_tostring(L, -1));
-        lua_pop(L, 1);
-        cmd.assign(u2w);
-    }
+    doPluginsStringMethod("gamecmd", cmd);
 }
 
-void PluginsManager::processGameStrings(const char* method, int view, parseData* data)
+void PluginsManager::processViewData(const char* method, int view, parseData* data)
 {
     PluginsParseData pdata(data);
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;       
+        if (!p->state()) continue;
         lua_pushinteger(L, view);
         luaT_pushobject(L, &pdata, LUAT_VIEWDATA);
         if (!p->runMethod(method, 2, 0))
         {
-            pluginError(L, method, "Ошибка в методе. Плагин отключен!");
-            p->setOn(false);
-            PluginsDataValues &modules = m_propData->plugins;
-            modules[i].state = 0;
-            i = 0; // restart plugins
+            // restart plugins
+            turnoffPlugin(method, i);
+            i = 0;
         }
-        lua_settop(L, 0);       
+        lua_settop(L, 0);
     }
 }
 
-bool PluginsManager::doAllPluginsMethod(const char* method, const wchar_t *text)
+void PluginsManager::processBarCmd(tstring *cmd)
 {
-    WideToUtf8 w2u(text);
+    if (cmd->empty())
+        return;  
+    tchar separator[2] = { m_propData->cmd_separator, 0 };
+    Tokenizer t(cmd->c_str(), separator);
+    std::vector<tstring> cmds;
+    t.moveto(&cmds);
+    cmd->clear();
+    if (!doPluginsTableMethod("barcmd", &cmds))
+        return;
+    for (int i = 0, e = cmds.size(); i < e; ++i)
+    {
+        if (i != 0) cmd->append(separator);
+        cmd->append(cmds[i]);
+    }
+}
+
+void PluginsManager::processHistoryCmd(tstring *cmd)
+{
+    if (cmd->empty())
+        return;
+    const char* method = "historycmd";
+    WideToUtf8 w2u(cmd->c_str());
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (!p->state()) continue;
+        lua_pushstring(L, w2u);
+        if (!p->runMethod(method, 1, 1))
+        {
+            // restart plugins
+            turnoffPlugin(method, i);
+            lua_settop(L, 0);
+            i = 0;
+        }
+        else
+        {
+            if (lua_isboolean(L, -1))            
+            {
+                int r = lua_toboolean(L, -1);                
+                if (!r) 
+                {
+                    cmd->clear();
+                    lua_pop(L, 1);
+                    break; 
+                }
+            }
+            lua_pop(L, 1);
+        }
+    }
+}
+
+bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
+{
+    WideToUtf8 w2u(str->c_str());
     lua_pushstring(L, w2u);
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
-
         if (!p->runMethod(method, 1, 1) || !lua_isstring(L, -1))
         {
-            // error in plugin - turn it off
-            pluginError(L, method, "Ошибка в методе. Плагин отключен!");
-            p->setOn(false);
-            PluginsDataValues &modules = m_propData->plugins;
-            modules[i].state = 0;
-            
             // restart plugins
+            turnoffPlugin(method, i);            
             lua_settop(L, 0);            
             lua_pushstring(L, w2u);
             i = 0;
-        }        
+        }
     }    
     if (lua_isstring(L, -1))
+    {
+        Utf8ToWide u2w(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        str->assign(u2w);
         return true;
+    }
     lua_settop(L, 0);
     return false;
+}
+
+bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* cmds)
+{
+    WideToUtf8 w2u;
+    lua_newtable(L);
+    for (int j = 0, je = cmds->size(); j < je; ++j)
+    {
+        const tstring& s = cmds->at(j);
+        w2u.convert(s.c_str(), s.length());
+        lua_pushinteger(L, j + 1);
+        lua_pushstring(L, w2u);
+        lua_settable(L, -3);
+    }
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (!p->state()) continue;
+        if (!p->runMethod(method, 1, 1) || !lua_istable(L, -1))
+        {
+            // restart plugins
+            turnoffPlugin(method, i);
+            lua_settop(L, 0);
+            lua_newtable(L);
+            for (int j = 0, je = cmds->size(); j < je; ++j)
+            {
+                const tstring& s = cmds->at(j);
+                w2u.convert(s.c_str(), s.length());
+                lua_pushinteger(L, j + 1);
+                lua_pushstring(L, w2u);
+                lua_settable(L, -3);
+            }
+            i = 0;
+        }
+    }
+    if (lua_istable(L, -1))
+    {
+        lua_len(L, -1);
+        int len = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        Utf8ToWide u2w;
+        cmds->clear();
+        for (int i = 0; i < len; ++i)
+        {
+            lua_pushinteger(L, i + 1);
+            lua_gettable(L, -2);
+            u2w.convert(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            cmds->push_back(tstring(u2w));
+        }
+        lua_pop(L, 1);
+        return true;
+    }
+    lua_settop(L, 0);
+    return false;
+}
+
+void PluginsManager::turnoffPlugin(const char* method, int plugin_index)
+{
+    // error in plugin - turn it off
+    Plugin *p = m_plugins[plugin_index];
+    Plugin *old = p;
+    _cp = p;
+    pluginError(L, method, "Ошибка в методе. Плагин отключен!");
+    p->setOn(false);
+    _cp = old;
+    PluginsDataValues &modules = m_propData->plugins;
+    modules[plugin_index].state = 0;
 }

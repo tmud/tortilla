@@ -21,7 +21,7 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getNetworkRatio(int *compressed, int *decompressed) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessGameCmd(tstring& cmd) = 0;
+    virtual void preprocessGameCmd(tstring* cmd) = 0;
 };
 
 class LogicProcessorMethods

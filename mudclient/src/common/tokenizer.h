@@ -18,7 +18,8 @@ public:
     bool empty() const { return parts.empty(); }
     int  size() const { return parts.size(); }
     const tchar* operator[](int index) { return parts[index].c_str(); }
-
+    void moveto(std::vector<tstring> *v) { v->swap(parts); parts.clear(); }
+    
 private:
     std::vector<tstring> parts;
 };

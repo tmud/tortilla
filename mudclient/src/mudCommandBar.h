@@ -86,6 +86,35 @@ public:
         m_undo.clear();
     }
 
+    void addToHistory(const tstring& cmd)
+    {
+        if (cmd.empty())
+            return;
+
+        std::vector<tstring> &h = propData->cmd_history;
+        if (m_history_index != -1)
+        {
+            if (h[m_history_index] == cmd)
+                h.erase(h.begin() + m_history_index);
+            m_history_index = -1;
+        }
+
+        if (!h.empty())
+        {
+            int last = h.size() - 1;
+            if (h[last] == cmd)
+                return;
+        }
+        h.push_back(cmd);
+
+        int size = h.size();
+        if (size > propData->cmd_history_size)
+        {
+            size = size - propData->cmd_history_size;
+            h.erase(h.begin(), h.begin() + size);
+        }
+    }
+
 private:
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CHAR, OnChar)
@@ -130,7 +159,6 @@ private:
             if (buffer_len < len)
                 initCmdBar(len);
             GetWindowText((LPTSTR)m_cmdBar.getData(), m_cmdBar.getSize());
-            onChangeHistory();
             SendMessage(GetParent(), WM_USER, 0, 0);
             return 0;
         }
@@ -199,37 +227,6 @@ private:
         const tstring& cmd = h[m_history_index];
         setText(cmd);
         clearTab();
-    }
-
-    void onChangeHistory()
-    {
-        WCHAR* buffer = (WCHAR*)m_cmdBar.getData();
-        tstring cmd(buffer);
-        if (cmd.empty())
-            return;
-
-        std::vector<tstring> &h = propData->cmd_history;
-        if (m_history_index != -1)
-        {
-            if (h[m_history_index] == cmd)
-                h.erase(h.begin() + m_history_index);
-            m_history_index = -1;
-        }
-
-        if (!h.empty())
-        {
-            int last = h.size() - 1;
-            if (h[last] == cmd)
-                return;
-        }
-        h.push_back(cmd);
-
-        int size = h.size();
-        if (size > propData->cmd_history_size)
-        {
-            size = size - propData->cmd_history_size;
-            h.erase(h.begin(), h.begin()+size);
-        }
     }
 
     void onTab()
