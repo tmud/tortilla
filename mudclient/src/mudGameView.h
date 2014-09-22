@@ -302,7 +302,7 @@ private:
         m_hSplitter.SetSplitterPanes(m_history, m_view);
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
 
-        m_bar.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
+        m_bar.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
         m_parent.MoveWindow(&m_propData->main_window);
 
         // create docking output windows

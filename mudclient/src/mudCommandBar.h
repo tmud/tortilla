@@ -14,7 +14,7 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CEdit>
 public:
     MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0), m_undo_cursor(-1)
     {
-        initCmdBar(255);
+        initCmdBar(4096);
     }
 
     void getCommand(tstring *cmd)
