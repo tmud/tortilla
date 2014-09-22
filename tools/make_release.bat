@@ -1,7 +1,7 @@
 @echo off
 
-set modules=modules\dummy.txt
-set plugins=plugins\prompt.dll plugins\jmc3import.dll
+set modules=modules\system.dll
+set plugins=plugins\prompt.dll plugins\jmc3import.dll plugins\historyfilter.lua
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
@@ -17,7 +17,5 @@ del tortilla.exe lua.dll api.dll readme.txt > nul
 cd ..
 tools\7za.exe a -r -tzip tools\%filename% help\* %plugins% %modules%
 cd tools
-
-
-
-
+echo Finished.
+pause
