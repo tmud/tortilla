@@ -74,6 +74,7 @@
   <mainwindow left="247" right="1515" top="73" bottom="990" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="0"/>
-    <plugin key="jmc3import.dll" value="0"/>
+    <plugin key="jmc3import.dll" value="1"/>
+	<plugin key="historyfilter.lua" value="1"/>
   </plugins>
 </profile>

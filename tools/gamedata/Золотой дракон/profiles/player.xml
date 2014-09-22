@@ -76,5 +76,6 @@
   <plugins>
     <plugin key="prompt.dll" value="1"/>
     <plugin key="jmc3import.dll" value="1"/>
+	<plugin key="historyfilter.lua" value="1"/>
   </plugins>
 </profile>

@@ -33,6 +33,9 @@
     <ClInclude Include="api.h">
       <Filter>Main Files</Filter>
     </ClInclude>
+    <ClInclude Include="base.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="api.def">
