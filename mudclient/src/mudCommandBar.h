@@ -8,13 +8,17 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CEdit>
     tstring m_tab;
     int m_lasttab;
     int m_lasthistorytab;
-    tstring m_undo;
-    int m_undo_cursor;
+    struct undata {
+        tstring text;
+        int cursor;
+    };
+    std::vector<undata> m_undo;
 
 public:
-    MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0), m_undo_cursor(-1)
+    MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0)
     {
-        initCmdBar(4096);
+        initCmdBar(1024);
+        addundo(L"", 0);
     }
 
     void getCommand(tstring *cmd)
@@ -48,8 +52,7 @@ public:
         {
             tstring text;
             gettext(&text);
-            m_undo = text;
-            m_undo_cursor = to;
+            addundo(text, to);
             tstring new_cmd(text.substr(0, from));
             new_cmd.append(text.substr(to));
             SetWindowText(new_cmd.c_str());
@@ -66,9 +69,7 @@ public:
         GetSel(from, to);
         tstring text;
         gettext(&text);
-
-        m_undo = text;
-        m_undo_cursor = to;
+        addundo(text, to);
         if (from != to)
         {
             tstring new_cmd(text.substr(0, from));
@@ -85,9 +86,11 @@ public:
     {
         if (m_undo.empty()) 
             return;
-        SetWindowText(m_undo.c_str());        
-        SetSel(m_undo_cursor, m_undo_cursor);
-        m_undo.clear();
+        int last = m_undo.size() - 1;
+        undata u = m_undo[last];
+        m_undo.pop_back();
+        SetWindowText(u.text.c_str());        
+        SetSel(u.cursor, u.cursor);
     }
 
     void addToHistory(const tstring& cmd)
@@ -138,6 +141,14 @@ private:
         clearTab();
     }
 
+    void addundo(const tstring& cmd, int cursor)
+    {
+        undata u; u.text = cmd; u.cursor = cursor;
+        m_undo.push_back(u);
+        if (m_undo.size() == 30)
+            m_undo.erase(m_undo.begin());
+    }
+
     void selecttext()
     {
         int len = GetWindowTextLength();
@@ -158,16 +169,17 @@ private:
     {
         if (wparam == VK_RETURN)
         {
-            int len = GetWindowTextLength();
-            int buffer_len = m_cmdBar.getSize()-1;
-            if (buffer_len < len)
-                initCmdBar(len);
-            GetWindowText((LPTSTR)m_cmdBar.getData(), m_cmdBar.getSize());
+            putTextToBuffer();
             SendMessage(GetParent(), WM_USER, 0, 0);
             return 0;
         }
         if (wparam != VK_TAB && wparam != VK_ESCAPE)
         {
+            putTextToBuffer();
+            WCHAR* buffer = (WCHAR*)m_cmdBar.getData();
+            int from = 0, to = 0;
+            GetSel(from, to);
+            addundo(buffer, to);
             clearTab();
             bHandled = FALSE;
             return 0;
@@ -188,6 +200,15 @@ private:
         else
             bHandled = FALSE;
         return 0;
+    }
+
+    void putTextToBuffer()
+    {
+        int len = GetWindowTextLength();
+        int buffer_len = m_cmdBar.getSize() - 1;
+        if (buffer_len < len)
+            initCmdBar(len);
+        GetWindowText((LPTSTR)m_cmdBar.getData(), m_cmdBar.getSize());
     }
 
     void initCmdBar(int size)
