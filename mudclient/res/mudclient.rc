@@ -161,8 +161,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,124,55,42,14
     LTEXT           "Tortilla MUD Client",IDC_STATIC,58,7,58,8
-    LTEXT           "Версия 0.92",IDC_STATIC,68,15,38,8
-    LTEXT           "Адрес программы:",IDC_STATIC,7,32,67,9
+    LTEXT           "Версия 0.93",IDC_STATIC,68,15,38,8
+    LTEXT           "Сайт программы:",IDC_STATIC,7,32,67,9
     LTEXT           "https://github.com/tmud",IDC_APP_SITE,79,32,70,8
     LTEXT           "Контакты:",IDC_STATIC,7,42,65,9
     LTEXT           "mail@tmud.net",IDC_STATIC,79,42,60,9
@@ -453,8 +453,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,2,0
- PRODUCTVERSION 0,9,2,0
+ FILEVERSION 0,9,3,0
+ PRODUCTVERSION 0,9,3,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -470,12 +470,12 @@ BEGIN
         BLOCK "080004b0"
         BEGIN
             VALUE "FileDescription", "Client for Multi User Dangeon games"
-            VALUE "FileVersion", "0.9.2.0"
+            VALUE "FileVersion", "0.9.3.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
             VALUE "OriginalFilename", "tortilla.exe"
             VALUE "ProductName", "Tortilla Mud Client"
-            VALUE "ProductVersion", "0.9.2.0"
+            VALUE "ProductVersion", "0.9.3.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -525,7 +525,7 @@ IDR_MAINFRAME           ICON                    "mudclient.ico"
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "Tortilla Mud Client v0.92"
+    IDR_MAINFRAME           "Tortilla Mud Client v0.93"
     IDS_RESET_COLORS_CONFIRM 
                             "Вы уверены что хотите сбросить цвета и шрифт и вернуть их к первоначальному состоянию?"
     IDS_NETWORK_FAILED      "Ошибка инициализации сети! Дальнейшая работа невозможна."

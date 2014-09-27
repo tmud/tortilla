@@ -29,7 +29,7 @@
     <color id="14" r="0" g="255" b="255"/>
     <color id="15" r="255" g="255" b="255"/>
   </colors>
-  <font italic="0" bold="700" heigth="10" name="Consolas"/>
+  <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
     <action key="Please choose a MUD client from the list below:" value="3" group="base"/>
   </actions>
@@ -41,8 +41,8 @@
     <hotkey key="NUM6" value="в" group="base"/>
     <hotkey key="NUM7" value="вв" group="base"/>
     <hotkey key="NUM1" value="вн" group="base"/>
-    <hotkey key="NUM0" value="см" group="test"/>
-    <hotkey key="F12" value="#connect 178.63.209.14 3040" group="test"/>
+    <hotkey key="NUM0" value="см" group="base"/>
+    <hotkey key="F12" value="#connect 178.63.209.14 3040" group="base"/>
   </hotkeys>
   <subs/>
   <asubs/>
@@ -53,20 +53,19 @@
   <timers/>
   <groups>
     <group key="base" value="1"/>
-    <group key="test" value="1"/>
     <group key="off" value="0"/>
   </groups>
   <tabwords/>
   <variables/>
   <windows>
-    <window name="Окно 1" left="0" right="1307" top="0" bottom="108" side="5" lastside="1" width="816" height="108"/>
+    <window name="Окно 1" left="70" right="420" top="70" bottom="270" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 2" left="140" right="490" top="140" bottom="340" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 3" left="210" right="560" top="210" bottom="410" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 4" left="280" right="630" top="280" bottom="480" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
   </windows>
-  <mainwindow left="2194" right="3477" top="105" bottom="986" width="3840" height="1080" fullscreen="0"/>
+  <mainwindow left="329" right="1612" top="32" bottom="913" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="0"/>
     <plugin key="jmc3import.dll" value="1"/>

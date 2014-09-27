@@ -29,7 +29,7 @@
     <color id="14" r="0" g="255" b="255"/>
     <color id="15" r="255" g="255" b="255"/>
   </colors>
-  <font italic="0" bold="700" heigth="10" name="Consolas"/>
+  <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
     <action key="Enter Charset:" value="5" group="base"/>
   </actions>
@@ -41,8 +41,8 @@
     <hotkey key="NUM6" value="в" group="base"/>
     <hotkey key="NUM7" value="вв" group="base"/>
     <hotkey key="NUM1" value="вн" group="base"/>
-    <hotkey key="NUM0" value="см" group="test"/>
-    <hotkey key="F12" value="#connect adan.ru 4000" group="test"/>
+    <hotkey key="NUM0" value="см" group="base"/>
+    <hotkey key="F12" value="#connect adan.ru 4000" group="base"/>
   </hotkeys>
   <subs/>
   <asubs/>
@@ -53,20 +53,19 @@
   <timers/>
   <groups>
     <group key="base" value="1"/>
-    <group key="test" value="1"/>
     <group key="off" value="0"/>
   </groups>
   <tabwords/>
   <variables/>
   <windows>
-    <window name="Окно 1" left="0" right="1205" top="0" bottom="128" side="1" lastside="1" width="262" height="180"/>
+    <window name="Окно 1" left="0" right="1205" top="0" bottom="128" side="5" lastside="1" width="262" height="128"/>
     <window name="Окно 2" left="788" right="1148" top="631" bottom="811" side="5" lastside="4" width="360" height="180"/>
     <window name="Окно 3" left="1324" right="1684" top="250" bottom="430" side="5" lastside="4" width="360" height="180"/>
     <window name="Окно 4" left="0" right="360" top="0" bottom="180" side="5" lastside="4" width="360" height="180"/>
     <window name="Окно 5" left="0" right="360" top="0" bottom="180" side="5" lastside="4" width="360" height="180"/>
     <window name="Окно 6" left="0" right="360" top="0" bottom="180" side="5" lastside="4" width="360" height="180"/>
   </windows>
-  <mainwindow left="2194" right="3477" top="105" bottom="986" width="3840" height="1080" fullscreen="0"/>
+  <mainwindow left="329" right="1612" top="32" bottom="913" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="0"/>
     <plugin key="jmc3import.dll" value="1"/>
