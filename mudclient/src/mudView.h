@@ -11,7 +11,11 @@ class MudView : public CWindowImpl<MudView>
     int m_last_visible_line;
     std::vector<MudViewString*> m_strings;
     bool m_last_string_updated;
+
+    POINT m_dragpt;
     int  drag_begin, drag_end;
+    int  drag_left, drag_right;
+    std::vector<int> m_drag_line_len;
 
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
@@ -79,9 +83,15 @@ private:
     void mouseWheel(WORD position);
     void checkLimit();
     void deleteStrings(int count_from_begin);
-    int  getCurrentDraggingLine() const;
+
     void startDraging();
     void stopDraging();
     void doDraging();
-    bool checkDragging(int line);   
+    bool checkDragging(int line, bool accept_emptyline);
+    bool checkDraggingSym(int line);
+    POINT getCursor() const;
+    int   getCursorLine(int y) const;
+    int   getCursorSym(int x) const;
+    void  calcDragLine(int line);
+    void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
 };
