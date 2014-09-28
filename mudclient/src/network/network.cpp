@@ -3,16 +3,36 @@
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
 
-#define IAC             255
-#define DONT            254
-#define DO              253
-#define WONT            252
-#define WILL            251
-#define SB              250
-#define SE              240
-#define GA              249
-#define COMPRESS        85
-#define COMPRESS2       86
+#define IAC             255 // ff - in hex
+#define DONT            254 // fe
+#define DO              253 // fd
+#define WONT            252 // fc
+#define WILL            251 // fb
+#define SB              250 // fa
+#define SE              240 // f0
+#define GA              249 // f9
+#define COMPRESS        85  // 55
+#define COMPRESS2       86  // 56
+
+#ifdef _DEBUG
+void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
+{
+    OutputDebugStringA(label);
+    char tmp[32]; sprintf(tmp, " len=%d\r\n", len);
+    OutputDebugStringA(tmp);
+    if (maxlen > len) maxlen = len;
+    const unsigned char *bytes = (const unsigned char *)data;
+    for (int i = 0; i < maxlen; ++i)
+    {
+        sprintf(tmp, "%.2x ", bytes[i]);
+        OutputDebugStringA(tmp);
+    }
+    OutputDebugStringA("\r\n");
+}
+#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
+#else
+#define OUTPUT_BYTES(data, len, maxlen, label)
+#endif
 
 Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), m_double_iac_mode(true)
 {
@@ -21,7 +41,7 @@ Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_
 }
 
 Network::~Network()
-{   
+{
     close();
 }
 
@@ -50,15 +70,15 @@ bool Network::connect(const NetworkConnectData& data)
         memcpy((char*)&peer.sin_addr, hp->h_addr, sizeof(peer.sin_addr));
     }
     else
-    {       
+    {
        peer.sin_addr.s_addr = inet_addr( data.address.c_str() );
     }
-          
+
     if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE) == SOCKET_ERROR)
     {
         close();
         return false;
-    }    
+    }
 
     if (WSAConnect( sock, (SOCKADDR*)&peer, sizeof(peer), NULL, NULL, NULL, NULL) == SOCKET_ERROR) 
     {
@@ -83,7 +103,7 @@ void Network::close()
     closesocket(sock);
     sock = NULL;
     close_mccp();
-    
+
     m_input_data.clear();
     m_receive_data.clear();
     m_output_buffer.clear();
@@ -180,7 +200,8 @@ int Network::read_socket()
     DWORD readed = 0;
     if (WSARecv(sock, &buffer, 1, &readed, &flags, NULL, NULL) == SOCKET_ERROR)
         return -1;
-  
+    //OUTPUT_BYTES(buffer.buf, readed, 8, "read socket");
+    
     m_totalReaded += readed;
     if (!m_mccp_on)
     {
@@ -244,6 +265,7 @@ int Network::write_socket()
     DWORD sent = 0;
     if (WSASend(sock, &buffer, 1, &sent, flags, NULL, NULL) == SOCKET_ERROR)
         return -1;
+    //OUTPUT_BYTES(buffer.buf, sent, 8, "send socket");
     m_send_data.truncate(sent);
     return sent;
 }
@@ -286,7 +308,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     e++;
     if (*e == IAC)               // double iac - continue
         return 2;
-    
+
     if (*e == GA)                // IAC GA - skip
         return -2;
 
@@ -350,7 +372,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         }
         return -(se+2);
     }
-    
+
     return -1;      // skip error IAC
 }
 
@@ -366,7 +388,7 @@ void Network::init_mccp()
     zs->zalloc     =  Z_NULL;
     zs->zfree      =  Z_NULL;
     zs->opaque     =  NULL;
-   
+
     if (inflateInit(zs) != Z_OK)
     {
         delete zs;

@@ -30,8 +30,8 @@ public:
     int  getLastString() const;
     bool isLastString() const;
     int  getStringsOnDisplay() const;
-    MudViewString* getString(int idx) const;    
-    void updateProps();    
+    MudViewString* getString(int idx) const;
+    void updateProps();
 
 private:
 	BEGIN_MSG_MAP(MudView)
@@ -63,7 +63,7 @@ private:
         return 0; 
     }
     LRESULT OnLButtonUp(UINT, WPARAM wparam, LPARAM, BOOL&)
-    {        
+    {
         stopDraging();
         return 0;
     }

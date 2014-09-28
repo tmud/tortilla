@@ -462,26 +462,43 @@ private:
         if (result == NE_NEWDATA)
         {
             DataQueue* data = m_network.receive();
-            int text_len =  data->getSize();
+            int text_len = data->getSize();
             if (text_len == 0)
-               return 0;            
+                return 0;
 
             MemoryBuffer wide;
             if (m_codepage == CPWIN)
             {
                 AnsiToWideConverter a2wc;
-                a2wc.convert(&wide, (char*)data->getData(), text_len);                
+                a2wc.convert(&wide, (char*)data->getData(), text_len);
             }
             else
             {
                 Utf8ToWideConverter u2w;
-                u2w.convert(&wide, (char*)data->getData(), text_len);                
+                u2w.convert(&wide, (char*)data->getData(), text_len);
             }
             data->truncate(text_len);
 
+            bool zero = false;
+            WCHAR* newdata = (WCHAR*)wide.getData();
+            int len = (wide.getSize()-1) / sizeof(WCHAR);
+            for (int i = 0; i < len; ++i) {
+            if (newdata[i] == 0) {
+               zero = true;
+               WCHAR* to = newdata + i;
+               WCHAR* from = to + 1;
+               memcpy(to, from, (len-i)*sizeof(WCHAR));
+               i--; len--;
+            }}
+
+            if (zero)
+            {
+                OutputDebugStringA("zero!\r\n");
+            }
+            
             m_plugins.processStreamData(&wide);
-            const WCHAR* newdata = (const WCHAR*)wide.getData();
-            m_processor.processNetworkData(newdata, wcslen(newdata));
+            const WCHAR* processeddata = (const WCHAR*)wide.getData();
+            m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
         else if (result == NE_CONNECT)
         {
@@ -557,7 +574,7 @@ private:
 
     LRESULT OnNewProfile(WORD, WORD, HWND, BOOL&)
     {
-        onNewProfile();        
+        onNewProfile();
         return 0;
     }
 
@@ -618,8 +635,8 @@ private:
         m_bar.SetFocus();
         return 0;
     } 
-       
-    bool processKey(int vkey)    
+
+    bool processKey(int vkey)
     {
         if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
         {
@@ -690,7 +707,7 @@ private:
         {
             MudView* v = m_views[view - 1];
             v->accLastString(parse_data);
-        }        
+        }
     }
 
     void preprocessText(int view, parseData* parse_data)
@@ -721,7 +738,7 @@ private:
                 SIZE sz = {0,0};
                 GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
                 dc.SelectFont(current_font);
-                
+
                 RECT rc; m_hSplitter.GetClientRect(&rc);
                 int lines0 = rc.bottom / sz.cy;
                 int dy0 = rc.bottom - (lines0 * sz.cy);
@@ -761,7 +778,7 @@ private:
             v->clearText();
         }
     }
-    
+
     void showWindow(int view, bool show)
     {
         assert(view >=1 && view <= OUTPUT_WINDOWS);
@@ -921,6 +938,6 @@ private:
                 w.size = ctx->sizeFloat;
                 m_propData->plugins.saveWindowPos(v->getPluginName(), w);
             }
-        }     
+        }
     }
 };
