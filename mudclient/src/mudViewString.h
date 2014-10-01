@@ -62,12 +62,13 @@ struct MudViewStringBlock
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false) {}
+   MudViewString() : dropped(false), gamecmd(false), ga(false) {}
    void moveBlocks(MudViewString* src) 
    {
        for (int i=0,e=src->blocks.size(); i<e; ++i)
            blocks.push_back(src->blocks[i]);
        gamecmd = src->gamecmd;
+       ga = src->ga;
        src->clear();
    }
    void clear()
@@ -75,6 +76,7 @@ struct MudViewString
        blocks.clear();
        dropped = false;
        gamecmd = false;
+       ga = false;
    }
    void copy(MudViewString* src)
    {
@@ -82,6 +84,7 @@ struct MudViewString
        for (int i=0,e=src->blocks.size(); i<e; ++i)
            blocks.push_back(src->blocks[i]);
        gamecmd = src->gamecmd;
+       ga = src->ga;
    }
    void getText(tstring *text) const
    {
@@ -94,4 +97,5 @@ struct MudViewString
    std::vector<MudViewStringBlock> blocks;  // all string blocks
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd in string
+   bool ga;                                 // flag - iac ga in string
 };

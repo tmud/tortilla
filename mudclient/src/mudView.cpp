@@ -26,12 +26,16 @@ void MudView::accLastString(parseData *parse_data)
         parse_data->strings.empty())
         return;
 
-    MudViewString *string = parse_data->strings[0];
     int last = m_strings.size() - 1;
-    m_strings[last]->moveBlocks(string);
+    MudViewString *last_string = m_strings[last];    
+    MudViewString *string = parse_data->strings[0];
+    if (string->gamecmd && !last_string->ga)
+        return;
+    if (!string->gamecmd && last_string->ga)
+        return;
+    last_string->moveBlocks(string);
     delete string;
-
-    parse_data->strings[0] = m_strings[last];
+    parse_data->strings[0] = last_string;
     m_strings.pop_back();                                   // remove last string from view
     m_last_string_updated = true;
 }
