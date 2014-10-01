@@ -22,8 +22,8 @@ void  luaT_log(lua_State *L, const utf8* log_message);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
-void  luaT_showLuaStack(lua_State* L, const char* label);
-void  luaT_showTableOnTop(lua_State* L, const char* label);
+void  luaT_showLuaStack(lua_State* L, const utf8* label);
+void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
