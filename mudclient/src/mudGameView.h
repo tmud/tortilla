@@ -479,23 +479,6 @@ private:
             }
             data->truncate(text_len);
 
-            bool zero = false;
-            WCHAR* newdata = (WCHAR*)wide.getData();
-            int len = (wide.getSize()-1) / sizeof(WCHAR);
-            for (int i = 0; i < len; ++i) {
-            if (newdata[i] == 0) {
-               zero = true;
-               WCHAR* to = newdata + i;
-               WCHAR* from = to + 1;
-               memcpy(to, from, (len-i)*sizeof(WCHAR));
-               i--; len--;
-            }}
-
-            if (zero)
-            {
-                OutputDebugStringA("zero!\r\n");
-            }
-            
             m_plugins.processStreamData(&wide);
             const WCHAR* processeddata = (const WCHAR*)wide.getData();
             m_processor.processNetworkData(processeddata, wcslen(processeddata));

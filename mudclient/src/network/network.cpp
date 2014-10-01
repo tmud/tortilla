@@ -240,13 +240,12 @@ int Network::read_socket()
         else
         {
             if (processed == 2 && in[0] == IAC && in[1] == IAC)
-                m_receive_data.write(in, 1);           
+                m_receive_data.write(in, 1);
             else
                 m_receive_data.write(in, processed);
         }
-        m_input_data.truncate(processed);        
+        m_input_data.truncate(processed);
     }
-
     return 1;
 }
 
@@ -290,17 +289,20 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 {
     const tbyte* b = buffer;
     const tbyte* e = b;
-    if (*b != IAC)                // find iac symbol
+    if (*b != IAC && *b != 0)     // find iac symbol or zero
     {
         const tbyte* e = b + len;
         while(b != e)
         {
-            if (*b == IAC)
+            if (*b == IAC || *b == 0)
                 break;
             b++;
         }
         return len-(e-b);
     }
+
+    if (*b == 0)                 // protect from incorrect data
+        return -1;
 
     if (len < 2)
         return 0;
@@ -309,8 +311,8 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (*e == IAC)               // double iac - continue
         return 2;
 
-    if (*e == GA)                // IAC GA - skip
-        return -2;
+    if (*e == GA)                // IAC GA - continue
+        return 2;
 
     if (len < 3)
         return 0;
@@ -372,13 +374,12 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         }
         return -(se+2);
     }
-
     return -1;      // skip error IAC
 }
 
 void Network::init_mccp()
 {
-    z_stream *zs = new z_stream();   
+    z_stream *zs = new z_stream();
     zs->next_in    =  NULL;
     zs->avail_in   =  0;
     zs->total_in   =  0;
@@ -411,11 +412,11 @@ bool Network::process_mccp()
          return false;
 
     int size = m_mccp_buffer.getSize() - m_pMccpStream->avail_out;
-    m_input_data.write(m_mccp_buffer.getData(), size);        
+    m_input_data.write(m_mccp_buffer.getData(), size);
     m_totalDecompressed += size;
 
-    int processed = m_mccp_data.getSize() - m_pMccpStream->avail_in;        
-    m_mccp_data.truncate(processed);    
+    int processed = m_mccp_data.getSize() - m_pMccpStream->avail_in;
+    m_mccp_data.truncate(processed);
     return true;
 }
 
