@@ -348,8 +348,7 @@ private:
         m_name.Attach(GetDlgItem(IDC_EDIT_PROFILE_NEW));
         m_ok.Attach(GetDlgItem(IDOK));
         
-        tstring text;
-        loadString(IDS_NEW_PROFILE, &text);
+        tstring text(L"Создать пустой профиль");
         m_list.AddString(text.c_str());
         m_list.SetCurSel(0);
 

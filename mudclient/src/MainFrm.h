@@ -10,7 +10,7 @@ class CMainFrame : public CFrameWindowImpl<CMainFrame>,
 {
 public:
     ToolbarEx<CMainFrame> m_toolBar;
-    MudGameView m_gameview; 
+    MudGameView m_gameview;
     DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
     CMainFrame() {}
 
@@ -70,12 +70,9 @@ private:
         m_toolBar.createCmdBar(IDR_MAINFRAME);
         m_toolBar.createToolbar(IDR_MAINFRAME);
 
-        CreateSimpleStatusBar();
         m_hWndClient = m_gameview.createView(m_hWnd);
-        
         //UIAddToolBar(hWndToolBar);
         UISetCheck(ID_VIEW_TOOLBAR, 1);
-        UISetCheck(ID_VIEW_STATUS_BAR, 1);
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
