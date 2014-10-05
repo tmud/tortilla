@@ -106,6 +106,8 @@
 #define IDC_EDIT_NEWWORLD_PROFILE       1121
 #define IDC_COMBO_CODEPAGE              1122
 #define IDC_APP_SITE                    1123
+#define IDC_RADIO_PROMT_GA              1124
+#define IDC_RADIO_PROMT_PCRE            1125
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -128,7 +130,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        219
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1124
+#define _APS_NEXT_CONTROL_VALUE         1126
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

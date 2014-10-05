@@ -172,28 +172,33 @@ IDD_PROPERTY_COMMON DIALOGEX 0, 0, 340, 225
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_EDIT_VIEW_HISTORY,117,28,39,12,ES_AUTOHSCROLL | ES_NUMBER
-    EDITTEXT        IDC_EDIT_CMD_HISTORY,117,43,39,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_VIEW_HISTORY,112,21,39,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_EDIT_CMD_HISTORY,112,36,39,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Показывать системные команды",IDC_CHECK_SHOW_SYSTEM_CMDS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,71,126,8
-    CONTROL         "Очищать строку ввода команд",IDC_CHECK_CLEAR_BAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,82,119,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,55,126,8
+    CONTROL         "Очищать строку ввода команд",IDC_CHECK_CLEAR_BAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,119,8
     CONTROL         "Использовать историю команд в автоподстановках",IDC_CHECK_HISTORYTAB,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,93,189,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,77,189,8
     CONTROL         "Не удваивать букву 'я' при отправке на сервер",IDC_CHECK_DISABLE_DOUBLE_YA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,104,175,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,88,175,8
     CONTROL         "Показывать ошибки работы плагинов",IDC_CHECK_PLUGINSLOGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,115,143,9
-    EDITTEXT        IDC_EDIT_PLUGINSLOGS,165,124,36,12,ES_AUTOHSCROLL | ES_NUMBER
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,99,143,9
+    EDITTEXT        IDC_EDIT_PLUGINSLOGS,160,108,36,12,ES_AUTOHSCROLL | ES_NUMBER
     CTEXT           "Общие настройки",IDC_STATIC,135,6,70,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,134,8
     LTEXT           "-",IDC_STATIC_BL2,204,6,136,8
-    LTEXT           "Размер буфера (scroll buffer):",IDC_STATIC,11,30,104,8
-    LTEXT           "История команд:",IDC_STATIC,11,44,67,8
-    LTEXT           "строк",IDC_STATIC,161,30,27,8
-    LTEXT           "шт",IDC_STATIC,161,44,27,8
-    LTEXT           "Номер окна для для сообщений об ошибках:",IDC_STATIC,11,126,153,9
-    LTEXT           "Кодировка клиента:",IDC_STATIC,208,30,70,9
-    COMBOBOX        IDC_COMBO_CODEPAGE,283,28,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Размер буфера (scroll buffer):",IDC_STATIC,6,23,104,8
+    LTEXT           "История команд:",IDC_STATIC,6,37,67,8
+    LTEXT           "строк",IDC_STATIC,156,23,27,8
+    LTEXT           "шт",IDC_STATIC,156,37,27,8
+    LTEXT           "Номер окна для для сообщений об ошибках:",IDC_STATIC,6,110,153,9
+    LTEXT           "Кодировка клиента:",IDC_STATIC,208,23,70,9
+    COMBOBOX        IDC_COMBO_CODEPAGE,283,21,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,126,206,48
+    CONTROL         "Использовать IAC GA (должен поддерживать сервер)",IDC_RADIO_PROMT_GA,
+                    "Button",BS_AUTORADIOBUTTON,8,137,195,8
+    CONTROL         "Автопоиск по шаблону",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,146,90,10
+    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,157,183,12,ES_AUTOHSCROLL
 END
 
 IDD_PROPERTY_GROUPS DIALOGEX 0, 0, 340, 225

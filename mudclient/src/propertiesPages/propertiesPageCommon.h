@@ -14,6 +14,9 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CButton m_plugins_logs;
     CEdit   m_plugins_logs_window;
     CComboBox m_codepage;
+    CButton m_prompt_iacga;
+    CButton m_prompt_pcre;
+    CEdit   m_prompt_pcre_template;
 
 public:
     enum { IDD = IDD_PROPERTY_COMMON };
@@ -31,6 +34,9 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_PLUGINSLOGS, OnPluginsLogs)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
         COMMAND_HANDLER(IDC_COMBO_CODEPAGE, CBN_SELCHANGE, OnCodePage)
+        COMMAND_ID_HANDLER(IDC_RADIO_PROMT_GA, OnPromptGA)
+        COMMAND_ID_HANDLER(IDC_RADIO_PROMT_PCRE, OnPromptPcre)
+        COMMAND_HANDLER(IDC_EDIT_PROMPT_PCRE, EN_KILLFOCUS, OnPromptTemplate)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -48,6 +54,21 @@ private:
         m_plugins_logs.Attach(GetDlgItem(IDC_CHECK_PLUGINSLOGS));
         m_plugins_logs_window.Attach(GetDlgItem(IDC_EDIT_PLUGINSLOGS));
         m_plugins_logs_window.SetLimitText(1);
+
+        m_prompt_iacga.Attach(GetDlgItem(IDC_RADIO_PROMT_GA));
+        m_prompt_pcre.Attach(GetDlgItem(IDC_RADIO_PROMT_PCRE));
+        m_prompt_pcre_template.Attach(GetDlgItem(IDC_EDIT_PROMPT_PCRE));
+        m_prompt_pcre_template.SetWindowText(propData->recognize_prompt_template.c_str());
+        if (propData->recognize_prompt == 0)
+        {
+            m_prompt_iacga.SetCheck(BST_CHECKED);
+            m_prompt_pcre_template.EnableWindow(FALSE);
+        }
+        else
+        {
+            m_prompt_pcre.SetCheck(BST_CHECKED);
+        }
+
         m_codepage.Attach(GetDlgItem(IDC_COMBO_CODEPAGE));
         m_codepage.AddString(L"win");
         m_codepage.AddString(L"utf8");
@@ -169,6 +190,33 @@ private:
         int item = m_codepage.GetCurSel();
         if (item == 0) propData->codepage = L"win";
         else propData->codepage = L"utf8";
+        return 0;
+    }
+
+    LRESULT OnPromptGA(WORD, WORD, HWND, BOOL&)
+    {
+        m_prompt_pcre_template.EnableWindow(FALSE);
+        propData->recognize_prompt = 0;
+        return 0;
+    }
+
+    LRESULT OnPromptPcre(WORD, WORD, HWND, BOOL&)
+    {
+        m_prompt_pcre_template.EnableWindow(TRUE);
+        tstring text;
+        getWindowText(m_prompt_pcre_template, &text);
+        int cursor = text.size();
+        m_prompt_pcre_template.SetFocus();
+        m_prompt_pcre_template.SetSel(cursor, cursor);
+        propData->recognize_prompt = 1;
+        return 0;
+    }
+
+    LRESULT OnPromptTemplate(WORD, WORD, HWND, BOOL&)
+    {
+        tstring text;
+        getWindowText(m_prompt_pcre_template, &text);
+        propData->recognize_prompt_template = text;
         return 0;
     }
 };

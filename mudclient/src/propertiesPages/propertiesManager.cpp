@@ -99,6 +99,10 @@ bool PropertiesManager::loadProfileData()
     if (cp != L"win" && cp != L"utf8")
         cp = L"win";
     m_propData.codepage = cp;
+    loadValue(sd, "prompt", 0, 1, &m_propData.recognize_prompt);
+    loadString(sd, "ptemplate", &m_propData.recognize_prompt_template);
+    if (m_propData.recognize_prompt_template.empty())
+        m_propData.recognize_prompt = 0;
 
     xml::request colors(sd, "colors/color");
     for (int i=0,e=colors.size(); i<e; ++i)
@@ -229,6 +233,8 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, "plogs", m_propData.plugins_logs);
     saveValue(sd, "plogswnd", m_propData.plugins_logs_window);
     saveString(sd, "codepage", m_propData.codepage);
+    saveValue(sd, "prompt", m_propData.recognize_prompt);
+    saveString(sd, "ptemplate", m_propData.recognize_prompt_template);
 
     xml::node c = sd.createsubnode("colors");
     saveRgbColor(c, "background", m_propData.bkgnd);

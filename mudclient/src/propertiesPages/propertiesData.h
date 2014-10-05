@@ -322,7 +322,7 @@ struct PropertiesData
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(1), clear_bar(1), disable_ya(0)
-       , history_tab(0), timers_on(0), plugins_logs(0), plugins_logs_window(0)
+       , history_tab(0), timers_on(0), plugins_logs(0), plugins_logs_window(0), recognize_prompt(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();
@@ -365,6 +365,9 @@ struct PropertiesData
     int      timers_on;    
     int      plugins_logs;
     int      plugins_logs_window;
+
+    int      recognize_prompt;
+    tstring  recognize_prompt_template;
 
     RECT main_window;
     int  main_window_fullscreen;
@@ -440,12 +443,15 @@ struct PropertiesData
         initOutputWindows();
         timers_on = 0;
         initPlugins();
+        recognize_prompt = 0;
+        recognize_prompt_template.clear();
     }
 
     void initPlugins()
     {
         // turn off all plugins
-        for (int i = 0, e = plugins.size(); i<e; ++i) { plugins[i].state = 0; }
+        for (int i = 0, e = plugins.size(); i<e; ++i)
+            plugins[i].state = 0;
     }
 
     void initLogFont(HWND hwnd, LOGFONT *f)
