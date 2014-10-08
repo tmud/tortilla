@@ -116,6 +116,11 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // accamulate last string in one
    m_pHost->accLastString(window, &parse_data);
 
+   if (propData->recognize_prompt)
+   {
+       
+   }
+
    // collect strings in parse_data in one with same colors params
    ColorsCollector pc;
    pc.process(&parse_data);

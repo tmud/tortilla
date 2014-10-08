@@ -217,6 +217,13 @@ private:
         tstring text;
         getWindowText(m_prompt_pcre_template, &text);
         propData->recognize_prompt_template = text;
+        if (text.empty())
+        {            
+            m_prompt_iacga.SetCheck(BST_CHECKED);
+            m_prompt_pcre.SetCheck(BST_UNCHECKED);
+            propData->recognize_prompt = 0;
+            m_prompt_pcre_template.EnableWindow(FALSE);
+        }
         return 0;
     }
 };

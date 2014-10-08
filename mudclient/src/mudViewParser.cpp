@@ -87,10 +87,6 @@ MudViewParser::parserResult MudViewParser::process_string(const WCHAR* b, int le
 
 MudViewParser::parserResult MudViewParser::process_0xd(const WCHAR* b, int len)
 {
-    /*if (len == 1)
-        return parserResult(PARSE_LOW_DATA, 0);
-    int block_len = (b[1] == 0xa) ? 2 : 1;     
-    return parserResult(PARSE_STRING_FINISHED, block_len);*/
     return parserResult(PARSE_NO_ERROR, 1);
 }
 
@@ -104,15 +100,14 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
     if (len < 2)
         return parserResult(PARSE_LOW_DATA, 0);
 
-    if (b[1] == L'[')
+    if (b[1] == L'[') //0x5b
        return process_csi(b, len);
 
-    if (b[1] == L'\\')
-    {   // string terminator (GA)
+    if (b[1] == 0x5c) // string terminator (GA)
+    {
         m_current_string->ga = true;
         return parserResult(PARSE_NO_ERROR, 2);
     }
-
     // skip all other esc codes (0x1b + code)
     return parserResult(PARSE_NOT_SUPPORTED, 2);
 }
