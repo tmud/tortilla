@@ -98,6 +98,16 @@ public:
         runcmd("isgamecmd");
         return boolresult();
     }
+    bool isprompt()
+    {
+        runcmd("isprompt");
+        return boolresult();
+    }
+    void getprompt(u8string *str)
+    {
+        runcmd("getprompt");
+        strresult(str);
+    }
     void gettext(u8string* str) 
     {
         runcmd("gettext");

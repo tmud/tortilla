@@ -62,13 +62,12 @@ struct MudViewStringBlock
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false), ga(false) {}
+   MudViewString() : dropped(false), gamecmd(false), prompt(0) {}
    void moveBlocks(MudViewString* src) 
    {
        for (int i=0,e=src->blocks.size(); i<e; ++i)
            blocks.push_back(src->blocks[i]);
        gamecmd = src->gamecmd;
-       ga = src->ga;
        src->clear();
    }
    void clear()
@@ -76,7 +75,7 @@ struct MudViewString
        blocks.clear();
        dropped = false;
        gamecmd = false;
-       ga = false;
+       prompt = 0;
    }
    void copy(MudViewString* src)
    {
@@ -84,7 +83,7 @@ struct MudViewString
        for (int i=0,e=src->blocks.size(); i<e; ++i)
            blocks.push_back(src->blocks[i]);
        gamecmd = src->gamecmd;
-       ga = src->ga;
+       prompt = src->prompt;
    }
    void getText(tstring *text) const
    {
@@ -93,9 +92,29 @@ struct MudViewString
            text->append(blocks[i].string);
        }
    }
+   void setPrompt(int index = -1)
+   {
+       if (index == -1)
+       {
+           int size = 0;
+           for (int i = 0, e = blocks.size(); i < e; ++i)
+               size += blocks[i].string.size();
+           prompt = size;
+       }
+       else
+       {
+           prompt = index;
+       }
+   }
 
+   void getPrompt(tstring *text) const
+   {
+       tstring tmp;
+       getText(&tmp);
+       text->assign(tmp.substr(0, prompt));       
+   }
    std::vector<MudViewStringBlock> blocks;  // all string blocks
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd in string
-   bool ga;                                 // flag - iac ga in string
+   int  prompt;                             // prompt-string, index of last symbol of prompt
 };

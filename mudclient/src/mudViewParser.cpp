@@ -105,7 +105,7 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
 
     if (b[1] == 0x5c) // string terminator (GA)
     {
-        m_current_string->ga = true;
+        m_current_string->setPrompt();
         return parserResult(PARSE_NO_ERROR, 2);
     }
     // skip all other esc codes (0x1b + code)

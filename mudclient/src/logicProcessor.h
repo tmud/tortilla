@@ -55,6 +55,7 @@ class LogicProcessor : public LogicProcessorMethods
     std::map<tstring, syscmd_fun> m_syscmds;
     std::vector<tstring> m_plugins_cmds;
     IfProcessor m_ifproc;
+    Pcre16 m_prompt_pcre;
 
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);

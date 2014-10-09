@@ -116,9 +116,24 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // accamulate last string in one
    m_pHost->accLastString(window, &parse_data);
 
+   // recognize prompt string via template
    if (propData->recognize_prompt)
    {
-       
+       for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
+       {
+           MudViewString *s = parse_data.strings[i];           
+           tstring text;  s->getText(&text);
+           m_prompt_pcre.find(text);
+           if (m_prompt_pcre.getSize())
+               s->setPrompt(m_prompt_pcre.getLast(0));           
+#ifdef _DEBUG
+           if (s->prompt)
+           {
+               int last = s->blocks.size() - 1;
+               s->blocks[last].string.append(L"GA");
+           }
+#endif
+       }
    }
 
    // collect strings in parse_data in one with same colors params
@@ -160,6 +175,11 @@ void LogicProcessor::updateProps()
     m_helper.updateProps();
     m_input.updateProps(propData);
     m_logs.updateProps(propData);
+
+    if (propData->recognize_prompt)
+    {
+        m_prompt_pcre.setRegExp(propData->recognize_prompt_template.c_str(), true);
+    }
 }
 
 void LogicProcessor::processNetworkDisconnect()

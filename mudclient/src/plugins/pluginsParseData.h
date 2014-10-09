@@ -43,6 +43,21 @@ public:
         return NULL;
     }
 
+    bool getPrompt(u8string *str)
+    {
+        MudViewString*s = getselected();
+        if (s) 
+        {
+            tstring text;
+            s->getPrompt(&text);
+            WideToUtf8 w2u;
+            w2u.convert(text.c_str(), text.length());
+            str->assign(w2u);
+            return true;
+        }
+        return false;
+    }
+
     bool getselected_block(int block, u8string* str)
     {
         PluginViewString* vs = getselected_pvs();
@@ -50,7 +65,8 @@ public:
         int size = vs->blocks.size();
         if (block >= 0 && block < size)
         {
-            str->assign(vs->blocks[block]); return true;
+            str->assign(vs->blocks[block]);
+            return true;
         }
         return false;
     }

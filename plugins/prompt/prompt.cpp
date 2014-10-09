@@ -3,8 +3,8 @@
 #include "settingsDlg.h"
 #include <vector>
 
-u8string m_regexp;
-Pcre m_pcre;
+//u8string m_regexp;
+//Pcre m_pcre;
 
 int get_name(lua_State *L)
 {
@@ -24,7 +24,7 @@ int get_version(lua_State *L)
     return 1;
 }
 
-int init(lua_State *L)
+/*int init(lua_State *L)
 {
     luaT_run(L, "addMenu", "sdd", "Плагины/Фильтр prompt...", 1, 2);    
 
@@ -81,7 +81,7 @@ bool recognizePrompt(u8string &prompt)
     if (prompt.find(">") == u8string::npos)
         return false;
     return true;
-}
+}*/
 
 u8string last_prompt;
 void checkDoublePrompt(luaT_ViewData &vd)
@@ -111,7 +111,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
             empty.push_back(i);
             continue;
         }
-        if (!recognizePrompt(text))
+        if (!vd.isprompt())
         {
             last_prompt.clear();
             empty.clear();
@@ -119,12 +119,12 @@ void checkDoublePrompt(luaT_ViewData &vd)
         }
         if (last_prompt.empty())
         {
-            vd.gethash(&last_prompt);
+            vd.getprompt(&last_prompt);
             continue;
         }
-        u8string hash;
-        vd.gethash(&hash);
-        if (hash == last_prompt)
+        u8string prompt;
+        vd.getprompt(&prompt);
+        if (prompt == last_prompt)
         {
             empty.push_back(i);
             for (int j = empty.size() - 1; j >= 0; --j)
@@ -148,8 +148,7 @@ int afterstr(lua_State *L)
 {
     if (!luaT_check(L, 2, LUA_TNUMBER, LUAT_VIEWDATA))
         return 0;
-    int view = lua_tointeger(L, 1);
-    if (view != 0)
+    if (lua_tointeger(L, 1) != 0) // view number
         return 0;
     luaT_ViewData vd;
     vd.init(L, luaT_toobject(L, 2));
@@ -162,9 +161,9 @@ static const luaL_Reg prompt_methods[] =
     { "name", get_name },
     { "description", get_description },
     { "version", get_version },
-    { "init", init },
-    { "release", release },
-    { "menucmd", menucmd },
+    //{ "init", init },
+    //{ "release", release },
+    //{ "menucmd", menucmd },
     { "after", afterstr },
     { NULL, NULL }
 };

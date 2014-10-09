@@ -195,10 +195,37 @@ int vd_isgamecmd(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString* mv = pdata->getselected();
-        lua_pushboolean(L, (mv) ? mv->gamecmd : 0);
+        int state = (mv && mv->gamecmd) ? 1 : 0;
+        lua_pushboolean(L, state);
         return 1;
     }
     return pluginInvArgs(L, "viewdata.isgamecmd");
+}
+
+int vd_isprompt(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString* mv = pdata->getselected();
+        int state = (mv && mv->prompt) ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.isprompt");
+}
+
+int vd_getprompt(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        u8string prompt;
+        pdata->getPrompt(&prompt);        
+        lua_pushstring(L, prompt.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.getprompt");
 }
 
 int vd_isfirst(lua_State *L)
@@ -580,7 +607,9 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "size", vd_size);
     regFunction(L, "select", vd_select);
     regFunction(L, "isfirst", vd_isfirst);
-    regFunction(L, "isgamecmd", vd_isgamecmd);    
+    regFunction(L, "isgamecmd", vd_isgamecmd);
+    regFunction(L, "isprompt", vd_isprompt);
+    regFunction(L, "getprompt", vd_getprompt);
     regFunction(L, "gettext", vd_gettext);
     regFunction(L, "gethash", vd_gethash);    
     regFunction(L, "blocks", vd_blocks);
