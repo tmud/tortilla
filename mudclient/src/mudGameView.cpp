@@ -33,7 +33,7 @@ bool MudGameView::initialize()
 }
 
 void MudGameView::onStart()
-{  
+{
     if (!loadModules())
         msgBox(m_hWnd, IDS_ERROR_MODULES, MB_OK | MB_ICONSTOP);
    updateProps();
