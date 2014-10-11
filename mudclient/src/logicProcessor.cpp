@@ -126,13 +126,15 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
            m_prompt_pcre.find(text);
            if (m_prompt_pcre.getSize())
                s->setPrompt(m_prompt_pcre.getLast(0));
-/* todo #ifdef _DEBUG
+
+ #ifdef _DEBUG //todo
            if (s->prompt)
            {
                int last = s->blocks.size() - 1;
-               s->blocks[last].string.append(L"GA");
+               for (int i = 0; i <= last; ++i)
+                   s->blocks[i].params.blink_status = 1;
            }
-#endif*/
+#endif
        }
    }
 
@@ -178,7 +180,42 @@ void LogicProcessor::updateProps()
 
     if (propData->recognize_prompt)
     {
-        m_prompt_pcre.setRegExp(propData->recognize_prompt_template.c_str(), true);
+        // calc regexp from template
+        tstring tmpl(propData->recognize_prompt_template);
+        Pcre16 t1;
+        t1.setRegExp(L"\\\\\\*");
+        t1.findAllMatches(tmpl);
+        std::vector<tstring> parts;
+        int pos = 0;
+        for (int i = 0, e = t1.getSize(); i < e;  ++i)
+        {
+            int last = t1.getFirst(i);
+            parts.push_back(tmpl.substr(pos, last - pos));
+            pos = t1.getLast(i);
+        }
+        parts.push_back(tmpl.substr(pos));
+        for (int i = 0, e = parts.size(); i < e; ++i)
+        {
+            MaskSymbolsBySlash mask(parts[i], L"+/?|^$.[]()\\");
+            parts[i] = mask;
+            tstring_replace(&parts[i], L"*", L".*");
+        }
+        
+        int last = parts.size() - 1;
+        tmpl.clear();
+        for (int i = 0; i < last; ++i)
+        {
+            tmpl.append(parts[i]);
+            tmpl.append(L"\\*");
+        }
+        tmpl.append(parts[last]);      
+
+        bool result = m_prompt_pcre.setRegExp(tmpl, true);
+        if (!result)
+        {
+            MessageBox(m_pHost->getMainWindow(), L"Ошибка в шаблоне для распознавания Prompt-строки!", L"Ошибка", MB_OK | MB_ICONERROR);
+            propData->recognize_prompt = 0;
+        }
     }
 }
 

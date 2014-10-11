@@ -197,7 +197,7 @@ BEGIN
     GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,126,191,48
     CONTROL         "Использовать IAC GA (нужна поддержка сервера)",IDC_RADIO_PROMT_GA,
                     "Button",BS_AUTORADIOBUTTON,8,137,184,8
-    CONTROL         "Автопоиск по шаблону",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,146,90,10
+    CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,146,90,10
     EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,157,167,12,ES_AUTOHSCROLL
 END
 

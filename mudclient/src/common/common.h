@@ -41,3 +41,30 @@ struct autodel
        v.clear();
    }
 };
+
+class MaskSymbolsBySlash
+{
+public:
+    MaskSymbolsBySlash(const tstring& src, const tstring& symbols)
+    {
+        tchar x[3] = { L'\\', 0, 0 };
+        const tchar *b = src.c_str();
+        const tchar *e = b + src.length();
+        const tchar* p = b + wcscspn(b, symbols.c_str());
+        while (p != e)
+        {
+            result.append(tstring(b, p - b));
+            x[1] = *p;
+            result.append(x);
+            b = p + 1;
+            p = b + wcscspn(b, symbols.c_str());
+        }
+        result.append(b);
+    }
+    operator const tstring&() const
+    {
+        return result;
+    }
+private:
+    tstring result;
+};
