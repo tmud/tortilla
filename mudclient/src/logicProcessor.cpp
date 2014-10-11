@@ -121,18 +121,18 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    {
        for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
        {
-           MudViewString *s = parse_data.strings[i];           
+           MudViewString *s = parse_data.strings[i];
            tstring text;  s->getText(&text);
            m_prompt_pcre.find(text);
            if (m_prompt_pcre.getSize())
-               s->setPrompt(m_prompt_pcre.getLast(0));           
-#ifdef _DEBUG
+               s->setPrompt(m_prompt_pcre.getLast(0));
+/* todo #ifdef _DEBUG
            if (s->prompt)
            {
                int last = s->blocks.size() - 1;
                s->blocks[last].string.append(L"GA");
            }
-#endif
+#endif*/
        }
    }
 

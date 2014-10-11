@@ -11,12 +11,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>Main Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Main Files</Filter>
-    </ClInclude>
-    <ClInclude Include="settingsDlg.h">
-      <Filter>Main Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -30,10 +24,5 @@
     <None Include="plugin.def">
       <Filter>Main Files</Filter>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="prompt.rc">
-      <Filter>Main Files</Filter>
-    </ResourceCompile>
   </ItemGroup>
 </Project>

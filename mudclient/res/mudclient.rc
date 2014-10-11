@@ -194,11 +194,11 @@ BEGIN
     LTEXT           "Номер окна для для сообщений об ошибках:",IDC_STATIC,6,110,153,9
     LTEXT           "Кодировка клиента:",IDC_STATIC,208,23,70,9
     COMBOBOX        IDC_COMBO_CODEPAGE,283,21,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,126,206,48
-    CONTROL         "Использовать IAC GA (нужна поддержка сервером)",IDC_RADIO_PROMT_GA,
-                    "Button",BS_AUTORADIOBUTTON,8,137,195,8
+    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,126,191,48
+    CONTROL         "Использовать IAC GA (нужна поддержка сервера)",IDC_RADIO_PROMT_GA,
+                    "Button",BS_AUTORADIOBUTTON,8,137,184,8
     CONTROL         "Автопоиск по шаблону",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,146,90,10
-    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,157,183,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,157,167,12,ES_AUTOHSCROLL
 END
 
 IDD_PROPERTY_GROUPS DIALOGEX 0, 0, 340, 225
@@ -479,7 +479,7 @@ BEGIN
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
             VALUE "OriginalFilename", "tortilla.exe"
-            VALUE "ProductName", "Tortilla Mud Client"
+            VALUE "ProductName", "Totilla mud client"
             VALUE "ProductVersion", "0.9.3.0"
         END
     END

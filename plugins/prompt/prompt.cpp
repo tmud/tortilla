@@ -1,10 +1,5 @@
 #include "stdafx.h"
-#include "resource.h"
-#include "settingsDlg.h"
 #include <vector>
-
-//u8string m_regexp;
-//Pcre m_pcre;
 
 int get_name(lua_State *L)
 {
@@ -24,65 +19,6 @@ int get_version(lua_State *L)
     return 1;
 }
 
-/*int init(lua_State *L)
-{
-    luaT_run(L, "addMenu", "sdd", "Плагины/Фильтр prompt...", 1, 2);    
-
-    luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
-
-    m_regexp.clear();
-    xml::node ld;
-    if (ld.load(path.c_str()))
-    {
-        ld.get("pcre/value", &m_regexp);
-    }
-    ld.deletenode();
-    m_pcre.init(m_regexp.c_str());
-    return 0;
-}
-
-int release(lua_State *L)
-{
-    xml::node s("prompt");
-    s.set("pcre/value", m_regexp.c_str());
-    luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
-
-    if (!s.save(path.c_str()))
-        return luaT_error(L, "Ошибка записи настроек плагина prompt: config.xml");
-    s.deletenode();
-    return 0;
-}
-
-int menucmd(lua_State *L)
-{
-    if (!luaT_check(L, 1, LUA_TNUMBER))
-        return 0;
-    int menuid = lua_tointeger(L, 1);
-    lua_pop(L, 1);
-    if (menuid == 1)
-    {
-        std::wstring param( convert_utf8_to_wide(m_regexp.c_str()) );
-        SettingsDlg dlg(param);
-        if (dlg.DoModal() == IDOK)
-        {
-            m_regexp.assign( convert_wide_to_utf8(dlg.getRegexp()) );
-            m_pcre.init(m_regexp.c_str());
-        }
-    }
-    return 0;
-}
-
-bool recognizePrompt(u8string &prompt)
-{
-    if (prompt.find(">") == u8string::npos)
-        return false;
-    return true;
-}*/
-
 u8string last_prompt;
 void checkDoublePrompt(luaT_ViewData &vd)
 {
@@ -94,13 +30,8 @@ void checkDoublePrompt(luaT_ViewData &vd)
     for (int i = 0; i < strings_count; ++i)
     {
         vd.select(i);
-        if (i == 0 && vd.isfirst())
-        {
-            last_prompt.clear();
-            empty.clear();
-        }
         if (vd.isgamecmd())
-        {            
+        {
             last_prompt.clear();
             empty.clear();
             continue; 
@@ -131,7 +62,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
             {
                 vd.select(empty[j]);
                 vd.deletestring();
-            }           
+            }
             strings_count = vd.size();
             i = empty[0];
             empty.clear();
@@ -161,9 +92,6 @@ static const luaL_Reg prompt_methods[] =
     { "name", get_name },
     { "description", get_description },
     { "version", get_version },
-    //{ "init", init },
-    //{ "release", release },
-    //{ "menucmd", menucmd },
     { "after", afterstr },
     { NULL, NULL }
 };
