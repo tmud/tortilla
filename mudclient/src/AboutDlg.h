@@ -1,86 +1,129 @@
 #pragma once
 
-class Link : public CWindowImpl < Link, CStatic >
+class RichEdit : public CWindowImpl<RichEdit, CRichEditCtrl>
 {
-public:
-    void Attach(HWND static_control)
+    typedef CWindowImpl<RichEdit, CRichEditCtrl> ParentClass;
+    HINSTANCE hInstRich;
+    struct RtfStream
     {
-        CWindow s(static_control);
-        RECT pos;
-        s.GetWindowRect(&pos);
-        CWindow p(s.GetParent());
-        p.ScreenToClient(&pos);
-        std::wstring tmp;
-        getWindowText(static_control, &tmp);
-        HFONT f = s.GetFont();
-        s.ShowWindow(SW_HIDE);
-        Create(p, pos, tmp.c_str(), WS_CHILD | WS_VISIBLE | SS_NOTIFY);
-        SetFont(f);
+        LPCSTR pstr;
+        DWORD pos;
+    };
+
+public:
+    RichEdit() : hInstRich(NULL) {}
+    ~RichEdit() { if (hInstRich) FreeLibrary(hInstRich); }
+    HWND Create(HWND parent, const RECT& pos, DWORD dwStyle, DWORD dwExStyle)
+    {
+        hInstRich = ::LoadLibrary(CRichEditCtrl::GetLibraryName());
+        if (!hInstRich)
+            return NULL;
+        RECT tmp = pos;
+        return ParentClass::Create(parent, tmp, NULL, dwStyle, dwExStyle);
+    }
+    
+    bool LoadRTF(void *data, int len)
+    {
+        // Stream RTF into control
+        RtfStream st = { (LPCSTR)data, 0 };
+        EDITSTREAM es = { 0 };
+        es.dwCookie = (DWORD)&st;
+        es.dwError = 0;
+        es.pfnCallback = _StreamReadCallback;
+        StreamIn(SF_RTF, es);
+        return true;
     }
 
 private:
-    BEGIN_MSG_MAP(Link)
-        MESSAGE_HANDLER(WM_SETCURSOR, OnSetCursor)
-        MESSAGE_HANDLER(OCM_COMMAND, OnCommand)
-        MESSAGE_HANDLER(OCM_CTLCOLORSTATIC, OnCtlColor)
-    END_MSG_MAP()
-
-    LRESULT OnSetCursor(UINT, WPARAM, LPARAM, BOOL&)
+    static DWORD CALLBACK _StreamReadCallback(DWORD dwCookie, LPBYTE pbBuff, LONG cb, LONG FAR *pcb)
     {
-        static HCURSOR hHand = NULL;
-        if (hHand == NULL)
-            hHand = LoadCursor(0, MAKEINTRESOURCE(IDC_HAND));
-        if (hHand)
-            ::SetCursor(hHand);
-        return 1;
-    };
+        RtfStream *pS = reinterpret_cast<RtfStream *>(dwCookie);
+        ATLASSERT(pS);
+        LPCSTR pstr = pS->pstr + pS->pos;
+        ATLASSERT(!::IsBadStringPtrA(pstr, -1));
+        LONG len = ::lstrlenA(pstr);
+        if (cb > len) cb = len;
+        ::CopyMemory(pbBuff, pstr, cb);
+        pS->pos += cb;
+        *pcb = cb;
+        return 0;
+    }
 
-    LRESULT OnCommand(UINT, WPARAM wParam, LPARAM, BOOL&)
+    LRESULT OnCreate(UINT umsg, WPARAM wparam, LPARAM lparam, BOOL&)
     {
-        int code = HIWORD(wParam);
-        if (code == STN_CLICKED)
+        LRESULT lRet = DefWindowProc(umsg, wparam, lparam);
+        ShowScrollBar(SB_VERT);
+        SetEventMask(GetEventMask() | ENM_LINK);
+        SetAutoURLDetect(TRUE);
+        return lRet;
+    }
+
+    LRESULT OnLink(int, LPNMHDR pnmh, BOOL&)
+    {
+        ENLINK *link = (ENLINK *)pnmh;
+        if (link->msg == WM_LBUTTONDOWN)
         {
-            std::wstring tmp;
-            getWindowText(m_hWnd, &tmp);
+            int from = link->chrg.cpMin;
+            int to = link->chrg.cpMax;
+            MemoryBuffer textbuffer((to - from + 1) * sizeof(WCHAR));
+            WCHAR *text = (WCHAR*)textbuffer.getData();
+            GetTextRange(from, to, text);
             std::wstring url(L"url.dll,FileProtocolHandler ");
-            url.append(tmp);
+            url.append(text);
             ShellExecute(NULL, L"open", L"rundll32.exe", url.c_str(), 0, SW_SHOWNORMAL);
         }
         return 0;
     }
 
-    LRESULT OnCtlColor(UINT, WPARAM wParam, LPARAM, BOOL&)
-    {
-        HDC hdc = (HDC)wParam;
-        SetTextColor(hdc, RGB(0, 0, 255));
-        SetBkMode(hdc, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
-    }
+    BEGIN_MSG_MAP(RichEdit)
+      MESSAGE_HANDLER(WM_CREATE, OnCreate)
+      REFLECTED_NOTIFY_CODE_HANDLER(EN_LINK, OnLink)
+    END_MSG_MAP()
 };
 
-class CAboutDlg : public CDialogImpl<CAboutDlg>
+class CWelcomeDlg : public CDialogImpl<CWelcomeDlg>
 {
-    Link m_link;
+    RichEdit m_rich;
 public:
-	enum { IDD = IDD_ABOUTBOX };
-
-	BEGIN_MSG_MAP(CAboutDlg)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-		COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
-		COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+    enum { IDD = IDD_WELCOME };
+private:
+    BEGIN_MSG_MAP(CWelcomeDlg)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_USER, OnFocus)
+        COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
+        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
         REFLECT_NOTIFICATIONS()
-	END_MSG_MAP()
+    END_MSG_MAP()
 
-	LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
-	{
-        m_link.Attach(GetDlgItem(IDC_APP_SITE));
-		CenterWindow(GetParent());
-		return TRUE;
-	}
+    LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        CenterWindow(GetParent());
+        RECT pos;
+        ::GetWindowRect(GetDlgItem(IDC_STATIC_RICHBOXPLACE), &pos);
+        ScreenToClient(&pos);             
+        m_rich.Create(m_hWnd, pos, WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY, WS_EX_STATICEDGE);
 
-	LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
-	{
-		EndDialog(wID);
-		return 0;
-	}
+        HRSRC res = FindResource(NULL, MAKEINTRESOURCE(IDR_BINARY_WELCOME), L"BINARY");
+        int size = SizeofResource(NULL, res);
+        HGLOBAL resourceData = LoadResource(NULL, res);
+        void* binaryData = LockResource(resourceData);
+        MemoryBuffer rtfdata(size);
+        memcpy(rtfdata.getData(), binaryData, size);
+        UnlockResource(resourceData);
+        m_rich.LoadRTF(rtfdata.getData(), rtfdata.getSize());
+        PostMessage(WM_USER, 0, 0);        
+        return TRUE;
+    }
+
+    LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
+    {
+        EndDialog(wID);
+        return 0;
+    }
+
+    LRESULT OnFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_rich.SetFocus();
+        return 0;
+    }
 };

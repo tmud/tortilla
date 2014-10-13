@@ -13,6 +13,8 @@
 #include "plugins/pluginsView.h"
 #include "plugins/pluginsManager.h"
 
+#include "AboutDlg.h"
+
 class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, public CIdleHandler
 {
     enum { CPWIN = 0, CPUTF8 };
@@ -267,7 +269,8 @@ private:
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_USER, OnUserCommand)
         MESSAGE_HANDLER(WM_USER+1, OnNetwork)
-        MESSAGE_HANDLER(WM_USER+2, OnFullScreen)        
+        MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
+        MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)        
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -346,6 +349,8 @@ private:
         m_parent.ShowWindow(SW_SHOW);
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
+        if (m_propData->show_welcome)
+            PostMessage(WM_USER+3);
         SetTimer(1, 200);
 
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -353,9 +358,16 @@ private:
         return 0;
     }
 
-    LRESULT OnFullScreen(UINT, WPARAM, LPARAM lparam, BOOL&)
+    LRESULT OnFullScreen(UINT, WPARAM, LPARAM, BOOL&)
     {
         m_parent.ShowWindow(SW_SHOWMAXIMIZED);
+        return 0;
+    }
+
+    LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        CWelcomeDlg dlg;
+        dlg.DoModal();
         return 0;
     }
 

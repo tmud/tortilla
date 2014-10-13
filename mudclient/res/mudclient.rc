@@ -154,20 +154,6 @@ BEGIN
     LTEXT           "Список профилей (персонажи):",IDC_STATIC,7,19,141,8
 END
 
-IDD_ABOUTBOX DIALOGEX 0, 0, 173, 76
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе"
-FONT 8, "MS Sans Serif", 0, 0, 0x0
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,124,55,42,14
-    LTEXT           "Tortilla MUD Client",IDC_STATIC,58,7,58,8
-    LTEXT           "Версия 0.93",IDC_STATIC,68,15,38,8
-    LTEXT           "Сайт программы:",IDC_STATIC,7,32,67,9
-    LTEXT           "https://github.com/tmud",IDC_APP_SITE,79,32,70,8
-    LTEXT           "Контакты:",IDC_STATIC,7,42,65,9
-    LTEXT           "mail@tmud.net",IDC_STATIC,79,42,60,9
-END
-
 IDD_PROPERTY_COMMON DIALOGEX 0, 0, 340, 225
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -307,6 +293,17 @@ BEGIN
     LTEXT           "Название профиля:",IDC_STATIC,7,145,73,8
 END
 
+IDD_WELCOME DIALOGEX 0, 0, 331, 170
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "О программе..."
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,274,149,50,14
+    CONTROL         "Не показывать при следующем запуске",IDC_CHECK_DONTSHOW,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,151,148,8
+    LTEXT           "Richbox place",IDC_STATIC_RICHBOXPLACE,7,7,317,137,NOT WS_VISIBLE,WS_EX_STATICEDGE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -360,14 +357,6 @@ BEGIN
         BOTTOMMARGIN, 144
     END
 
-    IDD_ABOUTBOX, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 166
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 69
-    END
-
     IDD_PROPERTY_COMMON, DIALOG
     BEGIN
         TOPMARGIN, 2
@@ -407,6 +396,14 @@ BEGIN
         RIGHTMARGIN, 266
         TOPMARGIN, 7
         BOTTOMMARGIN, 176
+    END
+
+    IDD_WELCOME, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 324
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -474,12 +471,12 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "FileDescription", "Client for Multi User Dangeon games"
+            VALUE "FileDescription", "TortillaMC"
             VALUE "FileVersion", "0.9.3.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
             VALUE "OriginalFilename", "tortilla.exe"
-            VALUE "ProductName", "Totilla mud client"
+            VALUE "ProductName", "Totilla - client for Multi User Dangeon games"
             VALUE "ProductVersion", "0.9.3.0"
         END
     END
@@ -522,6 +519,13 @@ IDR_MAINFRAME           BITMAP                  "Toolbar.bmp"
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDR_MAINFRAME           ICON                    "mudclient.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// BINARY
+//
+
+IDR_BINARY_WELCOME      BINARY                  "welcome.rtf"
 
 /////////////////////////////////////////////////////////////////////////////
 //

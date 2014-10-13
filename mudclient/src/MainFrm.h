@@ -164,7 +164,7 @@ private:
    
     LRESULT OnAppAbout(WORD, WORD, HWND, BOOL&)
     {
-        CAboutDlg dlg;
+        CWelcomeDlg dlg;
         dlg.DoModal();
         return 0;
     }

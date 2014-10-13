@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by mudclient.rc
 //
-#define IDD_ABOUTBOX                    100
 #define IDR_MAINFRAME                   128
 #define IDS_RESET_COLORS_CONFIRM        129
 #define IDS_NETWORK_FAILED              130
@@ -21,10 +20,8 @@
 #define IDD_PROPERTY_HIGHLIGHTS         206
 #define IDS_ERROR_SCRIPTENGINE_FAILED   206
 #define IDD_PROPERTY_COLORS_FONT        207
-#define IDS_ERROR_SAVEMAPPER            207
 #define IDS_ERROR_MODULES               207
 #define IDD_LOAD_PROFILE                208
-#define IDS_ERROR_LOADMAPPER            208
 #define IDD_NEW_PROFILE                 209
 #define IDD_PROPERTY_COMMON             210
 #define IDD_PROPERTY_GROUPS             211
@@ -33,6 +30,8 @@
 #define IDD_PROPERTY_TIMERS             214
 #define IDD_PLUGINS                     215
 #define IDD_NEW_WORLD                   218
+#define IDD_WELCOME                     219
+#define IDR_BINARY_WELCOME              220
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
@@ -59,10 +58,6 @@
 #define IDC_EDIT_HOTKEY                 1026
 #define IDC_EDIT_HOTKEY_TEXT            1027
 #define IDC_EDIT_HIGHLIGHT_TEXT         1040
-#define IDC_STATIC_COLORS_BL1           1041
-#define IDC_STATIC_COLORS_BL2           1042
-#define IDC_STATIC_COLORS_BL3           1043
-#define IDC_STATIC_COLORS_BL4           1044
 #define IDC_STATIC_COLORS_WINDOW        1045
 #define IDC_BUTTON_FONT                 1046
 #define IDC_BUTTON_BKGND_COLOR          1047
@@ -79,7 +74,6 @@
 #define IDC_CHECK_HIGHLIGHTS_ITALIC     1066
 #define IDC_EDIT_VIEW_HISTORY           1069
 #define IDC_EDIT_CMD_HISTORY            1070
-#define IDC_SPIN_VIEW_HISTORY           1072
 #define IDC_BUTTON_UP                   1074
 #define IDC_BUTTON_DOWN                 1075
 #define IDC_EDIT_GROUP                  1078
@@ -94,7 +88,6 @@
 #define IDC_EDIT_NUMBER                 1087
 #define IDC_EDIT_PROMPT_PCRE            1110
 #define IDC_CHECK_DISABLE_DOUBLE_YA     1111
-#define IDC_CHECK_DOUBLE_PROMPT         1112
 #define IDC_CHECK_HISTORYTAB            1113
 #define IDC_EDIT_PLUGIN_DESC            1114
 #define IDC_BUTTON_ONOFF                1115
@@ -105,9 +98,10 @@
 #define IDC_EDIT_NEWWORLD_NAME          1120
 #define IDC_EDIT_NEWWORLD_PROFILE       1121
 #define IDC_COMBO_CODEPAGE              1122
-#define IDC_APP_SITE                    1123
 #define IDC_RADIO_PROMT_GA              1124
 #define IDC_RADIO_PROMT_PCRE            1125
+#define IDC_CHECK_DONTSHOW              1126
+#define IDC_STATIC_RICHBOXPLACE         1129
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -128,9 +122,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        219
+#define _APS_NEXT_RESOURCE_VALUE        221
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1126
+#define _APS_NEXT_CONTROL_VALUE         1130
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
