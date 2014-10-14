@@ -1,6 +1,30 @@
 #include "stdafx.h"
 #include "propertiesElements.h"
 
+PropertiesGlobal::PropertiesGlobal()
+{
+    {
+        tstring path;
+        tchar szPath[MAX_PATH];
+        SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, szPath);
+        path.assign(szPath);
+        int last = path.length() - 1;
+        if (path.at(last) != L'\\')
+            path.append(L"\\");
+        path.append(L"tortilla.xml");
+        m_path.assign(WideToUtf8(path.c_str()));
+    }
+
+    if (!m_data.load(m_path.c_str()))
+        m_data = xml::node("global");
+}
+
+PropertiesGlobal::~PropertiesGlobal()
+{
+    m_data.save(m_path.c_str());
+    m_data.deletenode();
+}
+
 PropertiesElements::PropertiesElements(PropertiesData *data) : propData(data), palette(data), font_height(1)
 {
 }

@@ -29,7 +29,16 @@ class ProfilePluginPath
 {
 public:
     ProfilePluginPath(const tstring& profile, const tstring& plugin, const tstring& file);
-    operator const tchar*() { return m_path.c_str(); }
+    operator const tchar*() const { return m_path.c_str(); }
+private:
+    tstring m_path;
+};
+
+class GlobalProfilePath
+{
+public:
+    GlobalProfilePath();
+    operator const tchar*() const { return m_path.c_str(); }
 private:
     tstring m_path;
 };

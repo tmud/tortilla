@@ -1,9 +1,23 @@
 #pragma once
 
+class RichEditDll {
+public:
+    RichEditDll() : hInstRich(NULL) {}
+    ~RichEditDll() { if (hInstRich) FreeLibrary(hInstRich); }
+    bool load()
+    {
+        if (!hInstRich)
+            hInstRich = ::LoadLibrary(CRichEditCtrl::GetLibraryName());
+        return (hInstRich) ? true : false;
+    }
+private:
+    HINSTANCE hInstRich;
+};
+extern RichEditDll _rich_edit;
+
 class RichEdit : public CWindowImpl<RichEdit, CRichEditCtrl>
 {
     typedef CWindowImpl<RichEdit, CRichEditCtrl> ParentClass;
-    HINSTANCE hInstRich;
     struct RtfStream
     {
         LPCSTR pstr;
@@ -11,12 +25,11 @@ class RichEdit : public CWindowImpl<RichEdit, CRichEditCtrl>
     };
 
 public:
-    RichEdit() : hInstRich(NULL) {}
-    ~RichEdit() { if (hInstRich) FreeLibrary(hInstRich); }
+    RichEdit() {}
+    ~RichEdit() {}
     HWND Create(HWND parent, const RECT& pos, DWORD dwStyle, DWORD dwExStyle)
     {
-        hInstRich = ::LoadLibrary(CRichEditCtrl::GetLibraryName());
-        if (!hInstRich)
+        if (!_rich_edit.load())
             return NULL;
         RECT tmp = pos;
         return ParentClass::Create(parent, tmp, NULL, dwStyle, dwExStyle);
@@ -111,7 +124,7 @@ private:
         memcpy(rtfdata.getData(), binaryData, size);
         UnlockResource(resourceData);
         m_rich.LoadRTF(rtfdata.getData(), rtfdata.getSize());
-        PostMessage(WM_USER, 0, 0);        
+        PostMessage(WM_USER, 0, 0);
         return TRUE;
     }
 

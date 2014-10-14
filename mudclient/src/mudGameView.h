@@ -349,8 +349,15 @@ private:
         m_parent.ShowWindow(SW_SHOW);
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
-        if (m_propData->show_welcome)
-            PostMessage(WM_USER+3);
+        
+       /* int welcome = 1;
+        if (!m_propElements.global.get(L"welcome", &welcome) || (welcome != 0 && welcome !=1))
+            welcome = 1;
+        if (welcome)
+            m_propElements.global.set(L"welcome", 0);*/
+        //if (welcome)
+        //    PostMessage(WM_USER+3);
+
         SetTimer(1, 200);
 
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -365,7 +372,7 @@ private:
     }
 
     LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
-    {
+    {      
         CWelcomeDlg dlg;
         dlg.DoModal();
         return 0;

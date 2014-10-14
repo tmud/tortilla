@@ -213,6 +213,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
+    <ClCompile Include="src\AboutDlg.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
     <ClCompile Include="src\helpManager.cpp" />

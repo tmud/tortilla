@@ -299,8 +299,6 @@ CAPTION "О программе..."
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,274,149,50,14
-    CONTROL         "Не показывать при следующем запуске",IDC_CHECK_DONTSHOW,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,11,151,148,8
     LTEXT           "Richbox place",IDC_STATIC_RICHBOXPLACE,7,7,317,137,NOT WS_VISIBLE,WS_EX_STATICEDGE
 END
 
