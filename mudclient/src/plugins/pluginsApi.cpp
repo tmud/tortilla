@@ -649,6 +649,8 @@ bool initPluginsSystem()
 void pluginDeleteResources(Plugin *plugin)
 {
     // delete UI (menu, buttons, etc)
+    Plugin *old = _cp;
+    _cp = plugin;
     for (int i = 0, e = plugin->menus.size(); i < e; ++i)
     {
         std::vector<UINT> ids;
@@ -674,4 +676,5 @@ void pluginDeleteResources(Plugin *plugin)
     for (int i = 0, e = plugin->commands.size(); i < e; ++i)
         _lp->deleteSystemCommand(plugin->commands[i]);
     plugin->commands.clear();
+    _cp = old;
 }
