@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "propertiesElements.h"
 
-PropertiesGlobal::PropertiesGlobal()
+PropertiesGlobal::PropertiesGlobal() : welcome(1)
 {
     {
         tstring path;
@@ -15,14 +15,63 @@ PropertiesGlobal::PropertiesGlobal()
         m_path.assign(WideToUtf8(path.c_str()));
     }
 
-    if (!m_data.load(m_path.c_str()))
-        m_data = xml::node("global");
+    xml::node gd;
+    if (gd.load(m_path.c_str()))
+    {
+        loadValue(gd, "welcome", 0, 1, &welcome);
+        gd.deletenode();
+    }    
 }
 
 PropertiesGlobal::~PropertiesGlobal()
 {
-    m_data.save(m_path.c_str());
-    m_data.deletenode();
+    xml::node gd("global");
+    saveValue(gd, "welcome", welcome);
+    saveString(gd, "version", TORTILLA_VERSION);
+    gd.save(m_path.c_str());
+    gd.deletenode();
+}
+
+void PropertiesGlobal::saveValue(xml::node parent, const utf8* name, int value)
+{
+    xml::node n = parent.createsubnode(name);
+    n.set("value", value);
+}
+
+bool PropertiesGlobal::loadString(xml::node parent, const utf8* name, tstring* value)
+{
+    xml::request r(parent, name);
+    if (r.size() == 0)
+        return false;
+    std::string v;
+    if (!r[0].get("value", &v))
+        return false;
+    U2W u2w(v);
+    value->assign(u2w);
+    return true;
+}
+
+void PropertiesGlobal::saveString(xml::node parent, const utf8* name, const tstring& value)
+{
+    W2U w2u(value);
+    xml::node n = parent.createsubnode(name);
+    n.set("value", w2u);
+}
+
+bool PropertiesGlobal::loadValue(xml::node parent, const utf8* name, int min, int max, int *value)
+{
+    xml::request r(parent, name);
+    if (r.size() == 0)
+        return false;
+    int v = 0;
+    if (!r[0].get("value", &v))
+        return false;
+    if (v < min)
+        v = min;
+    if (v > max)
+        v = max;
+    *value = v;
+    return true;
 }
 
 PropertiesElements::PropertiesElements(PropertiesData *data) : propData(data), palette(data), font_height(1)

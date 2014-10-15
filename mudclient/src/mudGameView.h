@@ -349,17 +349,14 @@ private:
         m_parent.ShowWindow(SW_SHOW);
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
-        
-       /* int welcome = 1;
-        if (!m_propElements.global.get(L"welcome", &welcome) || (welcome != 0 && welcome !=1))
-            welcome = 1;
-        if (welcome)
-            m_propElements.global.set(L"welcome", 0);*/
-        //if (welcome)
-        //    PostMessage(WM_USER+3);
+               
+        if (m_propElements.global.welcome)
+        {
+            m_propElements.global.welcome = 0;
+            PostMessage(WM_USER + 3);
+        }
 
         SetTimer(1, 200);
-
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -679,6 +676,8 @@ private:
         title.append(L" - ");
         tstring appname;
         loadString(IDR_MAINFRAME, &appname);
+        appname.append(L" v");
+        appname.append(TORTILLA_VERSION);
         title.append(appname);
         ::SetWindowText(m_dock.GetParent(), title.c_str());
         m_propData->title = title;

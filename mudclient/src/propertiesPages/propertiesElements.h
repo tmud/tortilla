@@ -3,19 +3,18 @@
 #include "propertiesData.h"
 #include "..\palette256.h"
 
-class PropertiesGlobal
+struct PropertiesGlobal
 {
+    int welcome;
 public:
     PropertiesGlobal();
     ~PropertiesGlobal();
-    bool get(const tstring& name, tstring *value);
-    bool get(const tstring& name, int *value);
-    void set(const tstring& name, const tstring& value);
-    void set(const tstring& name, int value);
-
 private:
-    xml::node m_data;
     u8string m_path;
+    bool loadValue(xml::node parent, const utf8* name, int min, int max, int *value);
+    void saveValue(xml::node parent, const utf8* name, int value);
+    bool loadString(xml::node parent, const utf8* name, tstring* value);
+    void saveString(xml::node parent, const utf8* name, const tstring& value);
 };
 
 class PropertiesElements

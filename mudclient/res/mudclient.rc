@@ -469,7 +469,7 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "FileDescription", "TortillaMC"
+            VALUE "FileDescription", "TMC"
             VALUE "FileVersion", "0.9.3.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
@@ -532,7 +532,7 @@ IDR_BINARY_WELCOME      BINARY                  "welcome.rtf"
 
 STRINGTABLE
 BEGIN
-    IDR_MAINFRAME           "Tortilla Mud Client v0.93"
+    IDR_MAINFRAME           "Tortilla Mud Client"
     IDS_RESET_COLORS_CONFIRM 
                             "Вы уверены что хотите сбросить цвета и шрифт и вернуть их к первоначальному состоянию?"
     IDS_NETWORK_FAILED      "Ошибка инициализации сети! Дальнейшая работа невозможна."
