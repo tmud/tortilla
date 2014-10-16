@@ -258,9 +258,11 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                 dc->SelectFont(propElements->italic_font);
         }
 
+        bool dragging = false;
         const tstring &s = b[i].string;
         if (checkDraggingSym(index))
         {
+            dragging = true;
             int end_sym = start_sym + s.length();
             int left = drag_left; int right = drag_right;
             if (left == -1) { left = drag_right; right = drag_left; }
@@ -275,7 +277,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                 else left = 0;
                 if (right >= start_sym  && right < end_sym) right -= start_sym;
                 else right = end_sym - 1;
-              
+
                 if (left != 0)
                 {
                     RECT side = pos; side.right = m_drag_line_len[start_sym + left - 1];
@@ -304,17 +306,18 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
             COLORREF bkg =  propElements->propData->bkgnd;
             bkg_color = invertColor(bkg);
             text_color = bkg;
+            dragging = true;
         }
 
         dc->FillSolidRect(&pos, bkg_color);
         dc->SetBkColor(bkg_color);
         dc->SetTextColor(text_color);
         dc->DrawText(s.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
-        
+
         if (p.underline_status || p.italic_status)
             dc->SelectFont(propElements->standard_font);
 
-        if (p.blink_status)
+        if (p.blink_status && !dragging)
         {
                 CPen pen;
                 pen.CreatePen(PS_SOLID, 1, text_color);
@@ -382,7 +385,7 @@ void MudView::setScrollbar(DWORD position)
 {
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
-    
+
     int visible_line = m_last_visible_line;
     switch(action) {
     case SB_LINEUP:
@@ -421,7 +424,7 @@ void MudView::checkLimit()
     {
         size = size - propElements->propData->view_history_size;
         deleteStrings(size);
-    }    
+    }
 }
 
 void MudView::deleteStrings(int count_from_begin)
@@ -469,7 +472,7 @@ void MudView::stopDraging()
         {
             if (drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
             text = text.substr(drag_left, drag_right - drag_left + 1);
-        }           
+        }
         sendToClipboard(m_hWnd, text);
     }
     else
@@ -485,7 +488,7 @@ void MudView::stopDraging()
         }
         sendToClipboard(m_hWnd, data);
     }
-    drag_begin = -1;    
+    drag_begin = -1;
     Invalidate(FALSE);
 }
 
