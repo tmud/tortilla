@@ -428,7 +428,6 @@ BEGIN
     POPUP "Вид"
     BEGIN
         MENUITEM "&Панель инструментов",        ID_VIEW_TOOLBAR
-        MENUITEM "&Строка состояния",           ID_VIEW_STATUS_BAR
         MENUITEM SEPARATOR
         MENUITEM "Окно &1",                     ID_WINDOW_1
         MENUITEM "Окно &2",                     ID_WINDOW_2
@@ -535,33 +534,6 @@ BEGIN
     IDR_MAINFRAME           "Tortilla Mud Client"
     IDS_RESET_COLORS_CONFIRM 
                             "Вы уверены что хотите сбросить цвета и шрифт и вернуть их к первоначальному состоянию?"
-    IDS_NETWORK_FAILED      "Ошибка инициализации сети! Дальнейшая работа невозможна."
-    IDS_NEW_PROFILE         "Создать пустой профиль"
-    IDS_NEW_WORLD           "Создать новый мир"
-END
-
-STRINGTABLE
-BEGIN
-    ID_VIEW_TOOLBAR         "Скрыть или показать панель инструментов"
-    ID_VIEW_STATUS_BAR      "Скрыть или показать строку состояния"
-END
-
-STRINGTABLE
-BEGIN
-    ATL_IDS_SCSIZE          "Изменить размер окна"
-    ATL_IDS_SCMOVE          "Изменить положение окна"
-    ATL_IDS_SCMINIMIZE      "Свернуть окно"
-    ATL_IDS_SCMAXIMIZE      "Развернуть окно на весь экран"
-END
-
-STRINGTABLE
-BEGIN
-    ATL_IDS_SCRESTORE       "Восстановить положение окна"
-END
-
-STRINGTABLE
-BEGIN
-    ATL_IDS_IDLEMESSAGE     " "
 END
 
 STRINGTABLE
@@ -584,29 +556,15 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_SETTINGS             "Общие настройки, макросы, триггеры, замены, антизамены, горячие клавиши и др.\nНастройки"
-    ID_WINDOW_1             "Окно 1"
-    ID_WINDOW_2             "Окно 2"
-    ID_WINDOW_3             "Окно 3"
-    ID_WINDOW_4             "Окно 4"
-    ID_WINDOW_5             "Окно 5"
-    ID_WINDOW_6             "Окно 6"
+    ID_SETTINGS             "\nНастройки"
 END
 
 STRINGTABLE
 BEGIN
-    ID_PLUGINS              "Включение/выключение плагинов\nПлагины"
-    ID_NEWPROFILE           "Создать новый профиль\nНовый профиль"
-    ID_LOADPROFILE          "Загрузить другой профиль\nЗагрузить профиль"
-    ID_MUDCLIENT_EXIT       "Завершить работу с клиентом\nВыход"
-    ID_MUDCLIENT_ABOUT      "Версия программы, описание\nО программе"
-    ID_MUDCLIENT_HELP       "Справка к мадклиенту\nСправка"
-    ID_NEWWORLD             "Создать новую группу профилей (новый мир)"
-END
-
-STRINGTABLE
-BEGIN
-    ID_CHECK_UPDATES        "Открыть сайт программы с последними обновлениями\nОбновления"
+    ID_PLUGINS              "\nПлагины"
+    ID_NEWPROFILE           "\nНовый профиль"
+    ID_LOADPROFILE          "\nЗагрузить профиль"
+    ID_MUDCLIENT_HELP       "\nСправка"
 END
 
 #endif    // Russian (Russia) resources

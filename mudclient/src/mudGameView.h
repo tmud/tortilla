@@ -29,7 +29,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     MudView m_history;
     MudView m_view;
     CSplitterWindowExT<false, 3, 1> m_hSplitter;
-   
+
     NetworkConnectData m_networkData;
     Network m_network;
     HotkeyTable m_hotkeyTable;
@@ -52,7 +52,7 @@ public:
     DECLARE_WND_CLASS(NULL)
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
-        m_barHeigth(16), m_bar(m_propData),
+        m_barHeigth(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(m_propData, this), m_plugins(m_propData), 
         m_codepage(CPWIN)
@@ -68,50 +68,16 @@ public:
             m_hotkeyTable.recognize(pMsg->wParam, pMsg->lParam, &key);
             if (m_processor.processHotkey(key))
                 return TRUE;
-            if (GetKeyState(VK_CONTROL) < 0)
-            {
-                if (pMsg->wParam == 'A') // select all
-                {
-                    m_bar.selecttext();
-                }
-                else if (pMsg->wParam == 'V') // paste
-                {
-                    tstring cmd;
-                    getFromClipboard(m_hWnd, &cmd);
-                    if (!cmd.empty())
-                        m_bar.insert(cmd);
-                }
-                else if (pMsg->wParam == 'C') // copy
-                {
-                    tstring cmd;
-                    m_bar.getSelected(&cmd);
-                    if (!cmd.empty())
-                        sendToClipboard(m_hWnd, cmd);
-                }
-                else if (pMsg->wParam == 'X') // cut
-                {
-                    tstring cmd;
-                    m_bar.getSelected(&cmd);
-                    if (!cmd.empty())
-                    {
-                        m_bar.deleteSelected();
-                        sendToClipboard(m_hWnd, cmd);
-                    }                    
-                }
-                else if (pMsg->wParam == 'Z') // undo
-                {
-                    m_bar.undo();
-                }
-                return TRUE;
-            }
             if (GetKeyState(VK_MENU) < 0)
             {
                 if (pMsg->wParam != VK_MENU && pMsg->wParam != VK_F4)
                     return TRUE;
             }
             if (processKey(pMsg->wParam))
-                return TRUE;                        
+                return TRUE;
         }
+        if (m_bar.PreTranslateMessage(pMsg))
+            return TRUE;
         return FALSE;
     }
 
@@ -305,7 +271,7 @@ private:
         m_hSplitter.SetSplitterPanes(m_history, m_view);
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
 
-        m_bar.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+        m_bar.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP);
         m_parent.MoveWindow(&m_propData->main_window);
 
         // create docking output windows
@@ -453,10 +419,9 @@ private:
         return 0;
     }
 
-    LRESULT OnSetFocus(UINT, WPARAM, LPARAM lparam, BOOL& bHandled)
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (m_bar.IsWindow())
-            m_bar.SetFocus();
+        m_bar.setFocus();
         return 0;
     }
 
@@ -568,7 +533,13 @@ private:
     void initCommandBar()
     {
         m_barHeigth = m_propElements.font_height + 4;
-        m_bar.SetFont(m_propElements.standard_font);
+        m_bar.setParams(m_barHeigth, m_propElements.standard_font);
+        RECT pos; GetClientRect(&pos);
+        pos.bottom -= m_barHeigth;
+        m_hSplitter.MoveWindow(&pos);
+        pos.top = pos.bottom;
+        pos.bottom += m_barHeigth;
+        m_bar.MoveWindow(&pos);
     }
 
     LRESULT OnNewProfile(WORD, WORD, HWND, BOOL&)

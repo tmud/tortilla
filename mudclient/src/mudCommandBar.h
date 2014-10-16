@@ -1,9 +1,10 @@
 #pragma once
 
-class MudCommandBar :  public CWindowImpl<MudCommandBar, CEdit>
-{       
+class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
+{
     PropertiesData* propData;
     MemoryBuffer m_cmdBar;
+    CEdit m_edit;
     int m_history_index;
     tstring m_tab;
     int m_lasttab;
@@ -15,10 +16,33 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CEdit>
     std::vector<undata> m_undo;
 
 public:
+    BOOL PreTranslateMessage(MSG* pMsg)
+    {
+        if (pMsg->hwnd == m_edit)
+        {
+            if (pMsg->message == WM_CHAR)
+                return processChar(pMsg->wParam);
+            else if (pMsg->message == WM_KEYDOWN)
+                return processKeyDown(pMsg->wParam);
+        }
+        return FALSE;
+    }
+
     MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0)
     {
         initCmdBar(1024);
-        addundo(L"", 0);
+        addUndo(L"", 0);
+    }
+
+    void setParams(int size, HFONT font)
+    {
+        SetMinHeight(size);
+        m_edit.SetFont(font);
+    }
+
+    void setFocus()
+    {
+        m_edit.SetFocus();
     }
 
     void getCommand(tstring *cmd)
@@ -29,17 +53,17 @@ public:
         if (propData->clear_bar)
             clear();
         else
-            selecttext();
+            selectText();
     }
 
     void getSelected(tstring *cmd)
     {
         int from = 0, to = 0;
-        GetSel(from, to);
+        m_edit.GetSel(from, to);
         if (from != to)
         {
             tstring text;
-            gettext(&text);
+            getText(&text);
             cmd->assign(text.substr(from, to-from));
         }
     }
@@ -47,16 +71,15 @@ public:
     void deleteSelected()
     {
         int from = 0, to = 0;
-        GetSel(from, to);
+        m_edit.GetSel(from, to);
         if (from != to)
         {
             tstring text;
-            gettext(&text);
-            addundo(text, to);
+            getText(&text);
+            addUndo(text, to);
             tstring new_cmd(text.substr(0, from));
             new_cmd.append(text.substr(to));
-            SetWindowText(new_cmd.c_str());
-            SetSel(from, from);
+            setText(new_cmd, from);
         }
     }
 
@@ -66,10 +89,10 @@ public:
         tstring_trimsymbols(&str, L"\r\n");
 
         int from = 0, to = 0;
-        GetSel(from, to);
+        m_edit.GetSel(from, to);
         tstring text;
-        gettext(&text);
-        addundo(text, to);
+        getText(&text);
+        addUndo(text, to);
         if (from != to)
         {
             tstring new_cmd(text.substr(0, from));
@@ -77,9 +100,8 @@ public:
             text.assign(new_cmd);
         }
         text.insert(from, str);
-        SetWindowText(text.c_str());
         int cursor_pos = from + str.length();
-        SetSel(cursor_pos, cursor_pos);
+        setText(text, cursor_pos);
     }
 
     void undo()
@@ -89,8 +111,7 @@ public:
         int last = m_undo.size() - 1;
         undata u = m_undo[last];
         m_undo.pop_back();
-        SetWindowText(u.text.c_str());        
-        SetSel(u.cursor, u.cursor);
+        setText(u.text, u.cursor);
     }
 
     void addToHistory(const tstring& cmd)
@@ -124,24 +145,24 @@ public:
 
 private:
     BEGIN_MSG_MAP(MudCommandBar)
-        MESSAGE_HANDLER(WM_CHAR, OnChar)
-        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
 
-    void setText(const tstring& text)
+    void setText(const tstring& text, int cursor = -1)
     {
-        SetWindowText(text.c_str());
-        int lastsym = text.length();
-        SetSel(lastsym, lastsym);   // move cursor to end
+        m_edit.SetWindowText(text.c_str());
+        int cursorpos = (cursor == -1) ? text.length() : cursor;   // move cursor to end, as default
+        m_edit.SetSel(cursorpos, cursorpos); 
     }
 
     void clear()
     {
-        SetWindowText(L"");
+        m_edit.SetWindowText(L"");
         clearTab();
     }
 
-    void addundo(const tstring& cmd, int cursor)
+    void addUndo(const tstring& cmd, int cursor)
     {
         undata u; u.text = cmd; u.cursor = cursor;
         m_undo.push_back(u);
@@ -149,66 +170,80 @@ private:
             m_undo.erase(m_undo.begin());
     }
 
-    void selecttext()
+    void selectText()
     {
-        int len = GetWindowTextLength();
+        int len = m_edit.GetWindowTextLength();
         if (len > 0)
-            SetSel(0, len);
+            m_edit.SetSel(0, len);
         clearTab();
     }
 
-    void gettext(tstring *text)
+    void getText(tstring *text)
     {
-        int len = (GetWindowTextLength() + 1) * sizeof(WCHAR);
+        int len = (m_edit.GetWindowTextLength() + 1) * sizeof(WCHAR);
         MemoryBuffer tmp(len); WCHAR* buffer = (WCHAR*)tmp.getData();
-        GetWindowText(buffer, len);
+        m_edit.GetWindowText(buffer, len);
         text->assign(buffer);
     }
-
-    LRESULT OnChar(UINT, WPARAM wparam, LPARAM lparam, BOOL& bHandled)
+    
+    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
-        if (wparam == VK_RETURN)
+        m_edit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+        bHandled = FALSE;
+        return 0;
+    }
+
+    LRESULT OnSize(UINT, WPARAM wparam, LPARAM lparam, BOOL& bHandled)
+    {
+        RECT rc; GetClientRect(&rc);
+        rc.right -= 48;
+        m_edit.MoveWindow(&rc);
+        return 0;
+    }
+
+    BOOL processChar(UINT key)
+    {
+        if (key == VK_RETURN)
         {
             putTextToBuffer();
             SendMessage(GetParent(), WM_USER, 0, 0);
-            return 0;
+            return TRUE;
         }
-        if (wparam != VK_TAB && wparam != VK_ESCAPE)
+        if (key != VK_TAB && key != VK_ESCAPE)
         {
             putTextToBuffer();
             WCHAR* buffer = (WCHAR*)m_cmdBar.getData();
             int from = 0, to = 0;
-            GetSel(from, to);
-            addundo(buffer, to);
+            m_edit.GetSel(from, to);
+            addUndo(buffer, to);
             clearTab();
-            bHandled = FALSE;
-            return 0;
+            return FALSE;
         }
-        return 0;   // disable system sound VK_TAB + VK_ESCAPE
+        return TRUE;   // disable system sound VK_TAB + VK_ESCAPE
     }
 
-    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL& bHandled)
+    BOOL processKeyDown(UINT key)
     {
-        if (wparam == VK_DOWN)
+        if (key == VK_DOWN)
             onHistoryDown();
-        else if (wparam == VK_UP)
+        else if (key == VK_UP)
             onHistoryUp();
-        else if (wparam == VK_ESCAPE)
+        else if (key == VK_ESCAPE)
             { clear(); }
-        else if (wparam == VK_TAB)
+        else if (key == VK_TAB)
             onTab();
         else
-            bHandled = FALSE;
-        return 0;
+            return FALSE;
+        return TRUE;
     }
 
     void putTextToBuffer()
     {
-        int len = GetWindowTextLength();
+        int len = m_edit.GetWindowTextLength();
         int buffer_len = m_cmdBar.getSize() - 1;
         if (buffer_len < len)
             initCmdBar(len);
-        GetWindowText((LPTSTR)m_cmdBar.getData(), m_cmdBar.getSize());
+        m_edit.GetWindowText((LPTSTR)m_cmdBar.getData(), m_cmdBar.getSize());
     }
 
     void initCmdBar(int size)
@@ -259,14 +294,14 @@ private:
         // tabbing simplest variants
         WCHAR prefix = propData->cmd_prefix;
         WCHAR cmd_prefix[2] = { prefix, 0 };
-        int len = GetWindowTextLength();
+        int len = m_edit.GetWindowTextLength();
         if (len == 0) {
             setText(cmd_prefix);
             return;
         }
 
         tstring text;
-        getWindowText(m_hWnd, &text);
+        getText(&text);
         int lastidx = text.length()-1;
         WCHAR last = text.at(lastidx);
         if (last == prefix)
