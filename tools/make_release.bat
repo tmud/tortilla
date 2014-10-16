@@ -5,6 +5,7 @@ set plugins=plugins\prompt.dll plugins\jmc3import.dll plugins\historyfilter.lua
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
+set sdk="sdk_%ver%.zip"
 
 del *.zip > nul
 copy ..\Release\tortilla.exe .\ > nul
@@ -16,6 +17,7 @@ copy ..\mudclient\readme.txt .\ > nul
 del tortilla.exe lua.dll api.dll readme.txt > nul
 cd ..
 tools\7za.exe a -r -tzip tools\%filename% help\* %plugins% %modules%
+tools\7za.exe a -tzip tools\%sdk% sdk\*
 cd tools
 echo Finished.
 pause
