@@ -126,15 +126,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
            m_prompt_pcre.find(text);
            if (m_prompt_pcre.getSize())
                s->setPrompt(m_prompt_pcre.getLast(0));
-
- #ifdef _DEBUG //todo
-           if (s->prompt)
-           {
-               int last = s->blocks.size() - 1;
-               for (int i = 0; i <= last; ++i)
-                   s->blocks[i].params.blink_status = 1;
-           }
-#endif
        }
    }
 
