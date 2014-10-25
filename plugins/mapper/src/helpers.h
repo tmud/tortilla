@@ -74,13 +74,13 @@ public:
                     continue;
                 }
             }
-        }
+        } 
 
         for (int i = 0, e = rooms.size(); i < e; ++i)
             rooms[i]->special = 0;
         m_room->special = 0;
         subzone->swap(rooms);
-    }     
+    }
 
 private:
     bool sameZone(Room *r1, Room *r2)

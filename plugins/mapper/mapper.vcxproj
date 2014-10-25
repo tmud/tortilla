@@ -113,7 +113,6 @@
     <ClInclude Include="src\mapperPrompt.h" />
     <ClInclude Include="src\mapperRender.h" />
     <ClInclude Include="src\mapperRoomRender.h" />
-    <ClInclude Include="src\mapperRoomsCache.h" />
     <ClInclude Include="src\mapperSettings.h" />
     <ClInclude Include="src\mapperToolbar.h" />
     <ClInclude Include="src\mapperZoneControl.h" />

@@ -2,7 +2,7 @@
 
 #include "editListBox.h"
 
-class MappeZoneControl : public CDialogImpl<MappeZoneControl>
+class MapperZoneControl : public CDialogImpl<MapperZoneControl>
 {
     CEditListBox m_list;
     RECT rc_list;
@@ -12,7 +12,7 @@ class MappeZoneControl : public CDialogImpl<MappeZoneControl>
 
 public:
     enum { IDD = IDD_MAPPER_ZONES };
-    MappeZoneControl() : m_parent(NULL), m_msg(0)
+    MapperZoneControl() : m_parent(NULL), m_msg(0)
     {
     }
     

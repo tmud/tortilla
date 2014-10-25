@@ -8,7 +8,6 @@
 #include "mapperHashTable.h"
 #include "mapperToolbar.h"
 #include "mapperZoneControl.h"
-#include "mapperRoomsCache.h"
 
 class Mapper : public CWindowImpl<Mapper>
 {
@@ -42,38 +41,38 @@ private:
     void onSize();
     void onZoneChanged();
 
-private:
-    Zone* addNewZone();
-    Room* findRoomCached(const RoomData& room);
-    Room* findRoom(const RoomData& room);
+private:    
+    void  findRooms(const RoomData& room, std::vector<Room*> *vr);    
     Room* addNewRoom(const RoomData& room);
+    Zone* addNewZone();
     Room* createNewRoom(const RoomData& room);
     void  deleteRoom(Room* room);
     void  changeLevelOrZone(Room *old, Room* curr);
     void  checkExits(Room *room);
     int   revertDir(int dir);
     void  popDir();
-    Room* getNextRoom(Room *room, int dir);
+    //Room* getNextRoom(Room *room, int dir);
     void  redrawPosition();
 
-private: // Elements on the screen
+private:
     PropertiesMapper *m_propsData;
 
+    // Elements on the screen
     MapperToolbar m_toolbar;
-    CSplitterWindowExT<true, 1, 4> m_vSplitter;
-    MappeZoneControl m_zones_control;
+    CSplitterWindowExT<true, 1, 3> m_vSplitter;
+    MapperZoneControl m_zones_control;
     MapperRender m_view;
     int m_toolbar_height;
 
     MapperProcessor m_processor;
-    MapperPrompt m_prompt;
+    MapperPrompt    m_prompt;
     MapperHashTable m_table;
-    MapperRoomsCache m_cache;
 
-    std::vector<int> m_path;
+    std::list<int> m_path;
     int m_lastDir;
     Room *m_pCurrentRoom;
-    std::vector<Zone*> m_zones;
-    RoomCursor m_rpos;
+    RoomCursor m_lastpos;
+
+    std::vector<Zone*> m_zones;    
     ViewMapPosition m_viewpos;
 };

@@ -151,7 +151,7 @@ bool MapperProcessor::processNetworkData(const WCHAR* text, int textlen, RoomDat
     bool r = searchData(data, datalen, result);
     m_network_buffer.truncate(ee.getAfterKey());
     bn.reset();
-    if (r) // additional check of room data
+    if (r) // additional checks of room data
     {
         tstring &n = result->name;
         int size = n.size();
@@ -159,6 +159,14 @@ bool MapperProcessor::processNetworkData(const WCHAR* text, int textlen, RoomDat
         { if (n.at(i) < 32)
                 return false;
         }
+        result->dark = false;
+        tstring &d = result->descr;
+        if (!d.empty() && dark_cs == d)
+        {
+            d.clear();
+            result->dark = true;
+        }
+        result->calcHash();
     }
     return r;
 }
@@ -206,4 +214,5 @@ void MapperProcessor::updateProps(PropertiesMapper *props)
     ed.init(props->end_descr);
     be.init(props->begin_exits);
     ee.init(props->end_exits);
+    dark_cs = props->dark_room;
 }

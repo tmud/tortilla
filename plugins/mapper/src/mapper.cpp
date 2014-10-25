@@ -20,21 +20,31 @@ void Mapper::processNetworkData(const wchar_t* text, int text_len)
             popDir();
         return;
     }
-    if (room.descr.empty())
-        room.descr.append(L"empty");
-    else
-    {
-        tstring &dark = m_propsData->dark_room;
-        if (!dark.empty() && dark == room.descr)
-            room.descr.clear();
-    }
-    room.calcHash();
     popDir();
     
-    bool cached = m_cache.isExistRoom(m_pCurrentRoom);
-
     // can be return NULL (if cant find or create new) so it is mean -> lost position
-    Room* new_room = (cached) ? findRoomCached(room) : findRoom(room);
+    std::vector<Room*> rooms;
+    findRooms(room, &rooms);
+
+    if (rooms.empty()) {            // room not found
+        m_pCurrentRoom = NULL;
+        redrawPosition();
+        return;
+    }
+
+    int count = rooms.size();
+    if (count == 1)
+    {
+        if (m_pCurrentRoom)
+        {
+            /*RoomExit &e = m_pCurrentRoom->dirs[m_lastDir];
+            if (!e.next_room)
+                e.next_room = new_room;*/
+        }
+    }
+
+
+    /*Room* new_room = (cached) ? findRoomCached(room) : findRoom(room);    
     if (!new_room)
     {
         if (m_lastDir == -1)
@@ -71,7 +81,7 @@ void Mapper::processNetworkData(const wchar_t* text, int text_len)
     m_viewpos.room = croom;
     m_viewpos.level = croom->level;
     redrawPosition();
-    m_pCurrentRoom = new_room;
+    m_pCurrentRoom = new_room;*/
 }
 
 void Mapper::processCmd(const wchar_t* text, int text_len)
@@ -79,7 +89,6 @@ void Mapper::processCmd(const wchar_t* text, int text_len)
     tstring cmd(text, text_len);
     if (cmd.empty())
         return;
-
     int dir = -1;
     if (cmd == m_propsData->north_cmd)
         dir = RD_NORTH;
@@ -101,195 +110,97 @@ void Mapper::popDir()
 {
     if (m_path.empty())
         m_lastDir = -1;
-    else {
-        m_lastDir = m_path[0];
-        m_path.erase(m_path.begin());
-    }
-}
-
-Zone* Mapper::addNewZone()
-{
-    ZoneParams zp;
-    WCHAR buffer[32];
-    for (int i = 1;; ++i)
+    else 
     {
-        swprintf(buffer, L"Новая зона %d", i);
-        bool found = false;
-        for (int j = 0, e = m_zones.size(); j < e; ++j)
-        {
-            m_zones[j]->getParams(&zp);
-            if (!zp.name.compare(buffer)) { found = true; break; }
-        }
-        if (!found)
-            break;
+        m_lastDir = *m_path.begin();
+        m_path.pop_front();
     }
-        
-    Zone *new_zone = new Zone(buffer);
-    m_zones.push_back(new_zone);
-    return new_zone;
 }
 
-Room* Mapper::findRoomCached(const RoomData& room)
+void Mapper::findRooms(const RoomData& room, std::vector<Room*> *vr)
 {
-    if (m_lastDir == -1)
-        return findRoom(room);
+    assert(vr->empty());
+    if (m_lastDir == -1 || !m_pCurrentRoom)
+    {
+        m_table.findRooms(room, vr);
+        if (vr->empty())
+        {
+            Room *new_room = addNewRoom(room);
+            if (new_room)
+                vr->push_back(new_room);
+        }
+        return;
+    }
 
     Room* next = m_pCurrentRoom->dirs[m_lastDir].next_room;
     if (next)
-    {  if (room.dhash && room.equal(next->roomdata))
-          return next;
-       if (!room.dhash && room.similar(next->roomdata))
-          return next;
-       return addNewRoom(room);
-    }
-
-    // get dir from room entered
-    int from = -1;
-    for (int i=0,e=ROOM_DIRS_COUNT; i<e; ++i)
     {
-        if (m_pCurrentRoom->dirs[i].next_room)
-            { from = i; break; }
+        if (room.dhash && room.equal(next->roomdata))
+            { vr->push_back(next); return; }
+        if (!room.dhash && room.similar(next->roomdata))
+            { vr->push_back(next); return; }
+        
+        //todo new zone ? rooms conflict, multiexit ?
+        Room *new_room = addNewRoom(room);
+        if (new_room)
+            vr->push_back(new_room);
+        return;
     }
-    if (from == -1) { assert(false); return NULL; }
-    int revertFrom = revertDir(from);
-    int revert = revertDir(m_lastDir);
+    
+    int backDir = revertDir(m_lastDir);
 
-    // get all rooms as cached
-    int index = -1;
-    std::vector<Room*> vr;
-    m_table.findRooms(m_pCurrentRoom->roomdata, &vr);
-    int size = vr.size();    
+    // check rooms like current and their back directions
+    m_table.findRooms(m_pCurrentRoom->roomdata, vr);
+    int size = vr->size();
+    std::vector<Room*> like_current;
     for (int i=0; i<size; ++i)
     {
-        if (vr[i] == m_pCurrentRoom)
+        Room *candidate = vr->at(i);
+        if (candidate == m_pCurrentRoom)
             continue;
-        if (vr[i]->dirs[from].next_room)
-            continue;
-        Room* next = vr[i]->dirs[m_lastDir].next_room;
+        Room* next = candidate->dirs[m_lastDir].next_room;
         if (next && next->roomdata.equal(room))
         {
-            Room* back = next->dirs[revert].next_room;
+            Room* back = next->dirs[backDir].next_room;
             if (back && back->roomdata.equal(m_pCurrentRoom->roomdata))
-                { index = i; break; }
+                like_current.push_back(candidate);
         }
     }
-
-    if (index != -1)
+        
+    if (like_current.empty())
     {
-        m_cache.deleteRoom(m_pCurrentRoom);
-        Room* new_current = vr[index];
-        Room *f = m_pCurrentRoom->dirs[from].next_room;
-        deleteRoom(m_pCurrentRoom);
-        f->dirs[revertFrom].next_room = new_current;
-        new_current->dirs[from].next_room = f;
-        return new_current->dirs[m_lastDir].next_room;
-    }
+        vr->clear();
 
-    // check neighborhood room by coordinates
-    {
+        // check neighborhood room by coordinates
         RoomCursor pos;
         pos.current_room = m_pCurrentRoom;
         pos.move(m_lastDir);
         Room *next = pos.getOffsetRoom();
-        if (next && !next->dirs[revert].next_room && 
+        if (next && !next->dirs[backDir].next_room &&
             next->roomdata.equal(room))
         {
             m_pCurrentRoom->dirs[m_lastDir].next_room = next;
-            next->dirs[revert].next_room = m_pCurrentRoom;
-            return next;
+            next->dirs[backDir].next_room = m_pCurrentRoom;
+            vr->push_back(next);
+            return;
         }
-    }
 
-    m_cache.deleteRoom(m_pCurrentRoom);
-    return addNewRoom(room);
-}
-
-Room* Mapper::findRoom(const RoomData& room)
-{
-    // find current/new position
-    if (m_pCurrentRoom)
-    {
-        // check neighborhood room
-        if (m_lastDir != -1)
-        {
-            Room* next = m_pCurrentRoom->dirs[m_lastDir].next_room;
-            if (next)
-            {  if (room.dhash && room.equal(next->roomdata))
-                   return next;
-               if (!room.dhash && room.similar(next->roomdata))
-                   return next;
-            }
+        // create new room
+        Room *new_room = addNewRoom(room);
+        if (new_room) {
+            vr->push_back(new_room);
+            m_pCurrentRoom->dirs[m_lastDir].next_room = new_room;
         }
-        else
-        {
-            if (room.dhash && room.equal(m_pCurrentRoom->roomdata))
-                return m_pCurrentRoom;
-            if (!room.dhash && room.similar(m_pCurrentRoom->roomdata))
-                return m_pCurrentRoom;
-        }
+        return;
     }
-
-    if (!room.dhash)
-        return NULL;            // unknown position
-
-    // get all rooms
-    std::vector<Room*> vr;
-    m_table.findRooms(room, &vr);
-    int size = vr.size();
-
-    if (size == 0)
-        return addNewRoom(room);
-
-    if (m_lastDir == -1 || !m_pCurrentRoom)
-    {
-        if (size == 1)
-            return vr[0];
-        return NULL;            // unknown position
-    }
-
-    // try to find room (check back exit)
-    int revert = revertDir(m_lastDir);
-    for (int i=0; i<size; ++i)
-    {
-       if (vr[i]->dirs[revert].next_room == m_pCurrentRoom)
-       {
-           return vr[i];  
-       }
-    }
-    if (!m_pCurrentRoom->dirs[m_lastDir].next_room)
-    {
-       Room *next = getNextRoom(m_pCurrentRoom, m_lastDir);
-       if (next && next->roomdata.equal(room) && !next->dirs[revert].next_room)
-       {
-           m_pCurrentRoom->dirs[m_lastDir].next_room = next;
-           next->dirs[revert].next_room = m_pCurrentRoom;
-           return next;
-       }
-    }
-        
-    if (size == 1)
-    {
-        Room *next = vr[0];
-        if (!next->dirs[revert].next_room &&            
-            !m_pCurrentRoom->dirs[m_lastDir].next_room)
-        {
-           m_pCurrentRoom->dirs[m_lastDir].next_room = next;
-           next->dirs[revert].next_room = m_pCurrentRoom;
-           return next;
-        }
-    } //todo
-
-    // Add new room in cache - will it checking later
-    Room* new_room = addNewRoom(room);
-    m_cache.addRoom(new_room);
-    return new_room;
+    vr->swap(like_current);
 }
 
 Room* Mapper::addNewRoom(const RoomData& room)
 {
     if (!m_pCurrentRoom || m_lastDir == -1)
     {
-        if (!m_rpos.current_room || m_lastDir == -1)  // last known room
+        if (!m_lastpos.current_room || m_lastDir == -1)  // last known room
         {
             // new zone, level and room
             Zone *new_zone = addNewZone();
@@ -302,7 +213,7 @@ Room* Mapper::addNewRoom(const RoomData& room)
         else
         {
             Room *new_room = createNewRoom(room);
-            if (!m_rpos.setOffsetRoom(new_room))
+            if (!m_lastpos.setOffsetRoom(new_room))
             {
                 m_table.deleteRoom(new_room);
                 delete new_room;
@@ -333,10 +244,32 @@ Room* Mapper::addNewRoom(const RoomData& room)
     return new_room;
 }
 
+Zone* Mapper::addNewZone()
+{
+    ZoneParams zp;
+    WCHAR buffer[32];
+    for (int i = 1;; ++i)
+    {
+        swprintf(buffer, L"Новая зона %d", i);
+        bool found = false;
+        for (int j = 0, e = m_zones.size(); j < e; ++j)
+        {
+            m_zones[j]->getParams(&zp);
+            if (!zp.name.compare(buffer)) { found = true; break; }
+        }
+        if (!found)
+            break;
+    }
+
+    Zone *new_zone = new Zone(buffer);
+    m_zones.push_back(new_zone);
+    return new_zone;
+}
+
 Room* Mapper::createNewRoom(const RoomData& room)
 {
     Room *new_room = new Room();
-    new_room->roomdata = room;    
+    new_room->roomdata = room;
     checkExits(new_room);
     m_table.addRoom(new_room);
     return new_room;
@@ -391,13 +324,13 @@ int Mapper::revertDir(int dir)
     return -1;
 }
 
-Room* Mapper::getNextRoom(Room *room, int dir)
+/*Room* Mapper::getNextRoom(Room *room, int dir)
 {
     RoomCursor rc;
     rc.current_room = room;
     rc.move(dir);
     return rc.getOffsetRoom();
-}
+}*/
 
 void Mapper::updateProps()
 {

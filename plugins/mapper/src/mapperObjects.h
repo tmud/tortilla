@@ -12,6 +12,7 @@ struct RoomData
     tstring name;
     tstring descr;
     tstring exits;
+    bool    dark;
     uint    hash;
     uint    dhash;
 
@@ -89,7 +90,7 @@ struct Room
     int icon;                       // icon if exist
     int use_color;                  // flag for use background color
     COLORREF color;                 // background color
-    int special;                    // special internal value for algoritms (don't save)
+    int special;                    // special internal value for algoritms (don't saved)
 };
 
 struct RoomCursor

@@ -15,6 +15,9 @@
     <Filter Include="External Common Libs">
       <UniqueIdentifier>{7b1716d7-0314-4260-a05e-4eaaa492bf96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Common Files">
+      <UniqueIdentifier>{9be0cad6-f617-4b7f-8610-4639c26aa99f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="res\resource.h">
@@ -30,9 +33,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapperSettings.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mapperRoomsCache.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapperRoomRender.h">

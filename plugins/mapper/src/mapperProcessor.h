@@ -56,4 +56,5 @@ private:
     MapperKeyElement ed;        // end description
     MapperKeyElement be;        // begin exits
     MapperKeyElement ee;        // end exits
+    tstring dark_cs;            // dark room compare string
 };
