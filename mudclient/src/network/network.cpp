@@ -201,7 +201,7 @@ int Network::read_socket()
     if (WSARecv(sock, &buffer, 1, &readed, &flags, NULL, NULL) == SOCKET_ERROR)
         return -1;
     //OUTPUT_BYTES(buffer.buf, readed, 8, "read socket");
-    
+
     m_totalReaded += readed;
     if (!m_mccp_on)
     {
@@ -413,7 +413,7 @@ bool Network::process_mccp()
     m_pMccpStream->avail_out = m_mccp_buffer.getSize();
 
     int error = inflate(m_pMccpStream, Z_NO_FLUSH);
-    if (error != Z_OK)
+    if (error != Z_OK && error != Z_STREAM_END)
          return false;
 
     int size = m_mccp_buffer.getSize() - m_pMccpStream->avail_out;
@@ -422,6 +422,17 @@ bool Network::process_mccp()
 
     int processed = m_mccp_data.getSize() - m_pMccpStream->avail_in;
     m_mccp_data.truncate(processed);
+
+    if (error == Z_STREAM_END)
+    {
+        int final_block = m_pMccpStream->avail_in;
+        m_input_data.write(m_pMccpStream->next_in, final_block);
+        m_mccp_data.truncate(final_block);
+        close_mccp();
+        init_mccp();
+        m_totalDecompressed += final_block;
+        m_totalReaded = m_totalDecompressed;        
+    }
     return true;
 }
 
