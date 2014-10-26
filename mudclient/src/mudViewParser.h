@@ -22,6 +22,7 @@ public:
     MudViewParser();
     ~MudViewParser();
     void parse(const WCHAR* text, int len, parseData* data);
+    void clearbreakline();
 
 private:
     enum parserResultCode {

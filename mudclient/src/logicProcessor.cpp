@@ -101,18 +101,81 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // parse incoming text
    parseData parse_data;
    m_parser.parse(text, text_len, &parse_data);
+   
+   parseDataStrings& pd = parse_data.strings;
+   parseDataStrings& stack = m_incoming_stack.strings;
    if (flags & GAME_CMD)
    {
-       parseDataStrings &s = parse_data.strings;       
-       for (int i=0,e=s.size(); i<e; ++i)
-           s[i]->gamecmd = true;
+       for (int i=0,e=pd.size(); i<e; ++i)
+           pd[i]->gamecmd = true;
    }
 
-   // start from new string forcibly
-   if (flags & START_BR)
-       parse_data.update_prev_string = false;
+   // can? insert strings
+   if (flags & (START_BR|GAME_CMD))
+   {
+       bool last_prompt = m_pHost->isLastStringPrompt(window);
+       if (!last_prompt)
+       {
+#ifdef _DEBUG //todo
+           int count = pd.size();
+           for (int i = 0; i < count; ++i)
+           {
+               int blocks = pd[i]->blocks.size();
+               for (int j = 0; j < blocks; ++j)
+                   pd[i]->blocks[j].params.blink_status = 1;
+           }
+#endif
 
-   // accamulate last string in one
+           if (parse_data.update_prev_string)   // previous string not finished (not prompt)
+           {
+#ifdef _DEBUG //todo
+               int count = pd.size();
+               for (int i = 0; i < count; ++i)
+               {
+                   int blocks = pd[i]->blocks.size();
+                   for (int j = 0; j < blocks; ++j)
+                       pd[i]->blocks[j].params.reverse_video = 1;
+               }
+#endif
+               for (int i = 0, e = pd.size(); i < e; ++i)
+               {
+#ifdef _DEBUG //todo
+                   tstring text;
+                   pd[i]->getText(&text);
+                   OutputDebugString(text.c_str());
+                   OutputDebugString(L"\r\n");
+#endif
+                   stack.push_back(pd[i]);
+               }
+               pd.clear();
+               //m_parser.clearbreakline();
+               return;
+           }
+
+           //int stack_size = stack.size();
+           //if (stack_size > 0) //todo
+           //{
+           //    pd.insert(pd.begin(), stack_size, NULL);
+           //    for (int i = 0; i < stack_size; ++i)
+           //        pd[i] = stack[i];
+           //    stack.clear();
+           //}
+       }
+
+       // start from new string forcibly
+       if (flags & START_BR)
+           parse_data.update_prev_string = false;
+   }
+
+   if (!parse_data.update_prev_string && !stack.empty()) //todo
+   {
+       //int size = stack.size();
+       OutputDebugString(L"from stack\r\n");             //todo
+       pd.insert(pd.begin(), stack.begin(), stack.end());
+       stack.clear();
+   }
+
+   // accumulate last string in one
    m_pHost->accLastString(window, &parse_data);
 
    // recognize prompt string via template

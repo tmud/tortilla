@@ -27,7 +27,7 @@ void MudView::accLastString(parseData *parse_data)
         return;
 
     int last = m_strings.size() - 1;
-    MudViewString *last_string = m_strings[last];    
+    MudViewString *last_string = m_strings[last];
     MudViewString *string = parse_data->strings[0];
     if (string->gamecmd && !last_string->prompt)
         return;
@@ -38,6 +38,15 @@ void MudView::accLastString(parseData *parse_data)
     parse_data->strings[0] = last_string;
     m_strings.pop_back();                                   // remove last string from view
     m_last_string_updated = true;
+}
+
+bool MudView::isLastStringPrompt()
+{
+    if (m_strings.empty())
+        return true;
+    int last = m_strings.size() - 1;
+    MudViewString *last_string = m_strings[last];
+    return (last_string->prompt) ? true : false;
 }
 
 void MudView::addText(parseData* parse_data, MudView* mirror)

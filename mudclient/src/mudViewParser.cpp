@@ -56,6 +56,11 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
     }
 }
 
+void MudViewParser::clearbreakline()
+{
+    m_last_finished = false;
+}
+
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)
 {
     if (*b >= 0x20)

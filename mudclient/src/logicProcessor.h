@@ -12,7 +12,8 @@ class LogicProcessorHost
 public:
     virtual void connectToNetwork(const tstring& address, int port) = 0;
     virtual void disconnectFromNetwork() = 0;
-    virtual void sendToNetwork(const tstring& data) = 0;
+    virtual void sendToNetwork(const tstring& data) = 0;    
+    virtual bool isLastStringPrompt(int view) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
     virtual void postprocessText(int view, parseData* parse_data) = 0;
@@ -57,6 +58,7 @@ class LogicProcessor : public LogicProcessorMethods
     std::vector<tstring> m_plugins_cmds;
     IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
+    parseData m_incoming_stack;
 
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);

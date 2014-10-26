@@ -671,6 +671,18 @@ private:
         m_network.disconnect();
     }
 
+    bool isLastStringPrompt(int view)
+    {
+        if (view == 0)
+            return m_view.isLastStringPrompt();
+        if (view >= 1 && view <= OUTPUT_WINDOWS)
+        {
+            MudView* v = m_views[view - 1];
+            return v->isLastStringPrompt();
+        }
+        return false;
+    }
+
     void accLastString(int view, parseData* parse_data)
     {
         if (view == 0)

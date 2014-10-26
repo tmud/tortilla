@@ -22,6 +22,7 @@ public:
     MudView(PropertiesElements *elements);
     ~MudView();
     void accLastString(parseData *parse_data);
+    bool isLastStringPrompt();
     void addText(parseData* parse_data, MudView* mirror = NULL);
     void clearText();
     void truncateStrings(int maxcount);
