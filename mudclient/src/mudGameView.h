@@ -800,12 +800,9 @@ private:
         return (ctx->Side != DOCK_HIDDEN) ? true : false;
     }
 
-    void getNetworkRatio(int *compressed, int *decompressed)
+    void getMccpStatus(MccpStatus *status)
     {
-        MccpData data;
-        m_network.getMccpRatio(&data);
-        *compressed = data.network_data_len;
-        *decompressed = data.game_data_len;
+        m_network.getMccpRatio(status);
     }
 
     HWND getMainWindow()

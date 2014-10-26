@@ -506,16 +506,16 @@ IMPL(mccp)
 {
     if (p->size() == 0)
     {
-        int compressed = 0; int decompressed = 0;
-        m_pHost->getNetworkRatio(&compressed, &decompressed);
-        if (compressed == decompressed)
+        MccpStatus status;
+        m_pHost->getMccpStatus(&status);
+        if (!status.status)
         {
             tmcLog(L"Сжатие трафика не работает.");
             return;
         }
 
-        float d = (float)decompressed;
-        float c = (float)compressed;
+        float d = (float)status.game_data_len;
+        float c = (float)status.network_data_len;
         float ratio = 0; 
         if (d > 0)
             ratio = 100 - ((c / d) * 100);        

@@ -5,6 +5,7 @@
 #include "inputProcessor.h"
 #include "logsProcessor.h"
 #include "IfProcessor.h"
+#include "network/network.h"
 
 class LogicProcessorHost
 {
@@ -19,7 +20,7 @@ public:
     virtual void clearText(int view) = 0;
     virtual void showWindow(int view, bool show) = 0;
     virtual void setWindowName(int view, const tstring& name) = 0;
-    virtual void getNetworkRatio(int *compressed, int *decompressed) = 0;
+    virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
     virtual void preprocessGameCmd(tstring* cmd) = 0;
 };

@@ -113,10 +113,11 @@ void Network::close()
     m_totalDecompressed = 0;
 }
 
-void Network::getMccpRatio(MccpData* data)
+void Network::getMccpRatio(MccpStatus* data)
 {
     data->game_data_len = m_totalDecompressed;
     data->network_data_len = m_totalReaded;   
+    data->status = m_mccp_on;
 }
 
 void Network::setSendDoubleIACmode(bool on)
@@ -431,7 +432,6 @@ bool Network::process_mccp()
         close_mccp();
         init_mccp();
         m_totalDecompressed += final_block;
-        m_totalReaded = m_totalDecompressed;        
     }
     return true;
 }

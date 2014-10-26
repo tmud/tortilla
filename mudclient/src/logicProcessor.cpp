@@ -106,7 +106,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
        parseDataStrings &s = parse_data.strings;       
        for (int i=0,e=s.size(); i<e; ++i)
            s[i]->gamecmd = true;
-       //parse_data.update_prev_string = true;
    }
 
    // start from new string forcibly
