@@ -1,20 +1,29 @@
 #pragma once 
-
 #include "mudViewString.h"
 
 typedef std::vector<MudViewString*> parseDataStrings;
-
 struct parseData
 {
     parseData() : update_prev_string(false) {}
-    ~parseData()
-    {
-        autodel<MudViewString> z1(strings);
-    }
+    ~parseData() { autodel<MudViewString> z1(strings); }
 
     bool update_prev_string;
     parseDataStrings strings;
 };
+
+// only for debug (help functions)
+#ifdef _DEBUG
+void markBlink(parseDataStrings& strings);
+void markInversed(parseDataStrings& strings);
+void printByIndex(const parseDataStrings& strings, int index);
+#define MARKBLINK(x) markBlink(x)
+#define MARKINVERSED(x) markInversed(x)
+#define PRINTBYINDEX(x, i) printByIndex(x, i);
+#else
+#define MARKBLINK(x)
+#define MARKINVERSED(x)
+#define PRINTBYINDEX(x, i)
+#endif
 
 class MudViewParser
 {

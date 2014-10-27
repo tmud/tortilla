@@ -96,6 +96,15 @@ void LogicProcessor::processCommand(const tstring& cmd)
     }
 }
 
+void LogicProcessor::processStackTick()
+{
+    // print stack commands
+    if (m_incoming_stack.strings.empty())
+        return;
+    WCHAR tmp[2] = { 13, 10 };
+    processIncoming(tmp, 2, SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_HIGHLIGHTS, 0);
+}
+
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
    // parse incoming text
@@ -113,53 +122,21 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // can? insert strings
    if (flags & (START_BR|GAME_CMD))
    {
-       bool last_prompt = m_pHost->isLastStringPrompt(window);
-       if (!last_prompt)
+       if (window == 0 && !m_pHost->isLastStringPrompt(0))
        {
-#ifdef _DEBUG //todo
-           int count = pd.size();
-           for (int i = 0; i < count; ++i)
-           {
-               int blocks = pd[i]->blocks.size();
-               for (int j = 0; j < blocks; ++j)
-                   pd[i]->blocks[j].params.blink_status = 1;
-           }
-#endif
-
+           MARKBLINK(pd);                       //todo
            if (parse_data.update_prev_string)   // previous string not finished (not prompt)
            {
-#ifdef _DEBUG //todo
-               int count = pd.size();
-               for (int i = 0; i < count; ++i)
-               {
-                   int blocks = pd[i]->blocks.size();
-                   for (int j = 0; j < blocks; ++j)
-                       pd[i]->blocks[j].params.reverse_video = 1;
-               }
-#endif
+               MARKINVERSED(pd);
                for (int i = 0, e = pd.size(); i < e; ++i)
                {
-#ifdef _DEBUG //todo
-                   tstring text;
-                   pd[i]->getText(&text);
-                   OutputDebugString(text.c_str());
-                   OutputDebugString(L"\r\n");
-#endif
+                   PRINTBYINDEX(pd, i);
                    stack.push_back(pd[i]);
                }
                pd.clear();
                //m_parser.clearbreakline();
                return;
            }
-
-           //int stack_size = stack.size();
-           //if (stack_size > 0) //todo
-           //{
-           //    pd.insert(pd.begin(), stack_size, NULL);
-           //    for (int i = 0; i < stack_size; ++i)
-           //        pd[i] = stack[i];
-           //    stack.clear();
-           //}
        }
 
        // start from new string forcibly

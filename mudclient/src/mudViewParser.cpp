@@ -279,3 +279,33 @@ void ColorsCollector::process(parseData *data)
        }
    }
 }
+
+#ifdef _DEBUG
+void markBlink(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+            strings[i]->blocks[j].params.blink_status = 1;
+    }
+}
+void markInversed(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+            strings[i]->blocks[j].params.reverse_video = 1;
+    }
+}
+void printByIndex(const parseDataStrings& strings, int index)
+{
+    tstring text;
+    strings[index]->getText(&text);
+    OutputDebugString(text.c_str());
+    OutputDebugString(L"\r\n");
+}
+#endif

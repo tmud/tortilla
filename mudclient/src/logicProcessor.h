@@ -74,6 +74,7 @@ public:
     void processCommand(const tstring& cmd);
     void processSystemCommand(const tstring& cmd);
     void processTick();
+    void processStackTick();
     void updateProps();    
     void tmcLog(const tstring& cmd);
     void tmcSysLog(const tstring& cmd);

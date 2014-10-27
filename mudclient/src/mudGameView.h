@@ -237,7 +237,7 @@ private:
         MESSAGE_HANDLER(WM_USER+1, OnNetwork)
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
-        MESSAGE_HANDLER(WM_TIMER, OnTimer)        
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
@@ -323,6 +323,7 @@ private:
         }
 
         SetTimer(1, 200);
+        SetTimer(2, 50);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -355,6 +356,7 @@ private:
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->RemoveIdleHandler(this);
 
+        KillTimer(2);
         KillTimer(1);
         for (int i=0,e=m_views.size(); i<e; ++i)
             delete m_views[i];
@@ -507,13 +509,20 @@ private:
         m_network.send((tbyte*)buffer.getData(), buffer.getSize() - 1); // don't send last byte(0) of string
     }
 
-    LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&)
+    LRESULT OnTimer(UINT, WPARAM id, LPARAM, BOOL&)
     {
-        m_processor.processTick();
-        if (m_history.IsWindowVisible() && m_history.isLastString())
+        if (id == 1)
         {
-            m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-            m_history.truncateStrings(m_propData->view_history_size);
+            m_processor.processTick();
+            if (m_history.IsWindowVisible() && m_history.isLastString())
+            {
+                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
+                m_history.truncateStrings(m_propData->view_history_size);
+            }
+        }
+        else if (id == 2)
+        {
+            m_processor.processStackTick();
         }
         return 0;
     }
