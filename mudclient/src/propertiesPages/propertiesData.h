@@ -598,17 +598,5 @@ private:
             }
             windows.push_back(w);
         }
-    }    
-
-    bool isVistaOrHigher() const
-    {
-        OSVERSIONINFOEX os;
-        ZeroMemory(&os, sizeof(OSVERSIONINFOEX));
-        os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-        GetVersionEx((OSVERSIONINFO*)&os);
-        if ((os.wProductType != VER_NT_WORKSTATION) ||
-            (os.dwMajorVersion < 6)) // if less Vista/7/8
-                return false;
-        return true;
     }
 };

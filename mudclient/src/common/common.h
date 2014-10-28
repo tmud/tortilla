@@ -1,5 +1,6 @@
 #pragma once
 
+bool isVistaOrHigher();
 void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, UINT msg, UINT options);
 void getWindowText(HWND handle, tstring *string);

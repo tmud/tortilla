@@ -66,6 +66,9 @@ private:
             PostQuitMessage(0);
             return 0;
         }
+
+        setTaskbarName();
+
         m_toolBar.create(this);
         m_toolBar.createCmdBar(IDR_MAINFRAME);
         m_toolBar.createToolbar(IDR_MAINFRAME);
@@ -164,5 +167,21 @@ private:
         CWelcomeDlg dlg;
         dlg.DoModal();
         return 0;
+    }
+
+    void setTaskbarName()
+    {
+        if (!isVistaOrHigher())
+            return;
+        tstring name(L"Tortilla Mud Client");
+        HKEY key = 0;
+        if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", 
+            0, KEY_SET_VALUE, &key) == ERROR_SUCCESS)
+        {
+            WCHAR buffer[MAX_PATH+1];
+            GetModuleFileName(NULL, buffer, MAX_PATH);
+            RegSetValueEx(key, buffer, 0, REG_SZ, (const BYTE*)name.c_str(), name.length()*sizeof(WCHAR));
+            RegCloseKey(key);
+        }
     }
 };

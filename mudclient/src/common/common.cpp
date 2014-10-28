@@ -1,6 +1,18 @@
 #include "stdafx.h"
 #include "common.h"
 
+bool isVistaOrHigher()
+{
+    OSVERSIONINFOEX os;
+    ZeroMemory(&os, sizeof(OSVERSIONINFOEX));
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    GetVersionEx((OSVERSIONINFO*)&os);
+    if ((os.wProductType != VER_NT_WORKSTATION) ||
+        (os.dwMajorVersion < 6)) // if less Vista/7/8
+        return false;
+    return true;
+}
+
 void loadString(UINT id, tstring* string)
 {
     WCHAR buffer[256];

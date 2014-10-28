@@ -468,12 +468,11 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "FileDescription", "TMC"
-            VALUE "FileVersion", "0.9.4.0"
+            VALUE "FileDescription", "Client for Multi User Dangeon games"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
             VALUE "OriginalFilename", "tortilla.exe"
-            VALUE "ProductName", "Totilla - client for Multi User Dangeon games"
+            VALUE "ProductName", "Tortilla Mud Client"
             VALUE "ProductVersion", "0.9.4.0"
         END
     END
