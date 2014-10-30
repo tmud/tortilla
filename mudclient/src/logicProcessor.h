@@ -81,8 +81,8 @@ public:
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
 
-private:    
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, START_BR = 8, GAME_CMD = 16  };
+private:
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, IND_PARSER = 64  };
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);

@@ -23,6 +23,7 @@ public:
     PluginsParseData(parseData *data) : pdata(data), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
     int size() const { return plugins_strings.size(); }
+    int getindex() const { return selected; }
     bool select(int index)
     {
         if (index >= 0 && index < size()) { selected = index; return true; }

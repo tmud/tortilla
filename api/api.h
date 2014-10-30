@@ -83,10 +83,15 @@ public:
         runcmd("size");
         return intresult(); 
     }
-    bool select(int string) // select string for operations
+    bool select(int index) // select string for operations
     {
-        runcmdint("select", string);
-        return boolresult(); 
+        runcmdint("select", index);
+        return boolresult();
+    }
+    int getindex()
+    {
+        runcmd("getindex");
+        return intresult();
     }
     bool isfirst()
     {
@@ -112,6 +117,11 @@ public:
     {
         runcmd("gettext");
         strresult(str); 
+    }
+    int gettextlen()
+    {
+        runcmd("gettextlen");
+        return intresult();
     }
     void gethash(u8string* str)
     {

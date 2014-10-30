@@ -173,7 +173,7 @@ private:
     {
         if (!isVistaOrHigher())
             return;
-        tstring name(L"Tortilla Mud Client");
+        tstring name(L"Tortilla");
         HKEY key = 0;
         if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\MuiCache", 
             0, KEY_SET_VALUE, &key) == ERROR_SUCCESS)

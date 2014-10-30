@@ -17,6 +17,17 @@ void regFunction(lua_State *L, const char* name, lua_CFunction f)
     lua_pushcfunction(L, f);
     lua_settable(L, -3);
 }
+
+void regIndexMt(lua_State *L)
+{
+    assert(lua_istable(L, -1));
+    lua_pushstring(L, "__index");
+    lua_pushvalue(L, -2);
+    lua_settable(L, -3);
+    lua_pushstring(L, "__metatable");
+    lua_pushstring(L, "access denied");
+    lua_settable(L, -3);
+}
 //--------------------------------------------------------------------
 int window_attach(lua_State *L)
 {
@@ -162,6 +173,7 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "show", window_show);
     regFunction(L, "hide", window_hide);
     regFunction(L, "isvisible", window_isvisible);
+    regIndexMt(L);
     lua_pop(L, 1);
 }
 //--------------------------------------------------------------------
@@ -187,6 +199,17 @@ int vd_select(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, "viewdata.select");
+}
+
+int vd_getindex(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        lua_pushinteger(L, pdata->getindex());
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.getindex");
 }
 
 int vd_isgamecmd(lua_State *L)
@@ -257,6 +280,18 @@ int vd_gettext(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, "viewdata.gettext");
+}
+
+int vd_gettextlen(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString* str = pdata->getselected();           
+        lua_pushinteger(L, (str) ? str->getTextLen() : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.gettextlen");
 }
 
 int vd_gethash(lua_State *L)
@@ -606,12 +641,14 @@ void reg_mt_viewdata(lua_State *L)
     luaL_newmetatable(L, "viewdata");
     regFunction(L, "size", vd_size);
     regFunction(L, "select", vd_select);
+    regFunction(L, "getindex", vd_getindex);
     regFunction(L, "isfirst", vd_isfirst);
     regFunction(L, "isgamecmd", vd_isgamecmd);
     regFunction(L, "isprompt", vd_isprompt);
     regFunction(L, "getprompt", vd_getprompt);
     regFunction(L, "gettext", vd_gettext);
-    regFunction(L, "gethash", vd_gethash);    
+    regFunction(L, "gettextlen", vd_gettextlen);
+    regFunction(L, "gethash", vd_gethash);
     regFunction(L, "blocks", vd_blocks);
     regFunction(L, "getblock", vd_getblock);
     regFunction(L, "get", vd_get);
@@ -620,6 +657,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteblock", vd_deleteblock);
     regFunction(L, "deleteallblocks", vd_deleteallblocks);
     regFunction(L, "deletestring", vd_deletestring);
+    regIndexMt(L);
     lua_pop(L, 1);
 }
 //--------------------------------------------------------------------
@@ -823,12 +861,7 @@ void reg_mt_activeobject(lua_State *L)
     regFunction(L, "setindex", ao_setindex);
     regFunction(L, "update", ao_update);
     regFunction(L, "__gc", ao_gc);
-    lua_pushstring(L, "__index");
-    lua_pushvalue(L, -2);
-    lua_settable(L, -3);
-    lua_pushstring(L, "__metatable");
-    lua_pushstring(L, "access denied");
-    lua_settable(L, -3);
+    regIndexMt(L);
     lua_pop(L, 1);
 }
 
