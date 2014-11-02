@@ -37,7 +37,7 @@ void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
 Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), m_double_iac_mode(true)
 {
     m_input_buffer.alloc(1024);
-    m_mccp_buffer.alloc(4096);
+    m_mccp_buffer.alloc(8192);
 }
 
 Network::~Network()
@@ -193,31 +193,39 @@ DataQueue* Network::receive()
 
 int Network::read_socket()
 {
-    WSABUF buffer;
-    buffer.buf = m_input_buffer.getData();
-    buffer.len = m_input_buffer.getSize();
-
-    DWORD flags = 0;
-    DWORD readed = 0;
-    if (WSARecv(sock, &buffer, 1, &readed, &flags, NULL, NULL) == SOCKET_ERROR)
-        return -1;
-    //OUTPUT_BYTES(buffer.buf, readed, 8, "read socket");
-
-    m_totalReaded += readed;
-    if (!m_mccp_on)
+    while (true)
     {
+        WSABUF buffer;
+        buffer.buf = m_input_buffer.getData();
+        buffer.len = m_input_buffer.getSize();
+
+        DWORD flags = 0;
+        DWORD readed = 0;
+        if (WSARecv(sock, &buffer, 1, &readed, &flags, NULL, NULL) == SOCKET_ERROR)
+        {
+            if (WSAGetLastError() != WSAEWOULDBLOCK)
+                return -1;
+        }
+        //OUTPUT_BYTES(buffer.buf, readed, 8, "read socket");
         if (readed == 0)
-            return 0;
-        m_input_data.write(m_input_buffer.getData(), readed);
-        m_totalDecompressed += readed;
-    }
-    else
-    {
-        m_mccp_data.write(m_input_buffer.getData(), readed);
-        if (m_mccp_data.getSize() == 0)
-            return 0;
-        if (!process_mccp())
-            return -2;
+            break;
+
+        m_totalReaded += readed;
+        if (!m_mccp_on)
+        {
+            if (readed == 0)
+                return 0;
+            m_input_data.write(m_input_buffer.getData(), readed);
+            m_totalDecompressed += readed;
+        }
+        else
+        {
+            m_mccp_data.write(m_input_buffer.getData(), readed);
+            if (m_mccp_data.getSize() == 0)
+                return 0;
+            if (!process_mccp())
+                return -2;
+        }
     }
 
     while(m_input_data.getSize() > 0)
