@@ -39,7 +39,7 @@ wchar_t plugin_buffer[1024];
 int pluginInvArgs(lua_State *L, const utf8* fname) 
 {
     Utf8ToWide f(fname);
-    swprintf(plugin_buffer, L"'%s': Функция '%s'. Неверный набор параметров (%d шт.)", _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
+    swprintf(plugin_buffer, L"'%s'.%s: Неверный набор параметров (%d шт.)", _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
     pluginLog(plugin_buffer);
     return 0; 
 }
@@ -48,7 +48,7 @@ int pluginError(lua_State *L, const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s': Функция '%s'. Ошибка: %s", _cp->get(Plugin::NAME), (const wchar_t*)f, (const wchar_t*)e);
+    swprintf(plugin_buffer, L"'%s'.%s: %s", _cp->get(Plugin::NAME), (const wchar_t*)f, (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
 }
@@ -56,7 +56,7 @@ int pluginError(lua_State *L, const utf8* fname, const utf8* error)
 int pluginError(lua_State *L, const utf8* error)
 {
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s': Ошибка: %s", _cp->get(Plugin::NAME), (const wchar_t*)e);
+    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::NAME), (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
 }
@@ -602,16 +602,24 @@ int createwindow(lua_State *L)
 
 int pluginlog(lua_State *L)
 {
-    if (!luaT_check(L, 1, LUA_TSTRING))
-        return pluginInvArgs(L, "log");
-    pluginLog(L, lua_tostring(L, 1));
-    return 0;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        pluginLog(L, lua_tostring(L, 1));
+        return 0;
+    }
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        pluginLog(L, lua_tostring(L, 1));
+        return 0;
+    }
+    return pluginInvArgs(L, "log");    
 }
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
 void reg_mt_viewdata(lua_State *L);
 void reg_activeobjects(lua_State *L);
+void reg_string(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -623,6 +631,7 @@ bool initPluginsSystem()
     lua_pop(L, 1);
     luaopen_table(L);
     lua_setglobal(L, "table");
+    reg_string(L);    
     lua_register(L, "addCommand", addcommand);
     lua_register(L, "addMenu", addmenu);
     lua_register(L, "addButton", addbutton);
@@ -678,3 +687,4 @@ void pluginDeleteResources(Plugin *plugin)
     plugin->commands.clear();
     _cp = old;
 }
+

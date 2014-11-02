@@ -133,9 +133,9 @@ public:
         runcmd("blocks");
         return intresult(); 
     }
-    void getblock(int block, u8string* str)
+    void getblocktext(int block, u8string* str)
     {
-        runcmdint("getblock", block);
+        runcmdint("getblocktext", block);
         strresult(str);
     }
     bool get(int block, int param, unsigned int *value)
@@ -159,6 +159,12 @@ public:
         luaT_run(L, "setblocktext", "ods", block, text);
         return boolresult();
     }
+    bool copyblock(int block, int dst_string, int dst_block)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "copyblock", "oddd", block, dst_string, dst_block);
+        return boolresult();
+    }
     bool deleteblock(int block)
     {
         runcmdint("deleteblock", block);
@@ -167,6 +173,11 @@ public:
     bool deleteallblocks()
     {
         runcmd("deleteallblocks");
+        return boolresult();
+    }
+    bool createstring()
+    {
+        runcmd("createstring");
         return boolresult();
     }
     bool deletestring()

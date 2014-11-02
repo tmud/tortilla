@@ -57,7 +57,7 @@ public:
     }    
     bool select(int index)
     {
-        if (index >= 0 && index < size()) { selected = index; return true; }
+        if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
     }
     bool get(int param, u8string* value)
@@ -107,16 +107,16 @@ public:
     }
     int getindex() 
     {
-        return selected; 
+        return selected+1;
     }
     bool setindex(int index) 
     {
         if (selected == -1)
             return false;
-        if (index >= 0 && index < size())
+        if (index >= 1 && index <= size())
         {
-            actobj->move(selected, index);
-            selected = index;
+            actobj->move(selected, index-1);
+            selected = index-1;
             return true;
         }
         return false; 
@@ -470,7 +470,7 @@ public:
     const utf8* type() const { return "tabs"; }
     bool select(int index)
     {
-        if (index >= 0 && index < size()) { selected = index; return true; }
+        if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
     }
     bool get(int param, u8string* value)
@@ -500,7 +500,7 @@ public:
         }
         return false;
     }
-    int getindex() { return selected; }
+    int getindex() { return selected+1; }
     bool setindex(int index) { return false; }
     int size() const { return data->tabwords.size(); }
     bool add(const utf8* key, const utf8* value, const utf8* group)
