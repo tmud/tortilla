@@ -384,7 +384,7 @@ struct PropertiesData
         colors[1] = RGB(128, 0, 0);
         colors[2] = RGB(0, 128, 0);
         colors[3] = RGB(128, 128, 0);
-        colors[4] = RGB(0, 0, 128);
+        colors[4] = RGB(0, 0, 255);
         colors[5] = RGB(128, 0, 128);
         colors[6] = RGB(0, 128, 128);
         colors[7] = RGB(192, 192, 192);
@@ -392,7 +392,7 @@ struct PropertiesData
         colors[9] = RGB(255, 0, 0);
         colors[10] = RGB(0, 255, 0);
         colors[11] = RGB(255, 255, 0);
-        colors[12] = RGB(0, 0, 255);
+        colors[12] = RGB(64, 64, 255);
         colors[13] = RGB(255, 0, 255);
         colors[14] = RGB(0, 255, 255);
         colors[15] = RGB(255, 255, 255);        
