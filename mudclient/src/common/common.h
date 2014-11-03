@@ -21,6 +21,9 @@ void tstring_tolower(tstring *str);
 void tstring_replace(tstring *str, const tstring& what, const tstring& forr);
 bool tstring_cmpl(const tstring& str, const WCHAR* lstr);
 
+int  u8string_len(const u8string& str);
+void u8string_substr(u8string *str, int from, int len);
+
 class Separator
 {
 public:

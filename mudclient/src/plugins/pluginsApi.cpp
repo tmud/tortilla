@@ -688,3 +688,55 @@ void pluginDeleteResources(Plugin *plugin)
     _cp = old;
 }
 
+//--------------------------------------------------------------------
+int string_len(lua_State *L)
+{
+    int len = 0;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        u8string str(lua_tostring(L, 1));
+        len = u8string_len(str);
+    }
+    lua_pushinteger(L, len);
+    return 1;
+}
+
+int string_substr(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
+    {
+        u8string s(lua_tostring(L, 1));
+        u8string_substr(&s, 0, lua_tointeger(L, 2));
+        lua_pushstring(L, s.c_str());
+        return 1;
+    }
+    if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        u8string s(lua_tostring(L, 1));
+        int from = lua_tointeger(L, 2);
+        if (from < 1)
+            s.clear();
+        else
+            u8string_substr(&s, from-1, lua_tointeger(L, 3));
+        lua_pushstring(L, s.c_str());
+        return 1;
+    }
+    lua_pushnil(L);
+    return 1;
+}
+
+extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
+extern void regIndexMt(lua_State *L);
+void reg_string(lua_State *L)
+{
+    lua_newtable(L);
+    regFunction(L, "len", string_len);
+    regFunction(L, "substr", string_substr);
+    regIndexMt(L);
+
+    // set metatable for lua string type
+    lua_pushstring(L, "");
+    lua_insert(L, -2);
+    lua_setmetatable(L, -2);
+    lua_pop(L, 1);
+}

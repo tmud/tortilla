@@ -5,10 +5,17 @@
 struct PluginViewString
 {
     std::vector<u8string> blocks;
-    void gettext(u8string *text)
+    void getText(u8string *text) const
     {
         for (int i = 0, e = blocks.size(); i < e; ++i)
             text->append(blocks[i]);
+    }
+    int getTextLen() const
+    {
+        int len = 0;
+        for (int i = 0, e = blocks.size(); i < e; ++i)
+            len += u8string_len(blocks[i]);
+        return len;
     }
 };
 
@@ -42,7 +49,7 @@ public:
     bool getPrompt(u8string *str)
     {
         MudViewString*s = getselected();
-        if (s) 
+        if (s)
         {
             tstring text;
             s->getPrompt(&text);
@@ -114,13 +121,8 @@ public:
                         dst->blocks.push_back(MudViewStringBlock());
                     }
                 }
-
-                if (block == 1) {}
-                else
-                {
-                    dst_pvs->blocks[dst_block - 1] = src_pvs->blocks[block - 1];
-                    dst->blocks[dst_block - 1] = src->blocks[block - 1];
-                }
+                dst_pvs->blocks[dst_block - 1] = src_pvs->blocks[block - 1];
+                dst->blocks[dst_block - 1] = src->blocks[block - 1];
                 return true;
             }
         }

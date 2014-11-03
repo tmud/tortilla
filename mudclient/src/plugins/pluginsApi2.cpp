@@ -270,7 +270,8 @@ int vd_gettext(lua_State *L)
         PluginViewString* str = pdata->getselected_pvs();
         if (str)
         {
-            u8string text; str->gettext(&text);
+            u8string text;
+            str->getText(&text);
             lua_pushstring(L, text.c_str());
         }
         else
@@ -287,8 +288,9 @@ int vd_gettextlen(lua_State *L)
     if (luaT_check(L, 1, LUAT_VIEWDATA))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        MudViewString* str = pdata->getselected();           
-        lua_pushinteger(L, (str) ? str->getTextLen() : 0);
+        PluginViewString* str = pdata->getselected_pvs();
+        int len = (str) ? str->getTextLen() : 0;
+        lua_pushinteger(L, len);
         return 1;
     }
     return pluginInvArgs(L, "viewdata.gettextlen");
@@ -343,21 +345,6 @@ int vd_blocks(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, "viewdata.blocks");
-}
-
-int vd_getblocktext(lua_State *L)
-{
-    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
-    {
-        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        u8string str;
-        if (pdata->getselected_block(lua_tointeger(L, 2), &str))
-            lua_pushstring(L, str.c_str());
-        else
-            lua_pushnil(L);
-        return 1;
-    }
-    return pluginInvArgs(L, "viewdata.getblocktext");
 }
 
 tbyte _check(unsigned int val, unsigned int min, unsigned int max)
@@ -540,6 +527,21 @@ int vd_set(lua_State *L)
     return pluginInvArgs(L, "viewdata.set");
 }
 
+int vd_getblocktext(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        u8string str;
+        if (pdata->getselected_block(lua_tointeger(L, 2), &str))
+            lua_pushstring(L, str.c_str());
+        else
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.getblocktext");
+}
+
 int vd_setblocktext(lua_State *L)
 {
     if (luaT_check(L, 3, LUAT_VIEWDATA, LUA_TNUMBER, LUA_TSTRING))
@@ -617,12 +619,8 @@ int vd_createstring(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         bool ok = false;
-        if (pdata->getselected())
+        if (pdata->getselected_pvs())
         {
-            MudViewString *vs = pdata->getselected();
-            tstring text;  vs->getText(&text);
-            int len = vs->getTextLen();
-
             pdata->insert_new_string();
             ok = true;
         }
@@ -922,28 +920,4 @@ void reg_activeobjects(lua_State *L)
     reg_activeobject(L, "timers", new AO_Timers(p));
     reg_activeobject(L, "vars", new AO_Vars(p));    
 }
-//--------------------------------------------------------------------
-int string_len(lua_State *L)
-{
-    int len = 0;
-    if (luaT_check(L, 1, LUA_TSTRING))
-    {
-        tstring str ( convert_utf8_to_wide(lua_tostring(L, -1)) );
-        len = str.length();
-    }
-    lua_pushinteger(L, len);
-    return 1;
-}
 
-void reg_string(lua_State *L)
-{
-    lua_newtable(L);        
-    regFunction(L, "len", string_len);
-    regIndexMt(L);
-
-    // set metatable for lua string type
-    lua_pushstring(L, "");
-    lua_insert(L, -2);
-    lua_setmetatable(L, -2);
-    lua_pop(L, 1);
-}
