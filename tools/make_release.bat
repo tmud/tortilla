@@ -1,7 +1,7 @@
 @echo off
 
 set modules=modules\system.dll
-set plugins=plugins\prompt.dll plugins\jmc3import.dll plugins\historyfilter.lua
+set plugins=plugins\prompt.dll plugins\jmc3import.dll plugins\historyfilter.lua plugins\autowrap.lua
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
