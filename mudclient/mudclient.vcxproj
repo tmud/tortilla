@@ -166,6 +166,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\mudView.h" />
     <ClInclude Include="src\mudViewParser.h" />
     <ClInclude Include="src\mudViewString.h" />
+    <ClInclude Include="src\passwordDlg.h" />
     <ClInclude Include="src\plugins\plugin.h" />
     <ClInclude Include="src\plugins\pluginsActiveObjects.h" />
     <ClInclude Include="src\plugins\pluginsApi.h" />

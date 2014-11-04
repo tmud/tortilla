@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "logicProcessor.h"
 #include "helpManager.h"
+#include "passwordDlg.h"
 
 //parse any variations {'" or space:
 //#cmd par1 par2 par3
@@ -451,6 +452,28 @@ IMPL(help)
         if (param.at(0) == propData->cmd_prefix)
             param = param.substr(1);
         openHelp(m_pHost->getMainWindow(), param);
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(password)
+{
+    int n = p->size();
+    if (n == 0 || n == 1)
+    {
+        tstring pass;
+        PasswordDlg dlg(n == 0 ? L"" : p->at(0));
+        if (dlg.DoModal() == IDOK)
+            pass = dlg.getPassword();
+        if (!pass.empty())
+        {
+            tstring msg(L"*****\r\n");
+            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS);
+            WCHAR br[2] = { 10, 0 };            
+            pass.append(br);
+            sendToNetwork(pass);
+        }
         return;
     }
     p->invalidargs();
@@ -996,7 +1019,8 @@ bool LogicProcessor::init()
     regCommand("var", var);
     regCommand("unvar", unvar);
 
-    regCommand("hide", hide);        
+    regCommand("password", password);
+    regCommand("hide", hide);
     regCommand("if", ifop);
     regCommand("group", group);
 

@@ -104,6 +104,7 @@ public: // system commands
     DEF(hotkey);
     DEF(unhotkey);
     DEF(help);
+    DEF(password);
     DEF(hide);
     DEF(highlight);
     DEF(ifop);

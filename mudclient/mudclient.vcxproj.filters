@@ -235,6 +235,9 @@
     <ClInclude Include="src\ifProcessor.h">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClInclude>
+    <ClInclude Include="src\passwordDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\compareObject.cpp">
