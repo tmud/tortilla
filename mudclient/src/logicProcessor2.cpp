@@ -30,10 +30,10 @@ private:
 };
 //-------------------------------------------------------------------
 #include "logicScripts.h"
-WCHAR buffer[256];
+ParamsBuffer pb;
+tchar buffer[1024];
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
-tchar MethodsHelper::buffer[1024]; //logicScripts.h
 //------------------------------------------------------------------
 void LogicProcessor::processSystemCommand(const tstring& cmd)
 {
@@ -125,126 +125,147 @@ IMPL(drop)
     if (p->size() != 0)
         p->invalidargs();
 }
+//------------------------------------------------------------------
+class ElementsHelper : public MethodsHelper
+{
+    LogicProcessorMethods *m_pMethods;
+    int  m_type;
+    bool m_skip;
+    bool canDoIt() {
+        if (!m_skip && m_pMethods->checkActiveObjectsLog(m_type)) return true;
+        return m_skip;
+    }
+public:
+    ElementsHelper(LogicProcessorMethods *methods, int type) : m_pMethods(methods), m_type(type), m_skip(false) {}
+    void tmcLog(const tstring& msg) { if (canDoIt()) m_pMethods->tmcLog(msg); }
+    void simpleLog(const tstring& msg) { if (canDoIt()) m_pMethods->simpleLog(msg); }
+    void updateLog(const tstring& msg) { if (canDoIt()) m_pMethods->updateLog(msg); }
+    void skipCheckMode() { m_skip = true; }
+    operator MethodsHelper*() { return this; }
+};
 
 IMPL(action) 
 {
-    AddParams3 script(this);
+    AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
     int update = script.process(p, &propData->actions, &propData->groups, 
-            L"Триггеры(actions)", L"Триггеры", L"Новый триггер");
+            L"Триггеры(actions)", L"Триггеры", L"Новый триггер", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
 IMPL(unaction)
 {
-    DeleteParams3 script(this);
-    int update = script.process(p, &propData->actions, L"Удаление триггера");
+    DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
+    int update = script.process(p, &propData->actions, L"Удаление триггера", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
 IMPL(alias)
 {
-    AddParams3 script(this);
+    AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
     int update = script.process(p, &propData->aliases, &propData->groups,
-        L"Макросы(aliases)", L"Макросы", L"Новый макрос");
+        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
- }
+}
 
 IMPL(unalias)
 {
-    DeleteParams3 script(this);
-    int update = script.process(p, &propData->aliases, L"Удаление команды");
+    DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
+    int update = script.process(p, &propData->aliases, L"Удаление команды", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
 IMPL(sub)
 {
-    AddParams3 script(this);
+    AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
     int update = script.process(p, &propData->subs, &propData->groups,
-        L"Замены(subs)", L"Замены", L"Новая замена");
+        L"Замены(subs)", L"Замены", L"Новая замена", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
 IMPL(unsub)
 {
-    DeleteParams3 script(this);
-    int update = script.process(p, &propData->subs, L"Удаление замены");
+    DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
+    int update = script.process(p, &propData->subs, L"Удаление замены", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
 IMPL(hotkey)
 {
-    AddParams3 script(this);
+    AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
     HotkeyTestControl control;
     int update = script.process(p, &propData->hotkeys, &propData->groups,
-        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"Новая горячая клавиша",
+        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"Новая горячая клавиша", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
 
 IMPL(unhotkey)
 {
-    DeleteParams3 script(this);
-    int update = script.process(p, &propData->hotkeys, L"Удаление горячей клавиши");
+    DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
+    int update = script.process(p, &propData->hotkeys, L"Удаление горячей клавиши", &ph);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
 
 IMPL(highlight)
 {
-    AddParams3 script(this);
+    AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
     HighlightTestControl control;
     int update = script.process(p, &propData->highlights, &propData->groups,
-        L"Подсветки(highlights)", L"Подсветка", L"Новая подсветка",
+        L"Подсветки(highlights)", L"Подсветка", L"Новая подсветка", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
 
 IMPL(unhighlight)
 {
-    DeleteParams3 script(this);
-    int update = script.process(p, &propData->highlights, L"Удаление подсветки");
+    DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
+    int update = script.process(p, &propData->highlights, L"Удаление подсветки", &ph);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
 
 IMPL(gag)
 {
-    AddParams2 script(this);
-    int update = script.process(p, &propData->gags, &propData->groups, L"Фильтры (gags)", L"Фильтр");
+    AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
+    int update = script.process(p, &propData->gags, &propData->groups, L"Фильтры (gags)", L"Фильтр", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
 IMPL(ungag)
 {
-    DeleteParams2 script(this);
-    int update = script.process(p, &propData->gags, L"Удаление фильтра");
+    DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
+    int update = script.process(p, &propData->gags, L"Удаление фильтра", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
 IMPL(antisub)
 {
-    AddParams2 script(this);
-    int update = script.process(p, &propData->antisubs, &propData->groups, L"Антизамены (antisubs)", L"Антизамена");
+    AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
+    int update = script.process(p, &propData->antisubs, &propData->groups, L"Антизамены (antisubs)", L"Антизамена", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
 IMPL(unantisub)
 {
-    DeleteParams2 script(this);
-    int update = script.process(p, &propData->antisubs, L"Удаление антизамены");
+    DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
+    int update = script.process(p, &propData->antisubs, L"Удаление антизамены", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
 IMPL(var)
 {
+    ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+    MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 0 || n == 1)
     {
+        helper->skipCheckMode();
         bool found = false;
         if (n == 0)
-            tmcLog(L"Переменные(vars):");
+            helper->tmcLog(L"Переменные(vars):");
         else
         {   
-            swprintf(buffer, L"Переменные с '%s':", p->c_str(0));
-            tmcLog(buffer);
+            swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
+            helper->tmcLog(pb.buffer);
         }
 
         int size = propData->variables.size();
@@ -253,12 +274,12 @@ IMPL(var)
             const property_value& v = propData->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(buffer, L"%s = '%s'", v.key.c_str(), v.value.c_str());
-            simpleLog(buffer);
+            swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", v.key.c_str(), v.value.c_str());
+            helper->simpleLog(pb.buffer);
             found = true;
         }
         if (!found)
-            tmcLog(L"Список пуст");
+            helper->tmcLog(L"Список пуст");
         return;
     }
 
@@ -266,8 +287,8 @@ IMPL(var)
     {
         int index = propData->variables.find(p->at(0));
         propData->variables.add(index, p->at(0), p->at(1), L"");       
-        swprintf(buffer, L"%s = '%s'", p->c_str(0), p->c_str(1));
-        tmcSysLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", p->c_str(0), p->c_str(1));
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -275,19 +296,21 @@ IMPL(var)
 
 IMPL(unvar)
 {
+    ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+    MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 1)
     {
         int index = propData->variables.find(p->at(0));
         if (index == -1)
         {
-            swprintf(buffer, L"Переменная '%s' не существует.", p->c_str(0));
-            tmcSysLog(buffer);
+            swprintf(pb.buffer, pb.buffer_len, L"Переменная '%s' не существует.", p->c_str(0));
+            helper->tmcLog(pb.buffer);
             return;
         }
         propData->variables.del(index);
-        swprintf(buffer, L"Переменная '%s' удалена.", p->c_str(0));
-        tmcSysLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Переменная '%s' удалена.", p->c_str(0));
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -315,15 +338,18 @@ IMPL(group)
     if (n > 2)
         return p->invalidargs();
 
+    ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+    MethodsHelper* helper = ph;
     if (n == 0)
     {
-        tmcLog(L"Группы:");
+        helper->skipCheckMode();
+        helper->tmcLog(L"Группы:");
         for (int i=0,e=propData->groups.size(); i<e; ++i)
         {
             const property_value &v = propData->groups.get(i);
             tstring value = (v.value == L"1") ? L"Вкл" : L"";
-            swprintf(buffer, L"%s %s", v.key.c_str(), value.c_str());
-            simpleLog(buffer);
+            swprintf(pb.buffer, pb.buffer_len, L"%s %s", v.key.c_str(), value.c_str());
+            helper->simpleLog(pb.buffer);
         }
         return;
     }
@@ -337,8 +363,8 @@ IMPL(group)
     }
     if (index == -1)
     {
-        swprintf(buffer, L"Группа '%s' не существует.", group.c_str());
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' не существует.", group.c_str());
+        helper->tmcLog(pb.buffer);
         return;
     }
 
@@ -346,8 +372,9 @@ IMPL(group)
     if (n == 2) op = p->at(0);
     if (n == 1 || (op == L"info" || op == L"инф" || op == L"list" || op == L"список"))
     {
-        swprintf(buffer, L"Группа '%s':", group.c_str());
-        tmcLog(buffer);
+        helper->skipCheckMode();
+        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s':", group.c_str());
+        helper->tmcLog(pb.buffer);
         GroupCollector gc(group);
         int aliases = gc.count(propData->aliases);
         int actions = gc.count(propData->actions);
@@ -356,9 +383,9 @@ IMPL(group)
         int subs = gc.count(propData->subs);
         int gags = gc.count(propData->gags);
         int antisubs = gc.count(propData->antisubs);
-        swprintf(buffer, L"Макросы(aliases): %d\nТриггеры(actions): %d\nПодсветки(highlights): %d\nГорячие клавиши(hotkeys): %d\nЗамены(subs): %d\nФильтры(gags): %d\nАнтизамены(antisubs): %d",
+        swprintf(pb.buffer, pb.buffer_len, L"Макросы(aliases): %d\nТриггеры(actions): %d\nПодсветки(highlights): %d\nГорячие клавиши(hotkeys): %d\nЗамены(subs): %d\nФильтры(gags): %d\nАнтизамены(antisubs): %d",
             aliases, actions, highlights, hotkeys, subs, gags, antisubs);
-        simpleLog(buffer);
+        helper->simpleLog(pb.buffer);
         return;
     }
     
@@ -367,8 +394,8 @@ IMPL(group)
         property_value &v = propData->groups.getw(index);
         v.value = L"1";
         updateProps();
-        swprintf(buffer, L"Группа '%s' включена.", v.key.c_str());
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' включена.", v.key.c_str());
+        helper->tmcLog(pb.buffer);
         return;
     }
 
@@ -377,13 +404,13 @@ IMPL(group)
         property_value &v = propData->groups.getw(index);
         v.value = L"0";
         updateProps();
-        swprintf(buffer, L"Группа '%s' выключена.", v.key.c_str());
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' выключена.", v.key.c_str());
+        helper->tmcLog(pb.buffer);
         return;
     }   
 
-    swprintf(buffer, L"Неизвестная операция '%s'.", op.c_str());
-    tmcLog(buffer);
+    swprintf(pb.buffer, pb.buffer_len, L"Неизвестная операция '%s'.", op.c_str());
+    helper->tmcLog(pb.buffer);
     return;
 }
 
@@ -541,7 +568,8 @@ IMPL(mccp)
         float c = (float)status.network_data_len;
         float ratio = 0; 
         if (d > 0)
-            ratio = 100 - ((c / d) * 100);        
+            ratio = 100 - ((c / d) * 100);
+        tchar buffer[64];
         swprintf(buffer, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
         tmcLog(buffer);
         return;
@@ -777,18 +805,21 @@ IMPL(print)
 
 IMPL(tab)
 {
+    ElementsHelper ph(this, LogicHelper::UPDATE_TABS);
+    MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 0)
-    {
-        tmcLog(L"Автоподстановки(tabs):");
+    {        
+        helper->skipCheckMode();
+        helper->tmcLog(L"Автоподстановки(tabs):");
         int size = propData->tabwords.size();
         for (int i=0; i<size; ++i)
         {
             const tstring &v = propData->tabwords.get(i);
-            simpleLog(v.c_str());
+            helper->simpleLog(v.c_str());
         }
         if (size == 0)
-            tmcLog(L"Список пуст.");
+            helper->tmcLog(L"Список пуст.");
         return;
     }
 
@@ -798,8 +829,8 @@ IMPL(tab)
         int index = propData->tabwords.find(tab);
         if (index == -1)
             propData->tabwords.add(index, tab);
-        swprintf(buffer, L"Автоподстановка '%s' добавлена.", tab.c_str());        
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка '%s' добавлена.", tab.c_str());        
+        helper->tmcLog(buffer);
         return;
     }
     p->invalidargs();
@@ -807,6 +838,8 @@ IMPL(tab)
 
 IMPL(untab)
 {
+    ElementsHelper ph(this, LogicHelper::UPDATE_TABS);
+    MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 1)
     {
@@ -819,7 +852,7 @@ IMPL(untab)
             propData->tabwords.del(index);
             swprintf(buffer, L"Автоподстановкa '%s' удалена.", tab.c_str());
         }
-        tmcLog(buffer);
+        helper->tmcLog(buffer);
         return;
     }
     p->invalidargs();
@@ -827,26 +860,29 @@ IMPL(untab)
 
 IMPL(timer)
 {
+    ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
+    MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 0)
     {
-        tmcLog(L"Таймеры:");
+        helper->skipCheckMode();
+        helper->tmcLog(L"Таймеры:");
         if (!propData->timers_on)
-            simpleLog(L"Таймеры выключены.");
+            helper->simpleLog(L"Таймеры выключены.");
 
         const PropertiesValues &t  = propData->timers;
         if (t.size() == 0)
         {
-            tmcLog(L"Список пуст.");
+            helper->tmcLog(L"Список пуст.");
             return;
         }            
         for (int i=0,e=t.size(); i<e; ++i)
         {            
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
-            swprintf(buffer, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
                 pt.cmd.c_str(), v.group.c_str());
-            simpleLog(buffer);
+            helper->simpleLog(buffer);
         }
         return;
     }
@@ -856,18 +892,18 @@ IMPL(timer)
         tstring op(p->at(0));
         if (op == L"disable" || op == L"off" || op == L"выкл") {
             propData->timers_on = 0;
-            tmcLog(L"Таймеры выключены.");
+            helper->tmcLog(L"Таймеры выключены.");
             return;
         }
         if (op == L"enable" || op == L"on" || op == L"вкл") {
             if (!m_connected)
             {
-                tmcLog(L"Нет подключения.");
+                helper->tmcLog(L"Нет подключения.");
                 return;
             }
             m_helper.resetTimers();
             propData->timers_on = 1;
-            tmcLog(L"Таймеры включены.");
+            helper->tmcLog(L"Таймеры включены.");
             return;
         }
     }
@@ -883,16 +919,16 @@ IMPL(timer)
         int index = propData->timers.find(id);
         if (index == -1)
         {
-            swprintf(buffer, L"Таймер #%s не используется.", id.c_str());
-            tmcLog(buffer);
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
+            helper->tmcLog(buffer);
             return;
         }
         const PropertiesValues &t  = propData->timers;
         const property_value &v = t.get(index);
         PropertiesTimer pt; pt.convertFromString(v.value);
-        swprintf(buffer, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
+        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
-        simpleLog(buffer);
+        helper->simpleLog(buffer);
         return;
     }
 
@@ -910,8 +946,8 @@ IMPL(timer)
         int index = propData->timers.find(id);
         if (index == -1 && n == 2)
         {
-            swprintf(buffer, L"Ошибка. Таймер #%s не существует.", id.c_str());
-            tmcLog(buffer);
+            swprintf(pb.buffer, pb.buffer_len, L"Ошибка. Таймер #%s не существует.", id.c_str());
+            helper->tmcLog(buffer);
             return;
         }
 
@@ -948,9 +984,9 @@ IMPL(timer)
         tstring value;
         pt.convertToString(&value);
         propData->timers.add(index, id, value, group);
-        swprintf(buffer, L"#%s %s сек: '%s' '%s'", id.c_str(), pt.timer.c_str(), 
+        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
-        simpleLog(buffer);
+        helper->simpleLog(buffer);
         return updateProps(0, LogicHelper::UPDATE_TIMERS);
     }
     p->invalidargs();
@@ -975,6 +1011,25 @@ IMPL(showwindow)
         w.ShowWindow(SW_RESTORE);
         return;
     }
+    p->invalidargs();
+}
+
+IMPL(message)
+{
+    int n = p->size();
+    /*if (n == 0)
+    {
+        openHelp(m_pHost->getMainWindow(), L"");
+        return;
+    }
+    if (n == 1)
+    {
+        tstring param(p->at(0));
+        if (param.at(0) == propData->cmd_prefix)
+            param = param.substr(1);
+        openHelp(m_pHost->getMainWindow(), param);
+        return;
+    }*/
     p->invalidargs();
 }
 //-------------------------------------------------------------------
@@ -1029,6 +1084,7 @@ bool LogicProcessor::init()
     regCommand("mccp", mccp);
     regCommand("woutput", wprint);
     regCommand("output", print);
+    regCommand("message", message);
 
     regCommand("tab", tab);
     regCommand("untab", untab);

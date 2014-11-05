@@ -249,12 +249,6 @@ void LogicProcessor::tmcLog(const tstring& cmd)
     simpleLog(log);
 }
 
-void LogicProcessor::tmcSysLog(const tstring& cmd)
-{
-    if (propData->show_system_commands)
-        tmcLog(cmd);
-}
-
 void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
@@ -278,6 +272,11 @@ void LogicProcessor::pluginLog(const tstring& cmd)
 void LogicProcessor::updateActiveObjects(int type)
 {
     m_helper.updateProps(type);
+}
+
+bool LogicProcessor::checkActiveObjectsLog(int type)
+{
+    return true;
 }
 
 bool LogicProcessor::addSystemCommand(const tstring& cmd)

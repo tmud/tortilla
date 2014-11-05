@@ -97,7 +97,7 @@ class LogicHelper
 {
 public:
     enum { UPDATE_ALL =0, UPDATE_ALIASES, UPDATE_ACTIONS, UPDATE_HOTKEYS, UPDATE_SUBS, UPDATE_ANTISUBS, 
-           UPDATE_GAGS, UPDATE_HIGHLIGHTS, UPDATE_TIMERS };
+           UPDATE_GAGS, UPDATE_HIGHLIGHTS, UPDATE_TIMERS, UPDATE_VARS, UPDATE_GROUPS, UPDATE_TABS };
 
     LogicHelper(PropertiesData *propData);
     void updateProps(int what = UPDATE_ALL);

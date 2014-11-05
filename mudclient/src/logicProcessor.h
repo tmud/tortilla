@@ -29,11 +29,11 @@ class LogicProcessorMethods
 {
 public:
     virtual void tmcLog(const tstring& msg) = 0;
-    virtual void tmcSysLog(const tstring& cmd) = 0;
     virtual void simpleLog(const tstring& msg) = 0;
     virtual void pluginLog(const tstring& msg) = 0;
     virtual void updateLog(const tstring& msg) = 0;
     virtual void updateActiveObjects(int type) = 0;
+    virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
 };
@@ -74,10 +74,10 @@ public:
     void processTick();
     void updateProps();    
     void tmcLog(const tstring& cmd);
-    void tmcSysLog(const tstring& cmd);
     void simpleLog(const tstring& cmd);
     void pluginLog(const tstring& cmd);
     void updateActiveObjects(int type);
+    bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
 
@@ -121,6 +121,7 @@ public: // system commands
     void printex(int view, const std::vector<tstring>& params);
     DEF(wprint);
     DEF(print);
+    DEF(message);
     DEF(tab);
     DEF(untab);
     DEF(timer);
