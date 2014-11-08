@@ -276,7 +276,9 @@ void LogicProcessor::updateActiveObjects(int type)
 
 bool LogicProcessor::checkActiveObjectsLog(int type)
 {
-    return true;
+    MessageCmdHelper mh(propData);
+    int state = mh.getState(type);
+    return (!state) ? false : true;
 }
 
 bool LogicProcessor::addSystemCommand(const tstring& cmd)

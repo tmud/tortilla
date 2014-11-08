@@ -39,7 +39,7 @@ wchar_t plugin_buffer[1024];
 int pluginInvArgs(lua_State *L, const utf8* fname) 
 {
     Utf8ToWide f(fname);
-    swprintf(plugin_buffer, L"'%s'.%s: Неверный набор параметров (%d шт.)", _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
+    swprintf(plugin_buffer, L"'%s'.%s: Некорректный набор параметров (%d шт.)", _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
     pluginLog(plugin_buffer);
     return 0; 
 }

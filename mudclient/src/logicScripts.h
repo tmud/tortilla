@@ -86,7 +86,7 @@ public:
             Pcre16 pcre; 
             if (!pcre.setRegExp(pattern))
             {
-                helper->tmcLog(L"Неверный параметр.");
+                helper->tmcLog(L"Некорректный параметр.");
             }
             else
             {

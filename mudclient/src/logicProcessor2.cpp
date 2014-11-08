@@ -23,7 +23,7 @@ public:
     int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
         return _wtoi(p.c_str()); }
     void error(const tstring& errmsg) { perror->assign(errmsg); }
-    void invalidargs() { error(L"Неправильный набор параметров."); }
+    void invalidargs() { error(L"Некорректный набор параметров."); }
 private:
     InputCommand *cmd;
     tstring *perror;
@@ -32,6 +32,7 @@ private:
 #include "logicScripts.h"
 ParamsBuffer pb;
 tchar buffer[1024];
+const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
@@ -389,7 +390,7 @@ IMPL(group)
         return;
     }
     
-    if (op == L"вкл" || op == L"enable" || op == L"on")
+    if (op == L"вкл" || op == L"enable" || op == L"on" || op == L"1")
     {
         property_value &v = propData->groups.getw(index);
         v.value = L"1";
@@ -399,7 +400,7 @@ IMPL(group)
         return;
     }
 
-    if (op == L"выкл" || op == L"disable" || op == L"off")
+    if (op == L"выкл" || op == L"disable" || op == L"off" || op == L"0")
     {
         property_value &v = propData->groups.getw(index);
         v.value = L"0";
@@ -570,7 +571,7 @@ IMPL(mccp)
         if (d > 0)
             ratio = 100 - ((c / d) * 100);
         tchar buffer[64];
-        swprintf(buffer, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
+        swprintf(buffer, buffer_len, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
         tmcLog(buffer);
         return;
     }
@@ -586,9 +587,9 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
          m_logs.closeLog(id);
          m_wlogs[log] = -1;
          if (log == 0)
-            swprintf(buffer, L"Лог закрыт: '%s'.", oldfile.c_str());
+            swprintf(buffer, buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
          else
-            swprintf(buffer, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
+             swprintf(buffer, buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
          tmcLog(buffer);
          if (file.empty())
              return;
@@ -598,9 +599,9 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (file.empty())
         {
             if (log == 0)
-                swprintf(buffer, L"Лог не был открыт.");
+                swprintf(buffer, buffer_len, L"Лог не был открыт.");
             else
-                swprintf(buffer, L"Лог в окне %d не был открыт.", log);
+                swprintf(buffer, buffer_len, L"Лог в окне %d не был открыт.", log);
             tmcLog(buffer);
             return; 
         }
@@ -621,16 +622,16 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id == -1)
     {
         if (log == 0)
-            swprintf(buffer, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
+            swprintf(buffer, buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
         else
-            swprintf(buffer, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
+            swprintf(buffer, buffer_len, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
     }
     else
     {
         if (log == 0)
-            swprintf(buffer, L"Лог открыт: '%s'.",  logfile.c_str());
+            swprintf(buffer, buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
         else
-            swprintf(buffer, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
+            swprintf(buffer, buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
         m_wlogs[log] = id;
     }
     tmcLog(buffer);    
@@ -694,7 +695,7 @@ IMPL(wname)
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
-    swprintf(buffer, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
+    swprintf(buffer, buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
     tmcLog(buffer);
     p->invalidargs();
 }
@@ -711,7 +712,7 @@ IMPL(wshow)
             m_pHost->showWindow(window, true);
             return;
         }               
-        swprintf(buffer, L"Неверный параметр: '%s'.", p->c_str(0));
+        swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
         tmcLog(buffer);
     }
     p->invalidargs();
@@ -729,7 +730,7 @@ IMPL(whide)
             m_pHost->showWindow(window, false);
             return;
         }               
-        swprintf(buffer, L"Неверный параметр: '%s'.", p->c_str(0));
+        swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
         tmcLog(buffer);
     }
     p->invalidargs();
@@ -846,11 +847,11 @@ IMPL(untab)
         const tstring &tab = p->at(0);
         int index = propData->tabwords.find(tab);
         if (index == -1)
-            swprintf(buffer, L"Автоподстановки '%s' не существует.", tab.c_str());
+            swprintf(buffer, buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
         else
         {
             propData->tabwords.del(index);
-            swprintf(buffer, L"Автоподстановкa '%s' удалена.", tab.c_str());
+            swprintf(buffer, buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
         }
         helper->tmcLog(buffer);
         return;
@@ -1017,19 +1018,39 @@ IMPL(showwindow)
 IMPL(message)
 {
     int n = p->size();
-    /*if (n == 0)
+    if (n == 0)
     {
-        openHelp(m_pHost->getMainWindow(), L"");
+        MessageCmdHelper mh(propData);
+        tstring str;
+        mh.getStrings(&str);
+        if (!str.empty()) {
+            tmcLog(L"Уведомления:");
+            simpleLog(str);
+        }          
+        else
+            tmcLog(L"Все уведомления отключены");
         return;
     }
-    if (n == 1)
+    
+    if (n == 1 || n == 2)
     {
-        tstring param(p->at(0));
-        if (param.at(0) == propData->cmd_prefix)
-            param = param.substr(1);
-        openHelp(m_pHost->getMainWindow(), param);
+        MessageCmdHelper mh(propData);
+        if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
+        {
+            if (n == 1)
+                swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->at(0).c_str());
+            else
+                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
+            tmcLog(buffer);
+        }
+        else
+        {
+            tstring str;
+            mh.getStateString(p->at(0), &str);
+            tmcLog(str);
+        }
         return;
-    }*/
+    }
     p->invalidargs();
 }
 //-------------------------------------------------------------------

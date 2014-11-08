@@ -342,6 +342,22 @@ struct PropertiesData
     PropertiesList   tabwords_commands;   
     PluginsDataValues plugins;
 
+    struct message_data { 
+    message_data() { initDefault();  }
+    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
+    int actions;
+    int aliases;    
+    int subs;
+    int hotkeys;
+    int highlights;
+    int groups;
+    int antisubs;
+    int gags;
+    int timers;
+    int variables;
+    int tabwords;
+    } messages;
+
     std::vector<tstring> cmd_history;
 
     tstring  codepage;
@@ -362,7 +378,7 @@ struct PropertiesData
     int      clear_bar;
     int      disable_ya;
     int      history_tab;
-    int      timers_on;    
+    int      timers_on;
     int      plugins_logs;
     int      plugins_logs_window;
 
@@ -441,6 +457,7 @@ struct PropertiesData
         groups.clear();
         initDefaultColorsAndFont();
         initOutputWindows();
+        messages.initDefault();
         timers_on = 0;
         initPlugins();
         recognize_prompt = 0;
