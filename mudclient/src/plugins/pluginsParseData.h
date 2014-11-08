@@ -5,10 +5,17 @@
 struct PluginViewString
 {
     std::vector<u8string> blocks;
-    void gettext(u8string *text)
+    void getText(u8string *text) const
     {
         for (int i = 0, e = blocks.size(); i < e; ++i)
             text->append(blocks[i]);
+    }
+    int getTextLen() const
+    {
+        int len = 0;
+        for (int i = 0, e = blocks.size(); i < e; ++i)
+            len += u8string_len(blocks[i]);
+        return len;
     }
 };
 
@@ -18,35 +25,31 @@ public:
     parseData *pdata;
     std::vector<PluginViewString*> plugins_strings;
     int selected;
-
-public:    
+public:
     PluginsParseData(parseData *data) : pdata(data), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
     int size() const { return plugins_strings.size(); }
+    int getindex() const { return selected+1; }
     bool select(int index)
     {
-        if (index >= 0 && index < size()) { selected = index; return true; }
+        if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
     }
     
     PluginViewString* getselected_pvs()
     {
-        if (selected >= 0 && selected < size())
-            return plugins_strings[selected];
-        return NULL;
+        return (isselected()) ? plugins_strings[selected] : NULL;
     }
 
     MudViewString* getselected()
     {
-        if (selected >= 0 && selected < size())
-            return pdata->strings[selected];
-        return NULL;
+        return (isselected()) ? pdata->strings[selected] : NULL;
     }
 
     bool getPrompt(u8string *str)
     {
         MudViewString*s = getselected();
-        if (s) 
+        if (s)
         {
             tstring text;
             s->getPrompt(&text);
@@ -63,9 +66,9 @@ public:
         PluginViewString* vs = getselected_pvs();
         if (!vs) return false;
         int size = vs->blocks.size();
-        if (block >= 0 && block < size)
+        if (block >= 1 && block <= size)
         {
-            str->assign(vs->blocks[block]);
+            str->assign(vs->blocks[block-1]);
             return true;
         }
         return false;
@@ -73,7 +76,7 @@ public:
 
     void delete_selected()
     {
-        if (selected >= 0 && selected < size())
+        if (isselected())
         {
             delete plugins_strings[selected];
             plugins_strings.erase(plugins_strings.begin() + selected);
@@ -84,6 +87,51 @@ public:
                 pdata->update_prev_string = false;
         }
         selected = -1;
+    }
+
+    void insert_new_string()
+    {
+        if (isselected())
+        {
+            plugins_strings.insert(plugins_strings.begin() + selected + 1, new PluginViewString);
+            parseDataStrings &ss = pdata->strings;
+            ss.insert(ss.begin() + selected + 1, new MudViewString);
+        }
+    }
+
+    bool copy_block(int block, int dst_string, int dst_block)
+    {        
+        PluginViewString *src_pvs = getselected_pvs();
+        MudViewString *src = getselected();
+        if (src_pvs && dst_block >= 1)
+        {
+            int blocks = src_pvs->blocks.size();
+            int strings = plugins_strings.size();
+            if (block >= 1 && block <= blocks && dst_string >= 1 && dst_string <= strings)
+            {
+                PluginViewString *dst_pvs = plugins_strings[dst_string-1];
+                MudViewString *dst = pdata->strings[dst_string-1];
+                int blocks2 = dst_pvs->blocks.size();
+                if (dst_block > blocks2)
+                {
+                    int count = dst_block - blocks2;
+                    for (; count > 0; --count)
+                    {
+                        dst_pvs->blocks.push_back(u8string());
+                        dst->blocks.push_back(MudViewStringBlock());
+                    }
+                }
+                dst_pvs->blocks[dst_block - 1] = src_pvs->blocks[block - 1];
+                dst->blocks[dst_block - 1] = src->blocks[block - 1];
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool isselected() const
+    {
+        return (selected >= 0 && selected < size()) ? true : false;
     }
 
 private:

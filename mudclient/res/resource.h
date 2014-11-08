@@ -32,6 +32,7 @@
 #define IDD_NEW_WORLD                   218
 #define IDD_WELCOME                     219
 #define IDR_BINARY_WELCOME              220
+#define IDD_PASSWORD                    221
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
@@ -102,6 +103,7 @@
 #define IDC_RADIO_PROMT_PCRE            1125
 #define IDC_CHECK_DONTSHOW              1126
 #define IDC_STATIC_RICHBOXPLACE         1129
+#define IDC_EDIT_PASSWORD               1130
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -122,9 +124,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        221
+#define _APS_NEXT_RESOURCE_VALUE        222
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1130
+#define _APS_NEXT_CONTROL_VALUE         1131
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

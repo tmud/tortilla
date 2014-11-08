@@ -30,11 +30,11 @@ class LogicProcessorMethods
 {
 public:
     virtual void tmcLog(const tstring& msg) = 0;
-    virtual void tmcSysLog(const tstring& cmd) = 0;
     virtual void simpleLog(const tstring& msg) = 0;
     virtual void pluginLog(const tstring& msg) = 0;
     virtual void updateLog(const tstring& msg) = 0;
     virtual void updateActiveObjects(int type) = 0;
+    virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
 };
@@ -77,15 +77,15 @@ public:
     void processStackTick();
     void updateProps();    
     void tmcLog(const tstring& cmd);
-    void tmcSysLog(const tstring& cmd);
     void simpleLog(const tstring& cmd);
     void pluginLog(const tstring& cmd);
     void updateActiveObjects(int type);
+    bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
 
-private:    
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, START_BR = 8, GAME_CMD = 16  };
+private:
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, IND_PARSER = 64  };
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
@@ -107,6 +107,7 @@ public: // system commands
     DEF(hotkey);
     DEF(unhotkey);
     DEF(help);
+    DEF(password);
     DEF(hide);
     DEF(highlight);
     DEF(ifop);
@@ -123,6 +124,7 @@ public: // system commands
     void printex(int view, const std::vector<tstring>& params);
     DEF(wprint);
     DEF(print);
+    DEF(message);
     DEF(tab);
     DEF(untab);
     DEF(timer);

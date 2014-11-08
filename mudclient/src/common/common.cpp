@@ -1,6 +1,18 @@
 #include "stdafx.h"
 #include "common.h"
 
+bool isVistaOrHigher()
+{
+    OSVERSIONINFOEX os;
+    ZeroMemory(&os, sizeof(OSVERSIONINFOEX));
+    os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    GetVersionEx((OSVERSIONINFO*)&os);
+    if ((os.wProductType != VER_NT_WORKSTATION) ||
+        (os.dwMajorVersion < 6)) // if less Vista/7/8
+        return false;
+    return true;
+}
+
 void loadString(UINT id, tstring* string)
 {
     WCHAR buffer[256];
@@ -128,6 +140,65 @@ void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
 bool tstring_cmpl(const tstring& str, const WCHAR* lstr)
 {
     return (wcsncmp(str.c_str(), lstr, wcslen(lstr)) == 0) ? true : false;    
+}
+
+int utf8_getbinlen(const utf8* str, int symbol)
+{
+    int p = 0;
+    while (str && symbol > 0)
+    {
+        const unsigned char &c = str[p];
+        if (c < 0x80) { symbol--; p++; }
+        else if (c < 0xc0 || c > 0xf7) break;  // error in bytes
+        else
+        {
+            int sym_len = 2;
+            if ((c & 0xf0) == 0xe0) sym_len = 3;
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;
+            else if (c >= 0xf8) break;         // error
+            p += sym_len;
+            symbol--;
+        }
+    }
+    return (symbol > 0) ? -1 : p;
+}
+
+int utf8_strnlen(const utf8* str, int str_len)
+{
+    assert(str);
+    int len = 0;
+    int p = 0;
+    while (str_len > 0)
+    {
+        const unsigned char &c = str[p];
+        if (c < 0x80) { len++; str_len--; p++; }
+        else if (c < 0xc0 || c > 0xf7) break;  // error in bytes
+        else
+        {
+            int sym_len = 2;
+            if ((c & 0xf0) == 0xe0) sym_len = 3;
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;
+
+            if (sym_len > str_len) break;      // error
+            len++;
+            str_len -= sym_len;
+            p += sym_len;
+        }
+    }
+    return len;
+}
+
+int u8string_len(const u8string& str)
+{
+    return utf8_strnlen(str.c_str(), str.length());
+}
+
+void u8string_substr(u8string *str, int from, int len)
+{
+    from = utf8_getbinlen(str->c_str(), from);
+    len = utf8_getbinlen(str->c_str(), from + len);
+    u8string res(str->substr(from, len));
+    str->swap(res);
 }
 
 Separator::Separator(const tstring& str)

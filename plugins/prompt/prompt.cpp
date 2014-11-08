@@ -15,7 +15,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0");
+    lua_pushstring(L, "-");
     return 1;
 }
 
@@ -27,7 +27,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
 
     std::vector<int> empty;
     u8string text;
-    for (int i = 0; i < strings_count; ++i)
+    for (int i = 1; i <= strings_count; ++i)
     {
         vd.select(i);
         if (vd.isgamecmd())

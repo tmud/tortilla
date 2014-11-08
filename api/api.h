@@ -83,10 +83,15 @@ public:
         runcmd("size");
         return intresult(); 
     }
-    bool select(int string) // select string for operations
+    bool select(int index) // select string for operations
     {
-        runcmdint("select", string);
-        return boolresult(); 
+        runcmdint("select", index);
+        return boolresult();
+    }
+    int getindex()
+    {
+        runcmd("getindex");
+        return intresult();
     }
     bool isfirst()
     {
@@ -113,6 +118,11 @@ public:
         runcmd("gettext");
         strresult(str); 
     }
+    int gettextlen()
+    {
+        runcmd("gettextlen");
+        return intresult();
+    }
     void gethash(u8string* str)
     {
         runcmd("gethash");
@@ -123,9 +133,9 @@ public:
         runcmd("blocks");
         return intresult(); 
     }
-    void getblock(int block, u8string* str)
+    void getblocktext(int block, u8string* str)
     {
-        runcmdint("getblock", block);
+        runcmdint("getblocktext", block);
         strresult(str);
     }
     bool get(int block, int param, unsigned int *value)
@@ -149,6 +159,12 @@ public:
         luaT_run(L, "setblocktext", "ods", block, text);
         return boolresult();
     }
+    bool copyblock(int block, int dst_string, int dst_block)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "copyblock", "oddd", block, dst_string, dst_block);
+        return boolresult();
+    }
     bool deleteblock(int block)
     {
         runcmdint("deleteblock", block);
@@ -157,6 +173,11 @@ public:
     bool deleteallblocks()
     {
         runcmd("deleteallblocks");
+        return boolresult();
+    }
+    bool createstring()
+    {
+        runcmd("createstring");
         return boolresult();
     }
     bool deletestring()

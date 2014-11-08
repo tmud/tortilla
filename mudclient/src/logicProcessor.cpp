@@ -109,8 +109,14 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 {
    // parse incoming text
    parseData parse_data;
-   m_parser.parse(text, text_len, &parse_data);
-   
+   if (!(flags & IND_PARSER))
+       m_parser.parse(text, text_len, &parse_data);
+   else
+   {
+       MudViewParser p;
+       p.parse(text, text_len, &parse_data);
+   }
+
    parseDataStrings& pd = parse_data.strings;
    parseDataStrings& stack = m_incoming_stack.strings;
    if (flags & GAME_CMD)
@@ -171,9 +177,10 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // collect strings in parse_data in one with same colors params
    ColorsCollector pc;
    pc.process(&parse_data);
-   
+
    // preprocess data via plugins
-   m_pHost->preprocessText(window, &parse_data);
+   if (!(flags & SKIP_PLUGINS))
+       m_pHost->preprocessText(window, &parse_data);
 
    // array for new cmds from actions
    std::vector<tstring> new_cmds;
@@ -191,7 +198,8 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
        m_helper.processHighlights(&parse_data);
 
    // postprocess data via plugins
-   m_pHost->postprocessText(window, &parse_data);
+   if (!(flags & SKIP_PLUGINS))
+       m_pHost->postprocessText(window, &parse_data);
 
    int log = m_wlogs[window];
    if (log != -1)
@@ -280,17 +288,11 @@ void LogicProcessor::tmcLog(const tstring& cmd)
     simpleLog(log);
 }
 
-void LogicProcessor::tmcSysLog(const tstring& cmd)
-{
-    if (propData->show_system_commands)
-        tmcLog(cmd);
-}
-
 void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|START_BR);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR|IND_PARSER);
 }
 
 void LogicProcessor::pluginLog(const tstring& cmd)
@@ -302,13 +304,20 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     {
         tstring log(L"[plugins] ");
         log.append(cmd);
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|START_BR, window);
+        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR|IND_PARSER, window);
     }
 }
 
 void LogicProcessor::updateActiveObjects(int type)
 {
     m_helper.updateProps(type);
+}
+
+bool LogicProcessor::checkActiveObjectsLog(int type)
+{
+    MessageCmdHelper mh(propData);
+    int state = mh.getState(type);
+    return (!state) ? false : true;
 }
 
 bool LogicProcessor::addSystemCommand(const tstring& cmd)
