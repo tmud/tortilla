@@ -56,9 +56,13 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
     }
 }
 
-void MudViewParser::clearbreakline()
+void MudViewParser::reset()
 {
-    m_last_finished = false;
+    m_buffer.clear();
+    m_last_finished = true;
+    if (m_current_string)
+        delete m_current_string;
+    m_current_string = NULL;
 }
 
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)

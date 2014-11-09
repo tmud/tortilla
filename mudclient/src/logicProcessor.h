@@ -48,6 +48,7 @@ class LogicProcessor : public LogicProcessorMethods
     PropertiesData *propData;
     LogicProcessorHost *m_pHost;
     MudViewParser m_parser;
+    MudViewParser m_stk_parser;
     InputProcessor m_input;
     LogicHelper m_helper; 
     bool m_connected;
@@ -85,7 +86,7 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
 
 private:
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, IND_PARSER = 64  };
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32 };
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);

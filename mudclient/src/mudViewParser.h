@@ -31,7 +31,8 @@ public:
     MudViewParser();
     ~MudViewParser();
     void parse(const WCHAR* text, int len, parseData* data);
-    void clearbreakline();
+    bool isLastFinished() const { return m_last_finished; } //todo возможно не нужен
+    void reset();
 
 private:
     enum parserResultCode {

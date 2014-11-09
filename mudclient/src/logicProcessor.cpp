@@ -98,85 +98,129 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
 void LogicProcessor::processStackTick()
 {
-    // print stack commands
-    if (m_incoming_stack.strings.empty())
+   if (m_incoming_stack.strings.empty())
         return;
-    WCHAR tmp[2] = { 13, 10 };
-    processIncoming(tmp, 2, SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_HIGHLIGHTS, 0);
+   //if (m_parser.isLastFinished())
+   //     return;
+   WCHAR tmp[2] = { 10, 0 };
+   processIncoming(tmp, 1, 0, 0);
+   //processIncoming(tmp, 1, SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS, 0);
 }
 
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
-   // parse incoming text
-   parseData parse_data;
-   if (!(flags & IND_PARSER))
-       m_parser.parse(text, text_len, &parse_data);
-   else
+   // parse incoming text   
+   bool parse_to_stack = false;
+   if (flags & (START_BR | GAME_CMD))
    {
-       MudViewParser p;
-       p.parse(text, text_len, &parse_data);
+       if (window == 0 && !m_pHost->isLastStringPrompt(0))
+       {
+           //todo
+           //if (!m_parser.isLastFinished())      // previous string not finished (and not prompt)
+           // previous string not prompt! бесмысленно проверять окончание строки, тк разрыв мб как раз на конец строки
+           //{
+               //parse_to_stack = true;
+           //}
+       }
+   }
+
+   parseData parse_data;
+   if (parse_to_stack) {
+       m_stk_parser.parse(text, text_len, &parse_data);
+       m_stk_parser.reset();
+   }
+   else {
+       m_parser.parse(text, text_len, &parse_data);
    }
 
    parseDataStrings& pd = parse_data.strings;
    parseDataStrings& stack = m_incoming_stack.strings;
    if (flags & GAME_CMD)
    {
-       for (int i=0,e=pd.size(); i<e; ++i)
+       for (int i = 0, e = pd.size(); i < e; ++i)
            pd[i]->gamecmd = true;
    }
 
-   // can? insert strings
-   if (flags & (START_BR|GAME_CMD))
+   if (parse_to_stack)
    {
-       if (window == 0 && !m_pHost->isLastStringPrompt(0))
+       MARKINVERSED(pd); //todo
+       for (int i = 0, e = stack.size(); i < e; ++i)
        {
-           MARKBLINK(pd);                       //todo
-           if (parse_data.update_prev_string)   // previous string not finished (not prompt)
-           {
-               MARKINVERSED(pd);
-               for (int i = 0, e = pd.size(); i < e; ++i)
-               {
-                   PRINTBYINDEX(pd, i);
-                   stack.push_back(pd[i]);
-               }
-               pd.clear();
-               //m_parser.clearbreakline();
-               return;
-           }
+           OutputDebugString(L"on stack: ");
+           PRINTBYINDEX(stack, i);
        }
-
-       // start from new string forcibly
-       if (flags & START_BR)
-           parse_data.update_prev_string = false;
+       for (int i = 0, e = pd.size(); i < e; ++i)
+       {
+           OutputDebugString(L"push stack: ");
+           PRINTBYINDEX(pd, i);
+       }
+       stack.insert(stack.end(), pd.begin(), pd.end());       
+       pd.clear();
+       return;
    }
-
-   if (!parse_data.update_prev_string && !stack.empty()) //todo
-   {
-       //int size = stack.size();
-       OutputDebugString(L"from stack\r\n");             //todo
-       pd.insert(pd.begin(), stack.begin(), stack.end());
-       stack.clear();
-   }
+   
+   // start from new string forcibly
+   if (flags & START_BR)
+       parse_data.update_prev_string = false;
 
    // accumulate last string in one
    m_pHost->accLastString(window, &parse_data);
-
-   // recognize prompt string via template
-   if (propData->recognize_prompt)
-   {
-       for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
-       {
-           MudViewString *s = parse_data.strings[i];
-           tstring text;  s->getText(&text);
-           m_prompt_pcre.find(text);
-           if (m_prompt_pcre.getSize())
-               s->setPrompt(m_prompt_pcre.getLast(0));
-       }
-   }
-
+   
    // collect strings in parse_data in one with same colors params
    ColorsCollector pc;
    pc.process(&parse_data);
+
+   std::vector<int> prompts;
+   bool use_template = propData->recognize_prompt ? true : false;
+   for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
+   {
+       MudViewString *s = parse_data.strings[i];
+       if (s->gamecmd) continue;
+       if (s->prompt) prompts.push_back(i);
+       else if (use_template)
+       {
+           // recognize prompt string via template
+           tstring text;  s->getText(&text);
+           m_prompt_pcre.find(text);
+           if (m_prompt_pcre.getSize())
+           {
+               s->setPrompt(m_prompt_pcre.getLast(0));
+               prompts.push_back(i);
+           }           
+       }
+   }
+
+   tstring ps; //todo
+   for (int i = 0, e = prompts.size(); i < e; ++i)
+   {
+       tchar buffer[16];
+       ps.append(_itow(prompts[i], buffer, 10));
+       ps.append(L", ");
+   }
+   if (prompts.empty())
+       ps.append(L"empty");
+   ps.append(L"\r\n");
+   OutputDebugString(ps.c_str());
+
+   if (!stack.empty())
+   {
+
+
+
+   }
+
+
+   /* true: !parse_data.update_prev_string &&*/
+   /*if ( !stack.empty())
+       if (m_parser.isLastFinished() && !stack.empty())
+       {
+       OutputDebugString(L"from stack: ");               //todo
+       for (int i = 0, e = stack.size(); i < e; ++i)
+           PRINTBYINDEX(stack, i);
+       pd.insert(pd.end(), stack.begin(), stack.end());
+       stack.clear();
+       }*/
+
 
    // preprocess data via plugins
    if (!(flags & SKIP_PLUGINS))
@@ -292,7 +336,7 @@ void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR|IND_PARSER);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR);
 }
 
 void LogicProcessor::pluginLog(const tstring& cmd)
@@ -304,7 +348,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     {
         tstring log(L"[plugins] ");
         log.append(cmd);
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR|IND_PARSER, window);
+        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR, window);
     }
 }
 
