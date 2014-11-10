@@ -59,7 +59,11 @@ class LogicProcessor : public LogicProcessorMethods
     std::vector<tstring> m_plugins_cmds;
     IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
-    parseData m_incoming_stack;
+    struct stack_el {
+        tstring text;
+        int flags;
+    };
+    std::vector<stack_el> m_incoming_stack;
 
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
@@ -86,8 +90,9 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
 
 private:
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32 };
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, FROM_STACK = 64 };
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
+    void processStack(parseData& parse_data);
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
