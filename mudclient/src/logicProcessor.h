@@ -48,17 +48,17 @@ class LogicProcessor : public LogicProcessorMethods
     PropertiesData *propData;
     LogicProcessorHost *m_pHost;
     MudViewParser m_parser;
-    MudViewParser m_stk_parser;
     InputProcessor m_input;
     LogicHelper m_helper; 
     bool m_connected;
     tstring m_updatelog;
     LogsProcessor m_logs;
-    int m_wlogs[OUTPUT_WINDOWS+1];    
+    int m_wlogs[OUTPUT_WINDOWS+1];
     std::map<tstring, syscmd_fun> m_syscmds;
     std::vector<tstring> m_plugins_cmds;
     IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
+    MudViewParser m_stack_parser;
     struct stack_el {
         tstring text;
         int flags;
@@ -68,7 +68,7 @@ class LogicProcessor : public LogicProcessorMethods
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
     ~LogicProcessor();
-    bool init();    
+    bool init();
     void processNetworkData(const WCHAR* text, int text_len);
     void processNetworkConnect();
     void processNetworkDisconnect();
@@ -92,7 +92,8 @@ public:
 private:
     enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, FROM_STACK = 64 };
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
-    void processStack(parseData& parse_data);
+    void printIncoming(parseData& parse_data, int flags, int window);
+    bool processStack(parseData& parse_data);
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
@@ -123,7 +124,7 @@ public: // system commands
     DEF(antisub);
     DEF(unantisub);
     DEF(group);
-    DEF(mccp);    
+    DEF(mccp);
     DEF(wshow);
     DEF(whide);
     DEF(wpos);

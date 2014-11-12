@@ -112,28 +112,28 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // parse incoming text data
    if (flags & (START_BR | GAME_CMD) && !(flags & FROM_STACK))
    {
-       /*if (window == 0 && !m_pHost->isLastStringPrompt(0))
+       if (window == 0 && !m_pHost->isLastStringPrompt(0))
        {
-           // в стек - если нельзя сразу добавить команды в окно (нет prompt, возможно разрыв текста).
+           // в стек, если нельзя сразу добавить команды в окно (нет prompt, возможно это разрыв текста).
            stack_el e;
            e.text.assign(text, text_len);
            e.flags = flags | FROM_STACK;
            m_incoming_stack.push_back(e);
            return;
-       }*/
+       }
    }
    // сюда попадаем:
    // 1. данные, как продолжение старых данных - ок
    // 2. команды, но после prompt - ок
-   // 3. команды, но из стека - поиск места для вставки
+   // 3. команды, но из стека по таймеру - жесткая вставка 
 
    parseData parse_data;
    m_parser.parse(text, text_len, &parse_data);
-
-   if (flags & FROM_STACK)
+ 
+   if (flags & FROM_STACK)  // todo
    {
        parseDataStrings& ps = parse_data.strings;
-       MARKINVERSED(ps); // todo
+       MARKINVERSED(ps);
    }
    
    if (flags & GAME_CMD)
@@ -143,7 +143,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
            ps[i]->gamecmd = true;
    }
 
-   // start from new string forcibly
+   // start from new string forcibly //todo - возможно лишнее, т.к. с новой строки уже сделано см п1.-3
    if (flags & START_BR)
        parse_data.update_prev_string = false;
 
@@ -155,67 +155,60 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    pc.process(&parse_data);
 
    // попытка вставки стека по ходу данных, если это обычные данные
-   if (window == 0 && !(flags & (FROM_STACK | START_BR | GAME_CMD)))
+   if (window == 0 && !(flags & (START_BR | GAME_CMD)))
    {
-       processStack(parse_data);
+       if (processStack(parse_data))
+           return;
    }
   
-   // preprocess data via plugins
-   if (!(flags & SKIP_PLUGINS))
-       m_pHost->preprocessText(window, &parse_data);
-
-   // array for new cmds from actions
-   std::vector<tstring> new_cmds;
-   if (!(flags & SKIP_ACTIONS))
-       m_helper.processActions(&parse_data, &new_cmds);
-
-   if (!(flags & SKIP_SUBS))
-   {
-       m_helper.processAntiSubs(&parse_data);
-       m_helper.processGags(&parse_data);
-       m_helper.processSubs(&parse_data);
-   }
-
-   if (!(flags & SKIP_HIGHLIGHTS))
-       m_helper.processHighlights(&parse_data);
-
-   // postprocess data via plugins
-   if (!(flags & SKIP_PLUGINS))
-       m_pHost->postprocessText(window, &parse_data);
-
-   int log = m_wlogs[window];
-   if (log != -1)
-       m_logs.writeLog(log, parse_data);     // write log
-   m_pHost->addText(window, &parse_data);    // send processed text to view
-
-   for (int i=0,e=new_cmds.size(); i<e; ++i) // process actions' result
-         processCommand(new_cmds[i]);
+   printIncoming(parse_data, flags, window);
 }
 
-void LogicProcessor::processStack(parseData& parse_data)
+void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
-    return; 
+    // final step for data
+    // preprocess data via plugins
+    if (!(flags & SKIP_PLUGINS))
+        m_pHost->preprocessText(window, &parse_data);
 
-    /* true: !parse_data.update_prev_string &&*/
-    /*if ( !stack.empty())
-    if (m_parser.isLastFinished() && !stack.empty())
+    // array for new cmds from actions
+    std::vector<tstring> new_cmds;
+    if (!(flags & SKIP_ACTIONS))
+        m_helper.processActions(&parse_data, &new_cmds);
+
+    if (!(flags & SKIP_SUBS))
     {
-    OutputDebugString(L"from stack: ");               //todo
-    for (int i = 0, e = stack.size(); i < e; ++i)
-    PRINTBYINDEX(stack, i);
-    pd.insert(pd.end(), stack.begin(), stack.end());
-    stack.clear();
-    }*/
+        m_helper.processAntiSubs(&parse_data);
+        m_helper.processGags(&parse_data);
+        m_helper.processSubs(&parse_data);
+    }
 
-    // find prompts in parse data (places to insert stack)
-    std::vector<int> prompts;
+    if (!(flags & SKIP_HIGHLIGHTS))
+        m_helper.processHighlights(&parse_data);
+
+    // postprocess data via plugins
+    if (!(flags & SKIP_PLUGINS))
+        m_pHost->postprocessText(window, &parse_data);
+
+    int log = m_wlogs[window];
+    if (log != -1)
+        m_logs.writeLog(log, parse_data);     // write log
+    m_pHost->addText(window, &parse_data);    // send processed text to view
+
+    for (int i = 0, e = new_cmds.size(); i < e; ++i) // process actions' result
+        processCommand(new_cmds[i]);
+}
+
+bool LogicProcessor::processStack(parseData& parse_data)
+{
+    // find prompts in parse data (place to insert stack -> last gamecmd/prompt string)
+    int last_game_cmd = -1;
     bool use_template = propData->recognize_prompt ? true : false;
     for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
     {
         MudViewString *s = parse_data.strings[i];
-        if (s->gamecmd) continue;
-        if (s->prompt) prompts.push_back(i);
-        else if (use_template)
+        if (s->gamecmd || s->prompt) { last_game_cmd = i; continue; }
+        if (use_template)
         {
             // recognize prompt string via template
             tstring text;  s->getText(&text);
@@ -223,7 +216,7 @@ void LogicProcessor::processStack(parseData& parse_data)
             if (m_prompt_pcre.getSize())
             {
                 s->setPrompt(m_prompt_pcre.getLast(0));
-                prompts.push_back(i);
+                last_game_cmd = i;
             }
         }
         else
@@ -232,27 +225,26 @@ void LogicProcessor::processStack(parseData& parse_data)
         }
     }
 
-    tstring ps; //todo
-    for (int i = 0, e = prompts.size(); i < e; ++i)
+    //todo debug
     {
-        tchar buffer[16];
-        ps.append(_itow(prompts[i], buffer, 10));
-        ps.append(L", ");
+        tchar b[32];
+        wsprintf(b, L"%d\r\n", last_game_cmd);
+        OutputDebugString(b);
     }
-    if (prompts.empty())
-        ps.append(L"empty");
-    ps.append(L"\r\n");
-    OutputDebugString(ps.c_str());
 
-    if (!prompts.empty())
-    {
+    if (last_game_cmd == -1)       // skip stack insertion (no insert place)
+        return false;
+        
+    return true;
+
+    /*{
         parseDataStrings tmp;
         parseData parse_data2;
         for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
         {
             stack_el &se = m_incoming_stack[i];            
-            m_stk_parser.parse(se.text.c_str(), se.text.length(), &parse_data2);
-            m_stk_parser.reset();
+            m_stack_parser.parse(se.text.c_str(), se.text.length(), &parse_data2);
+            m_stack_parser.reset();
             parseDataStrings& pd = parse_data2.strings;
             tmp.insert(tmp.end(), pd.begin(), pd.end());
             pd.clear();
@@ -262,7 +254,7 @@ void LogicProcessor::processStack(parseData& parse_data)
         parseDataStrings& ps = parse_data.strings;
         ps.insert(ps.begin()+pos, tmp.begin(), tmp.end());
         tmp.clear();
-    }
+    }*/
 }
 
 void LogicProcessor::updateProps()
