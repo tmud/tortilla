@@ -157,10 +157,9 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // попытка вставки стека по ходу данных, если это обычные данные
    if (window == 0 && !(flags & (START_BR | GAME_CMD)))
    {
-       if (processStack(parse_data))
+       if (processStack(parse_data, flags))
            return;
-   }
-  
+   }  
    printIncoming(parse_data, flags, window);
 }
 
@@ -199,7 +198,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
         processCommand(new_cmds[i]);
 }
 
-bool LogicProcessor::processStack(parseData& parse_data)
+bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt string)
     int last_game_cmd = -1;
@@ -219,42 +218,33 @@ bool LogicProcessor::processStack(parseData& parse_data)
                 last_game_cmd = i;
             }
         }
-        else
-        {
-            //todo extra prompt recognizer for symbol '>' ???
-        }
     }
 
-    //todo debug
-    {
-        tchar b[32];
-        wsprintf(b, L"%d\r\n", last_game_cmd);
-        OutputDebugString(b);
-    }
+#ifdef _DEBUG //todo
+    tchar b[32];
+    wsprintf(b, L"insert: %d\r\n", last_game_cmd);
+    OutputDebugString(b);
+#endif
 
     if (last_game_cmd == -1)       // skip stack insertion (no insert place)
         return false;
-        
+    
+    // div current parseData for 2 parts
+    parseData pd;
+    pd.update_prev_string = parse_data.update_prev_string;
+    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin()+last_game_cmd);
+    printIncoming(pd, flags, 0);
+    // insert stack between 2 parts
+    for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
+    {
+        stack_el &s = m_incoming_stack[i];
+        processIncoming(s.text.c_str(), s.text.length(), s.flags, 0);
+    }
+    pd.update_prev_string = false;
+    pd.strings.assign(parse_data.strings.begin() + last_game_cmd, parse_data.strings.end());
+    printIncoming(pd, flags, 0);
+    pd.strings.clear();    
     return true;
-
-    /*{
-        parseDataStrings tmp;
-        parseData parse_data2;
-        for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
-        {
-            stack_el &se = m_incoming_stack[i];            
-            m_stack_parser.parse(se.text.c_str(), se.text.length(), &parse_data2);
-            m_stack_parser.reset();
-            parseDataStrings& pd = parse_data2.strings;
-            tmp.insert(tmp.end(), pd.begin(), pd.end());
-            pd.clear();
-        }
-     
-        int pos = prompts[0];
-        parseDataStrings& ps = parse_data.strings;
-        ps.insert(ps.begin()+pos, tmp.begin(), tmp.end());
-        tmp.clear();
-    }*/
 }
 
 void LogicProcessor::updateProps()
