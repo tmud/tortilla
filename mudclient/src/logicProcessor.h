@@ -58,7 +58,7 @@ class LogicProcessor : public LogicProcessorMethods
     std::vector<tstring> m_plugins_cmds;
     IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
-    MudViewParser m_stack_parser;
+    MudViewParser m_parser2;
     struct stack_el {
         tstring text;
         int flags;

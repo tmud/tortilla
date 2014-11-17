@@ -4,7 +4,6 @@
 
 LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
 {
-    m_ticker = GetTickCount();
 }
 
 bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
@@ -108,19 +107,8 @@ void LogicHelper::processHighlights(parseData *parse_data)
 
 void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
 {
-    DWORD diff = -1;
-    DWORD tick = GetTickCount();
-    if (tick >= m_ticker)
-    {
-        diff = tick - m_ticker;
-    }
-    else
-    {   // overflow 49.7 days (MSDN GetTickCount)
-        diff = diff - m_ticker;
-        diff = diff + tick + 1;
-    }
-    m_ticker = tick;
-    int dt = diff;
+    int dt = m_ticker.getDiff();
+    m_ticker.sync();
 
     for (int i=0,e=m_timers.size(); i<e; ++i)
     {
@@ -137,7 +125,7 @@ void LogicHelper::resetTimers()
 {
     for (int i=0,e=m_timers.size(); i<e; ++i)
         m_timers[i]->reset();
-    m_ticker = GetTickCount();
+    m_ticker.sync();
 }
 
 void LogicHelper::processVars(tstring *cmdline)

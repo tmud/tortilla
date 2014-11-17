@@ -72,3 +72,24 @@ public:
 private:
     tstring result;
 };
+
+class Ticker
+{
+    DWORD m_ticker;
+public:
+    Ticker() { sync(); }
+    void sync() { m_ticker = GetTickCount(); }
+    DWORD getDiff() const
+    {
+        DWORD diff = -1;
+        DWORD tick = GetTickCount();
+        if (tick >= m_ticker)
+            diff = tick - m_ticker;
+        else
+        {   // overflow 49.7 days (MSDN GetTickCount)
+            diff = diff - m_ticker;
+            diff = diff + tick + 1;
+        }
+        return diff;
+    }
+};

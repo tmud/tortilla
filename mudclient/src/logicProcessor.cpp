@@ -100,11 +100,25 @@ void LogicProcessor::processStackTick()
 {
    if (m_incoming_stack.empty())
         return;
+   if (!m_connected)
+   {
+       //m_incoming_stack.clear();
+       //return;
+   }
+
    //if (m_parser.isLastFinished())
    //     return;
-   WCHAR tmp[2] = { 10, 0 };
+   //WCHAR tmp[2] = { 10, 0 };
    //processIncoming(tmp, 1, 0, 0);
    //processIncoming(tmp, 1, SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS, 0);
+
+   for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
+   {
+       const stack_el &s = m_incoming_stack[i];
+       const tstring &t = s.text;
+       processIncoming(t.c_str(), t.length(), s.flags);
+   }
+   m_incoming_stack.clear();
 }
 
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
@@ -123,12 +137,17 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
        }
    }
    // сюда попадаем:
-   // 1. данные, как продолжение старых данных - ок
+   // 1. данные, как продолжение старых игровых данных - ок
    // 2. команды, но после prompt - ок
    // 3. команды, но из стека по таймеру - жесткая вставка 
 
+   // используем отдельный parser для не основных окон
+   // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
    parseData parse_data;
-   m_parser.parse(text, text_len, &parse_data);
+   if (window == 0)
+       m_parser.parse(text, text_len, &parse_data);
+   else
+       m_parser2.parse(text, text_len, &parse_data);
  
    if (flags & FROM_STACK)  // todo
    {
@@ -161,6 +180,63 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
            return;
    }  
    printIncoming(parse_data, flags, window);
+}
+
+bool LogicProcessor::processStack(parseData& parse_data, int flags)
+{
+    // check stack
+    if (m_incoming_stack.empty())
+        return false;
+
+    // find prompts in parse data (place to insert stack -> last gamecmd/prompt string)
+    int last_game_cmd = -1;
+    bool use_template = propData->recognize_prompt ? true : false;
+    for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
+    {
+        MudViewString *s = parse_data.strings[i];
+        if (s->gamecmd || s->prompt) { last_game_cmd = i; continue; }
+        if (use_template)
+        {
+            // recognize prompt string via template
+            tstring text;  s->getText(&text);
+            m_prompt_pcre.find(text);
+            if (m_prompt_pcre.getSize())
+            {
+                s->setPrompt(m_prompt_pcre.getLast(0));
+                last_game_cmd = i;
+            }
+        }
+    }
+
+#ifdef _DEBUG //todo
+    tchar b[32];
+    wsprintf(b, L"insert: %d\r\n", last_game_cmd);
+    OutputDebugString(b);
+#endif
+
+    if (last_game_cmd == -1)       // skip stack insertion (no insert place)
+        return false;
+
+    // todo
+    parseDataStrings& ps = parse_data.strings;
+    MARKBLINK(ps);
+    
+    // div current parseData for 2 parts
+    parseData pd;
+    pd.update_prev_string = parse_data.update_prev_string;
+    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin()+last_game_cmd);
+    printIncoming(pd, flags, 0);
+    // insert stack between 2 parts
+    for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
+    {
+        stack_el &s = m_incoming_stack[i];
+        processIncoming(s.text.c_str(), s.text.length(), s.flags, 0);
+    }
+    pd.update_prev_string = false;
+    pd.strings.assign(parse_data.strings.begin() + last_game_cmd, parse_data.strings.end());
+    printIncoming(pd, flags, 0);
+    pd.strings.clear();    
+    return true;
 }
 
 void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
@@ -198,55 +274,6 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
         processCommand(new_cmds[i]);
 }
 
-bool LogicProcessor::processStack(parseData& parse_data, int flags)
-{
-    // find prompts in parse data (place to insert stack -> last gamecmd/prompt string)
-    int last_game_cmd = -1;
-    bool use_template = propData->recognize_prompt ? true : false;
-    for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
-    {
-        MudViewString *s = parse_data.strings[i];
-        if (s->gamecmd || s->prompt) { last_game_cmd = i; continue; }
-        if (use_template)
-        {
-            // recognize prompt string via template
-            tstring text;  s->getText(&text);
-            m_prompt_pcre.find(text);
-            if (m_prompt_pcre.getSize())
-            {
-                s->setPrompt(m_prompt_pcre.getLast(0));
-                last_game_cmd = i;
-            }
-        }
-    }
-
-#ifdef _DEBUG //todo
-    tchar b[32];
-    wsprintf(b, L"insert: %d\r\n", last_game_cmd);
-    OutputDebugString(b);
-#endif
-
-    if (last_game_cmd == -1)       // skip stack insertion (no insert place)
-        return false;
-    
-    // div current parseData for 2 parts
-    parseData pd;
-    pd.update_prev_string = parse_data.update_prev_string;
-    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin()+last_game_cmd);
-    printIncoming(pd, flags, 0);
-    // insert stack between 2 parts
-    for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
-    {
-        stack_el &s = m_incoming_stack[i];
-        processIncoming(s.text.c_str(), s.text.length(), s.flags, 0);
-    }
-    pd.update_prev_string = false;
-    pd.strings.assign(parse_data.strings.begin() + last_game_cmd, parse_data.strings.end());
-    printIncoming(pd, flags, 0);
-    pd.strings.clear();    
-    return true;
-}
-
 void LogicProcessor::updateProps()
 {
     m_helper.updateProps();
@@ -275,7 +302,7 @@ void LogicProcessor::updateProps()
             parts[i] = mask;
             tstring_replace(&parts[i], L"*", L".*");
         }
-        
+
         int last = parts.size() - 1;
         tmpl.clear();
         for (int i = 0; i < last; ++i)
@@ -283,7 +310,7 @@ void LogicProcessor::updateProps()
             tmpl.append(parts[i]);
             tmpl.append(L"\\*");
         }
-        tmpl.append(parts[last]);      
+        tmpl.append(parts[last]);
 
         bool result = m_prompt_pcre.setRegExp(tmpl, true);
         if (!result)
@@ -390,7 +417,7 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
     {
         m_pHost->sendToNetwork(cmd);
         return true;
-    }    
+    }
     tmcLog(L"Нет подключения.");
     return false;
 }
