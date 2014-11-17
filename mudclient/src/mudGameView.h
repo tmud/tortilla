@@ -628,6 +628,7 @@ private:
        m_propElements.updateProps(m_hWnd);
        initCommandBar();
        m_view.updateProps();
+       m_history.updateProps();
        for (int i=0,e=m_views.size(); i<e; ++i)
            m_views[i]->updateProps();
        updateTitle();
