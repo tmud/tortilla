@@ -94,6 +94,7 @@ private:
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
     void printIncoming(parseData& parse_data, int flags, int window);
     bool processStack(parseData& parse_data, int flags);
+    void printStack();
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);

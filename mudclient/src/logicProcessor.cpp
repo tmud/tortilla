@@ -98,8 +98,8 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
 void LogicProcessor::processStackTick()
 {
-   if (m_incoming_stack.empty())
-        return;
+   //if (m_incoming_stack.empty())
+   //     return;
    if (!m_connected)
    {
        //m_incoming_stack.clear();
@@ -112,13 +112,8 @@ void LogicProcessor::processStackTick()
    //processIncoming(tmp, 1, 0, 0);
    //processIncoming(tmp, 1, SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS, 0);
 
-   for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
-   {
-       const stack_el &s = m_incoming_stack[i];
-       const tstring &t = s.text;
-       processIncoming(t.c_str(), t.length(), s.flags);
-   }
-   m_incoming_stack.clear();
+   printStack();
+
 }
 
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
@@ -131,7 +126,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
            // в стек, если нельзя сразу добавить команды в окно (нет prompt, возможно это разрыв текста).
            stack_el e;
            e.text.assign(text, text_len);
-           e.flags = flags | FROM_STACK;
+           e.flags = flags;
            m_incoming_stack.push_back(e);
            return;
        }
@@ -144,11 +139,20 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // используем отдельный parser для не основных окон
    // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
    parseData parse_data;
-   if (window == 0)
+   if (window == 0) // && !(flags & FROM_STACK)) //todo
        m_parser.parse(text, text_len, &parse_data);
    else
        m_parser2.parse(text, text_len, &parse_data);
  
+   if (parse_data.update_prev_string)   //todo
+   {
+       OutputDebugString(L"ups = true\r\n");
+   }
+   else
+   {
+       OutputDebugString(L"ups = false\r\n");
+   }
+
    if (flags & FROM_STACK)  // todo
    {
        parseDataStrings& ps = parse_data.strings;
@@ -214,8 +218,16 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     OutputDebugString(b);
 #endif
 
-    if (last_game_cmd == -1)       // skip stack insertion (no insert place)
+    if (last_game_cmd == -1)       // нет места для вставки данных из стека
+    {
+        int size = m_incoming_stack.size();
+        if (size < 1)              // todo. регулируемое значение нужно ?
+            return false;
+        
+        // печатаем сначала стек 
+        printStack();
         return false;
+    }
 
     // todo
     parseDataStrings& ps = parse_data.strings;
@@ -237,6 +249,19 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     printIncoming(pd, flags, 0);
     pd.strings.clear();    
     return true;
+}
+
+void LogicProcessor::printStack()
+{
+    if (m_incoming_stack.empty())
+        return;
+    for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
+    {
+        const stack_el &s = m_incoming_stack[i];
+        const tstring &t = s.text;
+        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK); //todo | START_BR);
+    }
+    m_incoming_stack.clear();
 }
 
 void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
