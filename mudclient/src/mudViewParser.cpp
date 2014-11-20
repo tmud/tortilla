@@ -7,7 +7,7 @@ MudViewParser::MudViewParser() : m_current_string(NULL), m_last_finished(true)
 
 MudViewParser::~MudViewParser()
 { 
-    delete m_current_string;    
+    delete m_current_string;
 }
 
 void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
@@ -26,7 +26,7 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
 
         parserResult result = process (b, len);
         parserResultCode r = result.result;
-        
+
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
         {
             if (!m_current_block.string.empty())
@@ -45,7 +45,7 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
         m_buffer.truncate(result.processed * sizeof(WCHAR));
         if (r == PARSE_LOW_DATA)
             break;
-    } 
+    }
 
     m_last_finished = true;
     if (m_current_string)
@@ -56,14 +56,14 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
     }
 }
 
-void MudViewParser::reset()
+/*void MudViewParser::reset()
 {
     m_buffer.clear();
     m_last_finished = true;
     if (m_current_string)
         delete m_current_string;
     m_current_string = NULL;
-}
+} todo */
 
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)
 {
@@ -123,11 +123,11 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
 
 MudViewParser::parserResult MudViewParser::process_csi(const WCHAR* b, int len)
 {
-    // csi: b[0]=0x1b, b[1]='['        
+    // csi: b[0]=0x1b, b[1]='['
     // find end of csi macro
     if (len < 3)
         return parserResult(PARSE_LOW_DATA, 0);
-    
+
     const WCHAR *p = b+2;
     if (*p == L'm')
     {
@@ -145,7 +145,7 @@ MudViewParser::parserResult MudViewParser::process_csi(const WCHAR* b, int len)
         const WCHAR *check_symbol = wcschr(L";0123456789", *p);
         p++;
         if (!check_symbol)
-            return parserResult(PARSE_ERROR_DATA, p-b);        
+            return parserResult(PARSE_ERROR_DATA, p-b);
     }
 
     if (!macro_end)
@@ -163,7 +163,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
     // b[0]=0x1b, b[1]='[', b[len]='m'
     const WCHAR *e = b+len;
     const WCHAR *p = b+2;
-    
+
     while (p != e)
     {
         const WCHAR *c = p;
@@ -172,7 +172,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
 
         if (p == c)
             {   p++; continue; }
-        
+
         tstring code_str(p, c-p);
         int code = _wtoi(code_str.c_str());
         p = c;
@@ -184,7 +184,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
         {
             if ((e-p) < 5)
                 return parserResult(PARSE_ERROR_DATA, len);
-                                                    
+
             if (p[1] == L';' && p[2] == 5 && p[3] == L';')
             {
                  tbyte color = p[4] - 0;
@@ -196,7 +196,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
              }
              else
                  return parserResult(PARSE_ERROR_DATA, len);
-         }        
+         }
          if (code >= 30 && code <= 37)
          {
              pa.text_color = code - 30;
@@ -254,7 +254,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
             }
             p++;
          }
-    }    
+    }
     return parserResult(PARSE_NO_ERROR, len);
 }
 

@@ -31,8 +31,9 @@ public:
     MudViewParser();
     ~MudViewParser();
     void parse(const WCHAR* text, int len, parseData* data);
-    bool isLastFinished() const { return m_last_finished; } //todo возможно не нужен
-    void reset();
+    //void finishLast() { m_last_finished = true; }
+    //bool isLastFinished() const { return m_last_finished; } //todo возможно не нужен
+    //void reset(); todo
 
 private:
     enum parserResultCode {
@@ -58,7 +59,7 @@ private:
     parserResult process_esc(const WCHAR* b, int len);
     parserResult process_csi(const WCHAR* b, int len);
     parserResult process_csr(const WCHAR* b, int len);    
-    
+
 private:
     DataQueue m_buffer;
     MudViewString *m_current_string;

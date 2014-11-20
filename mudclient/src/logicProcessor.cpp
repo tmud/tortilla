@@ -98,22 +98,7 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
 void LogicProcessor::processStackTick()
 {
-   //if (m_incoming_stack.empty())
-   //     return;
-   if (!m_connected)
-   {
-       //m_incoming_stack.clear();
-       //return;
-   }
-
-   //if (m_parser.isLastFinished())
-   //     return;
-   //WCHAR tmp[2] = { 10, 0 };
-   //processIncoming(tmp, 1, 0, 0);
-   //processIncoming(tmp, 1, SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS, 0);
-
-   printStack();
-
+    printStack();
 }
 
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
@@ -136,23 +121,16 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // 2. команды, но после prompt - ок
    // 3. команды, но из стека по таймеру - жесткая вставка 
 
-   // используем отдельный parser для не основных окон
+   // используем отдельный parser для неосновных окон
    // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
    parseData parse_data;
    if (window == 0) // && !(flags & FROM_STACK)) //todo
+   {
        m_parser.parse(text, text_len, &parse_data);
+   }
    else
        m_parser2.parse(text, text_len, &parse_data);
  
-   if (parse_data.update_prev_string)   //todo
-   {
-       OutputDebugString(L"ups = true\r\n");
-   }
-   else
-   {
-       OutputDebugString(L"ups = false\r\n");
-   }
-
    if (flags & FROM_STACK)  // todo
    {
        parseDataStrings& ps = parse_data.strings;
@@ -170,6 +148,14 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    if (flags & START_BR)
        parse_data.update_prev_string = false;
 
+   // попытка вставки стека по ходу данных, если это обычные данные
+   if (window == 0 && !(flags & (START_BR | GAME_CMD)))
+   {
+       if (processStack(parse_data, flags))
+           return;
+       processAngleBracket(parse_data);
+   }
+
    // accumulate last string in one
    m_pHost->accLastString(window, &parse_data);
 
@@ -177,12 +163,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    ColorsCollector pc;
    pc.process(&parse_data);
 
-   // попытка вставки стека по ходу данных, если это обычные данные
-   if (window == 0 && !(flags & (START_BR | GAME_CMD)))
-   {
-       if (processStack(parse_data, flags))
-           return;
-   }  
    printIncoming(parse_data, flags, window);
 }
 
@@ -212,19 +192,20 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
         }
     }
 
-#ifdef _DEBUG //todo
+/*#ifdef _DEBUG //todo
     tchar b[32];
     wsprintf(b, L"insert: %d\r\n", last_game_cmd);
     OutputDebugString(b);
-#endif
+#endif*/
 
     if (last_game_cmd == -1)       // нет места для вставки данных из стека
     {
-        int size = m_incoming_stack.size();
+        /*int size = m_incoming_stack.size();
         if (size < 1)              // todo. регулируемое значение нужно ?
-            return false;
-        
-        // печатаем сначала стек 
+            return false;*/
+
+        // печатаем стек
+        parse_data.update_prev_string = false;
         printStack();
         return false;
     }
@@ -232,7 +213,9 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     // todo
     parseDataStrings& ps = parse_data.strings;
     MARKBLINK(ps);
+    printIncoming(parse_data, flags, 0);
     
+    /*
     // div current parseData for 2 parts
     parseData pd;
     pd.update_prev_string = parse_data.update_prev_string;
@@ -247,7 +230,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     pd.update_prev_string = false;
     pd.strings.assign(parse_data.strings.begin() + last_game_cmd, parse_data.strings.end());
     printIncoming(pd, flags, 0);
-    pd.strings.clear();    
+    pd.strings.clear();*/
     return true;
 }
 
@@ -259,13 +242,16 @@ void LogicProcessor::printStack()
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
-        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK); //todo | START_BR);
+        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK);
     }
     m_incoming_stack.clear();
 }
 
 void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
+    if (!m_connected)
+        flags |= SKIP_ACTIONS;
+
     // final step for data
     // preprocess data via plugins
     if (!(flags & SKIP_PLUGINS))
@@ -297,6 +283,25 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 
     for (int i = 0, e = new_cmds.size(); i < e; ++i) // process actions' result
         processCommand(new_cmds[i]);
+}
+
+void LogicProcessor::processAngleBracket(parseData &parse_data)
+{
+    // минихак -> перенос строки, если последний символ '>' и если нет IAC GA
+    if (!parse_data.update_prev_string || parse_data.strings.empty())
+        return;
+    int last = parse_data.strings.size() - 1;
+    MudViewString *s = parse_data.strings[last];
+    if (s->prompt)
+        return;
+    tstring text;
+    s->getText(&text);
+    tstring_trimright(&text);
+    if (text.empty())
+        return;
+    int last_sym = text.size() - 1;
+    if (text.at(last_sym) == L'>')
+        parse_data.update_prev_string = false;
 }
 
 void LogicProcessor::updateProps()
