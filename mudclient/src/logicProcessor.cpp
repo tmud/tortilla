@@ -106,32 +106,42 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // parse incoming text data
    if (flags & (START_BR | GAME_CMD) && !(flags & FROM_STACK))
    {
-       if (window == 0 && !m_pHost->isLastStringPrompt(0))
+       if (window == 0) 
        {
-           // в стек, если нельзя сразу добавить команды в окно (нет prompt, возможно это разрыв текста).
-           stack_el e;
-           e.text.assign(text, text_len);
-           e.flags = flags;
-           m_incoming_stack.push_back(e);
-           return;
+           MudViewString *last = m_pHost->getLastString(0);
+           if (last && !last->prompt)
+           {
+               // в стек, если нельзя сразу добавить команды в окно (нет prompt, возможно это разрыв текста).
+               stack_el e;
+               e.text.assign(text, text_len);
+               e.flags = flags;
+               m_incoming_stack.push_back(e);
+               return;
+           }
        }
    }
    // сюда попадаем:
    // 1. данные, как продолжение старых игровых данных - ок
    // 2. команды, но после prompt - ок
    // 3. команды, но из стека по таймеру - жесткая вставка 
-
    // используем отдельный parser для неосновных окон
-   // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
+   // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).   
    parseData parse_data;
-   if (window == 0) // && !(flags & FROM_STACK)) //todo
+   if (window == 0)
    {
-       m_parser.parse(text, text_len, &parse_data);
+       m_parser.parse(text, text_len, true, &parse_data);
+       if (flags & GAME_CMD)
+       {
+           MudViewString *last = m_pHost->getLastString(0);
+           if (last && last->prompt && !last->gamecmd)
+               parse_data.update_prev_string = true;
+       }
    }
    else
-       m_parser2.parse(text, text_len, &parse_data);
- 
-   if (flags & FROM_STACK)  // todo
+       m_parser2.parse(text, text_len, false, &parse_data);
+   MARKPROMPT(parse_data.strings);  // todo
+
+   if (flags & FROM_STACK)          // todo
    {
        parseDataStrings& ps = parse_data.strings;
        MARKINVERSED(ps);
@@ -141,7 +151,10 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    {
        parseDataStrings& ps = parse_data.strings;
        for (int i = 0, e = ps.size(); i < e; ++i)
+       {
            ps[i]->gamecmd = true;
+           //ps[i]->blocks[0].params.underline_status = 1; //todo
+       }
    }
 
    // start from new string forcibly //todo - возможно лишнее, т.к. с новой строки уже сделано см п1.-3
@@ -192,12 +205,6 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
         }
     }
 
-/*#ifdef _DEBUG //todo
-    tchar b[32];
-    wsprintf(b, L"insert: %d\r\n", last_game_cmd);
-    OutputDebugString(b);
-#endif*/
-
     if (last_game_cmd == -1)       // нет места для вставки данных из стека
     {
         /*int size = m_incoming_stack.size();
@@ -210,11 +217,20 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
         return false;
     }
 
+#ifdef _DEBUG //todo
+    tchar b[32];
+    wsprintf(b, L"insert: %d\r\n", last_game_cmd);
+    OutputDebugString(b);
+#endif
+
     // todo
     parseDataStrings& ps = parse_data.strings;
-    MARKBLINK(ps);
+    if (parse_data.update_prev_string)
+        MARKINVERSED(ps);        
+    else
+        MARKBLINK(ps);
     printIncoming(parse_data, flags, 0);
-    
+
     /*
     // div current parseData for 2 parts
     parseData pd;

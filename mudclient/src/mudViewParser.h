@@ -16,12 +16,15 @@ struct parseData
 void markBlink(parseDataStrings& strings);
 void markInversed(parseDataStrings& strings);
 void printByIndex(const parseDataStrings& strings, int index);
+void markPrompt(parseDataStrings& strings);
 #define MARKBLINK(x) markBlink(x)
 #define MARKINVERSED(x) markInversed(x)
+#define MARKPROMPT(x) markPrompt(x)
 #define PRINTBYINDEX(x, i) printByIndex(x, i);
 #else
 #define MARKBLINK(x)
 #define MARKINVERSED(x)
+#define MARKPROMPT(x)
 #define PRINTBYINDEX(x, i)
 #endif
 
@@ -30,7 +33,7 @@ class MudViewParser
 public:
     MudViewParser();
     ~MudViewParser();
-    void parse(const WCHAR* text, int len, parseData* data);
+    void parse(const WCHAR* text, int len, bool newline_iacga, parseData* data);
     //void finishLast() { m_last_finished = true; }
     //bool isLastFinished() const { return m_last_finished; } //todo возможно не нужен
     //void reset(); todo
@@ -42,7 +45,8 @@ private:
     PARSE_ERROR_DATA,      // data parsed, data with errors (skipped errors)
     PARSE_NOT_SUPPORTED,   // data parsed, commands not supported (skipped)
     PARSE_BLOCK_FINISHED,
-    PARSE_STRING_FINISHED  // string finalized with new line
+    PARSE_STRING_FINISHED, // string finalized with new line
+    PARSE_STRING_IACGA
     };
 
     struct parserResult

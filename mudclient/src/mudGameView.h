@@ -680,16 +680,19 @@ private:
         m_network.disconnect();
     }
 
-    bool isLastStringPrompt(int view)
+    MudViewString* getLastString(int view)
     {
+        MudViewString *s = NULL;
+        MudView* v = NULL;
         if (view == 0)
-            return m_view.isLastStringPrompt();
+            v = &m_view;
         if (view >= 1 && view <= OUTPUT_WINDOWS)
-        {
-            MudView* v = m_views[view - 1];
-            return v->isLastStringPrompt();
+            v = m_views[view - 1];
+        if (v) {
+            int last = v->getStringsCount() - 1;
+            s = (last > 0) ? v->getString(last) : NULL;
         }
-        return false;
+        return s;
     }
 
     void accLastString(int view, parseData* parse_data)

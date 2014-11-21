@@ -10,7 +10,7 @@ MudViewParser::~MudViewParser()
     delete m_current_string;
 }
 
-void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
+void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseData* data)
 {
     if (!m_last_finished)
         data->update_prev_string = true;
@@ -26,6 +26,9 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
 
         parserResult result = process (b, len);
         parserResultCode r = result.result;
+
+        if (r == PARSE_STRING_IACGA)
+            r = (newline_iacga) ? PARSE_STRING_FINISHED : PARSE_NO_ERROR;
 
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
         {
@@ -115,7 +118,7 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
     if (b[1] == 0x5c) // string terminator (GA)
     {
         m_current_string->setPrompt();
-        return parserResult(PARSE_NO_ERROR, 2);
+        return parserResult(PARSE_STRING_IACGA, 2);
     }
     // skip all other esc codes (0x1b + code)
     return parserResult(PARSE_NOT_SUPPORTED, 2);
@@ -311,5 +314,25 @@ void printByIndex(const parseDataStrings& strings, int index)
     strings[index]->getText(&text);
     OutputDebugString(text.c_str());
     OutputDebugString(L"\r\n");
+}
+
+void markPrompt(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        if (strings[i]->prompt)
+        {
+            int blocks = strings[i]->blocks.size();
+            for (int j = 0; j < blocks; ++j)
+            {
+                MudViewStringParams &p = strings[i]->blocks[j].params;
+                p.text_color = 2;
+                p.underline_status = 1;
+                p.intensive_status = 1;
+                p.use_ext_colors = 0;
+            }
+        }
+    }
 }
 #endif

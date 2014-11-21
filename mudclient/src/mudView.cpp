@@ -32,7 +32,14 @@ void MudView::accLastString(parseData *parse_data)
     if (string->gamecmd && !last_string->prompt)
         return;
     if (!string->gamecmd && last_string->prompt)
+    {
+        //todo
+        if (!string->blocks.empty())
+        {
+            string->blocks[0].params.italic_status = 1;
+        }
         return;
+    }
     last_string->moveBlocks(string);
     delete string;
     parse_data->strings[0] = last_string;
@@ -40,13 +47,9 @@ void MudView::accLastString(parseData *parse_data)
     m_last_string_updated = true;
 }
 
-bool MudView::isLastStringPrompt()
+int MudView::getStringsCount() const
 {
-    if (m_strings.empty())
-        return true;
-    int last = m_strings.size() - 1;
-    MudViewString *last_string = m_strings[last];
-    return (last_string->prompt) ? true : false;
+    return m_strings.size();
 }
 
 void MudView::addText(parseData* parse_data, MudView* mirror)
@@ -66,7 +69,7 @@ void MudView::addText(parseData* parse_data, MudView* mirror)
         m_strings.push_back(string);
         if (mirror)
         {
-            std::vector<MudViewString*> &ms = mirror->m_strings;            
+            std::vector<MudViewString*> &ms = mirror->m_strings;
             if (lsu)
             {
                 lsu = false;
