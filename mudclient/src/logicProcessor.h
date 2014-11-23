@@ -64,6 +64,8 @@ class LogicProcessor : public LogicProcessorMethods
         int flags;
     };
     std::vector<stack_el> m_incoming_stack;
+    bool m_iacga_exist;
+    int  m_iacga_counter;
 
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
@@ -80,7 +82,7 @@ public:
     void processSystemCommand(const tstring& cmd);
     void processTick();
     void processStackTick();
-    void updateProps();    
+    void updateProps();
     void tmcLog(const tstring& cmd);
     void simpleLog(const tstring& cmd);
     void pluginLog(const tstring& cmd);
@@ -100,6 +102,7 @@ private:
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
     bool sendToNetwork(const tstring& cmd);
+    void processNetworkError(const tstring& error);
 
 public: // system commands
     DEF(drop);

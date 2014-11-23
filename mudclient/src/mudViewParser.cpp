@@ -28,7 +28,10 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
         parserResultCode r = result.result;
 
         if (r == PARSE_STRING_IACGA)
+        {
             r = (newline_iacga) ? PARSE_STRING_FINISHED : PARSE_NO_ERROR;
+            data->iacga_exist = true;
+        }
 
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
         {
@@ -308,6 +311,16 @@ void markInversed(parseDataStrings& strings)
             strings[i]->blocks[j].params.reverse_video = 1;
     }
 }
+void markItalic(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+            strings[i]->blocks[j].params.italic_status = 1;
+    }
+}
 void printByIndex(const parseDataStrings& strings, int index)
 {
     tstring text;
@@ -327,10 +340,8 @@ void markPrompt(parseDataStrings& strings)
             for (int j = 0; j < blocks; ++j)
             {
                 MudViewStringParams &p = strings[i]->blocks[j].params;
-                p.text_color = 2;
+                p.italic_status = 1;
                 p.underline_status = 1;
-                p.intensive_status = 1;
-                p.use_ext_colors = 0;
             }
         }
     }

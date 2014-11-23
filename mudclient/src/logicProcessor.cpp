@@ -3,7 +3,8 @@
 #include "logicProcessor.h"
 
 LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
-propData(data), m_pHost(host), m_connected(false), m_helper(data)
+propData(data), m_pHost(host), m_connected(false), m_helper(data),
+m_iacga_exist(false), m_iacga_counter(0)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -106,7 +107,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // parse incoming text data
    if (flags & (START_BR | GAME_CMD) && !(flags & FROM_STACK))
    {
-       if (window == 0) 
+       if (window == 0)
        {
            MudViewString *last = m_pHost->getLastString(0);
            if (last && !last->prompt)
@@ -130,6 +131,23 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    if (window == 0)
    {
        m_parser.parse(text, text_len, true, &parse_data);
+       if (!m_iacga_exist)
+       {
+           if (parse_data.iacga_exist)
+               m_iacga_exist = true;
+       }
+       else
+       {
+           if (parse_data.iacga_exist)
+               m_iacga_counter = 0;
+           else
+           {
+               m_iacga_counter += parse_data.strings.size();
+               if (m_iacga_counter > 5)
+                { m_iacga_exist = false; m_iacga_counter = 0; }
+           }
+       }
+
        if (flags & GAME_CMD)
        {
            MudViewString *last = m_pHost->getLastString(0);
@@ -207,13 +225,10 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
 
     if (last_game_cmd == -1)       // нет места для вставки данных из стека
     {
-        /*int size = m_incoming_stack.size();
-        if (size < 1)              // todo. регулируемое значение нужно ?
-            return false;*/
-
-        // печатаем стек
+        if (m_iacga_exist)         // если с iac ga то ждем
+            return false;
         parse_data.update_prev_string = false;
-        printStack();
+        printStack();             // печатаем стек настойчиво
         return false;
     }
 
@@ -223,30 +238,24 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     OutputDebugString(b);
 #endif
 
-    // todo
-    parseDataStrings& ps = parse_data.strings;
-    if (parse_data.update_prev_string)
-        MARKINVERSED(ps);        
-    else
-        MARKBLINK(ps);
-    printIncoming(parse_data, flags, 0);
-
-    /*
     // div current parseData for 2 parts
     parseData pd;
     pd.update_prev_string = parse_data.update_prev_string;
-    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin()+last_game_cmd);
+    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin()+last_game_cmd+1);
+    MARKITALIC(pd.strings); //todo
+
     printIncoming(pd, flags, 0);
+    pd.strings.clear();
+
     // insert stack between 2 parts
-    for (int i = 0, e = m_incoming_stack.size(); i < e; ++i)
-    {
-        stack_el &s = m_incoming_stack[i];
-        processIncoming(s.text.c_str(), s.text.length(), s.flags, 0);
-    }
+    printStack();
+
     pd.update_prev_string = false;
-    pd.strings.assign(parse_data.strings.begin() + last_game_cmd, parse_data.strings.end());
+    pd.strings.assign(parse_data.strings.begin() + last_game_cmd+1, parse_data.strings.end());
+    MARKBLINK(pd.strings); //todo
     printIncoming(pd, flags, 0);
-    pd.strings.clear();*/
+    pd.strings.clear();
+    parse_data.strings.clear();
     return true;
 }
 
@@ -265,6 +274,9 @@ void LogicProcessor::printStack()
 
 void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
+    if (parse_data.strings.empty())
+        return;
+
     if (!m_connected)
         flags |= SKIP_ACTIONS;
 
@@ -369,26 +381,22 @@ void LogicProcessor::updateProps()
 
 void LogicProcessor::processNetworkDisconnect()
 {
-    tmcLog(L"Соединение завершено(обрыв).");
-    m_connected = false;
+    processNetworkError(L"Соединение завершено(обрыв).");
 }
 
 void LogicProcessor::processNetworkConnectError()
 {
-    tmcLog(L"Не удалось подключиться.");
-    m_connected = false;
+    processNetworkError(L"Не удалось подключиться.");
 }
 
 void LogicProcessor::processNetworkError()
 {
-    tmcLog(L"Ошибка cети. Соединение завершено.");
-    m_connected = false;
+    processNetworkError(L"Ошибка cети. Соединение завершено.");
 }
 
 void LogicProcessor::processNetworkMccpError()
 {
-    tmcLog(L"Ошибка в протоколе сжатия. Соединение завершено.");
-    m_connected = false;
+    processNetworkError(L"Ошибка в протоколе сжатия. Соединение завершено.");
 }
 
 void LogicProcessor::tmcLog(const tstring& cmd)
@@ -466,4 +474,12 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
     }
     tmcLog(L"Нет подключения.");
     return false;
+}
+
+void LogicProcessor::processNetworkError(const tstring& error)
+{
+    tmcLog(error.c_str());
+    m_connected = false;
+    m_iacga_exist = false;
+    m_iacga_counter = 0;
 }

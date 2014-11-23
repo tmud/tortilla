@@ -4,10 +4,10 @@
 typedef std::vector<MudViewString*> parseDataStrings;
 struct parseData
 {
-    parseData() : update_prev_string(false) {}
+    parseData() : update_prev_string(false), iacga_exist(false) {}
     ~parseData() { autodel<MudViewString> z1(strings); }
-
     bool update_prev_string;
+    bool iacga_exist;
     parseDataStrings strings;
 };
 
@@ -15,10 +15,12 @@ struct parseData
 #ifdef _DEBUG
 void markBlink(parseDataStrings& strings);
 void markInversed(parseDataStrings& strings);
+void markItalic(parseDataStrings& strings);
 void printByIndex(const parseDataStrings& strings, int index);
 void markPrompt(parseDataStrings& strings);
 #define MARKBLINK(x) markBlink(x)
 #define MARKINVERSED(x) markInversed(x)
+#define MARKITALIC(x) markItalic(x)
 #define MARKPROMPT(x) markPrompt(x)
 #define PRINTBYINDEX(x, i) printByIndex(x, i);
 #else
