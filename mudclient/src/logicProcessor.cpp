@@ -99,7 +99,13 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
 void LogicProcessor::processStackTick()
 {
-    printStack();
+    if (m_iacga_exist)
+    {
+        MudViewString *last = m_pHost->getLastString(0);
+        if (last && !last->prompt && !last->gamecmd)
+                return;
+    }
+    printStack(FROM_TIMER);
 }
 
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
@@ -143,7 +149,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
            else
            {
                m_iacga_counter += parse_data.strings.size();
-               if (m_iacga_counter > 5)
+               if (m_iacga_counter > 7)
                 { m_iacga_exist = false; m_iacga_counter = 0; }
            }
        }
@@ -161,18 +167,18 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 
    if (flags & FROM_STACK)          // todo
    {
-       parseDataStrings& ps = parse_data.strings;
-       MARKINVERSED(ps);
+       parseDataStrings& ps = parse_data.strings;       
+       if (flags & FROM_TIMER)
+           MARKINVERSEDCOLOR(ps, 6)
+       else
+           MARKINVERSED(ps);
    }
-   
+
    if (flags & GAME_CMD)
    {
        parseDataStrings& ps = parse_data.strings;
        for (int i = 0, e = ps.size(); i < e; ++i)
-       {
            ps[i]->gamecmd = true;
-           //ps[i]->blocks[0].params.underline_status = 1; //todo
-       }
    }
 
    // start from new string forcibly //todo - возможно лишнее, т.к. с новой строки уже сделано см п1.-3
@@ -232,11 +238,11 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
         return false;
     }
 
-#ifdef _DEBUG //todo
+/*#ifdef _DEBUG //todo
     tchar b[32];
     wsprintf(b, L"insert: %d\r\n", last_game_cmd);
     OutputDebugString(b);
-#endif
+#endif*/
 
     // div current parseData for 2 parts
     parseData pd;
@@ -259,7 +265,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     return true;
 }
 
-void LogicProcessor::printStack()
+void LogicProcessor::printStack(int flags)
 {
     if (m_incoming_stack.empty())
         return;
@@ -267,7 +273,7 @@ void LogicProcessor::printStack()
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
-        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK);
+        processIncoming(t.c_str(), t.length(), s.flags|FROM_STACK|flags);
     }
     m_incoming_stack.clear();
 }
@@ -315,6 +321,16 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 
 void LogicProcessor::processAngleBracket(parseData &parse_data)
 {
+#ifdef _DEBUG //todo
+    for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
+    {
+        tstring tmp;
+        parse_data.strings[i]->getText(&tmp);
+        OutputDebugString(tmp.c_str());
+        OutputDebugString(L"\r\n");
+    }  
+#endif
+
     // минихак -> перенос строки, если последний символ '>' и если нет IAC GA
     if (!parse_data.update_prev_string || parse_data.strings.empty())
         return;

@@ -92,11 +92,12 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
 
 private:
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, FROM_STACK = 64 };
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, 
+           FROM_STACK = 64, FROM_TIMER = 128 };
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
     void printIncoming(parseData& parse_data, int flags, int window);
     bool processStack(parseData& parse_data, int flags);
-    void printStack();
+    void printStack(int flags = 0);
     void processAngleBracket(parseData &parse_data);
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);

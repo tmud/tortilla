@@ -546,8 +546,7 @@ IMPL(disconnect)
             return;
         }
         m_pHost->disconnectFromNetwork();
-        tmcLog(L"Соединение завершено.");
-        m_connected = false;
+        processNetworkError(L"Соединение завершено.");
         return;
     }
     p->invalidargs();

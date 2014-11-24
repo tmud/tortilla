@@ -62,15 +62,6 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
     }
 }
 
-/*void MudViewParser::reset()
-{
-    m_buffer.clear();
-    m_last_finished = true;
-    if (m_current_string)
-        delete m_current_string;
-    m_current_string = NULL;
-} todo */
-
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)
 {
     if (*b >= 0x20)
@@ -309,6 +300,20 @@ void markInversed(parseDataStrings& strings)
         int blocks = strings[i]->blocks.size();
         for (int j = 0; j < blocks; ++j)
             strings[i]->blocks[j].params.reverse_video = 1;
+    }
+}
+void markInversedColor(parseDataStrings& strings, int color)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+        {
+            MudViewStringParams &p = strings[i]->blocks[j].params;
+            p.reverse_video = 1;
+            p.text_color = color;
+        }
     }
 }
 void markItalic(parseDataStrings& strings)

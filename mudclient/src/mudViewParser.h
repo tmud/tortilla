@@ -15,6 +15,7 @@ struct parseData
 #ifdef _DEBUG
 void markBlink(parseDataStrings& strings);
 void markInversed(parseDataStrings& strings);
+void markInversedColor(parseDataStrings& strings, int color);
 void markItalic(parseDataStrings& strings);
 void printByIndex(const parseDataStrings& strings, int index);
 void markPrompt(parseDataStrings& strings);
@@ -23,11 +24,14 @@ void markPrompt(parseDataStrings& strings);
 #define MARKITALIC(x) markItalic(x)
 #define MARKPROMPT(x) markPrompt(x)
 #define PRINTBYINDEX(x, i) printByIndex(x, i);
+#define MARKINVERSEDCOLOR(x, c) markInversedColor(x, c);
 #else
-#define MARKBLINK(x)
-#define MARKINVERSED(x)
-#define MARKPROMPT(x)
-#define PRINTBYINDEX(x, i)
+#define MARKBLINK(x) {}
+#define MARKINVERSED(x) {}
+#define MARKITALIC(x) {}
+#define MARKPROMPT(x) {}
+#define PRINTBYINDEX(x, i) {}
+#define MARKINVERSEDCOLOR(x, c) {}
 #endif
 
 class MudViewParser
@@ -36,9 +40,6 @@ public:
     MudViewParser();
     ~MudViewParser();
     void parse(const WCHAR* text, int len, bool newline_iacga, parseData* data);
-    //void finishLast() { m_last_finished = true; }
-    //bool isLastFinished() const { return m_last_finished; } //todo возможно не нужен
-    //void reset(); todo
 
 private:
     enum parserResultCode {
