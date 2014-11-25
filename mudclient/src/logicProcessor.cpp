@@ -163,7 +163,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    }
    else
        m_parser2.parse(text, text_len, false, &parse_data);
-   MARKPROMPT(parse_data.strings);  // todo
+   MARKUNDERLINE(parse_data.strings);  // todo
 
    if (flags & FROM_STACK)          // todo
    {
@@ -180,6 +180,19 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
        for (int i = 0, e = ps.size(); i < e; ++i)
            ps[i]->gamecmd = true;
    }
+
+#ifdef _DEBUG   //todo!
+   parseDataStrings &p = parse_data.strings;
+   if (!p.empty())
+   {
+       MudViewString *s = p[0];
+       MudViewStringBlock b; b.string = L"{"; b.params.text_color = 5; b.params.intensive_status = 1;
+       s->blocks.insert(s->blocks.begin(), b);
+       int last = p.size() - 1;
+       s = p[last]; b.string = L"}";
+       s->blocks.push_back(b);
+   }
+#endif
 
    // start from new string forcibly //todo - возможно лишнее, т.к. с новой строки уже сделано см п1.-3
    if (flags & START_BR)
@@ -199,7 +212,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
    // collect strings in parse_data in one with same colors params
    ColorsCollector pc;
    pc.process(&parse_data);
-
    printIncoming(parse_data, flags, window);
 }
 
@@ -249,7 +261,6 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     pd.update_prev_string = parse_data.update_prev_string;
     pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin()+last_game_cmd+1);
     MARKITALIC(pd.strings); //todo
-
     printIncoming(pd, flags, 0);
     pd.strings.clear();
 
@@ -282,6 +293,20 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
     if (parse_data.strings.empty())
         return;
+
+#ifdef _DEBUG //todo
+    for (int i = 0, e = parse_data.strings.size() - 1; i <= e; ++i)
+    {
+        tstring tmp;
+        parse_data.strings[i]->getText(&tmp);
+        OutputDebugString(tmp.c_str());
+        if (i == 0 && parse_data.update_prev_string)
+        {
+           OutputDebugString(L" - update prev string");
+        }
+        OutputDebugString(L"\r\n");
+    }
+#endif
 
     if (!m_connected)
         flags |= SKIP_ACTIONS;
@@ -321,16 +346,6 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 
 void LogicProcessor::processAngleBracket(parseData &parse_data)
 {
-#ifdef _DEBUG //todo
-    for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
-    {
-        tstring tmp;
-        parse_data.strings[i]->getText(&tmp);
-        OutputDebugString(tmp.c_str());
-        OutputDebugString(L"\r\n");
-    }  
-#endif
-
     // минихак -> перенос строки, если последний символ '>' и если нет IAC GA
     if (!parse_data.update_prev_string || parse_data.strings.empty())
         return;
@@ -345,7 +360,12 @@ void LogicProcessor::processAngleBracket(parseData &parse_data)
         return;
     int last_sym = text.size() - 1;
     if (text.at(last_sym) == L'>')
+    {
         parse_data.update_prev_string = false;
+        //todo
+        for (int i = 0, e = s->blocks.size(); i < e; ++i)
+            s->blocks[i].params.blink_status = 1;
+    }
 }
 
 void LogicProcessor::updateProps()

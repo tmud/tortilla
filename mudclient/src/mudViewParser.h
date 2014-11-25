@@ -18,18 +18,18 @@ void markInversed(parseDataStrings& strings);
 void markInversedColor(parseDataStrings& strings, int color);
 void markItalic(parseDataStrings& strings);
 void printByIndex(const parseDataStrings& strings, int index);
-void markPrompt(parseDataStrings& strings);
+void markUnderline(parseDataStrings& strings);
 #define MARKBLINK(x) markBlink(x)
 #define MARKINVERSED(x) markInversed(x)
 #define MARKITALIC(x) markItalic(x)
-#define MARKPROMPT(x) markPrompt(x)
+#define MARKUNDERLINE(x) markUnderline(x)
 #define PRINTBYINDEX(x, i) printByIndex(x, i);
 #define MARKINVERSEDCOLOR(x, c) markInversedColor(x, c);
 #else
 #define MARKBLINK(x) {}
 #define MARKINVERSED(x) {}
 #define MARKITALIC(x) {}
-#define MARKPROMPT(x) {}
+#define MARKUNDERLINE(x) {}
 #define PRINTBYINDEX(x, i) {}
 #define MARKINVERSEDCOLOR(x, c) {}
 #endif

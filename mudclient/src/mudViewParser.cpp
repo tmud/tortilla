@@ -334,7 +334,7 @@ void printByIndex(const parseDataStrings& strings, int index)
     OutputDebugString(L"\r\n");
 }
 
-void markPrompt(parseDataStrings& strings)
+void markUnderline(parseDataStrings& strings)
 {
     int count = strings.size();
     for (int i = 0; i < count; ++i)
@@ -345,7 +345,6 @@ void markPrompt(parseDataStrings& strings)
             for (int j = 0; j < blocks; ++j)
             {
                 MudViewStringParams &p = strings[i]->blocks[j].params;
-                p.italic_status = 1;
                 p.underline_status = 1;
             }
         }
