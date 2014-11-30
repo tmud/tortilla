@@ -4,32 +4,35 @@
 typedef std::vector<MudViewString*> parseDataStrings;
 struct parseData
 {
-    parseData() : update_prev_string(false), iacga_exist(false) {}
+    parseData() : update_prev_string(false) {}
     ~parseData() { autodel<MudViewString> z1(strings); }
     bool update_prev_string;
-    bool iacga_exist;
     parseDataStrings strings;
 };
 
 // only for debug (help functions)
 #ifdef _DEBUG
+#define MARKERS_IN_VIEW
+#endif
+
+#ifdef MARKERS_IN_VIEW
 void markBlink(parseDataStrings& strings);
 void markInversed(parseDataStrings& strings);
 void markInversedColor(parseDataStrings& strings, int color);
 void markItalic(parseDataStrings& strings);
 void printByIndex(const parseDataStrings& strings, int index);
-void markUnderline(parseDataStrings& strings);
+void markPromptUnderline(parseDataStrings& strings);
 #define MARKBLINK(x) markBlink(x)
 #define MARKINVERSED(x) markInversed(x)
 #define MARKITALIC(x) markItalic(x)
-#define MARKUNDERLINE(x) markUnderline(x)
+#define MARKPROMPTUNDERLINE(x) markPromptUnderline(x)
 #define PRINTBYINDEX(x, i) printByIndex(x, i);
 #define MARKINVERSEDCOLOR(x, c) markInversedColor(x, c);
 #else
 #define MARKBLINK(x) {}
 #define MARKINVERSED(x) {}
 #define MARKITALIC(x) {}
-#define MARKUNDERLINE(x) {}
+#define MARKPROMPTUNDERLINE(x) {}
 #define PRINTBYINDEX(x, i) {}
 #define MARKINVERSEDCOLOR(x, c) {}
 #endif

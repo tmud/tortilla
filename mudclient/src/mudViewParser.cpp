@@ -30,7 +30,6 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
         if (r == PARSE_STRING_IACGA)
         {
             r = (newline_iacga) ? PARSE_STRING_FINISHED : PARSE_NO_ERROR;
-            data->iacga_exist = true;
         }
 
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
@@ -334,19 +333,18 @@ void printByIndex(const parseDataStrings& strings, int index)
     OutputDebugString(L"\r\n");
 }
 
-void markUnderline(parseDataStrings& strings)
+void markPromptUnderline(parseDataStrings& strings)
 {
     int count = strings.size();
     for (int i = 0; i < count; ++i)
     {
-        if (strings[i]->prompt)
+        if (!strings[i]->prompt)
+            continue;
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
         {
-            int blocks = strings[i]->blocks.size();
-            for (int j = 0; j < blocks; ++j)
-            {
-                MudViewStringParams &p = strings[i]->blocks[j].params;
-                p.underline_status = 1;
-            }
+            MudViewStringParams &p = strings[i]->blocks[j].params;
+            p.underline_status = 1;
         }
     }
 }

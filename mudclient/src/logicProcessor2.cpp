@@ -1066,6 +1066,8 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
+    m_univ_prompt_pcre.setRegExp(L"^.*[0-9]+.*>", true);
+
     if (!m_logs.init())
         return false;
 

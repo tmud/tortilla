@@ -64,8 +64,10 @@ class LogicProcessor : public LogicProcessorMethods
         int flags;
     };
     std::vector<stack_el> m_incoming_stack;
-    bool m_iacga_exist;
-    int  m_iacga_counter;
+    enum PromptMode { OFF = 0, USER, UNIVERSAL };
+    PromptMode m_prompt_mode;
+    int  m_prompt_counter;
+    Pcre16 m_univ_prompt_pcre;
 
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
@@ -92,18 +94,19 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
 
 private:
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, 
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
            FROM_STACK = 64, FROM_TIMER = 128 };
-    void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
-    void printIncoming(parseData& parse_data, int flags, int window);
-    bool processStack(parseData& parse_data, int flags);
-    void printStack(int flags = 0);
-    void processAngleBracket(parseData &parse_data);
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
     bool sendToNetwork(const tstring& cmd);
     void processNetworkError(const tstring& error);
+
+    // Incoming data methods
+    void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0);
+    void printIncoming(parseData& parse_data, int flags, int window);
+    void printStack(int flags = 0);
+    bool processStack(parseData& parse_data, int flags);
 
 public: // system commands
     DEF(drop);
