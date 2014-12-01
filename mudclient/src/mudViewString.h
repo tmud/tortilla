@@ -85,7 +85,7 @@ struct MudViewString
        for (int i=0,e=src->blocks.size(); i<e; ++i)
            blocks.push_back(src->blocks[i]);
        gamecmd = src->gamecmd;
-       prompt = src->prompt;       
+       prompt = src->prompt;
    }
 
    void getText(tstring *text) const
@@ -114,9 +114,11 @@ struct MudViewString
 
    void getPrompt(tstring *text) const
    {
+       if (prompt <= 0)
+           return;
        tstring tmp;
        getText(&tmp);
-       text->assign(tmp.substr(0, prompt));       
+       text->assign(tmp.substr(0, prompt));
    }
 
    MudViewString* divideString(int pos)

@@ -9,13 +9,6 @@ void LogicProcessor::processStackTick()
         if (last && !last->prompt && !last->gamecmd)
             return;
     }
-    else
-    {
-       /* MudViewString *last = m_pHost->getLastString(0);
-        if (last && last->gamecmd) // && !isLastBracket(last))
-            printStack(FROM_TIMER);
-        return;*/
-    }
     printStack(FROM_TIMER);
 }
 
@@ -41,15 +34,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
     if (window == 0)
-    {
-        m_parser.parse(text, text_len, true, &parse_data);
-        /*if (flags & GAME_CMD)   // если последняя строка - это не использованный prompt, то используем
-        {
-            MudViewString *last = m_pHost->getLastString(0);
-            if (last && last->prompt && !last->gamecmd)
-                parse_data.update_prev_string = true;
-        }*/
-    }
+        m_parser.parse(text, text_len, false, &parse_data);
     else
     {
         // используем отдельный parser для дополнительных окон,
@@ -70,11 +55,30 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (flags & FROM_STACK)  // команды из стека по таймеру отдельным цветом
     {
         if (flags & FROM_TIMER)
-            MARKINVERSEDCOLOR(p, 6)
+        {
+            int color = 4;
+            MudViewString *last = m_pHost->getLastString(0);
+            if (last && last->prompt && !last->gamecmd)
+                color = 1;
+            if (last && !last->prompt && last->gamecmd)
+                color = 2;
+            if (last && last->prompt && last->gamecmd)
+                color = 3;
+            MARKINVERSEDCOLOR(p, color);
+
+            if (last) {
+                tstring text; last->getText(&text);
+                OutputDebugString(text.c_str());
+                tchar tmp[16];
+                _itow(m_prompt_mode, tmp, 10);
+                OutputDebugString(tmp);
+                OutputDebugString(L"<--\r\n");
+            }
+        }
         else
             MARKINVERSED(p);
     }
-    if (!p.empty())          // скобки - блок текста от сервера
+    /*if (!p.empty())          // скобки - блок текста от сервера
     {
         MudViewString *s = p[0];
         MudViewStringBlock b;
@@ -87,7 +91,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         int last = p.size() - 1;
         s = p[last]; b.string = L"}";
         s->blocks.push_back(b);
-    }
+    }*/
 #endif
 
     if (flags & GAME_LOG)
@@ -145,7 +149,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        if (m_prompt_mode == USER)
        {
            m_prompt_counter += parse_data.strings.size();
-           if (m_prompt_counter > max_lines_without_prompt) { m_prompt_mode = OFF; m_prompt_counter = 0; }
+           if (m_prompt_counter > max_lines_without_prompt) { m_prompt_mode = UNIVERSAL; m_prompt_counter = 0; }
        }
 
        // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
@@ -164,10 +168,8 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                tstring text; s->getText(&text);
                m_univ_prompt_pcre.find(text);
                if (m_univ_prompt_pcre.getSize())
+               //if (false)
                {
-                   OutputDebugString(text.c_str());
-                   OutputDebugString(L"\r\n"); //todo
-
                    int end_prompt = m_univ_prompt_pcre.getLast(0);
                    s->setPrompt(end_prompt);
                    last_game_cmd = last;
@@ -180,7 +182,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                        MudViewString *s2 = s->divideString(end_prompt);
                        if (!s2->blocks.empty()) tstring_trimleft(&s2->blocks[0].string);
 #ifdef MARKERS_IN_VIEW
-                       s2->prompt = 1;
+                       s2->prompt = -1;
 #endif
                        tmp.push_back(s2);
                    }
