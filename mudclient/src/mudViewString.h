@@ -34,7 +34,7 @@ struct MudViewStringParams
             }
             if (ext_text_color == p.ext_text_color &&
                 ext_bkg_color == p.ext_bkg_color)
-                return true;            
+                return true;
         }
         return false;
     }
@@ -62,13 +62,13 @@ struct MudViewStringBlock
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false), prompt(0) {}
+   MudViewString() : dropped(false), gamecmd(false), system(false), prompt(0) {}
    void moveBlocks(MudViewString* src) 
    {
-       for (int i=0,e=src->blocks.size(); i<e; ++i)
-           blocks.push_back(src->blocks[i]);
-       gamecmd = src->gamecmd;
+       blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
        src->clear();
+       gamecmd = src->gamecmd;
+       system = src->system;
    }
 
    void clear()
@@ -76,15 +76,16 @@ struct MudViewString
        blocks.clear();
        dropped = false;
        gamecmd = false;
+       system = false;
        prompt = 0;
    }
 
    void copy(MudViewString* src)
    {
-       clear();
-       for (int i=0,e=src->blocks.size(); i<e; ++i)
-           blocks.push_back(src->blocks[i]);
+       blocks.assign(src->blocks.begin(), src->blocks.end());
+       dropped = false;
        gamecmd = src->gamecmd;
+       system = src->system;
        prompt = src->prompt;
    }
 
@@ -124,7 +125,7 @@ struct MudViewString
    MudViewString* divideString(int pos)
    {
        MudViewString *s = new MudViewString;
-       int begin = 0; int index = -1;       
+       int begin = 0; int index = -1;
        for (int i = 0, e = blocks.size(); i < e; ++i)
        {
             int end = begin + blocks[i].string.size();
@@ -138,16 +139,17 @@ struct MudViewString
            newc.params = c.params;
            newc.string = c.string.substr(pos - begin);
            c.string = c.string.substr(0, pos - begin);
-           s->blocks.push_back(newc);          
+           s->blocks.push_back(newc);
            for (int i = index + 1, e = blocks.size(); i < e; ++i)
                s->blocks.push_back(blocks[i]);
            blocks.erase(blocks.begin()+index+1, blocks.end());
        }
        return s;
    }
-
+   
    std::vector<MudViewStringBlock> blocks;  // all string blocks
    bool dropped;                            // flag for dropping string from view
-   bool gamecmd;                            // flag - game cmd in string
+   bool gamecmd;                            // flag - game cmd
+   bool system;                             // flag - system cmd / log
    int  prompt;                             // prompt-string, index of last symbol of prompt   
 };

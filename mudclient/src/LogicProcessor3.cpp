@@ -6,7 +6,7 @@ void LogicProcessor::processStackTick()
     if (m_prompt_mode != OFF)
     {
         MudViewString *last = m_pHost->getLastString(0);
-        if (last && !last->prompt && !last->gamecmd)
+        if (last && !last->prompt && !last->gamecmd && !last->system)
             return;
     }
     printStack(FROM_TIMER);
@@ -17,7 +17,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (window == 0 && flags & (GAME_LOG|GAME_CMD) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
-       if (last && !last->prompt && !last->gamecmd)
+       if (last && !last->prompt && !last->gamecmd && !last->system)
        {
            // в стек, если нельзя сразу добавить команды в окно (нет prompt/gamecmd, возможно это разрыв текста).
            stack_el e;
@@ -49,6 +49,13 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
             ps[i]->gamecmd = true;
     }
 
+    if (flags & GAME_LOG)
+    {
+        parseDataStrings& ps = parse_data.strings;
+        for (int i = 0, e = ps.size(); i < e; ++i)
+            ps[i]->system = true;
+    }
+
 #ifdef MARKERS_IN_VIEW       // для отладки
     parseDataStrings &p = parse_data.strings;
     MARKPROMPTUNDERLINE(p);  // метка на prompt
@@ -66,19 +73,19 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
                 color = 3;
             MARKINVERSEDCOLOR(p, color);
 
-            if (last) {
+            if (last) { //todo
                 tstring text; last->getText(&text);
                 OutputDebugString(text.c_str());
                 tchar tmp[16];
                 _itow(m_prompt_mode, tmp, 10);
                 OutputDebugString(tmp);
-                OutputDebugString(L"<--\r\n");
+                OutputDebugString(L"\r\n");
             }
         }
         else
             MARKINVERSED(p);
     }
-    /*if (!p.empty())          // скобки - блок текста от сервера
+    if (!p.empty())          // скобки - блок текста от сервера
     {
         MudViewString *s = p[0];
         MudViewStringBlock b;
@@ -91,7 +98,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         int last = p.size() - 1;
         s = p[last]; b.string = L"}";
         s->blocks.push_back(b);
-    }*/
+    }
 #endif
 
     if (flags & GAME_LOG)
@@ -124,7 +131,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     {
         MudViewString *s = parse_data.strings[i];
         if (s->prompt) { p_exist = true; }
-        if (s->gamecmd || s->prompt) { last_game_cmd = i; continue; }
+        if (s->gamecmd || s->prompt || s->system) { last_game_cmd = i; continue; }
         if (use_template)
         {
             // recognize prompt string via template
@@ -163,7 +170,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                int last = tmp.size();
                MudViewString *s = parse_data.strings[i];
                tmp.push_back(s);
-               if (s->gamecmd) { last_game_cmd = last; continue; }
+               if (s->gamecmd || s->system) { last_game_cmd = last; continue; }
 
                tstring text; s->getText(&text);
                m_univ_prompt_pcre.find(text);
