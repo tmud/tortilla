@@ -237,6 +237,7 @@ private:
         MESSAGE_HANDLER(WM_USER+1, OnNetwork)
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
+        MESSAGE_HANDLER(WM_USER+4, OnSetFocus)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)        
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -582,6 +583,7 @@ private:
         HWND wnd = m_views[id-1]->m_hWnd;     
         bool new_state = !isWindowShown(wnd);
         showWindowEx(wnd, new_state);
+        setCmdBarFocus();
         return 0;
     }
    
@@ -598,11 +600,12 @@ private:
                 assert(p);
                 if (p) 
                     p->closeWindow(wnd);
+                setCmdBarFocus();
                 return 0;
             }
         }
         showWindowEx(wnd, false);
-        m_bar.SetFocus();
+        setCmdBarFocus();
         return 0;
     } 
 
@@ -665,6 +668,11 @@ private:
         m_networkData.wndToNotify = m_hWnd;
         if (!m_network.connect(m_networkData))
             m_processor.processNetworkConnectError();
+    }
+
+    void setCmdBarFocus()
+    {
+        PostMessage(WM_USER + 4);
     }
 
     void disconnectFromNetwork()
@@ -785,12 +793,12 @@ private:
         if (show)
         {
             if (!isWindowShown(wnd))
-                { m_dock.ShowWindow(wnd); m_bar.SetFocus();  m_parent.SendMessage(WM_USER, menu_id, 1);  }
+                { m_dock.ShowWindow(wnd); m_parent.SendMessage(WM_USER, menu_id, 1);  setCmdBarFocus(); }
         }
         else
         {
             if (isWindowShown(wnd))
-                { m_dock.HideWindow(wnd); m_bar.SetFocus(); m_parent.SendMessage(WM_USER, menu_id, 0); }
+                { m_dock.HideWindow(wnd); m_parent.SendMessage(WM_USER, menu_id, 0); setCmdBarFocus(); }
         }
     }
 

@@ -60,7 +60,7 @@ private:
         bool shift = (GetKeyState(VK_SHIFT) < 0) ? true : false;
         if (shift)
             startDraging();
-        return 0; 
+        return 0;
     }
     LRESULT OnLButtonUp(UINT, WPARAM wparam, LPARAM, BOOL&)
     {

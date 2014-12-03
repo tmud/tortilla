@@ -17,7 +17,6 @@ public:
 public:
     BEGIN_UPDATE_UI_MAP(CMainFrame)
         UPDATE_ELEMENT(ID_VIEW_TOOLBAR, UPDUI_MENUPOPUP)
-        UPDATE_ELEMENT(ID_VIEW_STATUS_BAR, UPDUI_MENUPOPUP)
         UPDATE_ELEMENT(ID_WINDOW_1, UPDUI_MENUPOPUP)
         UPDATE_ELEMENT(ID_WINDOW_2, UPDUI_MENUPOPUP)
         UPDATE_ELEMENT(ID_WINDOW_3, UPDUI_MENUPOPUP)
@@ -42,10 +41,9 @@ private:
 
     BEGIN_MSG_MAP(CMainFrame)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)        
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnMinMaxInfo)
         COMMAND_ID_HANDLER(ID_VIEW_TOOLBAR, OnViewToolBar)
-        COMMAND_ID_HANDLER(ID_VIEW_STATUS_BAR, OnViewStatusBar)
         COMMAND_ID_HANDLER(ID_MUDCLIENT_ABOUT, OnAppAbout)
         COMMAND_ID_HANDLER(ID_MUDCLIENT_EXIT, OnAppExit)
         MESSAGE_HANDLER(WM_USER, OnSetMenuCheck);
@@ -56,7 +54,7 @@ private:
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
-    END_MSG_MAP()   
+    END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
     {
@@ -74,7 +72,6 @@ private:
         m_toolBar.createToolbar(IDR_MAINFRAME);
 
         m_hWndClient = m_gameview.createView(m_hWnd);
-        //UIAddToolBar(hWndToolBar);
         UISetCheck(ID_VIEW_TOOLBAR, 1);
 
         // register object for message filtering and idle updates
@@ -118,15 +115,6 @@ private:
         int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 1);	// toolbar is 2nd added band
         rebar.ShowBand(nBandIndex, bVisible);
         UISetCheck(ID_VIEW_TOOLBAR, bVisible);
-        UpdateLayout();
-        return 0;
-    }
-
-    LRESULT OnViewStatusBar(WORD, WORD, HWND, BOOL&)
-    {
-        BOOL bVisible = !::IsWindowVisible(m_hWndStatusBar);
-        ::ShowWindow(m_hWndStatusBar, bVisible ? SW_SHOWNOACTIVATE : SW_HIDE);
-        UISetCheck(ID_VIEW_STATUS_BAR, bVisible);
         UpdateLayout();
         return 0;
     }
