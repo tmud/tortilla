@@ -21,11 +21,12 @@ struct NetworkConnectData
     UINT notifyMsg;
 };
 
-struct MccpData
+struct MccpStatus
 {
-    MccpData() : network_data_len(0), game_data_len(0) {}
+    MccpStatus() : network_data_len(0), game_data_len(0), status(0) {}
     int network_data_len;
     int game_data_len;
+    int status;
 };
 
 class Network
@@ -38,7 +39,7 @@ public:
     DataQueue* receive();
     int send(const tbyte* data, int len);    
     void disconnect();
-    void getMccpRatio(MccpData* data);
+    void getMccpRatio(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
     
 private:

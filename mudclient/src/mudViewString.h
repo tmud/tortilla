@@ -70,6 +70,7 @@ struct MudViewString
        gamecmd = src->gamecmd;
        src->clear();
    }
+
    void clear()
    {
        blocks.clear();
@@ -77,6 +78,7 @@ struct MudViewString
        gamecmd = false;
        prompt = 0;
    }
+
    void copy(MudViewString* src)
    {
        clear();
@@ -85,6 +87,7 @@ struct MudViewString
        gamecmd = src->gamecmd;
        prompt = src->prompt;
    }
+
    void getText(tstring *text) const
    {
        text->clear();
@@ -92,19 +95,21 @@ struct MudViewString
            text->append(blocks[i].string);
        }
    }
+
+   int getTextLen() const
+   {
+       int size = 0;
+       for (int i=0, e=blocks.size(); i<e; ++i)
+           size += blocks[i].string.size();
+       return size;
+   }
+
    void setPrompt(int index = -1)
    {
        if (index == -1)
-       {
-           int size = 0;
-           for (int i = 0, e = blocks.size(); i < e; ++i)
-               size += blocks[i].string.size();
-           prompt = size;
-       }
+           prompt = getTextLen();
        else
-       {
            prompt = index;
-       }
    }
 
    void getPrompt(tstring *text) const
@@ -113,6 +118,7 @@ struct MudViewString
        getText(&tmp);
        text->assign(tmp.substr(0, prompt));       
    }
+
    std::vector<MudViewStringBlock> blocks;  // all string blocks
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd in string

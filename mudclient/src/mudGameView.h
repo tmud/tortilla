@@ -628,6 +628,7 @@ private:
        m_propElements.updateProps(m_hWnd);
        initCommandBar();
        m_view.updateProps();
+       m_history.updateProps();
        for (int i=0,e=m_views.size(); i<e; ++i)
            m_views[i]->updateProps();
        updateTitle();
@@ -800,12 +801,9 @@ private:
         return (ctx->Side != DOCK_HIDDEN) ? true : false;
     }
 
-    void getNetworkRatio(int *compressed, int *decompressed)
+    void getMccpStatus(MccpStatus *status)
     {
-        MccpData data;
-        m_network.getMccpRatio(&data);
-        *compressed = data.network_data_len;
-        *decompressed = data.game_data_len;
+        m_network.getMccpRatio(status);
     }
 
     HWND getMainWindow()

@@ -203,7 +203,25 @@ bool PropertiesManager::loadProfileData()
             m_propData.plugins.push_back(pd);
         }
     }
-    
+
+    xml::request msrq(sd, "messages");
+    if (msrq.size() == 1)
+    {
+        xml::node ms(msrq[0]);
+        PropertiesData::message_data& d = m_propData.messages;
+        loadValue(ms, "actions", 0, 1, &d.actions);
+        loadValue(ms, "aliases", 0, 1, &d.aliases);
+        loadValue(ms, "subs", 0, 1, &d.subs);
+        loadValue(ms, "antisubs", 0, 1, &d.antisubs);
+        loadValue(ms, "hotkeys", 0, 1, &d.hotkeys);
+        loadValue(ms, "highlights", 0, 1, &d.highlights);
+        loadValue(ms, "gags", 0, 1, &d.gags);
+        loadValue(ms, "groups", 0, 1, &d.groups);
+        loadValue(ms, "vars", 0, 1, &d.variables);
+        loadValue(ms, "timers", 0, 1, &d.timers);
+        loadValue(ms, "tabwords", 0, 1, &d.tabwords);
+    }
+
     sd.deletenode();
     m_propData.checkGroups();
     return true;
@@ -300,6 +318,20 @@ bool PropertiesManager::saveProfileData()
                 saveWindow(pw, pd.windows[j]);
         }
     }
+
+    xml::node ms = sd.createsubnode("messages");
+    PropertiesData::message_data& d = m_propData.messages;
+    saveValue(ms, "actions", d.actions);
+    saveValue(ms, "aliases", d.aliases);
+    saveValue(ms, "subs", d.subs);
+    saveValue(ms, "antisubs", d.antisubs);
+    saveValue(ms, "hotkeys", d.hotkeys);
+    saveValue(ms, "highlights", d.highlights);
+    saveValue(ms, "gags", d.gags);
+    saveValue(ms, "groups", d.groups);
+    saveValue(ms, "vars", d.variables);
+    saveValue(ms, "timers", d.timers);
+    saveValue(ms, "tabwords", d.tabwords);
     
     tstring config(L"profiles\\");
     config.append(m_profileName);
@@ -580,6 +612,7 @@ bool PropertiesManager::createCopyProfile(const tstring& from, const tstring& na
         { m_profileName = name; return false; }
 
     m_profileName = name;
+    m_propData.messages.initDefault();
     bool result = saveProfileData();
     saveSettings();
     return result;
@@ -620,6 +653,7 @@ bool PropertiesManager::renameProfile(const tstring& group, const tstring& name)
     ProfileDirHelper dh;
     if (!dh.makeDir(m_configName, L"profiles"))
         return false;
+    m_propData.messages.initDefault();
     bool result = saveProfileData();
     saveSettings();
     return result;

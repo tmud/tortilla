@@ -342,6 +342,22 @@ struct PropertiesData
     PropertiesList   tabwords_commands;   
     PluginsDataValues plugins;
 
+    struct message_data { 
+    message_data() { initDefault();  }
+    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
+    int actions;
+    int aliases;    
+    int subs;
+    int hotkeys;
+    int highlights;
+    int groups;
+    int antisubs;
+    int gags;
+    int timers;
+    int variables;
+    int tabwords;
+    } messages;
+
     std::vector<tstring> cmd_history;
 
     tstring  codepage;
@@ -362,7 +378,7 @@ struct PropertiesData
     int      clear_bar;
     int      disable_ya;
     int      history_tab;
-    int      timers_on;    
+    int      timers_on;
     int      plugins_logs;
     int      plugins_logs_window;
 
@@ -384,7 +400,7 @@ struct PropertiesData
         colors[1] = RGB(128, 0, 0);
         colors[2] = RGB(0, 128, 0);
         colors[3] = RGB(128, 128, 0);
-        colors[4] = RGB(0, 0, 128);
+        colors[4] = RGB(0, 0, 255);
         colors[5] = RGB(128, 0, 128);
         colors[6] = RGB(0, 128, 128);
         colors[7] = RGB(192, 192, 192);
@@ -392,7 +408,7 @@ struct PropertiesData
         colors[9] = RGB(255, 0, 0);
         colors[10] = RGB(0, 255, 0);
         colors[11] = RGB(255, 255, 0);
-        colors[12] = RGB(0, 0, 255);
+        colors[12] = RGB(64, 64, 255);
         colors[13] = RGB(255, 0, 255);
         colors[14] = RGB(0, 255, 255);
         colors[15] = RGB(255, 255, 255);        
@@ -441,6 +457,7 @@ struct PropertiesData
         groups.clear();
         initDefaultColorsAndFont();
         initOutputWindows();
+        messages.initDefault();
         timers_on = 0;
         initPlugins();
         recognize_prompt = 0;
@@ -598,17 +615,5 @@ private:
             }
             windows.push_back(w);
         }
-    }    
-
-    bool isVistaOrHigher() const
-    {
-        OSVERSIONINFOEX os;
-        ZeroMemory(&os, sizeof(OSVERSIONINFOEX));
-        os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-        GetVersionEx((OSVERSIONINFO*)&os);
-        if ((os.wProductType != VER_NT_WORKSTATION) ||
-            (os.dwMajorVersion < 6)) // if less Vista/7/8
-                return false;
-        return true;
     }
 };

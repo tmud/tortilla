@@ -206,9 +206,8 @@ void MudView::renderView()
 void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, int index)
 {
     int line_heigth = propElements->font_height;
-    std::vector<MudViewStringBlock> &b = s->blocks;
     RECT pos = { left_x, bottom_y - line_heigth, left_x, bottom_y };
-    if (b.empty() && checkDragging(index, true))
+    if (checkDragging(index, true) && s->getTextLen()==0)
     {
         // dragging empty line
         pos.right += 16;
@@ -217,6 +216,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         return;
     }
 
+    std::vector<MudViewStringBlock> &b = s->blocks;
     int start_sym = 0;
     dc->SelectFont(propElements->standard_font);
     for (int i = 0, e = b.size(); i < e; ++i)
@@ -590,6 +590,7 @@ void MudView::calcDragLine(int line)
     int maxchars = text.size();
     m_drag_line_len.resize(maxchars);
     SIZE sz = { 0 };
-    GetTextExtentExPoint(dc, text.c_str(), text.length(), dc_size, &maxchars, &m_drag_line_len[0], &sz);
+    if (maxchars > 0)
+        GetTextExtentExPoint(dc, text.c_str(), text.length(), dc_size, &maxchars, &m_drag_line_len[0], &sz);
     dc.SelectFont(current_font);
 }

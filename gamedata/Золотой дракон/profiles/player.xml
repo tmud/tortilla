@@ -10,6 +10,8 @@
   <plogs value="1"/>
   <plogswnd value="1"/>
   <codepage value="win"/>
+  <prompt value="0"/>
+  <ptemplate value=""/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
@@ -72,9 +74,25 @@
     <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
   </windows>
-  <mainwindow left="2169" right="3452" top="98" bottom="979" width="3840" height="1080" fullscreen="0"/>
+  <mainwindow left="322" right="1605" top="102" bottom="989" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="1"/>
     <plugin key="jmc3import.dll" value="1"/>
+    <plugin key="autowrap.lua" value="0"/>
+    <plugin key="historyfilter.lua" value="0"/>
+    <plugin key="mapper.dll" value="0"/>
   </plugins>
+  <messages>
+    <actions value="1"/>
+    <aliases value="1"/>
+    <subs value="1"/>
+    <antisubs value="1"/>
+    <hotkeys value="1"/>
+    <highlights value="1"/>
+    <gags value="1"/>
+    <groups value="1"/>
+    <vars value="1"/>
+    <timers value="1"/>
+    <tabwords value="1"/>
+  </messages>
 </profile>

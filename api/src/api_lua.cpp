@@ -522,7 +522,7 @@ void luaT_showTableOnTop(lua_State* L, const utf8* label)
         OutputDebugString(L"Not TABLE on the top of stack!\r\n");
         return;
     }
-    swprintf(dbuf, L"TABLE 0x%p data:\r\n", label, lua_topointer(L, -1));
+    swprintf(dbuf, L"Table 0x%p data:\r\n", lua_topointer(L, -1));
     OutputDebugString(dbuf);
 
     lua_pushnil(L);                     // first key
@@ -535,7 +535,7 @@ void luaT_showTableOnTop(lua_State* L, const utf8* label)
             swprintf(dbuf, L"number index [%d]=", lua_tointeger(L, -2));
             break;
         case LUA_TSTRING:
-            swprintf(dbuf, L"string index [%s]=", lua_tostring(L, -2));
+            swprintf(dbuf, L"string index [%s]=", convert_utf8_to_wide(lua_tostring(L, -2)));
             break;
         default:
             wcscpy(dbuf, L"unknown type index []=");

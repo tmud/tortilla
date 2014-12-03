@@ -55,7 +55,7 @@ BEGIN
     PUSHBUTTON      "Отмена",IDCANCEL,417,213,50,14
     PUSHBUTTON      "Макросы (Aliases)",IDC_BUTTON_PROP_ALIASES,363,7,105,15,BS_FLAT
     PUSHBUTTON      "Триггеры (Actions)",IDC_BUTTON_PROP_ACTIONS,363,23,105,15,BS_FLAT
-    PUSHBUTTON      "Подсветка (Highlights)",IDC_BUTTON_PROP_HIGHLIGHTS,363,39,105,15,BS_FLAT
+    PUSHBUTTON      "Подсветки (Highlights)",IDC_BUTTON_PROP_HIGHLIGHTS,363,39,105,15,BS_FLAT
     PUSHBUTTON      "Горячие кнопки (Hotkeys)",IDC_BUTTON_PROP_HOTKEYS,363,55,105,15,BS_FLAT
     PUSHBUTTON      "Замены (Subs)",IDC_BUTTON_PROPS_SUBS,363,71,105,15,BS_FLAT
     PUSHBUTTON      "Антизамены (Antisubs)",IDC_BUTTON_PROPS_ANTISUBS,363,87,105,15,BS_FLAT
@@ -293,13 +293,23 @@ BEGIN
     LTEXT           "Название профиля:",IDC_STATIC,7,145,73,8
 END
 
-IDD_WELCOME DIALOGEX 0, 0, 331, 170
+IDD_WELCOME DIALOGEX 0, 0, 355, 190
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "О программе..."
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,274,149,50,14
-    LTEXT           "Richbox place",IDC_STATIC_RICHBOXPLACE,7,7,317,137,NOT WS_VISIBLE,WS_EX_STATICEDGE
+    DEFPUSHBUTTON   "OK",IDOK,298,169,50,14
+    LTEXT           "Richbox place",IDC_STATIC_RICHBOXPLACE,7,7,341,159,NOT WS_VISIBLE,WS_EX_STATICEDGE
+END
+
+IDD_PASSWORD DIALOGEX 0, 0, 228, 46
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Пароль"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_PASSWORD,71,12,150,12,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,171,28,50,14
+    LTEXT           "Введите пароль:",IDC_STATIC,7,13,61,8
 END
 
 
@@ -399,9 +409,17 @@ BEGIN
     IDD_WELCOME, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 324
+        RIGHTMARGIN, 348
         TOPMARGIN, 7
-        BOTTOMMARGIN, 163
+        BOTTOMMARGIN, 183
+    END
+
+    IDD_PASSWORD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 221
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 42
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -452,8 +470,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,9,4,0
- PRODUCTVERSION 0,9,4,0
+ FILEVERSION 0,9,5,0
+ PRODUCTVERSION 0,9,5,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -468,13 +486,13 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "FileDescription", "TMC"
-            VALUE "FileVersion", "0.9.4.0"
+            VALUE "FileDescription", "Client for Multi User Dangeon games"
+            VALUE "FileVersion", "0.9.5.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.net"
             VALUE "OriginalFilename", "tortilla.exe"
-            VALUE "ProductName", "Totilla - client for Multi User Dangeon games"
-            VALUE "ProductVersion", "0.9.4.0"
+            VALUE "ProductName", "Tortilla Mud Client"
+            VALUE "ProductVersion", "0.9.5.0"
         END
     END
     BLOCK "VarFileInfo"

@@ -37,50 +37,56 @@ public:
 
 class MethodsHelper
 {
-    LogicProcessorMethods *methods;
-protected:
-    void tmcLog(const tstring& msg) { methods->tmcLog(msg); }
-    void simpleLog(const tstring& msg) { methods->simpleLog(msg); }
-    void updateLog(const tstring& msg) { methods->updateLog(msg); }
-    static tchar buffer[1024];
 public:
-    MethodsHelper(LogicProcessorMethods *callback) : methods(callback) {}
+    virtual void tmcLog(const tstring& msg) = 0;
+    virtual void simpleLog(const tstring& msg) = 0;
+    virtual void updateLog(const tstring& msg) = 0;
+    virtual void skipCheckMode() = 0;
 };
 
-class AddParams3 : public MethodsHelper
+class ParamsBuffer
 {
 public:
-    AddParams3(LogicProcessorMethods *callback) : MethodsHelper(callback) {}
+    ParamsBuffer() : buffer_len(1024) {}
+    tchar buffer[1024];
+    size_t buffer_len;
+};
+
+class AddParams3 : public ParamsBuffer
+{
+public:
     int process(parser *p, PropertiesValues *values, PropertiesValues *groups,
-        const tstring& label1,  const tstring& label2,  const tstring& label3,
-        TestControl* control = NULL)
+        const tstring& label1,  const tstring& label2,  const tstring& label3, 
+        MethodsHelper* helper, TestControl* control = NULL)
     {
         int n = p->size();
         if (n == 0)
         {
-            swprintf(buffer, L"%s:", label1.c_str());
-            tmcLog(buffer);
+            helper->skipCheckMode();
+            swprintf(buffer, buffer_len, L"%s:", label1.c_str());
+            helper->tmcLog(buffer);
             for (int i=0,e=values->size(); i<e; ++i)
             {
                 const property_value& v = values->get(i);                        
-                swprintf(buffer, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
-                simpleLog(buffer);
+                swprintf(buffer, buffer_len, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
+                helper->simpleLog(buffer);
             }
             if (values->size() == 0)
             {
-                tmcLog(L"Список пуст");
+                helper->tmcLog(L"Список пуст");
             }
             return 0;
         }
         if (n == 1)
         {
+            helper->skipCheckMode();
             tstring pattern(p->at(0));
-            swprintf(buffer, L"%s с '%s':", label2.c_str(), pattern.c_str());
-            tmcLog(buffer);
+            swprintf(buffer, buffer_len, L"%s с '%s':", label2.c_str(), pattern.c_str());
+            helper->tmcLog(buffer);
             Pcre16 pcre; 
             if (!pcre.setRegExp(pattern))
             {
-                tmcLog(L"Неверный параметр.");
+                helper->tmcLog(L"Некорректный параметр.");
             }
             else
             {
@@ -91,13 +97,13 @@ public:
                     pcre.find(v.key);
                     if (pcre.getSize())
                     {
-                        swprintf(buffer, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
-                        simpleLog(buffer);
+                        swprintf(buffer, buffer_len, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
+                        helper->simpleLog(buffer);
                         count++;
                     }
                 }               
                 if (!count)
-                    tmcLog(L"Варианты не найдены.");
+                    helper->tmcLog(L"Варианты не найдены.");
             }
             return 0;
         }
@@ -111,8 +117,8 @@ public:
                 bool t = control->checkText(&text);
                 if (!p || !t)
                 {
-                    swprintf(buffer, L"Недопустимое значение: %s", p ? text.c_str() : pattern.c_str());
-                    tmcLog(buffer);
+                    swprintf(buffer, buffer_len, L"Недопустимое значение: %s", p ? text.c_str() : pattern.c_str());
+                    helper->tmcLog(buffer);
                     return 0;
                 }
             }
@@ -129,31 +135,31 @@ public:
 
             int index = values->find(pattern);
             values->add(index, pattern, text, group);
-            swprintf(buffer, L"%s: '%s' '%s' '%s'", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str() );
-            updateLog(buffer);
-            return 1;  
+            swprintf(buffer, buffer_len, L"%s: '%s' '%s' '%s'", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str());
+            helper->updateLog(buffer);
+            return 1;
         }
         p->invalidargs();
         return 0;
     }
 };
 
-class DeleteParams3 : public MethodsHelper
+class DeleteParams3 : public ParamsBuffer
 {
 public:
-    DeleteParams3(LogicProcessorMethods *callback) : MethodsHelper(callback) {}
     int process(parser *p, PropertiesValues *values,
-        const tstring& label, TestControl* control = NULL)
+        const tstring& label,
+        MethodsHelper* helper, TestControl* control = NULL)
     {
         if (p->size() == 1)
         {
             tstring pattern(p->at(0));
-            swprintf(buffer, L"%s '%s'",label.c_str(), pattern.c_str());
-            tmcLog(buffer);
+            swprintf(buffer, buffer_len, L"%s '%s'",label.c_str(), pattern.c_str());
+            helper->tmcLog(buffer);
             if (control && !control->checkPattern(&pattern))
             {
-                swprintf(buffer, L"Недопустимое значение: %s", pattern.c_str());
-                tmcLog(buffer);
+                swprintf(buffer, buffer_len, L"Недопустимое значение: %s", pattern.c_str());
+                helper->tmcLog(buffer);
                 return 0;
             }
 
@@ -163,8 +169,8 @@ public:
                 const property_value& v = values->get(i);
                 if (v.key == pattern)
                 {
-                    swprintf(buffer, L"Удалено '%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
-                    simpleLog(buffer);
+                    swprintf(buffer, buffer_len, L"Удалено '%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
+                    helper->simpleLog(buffer);
                     values->del(i);
                     deleted = true;
                     break;
@@ -173,7 +179,7 @@ public:
 
             if (!deleted)
             {
-                tmcLog(L"Варианты не найдены.");
+                helper->tmcLog(L"Варианты не найдены.");
                 return 0;
             }
             return 1;
@@ -183,27 +189,27 @@ public:
     }
 };
 
-class AddParams2 : public MethodsHelper
+class AddParams2 : public ParamsBuffer
 {
 public:
-    AddParams2(LogicProcessorMethods *callback) : MethodsHelper(callback) {}
     int process(parser *p, PropertiesValues *values, PropertiesValues *groups,
-        const tstring& label1,  const tstring& label2)
+        const tstring& label1, const tstring& label2, MethodsHelper* helper)
     {
         int n = p->size();
         if (n == 0)
         {
-            swprintf(buffer, L"%s:", label1.c_str());
-            tmcLog(buffer);
+            helper->skipCheckMode();
+            swprintf(buffer, buffer_len, L"%s:", label1.c_str());
+            helper->tmcLog(buffer);
             for (int i=0,e=values->size(); i<e; ++i)
             {
                 const property_value& v = values->get(i);                        
-                swprintf(buffer, L"'%s' '%s'", v.key.c_str(), v.group.c_str());
-                simpleLog(buffer);
+                swprintf(buffer, buffer_len, L"'%s' '%s'", v.key.c_str(), v.group.c_str());
+                helper->simpleLog(buffer);
             }
             if (values->size() == 0)
             {
-                tmcLog(L"Список пуст");
+                helper->tmcLog(L"Список пуст");
             }
             return 0;
         }
@@ -222,8 +228,8 @@ public:
 
             int index = values->find(pattern);
             values->add(index, pattern, L"", group);
-            swprintf(buffer, L"%s: '%s' '%s'",label2.c_str(), pattern.c_str(), group.c_str() );
-            updateLog(buffer);
+            swprintf(buffer, buffer_len, L"%s: '%s' '%s'", label2.c_str(), pattern.c_str(), group.c_str());
+            helper->updateLog(buffer);
             return 1;  
         }
         p->invalidargs();
@@ -231,17 +237,16 @@ public:
     }
 };
 
-class DeleteParams2 : public MethodsHelper
+class DeleteParams2 : public ParamsBuffer
 {
 public:
-    DeleteParams2(LogicProcessorMethods *callback) : MethodsHelper(callback) {}
-    int process(parser *p, PropertiesValues *values, const tstring& label)
+    int process(parser *p, PropertiesValues *values, const tstring& label, MethodsHelper* helper)
     {
         if (p->size() == 1)
         {
             tstring pattern(p->at(0));
-            swprintf(buffer, L"%s '%s'",label.c_str(), pattern.c_str());
-            tmcLog(buffer);
+            swprintf(buffer, buffer_len, L"%s '%s'", label.c_str(), pattern.c_str());
+            helper->tmcLog(buffer);
           
             bool deleted = false;
             for (int i=0,e=values->size(); i<e; ++i)
@@ -249,8 +254,8 @@ public:
                 const property_value& v = values->get(i);
                 if (v.key == pattern)
                 {
-                    swprintf(buffer, L"Удалено '%s' '%s'", v.key.c_str(), v.group.c_str());
-                    simpleLog(buffer);
+                    swprintf(buffer, buffer_len, L"Удалено '%s' '%s'", v.key.c_str(), v.group.c_str());
+                    helper->simpleLog(buffer);
                     values->del(i);
                     deleted = true;
                     break;
@@ -259,7 +264,7 @@ public:
 
             if (!deleted)
             {
-                tmcLog(L"Варианты не найдены.");
+                helper->tmcLog(L"Варианты не найдены.");
                 return 0;
             }
             return 1;
