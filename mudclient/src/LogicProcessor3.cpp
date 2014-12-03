@@ -34,7 +34,9 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
     if (window == 0)
-        m_parser.parse(text, text_len, false, &parse_data);
+    {
+        m_parser.parse(text, text_len, true, &parse_data);
+    }
     else
     {
         // используем отдельный parser для дополнительных окон,
@@ -47,6 +49,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parseDataStrings& ps = parse_data.strings;
         for (int i = 0, e = ps.size(); i < e; ++i)
             ps[i]->gamecmd = true;
+        parse_data.update_prev_string = true;
     }
 
     if (flags & GAME_LOG)
@@ -72,15 +75,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
             if (last && last->prompt && last->gamecmd)
                 color = 3;
             MARKINVERSEDCOLOR(p, color);
-
-            if (last) { //todo
-                tstring text; last->getText(&text);
-                OutputDebugString(text.c_str());
-                tchar tmp[16];
-                _itow(m_prompt_mode, tmp, 10);
-                OutputDebugString(tmp);
-                OutputDebugString(L"\r\n");
-            }
         }
         else
             MARKINVERSED(p);

@@ -66,9 +66,11 @@ struct MudViewString
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
+       gamecmd |= src->gamecmd;
+       system |= src->system;
+       if (!prompt)
+            prompt = src->prompt;
        src->clear();
-       gamecmd = src->gamecmd;
-       system = src->system;
    }
 
    void clear()

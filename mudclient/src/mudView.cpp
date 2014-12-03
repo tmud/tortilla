@@ -29,17 +29,12 @@ void MudView::accLastString(parseData *parse_data)
     int last = m_strings.size() - 1;
     MudViewString *last_string = m_strings[last];
     MudViewString *string = parse_data->strings[0];
+    if (last_string->prompt && last_string->gamecmd)
+        return;
     if (string->gamecmd && !last_string->prompt)
         return;
     if (!string->gamecmd && last_string->prompt)
-    {
-        //todo
-        if (!string->blocks.empty())
-        {
-            string->blocks[0].params.italic_status = 1;
-        }
         return;
-    }
     last_string->moveBlocks(string);
     delete string;
     parse_data->strings[0] = last_string;
