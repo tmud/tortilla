@@ -55,6 +55,7 @@ void Mapper::newZone(Room *room, RoomDir dir)
 
 void Mapper::saveMaps(lua_State *L)
 {
+    return; //todo
     luaT_run(L, "getPath", "s", "");
     tstring dir( convert_utf8_to_wide(lua_tostring(L, -1)) );
     lua_pop(L, 1);
@@ -159,6 +160,7 @@ void Mapper::saveMaps(lua_State *L)
 
 void Mapper::loadMaps(lua_State *L)
 {
+    return; //todo
     luaT_run(L, "getPath", "s", "");
     tstring dir(convert_utf8_to_wide(lua_tostring(L, -1)));
     lua_pop(L, 1);   
