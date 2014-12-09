@@ -3,18 +3,17 @@
 
 void LogicProcessor::processStackTick()
 {
-    if (m_prompt_mode != OFF)
-    {
-        MudViewString *last = m_pHost->getLastString(0);
-        if (last && !last->prompt && !last->gamecmd && !last->system)
+    if (m_prompt_mode == OFF)
+        return;
+    MudViewString *last = m_pHost->getLastString(0);
+    if (last && !last->prompt && !last->gamecmd && !last->system)
             return;
-    }
     printStack(FROM_TIMER);
 }
-
+ 
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
-    if (window == 0 && flags & (GAME_LOG|GAME_CMD) && !(flags & FROM_STACK))
+    if (window == 0 && m_prompt_mode != OFF && flags & (GAME_LOG | GAME_CMD) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
        if (last && !last->prompt && !last->gamecmd && !last->system)
@@ -34,16 +33,14 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
     if (window == 0)
-    {
         m_parser.parse(text, text_len, true, &parse_data);
-    }
     else
     {
         // используем отдельный parser для дополнительных окон,
         // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
         m_parser2.parse(text, text_len, false, &parse_data);
     }
-    
+
     if (flags & GAME_CMD)
     {
         parseDataStrings& ps = parse_data.strings;
@@ -117,7 +114,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 7;
+    const int max_lines_without_prompt = 12;
     bool p_exist = false;
     int last_game_cmd = -1;
     bool use_template = propData->recognize_prompt ? true : false;
@@ -150,7 +147,8 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        if (m_prompt_mode == USER)
        {
            m_prompt_counter += parse_data.strings.size();
-           if (m_prompt_counter > max_lines_without_prompt) { m_prompt_mode = UNIVERSAL; m_prompt_counter = 0; }
+           if (m_prompt_counter > max_lines_without_prompt) {
+               m_prompt_mode = OFF; m_prompt_counter = 0; }
        }
 
        // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
@@ -199,7 +197,8 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
            else
            {
                m_prompt_counter += parse_data.strings.size();
-               if (m_prompt_counter > max_lines_without_prompt) { m_prompt_mode = OFF; m_prompt_counter = 0; }
+               if (m_prompt_counter > max_lines_without_prompt) {
+                   m_prompt_mode = OFF; m_prompt_counter = 0; }
            }
        }
     }

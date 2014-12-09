@@ -1066,7 +1066,7 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
-    m_univ_prompt_pcre.setRegExp(L".*[0-9]+.* .*[0-9]+.*>", true);
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+(?:Âûõ)?:[ÑÞÇÂÏÎv^]+>", true);
 
     if (!m_logs.init())
         return false;
@@ -1122,4 +1122,3 @@ bool LogicProcessor::init()
     regCommand("wname", wname);
     return true;
 }
- 
