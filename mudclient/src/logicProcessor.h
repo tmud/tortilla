@@ -49,6 +49,7 @@ class LogicProcessor : public LogicProcessorMethods
     MudViewParser m_parser;
     InputProcessor m_input;
     LogicHelper m_helper; 
+    bool m_connecting;
     bool m_connected;
     tstring m_updatelog;
     LogsProcessor m_logs;

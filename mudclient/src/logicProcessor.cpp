@@ -3,7 +3,7 @@
 #include "logicProcessor.h"
 
 LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
-propData(data), m_pHost(host), m_connected(false), m_helper(data)
+propData(data), m_pHost(host), m_connecting(false), m_connected(false), m_helper(data)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -38,6 +38,7 @@ void LogicProcessor::processNetworkConnect()
     propData->timers_on = 0;
     m_helper.resetTimers();
     m_connected = true;
+    m_connecting = false;
 }
 
 bool LogicProcessor::processHotkey(const tstring& hotkey)
@@ -222,24 +223,28 @@ void LogicProcessor::processNetworkDisconnect()
 {
     tmcLog(L"Соединение завершено(обрыв).");
     m_connected = false;
+    m_connecting = false;
 }
 
 void LogicProcessor::processNetworkConnectError()
 {
     tmcLog(L"Не удалось подключиться.");
     m_connected = false;
+    m_connecting = false;
 }
 
 void LogicProcessor::processNetworkError()
 {
     tmcLog(L"Ошибка cети. Соединение завершено.");
     m_connected = false;
+    m_connecting = false;
 }
 
 void LogicProcessor::processNetworkMccpError()
 {
     tmcLog(L"Ошибка в протоколе сжатия. Соединение завершено.");
     m_connected = false;
+    m_connecting = false;
 }
 
 void LogicProcessor::tmcLog(const tstring& cmd)
@@ -314,7 +319,7 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
     {
         m_pHost->sendToNetwork(cmd);
         return true;
-    }    
+    }
     tmcLog(L"Нет подключения.");
     return false;
 }
