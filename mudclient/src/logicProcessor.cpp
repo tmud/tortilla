@@ -221,28 +221,32 @@ void LogicProcessor::updateProps()
 
 void LogicProcessor::processNetworkDisconnect()
 {
-    tmcLog(L"Соединение завершено(обрыв).");
+    if (m_connected)
+        tmcLog(L"Соединение завершено(обрыв).");
     m_connected = false;
     m_connecting = false;
 }
 
 void LogicProcessor::processNetworkConnectError()
 {
-    tmcLog(L"Не удалось подключиться.");
+    if (m_connected)
+        tmcLog(L"Не удалось подключиться.");
     m_connected = false;
     m_connecting = false;
 }
 
 void LogicProcessor::processNetworkError()
 {
-    tmcLog(L"Ошибка cети. Соединение завершено.");
+    if (m_connected)
+        tmcLog(L"Ошибка cети. Соединение завершено.");
     m_connected = false;
     m_connecting = false;
 }
 
 void LogicProcessor::processNetworkMccpError()
 {
-    tmcLog(L"Ошибка в протоколе сжатия. Соединение завершено.");
+    if (m_connected)
+        tmcLog(L"Ошибка в протоколе сжатия. Соединение завершено.");
     m_connected = false;
     m_connecting = false;
 }
