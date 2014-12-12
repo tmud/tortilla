@@ -114,7 +114,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 12;
+    const int max_lines_without_prompt = 20;
     bool p_exist = false;
     int last_game_cmd = -1;
     bool use_template = propData->recognize_prompt ? true : false;
@@ -245,6 +245,28 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
     if (parse_data.strings.empty())
         return;
+
+    if (parse_data.update_prev_string)
+    {
+        MudViewString *s = parse_data.strings[0];
+        if (s->prompt && s->gamecmd)
+        {
+            int x = 1; 
+        }
+    }
+
+    //todo
+    tstring text;
+    for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
+    {
+        MudViewString *s = parse_data.strings[i];
+        s->getText(&text);
+        tchar buffer[32];
+        wsprintf(buffer, L"%p:", s);
+        OutputDebugString(buffer);
+        OutputDebugString(text.c_str());
+        OutputDebugString(L"\r\n");
+    }
 
     if (!m_connected)
         flags |= SKIP_ACTIONS;
