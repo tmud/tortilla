@@ -27,7 +27,7 @@ public:
                Room *next = r->dirs[j].next_room;
                if (!next || !sameZone(r, next))
                    continue;
-               
+
                if (next->special == 0)
                {
                    next->special = r->special + 1;

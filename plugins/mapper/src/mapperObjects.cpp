@@ -55,7 +55,7 @@ void RoomCursor::move(int dir)
 
 int RoomsLevel::height() const
 {
-    return rooms.size();    
+    return rooms.size();
 }
 
 int RoomsLevel::width() const
@@ -92,7 +92,7 @@ Room* RoomsLevel::getRoom(int x, int y)
     if (!checkCoords(x, y))
         return NULL;
     row *row_y = rooms[y];
-    return row_y->rr[x];    
+    return row_y->rr[x];
 }
 
 bool RoomsLevel::addRoom(Room* r, int x, int y)

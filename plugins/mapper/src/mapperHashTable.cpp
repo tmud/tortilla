@@ -9,7 +9,7 @@ MapperHashTable::~MapperHashTable()
 {
     iterator it = rooms.begin(), it_end = rooms.end();
     for(; it!=it_end; ++it)
-        it->second.destroy();        
+        it->second.destroy();
 }
 
 void MapperHashTable::addRoom(Room* room)

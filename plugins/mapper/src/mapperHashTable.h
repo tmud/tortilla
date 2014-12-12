@@ -8,7 +8,7 @@ public:
     MapperHashTable();
     ~MapperHashTable();
     void addRoom(Room* room);
-    void deleteRoom(Room* room);       
+    void deleteRoom(Room* room);
     void findRooms(const RoomData& room, std::vector<Room*> *vr);
 
 private:
@@ -29,7 +29,7 @@ private:
             if (!next)
                 { next = h; return;  }
             hash_element *p = next;
-            while (p->next) 
+            while (p->next)
                 p = p->next;
             p->next = h;
         }
@@ -41,7 +41,7 @@ private:
                     return true;
                 hash_element *tmp = next;
                 room = next->room;
-                next = next->next;                
+                next = next->next;
                 delete tmp;
                 return false;
             }
@@ -55,14 +55,14 @@ private:
                     p->next = tmp->next;
                     delete tmp;
                     return false;
-                }              
+                }
                 p = p->next;
-            }           
+            }
             return false;
         }
         Room *room;
         hash_element *next;
     };
     std::map<uint, hash_element> rooms;
-    typedef std::map<uint, hash_element>::iterator iterator;    
+    typedef std::map<uint, hash_element>::iterator iterator;
 };

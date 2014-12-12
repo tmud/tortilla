@@ -3,7 +3,7 @@
 #include "helpers.h"
 //-------------------------------------------------------------------------------------
 void Mapper::newZone(Room *room, RoomDir dir)
-{   
+{
     RoomHelper rh(room);
     if (rh.isCycled())
     {
