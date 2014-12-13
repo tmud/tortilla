@@ -29,6 +29,7 @@ public:
     int  getViewString() const;
     int  getLastString() const;
     bool isLastString() const;
+    int  getStringsCount() const;
     int  getStringsOnDisplay() const;
     MudViewString* getString(int idx) const;
     void updateProps();

@@ -330,6 +330,9 @@
     <ClCompile Include="src\AboutDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\LogicProcessor3.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">

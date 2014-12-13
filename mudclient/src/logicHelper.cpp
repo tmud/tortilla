@@ -4,7 +4,6 @@
 
 LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
 {
-    m_ticker = GetTickCount();
 }
 
 bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
@@ -37,7 +36,9 @@ void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* ne
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_actions.size(); i<e; ++i)
         {
             tstring newcmd;
@@ -55,7 +56,9 @@ void LogicHelper::processSubs(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
             while (m_subs[i]->processing(cd))
@@ -71,7 +74,9 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
         {
             while (m_antisubs[i]->processing(cd))
@@ -84,7 +89,9 @@ void LogicHelper::processGags(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
             while (m_gags[i]->processing(cd))
@@ -108,19 +115,8 @@ void LogicHelper::processHighlights(parseData *parse_data)
 
 void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
 {
-    DWORD diff = -1;
-    DWORD tick = GetTickCount();
-    if (tick >= m_ticker)
-    {
-        diff = tick - m_ticker;
-    }
-    else
-    {   // overflow 49.7 days (MSDN GetTickCount)
-        diff = diff - m_ticker;
-        diff = diff + tick + 1;
-    }
-    m_ticker = tick;
-    int dt = diff;
+    int dt = m_ticker.getDiff();
+    m_ticker.sync();
 
     for (int i=0,e=m_timers.size(); i<e; ++i)
     {
@@ -137,7 +133,7 @@ void LogicHelper::resetTimers()
 {
     for (int i=0,e=m_timers.size(); i<e; ++i)
         m_timers[i]->reset();
-    m_ticker = GetTickCount();
+    m_ticker.sync();
 }
 
 void LogicHelper::processVars(tstring *cmdline)

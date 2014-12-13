@@ -217,8 +217,8 @@ int vd_isgamecmd(lua_State *L)
     if (luaT_check(L, 1, LUAT_VIEWDATA))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        MudViewString* mv = pdata->getselected();
-        int state = (mv && mv->gamecmd) ? 1 : 0;
+        MudViewString* s = pdata->getselected();
+        int state = (s && s->gamecmd) ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }
@@ -230,8 +230,8 @@ int vd_isprompt(lua_State *L)
     if (luaT_check(L, 1, LUAT_VIEWDATA))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        MudViewString* mv = pdata->getselected();
-        int state = (mv && mv->prompt) ? 1 : 0;
+        MudViewString* s = pdata->getselected();
+        int state = (s && s->prompt > 0) ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }

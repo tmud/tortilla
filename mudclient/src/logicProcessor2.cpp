@@ -552,9 +552,7 @@ IMPL(disconnect)
             return;
         }
         m_pHost->disconnectFromNetwork();
-        tmcLog(L"Соединение завершено.");
-        m_connected = false;
-        m_connecting = false;
+        processNetworkError(L"Соединение завершено.");
         return;
     }
     p->invalidargs();
@@ -1074,6 +1072,8 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+(?:Вых)?:[СЮЗВПОv^]+>", true);
+
     if (!m_logs.init())
         return false;
 
@@ -1128,4 +1128,3 @@ bool LogicProcessor::init()
     regCommand("wname", wname);
     return true;
 }
- 

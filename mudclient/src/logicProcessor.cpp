@@ -3,7 +3,8 @@
 #include "logicProcessor.h"
 
 LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
-propData(data), m_pHost(host), m_connecting(false), m_connected(false), m_helper(data)
+propData(data), m_pHost(host), m_connecting(false), m_connected(false), m_helper(data),
+m_prompt_mode(OFF), m_prompt_counter(0)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -97,81 +98,6 @@ void LogicProcessor::processCommand(const tstring& cmd)
     }
 }
 
-void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
-{
-   // parse incoming text
-   parseData parse_data;
-   if (!(flags & IND_PARSER))
-       m_parser.parse(text, text_len, &parse_data);
-   else
-   {
-       MudViewParser p;
-       p.parse(text, text_len, &parse_data);
-   }
-
-   if (flags & GAME_CMD)
-   {
-       parseDataStrings &s = parse_data.strings;       
-       for (int i=0,e=s.size(); i<e; ++i)
-           s[i]->gamecmd = true;
-   }
-
-   // start from new string forcibly
-   if (flags & START_BR)
-       parse_data.update_prev_string = false;
-
-   // accamulate last string in one
-   m_pHost->accLastString(window, &parse_data);
-
-   // recognize prompt string via template
-   if (propData->recognize_prompt)
-   {
-       for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
-       {
-           MudViewString *s = parse_data.strings[i];
-           tstring text;  s->getText(&text);
-           m_prompt_pcre.find(text);
-           if (m_prompt_pcre.getSize())
-               s->setPrompt(m_prompt_pcre.getLast(0));
-       }
-   }
-
-   // collect strings in parse_data in one with same colors params
-   ColorsCollector pc;
-   pc.process(&parse_data);
-
-   // preprocess data via plugins
-   if (!(flags & SKIP_PLUGINS))
-       m_pHost->preprocessText(window, &parse_data);
-
-   // array for new cmds from actions
-   std::vector<tstring> new_cmds;
-   if (!(flags & SKIP_ACTIONS))
-       m_helper.processActions(&parse_data, &new_cmds);
-
-   if (!(flags & SKIP_SUBS))
-   {
-       m_helper.processAntiSubs(&parse_data);
-       m_helper.processGags(&parse_data);
-       m_helper.processSubs(&parse_data);
-   }
-
-   if (!(flags & SKIP_HIGHLIGHTS))
-       m_helper.processHighlights(&parse_data);
-
-   // postprocess data via plugins
-   if (!(flags & SKIP_PLUGINS))
-       m_pHost->postprocessText(window, &parse_data);
-
-   int log = m_wlogs[window];
-   if (log != -1)
-       m_logs.writeLog(log, parse_data);    // write log 
-   m_pHost->addText(window, &parse_data);   // send processed text to view
-
-   for (int i=0,e=new_cmds.size(); i<e; ++i) // process actions' result
-         processCommand(new_cmds[i]);
-}
-
 void LogicProcessor::updateProps()
 {
     m_helper.updateProps();
@@ -200,7 +126,7 @@ void LogicProcessor::updateProps()
             parts[i] = mask;
             tstring_replace(&parts[i], L"*", L".*");
         }
-        
+
         int last = parts.size() - 1;
         tmpl.clear();
         for (int i = 0; i < last; ++i)
@@ -208,7 +134,7 @@ void LogicProcessor::updateProps()
             tmpl.append(parts[i]);
             tmpl.append(L"\\*");
         }
-        tmpl.append(parts[last]);      
+        tmpl.append(parts[last]);
 
         bool result = m_prompt_pcre.setRegExp(tmpl, true);
         if (!result)
@@ -221,34 +147,22 @@ void LogicProcessor::updateProps()
 
 void LogicProcessor::processNetworkDisconnect()
 {
-    if (m_connected)
-        tmcLog(L"Соединение завершено(обрыв).");
-    m_connected = false;
-    m_connecting = false;
+    processNetworkError(L"Соединение завершено(обрыв).");
 }
 
 void LogicProcessor::processNetworkConnectError()
 {
-    if (m_connected)
-        tmcLog(L"Не удалось подключиться.");
-    m_connected = false;
-    m_connecting = false;
+    processNetworkError(L"Не удалось подключиться.");
 }
 
 void LogicProcessor::processNetworkError()
 {
-    if (m_connected)
-        tmcLog(L"Ошибка cети. Соединение завершено.");
-    m_connected = false;
-    m_connecting = false;
+    processNetworkError(L"Ошибка cети. Соединение завершено.");
 }
 
 void LogicProcessor::processNetworkMccpError()
 {
-    if (m_connected)
-        tmcLog(L"Ошибка в протоколе сжатия. Соединение завершено.");
-    m_connected = false;
-    m_connecting = false;
+    processNetworkError(L"Ошибка в протоколе сжатия. Соединение завершено.");
 }
 
 void LogicProcessor::tmcLog(const tstring& cmd)
@@ -262,7 +176,7 @@ void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR|IND_PARSER);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG);
 }
 
 void LogicProcessor::pluginLog(const tstring& cmd)
@@ -274,7 +188,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     {
         tstring log(L"[plugins] ");
         log.append(cmd);
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|START_BR|IND_PARSER, window);
+        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
     }
 }
 
@@ -326,4 +240,14 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
     }
     tmcLog(L"Нет подключения.");
     return false;
+}
+
+void LogicProcessor::processNetworkError(const tstring& error)
+{
+    if (m_connected || m_connecting)
+        tmcLog(error.c_str());
+    m_connected = false;
+    m_connecting = false;
+    m_prompt_mode = OFF;
+    m_prompt_counter = 0;
 }

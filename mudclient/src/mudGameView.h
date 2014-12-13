@@ -324,6 +324,7 @@ private:
         }
 
         SetTimer(1, 200);
+        SetTimer(2, 50);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -356,6 +357,7 @@ private:
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->RemoveIdleHandler(this);
 
+        KillTimer(2);
         KillTimer(1);
         for (int i=0,e=m_views.size(); i<e; ++i)
             delete m_views[i];
@@ -508,13 +510,20 @@ private:
         m_network.send((tbyte*)buffer.getData(), buffer.getSize() - 1); // don't send last byte(0) of string
     }
 
-    LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&)
+    LRESULT OnTimer(UINT, WPARAM id, LPARAM, BOOL&)
     {
-        m_processor.processTick();
-        if (m_history.IsWindowVisible() && m_history.isLastString())
+        if (id == 1)
         {
-            m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-            m_history.truncateStrings(m_propData->view_history_size);
+            m_processor.processTick();
+            if (m_history.IsWindowVisible() && m_history.isLastString())
+            {
+                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
+                m_history.truncateStrings(m_propData->view_history_size);
+            }
+        }
+        else if (id == 2)
+        {
+            m_processor.processStackTick();
         }
         return 0;
     }
@@ -678,6 +687,21 @@ private:
     void disconnectFromNetwork()
     {
         m_network.disconnect();
+    }
+
+    MudViewString* getLastString(int view)
+    {
+        MudViewString *s = NULL;
+        MudView* v = NULL;
+        if (view == 0)
+            v = &m_view;
+        if (view >= 1 && view <= OUTPUT_WINDOWS)
+            v = m_views[view - 1];
+        if (v) {
+            int last = v->getStringsCount() - 1;
+            s = (last > 0) ? v->getString(last) : NULL;
+        }
+        return s;
     }
 
     void accLastString(int view, parseData* parse_data)

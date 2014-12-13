@@ -122,9 +122,9 @@ private:
     LogicWrapper<Gag> m_gags;
     LogicWrapper<Highlight> m_highlights;
     LogicWrapperTimers m_timers;
-    DWORD m_ticker;
     Pcre16 m_vars_regexp;
     PropertiesData *m_propData;
+    Ticker m_ticker;
 };
 
 class MessageCmdHelper

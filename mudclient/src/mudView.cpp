@@ -27,8 +27,10 @@ void MudView::accLastString(parseData *parse_data)
         return;
 
     int last = m_strings.size() - 1;
-    MudViewString *last_string = m_strings[last];    
+    MudViewString *last_string = m_strings[last];
     MudViewString *string = parse_data->strings[0];
+    if (last_string->prompt && last_string->gamecmd)
+        return;
     if (string->gamecmd && !last_string->prompt)
         return;
     if (!string->gamecmd && last_string->prompt)
@@ -38,6 +40,11 @@ void MudView::accLastString(parseData *parse_data)
     parse_data->strings[0] = last_string;
     m_strings.pop_back();                                   // remove last string from view
     m_last_string_updated = true;
+}
+
+int MudView::getStringsCount() const
+{
+    return m_strings.size();
 }
 
 void MudView::addText(parseData* parse_data, MudView* mirror)
@@ -57,7 +64,7 @@ void MudView::addText(parseData* parse_data, MudView* mirror)
         m_strings.push_back(string);
         if (mirror)
         {
-            std::vector<MudViewString*> &ms = mirror->m_strings;            
+            std::vector<MudViewString*> &ms = mirror->m_strings;
             if (lsu)
             {
                 lsu = false;
