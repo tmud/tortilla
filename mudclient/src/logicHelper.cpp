@@ -36,7 +36,9 @@ void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* ne
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_actions.size(); i<e; ++i)
         {
             tstring newcmd;
@@ -54,7 +56,9 @@ void LogicHelper::processSubs(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
             while (m_subs[i]->processing(cd))
@@ -70,7 +74,9 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
         {
             while (m_antisubs[i]->processing(cd))
@@ -83,7 +89,9 @@ void LogicHelper::processGags(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
+        MudViewString *s = parse_data->strings[j];
+        if (s->gamecmd || s->system) continue;
+        CompareData cd(s);
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
             while (m_gags[i]->processing(cd))

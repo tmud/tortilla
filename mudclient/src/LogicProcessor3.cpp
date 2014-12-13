@@ -245,32 +245,46 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
     if (parse_data.strings.empty())
         return;
+    if (!m_connected)
+        flags = flags | SKIP_ACTIONS | SKIP_SUBS;
+
+    parseDataStrings &pds = parse_data.strings;
 
     if (parse_data.update_prev_string)
     {
         MudViewString *s = parse_data.strings[0];
         if (s->prompt && s->gamecmd)
         {
-            int x = 1; 
+            pds.erase(pds.begin());
+            parseData pd;
+            pd.update_prev_string = true;
+            pd.strings.push_back(s);
+            printParseData(pd, flags | SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_SUBS, window);
+            pd.strings.clear();
         }
     }
 
-    //todo
-    tstring text;
-    for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
+    if (pds.empty())
+        return;
+
+    int last = pds.size() - 1;
+    MudViewString *s = pds[last];
+    if (!s->prompt && !s->gamecmd && !s->system)
     {
-        MudViewString *s = parse_data.strings[i];
-        s->getText(&text);
-        tchar buffer[32];
-        wsprintf(buffer, L"%p:", s);
-        OutputDebugString(buffer);
-        OutputDebugString(text.c_str());
-        OutputDebugString(L"\r\n");
-    }
+        pds.pop_back();
+        printParseData(parse_data, flags, window);
 
-    if (!m_connected)
-        flags |= SKIP_ACTIONS;
+        // last string not finished
+        parseData pd;
+        pd.strings.push_back(s);
+        printParseData(pd, flags | SKIP_SUBS, window);
+        return;
+    }    
+    printParseData(parse_data, flags, window);
+}
 
+void LogicProcessor::printParseData(parseData& parse_data, int flags, int window)
+{
     // final step for data
     // preprocess data via plugins
     if (!(flags & SKIP_PLUGINS))

@@ -105,6 +105,7 @@ private:
     // Incoming data methods
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0);
     void printIncoming(parseData& parse_data, int flags, int window);
+    void printParseData(parseData& parse_data, int flags, int window);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
 
