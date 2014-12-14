@@ -29,6 +29,7 @@ public:
     int  getViewString() const;
     int  getLastString() const;
     bool isLastString() const;
+    int  getStringsCount() const;
     int  getStringsOnDisplay() const;
     MudViewString* getString(int idx) const;
     void updateProps();
@@ -60,7 +61,7 @@ private:
         bool shift = (GetKeyState(VK_SHIFT) < 0) ? true : false;
         if (shift)
             startDraging();
-        return 0; 
+        return 0;
     }
     LRESULT OnLButtonUp(UINT, WPARAM wparam, LPARAM, BOOL&)
     {

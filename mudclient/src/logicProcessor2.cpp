@@ -444,7 +444,13 @@ IMPL(connect)
             tmcLog(L"Уже есть подключение! Нужно сначала отключиться от текущего сервера.");
             return;
         }
+        if (m_connecting)
+        {
+            tmcLog(L"Подключение уже устанавливается...");
+            return;
+        }
         tmcLog(L"Подключение...");
+        m_connecting = true;
         m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );        
         return;
     }
@@ -540,14 +546,13 @@ IMPL(disconnect)
 {
     if (p->size() == 0)
     {
-        if (!m_connected)
+        if (!m_connected && !m_connecting)
         {
             tmcLog(L"Нет подключения.");
             return;
         }
         m_pHost->disconnectFromNetwork();
-        tmcLog(L"Соединение завершено.");
-        m_connected = false;
+        processNetworkError(L"Соединение завершено.");
         return;
     }
     p->invalidargs();
@@ -1067,6 +1072,8 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+(?:Вых)?:[СЮЗВПОv^]+>", true);
+
     if (!m_logs.init())
         return false;
 
@@ -1121,4 +1128,3 @@ bool LogicProcessor::init()
     regCommand("wname", wname);
     return true;
 }
- 

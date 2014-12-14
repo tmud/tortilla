@@ -12,7 +12,8 @@ class LogicProcessorHost
 public:
     virtual void connectToNetwork(const tstring& address, int port) = 0;
     virtual void disconnectFromNetwork() = 0;
-    virtual void sendToNetwork(const tstring& data) = 0;
+    virtual void sendToNetwork(const tstring& data) = 0;    
+    virtual MudViewString* getLastString(int view) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
     virtual void postprocessText(int view, parseData* parse_data) = 0;
@@ -49,19 +50,30 @@ class LogicProcessor : public LogicProcessorMethods
     MudViewParser m_parser;
     InputProcessor m_input;
     LogicHelper m_helper; 
+    bool m_connecting;
     bool m_connected;
     tstring m_updatelog;
     LogsProcessor m_logs;
-    int m_wlogs[OUTPUT_WINDOWS+1];    
+    int m_wlogs[OUTPUT_WINDOWS+1];
     std::map<tstring, syscmd_fun> m_syscmds;
     std::vector<tstring> m_plugins_cmds;
     IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
+    MudViewParser m_parser2;
+    struct stack_el {
+        tstring text;
+        int flags;
+    };
+    std::vector<stack_el> m_incoming_stack;
+    enum PromptMode { OFF = 0, USER, UNIVERSAL };
+    PromptMode m_prompt_mode;
+    int  m_prompt_counter;
+    Pcre16 m_univ_prompt_pcre;
 
 public:
     LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
     ~LogicProcessor();
-    bool init();    
+    bool init();
     void processNetworkData(const WCHAR* text, int text_len);
     void processNetworkConnect();
     void processNetworkDisconnect();
@@ -72,7 +84,8 @@ public:
     void processCommand(const tstring& cmd);
     void processSystemCommand(const tstring& cmd);
     void processTick();
-    void updateProps();    
+    void processStackTick();
+    void updateProps();
     void tmcLog(const tstring& cmd);
     void simpleLog(const tstring& cmd);
     void pluginLog(const tstring& cmd);
@@ -82,12 +95,20 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
 
 private:
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, START_BR = 16, GAME_CMD = 32, IND_PARSER = 64  };
-    void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0 );
+    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
+           FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
     bool sendToNetwork(const tstring& cmd);
+    void processNetworkError(const tstring& error);
+
+    // Incoming data methods
+    void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0);
+    void printIncoming(parseData& parse_data, int flags, int window);
+    void printParseData(parseData& parse_data, int flags, int window);
+    void printStack(int flags = 0);
+    bool processStack(parseData& parse_data, int flags);
 
 public: // system commands
     DEF(drop);
@@ -114,7 +135,7 @@ public: // system commands
     DEF(antisub);
     DEF(unantisub);
     DEF(group);
-    DEF(mccp);    
+    DEF(mccp);
     DEF(wshow);
     DEF(whide);
     DEF(wpos);

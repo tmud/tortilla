@@ -7,10 +7,10 @@ MudViewParser::MudViewParser() : m_current_string(NULL), m_last_finished(true)
 
 MudViewParser::~MudViewParser()
 { 
-    delete m_current_string;    
+    delete m_current_string;
 }
 
-void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
+void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseData* data)
 {
     if (!m_last_finished)
         data->update_prev_string = true;
@@ -26,7 +26,12 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
 
         parserResult result = process (b, len);
         parserResultCode r = result.result;
-        
+
+        if (r == PARSE_STRING_IACGA)
+        {
+            r = (newline_iacga) ? PARSE_STRING_FINISHED : PARSE_NO_ERROR;
+        }
+
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
         {
             if (!m_current_block.string.empty())
@@ -45,7 +50,7 @@ void MudViewParser::parse(const WCHAR* text, int len, parseData* data)
         m_buffer.truncate(result.processed * sizeof(WCHAR));
         if (r == PARSE_LOW_DATA)
             break;
-    } 
+    }
 
     m_last_finished = true;
     if (m_current_string)
@@ -106,7 +111,7 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
     if (b[1] == 0x5c) // string terminator (GA)
     {
         m_current_string->setPrompt();
-        return parserResult(PARSE_NO_ERROR, 2);
+        return parserResult(PARSE_STRING_IACGA, 2);
     }
     // skip all other esc codes (0x1b + code)
     return parserResult(PARSE_NOT_SUPPORTED, 2);
@@ -114,11 +119,11 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
 
 MudViewParser::parserResult MudViewParser::process_csi(const WCHAR* b, int len)
 {
-    // csi: b[0]=0x1b, b[1]='['        
+    // csi: b[0]=0x1b, b[1]='['
     // find end of csi macro
     if (len < 3)
         return parserResult(PARSE_LOW_DATA, 0);
-    
+
     const WCHAR *p = b+2;
     if (*p == L'm')
     {
@@ -136,7 +141,7 @@ MudViewParser::parserResult MudViewParser::process_csi(const WCHAR* b, int len)
         const WCHAR *check_symbol = wcschr(L";0123456789", *p);
         p++;
         if (!check_symbol)
-            return parserResult(PARSE_ERROR_DATA, p-b);        
+            return parserResult(PARSE_ERROR_DATA, p-b);
     }
 
     if (!macro_end)
@@ -154,7 +159,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
     // b[0]=0x1b, b[1]='[', b[len]='m'
     const WCHAR *e = b+len;
     const WCHAR *p = b+2;
-    
+
     while (p != e)
     {
         const WCHAR *c = p;
@@ -163,7 +168,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
 
         if (p == c)
             {   p++; continue; }
-        
+
         tstring code_str(p, c-p);
         int code = _wtoi(code_str.c_str());
         p = c;
@@ -175,7 +180,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
         {
             if ((e-p) < 5)
                 return parserResult(PARSE_ERROR_DATA, len);
-                                                    
+
             if (p[1] == L';' && p[2] == 5 && p[3] == L';')
             {
                  tbyte color = p[4] - 0;
@@ -187,7 +192,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
              }
              else
                  return parserResult(PARSE_ERROR_DATA, len);
-         }        
+         }
          if (code >= 30 && code <= 37)
          {
              pa.text_color = code - 30;
@@ -245,7 +250,7 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
             }
             p++;
          }
-    }    
+    }
     return parserResult(PARSE_NO_ERROR, len);
 }
 
@@ -274,3 +279,73 @@ void ColorsCollector::process(parseData *data)
        }
    }
 }
+
+#ifdef _DEBUG
+void markBlink(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+            strings[i]->blocks[j].params.blink_status = 1;
+    }
+}
+void markInversed(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+            strings[i]->blocks[j].params.reverse_video = 1;
+    }
+}
+void markInversedColor(parseDataStrings& strings, int color)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+        {
+            MudViewStringParams &p = strings[i]->blocks[j].params;
+            p.reverse_video = 1;
+            p.text_color = color;
+        }
+    }
+}
+void markItalic(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+            strings[i]->blocks[j].params.italic_status = 1;
+    }
+}
+void printByIndex(const parseDataStrings& strings, int index)
+{
+    tstring text;
+    strings[index]->getText(&text);
+    OutputDebugString(text.c_str());
+    OutputDebugString(L"\r\n");
+}
+
+void markPromptUnderline(parseDataStrings& strings)
+{
+    int count = strings.size();
+    for (int i = 0; i < count; ++i)
+    {
+        if (!strings[i]->prompt)
+            continue;
+        int blocks = strings[i]->blocks.size();
+        for (int j = 0; j < blocks; ++j)
+        {
+            MudViewStringParams &p = strings[i]->blocks[j].params;
+            p.underline_status = 1;
+        }
+    }
+}
+#endif

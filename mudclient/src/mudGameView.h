@@ -237,6 +237,7 @@ private:
         MESSAGE_HANDLER(WM_USER+1, OnNetwork)
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
+        MESSAGE_HANDLER(WM_USER+4, OnSetFocus)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)        
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -323,6 +324,7 @@ private:
         }
 
         SetTimer(1, 200);
+        SetTimer(2, 50);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -355,6 +357,7 @@ private:
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->RemoveIdleHandler(this);
 
+        KillTimer(2);
         KillTimer(1);
         for (int i=0,e=m_views.size(); i<e; ++i)
             delete m_views[i];
@@ -507,13 +510,20 @@ private:
         m_network.send((tbyte*)buffer.getData(), buffer.getSize() - 1); // don't send last byte(0) of string
     }
 
-    LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&)
+    LRESULT OnTimer(UINT, WPARAM id, LPARAM, BOOL&)
     {
-        m_processor.processTick();
-        if (m_history.IsWindowVisible() && m_history.isLastString())
+        if (id == 1)
         {
-            m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-            m_history.truncateStrings(m_propData->view_history_size);
+            m_processor.processTick();
+            if (m_history.IsWindowVisible() && m_history.isLastString())
+            {
+                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
+                m_history.truncateStrings(m_propData->view_history_size);
+            }
+        }
+        else if (id == 2)
+        {
+            m_processor.processStackTick();
         }
         return 0;
     }
@@ -582,6 +592,7 @@ private:
         HWND wnd = m_views[id-1]->m_hWnd;     
         bool new_state = !isWindowShown(wnd);
         showWindowEx(wnd, new_state);
+        setCmdBarFocus();
         return 0;
     }
    
@@ -598,11 +609,12 @@ private:
                 assert(p);
                 if (p) 
                     p->closeWindow(wnd);
+                setCmdBarFocus();
                 return 0;
             }
         }
         showWindowEx(wnd, false);
-        m_bar.SetFocus();
+        setCmdBarFocus();
         return 0;
     } 
 
@@ -667,9 +679,29 @@ private:
             m_processor.processNetworkConnectError();
     }
 
+    void setCmdBarFocus()
+    {
+        PostMessage(WM_USER + 4);
+    }
+
     void disconnectFromNetwork()
     {
         m_network.disconnect();
+    }
+
+    MudViewString* getLastString(int view)
+    {
+        MudViewString *s = NULL;
+        MudView* v = NULL;
+        if (view == 0)
+            v = &m_view;
+        if (view >= 1 && view <= OUTPUT_WINDOWS)
+            v = m_views[view - 1];
+        if (v) {
+            int last = v->getStringsCount() - 1;
+            s = (last > 0) ? v->getString(last) : NULL;
+        }
+        return s;
     }
 
     void accLastString(int view, parseData* parse_data)
@@ -785,12 +817,12 @@ private:
         if (show)
         {
             if (!isWindowShown(wnd))
-                { m_dock.ShowWindow(wnd); m_bar.SetFocus();  m_parent.SendMessage(WM_USER, menu_id, 1);  }
+                { m_dock.ShowWindow(wnd); m_parent.SendMessage(WM_USER, menu_id, 1);  setCmdBarFocus(); }
         }
         else
         {
             if (isWindowShown(wnd))
-                { m_dock.HideWindow(wnd); m_bar.SetFocus(); m_parent.SendMessage(WM_USER, menu_id, 0); }
+                { m_dock.HideWindow(wnd); m_parent.SendMessage(WM_USER, menu_id, 0); setCmdBarFocus(); }
         }
     }
 
