@@ -7,6 +7,11 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <vector>
+#include <deque>
+#include <string>
+#include <map>
+#include <algorithm>
+#include <list>
 
 #include "api/api.h"
 
@@ -36,8 +41,4 @@ typedef unsigned int uint;
 
 #include "resource.h"
 
-#include <vector>
-#include <string>
-#include <map>
-#include <algorithm>
-#include <list>
+

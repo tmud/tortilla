@@ -8,7 +8,7 @@ Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), m_lastDir(-1), m_p
 
 Mapper::~Mapper()
 {
-    autodel<Zone> z(m_zones);
+    //autodel<Zone> z(m_zones);
 }
 
 void Mapper::processNetworkData(const wchar_t* text, int text_len)
@@ -21,14 +21,14 @@ void Mapper::processNetworkData(const wchar_t* text, int text_len)
         return;
     }
     popDir();
-    
-    // can be return NULL (if cant find or create new) so it is mean -> lost position
-    std::vector<Room*> rooms;
+        
+  /*  std::vector<Room*> rooms;
     findRooms(room, &rooms);
 
-    if (rooms.empty()) {            // room not found
-        m_pCurrentRoom = NULL;
-        redrawPosition();
+    if (rooms.empty())
+    {  
+        // if cant find or create new, so it is mean -> lost position        
+        redrawPosition(NULL);
         return;
     }
 
@@ -37,10 +37,15 @@ void Mapper::processNetworkData(const wchar_t* text, int text_len)
     {
         if (m_pCurrentRoom)
         {
-            /*RoomExit &e = m_pCurrentRoom->dirs[m_lastDir];
+            RoomExit &e = m_pCurrentRoom->dirs[m_lastDir];
             if (!e.next_room)
-                e.next_room = new_room;*/
+                e.next_room = rooms[0];
         }
+        m_pCurrentRoom = rooms[0];
+        m_viewpos.room = m_pCurrentRoom;
+        m_viewpos.level = m_pCurrentRoom->level;
+        redrawPosition();
+        return;
     }
 
 
@@ -119,7 +124,7 @@ void Mapper::popDir()
 
 void Mapper::findRooms(const RoomData& room, std::vector<Room*> *vr)
 {
-    assert(vr->empty());
+  /*  assert(vr->empty());
     if (m_lastDir == -1 || !m_pCurrentRoom)
     {
         m_table.findRooms(room, vr);
@@ -193,12 +198,12 @@ void Mapper::findRooms(const RoomData& room, std::vector<Room*> *vr)
         }
         return;
     }
-    vr->swap(like_current);
+    vr->swap(like_current);*/
 }
 
 Room* Mapper::addNewRoom(const RoomData& room)
 {
-    if (!m_pCurrentRoom || m_lastDir == -1)
+    /*if (!m_pCurrentRoom || m_lastDir == -1)
     {
         if (!m_lastpos.current_room || m_lastDir == -1)  // last known room
         {
@@ -241,12 +246,13 @@ Room* Mapper::addNewRoom(const RoomData& room)
     pos.setOffsetRoom(new_room);
     e.next_room = new_room;
     new_room->dirs[revertDir(m_lastDir)].next_room = m_pCurrentRoom;
-    return new_room;
+    return new_room;*/
+    return NULL;
 }
 
 Zone* Mapper::addNewZone()
 {
-    ZoneParams zp;
+    /*ZoneParams zp;
     WCHAR buffer[32];
     for (int i = 1;; ++i)
     {
@@ -263,21 +269,23 @@ Zone* Mapper::addNewZone()
 
     Zone *new_zone = new Zone(buffer);
     m_zones.push_back(new_zone);
-    return new_zone;
+    return new_zone;*/
+    return NULL;
 }
 
 Room* Mapper::createNewRoom(const RoomData& room)
 {
-    Room *new_room = new Room();
+    /*Room *new_room = new Room();
     new_room->roomdata = room;
     checkExits(new_room);
     m_table.addRoom(new_room);
-    return new_room;
+    return new_room;*/
+    return NULL;
 }
 
 void Mapper::deleteRoom(Room* room)
 {
-    m_table.deleteRoom(room);
+   /* m_table.deleteRoom(room);
     for (int i=0,e=ROOM_DIRS_COUNT; i<e; ++i)
     {
         Room *next = room->dirs[i].next_room;
@@ -285,13 +293,13 @@ void Mapper::deleteRoom(Room* room)
             next->dirs[revertDir(i)].next_room = NULL;
     }
     room->level->deleteRoom(room->x, room->y);
-    delete room;
+    delete room;*/
 }
 
 void Mapper::checkExits(Room *room)
 {
     // parse room->roomdata.exits to room->dirs
-    tstring e = room->roomdata.exits;
+   /* tstring e = room->roomdata.exits;
     if (e.find(m_propsData->north_exit) != -1)
         room->dirs[RD_NORTH].exist = true;
     if (e.find(m_propsData->south_exit) != -1)
@@ -303,7 +311,7 @@ void Mapper::checkExits(Room *room)
     if (e.find(m_propsData->up_exit) != -1)
         room->dirs[RD_UP].exist = true;
     if (e.find(m_propsData->down_exit) != -1)
-        room->dirs[RD_DOWN].exist = true;
+        room->dirs[RD_DOWN].exist = true;*/
 }
 
 int Mapper::revertDir(int dir)
@@ -338,10 +346,20 @@ void Mapper::updateProps()
     m_prompt.updateProps(m_propsData);
 }
 
-void Mapper::redrawPosition()
+void Mapper::redrawPosition(Room *newpos)
 {
+    /*if (newpos)
+    {
+        m_viewpos.room = newpos;
+        m_viewpos.level = newpos->level;
+    }
+    else
+    {
+        m_viewpos.room = NULL;
+        m_viewpos.level = NULL;
+    }
     m_zones_control.roomChanged(m_viewpos);
-    m_view.roomChanged(m_viewpos);
+    m_view.roomChanged(m_viewpos);*/
 }
 
 void Mapper::onCreate()
@@ -367,7 +385,7 @@ void Mapper::onCreate()
     m_zones_control.Create(m_vSplitter, pane_left, style);
     m_view.Create(m_vSplitter, pane_right, NULL, style | WS_VSCROLL | WS_HSCROLL);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_view);
-    m_zones_control.setNotifications(m_hWnd, WM_USER);
+//    m_zones_control.setNotifications(m_hWnd, WM_USER);
 
     updateProps();    
 }
@@ -385,9 +403,9 @@ void Mapper::onSize()
 
 void Mapper::onZoneChanged()
 {
-    m_viewpos.reset();
+/*    m_viewpos.reset();
     Zone *zone = m_zones_control.getCurrentZone();
     if (zone)
         m_viewpos.level = zone->getDefaultLevel();
-    redrawPosition();
+    redrawPosition();*/
 }

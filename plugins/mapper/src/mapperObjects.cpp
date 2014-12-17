@@ -1,8 +1,117 @@
 #include "stdafx.h"
 #include "mapperObjects.h"
-
 const utf8* RoomDirName[] = { "north", "south", "west", "east", "up", "down" };
-RoomCursor::RoomCursor() { reset(); }
+
+RoomsArray::RoomsArray(RoomsLevel *l) : level(l) 
+{
+    assert(l);
+}
+
+void RoomsArray::extend(ExtendDir d)
+{
+    int count = 1;
+    if (rooms.empty())
+    {
+        if (d >= EXTEND_LEFT && d <= EXTEND_BOTTOM) 
+        {
+            for (int i = 0; i < count; ++i) {
+                row *r = new row;
+                rooms.push_front(r);
+            }
+        }
+        else {
+            assert(false);
+            return;
+        }
+    }
+    switch (d)
+    {
+    case EXTEND_LEFT:
+        for (int y=0, e=rooms.size(); y<e; ++y)
+        {
+            std::deque<Room*> &d = rooms[y]->rr;
+            for (int i = 0; i < count; ++i)
+                d.push_front(NULL);
+        }
+        for (int x = 0, e = width(); x < e; ++x) {
+        for (int y = 0, ye = height(); y < ye; ++y) {
+        Room *room = rooms[y]->rr[x];
+        if (room) { room->x += count; }
+        }}
+    break;
+    case EXTEND_RIGHT:
+        for (int y = 0, e = rooms.size(); y < e; ++y)
+        {
+            std::deque<Room*> &d = rooms[y]->rr;
+            for (int i = 0; i < count; ++i)
+                d.push_back(NULL);
+        }
+    break;
+    case EXTEND_TOP:
+        for (int i = 0; i < count; ++i)
+        {
+            row *r = new row;
+            r->rr.resize(width(), NULL);
+            rooms.push_front(r);
+        }
+        for (int x = 0, e = width(); x < e; ++x) {
+        for (int y = count, ye = height(); y < ye; ++y) {
+           Room *room = rooms[y]->rr[x];
+           if (room) { room->y += count; }
+        }}
+    break;
+    case EXTEND_BOTTOM:
+        for (int i = 0; i < count; ++i)
+        {
+            row *r = new row;
+            r->rr.resize(width(), NULL);
+            rooms.push_back(r);
+        }
+    break;
+    }
+}
+
+bool RoomsArray::set(int x, int y, Room* room)
+{
+    if (!checkCoords(x, y))
+        return false;
+    assert(!rooms[y]->rr[x]);
+    room->x = x;
+    room->y = y;
+    room->level = level;
+    rooms[y]->rr[x] = room;
+    return true;
+}
+
+Room* RoomsArray::get(int x, int y) const
+{
+    if (!checkCoords(x, y))
+        return NULL;
+    return rooms[y]->rr[x];
+}
+
+int RoomsArray::width() const
+{
+    if (rooms.empty())
+        return 0;
+    return rooms[0]->rr.size();
+}
+
+int RoomsArray::height() const
+{
+    return rooms.size();
+}
+
+bool RoomsArray::checkCoords(int x, int y) const
+{
+    return (y >= 0 && y < height() && x >= 0 && x < width()) ? true : false;
+}
+
+
+
+
+
+/*RoomCursor::RoomCursor() { reset(); }
 void RoomCursor::reset() { current_room = NULL; new_room = NULL; x=y=z=0; }
 
 RoomsLevel* RoomCursor::getOffsetLevel() const
@@ -51,19 +160,7 @@ void RoomCursor::move(int dir)
     else if (dir == RD_DOWN)
         z -= 1;
     else { assert(false); }
-}
-
-int RoomsLevel::height() const
-{
-    return rooms.size();
-}
-
-int RoomsLevel::width() const
-{
-    if (rooms.empty())
-        return 0;
-    return rooms[0]->rr.size();
-}
+}*/
 
 const RoomsLevelBox& RoomsLevel::box()
 {
@@ -73,18 +170,6 @@ const RoomsLevelBox& RoomsLevel::box()
         calcBoundingBox();
     }
     return m_box;
-}
-
-bool RoomsLevel::isEmpty() const
-{
-    int w = width();
-    int h = height();
-    for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-        if (rooms[y]->rr[x])
-            return false;
-    }}
-    return true;
 }
 
 Room* RoomsLevel::getRoom(int x, int y)

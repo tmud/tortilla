@@ -4,7 +4,7 @@
 //-------------------------------------------------------------------------------------
 void Mapper::newZone(Room *room, RoomDir dir)
 {
-    RoomHelper rh(room);
+  /*  RoomHelper rh(room);
     if (rh.isCycled())
     {
         MessageBox(L"Невозможно создать новую зону из-за цикла!", L"Ошибка", MB_OK | MB_ICONERROR);
@@ -50,12 +50,12 @@ void Mapper::newZone(Room *room, RoomDir dir)
     }
 
     m_zones_control.addNewZone(new_zone);
-    m_view.Invalidate();
+    m_view.Invalidate();*/
 }
 
 void Mapper::saveMaps(lua_State *L)
 {
-    return; //todo
+   /* return; //todo
     luaT_run(L, "getPath", "s", "");
     tstring dir( convert_utf8_to_wide(lua_tostring(L, -1)) );
     lua_pop(L, 1);
@@ -155,12 +155,12 @@ void Mapper::saveMaps(lua_State *L)
         file.append(todelete[j]);
         file.append(L".map");
         DeleteFile(file.c_str());
-    }
+    }*/
 }
 
 void Mapper::loadMaps(lua_State *L)
 {
-    return; //todo
+    /*return; //todo
     luaT_run(L, "getPath", "s", "");
     tstring dir(convert_utf8_to_wide(lua_tostring(L, -1)));
     lua_pop(L, 1);   
@@ -305,5 +305,5 @@ void Mapper::loadMaps(lua_State *L)
         Zone *zone = m_zones[0];
         m_viewpos.level = zone->getDefaultLevel();
     }
-    redrawPosition();
+    redrawPosition();*/
 }

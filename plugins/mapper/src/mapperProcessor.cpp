@@ -159,12 +159,12 @@ bool MapperProcessor::processNetworkData(const WCHAR* text, int textlen, RoomDat
         { if (n.at(i) < 32)
                 return false;
         }
-        result->dark = false;
+        //result->dark = false;
         tstring &d = result->descr;
         if (!d.empty() && dark_cs == d)
         {
             d.clear();
-            result->dark = true;
+            //result->dark = true;
         }
         result->calcHash();
     }

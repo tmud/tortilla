@@ -52,7 +52,7 @@ private:
     int   revertDir(int dir);
     void  popDir();
     //Room* getNextRoom(Room *room, int dir);
-    void  redrawPosition();
+    void  redrawPosition(Room *newpos);
 
 private:
     PropertiesMapper *m_propsData;
@@ -71,8 +71,8 @@ private:
     std::list<int> m_path;
     int m_lastDir;
     Room *m_pCurrentRoom;
-    RoomCursor m_lastpos;
+    /*RoomCursor m_lastpos;
 
     std::vector<Zone*> m_zones;    
-    ViewMapPosition m_viewpos;
+    ViewMapPosition m_viewpos;*/
 };

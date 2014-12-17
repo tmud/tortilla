@@ -6,14 +6,10 @@
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
-    CBrush m_background;
-    ViewMapPosition viewpos;
-    MapperRoomRender rr;
+    enum CursorType { CT_NONE = 0, CT_CURRENT_POS, CT_POSSIBLE_POS };
     
-    struct room_pos { 
-    room_pos() : x(-1), y(-1) {}
-    bool valid() const { return (x >= 0) ? true : false; }
-    int x,y; };
+    Room *m_room;
+    RoomsLevel *m_level;
 
     int m_hscroll_pos;
     int m_hscroll_size;    
@@ -26,13 +22,16 @@ class MapperRender : public CWindowImpl<MapperRender>
 
     bool m_track_mouse;
 
+    CBrush m_background;
     CMenuXP m_menu;
     CImageList m_icons;
+    MapperRoomRender rr;
     Room *m_menu_tracked_room;
 
 public:
     MapperRender();
-    void roomChanged(const ViewMapPosition& pos);
+    void renderByRoom(Room *room);
+    void renderByLevel(RoomsLevel *level);
 
 private:
 	BEGIN_MSG_MAP(MapperRender)
@@ -68,7 +67,6 @@ private:
         m_menu.DrawItem((LPDRAWITEMSTRUCT)lparam);
         return 0;
     }
-
     LRESULT OnMenuCommand(UINT, WPARAM wparam, LPARAM, BOOL& bHandled)
     {
         if (!runMenuPoint(LOWORD(wparam)))
@@ -79,7 +77,14 @@ private:
 private:
     void renderMap(RoomsLevel* rlevel, int x, int y);
     void renderLevel(RoomsLevel* level, int dx, int dy, int type);
+
+    struct room_pos {
+        room_pos() : x(-1), y(-1) {}
+        bool valid() const { return (x >= 0) ? true : false; }
+        int x, y;
+    };
     room_pos findRoomPos(Room* room);
+
     Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();
