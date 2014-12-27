@@ -40,39 +40,43 @@ private:
     void onCreate();
     void onSize();
     void onZoneChanged();
+    void redrawPosition();
 
-private:    
-    void  findRooms(const RoomData& room, std::vector<Room*> *vr);    
+private:
+    void  processData(const RoomData& room);
+    void  findRooms(const RoomData& room, std::vector<Room*> *vr);
     Room* addNewRoom(const RoomData& room);
-    Zone* addNewZone();
-    Room* createNewRoom(const RoomData& room);
-    void  deleteRoom(Room* room);
+    Zone* addNewZone();    
     void  changeLevelOrZone(Room *old, Room* curr);
-    void  checkExits(Room *room);
+    Room* createRoom(const RoomData& room);
+    void  deleteRoom(Room* room);
     int   revertDir(int dir);
     void  popDir();
     //Room* getNextRoom(Room *room, int dir);
-    void  redrawPosition(Room *newpos);
 
 private:
     PropertiesMapper *m_propsData;
 
-    // Elements on the screen
+    // Elements on the screen (buttons etc).
     MapperToolbar m_toolbar;
     CSplitterWindowExT<true, 1, 3> m_vSplitter;
     MapperZoneControl m_zones_control;
     MapperRender m_view;
     int m_toolbar_height;
 
+    // Helper to parse incoming data and find rooms
     MapperProcessor m_processor;
     MapperPrompt    m_prompt;
     MapperHashTable m_table;
 
+    // Order for commands
     std::list<int> m_path;
     int m_lastDir;
+    
+    // Current position
     Room *m_pCurrentRoom;
-    /*RoomCursor m_lastpos;
+    RoomsLevel *m_pCurrentLevel;
 
-    std::vector<Zone*> m_zones;    
-    ViewMapPosition m_viewpos;*/
+    // Zones list
+    std::vector<Zone*> m_zones;
 };

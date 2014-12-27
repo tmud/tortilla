@@ -20,7 +20,6 @@ typedef unsigned int uint;
 
 #include <assert.h>
 #include "common/crc32.h"
-#include "common/autodel.h"
 #include "common/dataQueue.h"
 
 #ifdef _DEBUG
@@ -41,4 +40,10 @@ typedef unsigned int uint;
 
 #include "resource.h"
 
-
+template<class T>
+void auto_delete(std::vector<T*>& v)
+{
+    struct{ void operator() (T* cmd) { delete cmd; } } del;
+    std::for_each(v.begin(), v.end(), del);
+    v.clear();
+}

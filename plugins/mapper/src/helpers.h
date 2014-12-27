@@ -7,7 +7,7 @@ public:
     bool isExplored(RoomDir dir)
     {
         Room *r = m_room->dirs[dir].next_room;
-        if (r && sameZone(m_room, r))
+        if (r && samezone(m_room, r))
             return true;
         return false;
     }
@@ -25,7 +25,7 @@ public:
             for (int j = RD_NORTH; j <= RD_DOWN; ++j)
             {
                Room *next = r->dirs[j].next_room;
-               if (!next || !sameZone(r, next))
+               if (!next || !samezone(r, next))
                    continue;
 
                if (next->special == 0)
@@ -64,7 +64,7 @@ public:
             for (int j = RD_NORTH; j <= RD_DOWN; ++j)
             {
                 Room *next = r->dirs[j].next_room;
-                if (!next || !sameZone(r, next))
+                if (!next || !samezone(r, next))
                     continue;
 
                 if (next->special == 0)
@@ -82,8 +82,13 @@ public:
         subzone->swap(rooms);
     }
 
+    bool isSameZone(Room *another_room) const
+    {
+        return samezone(m_room, another_room);
+    }
+
 private:
-    bool sameZone(Room *r1, Room *r2)
+    bool samezone(Room *r1, Room *r2) const
     {
         return (r1->level->getZone() == r2->level->getZone()) ? true : false;
     }

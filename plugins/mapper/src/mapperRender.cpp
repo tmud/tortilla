@@ -30,6 +30,7 @@ MapperRender::MapperRender() : m_room(NULL), m_level(NULL), rr(ROOM_SIZE, 5)
     m_vscroll_flag = false;
     m_left = m_right = m_top = m_bottom = 0;
     m_block_center = true;
+    m_cursor = 0;
     m_track_mouse = false;
     m_menu_tracked_room = NULL;
 }
@@ -41,19 +42,42 @@ void MapperRender::onCreate()
     updateScrollbars(false);
 }
 
-void MapperRender::renderByRoom(Room *room)
+void MapperRender::setCurrentRoom(Room *room)
 {
-    m_room = room;
-    if (room)
-        m_level = room->level;
+    if (m_room)
+    {
+        m_room = room;
+        m_level = m_room->level;
+    }
+    m_cursor = 0;
     updateScrollbars(false);
     Invalidate();
 }
 
-void MapperRender::renderByLevel(RoomsLevel *level)
+void MapperRender::setCurrentLevel(RoomsLevel *level)
 {
     m_room = NULL;
     m_level = level;
+    m_cursor = 0;
+    updateScrollbars(false);
+    Invalidate();
+}
+
+void MapperRender::lostPosition()
+{
+    m_room = NULL;
+    m_cursor = 0;
+    updateScrollbars(false);
+    Invalidate();
+}
+
+void MapperRender::setPossibleRooms(const std::vector<Room*>& rooms)
+{
+    if (rooms.empty())
+        m_room = NULL;
+    else
+        m_room = rooms[0];      //todo
+    m_cursor = 1;
     updateScrollbars(false);
     Invalidate();
 }
@@ -64,8 +88,8 @@ void MapperRender::onPaint()
     CPaintDC dc(m_hWnd);
     CMemoryDC mdc(dc, pos);
     mdc.FillRect(&pos, m_background);
-    /*if (!m_level) return;
 
+    if (!m_level) return;
     int x = getRenderX();
     int y = getRenderY();
      
@@ -80,47 +104,46 @@ void MapperRender::onPaint()
         {
             int dx = x + p.x * ROOM_SIZE;
             int dy = y + p.y * ROOM_SIZE;
-            rr.renderCursor(dx, dy, viewpos.cursor);
+            rr.renderCursor(dx, dy, m_cursor);
         }
-    }*/
+    }
 }
 
 void MapperRender::renderMap(RoomsLevel* rlevel, int x, int y)
 {
-    /*Zone *zone = rlevel->getZone();
+    Zone *zone = rlevel->getZone();
     int level = rlevel->getLevel();
-    //RoomsLevel *under2 = zone->getLevel(level-2, false);
+    //RoomsLevel *under2 = zone->getLevel(level-2);
     //if (under2)
     //    renderLevel(under2, x+12, y+12, 1);
-    RoomsLevel *under = zone->getLevel(level-1, false);
+    RoomsLevel *under = zone->getLevel(level-1);
     if (under)
         renderLevel(under, x+6, y+6, 1);
     renderLevel(rlevel, x, y, 0);
-    RoomsLevel *over = zone->getLevel(level+1, false);
+    RoomsLevel *over = zone->getLevel(level+1);
     if (over)
-        renderLevel(over, x-6, y-6, 2);*/
+        renderLevel(over, x-6, y-6, 2);
 }
 
 void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
 {
-    /*RECT rc;
+    RECT rc;
     GetClientRect(&rc);
 
-    int width = level->width();
-    int height = level->height();
-
+    int width = level->getWidth();
+    int height = level->getHeight();
     for (int x=0; x<width; ++x)
     {
         for (int y=0; y<height; ++y)
         {
-            Room *r = level->getRoom(x,y);
+            Room *r = level->get(x,y);
             if (!r) 
                 continue;
             int px = ROOM_SIZE * x + dx;
             int py = ROOM_SIZE * y + dy;
-            rr.render(px, py, r, type);            
+            rr.render(px, py, r, type);
         }
-    }*/
+    }
 }
 
 MapperRender::room_pos MapperRender::findRoomPos(Room* room)
@@ -196,16 +219,16 @@ void MapperRender::onVScroll(DWORD position)
     int action = LOWORD(position);
     switch (action) {
     case SB_LINEUP:
-        m_vscroll_pos = m_vscroll_pos - ROOM_SIZE / 4;        
+        m_vscroll_pos = m_vscroll_pos - ROOM_SIZE / 4;
         break;
     case SB_LINEDOWN:
         m_vscroll_pos = m_vscroll_pos + ROOM_SIZE / 4;
         break;
     case SB_PAGEUP:
-        m_vscroll_pos = m_vscroll_pos - ROOM_SIZE;        
+        m_vscroll_pos = m_vscroll_pos - ROOM_SIZE;
         break;
     case SB_PAGEDOWN:
-        m_vscroll_pos = m_vscroll_pos + ROOM_SIZE;        
+        m_vscroll_pos = m_vscroll_pos + ROOM_SIZE;
         break;
     case SB_THUMBTRACK:
     case SB_THUMBPOSITION:
@@ -244,7 +267,7 @@ void MapperRender::updateScrollbars(bool center)
     int vmin = 0; int vmax = 0;
     GetScrollRange(SB_VERT, &vmin, &vmax);
     int hmin = 0; int hmax = 0;
-    GetScrollRange(SB_HORZ, &hmin, &hmax);    
+    GetScrollRange(SB_HORZ, &hmin, &hmax);
     sprintf(buffer, "vpos[%d-%d] = %d(%d), hpos[%d-%d] = %d(%d)\r\n", vmin, vmax, GetScrollPos(SB_VERT), m_vscroll_pos,
         hmin, hmax, GetScrollPos(SB_HORZ), m_hscroll_pos);
     OutputDebugStringA(buffer);*/
@@ -278,7 +301,7 @@ void MapperRender::updateScrollbars(bool center)
     
     if (width < window_width)
     {
-        m_hscroll_size = window_width - width - 1;        
+        m_hscroll_size = window_width - width - 1;
         if (m_hscroll_pos == -1)
             m_hscroll_pos = m_hscroll_size / 2;
         else if (center && !m_block_center)
@@ -370,7 +393,7 @@ void MapperRender::createMenu()
     if (m_icons.GetImageCount() > 0)
     {
         CMenuXP *pictures = new CMenuXP();
-        pictures->CreatePopupMenu();        
+        pictures->CreatePopupMenu();
         for (int i = 0, e = m_icons.GetImageCount(); i <= e; i++)
         {
             if (i == 0)

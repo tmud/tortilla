@@ -59,9 +59,6 @@
     <ClInclude Include="src\stdafx.h">
       <Filter>Main Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libs\common\autodel.h">
-      <Filter>External Common Libs</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\libs\common\crc32.h">
       <Filter>External Common Libs</Filter>
     </ClInclude>
@@ -120,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="src\MenuXP.cpp">
       <Filter>Support Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapper3.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

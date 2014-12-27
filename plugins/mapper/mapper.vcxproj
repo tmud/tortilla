@@ -98,7 +98,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libs\common\autodel.h" />
     <ClInclude Include="..\..\libs\common\crc32.h" />
     <ClInclude Include="..\..\libs\common\dataQueue.h" />
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
@@ -124,6 +123,7 @@
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
     <ClCompile Include="src\mapper.cpp" />
     <ClCompile Include="src\mapper2.cpp" />
+    <ClCompile Include="src\mapper3.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
     <ClCompile Include="src\mapperObjects.cpp" />
     <ClCompile Include="src\mapperProcessor.cpp" />

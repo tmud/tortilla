@@ -6,8 +6,6 @@
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
-    enum CursorType { CT_NONE = 0, CT_CURRENT_POS, CT_POSSIBLE_POS };
-    
     Room *m_room;
     RoomsLevel *m_level;
 
@@ -20,6 +18,8 @@ class MapperRender : public CWindowImpl<MapperRender>
     int  m_left, m_right, m_top, m_bottom;
     bool m_block_center;
 
+    int m_cursor;
+
     bool m_track_mouse;
 
     CBrush m_background;
@@ -30,8 +30,10 @@ class MapperRender : public CWindowImpl<MapperRender>
 
 public:
     MapperRender();
-    void renderByRoom(Room *room);
-    void renderByLevel(RoomsLevel *level);
+    void setCurrentRoom(Room *room);
+    void setCurrentLevel(RoomsLevel *level);
+    void lostPosition();
+    void setPossibleRooms(const std::vector<Room*>& rooms);
 
 private:
 	BEGIN_MSG_MAP(MapperRender)

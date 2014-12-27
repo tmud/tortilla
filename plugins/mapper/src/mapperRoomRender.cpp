@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "mapperRoomRender.h"
 #include "maskDC.h"
+#include "helpers.h"
 
 MapperRoomRender::MapperRoomRender(int room_size, int corridor_size) : m_size(room_size), m_csize(corridor_size), m_plist(NULL)
 {
@@ -200,7 +201,7 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
    else
      fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->color);
 
-   if (r->icon > 0)
+   if (m_plist && r->icon > 0)
    {
        int icons_count = m_plist->GetImageCount();
        if (r->icon <= icons_count)
@@ -421,7 +422,8 @@ bool MapperRoomRender::anotherZone(Room* r, int dir)
     Room *r2 = r->dirs[dir].next_room;
     if (!r2)
         return false;
-    return (r->level->getZone() == r2->level->getZone()) ? false : true;
+    RoomHelper rh(r);
+    return (rh.isSameZone(r2)) ? false : true;
 }
 
 void MapperRoomRender::renderRect(int x, int y, int dx, int dy)

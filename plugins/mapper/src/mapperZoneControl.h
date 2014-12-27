@@ -4,27 +4,25 @@
 
 class MapperZoneControl : public CDialogImpl<MapperZoneControl>
 {
-    /*CEditListBox m_list;
+    CEditListBox m_list;
     RECT rc_list;
     std::vector<Zone*> zones;
     HWND m_parent;
-    UINT m_msg;*/
+    UINT m_msg;
 
 public:
     enum { IDD = IDD_MAPPER_ZONES };
-    MapperZoneControl()// : m_parent(NULL), m_msg(0)
+    MapperZoneControl() : m_parent(NULL), m_msg(0)
     {
     }
-    
-   /* void roomChanged(const ViewMapPosition& pos)
+
+    void zoneChanged(Zone *newzone)
     {
-        if (!pos.level)
+        if (!newzone)
         {
             m_list.SelectItem(-1);
             return;
         }
-
-        Zone *newzone = pos.level->getZone();
         int current_zone = m_list.GetCurSel();
         if (current_zone == -1 || zones[current_zone] != newzone)
         {
@@ -41,10 +39,9 @@ public:
         int index = findZone(zone);
         if (index == -1)
         {
-            ZoneParams zp;
-            zone->getParams(&zp);
+            const tstring& name = zone->params().name;
             index = m_list.GetItemCount();
-            m_list.InsertItem(index, zp.name.c_str());
+            m_list.InsertItem(index, name.c_str());
             zones.push_back(zone);
         }
         if (selection == -1)
@@ -55,8 +52,7 @@ public:
     Zone* getCurrentZone()
     {
         int id = m_list.GetCurSel();
-        if (id == -1) return NULL;
-        return zones[id];
+        return (id == -1) ? NULL : zones[id];
     }
 
     void setNotifications(HWND wnd, UINT msg)
@@ -64,17 +60,15 @@ public:
         m_parent = wnd;
         m_msg = msg;
     }
-    */
 private:
-    /*int findZone(Zone *zone) 
+    int findZone(Zone *zone) 
     {
-        ZoneParams zp;
-        zone->getParams(&zp);
+        const tstring& name = zone->params().name;
         for (int i = 0, e = m_list.GetItemCount(); i<e; ++i)
         {
             tstring text;
             getItemText(i, &text);
-            if (!zp.name.compare(text))
+            if (!name.compare(text))
                 return i;
         }
         return -1;
@@ -88,7 +82,7 @@ private:
         WCHAR *textbuffer = (WCHAR*)buffer.getData();
         m_list.GetItemText(item, textbuffer, len);
         text->assign(textbuffer);
-    }*/
+    }
 
 private:
     BEGIN_MSG_MAP(MapperToolbar)
@@ -100,39 +94,39 @@ private:
 
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{
-       /* m_list.SubclassWindow(GetDlgItem(IDC_LIST_ZONES));
+        m_list.SubclassWindow(GetDlgItem(IDC_LIST_ZONES));
         RECT rc;
         GetWindowRect(&rc);
         m_list.GetWindowRect(&rc_list);
         rc_list.top -= rc.top;
-        m_list.SelectItem(-1);*/
+        m_list.SelectItem(-1);
         bHandled = FALSE;
         return 0;
 	}
 
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{
-        /*RECT rc, rc2;
+        RECT rc, rc2;
         GetClientRect(&rc);
         m_list.GetClientRect(&rc2);
         rc2.top = rc_list.top;
         rc2.right = rc.right;
         rc2.bottom = rc.bottom;
-        m_list.MoveWindow(&rc2);*/
+        m_list.MoveWindow(&rc2);
         bHandled = FALSE;
         return 0;
     }
 
     LRESULT OnSelectItem(UINT, WPARAM, LPARAM, BOOL&)
     {
-        //if (::IsWindow(m_parent))
-        //    ::SendMessage(m_parent, m_msg, 0, 0);
+        if (::IsWindow(m_parent) && m_msg)
+            ::SendMessage(m_parent, m_msg, 0, 0);
         return 0;
     }
 
     LRESULT OnChanged(int, LPNMHDR pnmh, BOOL&)
     {
-        /*NMEDITLIST *list = (NMEDITLIST*)pnmh;
+        NMEDITLIST *list = (NMEDITLIST*)pnmh;
         int item = list->iIndex;
         tstring text;
         getItemText(item, &text);
@@ -149,14 +143,13 @@ private:
         if (conflict)
         {
             MessageBox(L"Зона с таким именем уже существует!", L"Ошибка", MB_OK | MB_ICONERROR);
-            ZoneParams zp;
-            zones[item]->getParams(&zp);
-            m_list.SetItemText(item, zp.name.c_str());
+            const tstring& name = zones[item]->params().name;
+            m_list.SetItemText(item, name.c_str());
         }
         else
         {
             zones[item]->setName(text);
-        }*/
+        }
         return 0;
     }
 };

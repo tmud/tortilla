@@ -93,6 +93,7 @@ int init(lua_State *L)
         luaT_run(L, "checkMenu", "d", 1);
 
     m_mapper_window->loadMaps(L);
+    m_mapper_window->redrawPosition();
     return 0;
 }
 
@@ -236,7 +237,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
         break;
     case DLL_PROCESS_DETACH:
         delete m_mapper_window;
-        _Module.Term();        
+        _Module.Term();
         break;
     }
     return TRUE;

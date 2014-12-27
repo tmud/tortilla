@@ -58,8 +58,8 @@ struct RoomData
 #ifdef _DEBUG
     void printDebugData()
     {
-        WCHAR buf[16];
-        swprintf(buf, L"0x%x,0x%x\r\n", hash, dhash);
+        WCHAR buf[64];
+        swprintf(buf, L"-----\r\nhash: 0x%x, dhash: 0x%x\r\n", hash, dhash);
         OutputDebugString(buf);
         OutputDebugString(name.c_str());
         OutputDebugString(L"\r\n");
@@ -92,126 +92,98 @@ struct Room
     int special;                    // special internal value for algoritms (don't saved)
 };
 
-class RoomsArray
+class RoomsLevel
 {
 public:
-    RoomsArray(RoomsLevel *l);
-    ~RoomsArray() { 
-        struct{ void operator() (row* r) { delete r; } } del;
+    RoomsLevel(int level, Zone *parent_zone) : m_pZone(parent_zone), m_level(level), m_width(0), m_height(0)
+    {
+    }
+    ~RoomsLevel() 
+    {
+        struct{ void operator() (row* r) { delete r; }} del;
         std::for_each(rooms.begin(), rooms.end(), del);
     }
-    enum ExtendDir { EXTEND_LEFT = 0, EXTEND_RIGHT, EXTEND_TOP, EXTEND_BOTTOM };
-    void extend(ExtendDir d);
-    bool set(int x, int y, Room* room);
+    Zone* getZone() const { return m_pZone; }
+    int   getLevel() const { return m_level; }
+    int   getWidth() const { return m_width; }
+    int   getHeight() const { return m_height; }
+    bool  set(int x, int y, Room* room);
     Room* get(int x, int y) const;
-    int width() const;
-    int height() const;
-
+   
 private:
+    enum ExtendDir { EXTEND_LEFT = 0, EXTEND_RIGHT, EXTEND_TOP, EXTEND_BOTTOM };
+    void  extend(ExtendDir d, int count);
     bool checkCoords(int x, int y) const;
-    RoomsLevel *level;
     struct row 
     {   ~row()
-        { struct{ void operator() (Room* r) { delete r; } } del;
+        { struct{ void operator() (Room* r) { delete r; }} del;
           std::for_each(rr.begin(), rr.end(), del);
         }
         std::deque<Room*> rr;
     };
     std::deque<row*> rooms;
+    Zone* m_pZone;
+    int m_level;
+    int m_width;
+    int m_height;
 };
 
-/*struct RoomCursor
+struct RoomPosition
 {
-    RoomCursor();
-    void reset();
-    RoomsLevel*  getOffsetLevel() const;
-    Room* getOffsetRoom() const;
-    bool  setOffsetRoom(Room* room) const;
-    void  move(int dir);
-
-    Room* current_room;
-    Room* new_room;
-    int   x,y,z;
+    int x, y, level;
 };
 
-struct ViewMapPosition
+struct RoomCursor
 {
-    ViewMapPosition() { reset();  }
-    void reset() { room = NULL; level = NULL;cursor = 0; }
     Room* room;
-    RoomsLevel *level;
-    //int cursor;
-};*/
-
-struct RoomsLevelBox
-{
-    int left;
-    int right;
-    int top;
-    int bottom;
-};
-
-class RoomsLevel
-{
-    friend class Zone;
+    int x, y, level;
 public:
-    RoomsLevel(Zone* parent_zone, int level_floor) : rooms(this), zone(parent_zone), level(level_floor), m_invalidBoundingBox(true), m_changed(false)
-    {
-    }
-    ~RoomsLevel() {}
-
-    bool  addRoom(Room* r, int x, int y);
-    Room* detachRoom(int x, int y);
-    void  deleteRoom(int x, int y);
-    Room* getRoom(int x, int y) const { return rooms.get(x, y); }
-    Zone* getZone() const { return zone; }
-    int   getLevel() const { return level; }
-    int   width() const { return rooms.width(); }
-    int   height() const { return rooms.height();  }
-    const RoomsLevelBox& box();
-    bool  isChanged() const { return m_changed; }
-
+    RoomCursor(Room *r);
+    Room* move(int dir);
 private:
-    void calcBoundingBox();
-    void resizeLevel(int x, int y);
-    bool checkCoords(int x, int y) const;    
-    
-    
-    RoomsArray rooms;
-
-    Zone* zone;
-    int level;
-    RoomsLevelBox m_box;
-    bool m_invalidBoundingBox;
-    bool m_changed;
+    RoomsLevel* getOffsetLevel(int offset);
+    void updateCoords();
 };
 
 struct ZoneParams
 {
-    ZoneParams() : minl(0), maxl(0), empty(true) {}
-    int minl;
-    int maxl;
-    bool empty;
+    ZoneParams() : width(0), height(0), minlevel(-1), maxlevel(-1) {}
     tstring name;
-    tstring original_name;
+    int width;
+    int height;
+    int minlevel;
+    int maxlevel;
+    bool isEmpty() const { return (minlevel == -1 && maxlevel == -1) ? true : false; }
 };
 
 class Zone
 {
 public:
-    Zone(const tstring& zonename) : start_index(0), m_name(zonename), m_original_name(zonename) {}
-    ~Zone() { autodel<RoomsLevel> z(m_levels); }
-    RoomsLevel* getLevel(int level, bool create_if_notexist);
+    Zone(const tstring& zonename) : m_changed(false) {
+        m_params.name = zonename;
+    }
+    ~Zone() { lvls_iterator it = m_levels.begin(), it_end = m_levels.end();
+    for (; it != it_end; ++it) delete it->second;
+    }
+    void  setName(const tstring& newname) { m_params.name = newname; m_changed = true; }
+    bool  isChanged() const { return m_changed; }
+    const ZoneParams& params() const { return m_params; }
+    bool  isEmpty() const { return m_params.isEmpty(); }
+
+    bool  addRoom(const RoomPosition& pos, Room* room);
+    Room* getRoom(const RoomPosition& pos);
+    RoomsLevel* getLevel(int level);
+    RoomsLevel* getLevelAlways(int level);
     RoomsLevel* getDefaultLevel();
-    int width() const;
-    int height() const;
-    void getParams(ZoneParams* params) const;
-    void resizeLevels(int x, int y);
-    void setName(const tstring& newname) { m_name = newname; }
-    bool isChanged() const;
+
+    //void resizeLevels(int x, int y);
+
 private:
-    std::vector<RoomsLevel*> m_levels;
-    int start_index;
-    tstring m_name;
-    tstring m_original_name;
+    RoomsLevel* getl(int level, bool create_if_notexist);
+
+private:
+    std::map<int, RoomsLevel*> m_levels;
+    typedef std::map<int, RoomsLevel*>::iterator lvls_iterator;
+    bool m_changed;
+    ZoneParams m_params;
 };
