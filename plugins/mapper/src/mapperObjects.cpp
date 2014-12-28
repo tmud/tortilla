@@ -65,7 +65,7 @@ void RoomCursor::updateCoords()
     level = room->level->getLevel();
 }
 
-void RoomsLevel::extend(ExtendDir d, int count)
+/*void RoomsLevel::extend(ExtendDir d, int count)
 {
     assert(count > 0);
     if (rooms.empty())
@@ -124,12 +124,15 @@ void RoomsLevel::extend(ExtendDir d, int count)
         m_height++;
     break;
     }
-}
+}*/
 
 bool RoomsLevel::set(int x, int y, Room* room)
 {
-    if (!checkCoords(x, y))
+    if (!check(x, y))
+    {
+        assert(false);
         return false;
+    }
     if (room)
     {
         if (!rooms[y]->rr[x])
@@ -147,16 +150,16 @@ bool RoomsLevel::set(int x, int y, Room* room)
 
 Room* RoomsLevel::get(int x, int y) const
 {
-    if (!checkCoords(x, y))
+    if (!check(x, y))
         return NULL;
     return rooms[y]->rr[x];
 }
 
-bool RoomsLevel::checkCoords(int x, int y) const
-{
-    return (y >= 0 && y < m_height && x >= 0 && x < m_width) ? true : false;
+int RoomsLevel::getWidth() const { return m_pZone->getWidth(); }
+int RoomsLevel::getHeight() const { return m_pZone->getHeight(); }
+bool RoomsLevel::check(int x, int y) const {
+    return (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) ? true : false;
 }
-
 
 /*const RoomsLevelBox& RoomsLevel::box()
 {
@@ -295,16 +298,7 @@ void RoomsLevel::resizeLevel(int x, int y)
 
 RoomsLevel* Zone::getDefaultLevel()
 {
-    // find maximized level of the zone
-    int area = 0; int index = -1;
-    for (int i = 0, e = m_levels.size(); i < e; ++i)
-    {
-        RoomsLevel *level = m_levels[i];
-        int new_area = level->getWidth() * level->getHeight();
-        if (new_area > area) { area = new_area; index = i; }
-    }
-    if (index == -1) index = 0;
-    return m_levels[index];
+    return m_levels[0];
 }
 
 /*void Zone::resizeLevels(int x, int y)
@@ -313,18 +307,20 @@ RoomsLevel* Zone::getDefaultLevel()
         m_levels[i]->resizeLevel(x, y);
 }*/
 
-bool Zone::addRoom(const RoomPosition& pos, Room* room)
+bool Zone::addRoom(int x, int y, int level, Room* room)
 {
-    RoomsLevel *level = getl(pos.level, true);
-    bool result = level->set(pos.x, pos.y, room);
+    RoomsLevel *rlevel = getl(level, true);
+
+
+    bool result = rlevel->set(x, y, room);
     assert(result);
     return result;
 }
 
-Room* Zone::getRoom(const RoomPosition& pos)
+Room* Zone::getRoom(int x, int y, int level)
 {
-    RoomsLevel *level = getl(pos.level, false);
-    return (level) ? level->get(pos.x, pos.y) : NULL;    
+    RoomsLevel *rlevel = getl(level, false);
+    return (rlevel) ? rlevel->get(x, y) : NULL;
 }
 
 RoomsLevel* Zone::getLevel(int level)

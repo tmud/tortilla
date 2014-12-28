@@ -90,6 +90,7 @@ void MapperRender::onPaint()
     mdc.FillRect(&pos, m_background);
 
     if (!m_level) return;
+
     int x = getRenderX();
     int y = getRenderY();
      
@@ -130,8 +131,10 @@ void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
     RECT rc;
     GetClientRect(&rc);
 
-    int width = level->getWidth();
-    int height = level->getHeight();
+    Zone *zone = level->getZone();
+    int width = zone->getWidth();
+    int height = zone->getHeight();
+
     for (int x=0; x<width; ++x)
     {
         for (int y=0; y<height; ++y)
@@ -183,7 +186,7 @@ Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
 
 void MapperRender::onHScroll(DWORD position)
 {
-    /*if (m_hscroll_pos < 0) return;
+    if (m_hscroll_pos < 0) return;
     m_block_center = true;
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
@@ -208,12 +211,12 @@ void MapperRender::onHScroll(DWORD position)
     if (m_hscroll_pos < 0) m_hscroll_pos = 0;
     else if (m_hscroll_pos > m_hscroll_size) m_hscroll_pos = m_hscroll_size;    
     SetScrollPos(SB_HORZ, m_hscroll_pos);
-    Invalidate();*/
+    Invalidate();
 }
 
 void MapperRender::onVScroll(DWORD position)
 {
-    /*if (m_vscroll_pos < 0) return;
+    if (m_vscroll_pos < 0) return;
     m_block_center = true;
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
@@ -238,7 +241,7 @@ void MapperRender::onVScroll(DWORD position)
     if (m_vscroll_pos < 0) m_vscroll_pos = 0;
     else if (m_vscroll_pos > m_vscroll_size) m_vscroll_pos = m_vscroll_size;
     SetScrollPos(SB_VERT, m_vscroll_pos);
-    Invalidate();*/
+    Invalidate();
 }
 
 void MapperRender::onSize()
@@ -263,14 +266,16 @@ int MapperRender::getRenderY() const
 
 void MapperRender::updateScrollbars(bool center)
 {
-    /*char buffer[64];
+#ifdef _DEBUG
+    char buffer[64];
     int vmin = 0; int vmax = 0;
     GetScrollRange(SB_VERT, &vmin, &vmax);
     int hmin = 0; int hmax = 0;
     GetScrollRange(SB_HORZ, &hmin, &hmax);
     sprintf(buffer, "vpos[%d-%d] = %d(%d), hpos[%d-%d] = %d(%d)\r\n", vmin, vmax, GetScrollPos(SB_VERT), m_vscroll_pos,
         hmin, hmax, GetScrollPos(SB_HORZ), m_hscroll_pos);
-    OutputDebugStringA(buffer);*/
+    OutputDebugStringA(buffer);
+#endif
     
    /* RoomsLevel *level = viewpos.level;
     if (!level) return;
@@ -362,7 +367,7 @@ void MapperRender::mouseLeave()
 
 void MapperRender::mouseRightButtonDown()
 {
-    /*POINT pt; GetCursorPos(&pt);
+    POINT pt; GetCursorPos(&pt);
     int cursor_x = pt.x; 
     int cursor_y = pt.y;
     ScreenToClient(&pt);
@@ -380,12 +385,11 @@ void MapperRender::mouseRightButtonDown()
     m_menu.SetItemState(MENU_NEWZONE_DOWN, rh.isExplored(RD_DOWN));
 
     m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
-    */
 }
 
 void MapperRender::createMenu()
 {
-   /* m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
+    m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
     HANDLE hBmp = LoadImage(NULL, L"plugins\\mapper.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     if (hBmp)
         m_icons.Add((HBITMAP)hBmp, RGB(128, 0, 128));
@@ -417,12 +421,11 @@ void MapperRender::createMenu()
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_UP, L"вверх"));
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_DOWN, L"вниз"));
     m_menu.AppendODPopup(newzone, new CMenuXPText(0, L"Начать новую зону"));
-    */
 }
 
 bool MapperRender::runMenuPoint(int id)
 {    
-    /*if (id == MENU_SETCOLOR)
+    if (id == MENU_SETCOLOR)
     {
         COLORREF color = m_menu_tracked_room->color;
         if (!m_menu_tracked_room->use_color)
@@ -456,9 +459,8 @@ bool MapperRender::runMenuPoint(int id)
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
         RoomDir dir = (RoomDir)(id - MENU_NEWZONE_NORTH);
-        m_mapper_window->newZone(m_menu_tracked_room, dir);
+        //todo m_mapper_window->newZone(m_menu_tracked_room, dir);
         return true;
-    }*/
-    
+    }
     return false;
 }

@@ -18,13 +18,13 @@ struct RoomData
     bool equal(const RoomData& rd) const
     {
         assert(hash && rd.hash);
-        return (hash == rd.hash && dhash == rd.dhash) ? true : false;
+        return (hash && dhash && hash == rd.hash && dhash == rd.dhash) ? true : false;
     }
 
     bool similar(const RoomData& rd) const
     {
         assert(hash && rd.hash);
-        return (hash == rd.hash) ? true : false;
+        return (hash && hash == rd.hash) ? true : false;
     }
 
     bool compare(const RoomData& rd) const
@@ -95,7 +95,7 @@ struct Room
 class RoomsLevel
 {
 public:
-    RoomsLevel(int level, Zone *parent_zone) : m_pZone(parent_zone), m_level(level), m_width(0), m_height(0)
+    RoomsLevel(int level, Zone *parent_zone) : m_pZone(parent_zone), m_level(level)
     {
     }
     ~RoomsLevel() 
@@ -105,15 +105,15 @@ public:
     }
     Zone* getZone() const { return m_pZone; }
     int   getLevel() const { return m_level; }
-    int   getWidth() const { return m_width; }
-    int   getHeight() const { return m_height; }
     bool  set(int x, int y, Room* room);
     Room* get(int x, int y) const;
-   
+    int   getWidth() const;
+    int   getHeight() const;
+
 private:
-    enum ExtendDir { EXTEND_LEFT = 0, EXTEND_RIGHT, EXTEND_TOP, EXTEND_BOTTOM };
-    void  extend(ExtendDir d, int count);
-    bool checkCoords(int x, int y) const;
+    //enum ExtendDir { EXTEND_LEFT = 0, EXTEND_RIGHT, EXTEND_TOP, EXTEND_BOTTOM };
+    //void extend(ExtendDir d, int count);
+    bool check(int x, int y) const;
     struct row 
     {   ~row()
         { struct{ void operator() (Room* r) { delete r; }} del;
@@ -124,13 +124,6 @@ private:
     std::deque<row*> rooms;
     Zone* m_pZone;
     int m_level;
-    int m_width;
-    int m_height;
-};
-
-struct RoomPosition
-{
-    int x, y, level;
 };
 
 struct RoomCursor
@@ -170,11 +163,14 @@ public:
     const ZoneParams& params() const { return m_params; }
     bool  isEmpty() const { return m_params.isEmpty(); }
 
-    bool  addRoom(const RoomPosition& pos, Room* room);
-    Room* getRoom(const RoomPosition& pos);
+    bool  addRoom(int x, int y, int level, Room* room);
+    Room* getRoom(int x, int y, int level);
     RoomsLevel* getLevel(int level);
     RoomsLevel* getLevelAlways(int level);
     RoomsLevel* getDefaultLevel();
+
+    int getWidth() const { return m_params.width; }
+    int getHeight() const { return m_params.height; }
 
     //void resizeLevels(int x, int y);
 

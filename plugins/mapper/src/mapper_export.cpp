@@ -8,6 +8,7 @@ bool map_active = false;
 PropertiesMapper m_props;
 luaT_window m_parent_window;
 Mapper* m_mapper_window = NULL;
+MapperProcessor* m_mapper_processor = NULL;
 //-------------------------------------------------------------------------
 int get_name(lua_State *L) 
 {
@@ -83,7 +84,7 @@ int init(lua_State *L)
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isvisible();
 
-    m_mapper_window = new Mapper(&m_props);
+    m_mapper_window = new Mapper();
     RECT rc; ::GetClientRect(parent, &rc);
     if (rc.right == 0) rc.right = 400; // requeires for splitter inside map window (if parent window hidden)
     HWND res = m_mapper_window->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);  
@@ -92,15 +93,16 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    m_mapper_window->loadMaps(L);
-    m_mapper_window->redrawPosition();
+    m_mapper_processor = new MapperProcessor(&m_props);
+    m_mapper_processor->setCallback(m_mapper_window);
+    m_mapper_processor->loadMaps(L);
+    m_mapper_processor->selectDefault();
     return 0;
 }
 
 int release(lua_State *L)
 {
-    m_mapper_window->saveMaps(L);
-           
+    m_mapper_processor->saveMaps(L);
     xml::node s("mapper");
     s.set("darkroom/label", m_props.dark_room);
     s.set("name/begin", m_props.begin_name);
@@ -150,7 +152,7 @@ int menucmd(lua_State *L)
         if (ms.DoModal() == IDOK)
         {
             m_props = props;
-            m_mapper_window->updateProps();
+            m_mapper_processor->updateProps();
         }
     }
     if (id == 1)
@@ -190,7 +192,7 @@ int stream(lua_State *L)
     {
         const char *stream = lua_tostring(L, -1);
         const wchar_t *wstream = convert_utf8_to_wide (stream);
-        m_mapper_window->processNetworkData(wstream, wcslen(wstream));
+        m_mapper_processor->processNetworkData(wstream, wcslen(wstream));
     }    
     return 1;
 }
@@ -201,7 +203,7 @@ int gamecmd(lua_State *L)
     {
         const char *cmd = lua_tostring(L, -1);
         const wchar_t *wcmd = convert_utf8_to_wide(cmd);
-        m_mapper_window->processCmd(wcmd, wcslen(wcmd));
+        m_mapper_processor->processCmd(wcmd, wcslen(wcmd));
     }
     return 1;
 }
@@ -236,6 +238,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
         _Module.Init(NULL, hModule);
         break;
     case DLL_PROCESS_DETACH:
+        delete m_mapper_processor;
         delete m_mapper_window;
         _Module.Term();
         break;

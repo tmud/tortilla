@@ -1,5 +1,5 @@
 #pragma once
-#include "mapperProcessor.h"
+#include "mapperParser.h"
 
 class MapperPrompt
 {
@@ -13,4 +13,3 @@ private:
     MapperKeyElement ep;       // end prompt
     MapperDataQueue m_network_buffer;
 };
-

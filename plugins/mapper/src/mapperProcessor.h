@@ -1,60 +1,62 @@
 #pragma once
 
-#include "properties.h"
 #include "mapperObjects.h"
+#include "mapperParser.h"
+#include "mapperPrompt.h"
+#include "mapperHashTable.h"
+#include "mapperRender.h"
 
-class MapperKeyElement
+class MapperActions
 {
 public:
-    MapperKeyElement();
-    bool init(const tstring& macro);
-    void reset();
-    bool findData(const WCHAR* data, int datalen);
-
-    void truncate() { key = 0; }
-    int  getKey() const { return key; }
-    int  getKeyLen() const { return keylen; }
-    int  getAfterKey() const { return key + keylen; }
-    bool isKeyFull() const {
-        int size = keydata.size();
-        return (size > 0 && keylen == size) ? true : false;
-    }
-
-private:
-    tstring keydata;
-    int  key;
-    int  keylen;
-};
-
-class MapperDataQueue
-{
-public:
-    void write(const WCHAR* data, int datalen)  {    buffer.write(data, datalen * sizeof(WCHAR));  }
-    void truncate(int datalen) {  buffer.truncate(datalen * sizeof(WCHAR)); }
-    void clear() {  buffer.clear(); }
-    int getDataLen() const  {  return buffer.getSize() / sizeof(WCHAR); } 
-    const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
-private:
-    DataQueue buffer;
+    virtual void setCurrentRoom(Room *room) = 0;
+    virtual void setCurrentLevel(RoomsLevel *level) = 0;
+    virtual void lostPosition() = 0;
+    virtual void setPossibleRooms(const std::vector<Room*>& rooms) = 0;
+    virtual void addNewZone(Zone *zone) = 0;
 };
 
 class MapperProcessor
 {
 public:
-    MapperProcessor();
-    void updateProps(PropertiesMapper *props);
-    bool processNetworkData(const WCHAR* text, int textlen, RoomData* result);
+    MapperProcessor(PropertiesMapper *props);
+    ~MapperProcessor();
+    void setCallback(MapperActions* actions);
+    void processNetworkData(const wchar_t* text, int text_len);
+    void processCmd(const wchar_t* text, int text_len);
+
+    void updateProps();
+    void saveMaps(lua_State *L);
+    void loadMaps(lua_State *L);
+    void selectDefault();
 
 private:
-    bool searchData(const WCHAR* data, int datalen, RoomData* result);
-    void checkBufferLimit();
-    MapperDataQueue  m_network_buffer;
-    MapperKeyElement bn;        // begin name
-    MapperKeyElement bn2;
-    MapperKeyElement en;        // end name
-    MapperKeyElement bd;        // begin description
-    MapperKeyElement ed;        // end description
-    MapperKeyElement be;        // begin exits
-    MapperKeyElement ee;        // end exits
-    tstring dark_cs;            // dark room compare string
+    void processData(const RoomData& room);
+    Zone* createZone();
+    Room* createRoom(const RoomData& room);
+    void  deleteRoom(Room* room);
+    int   revertDir(int dir);
+    void  popDir();
+    void  setCurrentRoom(Room *room);
+
+private:
+    PropertiesMapper *m_propsData;
+    MapperActions* m_pActions;
+
+    // Helper to parse incoming data and find rooms
+    MapperParser    m_parser;
+    MapperPrompt    m_prompt;
+    MapperHashTable m_table;
+
+    // Order for commands
+    std::list<int> m_path;
+    int m_lastDir;
+    Room *m_pLastRoom;
+
+    // Current position
+    Room *m_pCurrentRoom;
+    RoomsLevel *m_pCurrentLevel;
+
+    // Zones list
+    std::vector<Zone*> m_zones;
 };
