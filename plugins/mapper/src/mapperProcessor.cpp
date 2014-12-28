@@ -56,11 +56,12 @@ void MapperProcessor::processData(const RoomData& room)
 {
     std::vector<Room*> vr;
     m_table.findRooms(room, &vr);
-
     int count = vr.size();
+
+    // нет ни одной подход€щей комнаты 
     if (count == 0)
     {
-        /*Room* new_room = createRoom(room);
+        Room* new_room = createRoom(room);
         if (m_pCurrentRoom && m_lastDir != -1)
         {
             Room* next = m_pCurrentRoom->dirs[m_lastDir].next_room;
@@ -70,8 +71,8 @@ void MapperProcessor::processData(const RoomData& room)
                 new_room->level = m_pCurrentRoom->level;
                 setCurrentRoom(new_room);
                 return;
-            }
-        }*/
+            }            
+        }
 
         // неизвестна последн€€ комната или направление или мультивыход
 
@@ -180,7 +181,7 @@ Zone* MapperProcessor::createZone()
         bool found = false;
         for (int j = 0, e=m_zones.size(); j<e; ++j)
         {
-            const tstring& name = m_zones[j]->params().name;
+            const tstring& name = m_zones[j]->getName();
             if (!name.compare(buffer)) { found = true; break; }
         }
         if (!found) break;

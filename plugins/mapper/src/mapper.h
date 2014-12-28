@@ -36,7 +36,6 @@ private: // actions from processor
     void addNewZone(Zone *zone) {}
 
 private:
-    // Elements on the screen (buttons etc).
     MapperToolbar m_toolbar;
     CSplitterWindowExT<true, 1, 3> m_vSplitter;
     MapperZoneControl m_zones_control;

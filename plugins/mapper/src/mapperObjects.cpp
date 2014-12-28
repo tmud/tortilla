@@ -2,7 +2,7 @@
 #include "mapperObjects.h"
 const utf8* RoomDirName[] = { "north", "south", "west", "east", "up", "down" };
 
-RoomCursor::RoomCursor(Room *r) : room(r), x(-1), y(-1), level(0) { assert(room); if (room) updateCoords(); }
+/*RoomCursor::RoomCursor(Room *r) : room(r), x(-1), y(-1), level(0) { assert(room); if (room) updateCoords(); }
 Room* RoomCursor::move(int dir)
 {
     if (!room)
@@ -63,68 +63,94 @@ void RoomCursor::updateCoords()
     x = room->x;
     y = room->y;
     level = room->level->getLevel();
+}*/
+
+RoomsLevel::RoomsLevel(int width, int height, int level, Zone *parent_zone) : m_pZone(parent_zone), m_level(level)
+{
+    setsize(width, height);
+}
+RoomsLevel::~RoomsLevel()
+{
+    struct{ void operator() (row* r) { delete r; } } del;
+    std::for_each(rooms.begin(), rooms.end(), del);
 }
 
-/*void RoomsLevel::extend(ExtendDir d, int count)
+void RoomsLevel::extend(RoomDir d, int count)
 {
-    assert(count > 0);
+    if (d == RD_UP || d == RD_DOWN || count <= 0)
+    {
+        assert(false);
+        return;
+    }
     if (rooms.empty())
     {
-        for (int i = 0; i < count; ++i) {
-        row *r = new row;
-        rooms.push_front(r);
+        switch (d)
+        {
+            case RD_WEST:
+            case RD_EAST:
+                setsize(count, 1);
+                break;
+            case RD_NORTH:
+            case RD_SOUTH:
+                setsize(1, count);
+            break;
         }
+        return;
     }
     switch (d)
     {
-    case EXTEND_LEFT:
-        for (int y=0, e=rooms.size(); y<e; ++y)
-        {
-            std::deque<Room*> &d = rooms[y]->rr;
-            for (int i = 0; i < count; ++i)
-                d.push_front(NULL);
-        }
-        for (int x = 0, e = m_width; x < e; ++x) {
-        for (int y = 0, ye = m_height; y < ye; ++y) {
+    case RD_WEST:
+        for (int x = 0, e = getWidth(); x < e; ++x) {
+        for (int y = 0, ye = getHeight(); y < ye; ++y) {
         Room *room = rooms[y]->rr[x];
         if (room) { room->x += count; }
         }}
-        m_width++;
-    break;
-    case EXTEND_RIGHT:
         for (int y = 0, e = rooms.size(); y < e; ++y)
         {
-            std::deque<Room*> &d = rooms[y]->rr;
-            for (int i = 0; i < count; ++i)
-                d.push_back(NULL);
+            std::deque<Room*> &rr = rooms[y]->rr;
+            rr.insert(rr.begin(), count, NULL);
         }
-        m_width++;
     break;
-    case EXTEND_TOP:
-        for (int i = 0; i < count; ++i)
+    case RD_EAST:
+        for (int y = 0, e = rooms.size(); y < e; ++y)
         {
-            row *r = new row;
-            r->rr.resize(m_width, NULL);
-            rooms.push_front(r);
+            std::deque<Room*> &rr = rooms[y]->rr;
+            rr.insert(rr.end(), count, NULL);
         }
-        for (int x = 0, e = m_width; x < e; ++x) {
-        for (int y = count, ye = m_height; y < ye; ++y) {
+    break;
+    case RD_NORTH:
+        for (int x = 0, e = getWidth(); x < e; ++x) {
+        for (int y = count, ye = getHeight(); y < ye; ++y) {
            Room *room = rooms[y]->rr[x];
            if (room) { room->y += count; }
         }}
-        m_height++;
-    break;
-    case EXTEND_BOTTOM:
         for (int i = 0; i < count; ++i)
         {
             row *r = new row;
-            r->rr.resize(m_width, NULL);
+            r->rr.resize(getWidth(), NULL);
+            rooms.push_front(r);
+        }
+    break;
+    case RD_SOUTH:
+        for (int i = 0; i < count; ++i)
+        {
+            row *r = new row;
+            r->rr.resize(getWidth(), NULL);
             rooms.push_back(r);
         }
-        m_height++;
     break;
     }
-}*/
+}
+
+void RoomsLevel::setsize(int dx, int dy)
+{
+    for (int i = 0; i < dy; ++i) 
+    {
+        row *r = new row;
+        r->rr.resize(dx, NULL);
+        rooms.push_front(r);
+    }
+}
 
 bool RoomsLevel::set(int x, int y, Room* room)
 {
@@ -135,7 +161,7 @@ bool RoomsLevel::set(int x, int y, Room* room)
     }
     if (room)
     {
-        if (!rooms[y]->rr[x])
+        if (rooms[y]->rr[x])
         {
             assert(false);
             return false;
@@ -157,7 +183,8 @@ Room* RoomsLevel::get(int x, int y) const
 
 int RoomsLevel::getWidth() const { return m_pZone->getWidth(); }
 int RoomsLevel::getHeight() const { return m_pZone->getHeight(); }
-bool RoomsLevel::check(int x, int y) const {
+bool RoomsLevel::check(int x, int y) const 
+{
     return (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) ? true : false;
 }
 
@@ -293,7 +320,6 @@ void RoomsLevel::resizeLevel(int x, int y)
     if (room) { room->x += mx; room->y += my; }
     }}
 }
-
 */
 
 RoomsLevel* Zone::getDefaultLevel()
@@ -317,26 +343,27 @@ bool Zone::addRoom(int x, int y, int level, Room* room)
     return result;
 }
 
-Room* Zone::getRoom(int x, int y, int level)
+/*Room* Zone::getRoom(int x, int y, int level)
 {
     RoomsLevel *rlevel = getl(level, false);
     return (rlevel) ? rlevel->get(x, y) : NULL;
-}
+}*/
+
 
 RoomsLevel* Zone::getLevel(int level)
 {
     return getl(level, false);
 }
 
-RoomsLevel* Zone::getLevelAlways(int level)
+/*RoomsLevel* Zone::getLevelAlways(int level)
 {
     return getl(level, true);
-}
+}*/
 
 RoomsLevel* Zone::getl(int level, bool create_if_notexist)
 {
-    lvls_iterator it = m_levels.find(level);    
-    if (it == m_levels.end())        
+    lvls_iterator it = m_levels.find(level);
+    if (it == m_levels.end())
     {
         if (!create_if_notexist)
             return NULL;
@@ -347,8 +374,10 @@ RoomsLevel* Zone::getl(int level, bool create_if_notexist)
     return it->second;
 }
 
-
-
+void Zone::extend(RoomDir d, int count)
+{
+    
+}
 
 /*RoomCursor::RoomCursor() { reset(); }
 void RoomCursor::reset() { current_room = NULL; new_room = NULL; x=y=z=0; }

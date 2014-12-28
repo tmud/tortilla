@@ -39,7 +39,7 @@ public:
         int index = findZone(zone);
         if (index == -1)
         {
-            const tstring& name = zone->params().name;
+            const tstring& name = zone->getName();
             index = m_list.GetItemCount();
             m_list.InsertItem(index, name.c_str());
             zones.push_back(zone);
@@ -63,7 +63,7 @@ public:
 private:
     int findZone(Zone *zone) 
     {
-        const tstring& name = zone->params().name;
+        const tstring& name = zone->getName();
         for (int i = 0, e = m_list.GetItemCount(); i<e; ++i)
         {
             tstring text;
@@ -143,7 +143,7 @@ private:
         if (conflict)
         {
             MessageBox(L"Зона с таким именем уже существует!", L"Ошибка", MB_OK | MB_ICONERROR);
-            const tstring& name = zones[item]->params().name;
+            const tstring& name = zones[item]->getName();
             m_list.SetItemText(item, name.c_str());
         }
         else

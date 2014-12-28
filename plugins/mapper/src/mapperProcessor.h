@@ -24,11 +24,10 @@ public:
     void setCallback(MapperActions* actions);
     void processNetworkData(const wchar_t* text, int text_len);
     void processCmd(const wchar_t* text, int text_len);
-
     void updateProps();
+    void selectDefault();
     void saveMaps(lua_State *L);
     void loadMaps(lua_State *L);
-    void selectDefault();
 
 private:
     void processData(const RoomData& room);
