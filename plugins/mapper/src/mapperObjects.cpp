@@ -75,83 +75,6 @@ RoomsLevel::~RoomsLevel()
     std::for_each(rooms.begin(), rooms.end(), del);
 }
 
-void RoomsLevel::extend(RoomDir d, int count)
-{
-    if (d == RD_UP || d == RD_DOWN || count <= 0)
-    {
-        assert(false);
-        return;
-    }
-    if (rooms.empty())
-    {
-        switch (d)
-        {
-            case RD_WEST:
-            case RD_EAST:
-                setsize(count, 1);
-                break;
-            case RD_NORTH:
-            case RD_SOUTH:
-                setsize(1, count);
-            break;
-        }
-        return;
-    }
-    switch (d)
-    {
-    case RD_WEST:
-        for (int x = 0, e = getWidth(); x < e; ++x) {
-        for (int y = 0, ye = getHeight(); y < ye; ++y) {
-        Room *room = rooms[y]->rr[x];
-        if (room) { room->x += count; }
-        }}
-        for (int y = 0, e = rooms.size(); y < e; ++y)
-        {
-            std::deque<Room*> &rr = rooms[y]->rr;
-            rr.insert(rr.begin(), count, NULL);
-        }
-    break;
-    case RD_EAST:
-        for (int y = 0, e = rooms.size(); y < e; ++y)
-        {
-            std::deque<Room*> &rr = rooms[y]->rr;
-            rr.insert(rr.end(), count, NULL);
-        }
-    break;
-    case RD_NORTH:
-        for (int x = 0, e = getWidth(); x < e; ++x) {
-        for (int y = count, ye = getHeight(); y < ye; ++y) {
-           Room *room = rooms[y]->rr[x];
-           if (room) { room->y += count; }
-        }}
-        for (int i = 0; i < count; ++i)
-        {
-            row *r = new row;
-            r->rr.resize(getWidth(), NULL);
-            rooms.push_front(r);
-        }
-    break;
-    case RD_SOUTH:
-        for (int i = 0; i < count; ++i)
-        {
-            row *r = new row;
-            r->rr.resize(getWidth(), NULL);
-            rooms.push_back(r);
-        }
-    break;
-    }
-}
-
-void RoomsLevel::setsize(int dx, int dy)
-{
-    for (int i = 0; i < dy; ++i) 
-    {
-        row *r = new row;
-        r->rr.resize(dx, NULL);
-        rooms.push_front(r);
-    }
-}
-
 bool RoomsLevel::set(int x, int y, Room* room)
 {
     if (!check(x, y))
@@ -171,6 +94,7 @@ bool RoomsLevel::set(int x, int y, Room* room)
         room->level = this;
     }    
     rooms[y]->rr[x] = room;
+    m_pZone->setChanged(true);
     return true;
 }
 
@@ -181,12 +105,88 @@ Room* RoomsLevel::get(int x, int y) const
     return rooms[y]->rr[x];
 }
 
-int RoomsLevel::getWidth() const { return m_pZone->getWidth(); }
-int RoomsLevel::getHeight() const { return m_pZone->getHeight(); }
-bool RoomsLevel::check(int x, int y) const 
+void RoomsLevel::extend(RoomDir d, int count)
 {
-    return (x >= 0 && x < getWidth() && y >= 0 && y < getHeight()) ? true : false;
+    if (d == RD_UP || d == RD_DOWN || count <= 0)
+    {
+        assert(false);
+        return;
+    }
+    if (rooms.empty())
+    {
+        switch (d)
+        {
+        case RD_WEST:
+        case RD_EAST:
+            setsize(count, 1);
+            break;
+        case RD_NORTH:
+        case RD_SOUTH:
+            setsize(1, count);
+            break;
+        default:
+            assert(false);
+        }
+        return;
+    }
+    switch (d)
+    {
+    case RD_WEST:
+        for (int x = 0, e = getWidth(); x < e; ++x) {
+            for (int y = 0, ye = getHeight(); y < ye; ++y) {
+                Room *room = rooms[y]->rr[x];
+                if (room) { room->x += count; }
+            }
+        }
+        for (int y = 0, e = rooms.size(); y < e; ++y)
+        {
+            std::deque<Room*> &rr = rooms[y]->rr;
+            rr.insert(rr.begin(), count, NULL);
+        }
+        break;
+    case RD_EAST:
+        for (int y = 0, e = rooms.size(); y < e; ++y)
+        {
+            std::deque<Room*> &rr = rooms[y]->rr;
+            rr.insert(rr.end(), count, NULL);
+        }
+        break;
+    case RD_NORTH:
+        for (int x = 0, e = getWidth(); x < e; ++x) {
+            for (int y = count, ye = getHeight(); y < ye; ++y) {
+                Room *room = rooms[y]->rr[x];
+                if (room) { room->y += count; }
+            }
+        }
+        for (int i = 0; i < count; ++i)
+        {
+            row *r = new row;
+            r->rr.resize(getWidth(), NULL);
+            rooms.push_front(r);
+        }
+        break;
+    case RD_SOUTH:
+        for (int i = 0; i < count; ++i)
+        {
+            row *r = new row;
+            r->rr.resize(getWidth(), NULL);
+            rooms.push_back(r);
+        }
+        break;
+    }
 }
+
+void RoomsLevel::setsize(int dx, int dy)
+{
+    assert(dx && dy);
+    for (int i = 0; i < dy; ++i)
+    {
+        row *r = new row;
+        r->rr.resize(dx, NULL);
+        rooms.push_front(r);
+    }
+}
+
 
 /*const RoomsLevelBox& RoomsLevel::box()
 {
@@ -322,10 +322,7 @@ void RoomsLevel::resizeLevel(int x, int y)
 }
 */
 
-RoomsLevel* Zone::getDefaultLevel()
-{
-    return m_levels[0];
-}
+
 
 /*void Zone::resizeLevels(int x, int y)
 {
@@ -333,7 +330,7 @@ RoomsLevel* Zone::getDefaultLevel()
         m_levels[i]->resizeLevel(x, y);
 }*/
 
-bool Zone::addRoom(int x, int y, int level, Room* room)
+/*bool Zone::addRoom(int x, int y, int level, Room* room)
 {
     RoomsLevel *rlevel = getl(level, true);
 
@@ -341,7 +338,7 @@ bool Zone::addRoom(int x, int y, int level, Room* room)
     bool result = rlevel->set(x, y, room);
     assert(result);
     return result;
-}
+}*/
 
 /*Room* Zone::getRoom(int x, int y, int level)
 {
@@ -350,33 +347,71 @@ bool Zone::addRoom(int x, int y, int level, Room* room)
 }*/
 
 
-RoomsLevel* Zone::getLevel(int level)
-{
-    return getl(level, false);
-}
-
 /*RoomsLevel* Zone::getLevelAlways(int level)
 {
     return getl(level, true);
 }*/
 
-RoomsLevel* Zone::getl(int level, bool create_if_notexist)
+/*RoomsLevel* Zone::getl(int level, bool create_if_notexist)
 {
     lvls_iterator it = m_levels.find(level);
     if (it == m_levels.end())
     {
         if (!create_if_notexist)
             return NULL;
-        RoomsLevel *new_level = new RoomsLevel(level, this);
+        int w = (m_width > 0) ? m_width : 1;
+        int h = (m_height > 0) ? m_height : 1;
+        RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
         m_levels[level] = new_level;
         return new_level;
     }
     return it->second;
-}
+}*/
 
 void Zone::extend(RoomDir d, int count)
 {
-    
+    switch (d)
+    {
+        case RD_NORTH:
+        case RD_SOUTH:
+        case RD_WEST:
+        case RD_EAST:
+        {
+            for (int i = 0, e = m_levels.size(); i < e; ++i)
+                m_levels[i]->extend(d, count);
+            setChanged(true);
+        }
+        break;
+        case RD_UP:
+        {
+            int w = getWidth(); int h = getHeight();
+            int level = m_levels.begin()->first - 1;
+            for (; count > 0; --count)
+            {
+                RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
+                m_levels[level] = new_level;
+                level--;
+            }
+            setChanged(true);
+        }
+        break;
+        case RD_DOWN:
+        {
+            int w = getWidth(); int h = getHeight();
+            int level = m_levels.rbegin()->first - 1;
+            for (; count > 0; --count)
+            {
+                RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
+                m_levels[level] = new_level;
+                level++;
+            }
+            setChanged(true);
+        }
+        break;
+    default:
+        assert(false);
+        break;
+    }
 }
 
 /*RoomCursor::RoomCursor() { reset(); }
@@ -429,3 +464,65 @@ else if (dir == RD_DOWN)
 z -= 1;
 else { assert(false); }
 }*/
+
+RoomCursor::RoomCursor(Room *r, RoomDir d) : room(r), dir(d)
+{
+    assert(r && d != RD_UNKNOWN); 
+}
+
+RoomCursor::RoomCursor(Room *r, int d) : room(r), dir((RoomDir)d)
+{
+    assert(r && d != RD_UNKNOWN);
+}
+
+Room* RoomCursor::next() const
+{
+    return room->dirs[dir].next_room;
+}
+
+void RoomCursor::setNext(Room* room)
+{
+    room->dirs[dir].next_room = room;
+}
+
+/*Room* RoomCursor::revert(RoomDir dir) const
+{
+    Room *next_room = next(dir);
+    return (next_room) ? next_room->dirs[revertDir(dir)].next_room : NULL;
+}*/
+
+bool RoomCursor::isSameByRevert() const
+{
+    Room *next_room = next();
+    if (!next_room)
+        return false;
+    Room *revert = next_room->dirs[revertDir(dir)].next_room;
+    return (revert == room) ? true : false;
+}
+
+bool RoomCursor::delDirByRevert() const
+{
+    Room *next_room = next();
+    if (!next_room)
+        return false;
+    next_room->dirs[revertDir(dir)].next_room = NULL;
+    return true;
+}
+
+RoomDir RoomCursor::revertDir(RoomDir dir)
+{
+    if (dir == RD_NORTH)
+        return RD_SOUTH;
+    if (dir == RD_SOUTH)
+        return RD_NORTH;
+    if (dir == RD_WEST)
+        return RD_EAST;
+    if (dir == RD_EAST)
+        return RD_WEST;
+    if (dir == RD_UP)
+        return RD_DOWN;
+    if (dir == RD_DOWN)
+        return RD_UP;
+    assert(false);
+    return RD_UNKNOWN;
+}

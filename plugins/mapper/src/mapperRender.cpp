@@ -44,11 +44,9 @@ void MapperRender::onCreate()
 
 void MapperRender::setCurrentRoom(Room *room)
 {
+    m_room = room;
     if (m_room)
-    {
-        m_room = room;
         m_level = m_room->level;
-    }
     m_cursor = 0;
     updateScrollbars(false);
     Invalidate();
@@ -152,24 +150,23 @@ void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
 MapperRender::room_pos MapperRender::findRoomPos(Room* room)
 {    
     room_pos p;
-    /*RoomsLevel* level = room->level;
-    int width = level->width();
-    int height = level->height();
+    RoomsLevel* level = room->level;
+    int width = level->getWidth();
+    int height = level->getHeight();
     for (int x=0; x<width; ++x) {
     for (int y=0; y<height; ++y) {
-      if (level->getRoom(x,y) == room)
+      if (level->get(x,y) == room)
         {  p.x = x; p.y = y;  return p;  }
-    }}*/
+    }}
     return p;
 }
 
 Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
 {
-   /* RoomsLevel *level = viewpos.level;
-    if (!level) return NULL;
+    if (!m_level) return NULL;
 
-    int sx = level->width() * ROOM_SIZE;
-    int sy = level->height() * ROOM_SIZE;
+    int sx = m_level->getWidth() * ROOM_SIZE;
+    int sy = m_level->getHeight() * ROOM_SIZE;
     int left = getRenderX();
     int top = getRenderY();
     int right = left + sx - 1;
@@ -179,8 +176,8 @@ Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
     {
         int x = (cursor_x - left) / ROOM_SIZE;
         int y = (cursor_y - top) / ROOM_SIZE;
-        return level->getRoom(x, y);
-    }*/
+        return m_level->get(x, y);
+    }
     return NULL;
 }
 
@@ -277,13 +274,14 @@ void MapperRender::updateScrollbars(bool center)
     OutputDebugStringA(buffer);
 #endif
     
-   /* RoomsLevel *level = viewpos.level;
-    if (!level) return;
+    if (!m_level) return;
 
-    int width = level->width();
-    int height = level->height();
+    int width = m_level->getWidth();
+    int height = m_level->getHeight();
         
-    const RoomsLevelBox &b = level->box();
+    RoomsLevelBox b;
+    m_level->getBox(&b);
+
     int old_dx = m_right;
     int old_dy = m_bottom;
     m_left = b.left * ROOM_SIZE;
@@ -354,7 +352,7 @@ void MapperRender::updateScrollbars(bool center)
     SetScrollRange(SB_VERT, 0, m_vscroll_size);
     if (m_vscroll_pos < 0) m_vscroll_pos = 0;
     else if (m_vscroll_pos > m_vscroll_size) m_vscroll_pos = m_vscroll_size;
-    SetScrollPos(SB_VERT, m_vscroll_pos + m_top);*/
+    SetScrollPos(SB_VERT, m_vscroll_pos + m_top);
 }
 
 void MapperRender::mouseMove(int x, int y)

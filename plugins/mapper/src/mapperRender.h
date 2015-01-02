@@ -30,10 +30,10 @@ class MapperRender : public CWindowImpl<MapperRender>
 
 public:
     MapperRender();
-    void setCurrentRoom(Room *room);
-    void setCurrentLevel(RoomsLevel *level);
+    void setCurrentRoom(Room *room);    
     void lostPosition();
     void setPossibleRooms(const std::vector<Room*>& rooms);
+    void setCurrentLevel(RoomsLevel *level);
 
 private:
 	BEGIN_MSG_MAP(MapperRender)

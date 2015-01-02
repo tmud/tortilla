@@ -10,7 +10,6 @@ class MapperActions
 {
 public:
     virtual void setCurrentRoom(Room *room) = 0;
-    virtual void setCurrentLevel(RoomsLevel *level) = 0;
     virtual void lostPosition() = 0;
     virtual void setPossibleRooms(const std::vector<Room*>& rooms) = 0;
     virtual void addNewZone(Zone *zone) = 0;
@@ -30,13 +29,13 @@ public:
     void loadMaps(lua_State *L);
 
 private:
-    void processData(const RoomData& room);
+    void  processData(const RoomData& room);
+    bool  setByDir(Room *room);
     Zone* createZone();
+    void  setCurrentRoom(Room *room);
     Room* createRoom(const RoomData& room);
     void  deleteRoom(Room* room);
-    int   revertDir(int dir);
-    void  popDir();
-    void  setCurrentRoom(Room *room);
+    void  popDir();    
 
 private:
     PropertiesMapper *m_propsData;
@@ -48,13 +47,14 @@ private:
     MapperHashTable m_table;
 
     // Order for commands
-    std::list<int> m_path;
-    int m_lastDir;
-    Room *m_pLastRoom;
+    std::list<RoomDir> m_path;
+    RoomDir m_lastDir;
+    
+    //Room *m_pLastRoom;
 
-    // Current position
-    Room *m_pCurrentRoom;
-    RoomsLevel *m_pCurrentLevel;
+    // Current position + all possible rooms
+    Room* m_pCurrentRoom;
+    std::vector<Room*> m_pos_rooms;
 
     // Zones list
     std::vector<Zone*> m_zones;

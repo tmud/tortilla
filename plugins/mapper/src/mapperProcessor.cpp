@@ -1,8 +1,8 @@
 #include "stdafx.h"
 #include "mapperProcessor.h"
 
-MapperProcessor::MapperProcessor(PropertiesMapper *props) : m_propsData(props), m_pActions(NULL),
-m_lastDir(-1), m_pLastRoom(NULL), m_pCurrentRoom(NULL), m_pCurrentLevel(NULL)
+MapperProcessor::MapperProcessor(PropertiesMapper *props) : 
+m_propsData(props), m_pActions(NULL), m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL)
 {
     assert(m_propsData);
 }
@@ -35,7 +35,7 @@ void MapperProcessor::processCmd(const wchar_t* text, int text_len)
     tstring cmd(text, text_len);
     if (cmd.empty())
         return;
-    int dir = -1;
+    RoomDir dir = RD_UNKNOWN;
     if (cmd == m_propsData->north_cmd)
         dir = RD_NORTH;
     else if (cmd == m_propsData->south_cmd)
@@ -48,13 +48,14 @@ void MapperProcessor::processCmd(const wchar_t* text, int text_len)
         dir = RD_UP;
     else if (cmd == m_propsData->down_cmd)
         dir = RD_DOWN;
-    if (dir != -1)
+    if (dir != RD_UNKNOWN)
         m_path.push_back(dir);
 }
 
 void MapperProcessor::processData(const RoomData& room)
 {
-    std::vector<Room*> vr;
+    std::vector<Room*> &vr = m_pos_rooms;
+    vr.clear();
     m_table.findRooms(room, &vr);
     int count = vr.size();
 
@@ -62,65 +63,58 @@ void MapperProcessor::processData(const RoomData& room)
     if (count == 0)
     {
         Room* new_room = createRoom(room);
-        if (m_pCurrentRoom && m_lastDir != -1)
+        if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN)      // есть местоположение и направление
         {
-            Room* next = m_pCurrentRoom->dirs[m_lastDir].next_room;
-            if (!next)
+            RoomCursor cursor(m_pCurrentRoom, m_lastDir);
+            if (!cursor.next())
             {
-                m_pCurrentRoom->dirs[m_lastDir].next_room = new_room;
-                new_room->level = m_pCurrentRoom->level;
-                setCurrentRoom(new_room);
-                return;
-            }            
+                cursor.setNext(new_room);
+                if (setByDir(new_room))
+                {
+                    setCurrentRoom(new_room);
+                    return;
+                }
+            }
         }
 
-        // неизвестна последняя комната или направление или мультивыход
-
-
-
-
-        /*if (!m_pCurrentRoom || m_lastDir == -1)
-        {
-        Zone *new_zone = createZone();
-        if (!new_zone->addRoom(0, 0, 0, new_room))
-        {
-        delete new_zone;
-        delete new_room;
-        }
+        // неизвестны комната и/или направление или это мультивыход
+        Zone* zone = createZone();
+        zone->getDefaultLevel()->set(0, 0, new_room);
+        setCurrentRoom(new_room);
         return;
-        }*/
-
-
-        return;
-    }
-
-
-
-    /*findOrCreateRooms(room, &rooms);
-
-    int count = rooms.size();
-    if (count == 0)
-    {
-    // if cant find or create new, so it is mean -> lost position
-    m_pCurrentRoom = NULL;
-    redrawPosition();
-    return;
     }
 
     if (count == 1)
     {
-    if (m_pCurrentRoom)
-    {
-    RoomExit &e = m_pCurrentRoom->dirs[m_lastDir];
-    if (!e.next_room)
-    e.next_room = rooms[0];
+        Room* next_room = vr[0];
+        if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN) // есть местоположение и направление
+        {
+            RoomCursor cursor(m_pCurrentRoom, m_lastDir);
+            if (cursor.next())
+            {
+                // даже если это не next_room - переходим по мультивыходу
+                setCurrentRoom(next_room);
+                return;
+            }
+            RoomCursor next_cursor(next_room, RoomCursor::revertDir(m_lastDir));
+            if (next_cursor.next() == m_pCurrentRoom)
+            {
+                // соединяем коридоры - туда/обратно
+                cursor.setNext(next_room);
+                setCurrentRoom(next_room);
+                return;
+            }
+            
+            // обратный корридор идет в другую комнату
+            cursor.setNext(next_room);
+            setCurrentRoom(next_room);
+            return;
+        }
+
+        // неизвестны комната и/или направление
+        setCurrentRoom(next_room);
+        return;
     }
-    m_pLastRoom = m_pCurrentRoom;
-    m_pCurrentRoom = rooms[0];
-    m_pCurrentLevel = m_pCurrentRoom->level;
-    redrawPosition();
-    return;
-    }*/
 
     /*Room* new_room = (cached) ? findRoomCached(room) : findRoom(room);
     if (!new_room)
@@ -172,6 +166,63 @@ void MapperProcessor::processData(const RoomData& room)
         if (m_pCurrentLevel) break;
     }*/
 
+bool MapperProcessor::setByDir(Room *room)
+{
+    assert(m_pCurrentRoom && m_lastDir != -1);
+    Zone *current_zone = m_pCurrentRoom->level->getZone();
+    bool extend = false;
+    switch (m_lastDir)
+    {
+    case RD_NORTH:          
+        if (m_pCurrentRoom->y == 0)
+            extend = true;
+        break;
+    case RD_SOUTH:
+        if (m_pCurrentRoom->y == current_zone->getHeight()-1)
+            extend = true;
+        break;
+    case RD_WEST:
+        if (m_pCurrentRoom->x == 0)
+            extend = true;
+        break;
+    case RD_EAST:
+        if (m_pCurrentRoom->x == current_zone->getWidth()-1)
+            extend = true;
+        break;
+    case RD_UP:
+    {
+        int level_index = m_pCurrentRoom->level->getLevel();
+        int max_index = current_zone->getMaxLevel();
+        if (level_index == max_index) extend = true;
+    }
+    break;
+    case RD_DOWN:
+    {
+        int level_index = m_pCurrentRoom->level->getLevel();
+        int min_level = current_zone->getMinLevel();
+        if (level_index == min_level) extend = true;
+    }
+    break;
+    }    
+    if (extend)
+        current_zone->extend(m_lastDir, 1);
+    
+    int x = m_pCurrentRoom->x;
+    int y = m_pCurrentRoom->y;
+    int z = m_pCurrentRoom->level->getLevel();
+    switch (m_lastDir)
+    {
+    case RD_NORTH: y = y - 1; break;
+    case RD_SOUTH: y = y + 1; break;
+    case RD_WEST: x = x - 1; break;
+    case RD_EAST: x = x + 1; break;
+    case RD_UP: z = z + 1; break;
+    case RD_DOWN: z = z - 1; break;
+    }
+    RoomsLevel *level = current_zone->getLevel(z);
+    return level->set(x, y, room);
+}
+
 Zone* MapperProcessor::createZone()
 {
     WCHAR buffer[20];
@@ -191,6 +242,19 @@ Zone* MapperProcessor::createZone()
     if (m_pActions)
         m_pActions->addNewZone(new_zone);
     return new_zone;
+}
+
+void MapperProcessor::setCurrentRoom(Room *room)
+{
+    //m_pLastRoom = m_pCurrentRoom;
+    m_pCurrentRoom = room;
+    if (m_pActions)
+    {
+        if (room)
+            m_pActions->setCurrentRoom(room);
+        else
+            m_pActions->lostPosition();
+    }
 }
 
 Room* MapperProcessor::createRoom(const RoomData& room)
@@ -219,62 +283,29 @@ Room* MapperProcessor::createRoom(const RoomData& room)
 
 void MapperProcessor::deleteRoom(Room* room)
 {
-    m_table.deleteRoom(room);
-    for (int i = 0, e = ROOM_DIRS_COUNT; i < e; ++i)
+    m_table.deleteRoom(room);    
+    for (int i=0, e=ROOM_DIRS_COUNT; i<e; ++i)
     {
-        Room *next = room->dirs[i].next_room;
-        if (next)
-            next->dirs[revertDir(i)].next_room = NULL;
+        RoomCursor cursor(room, (RoomDir)i);
+        if (cursor.isSameByRevert())
+            cursor.delDirByRevert();
     }
     room->level->set(room->x, room->y, NULL);
     if (m_pCurrentRoom == room)
         m_pCurrentRoom = NULL;
-    if (m_pLastRoom == room)
-        m_pLastRoom = NULL;
+    //if (m_pLastRoom == room)
+    //    m_pLastRoom = NULL;
     delete room;
-}
-
-int MapperProcessor::revertDir(int dir)
-{
-    if (dir == RD_NORTH)
-        return RD_SOUTH;
-    if (dir == RD_SOUTH)
-        return RD_NORTH;
-    if (dir == RD_WEST)
-        return RD_EAST;
-    if (dir == RD_EAST)
-        return RD_WEST;
-    if (dir == RD_UP)
-        return RD_DOWN;
-    if (dir == RD_DOWN)
-        return RD_UP;
-    assert(false);
-    return -1;
 }
 
 void MapperProcessor::popDir()
 {
     if (m_path.empty())
-        m_lastDir = -1;
+        m_lastDir = RD_UNKNOWN;
     else
     {
         m_lastDir = *m_path.begin();
         m_path.pop_front();
-    }
-}
-
-void MapperProcessor::setCurrentRoom(Room *room)
-{
-    m_pLastRoom = m_pCurrentRoom;
-    m_pCurrentRoom = room;
-    if (m_pCurrentRoom)
-        m_pCurrentLevel = m_pCurrentRoom->level;
-    if (m_pActions)
-    {
-        if (room)
-            m_pActions->setCurrentRoom(room);
-        else
-            m_pActions->lostPosition();
     }
 }
 

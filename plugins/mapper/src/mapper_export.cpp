@@ -95,6 +95,7 @@ int init(lua_State *L)
 
     m_mapper_processor = new MapperProcessor(&m_props);
     m_mapper_processor->setCallback(m_mapper_window);
+    m_mapper_processor->updateProps();
     m_mapper_processor->loadMaps(L);
     m_mapper_processor->selectDefault();
     return 0;
