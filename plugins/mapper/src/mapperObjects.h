@@ -209,7 +209,7 @@ public:
     RoomCursor(Room *r, RoomDir d);
     RoomCursor(Room *r, int d);
     Room* next() const;
-    void  setNext(Room* room);
+    void  setNext(Room* r);
     bool  isSameByRevert() const;
     bool  delDirByRevert() const;
 

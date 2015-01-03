@@ -153,7 +153,7 @@ void RoomsLevel::extend(RoomDir d, int count)
         break;
     case RD_NORTH:
         for (int x = 0, e = getWidth(); x < e; ++x) {
-            for (int y = count, ye = getHeight(); y < ye; ++y) {
+            for (int y = 0, ye = getHeight(); y < ye; ++y) {
                 Room *room = rooms[y]->rr[x];
                 if (room) { room->y += count; }
             }
@@ -385,12 +385,12 @@ void Zone::extend(RoomDir d, int count)
         case RD_UP:
         {
             int w = getWidth(); int h = getHeight();
-            int level = m_levels.begin()->first - 1;
+            int level = m_levels.rbegin()->first + 1;
             for (; count > 0; --count)
             {
                 RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
                 m_levels[level] = new_level;
-                level--;
+                level++;
             }
             setChanged(true);
         }
@@ -398,12 +398,12 @@ void Zone::extend(RoomDir d, int count)
         case RD_DOWN:
         {
             int w = getWidth(); int h = getHeight();
-            int level = m_levels.rbegin()->first - 1;
+            int level = m_levels.begin()->first - 1;
             for (; count > 0; --count)
             {
                 RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
                 m_levels[level] = new_level;
-                level++;
+                level--;
             }
             setChanged(true);
         }
@@ -480,9 +480,9 @@ Room* RoomCursor::next() const
     return room->dirs[dir].next_room;
 }
 
-void RoomCursor::setNext(Room* room)
+void RoomCursor::setNext(Room* r)
 {
-    room->dirs[dir].next_room = room;
+    room->dirs[dir].next_room = r;
 }
 
 /*Room* RoomCursor::revert(RoomDir dir) const
