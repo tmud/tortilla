@@ -85,10 +85,7 @@ bool RoomsLevel::set(int x, int y, Room* room)
     if (room)
     {
         if (rooms[y]->rr[x])
-        {
-            assert(false);
-            return false;
-        }
+            return false;       // место занято
         room->x = x;
         room->y = y;
         room->level = this;
@@ -377,8 +374,9 @@ void Zone::extend(RoomDir d, int count)
         case RD_WEST:
         case RD_EAST:
         {
-            for (int i = 0, e = m_levels.size(); i < e; ++i)
-                m_levels[i]->extend(d, count);
+            lvls_iterator it = m_levels.begin(), it_end = m_levels.end();
+            for (; it != it_end; ++it)
+                it->second->extend(d, count);
             setChanged(true);
         }
         break;
@@ -506,6 +504,35 @@ bool RoomCursor::delDirByRevert() const
     if (!next_room)
         return false;
     next_room->dirs[revertDir(dir)].next_room = NULL;
+    return true;
+}
+
+bool RoomCursor::isNeighbor(Room* r) const
+{
+    int dx = 0; int dy = 0; int dz = 0;
+    switch (dir)
+    {
+        case RD_NORTH: dy = -1; break;
+        case RD_SOUTH: dy = 1; break;
+        case RD_WEST: dx = -1; break;
+        case RD_EAST: dx = 1; break;
+        case RD_UP: dz = 1; break;
+        case RD_DOWN: dz = -1; break;
+        default: 
+            return false;
+    }
+
+    int x = room->x;
+    int y = room->y;
+    int z = room->level->getLevel();
+    Zone* zone = room->level->getZone();
+    RoomsLevel *l = NULL;
+    while (1)
+    {
+        x += dx; y += dy; z += dz;
+        l = zone->getLevel(z);
+        if (!l || !l->check(x, y)) return false;
+    } while (l->get(x, y) != r);
     return true;
 }
 

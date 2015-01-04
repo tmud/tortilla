@@ -107,6 +107,7 @@
     <ClInclude Include="src\helpers.h" />
     <ClInclude Include="src\mapper.h" />
     <ClInclude Include="src\mapperHashTable.h" />
+    <ClInclude Include="src\mapperKey.h" />
     <ClInclude Include="src\mapperObjects.h" />
     <ClInclude Include="src\mapperParser.h" />
     <ClInclude Include="src\mapperProcessor.h" />
@@ -124,6 +125,7 @@
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
     <ClCompile Include="src\mapper.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
+    <ClCompile Include="src\mapperKey.cpp" />
     <ClCompile Include="src\mapperObjects.cpp" />
     <ClCompile Include="src\mapperParser.cpp" />
     <ClCompile Include="src\mapperProcessor.cpp" />

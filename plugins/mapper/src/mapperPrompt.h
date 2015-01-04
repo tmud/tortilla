@@ -6,7 +6,7 @@ class MapperPrompt
 public:
     MapperPrompt();
     void updateProps(PropertiesMapper *props);
-    bool processNetworkData(const WCHAR* text, int textlen);
+    bool processNetworkData(MapperNetworkData &ndata);
 
 private:
     MapperKeyElement bp;       // begin prompt

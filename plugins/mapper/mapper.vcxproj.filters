@@ -83,6 +83,9 @@
     <ClInclude Include="src\mapperParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\mapperKey.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -119,6 +122,9 @@
       <Filter>Support Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapperParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapperKey.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

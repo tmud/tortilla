@@ -5,6 +5,8 @@ struct PropertiesMapper
     PropertiesMapper() {}
     tstring begin_name;
     tstring end_name;
+    tstring begin_key;
+    tstring end_key;
     tstring begin_descr;
     tstring end_descr;
     tstring begin_exits;
@@ -32,6 +34,8 @@ struct PropertiesMapper
     {
         begin_name.clear();
         end_name.clear();
+        begin_key.clear();
+        end_key.clear();
         begin_descr.clear();
         end_descr.clear();
         begin_exits.clear();

@@ -3,6 +3,7 @@
 #include "mapperObjects.h"
 #include "mapperParser.h"
 #include "mapperPrompt.h"
+#include "mapperKey.h"
 #include "mapperHashTable.h"
 #include "mapperRender.h"
 
@@ -21,8 +22,8 @@ public:
     MapperProcessor(PropertiesMapper *props);
     ~MapperProcessor();
     void setCallback(MapperActions* actions);
-    void processNetworkData(const wchar_t* text, int text_len);
-    void processCmd(const wchar_t* text, int text_len);
+    void processNetworkData(MapperNetworkData& ndata);
+    void processCmd(const tstring& cmd);
     void updateProps();
     void selectDefault();
     void saveMaps(lua_State *L);
@@ -44,6 +45,7 @@ private:
     // Helper to parse incoming data and find rooms
     MapperParser    m_parser;
     MapperPrompt    m_prompt;
+    MapperKey       m_key_trimmer;
     MapperHashTable m_table;
 
     // Order for commands

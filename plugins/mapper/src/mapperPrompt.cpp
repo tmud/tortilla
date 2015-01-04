@@ -9,12 +9,13 @@ void MapperPrompt::updateProps(PropertiesMapper *props)
 {
     bp.init(props->begin_prompt);
     ep.init(props->end_prompt);
-    m_network_buffer.clear();
+    //todo ? m_network_buffer.clear();
 }
 
-bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
+bool MapperPrompt::processNetworkData(MapperNetworkData &ndata)
 {
-    m_network_buffer.write(text, textlen);
+    m_network_buffer.write(ndata.getData(), ndata.getDataLen());
+
     int datalen = m_network_buffer.getDataLen();
     if (!datalen)
         return false;
@@ -24,7 +25,7 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
     while (data != data_end)
     {
         const WCHAR *p = data;
-        while (p != data_end && *p != 0xd && *p != 0xa) 
+        while (p != data_end && *p != 0xd && *p != 0xa)             // пытаемс€ выделить самосто€тельные строки
             p++;
         
         const WCHAR* msg = data;
@@ -33,18 +34,22 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
         if (msg == p)
             continue;
 
-        int msg_len = p - msg;        
-        //OutputDebugStringW(x.c_str());
-
-        if (bp.findData(msg, msg_len) && ep.findData(msg, msg_len))
+        int msg_len = p - msg;
+        if (bp.findData(msg, msg_len) && ep.findData(msg, msg_len) && 
+            bp.isKeyFull() && ep.isKeyFull())
         {
             const WCHAR* buffer = m_network_buffer.getData();
             int processed = p - buffer;
             m_network_buffer.truncate(processed);
             return true;
         }
-    }
 
-    m_network_buffer.clear();
+        if (data == data_end)
+        {
+            const WCHAR* buffer = m_network_buffer.getData();
+            int processed = msg - buffer;
+            m_network_buffer.truncate(processed);
+        }
+    }
     return false;
 }

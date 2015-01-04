@@ -17,22 +17,23 @@ void MapperProcessor::setCallback(MapperActions* actions)
     m_pActions = actions;
 }
 
-void MapperProcessor::processNetworkData(const wchar_t* text, int text_len)
+void MapperProcessor::processNetworkData(MapperNetworkData& ndata)
 {
     RoomData room;
-    if (!m_parser.processNetworkData(text, text_len, &room))
+    if (!m_parser.processNetworkData(ndata, &room))
     {
-        if (m_prompt.processNetworkData(text, text_len))
+        if (m_prompt.processNetworkData(ndata))
             popDir();
+        m_key_trimmer.processNetworkData(ndata);
         return;
     }
     popDir();
     processData(room);
+    m_key_trimmer.processNetworkData(ndata);
 }
 
-void MapperProcessor::processCmd(const wchar_t* text, int text_len)
+void MapperProcessor::processCmd(const tstring& cmd)
 {
-    tstring cmd(text, text_len);
     if (cmd.empty())
         return;
     RoomDir dir = RD_UNKNOWN;
@@ -90,22 +91,32 @@ void MapperProcessor::processData(const RoomData& room)
         if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN) // есть местоположение и направление
         {
             RoomCursor cursor(m_pCurrentRoom, m_lastDir);
-            if (cursor.next())
+            Room *next = cursor.next();
+            if (next)
             {
                 // даже если это не next_room - переходим по мультивыходу
                 setCurrentRoom(next_room);
                 return;
             }
+
             RoomCursor next_cursor(next_room, RoomCursor::revertDir(m_lastDir));
-            if (next_cursor.next() == m_pCurrentRoom)
+            Room *back = next_cursor.next();
+            if (back == m_pCurrentRoom || cursor.isNeighbor(next_room))
             {
                 // соединяем коридоры - туда/обратно
                 cursor.setNext(next_room);
+                next_cursor.setNext(m_pCurrentRoom);
                 setCurrentRoom(next_room);
                 return;
             }
-            
-            // обратный корридор идет в другую комнату
+            if (back)
+            {
+                // обратный коридор идет в другую комнату
+                if (setByDir(next_room))
+                    setCurrentRoom(next_room);
+                return;
+            }
+
             cursor.setNext(next_room);
             setCurrentRoom(next_room);
             return;
@@ -518,6 +529,7 @@ void MapperProcessor::updateProps()
 {
     m_parser.updateProps(m_propsData);
     m_prompt.updateProps(m_propsData);
+    m_key_trimmer.updateProps(m_propsData);
 }
 
 void MapperProcessor::saveMaps(lua_State *L)

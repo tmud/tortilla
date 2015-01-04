@@ -105,10 +105,11 @@ MapperParser::MapperParser()
 {
 }
 
-bool MapperParser::processNetworkData(const WCHAR* text, int textlen, RoomData* result)
+bool MapperParser::processNetworkData(MapperNetworkData &ndata, RoomData* result)
 {
     // collect network data for parsing
-    m_network_buffer.write(text, textlen);
+    m_network_buffer.write(ndata.getData(), ndata.getDataLen());
+
     int datalen = m_network_buffer.getDataLen();
     if (!datalen)
         return false;
@@ -136,10 +137,10 @@ bool MapperParser::processNetworkData(const WCHAR* text, int textlen, RoomData* 
     }
 
     // 2. now find ee
-    bool ee_result = ee.findData(data, datalen);
-    if (!ee_result || !ee.isKeyFull())
+    if (!ee.findData(data, datalen) || !ee.isKeyFull())
     {
-        checkBufferLimit(); return false;
+        checkBufferLimit();
+        return false;
     }
 
     // set data len to ee position
@@ -182,16 +183,33 @@ bool MapperParser::processNetworkData(const WCHAR* text, int textlen, RoomData* 
 
 bool MapperParser::searchData(const WCHAR* data, int datalen, RoomData* result)
 {
-    // now we searching all other tags (en,bd,ed,be)
+    // now we searching all other tags (en,bd,ed,be,kb,ke)
     bool a = en.findData(data, datalen);
-    bool b = bd.findData(data, datalen);
-    bool c = ed.findData(data, datalen);
-    bool d = be.findData(data, datalen);
-    if (a && b && c && d)
+    bool b = (a) ? bd.findData(data, datalen) : false; // this construction for easy debug
+    bool c = (b) ? ed.findData(data, datalen) : false;
+    bool d = (c) ? be.findData(data, datalen) : false;
+    bool e = (d) ? bk.findData(data, datalen) : false;
+    bool f = (e) ? ek.findData(data, datalen) : false;
+    if (f)  // if only all (a-f) true
     {
         int nl = (en.getKey() + 0);
         result->name.assign(data, nl);
 
+        int k = bk.getAfterKey();
+        int kl = (ek.getKey() - k);
+        if (kl > 0)
+        {
+            tstring key(&data[k], kl);
+            int pos = key.rfind(L',');
+            if (pos == -1)
+                result->zonename = key;
+            else
+            {
+                result->zonename = key.substr(0, pos);
+                result->key = key.substr(pos + 1);
+            }
+        }
+        
         int d = bd.getAfterKey();
         int dl = (ed.getKey() - d);
         if (dl > 0)
@@ -219,6 +237,8 @@ void MapperParser::updateProps(PropertiesMapper *props)
     bn.init(props->begin_name);
     bn2.init(props->begin_name);
     en.init(props->end_name);
+    bk.init(props->begin_key);
+    ek.init(props->end_key);
     bd.init(props->begin_descr);
     ed.init(props->end_descr);
     be.init(props->begin_exits);

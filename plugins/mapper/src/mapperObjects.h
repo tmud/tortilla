@@ -10,6 +10,8 @@ class Zone;
 struct RoomData
 {
     tstring name;
+    tstring zonename;
+    tstring key;
     tstring descr;
     tstring exits;
     uint    hash;
@@ -113,13 +115,14 @@ public:
     int   getHeight() const { return rooms.size(); }
     void  getBox(RoomsLevelBox *box) const
     {
+        //todo
         box->left = 0; box->top = 0;
         box->right = getWidth(); box->bottom = getHeight();
     }
+    bool check(int x, int y) const { return (y >= 0 && y < getHeight() && x >= 0 && x < getWidth()) ? true : false; }
 private:
     friend class Zone;
-    void extend(RoomDir d, int count);
-    bool check(int x, int y) const { return (y >= 0 && y < getHeight() && x >= 0 && x < getWidth()) ? true : false; }
+    void extend(RoomDir d, int count);    
     void setsize(int dx, int dy);
     struct row
     {   ~row()
@@ -212,7 +215,7 @@ public:
     void  setNext(Room* r);
     bool  isSameByRevert() const;
     bool  delDirByRevert() const;
-
+    bool  isNeighbor(Room* r) const;
     static RoomDir revertDir(RoomDir dir);
 
 private:

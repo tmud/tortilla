@@ -31,11 +31,33 @@ class MapperDataQueue
 public:
     void write(const WCHAR* data, int datalen)  { buffer.write(data, datalen * sizeof(WCHAR)); }
     void truncate(int datalen) { buffer.truncate(datalen * sizeof(WCHAR)); }
-    void clear() { buffer.clear(); }
+    void clear() { buffer.clear(); }    
     int getDataLen() const  { return buffer.getSize() / sizeof(WCHAR); }
     const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
 private:
     DataQueue buffer;
+};
+
+class MapperNetworkData
+{
+public:
+    MapperNetworkData(const WCHAR *data)
+    {
+        assert(data);
+        int datalen = (wcslen(data) + 1) *sizeof(WCHAR);
+        buffer.alloc(datalen);
+        memcpy(buffer.getData(), data, datalen);
+    }    
+    const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
+    int getDataLen() const  { return buffer.getSize() / sizeof(WCHAR); }
+    void trimLeft(int size) { buffer.alloc(size*sizeof(WCHAR)); }
+    void trimRight(int size)
+    {
+
+    }
+
+private:
+    MemoryBuffer buffer;
 };
 
 class MapperParser
@@ -43,7 +65,7 @@ class MapperParser
 public:
     MapperParser();
     void updateProps(PropertiesMapper *props);
-    bool processNetworkData(const WCHAR* text, int textlen, RoomData* result);
+    bool processNetworkData(MapperNetworkData &ndata, RoomData* result);
 
 private:
     bool searchData(const WCHAR* data, int datalen, RoomData* result);
@@ -52,6 +74,8 @@ private:
     MapperKeyElement bn;        // begin name
     MapperKeyElement bn2;
     MapperKeyElement en;        // end name
+    MapperKeyElement bk;        // key begin
+    MapperKeyElement ek;        // key end
     MapperKeyElement bd;        // begin description
     MapperKeyElement ed;        // end description
     MapperKeyElement be;        // begin exits

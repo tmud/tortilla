@@ -47,6 +47,8 @@ int init(lua_State *L)
         ld.get("darkroom/label", &m_props.dark_room);
         ld.get("name/begin", &m_props.begin_name);
         ld.get("name/end", &m_props.end_name);
+        ld.get("key/begin", &m_props.begin_key);
+        ld.get("key/end", &m_props.end_key);
         ld.get("descr/begin", &m_props.begin_descr);
         ld.get("descr/end", &m_props.end_descr);
         ld.get("exits/begin", &m_props.begin_exits);
@@ -108,6 +110,8 @@ int release(lua_State *L)
     s.set("darkroom/label", m_props.dark_room);
     s.set("name/begin", m_props.begin_name);
     s.set("name/end", m_props.end_name);
+    s.set("key/begin", m_props.begin_key);
+    s.set("key/end", m_props.end_key);
     s.set("descr/begin", m_props.begin_descr);
     s.set("descr/end", m_props.end_descr);
     s.set("exits/begin", m_props.begin_exits);
@@ -192,8 +196,10 @@ int stream(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         const char *stream = lua_tostring(L, -1);
-        const wchar_t *wstream = convert_utf8_to_wide (stream);
-        m_mapper_processor->processNetworkData(wstream, wcslen(wstream));
+        MapperNetworkData data(convert_utf8_to_wide(stream));
+        m_mapper_processor->processNetworkData(data);
+        lua_pop(L, 1);
+        lua_pushstring(L, convert_wide_to_utf8(data.getData()));
     }    
     return 1;
 }
@@ -204,7 +210,8 @@ int gamecmd(lua_State *L)
     {
         const char *cmd = lua_tostring(L, -1);
         const wchar_t *wcmd = convert_utf8_to_wide(cmd);
-        m_mapper_processor->processCmd(wcmd, wcslen(wcmd));
+        tstring gamecmd(wcmd, wcslen(wcmd));
+        m_mapper_processor->processCmd(gamecmd);
     }
     return 1;
 }
