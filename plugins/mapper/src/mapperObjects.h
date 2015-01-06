@@ -16,6 +16,7 @@ struct RoomData
     tstring exits;
     uint    hash;
     uint    dhash;
+    bool    dark;
 
     bool equal(const RoomData& rd) const
     {
@@ -55,7 +56,7 @@ struct RoomData
         }
     }
 
-    RoomData() : hash(0), dhash(0) {}
+    RoomData() : hash(0), dhash(0), dark(false) {}
 
 #ifdef _DEBUG
     void printDebugData()
@@ -64,6 +65,8 @@ struct RoomData
         swprintf(buf, L"-----\r\nhash: 0x%x, dhash: 0x%x\r\n", hash, dhash);
         OutputDebugString(buf);
         OutputDebugString(name.c_str());
+        if (dark)
+            OutputDebugString(L",dark");
         OutputDebugString(L"\r\n");
         OutputDebugString(descr.c_str());
         OutputDebugString(L"\r\n");

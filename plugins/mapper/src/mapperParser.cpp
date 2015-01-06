@@ -169,12 +169,13 @@ bool MapperParser::processNetworkData(MapperNetworkData &ndata, RoomData* result
             if (n.at(i) < 32)
                 return false;
         }
-        //todo result->dark = false;
+        
+        result->dark = false;
         tstring &d = result->descr;
         if (!d.empty() && dark_cs == d)
         {
             d.clear();
-            //result->dark = true;
+            result->dark = true;
         }
         result->calcHash();
     }

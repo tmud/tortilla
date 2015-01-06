@@ -19,6 +19,8 @@ public:
         int size = keydata.size();
         return (size > 0 && keylen == size) ? true : false;
     }
+    bool isKeyUsable() const { return (key != -1) ? true : false; }
+    int  getMaskLen() const { return keydata.size(); }
 
 private:
     tstring keydata;
@@ -49,11 +51,29 @@ public:
         memcpy(buffer.getData(), data, datalen);
     }    
     const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
-    int getDataLen() const  { return buffer.getSize() / sizeof(WCHAR); }
-    void trimLeft(int size) { buffer.alloc(size*sizeof(WCHAR)); }
+    int getDataLen() const  { return (buffer.getSize() / sizeof(WCHAR)) - 1; }
+    void accept(const WCHAR* data, int size) 
+    {
+        int datalen = (size + 1) * sizeof(WCHAR);
+        buffer.alloc(datalen);
+        memcpy(buffer.getData(), data, datalen);
+        WCHAR *p = (WCHAR*)buffer.getData();
+        p[size] = 0;
+    }
+    void trimLeft(int size) 
+    {
+        assert(size <= getDataLen());
+        buffer.alloc( (size+1)*sizeof(WCHAR) );
+        WCHAR *p = (WCHAR*)buffer.getData();
+        p[size] = 0;
+    }
     void trimRight(int size)
     {
-
+        assert(size <= getDataLen());
+        WCHAR *p = (WCHAR*)buffer.getData() + size;
+        int len = (getDataLen() - size + 1) * sizeof(WCHAR);
+        memcpy(buffer.getData(), p, len);
+        buffer.alloc(len);
     }
 
 private:

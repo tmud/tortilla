@@ -9,7 +9,6 @@ void MapperPrompt::updateProps(PropertiesMapper *props)
 {
     bp.init(props->begin_prompt);
     ep.init(props->end_prompt);
-    //todo ? m_network_buffer.clear();
 }
 
 bool MapperPrompt::processNetworkData(MapperNetworkData &ndata)

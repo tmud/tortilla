@@ -13,37 +13,67 @@ void MapperKey::updateProps(PropertiesMapper *props)
 
 void MapperKey::processNetworkData(MapperNetworkData &ndata)
 {
-    return;
-
-    m_network_buffer.write(ndata.getData(), ndata.getDataLen());
-    int datalen = m_network_buffer.getDataLen();
-    if (!datalen) return;
-    const WCHAR* data = m_network_buffer.getData();
-
-    if (m_find_end_mode)
+    //return; //todo
+    if (!m_find_end_mode)       // режим поиска начала ключа
     {
-        if (ek.findData(data, datalen) && ek.isKeyFull())
+        if (!bk.isKeyUsable())  // начало ключа еще не найдено
         {
-        }
-        
-        if (!ek.findData(ndata.getData(), ndata.getDataLen()))
-        {
-            ndata.trimLeft(0);
+            if (!bk.findData(ndata.getData(), ndata.getDataLen()))
+                return;
+            // нашли полный ключ или частичный, но в конце блока данных
+            if (bk.isKeyFull() || bk.getAfterKey() == ndata.getDataLen())
+            {
+                int pos = bk.getKey();
+                const WCHAR* key_begin = ndata.getData() + pos;
+                int key_len = ndata.getDataLen() - pos;
+                m_buffer.write(key_begin, key_len);
+                ndata.trimLeft(pos);
+                m_find_end_mode = true;
+                if (bk.isKeyFull())
+                    m_buffer.truncate(bk.getKeyLen());
+            }
             return;
         }
-        int pos = ek.getAfterKey();
-        int len = ndata.getDataLen() - pos;
-        const WCHAR* data = ndata.getData() + len;
 
-        m_find_end_mode = false;
-        return;
+        // сюда попадаем в случае частичного ключа в конце блока данных
+        // сначала допроверяем ключ
+        m_buffer.write(ndata.getData(), ndata.getDataLen());
+        ndata.trimLeft(0);
+
+        int datalen = m_buffer.getDataLen();
+        if (datalen < bk.getMaskLen())
+            return;
+
+        const WCHAR* data = m_buffer.getData();
+        if (bk.findData(data, datalen) && bk.isKeyFull())
+        {
+            m_buffer.truncate(bk.getKeyLen());
+            m_find_end_mode = true;
+            // продолжаем уже с поиском конца ключа
+        }
+        else
+        {
+            // ключ не совпал - сбрасываем буфер на выход
+            ndata.accept(m_buffer.getData(), m_buffer.getDataLen());
+            m_buffer.clear();
+            return;
+        }
     }
 
-    if (bk.findData(ndata.getData(), ndata.getDataLen()) && bk.isKeyFull())
-    {
-        int pos = bk.getKey();
-        ndata.trimLeft(pos);
+    // поиск окончания ключа
+    m_buffer.write(ndata.getData(), ndata.getDataLen());
+    ndata.trimLeft(0);
 
-        m_find_end_mode = true;
+    int datalen = m_buffer.getDataLen();
+    const WCHAR* data = m_buffer.getData();
+
+    if (ek.findData(data, datalen) && ek.isKeyFull())
+    {
+        // нашли окончание ключа
+        int pos = ek.getAfterKey();        
+        ndata.accept(data + pos, datalen - pos);
+        m_buffer.clear();
+        m_find_end_mode = false;
+        return;
     }
 }

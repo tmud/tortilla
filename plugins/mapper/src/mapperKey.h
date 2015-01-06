@@ -11,6 +11,6 @@ public:
 private:
     MapperKeyElement bk;       // begin key
     MapperKeyElement ek;       // end key
-    MapperDataQueue m_network_buffer;
+    MapperDataQueue m_buffer;
     bool m_find_end_mode;
 };
