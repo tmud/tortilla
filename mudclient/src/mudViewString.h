@@ -17,7 +17,7 @@ struct MudViewStringParams
         ext_bkg_color = 0;
     }
 
-    bool operator==(const MudViewStringParams& p)
+    bool operator==(const MudViewStringParams& p) const
     {
         if (intensive_status == p.intensive_status &&
             underline_status == p.underline_status &&
@@ -53,11 +53,12 @@ struct MudViewStringParams
 
 struct MudViewStringBlock
 {
-   MudViewStringBlock() { size.cx = 0; size.cy = 0; subs_protected = 0; }
+   MudViewStringBlock() { size.cx = 0; size.cy = 0; subs_protected = 0; bytes_pos = 0;  }
    tstring string;                        // text string
    MudViewStringParams params;            // string params
    SIZE size;                             // size of string (DC size of current font)
    tbyte subs_protected;                  // protected from subs
+   int bytes_pos;                         // helpers value for position in string bytes
 };
 
 struct MudViewString
@@ -65,7 +66,11 @@ struct MudViewString
    MudViewString() : dropped(false), gamecmd(false), system(false), prompt(0) {}
    void moveBlocks(MudViewString* src) 
    {
+       int size = blocks.size();
+       int di = (size != 0) ? blocks[size - 1].bytes_pos : 0;
+       std::for_each(src->blocks.begin(), src->blocks.end(), [di](MudViewStringBlock &b) { b.bytes_pos += di;});
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
+       bytes.append(src->bytes);
        gamecmd |= src->gamecmd;
        system |= src->system;
        if (!prompt)
@@ -76,6 +81,7 @@ struct MudViewString
    void clear()
    {
        blocks.clear();
+       bytes.clear();
        dropped = false;
        gamecmd = false;
        system = false;
@@ -85,6 +91,7 @@ struct MudViewString
    void copy(MudViewString* src)
    {
        blocks.assign(src->blocks.begin(), src->blocks.end());
+       bytes.assign(src->bytes);
        dropped = false;
        gamecmd = src->gamecmd;
        system = src->system;
@@ -145,11 +152,16 @@ struct MudViewString
            for (int i = index + 1, e = blocks.size(); i < e; ++i)
                s->blocks.push_back(blocks[i]);
            blocks.erase(blocks.begin()+index+1, blocks.end());
+           
+
+
+
        }
        return s;
    }
    
    std::vector<MudViewStringBlock> blocks;  // all string blocks
+   tstring bytes;                           // all stream data bytes parsed from
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd
    bool system;                             // flag - system cmd / log

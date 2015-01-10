@@ -108,6 +108,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // collect strings in parse_data in one with same colors params
     ColorsCollector pc;
     pc.process(&parse_data);
+
     printIncoming(parse_data, flags, window);
 }
 
@@ -179,7 +180,8 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                    if (!after_prompt.empty())
                    {
                        MudViewString *s2 = s->divideString(end_prompt);
-                       if (!s2->blocks.empty()) tstring_trimleft(&s2->blocks[0].string);
+                       if (!s2->blocks.empty())
+                           tstring_trimleft(&s2->blocks[0].string);
 #ifdef MARKERS_IN_VIEW
                        s2->prompt = -1;
 #endif

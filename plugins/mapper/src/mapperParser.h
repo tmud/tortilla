@@ -20,7 +20,7 @@ public:
         return (size > 0 && keylen == size) ? true : false;
     }
     bool isKeyUsable() const { return (key != -1) ? true : false; }
-    int  getMaskLen() const { return keydata.size(); }
+    int  getKeyTemplateLen() const { return keydata.size(); }
 
 private:
     tstring keydata;
@@ -52,12 +52,14 @@ public:
     }    
     const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
     int getDataLen() const  { return (buffer.getSize() / sizeof(WCHAR)) - 1; }
-    void accept(const WCHAR* data, int size) 
+    void append(const WCHAR* data, int size) 
     {
-        int datalen = (size + 1) * sizeof(WCHAR);
-        buffer.alloc(datalen);
-        memcpy(buffer.getData(), data, datalen);
-        WCHAR *p = (WCHAR*)buffer.getData();
+        int cur_size = getDataLen();
+        int new_size = (cur_size + size + 1) * sizeof(WCHAR);
+        buffer.keepalloc(new_size);
+        WCHAR *p = (WCHAR*)buffer.getData() + cur_size;
+        int datalen = size * sizeof(WCHAR);        
+        memcpy(p, data, datalen);
         p[size] = 0;
     }
     void trimLeft(int size) 

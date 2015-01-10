@@ -238,6 +238,19 @@ int vd_isprompt(lua_State *L)
     return pluginInvArgs(L, "viewdata.isprompt");
 }
 
+int vd_issystem(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString* s = pdata->getselected();
+        int state = (s && s->system) ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.issystem");
+}
+
 int vd_getprompt(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -676,6 +689,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "isfirst", vd_isfirst);
     regFunction(L, "isgamecmd", vd_isgamecmd);
     regFunction(L, "isprompt", vd_isprompt);
+    regFunction(L, "issystem", vd_issystem);
     regFunction(L, "getprompt", vd_getprompt);
     regFunction(L, "gettext", vd_gettext);
     regFunction(L, "gettextlen", vd_gettextlen);

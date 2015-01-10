@@ -24,16 +24,20 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
         if (!m_current_string)
             m_current_string = new MudViewString();
 
-        parserResult result = process (b, len);
+        parserResult result = process(b, len);
         parserResultCode r = result.result;
+        
+        if (r != PARSE_STRING_IACGA)
+            m_current_string->bytes.append(b, result.processed);
 
         if (r == PARSE_STRING_IACGA)
-        {
             r = (newline_iacga) ? PARSE_STRING_FINISHED : PARSE_NO_ERROR;
-        }
 
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
         {
+            int pos = m_current_string->bytes.length();
+            m_current_block.bytes_pos = pos;
+
             if (!m_current_block.string.empty())
             {
                 m_current_string->blocks.push_back(m_current_block);
@@ -266,7 +270,9 @@ void ColorsCollector::process(parseData *data)
        int j=0, je=b.size()-1;
        while (j<je)
        {
-           if (b[j].params == b[j+1].params)
+           int dt = b[j + 1].bytes_pos - b[j].bytes_pos;
+           int len = b[j + 1].string.size();
+           if (len == dt) // && b[j].params == b[j + 1].params)
            {
                b[j].string.append(b[j+1].string);
                b.erase(b.begin() + (j+1));
