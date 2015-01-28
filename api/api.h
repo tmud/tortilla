@@ -34,7 +34,18 @@ class luaT_window
     void *window;
 public:
     luaT_window() : L(NULL), window(NULL) {}
-    void init(lua_State *pL, void *window_object) { L = pL; window = window_object; }
+	bool create(lua_State *pL, const utf8* caption, int width, int height)
+	{
+		if (!pL)
+			return false;
+		L = pL;
+		luaT_run(L, "createWindow", "sdd", caption, width, height);
+		void *wnd = luaT_toobject(L, -1);
+		if (!wnd)
+			return false;
+		window = wnd;
+		return true;
+	}
 
     HWND hwnd()
     {

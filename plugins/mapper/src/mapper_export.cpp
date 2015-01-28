@@ -73,12 +73,9 @@ int init(lua_State *L)
         }
     }
     ld.deletenode();
- 
-    luaT_run(L, "createWindow", "sdd", "Карта", 400, 400);
-    void *window = luaT_toobject(L, -1);
-    if (!window)
-        return luaT_error(L, "Не удалось создать окно для карты");
-    m_parent_window.init(L, window);
+
+	if (!m_parent_window.create(L, "Карта", 400, 400))
+		return luaT_error(L, "Не удалось создать окно для карты");
 
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isvisible();
