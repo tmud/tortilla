@@ -53,12 +53,11 @@ struct MudViewStringParams
 
 struct MudViewStringBlock
 {
-   MudViewStringBlock() { size.cx = 0; size.cy = 0; subs_protected = 0; bytes_pos = 0;  }
+   MudViewStringBlock() { size.cx = 0; size.cy = 0; subs_protected = 0; }
    tstring string;                        // text string
    MudViewStringParams params;            // string params
    SIZE size;                             // size of string (DC size of current font)
    tbyte subs_protected;                  // protected from subs
-   int bytes_pos;                         // helpers value for position in string bytes
 };
 
 struct MudViewString
@@ -66,9 +65,6 @@ struct MudViewString
    MudViewString() : dropped(false), gamecmd(false), system(false), prompt(0) {}
    void moveBlocks(MudViewString* src) 
    {
-       int size = blocks.size();
-       int di = (size != 0) ? blocks[size - 1].bytes_pos : 0;
-       std::for_each(src->blocks.begin(), src->blocks.end(), [di](MudViewStringBlock &b) { b.bytes_pos += di;});
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
        bytes.append(src->bytes);
        gamecmd |= src->gamecmd;
@@ -152,14 +148,10 @@ struct MudViewString
            for (int i = index + 1, e = blocks.size(); i < e; ++i)
                s->blocks.push_back(blocks[i]);
            blocks.erase(blocks.begin()+index+1, blocks.end());
-           
-
-
-
        }
        return s;
    }
-   
+
    std::vector<MudViewStringBlock> blocks;  // all string blocks
    tstring bytes;                           // all stream data bytes parsed from
    bool dropped;                            // flag for dropping string from view

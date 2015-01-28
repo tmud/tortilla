@@ -26,7 +26,7 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
 
         parserResult result = process(b, len);
         parserResultCode r = result.result;
-        
+
         if (r != PARSE_STRING_IACGA)
             m_current_string->bytes.append(b, result.processed);
 
@@ -35,8 +35,8 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
 
         if (r == PARSE_BLOCK_FINISHED || r == PARSE_STRING_FINISHED)
         {
-            int pos = m_current_string->bytes.length();
-            m_current_block.bytes_pos = pos;
+            //int pos = m_current_string->bytes.length();
+            //m_current_block.bytes_pos = pos;
 
             if (!m_current_block.string.empty())
             {
@@ -266,13 +266,11 @@ void ColorsCollector::process(parseData *data)
    for (int i=0,e=pds.size(); i<e; ++i)
    {
        //collect same strings color
-       std::vector<MudViewStringBlock> &b = pds[i]->blocks;       
+       std::vector<MudViewStringBlock> &b = pds[i]->blocks;
        int j=0, je=b.size()-1;
        while (j<je)
        {
-           int dt = b[j + 1].bytes_pos - b[j].bytes_pos;
-           int len = b[j + 1].string.size();
-           if (len == dt) // && b[j].params == b[j + 1].params)
+           if (b[j].params == b[j + 1].params)
            {
                b[j].string.append(b[j+1].string);
                b.erase(b.begin() + (j+1));

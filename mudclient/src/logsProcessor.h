@@ -23,7 +23,6 @@ private:
     void prepare(int id);    
     void write(HANDLE file, const std::string &data);
     void closeReqLogs();
-    void collectColors(MudViewString *str);
     void convertString(MudViewString* str, std::string* out);
     MudViewString* getFreeString();
     const char* color(COLORREF c);

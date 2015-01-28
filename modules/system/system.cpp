@@ -7,7 +7,7 @@ int system_messagebox(lua_State *L)
     return 0;
 }
 
-int system_outputdebugstring(lua_State *L)
+int system_dbgstack(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
@@ -35,9 +35,9 @@ int system_dbgtable(lua_State *L)
 
 static const luaL_Reg system_methods[] =
 {
-    { "dbgstack", system_outputdebugstring },
+    { "dbgstack", system_dbgstack },
     { "dbgtable", system_dbgtable },
-    { "msgbox", system_messagebox },
+    //{ "msgbox", system_messagebox },
     { NULL, NULL }
 };
 

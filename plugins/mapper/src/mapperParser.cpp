@@ -24,13 +24,15 @@ bool MapperKeyElement::init(const tstring& macro)
         {
             if (!spec_sym)
             {
-                spec_sym = true; continue;
+                spec_sym = true;
+                continue;
             }
             spec_sym = false;
         }
         if (!spec_sym)
         {
-            keydata.append(p, 1); continue;
+            keydata.append(p, 1);
+            continue;
         }
 
         WCHAR s[2] = { *p, 0 };

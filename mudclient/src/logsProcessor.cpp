@@ -311,29 +311,8 @@ void LogsProcessor::closeReqLogs()
     }
 }
 
-void LogsProcessor::collectColors(MudViewString *str)
-{
-    //collect same strings color
-    std::vector<MudViewStringBlock> &b = str->blocks;
-    int j = 0, je = b.size() - 1;
-    while (j < je)
-    {
-        if (b[j].params == b[j + 1].params)
-        {
-            b[j].string.append(b[j + 1].string);
-            b.erase(b.begin() + (j + 1));
-            je--;
-        }
-        else
-        {
-            j++;
-        }
-    }
-}
-
 void LogsProcessor::convertString(MudViewString* str, std::string* out)
 {
-    collectColors(str);
     char* buffer = m_buffer.getData();
     for (int i=0,e=str->blocks.size(); i<e; ++i)
     {
