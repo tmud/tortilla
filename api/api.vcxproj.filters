@@ -20,6 +20,12 @@
     <ClCompile Include="src\api_pcre.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\api_trigger.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\trigger.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\stdafx.h">
@@ -29,6 +35,9 @@
       <Filter>Main Files</Filter>
     </ClInclude>
     <ClInclude Include="base.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\trigger.h">
       <Filter>Main Files</Filter>
     </ClInclude>
   </ItemGroup>
