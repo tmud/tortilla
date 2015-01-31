@@ -473,16 +473,18 @@ private:
 typedef void* trigger;
 trigger trigger_create(const utf8* begin, const utf8* end, int max_len);
 void    trigger_delete(trigger t);
-bool    trigger_addstream(trigger t, const utf8* data);
-const utf8* trigger_find(trigger t, const utf8* begin, const utf8* end);
+int     trigger_addstream(trigger t, const utf8* data);
+int     trigger_find(trigger t, const utf8* data);
+const utf8* trigger_get(trigger t, int from, int len);
 
 class StreamTrigger
 {
 public:
     StreamTrigger(const utf8* begin, const utf8* end, int max_len) { t = trigger_create(begin, end, max_len); }
     ~StreamTrigger() { trigger_delete(t); }
-    bool stream(const utf8* data) { return trigger_addstream(t, data); }
-    const utf8* find(const utf8* begin, const utf8* end) { return trigger_find(t, begin, end); }
+    int stream(const utf8* data) { return trigger_addstream(t, data); }
+    int find(const utf8* data) { return trigger_find(t, data); }
+    const utf8* get(int from, int len) { return trigger_get(t, from, len); }
 private:
     trigger t;
 };

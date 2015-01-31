@@ -1,20 +1,51 @@
 #include "stdafx.h"
 #include "trigger.h"
 
-int _findstrn(const utf8* str, const utf8* basestr, int basestr_len)
+const findpos not_found(-1, 0);
+findpos _findstrn_min(const utf8* str, const utf8* where_str, int where_len)
 {
-    if (!str || !basestr || basestr_len <= 0)
-        return -1;
+    if (!str || !where_str || where_len <= 0)
+        return not_found;
+    int str_len = strlen(str);
+    if (!str_len)
+        return not_found;
 
+    const utf8* p = where_str;
+    int len = where_len;
+
+    // find first symbol
+    while (len)
+    {
+       if (str[0] == *p)
+           break;
+       p++; len--;
+    }
+    if (len == 0)
+       return not_found;
+
+    // check next symbols
+    len = min(len, str_len);
+    int i = 1;
+    for (; i < len; ++i)
+    {
+        if (str[i] != p[i])
+            break;
+    }
+    return findpos(p - where_str, i);
+}
+
+int _findstrn(const utf8* str, const utf8* where_str, int where_len)
+{
+    if (!str || !where_str || where_len <= 0)
+        return -1;
     int str_len = strlen(str);
     if (!str_len)
         return -1;
 
-    do
+    const utf8* p = where_str;
+    int len = where_len;
+    do 
     {
-        const utf8* p = basestr;
-        int len = basestr_len;
-
         // find first symbol
         while (len)
         {
@@ -22,41 +53,30 @@ int _findstrn(const utf8* str, const utf8* basestr, int basestr_len)
                 break;
             p++; len--;
         }
-        if (len == 0)
+        if (len == 0 || str_len > len)
             return -1;
 
         // check next symbols
-        if (str_len > len)
-            len = datalen;
-
         bool compared = true;
-        int i = 1;
-        for (; i < len; ++i)
+        for (int i = 1; i < str_len; ++i)
         {
-            if (keydata.at(i) != data[i])
-            {
-                compared = false;
-                break;
-            }
+            if (str[i] != p[i]) { compared = false;  break; }
         }
         if (compared)
-        {
-            find_pos = data - data0;
-            find_len = len;
-            return true;
-        }
-        data += i;
-        datalen -= i;
-    } while (datalen);
+            return (p - where_str);
+        p++; len--;
+    } while (len);
+    return -1;
 }
 
-TriggerKeyElement::TriggerKeyElement(): find_pos(-1), find_len(0)
+TriggerKeyElement::TriggerKeyElement(): pos(not_found)
 {
 }
 
 bool TriggerKeyElement::init(const utf8* macro)
 {
     reset();
+    keydata.clear();
     bool spec_sym = false;
     const utf8*p = macro;
     for (; *p; ++p)
@@ -120,15 +140,14 @@ bool TriggerKeyElement::init(const utf8* macro)
 
 void TriggerKeyElement::reset()
 {
-    find_pos = -1;
-    find_len = 0;
-    keydata.clear();
+    pos = not_found;    
 }
 
 bool TriggerKeyElement::initfail()
 {
     assert(false);
     reset();
+    keydata.clear();
     return false;
 }
 
@@ -136,47 +155,8 @@ bool TriggerKeyElement::findData(const utf8* data, int datalen)
 {
     if (keydata.empty())
         return false;
-
-    const utf8 *data0 = data;
-    utf8 s = keydata.at(0);
-    do
-    {
-        // find first symbol
-        while (datalen)
-        {
-            if (s == *data)
-                break;
-            data++;
-            datalen--;
-        }
-        if (datalen == 0)
-            return false;
-
-        // check next symbols
-        int len = keydata.size();
-        if (len > datalen)
-            len = datalen;
-
-        bool compared = true;
-        int i = 1;
-        for (; i < len; ++i)
-        {
-            if (keydata.at(i) != data[i])
-            {
-                compared = false; 
-                break;
-            }
-        }
-        if (compared)
-        {
-            find_pos = data - data0;
-            find_len = len;
-            return true;
-        }
-        data += i;
-        datalen -= i;
-    } while (datalen);
-    return false;
+    pos = _findstrn_min(keydata.c_str(), data, datalen);
+    return (pos == not_found) ? false : true;
 }
 
 Trigger::Trigger() : m_data_maxlen(0)
@@ -195,73 +175,80 @@ bool Trigger::init(const utf8* begin, const utf8* end, int max_len)
 
 int Trigger::add(const utf8* data)
 {
-    if (!data)
-        return -1;
-    int data_len = strlen(data);
+    if (m_key_end.isFullComparsion())
+        reset();
+
+    int data_len = (data) ? strlen(data) : 0;
     if (!data_len)
-        return -1;
+        return 0;
 
     m_data.write(data, data_len);
-    int len = m_data.getSize();
-    const utf8* p = (const utf8*)m_data.getData();
 
     // 1. find 'begin' key
     if (!m_key_begin.isFullComparsion())
     {
-        if (!m_key_begin.findData(p, len))
+        if (!m_key_begin.findData((const utf8*)m_data.getData(), m_data.getSize()))
         {
             m_data.clear();
-            return -1;
+            return 0;
         }
+        m_data.truncate(m_key_begin.getBegin());
+        m_key_begin.truncate();
         if (!m_key_begin.isFullComparsion())
-        {
-            m_data.truncate(m_key_begin.getBegin());
-            m_key_begin.truncate();
-            return -1;
-        }
-
-        // full key found -> move pointer to search next data
-        m_data.truncate(m_key_begin.getEnd());
-        p = (const utf8*)m_data.getData();
-        len = m_data.getSize();
+            return 0;
     }
 
-    // 2. find 'end' key
-    if (!m_key_end.findData(p, len) || !m_key_end.isFullComparsion())
+    // 2. full begin key found -> move pointer to search next data
+    block_data b = getdata();
+
+    // 3. find 'end' key
+    if (!m_key_end.findData(b.first, b.second) || !m_key_end.isFullComparsion())
     {
-        checkBufferLimit();
-        return -1;
+        if (m_data.getSize() > m_data_maxlen)
+            reset();
+        return 0;
     }
-    int len = m_key_end.getBegin();
-    m_data.truncate(len);
-    return len;
+
+    // 4. found full end key - return len of block between keys
+    return m_key_end.getBegin() - m_key_begin.getLen();
 }
 
 int Trigger::find(const utf8* data)
 {
     if (!data || !m_key_end.isFullComparsion())
         return -1;
-
-    int data_len = strlen(data);    
-    int len = m_data.getSize();
-    if (!data_len || len < data_len)
-        return -1;
-
-    strstr
-
-    const utf8* p = (const utf8*)m_data.getData();            
-    int pos = strncmp(data, p, data_len);
-
-
-    return NULL; // m_find_buffer.c_str();
+    block_data b = getdata();
+    return _findstrn(data, b.first, b.second);
 }
 
-void Trigger::checkBufferLimit()
+const utf8* Trigger::get(int from, int len)
 {
-    if (m_data.getSize() > m_data_maxlen)
+    if (!m_key_end.isFullComparsion())
+        m_find_buffer.clear();
+    else
     {
-        m_data.clear();
-        m_key_begin.reset();
-        m_key_end.reset();
+        block_data b = getdata();
+        int bd_len = b.second;
+        if (from < 0 || from >= bd_len || len <= 0 || (from + len) >= bd_len)
+            m_find_buffer.clear();
+        else
+            m_find_buffer.assign(b.first + from, len);
     }
+    return m_find_buffer.c_str();
+}
+
+Trigger::block_data Trigger::getdata()
+{
+    int len = m_data.getSize();
+    const utf8* p = (const utf8*)m_data.getData();
+    p = p + m_key_begin.getLen();
+    len = len - m_key_begin.getLen();
+    return block_data(p, len);
+}
+
+void Trigger::reset()
+{
+    m_data.clear();
+    m_key_begin.reset();
+    m_key_end.reset();
 }
