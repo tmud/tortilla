@@ -15,6 +15,8 @@
 
 #include "AboutDlg.h"
 
+#define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
+
 class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, public CIdleHandler
 {
     enum { CPWIN = 0, CPUTF8 };
@@ -24,7 +26,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
 
     CWindow m_parent;
     CDockingWindow m_dock;
-    int m_barHeigth;
+    int m_barHeight;
     MudCommandBar m_bar;
     MudView m_history;
     MudView m_view;
@@ -52,13 +54,13 @@ public:
     DECLARE_WND_CLASS(NULL)
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
-        m_barHeigth(32), m_bar(m_propData),
+        m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(m_propData, this), m_plugins(m_propData), 
         m_codepage(CPWIN)
     {
     }
-    
+
     BOOL PreTranslateMessage(MSG* pMsg)
     {
         UINT msg = pMsg->message;
@@ -91,9 +93,18 @@ public:
     HWND createView(HWND parent)
     {
         m_parent = parent;
-        RECT rc; ::GetClientRect(parent, &rc);
-        HWND dock = m_dock.Create(parent, rc);
-        Create(dock, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+        RECT rc; ::GetClientRect(m_parent, &rc);
+        HWND dock = m_dock.Create(m_parent, rc);
+
+        int height = rc.bottom;
+        rc.top = height - m_barHeight;
+        HWND bar = m_bar.Create(dock, rc, NULL, WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP);
+        m_dock.SetStatusBar(bar);
+        m_dock.SetStatusBarHeight(m_barHeight);
+
+		rc.top = rc.bottom;
+		rc.bottom = height;
+		Create(dock, rc, NULL, WS_DEFCHILD);
         m_dock.SetClient(m_hWnd);
         return dock;
     }
@@ -238,7 +249,7 @@ private:
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
         MESSAGE_HANDLER(WM_USER+4, OnSetFocus)
-        MESSAGE_HANDLER(WM_TIMER, OnTimer)        
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
@@ -268,11 +279,10 @@ private:
 
         DWORD bstyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VSCROLL;
         m_history.Create(m_hSplitter, pane_top, NULL, bstyle);
-        m_view.Create(m_hSplitter, pane_bottom, NULL, bstyle);        
+        m_view.Create(m_hSplitter, pane_bottom, NULL, bstyle);
         m_hSplitter.SetSplitterPanes(m_history, m_view);
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
 
-        m_bar.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | SBARS_SIZEGRIP);
         m_parent.MoveWindow(&m_propData->main_window);
 
         // create docking output windows
@@ -282,7 +292,7 @@ private:
             MudView *v = new MudView(&m_propElements);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
             int menu_id = i+ID_WINDOW_1;
-            if (w.side != DOCK_HIDDEN)           
+            if (w.side != DOCK_HIDDEN)
                 m_parent.SendMessage(WM_USER, menu_id, 1);
             m_parent.SendMessage(WM_USER+1, menu_id, (WPARAM)w.name.c_str());
 
@@ -316,7 +326,7 @@ private:
         m_parent.ShowWindow(SW_SHOW);
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
-               
+
         if (m_propElements.global.welcome)
         {
             m_propElements.global.welcome = 0;
@@ -337,7 +347,7 @@ private:
     }
 
     LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
-    {      
+    {
         CWelcomeDlg dlg;
         dlg.DoModal();
         return 0;
@@ -366,18 +376,13 @@ private:
         onClose();
         return 0;
     }
-    
+
     LRESULT OnSize(UINT, WPARAM, LPARAM lparam, BOOL& bHandled)
     {
         if (!m_view.IsWindow())
             return 0;
-        int width = LOWORD(lparam);
-        int heigth = HIWORD(lparam);
-        RECT pos = { 0, 0, width, heigth - m_barHeigth };
+        RECT pos = { 0, 0, LOWORD(lparam), HIWORD(lparam) };
         m_hSplitter.MoveWindow(&pos);
-        pos.top = pos.bottom;
-        pos.bottom = heigth;
-        m_bar.MoveWindow(&pos);
         return 0;
     }
 
@@ -390,7 +395,7 @@ private:
     {
         POINT pt; RECT rc;
         if (GetCursorPos(&pt))
-        {            
+        {
             for (int i=0,e=m_views.size(); i<e; ++i)
             {
                 MudView *v = m_views[i];
@@ -413,7 +418,7 @@ private:
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
                 return 0;
             }
-        }        
+        }
 
         m_view.GetWindowRect(&rc);
         if (PtInRect(&rc, pt))
@@ -527,7 +532,7 @@ private:
         }
         return 0;
     }
-   
+
     LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         tstring cmd;
@@ -542,14 +547,11 @@ private:
 
     void initCommandBar()
     {
-        m_barHeigth = m_propElements.font_height + 4;
-        m_bar.setParams(m_barHeigth, m_propElements.standard_font);
+        m_barHeight = m_propElements.font_height + 4;
+        m_bar.setParams(m_barHeight, m_propElements.standard_font);
+		m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);
-        pos.bottom -= m_barHeigth;
         m_hSplitter.MoveWindow(&pos);
-        pos.top = pos.bottom;
-        pos.bottom += m_barHeigth;
-        m_bar.MoveWindow(&pos);
     }
 
     LRESULT OnNewProfile(WORD, WORD, HWND, BOOL&)
@@ -595,7 +597,7 @@ private:
         setCmdBarFocus();
         return 0;
     }
-   
+
     LRESULT OnCloseWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         HWND wnd = (HWND)wparam;
@@ -604,7 +606,7 @@ private:
             HWND hwnd = *m_plugins_views[i];
             if (hwnd == wnd)
             {
-                savePluginWindowPos(hwnd);                
+                savePluginWindowPos(hwnd);
                 Plugin *p = m_plugins.findPlugin(wnd);
                 assert(p);
                 if (p) 
@@ -631,7 +633,7 @@ private:
                 visible_string += page;
             view.setViewString(visible_string);
             return true;
-        }       
+        }
         return false;
     }
 
@@ -724,7 +726,7 @@ private:
     {
         m_plugins.processViewData("after", view, parse_data);
     }
-    
+
     void addText(int view, parseData* parse_data)
     {
         if (parse_data->strings.empty())
@@ -749,7 +751,7 @@ private:
                 int dy0 = rc.bottom - (lines0 * sz.cy);
                 int curpos = m_hSplitter.GetSplitterPos();
                 int lines = curpos / sz.cy;
-                curpos = dy0 + (lines * sz.cy);                
+                curpos = dy0 + (lines * sz.cy);
                 vs = vs - (lines0 - lines) + (m_history.getLastString() - m_view.getLastString());
 
                 m_hSplitter.SetSplitterPos(curpos);

@@ -1185,8 +1185,13 @@ public:
    TPaneWindow m_panes[4];  // The 4 panel windows (one for each side)
    CDockMap m_map;          // The master map of dockable windows
    HWND m_hwndClient;       // The client window contained in the center
+   HWND m_hwndBar;			// Bar at bottom side of dockarea
+   int  m_barHeight;
    DWORD m_dwExtStyle;      // Optional styles
    SIZE m_sizeBorder;       // Size of window borders
+
+   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0)
+   {}
 
    // Operations
    void SetClient(HWND hWnd)
@@ -1194,6 +1199,21 @@ public:
       ATLASSERT(::IsWindow(hWnd));
       ATLASSERT(::GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD);
       m_hwndClient = hWnd;
+   }
+
+   void SetStatusBar(HWND hWnd)
+   {
+	   ATLASSERT(::IsWindow(hWnd));
+	   ATLASSERT(::GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD);
+	   m_hwndBar = hWnd;
+	   m_barHeight = 0;
+   }
+
+   void SetStatusBarHeight(int height)
+   {
+	   m_barHeight = height;
+       T* pT = static_cast<T*>(this);
+       pT->UpdateLayout();
    }
 
    DWORD GetExtendedDockStyle() const
@@ -1227,7 +1247,7 @@ public:
       ctx->Side = DOCK_HIDDEN;
       ctx->LastSide = DOCK_FLOAT;
       ctx->hwndChild = hWnd;
-      ctx->hwndRoot = m_hWnd;      
+      ctx->hwndRoot = m_hWnd;
 
       RECT rc;
       ::GetClientRect(hWnd, &rc);
@@ -1498,8 +1518,11 @@ public:
          ::OffsetRect(&pTI->rc, pt.x - pTI->ptStart.x, pt.y - pTI->ptStart.y);
          pTI->Side = DOCK_FLOAT;
       }
+
       // Pressing CTRL key gives default floating
-      if( ::GetKeyState(VK_CONTROL) < 0 ) return 0;
+      if( ::GetKeyState(VK_CONTROL) < 0 )
+		  return 0;
+
       // Are we perhaps hovering over the tracked window?
       ::GetWindowRect(pTI->hWnd, &rc);
       if( ::PtInRect(&rc, pt) ) {
@@ -1508,10 +1531,12 @@ public:
          pTI->Side = pTI->pCtx->Side;
          return 0;
       }
+
       // Or is the point inside one of the other docking areas?
       for( int i = 0; i < 4; i++ ) 
       {
-         if( pTI->pCtx->dwFlags & (1<<i) ) continue; // DCK_NOxxx flag?
+         if( pTI->pCtx->dwFlags & (1<<i) )
+			 continue; // DCK_NOxxx flag?
 
          RECT dc;             // docking check area for mouse
          if( m_panes[i].m_cy == 0 ) 
@@ -1521,12 +1546,36 @@ public:
             switch( m_panes[i].m_Side )
             {
                 case DOCK_LEFT:
-                case DOCK_RIGHT:
+				case DOCK_RIGHT:
+				{
+					if (isUsedStatusBar())
+						rc.bottom -= m_barHeight;
+					LONG top = rc.top; LONG bottom = rc.bottom;
                     rc.top = rc.top + m_panes[DOCK_TOP].m_cy;
                     rc.bottom = rc.bottom - m_panes[DOCK_BOTTOM].m_cy;
+					short curSide = pTI->pCtx->Side;
+					if (curSide == DOCK_TOP || curSide == DOCK_BOTTOM)
+					{
+						int count = 0;
+						for (int i = 0; i < m_map.GetSize(); i++)
+						{
+							if (m_map[i]->Side == curSide) count++;
+						}
+						if (count == 1)
+						{
+							if (curSide == DOCK_TOP) rc.top = top;
+							else rc.bottom = bottom;
+						}
+					}
+				}
+                break;
+				case DOCK_TOP:
+				case DOCK_BOTTOM:
+					if (isUsedStatusBar())
+						rc.bottom -= m_barHeight;
                 break;
             };
-            
+
             dc = rc;
             int cx = pTI->pCtx->sizeFloat.cx;
             int cy = pTI->pCtx->sizeFloat.cy;
@@ -1544,7 +1593,7 @@ public:
             switch( m_panes[i].m_Side )
             {
                 case DOCK_LEFT:
-                    rc.right = rc.left + cx;             
+                    rc.right = rc.left + cx;
                     dc.right = dc.left + DEFAULT_DOCKING_ZONE;
                 break;
                 case DOCK_RIGHT:
@@ -1629,8 +1678,17 @@ public:
    // Overridables
    void UpdateLayout()
    {
-      RECT rect;   
+      RECT rect;
       GetClientRect(&rect);
+
+	  if (isUsedStatusBar())
+	  {
+		  RECT bar(rect);
+		  bar.top = bar.bottom - m_barHeight;
+		  ::SetWindowPos(m_hwndBar, NULL, bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top, SWP_NOZORDER | SWP_NOACTIVATE);
+		  rect.bottom -= m_barHeight;
+	  }
+
       RECT rcClient = rect;
 
       if( m_panes[DOCK_TOP].m_cy > 0 ) {
@@ -1788,15 +1846,15 @@ public:
         RECT limit; GetLimitRect(&limit);
         switch( side )
         {
-            case DOCK_LEFT:        
+            case DOCK_LEFT:
                 if (rc->right > limit.right)
                     rc->right = limit.right;
             break;
-            case DOCK_RIGHT:  
+            case DOCK_RIGHT:
                 if (rc->left < limit.left)
                     rc->left = limit.left;
             break;
-            case DOCK_TOP:    
+            case DOCK_TOP:
                 if (rc->bottom > limit.bottom)
                     rc->bottom = limit.bottom;
             break;
@@ -1814,11 +1872,11 @@ public:
        switch( side )
         {
             case DOCK_LEFT:
-            case DOCK_RIGHT:  
+            case DOCK_RIGHT:
                 if (sz->cx > ls.cx)
                     sz->cx = ls.cx;
             break;
-            case DOCK_TOP:    
+            case DOCK_TOP:
             case DOCK_BOTTOM:
                 if (sz->cy > ls.cy)
                     sz->cy = ls.cy;
@@ -1830,12 +1888,18 @@ public:
    {
       if (IsDocked(ctx->Side))
       {
-          if (IsDockedVertically(ctx->Side))         
+          if (IsDockedVertically(ctx->Side))
               ctx->sizeFloat.cx = ctx->rcWindow.right-ctx->rcWindow.left;
           else
-              ctx->sizeFloat.cy = ctx->rcWindow.bottom-ctx->rcWindow.top;          
+              ctx->sizeFloat.cy = ctx->rcWindow.bottom-ctx->rcWindow.top;
       }
    }
+private:
+	bool isUsedStatusBar() const
+	{
+		return (m_barHeight > 0 && ::IsWindow(m_hwndBar) && ::IsWindowVisible(m_hWnd)) ? true : false;
+	}
+
 };
 
 class CDockingWindow : public CDockingWindowImpl<CDockingWindow>
