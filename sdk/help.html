@@ -432,12 +432,18 @@ local t = {...} -- правильное написание
 Любой плагин, при необходимости может создавать для себя дополнительные окна. Данный класс предназначен для облегчения решения этой задачи. 
 Класс является оберткой вокруг Lua объекта Окно. В Lua есть подобный интерфейс <a href="#window" class="cmd">window</a>.<br>
 <pre>
-<div class="cmd">void init(lua_State *pL, void *window_object)</div> - инициализация.
-<div class="cmd">HWND hwnd()</div> - получение заголовка окна.
+<div class="cmd">bool create(lua_State *pL, const utf8* caption, int width, int height)</div> - создание окна-контейера, с заданными размерами 
+и заголовком.
+<div class="cmd">HWND hwnd()</div> - получение дескриптора окна.
 <div class="cmd">void hide()</div> - скрыть окно.
 <div class="cmd">void show()</div> - показать окно.
 <div class="cmd">bool isvisible()</div> - проверка видидимо окно или нет.
-<div class="cmd">void attach(HWND child)</div> - подключение к окну клиента своего окна.
+<div class="cmd">void dock(const utf8* side)</div> - заставляет окно пристыковаться к нужной стороне клиента. Возможные варианты: 'left', 'right', 
+'top', 'bottom'.
+<div class="cmd">void undock()</div> - окно открепляется от окна клиента.
+<div class="cmd">void block(const utf8* side)</div> - блокировка возможности прикрепить окно к определенной стороне. Возможные варианты: 'left', 
+'right', 'top', 'bottom', 'float'. Вариант 'float' означает, что окно не может быть плавающим и всегда должно быть пристыкованным.
+<div class="cmd">void attach(HWND child)</div> - подключение своего окна в данный контейнер, как дочернее.
 </pre>
 <hr>
 <a name="cppviewdata"></a>

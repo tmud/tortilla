@@ -73,6 +73,21 @@ public:
         lua_pop(L, 1);
         return result;
     }
+    void dock(const utf8* side)
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "dock", "os", side);
+    }
+    void undock()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "undock", "o");
+    }
+    void block(const utf8* side)
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "block", "os", side);
+    }
     void attach(HWND child)
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
