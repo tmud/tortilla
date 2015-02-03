@@ -192,7 +192,7 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
     file = fname;
     const wchar_t *ext = wcsrchr(fname, L'.');
     filename.assign(fname, ext - fname);
-    module = convert_wide_to_ansi(filename.c_str());
+    module = TW2A(filename.c_str());
 
     lua_getglobal(L, module.c_str());
     bool loaded = lua_istable(L, -1);

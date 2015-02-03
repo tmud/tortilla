@@ -16,7 +16,7 @@ public:
 class CompareObject
 {
 public:
-    CompareObject();
+    CompareObject(); 
     ~CompareObject();
     bool init(const tstring& key);
     bool checkToCompare(const tstring& str, const CompareVar* object);

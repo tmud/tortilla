@@ -16,7 +16,7 @@ m_highlights(L, "highlights"), m_hotkeys(L, "hotkeys"), m_gags(L, "gags"), m_var
     initLegacy(); 
 }
 Jmc3Import::~Jmc3Import() {}
-    
+
 bool Jmc3Import::import(HWND parent_for_dlgs, lua_State *L, std::vector<u8string>* errors)
 {
     m_parent = parent_for_dlgs;
@@ -36,7 +36,7 @@ bool Jmc3Import::import(HWND parent_for_dlgs, lua_State *L, std::vector<u8string
             return errorBox("Файл слишком большого размера!");
         if (size == 0)
             return errorBox("Файл пустой!");
-        
+
         std::vector <std::string> config;
         DataQueue dq;
         int buffer_size = 1024;
@@ -58,11 +58,11 @@ bool Jmc3Import::import(HWND parent_for_dlgs, lua_State *L, std::vector<u8string
         for (int i = 0, e = config.size(); i < e; ++i)
         {
             std::string &s = config[i];
-            const wchar_t *wide = convert_ansi_to_wide( config[i].c_str() );
-            const utf8* ptr = convert_wide_to_utf8(wide);
+            const wchar_t *wide = TA2W( config[i].c_str() );
+            const utf8* ptr = TW2U(wide);
             parseString(u8string(ptr), errors);
         }
-        
+
         // update all elements, through updating groups
         m_groups.update();
         return true;
@@ -90,7 +90,7 @@ void Jmc3Import::parseQueue(DataQueue &dq, std::vector<std::string>& out)
                 out.push_back(label);
            p++;
            b = p;
-        }        
+        }
     }
     const char* b0 = (const char*)dq.getData();    
     dq.truncate(b-b0);
@@ -260,6 +260,6 @@ void Jmc3Import::initPcre()
 
 bool Jmc3Import::errorBox(const utf8* msg)
 {
-    MessageBox(m_parent, convert_utf8_to_wide(msg), L"Jmc3 Import плагин", MB_OK | MB_ICONSTOP);
+    MessageBox(m_parent, TU2W(msg), L"Jmc3 Import плагин", MB_OK | MB_ICONSTOP);
     return false;
 }

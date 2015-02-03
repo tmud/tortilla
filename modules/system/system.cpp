@@ -3,8 +3,48 @@
 
 int system_messagebox(lua_State *L)
 {
-    MessageBox(NULL, L"test msgbox", L"API", MB_OK);
-    return 0;
+    HWND parent = NULL;
+    luaT_run(L, "getParent", "");
+    if (lua_isnumber(L, -1))
+    {
+        HWND wnd = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        if (::IsWindow(wnd))
+            parent = wnd;
+    }
+
+    bool params_ok = false;
+
+    u8string text;
+    u8string caption("Tortilla Mud Client");
+    UINT buttons = MB_OK;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        text.assign(lua_tostring(L, 1));
+        params_ok = true;
+    }
+    else if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    {
+        caption.assign(lua_tostring(L, 1));
+        text.assign(lua_tostring(L, 2));
+        params_ok = true;
+    }
+    else if (luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
+    {
+        caption.assign(lua_tostring(L, 1));
+        text.assign(lua_tostring(L, 2));
+        u8string b(lua_tostring(L, 3));
+        //todo Tokenize
+
+        params_ok = true;
+    }
+   
+    UINT result = 0;
+    if (params_ok)
+        result = MessageBox(parent, TU2W(text.c_str()), TU2W(caption.c_str()), buttons);
+
+    lua_pushinteger(L, result);
+    return 1;
 }
 
 int system_outputdebugstring(lua_State *L)

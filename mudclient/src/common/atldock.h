@@ -1234,14 +1234,23 @@ public:
            ATLASSERT(isDockable(iSide));
            return wincoll[iSide];
        }
-       BOOL AddWindow(HWND hWnd, short iSide)
+       BOOL AddWindow(HWND hWnd, short iSide, int iSize)
        {
            ATLASSERT(::IsWindow(hWnd));
            ATLASSERT(IsDockable(iSide));
            TSimplePaneWindow* wnd = new TSimplePaneWindow();
+           switch (iSide) {
+           case DOCK_LEFT:
+
+           break;
+           case DOCK_RIGHT:
+           case DOCK_TOP:
+           case DOCK_BOTTOM:
+           }
+
            if (!wnd->Create(m_hWnd, rcDefault, NULL))
               { delete wnd; return FALSE; }
-           wincoll.Add(wnd);
+           wincoll[iSide].Add(wnd);
            return TRUE;
        }
 
