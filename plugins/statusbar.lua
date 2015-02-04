@@ -18,5 +18,5 @@ function statusbar.version()
 end
 
 function statusbar.init()
-  msgbox('привет')
+  msgbox('привет', 'тестовый', 'ok,cancel,stop')
 end

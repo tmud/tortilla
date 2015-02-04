@@ -33,12 +33,22 @@ int system_messagebox(lua_State *L)
     {
         caption.assign(lua_tostring(L, 1));
         text.assign(lua_tostring(L, 2));
+
         u8string b(lua_tostring(L, 3));
-        //todo Tokenize
+        if (b == "ok,cancel") buttons = MB_OKCANCEL;
+        else if (b == "cancel,ok") buttons = MB_OKCANCEL|MB_DEFBUTTON2;
+        else if (b == "yes,no") buttons = MB_YESNO;
+        else if (b == "no,yes") buttons = MB_YESNO|MB_DEFBUTTON2;
+
+        if (strstr(b.c_str(), "error")) buttons |= MB_ICONERROR;
+        else if (strstr(b.c_str(), "stop")) buttons |= MB_ICONERROR;
+        else if (strstr(b.c_str(), "info")) buttons |= MB_ICONINFORMATION;
+        else if (strstr(b.c_str(), "information")) buttons |= MB_ICONINFORMATION;
+        else if (strstr(b.c_str(), "warning")) buttons |= MB_ICONWARNING;
 
         params_ok = true;
     }
-   
+
     UINT result = 0;
     if (params_ok)
         result = MessageBox(parent, TU2W(text.c_str()), TU2W(caption.c_str()), buttons);

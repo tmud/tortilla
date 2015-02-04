@@ -372,6 +372,9 @@ public:
     operator const char*() const { return (const char*)strbuf_ptr(b); }
 };
 
+
+
+
 // xml api
 typedef void* xnode;
 typedef void* xlist;

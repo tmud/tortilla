@@ -3,7 +3,6 @@
 #include "api/api.h"
 #include "../MainFrm.h"
 #include "pluginSupport.h"
-#include "plugin.h"
 #include "../profiles/profilesPath.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
@@ -297,7 +296,7 @@ int loadtable(lua_State *L)
             return 0;
         }
         lua_pop(L, 1);
-       
+
         struct el { el(xml::node n, int l) : node(n), level(l) {} xml::node node; int level; };
         std::vector<el> stack;
         xml::request req(doc, "*");
@@ -378,17 +377,17 @@ int savetable (lua_State *L)
 
     tstring filename(luaT_towstring(L, 2));
     lua_pop(L, 1);
-    
+
     // recursive cycles in table
     struct saveDataNode
     {
-        typedef std::pair<std::string, std::string> value;         
+        typedef std::pair<std::string, std::string> value;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
         std::string name;
     };
 
-    saveDataNode *current = new saveDataNode();       
+    saveDataNode *current = new saveDataNode();
     current->name = "plugindata";
 
     std::vector<saveDataNode*> stack;
@@ -524,7 +523,7 @@ int savetable (lua_State *L)
     return 0;
 }
 //----------------------------------------------------------------------------
-int find_plugin()
+PluginData& find_plugin()
 {
     tstring plugin_name(_cp->get(Plugin::FILE));
     int index = -1;
@@ -532,47 +531,29 @@ int find_plugin()
     {
         const PluginData &p = _pdata->plugins[i];
         if (p.name == plugin_name)
-            return i;
+            {  index = i; break; }
     }
-    return -1;
-}
-
-bool find_window(const tstring& window_name, OutputWindow *w)
-{
-    int plugin = find_plugin();
-    if (plugin == -1)
-        return false;
-    const PluginData &p = _pdata->plugins[plugin];
-    for (int j = 0, je = p.windows.size(); j < je; ++j)
-    {
-        if (p.windows[j].name == window_name)
-        {
-           *w = p.windows[j];
-           return true;
-        }
-    }
-    return false;      
-}
-
-int createwindow(lua_State *L)
-{
-    int index = find_plugin();
     if (index == -1)
     {
-        PluginData pd; pd.name = _cp->get(Plugin::FILE);
+        PluginData pd;
+        pd.name = plugin_name;
         pd.state = _cp->state() ? 1 : 0;
         _pdata->plugins.push_back(pd);
         index = _pdata->plugins.size() - 1;
     }
+    return _pdata->plugins[index];
+}
 
-    PluginData &p = _pdata->plugins[index];
+int createwindow(lua_State *L)
+{
+    PluginData &p = find_plugin();
     OutputWindow w;
     p.initDefaultPos(300, 300, &w);
 
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         tstring name( U2W(lua_tostring(L, 1)) );
-        if (!find_window(name, &w))
+        if (!p.findWindow(name, &w))
         {
             w.name = name;
             p.windows.push_back(w);
@@ -581,7 +562,7 @@ int createwindow(lua_State *L)
     else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER ))
     {
         tstring name(U2W(lua_tostring(L, 1)));
-        if (!find_window(name, &w))
+        if (!p.findWindow(name, &w))
         {
             int height = lua_tointeger(L, 3);
             int width = lua_tointeger(L, 2);
@@ -592,7 +573,7 @@ int createwindow(lua_State *L)
     }
     else { return pluginInvArgs(L, "createWindow"); }
    
-    PluginsView *window =  _wndMain.m_gameview.createDockPane(w, _cp->get(Plugin::FILE));
+    PluginsView *window =  _wndMain.m_gameview.createDockPane(w, p.name);
     if (window)
         _cp->views.push_back(window);
 

@@ -294,6 +294,19 @@ struct PluginData
         int y = 250 + windows_count * 50;
         w->initDefaultPos(x, y, width, height);                        
     }
+
+    bool findWindow(const tstring& window_name, OutputWindow *w)
+    {
+        for (int j = 0, je = windows.size(); j < je; ++j)
+        {
+            if (windows[j].name == window_name)
+            {
+                *w = windows[j];
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 struct PluginsDataValues : public std::vector<PluginData>

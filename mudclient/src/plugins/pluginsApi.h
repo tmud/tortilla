@@ -1,5 +1,7 @@
 #pragma once
 
+#include "plugin.h"
+
 #define PLUGING_MENUID_START 33000
 #define PLUGING_MENUID_END 57000
 
@@ -16,3 +18,4 @@ void pluginsUpdateActiveObjects(int type);
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f);
 void regIndexMt(lua_State *L);
+PluginData& find_plugin();
