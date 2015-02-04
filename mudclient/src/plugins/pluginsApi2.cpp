@@ -55,12 +55,9 @@ int window_hwnd(lua_State *L)
 
 int window_side(const wchar_t* side, bool checkfloat)
 {
-    int dock_side = -1;
-    if (!wcscmp(side,L"left")) dock_side = DOCK_LEFT;
-    else if (!wcscmp(side,L"right")) dock_side = DOCK_RIGHT;
-    else if (!wcscmp(side,L"top")) dock_side = DOCK_TOP;
-    else if (!wcscmp(side,L"bottom")) dock_side = DOCK_BOTTOM;
-    else if (checkfloat && !wcscmp(side, L"float")) dock_side = DOCK_FLOAT;
+    int dock_side = _wndMain.m_gameview.convertSideFromString(side);
+    if (!checkfloat && dock_side == DOCK_FLOAT)
+        dock_side = -1;
     return dock_side;
 }
 

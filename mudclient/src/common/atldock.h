@@ -1231,17 +1231,17 @@ public:
    {
    public:
        TSimpleList& get(short iSide) {
-           ATLASSERT(isDockable(iSide));
+           ATLASSERT(IsDocked(iSide));
            return wincoll[iSide];
        }
        BOOL AddWindow(HWND hWnd, short iSide, int iSize)
        {
-           ATLASSERT(::IsWindow(hWnd));
-           ATLASSERT(IsDockable(iSide));
+           /*ATLASSERT(::IsWindow(hWnd));
+           ATLASSERT(IsDocked(iSide));
            TSimplePaneWindow* wnd = new TSimplePaneWindow();
-           switch (iSide) {
+           switch (iSide) 
+           {
            case DOCK_LEFT:
-
            break;
            case DOCK_RIGHT:
            case DOCK_TOP:
@@ -1250,8 +1250,11 @@ public:
 
            if (!wnd->Create(m_hWnd, rcDefault, NULL))
               { delete wnd; return FALSE; }
-           wincoll[iSide].Add(wnd);
+           wincoll[iSide].Add(wnd);*/
            return TRUE;
+       }
+       void RemoveWindow(HWND hWnd)
+       {
        }
 
    private:       
@@ -1962,6 +1965,18 @@ public:
               ctx->sizeFloat.cy = ctx->rcWindow.bottom-ctx->rcWindow.top;
       }
    }
+
+   int GetSideByString(const wchar_t* side) const
+   {
+       int dock_side = -1;
+       if (!wcscmp(side, L"left")) dock_side = DOCK_LEFT;
+       else if (!wcscmp(side, L"right")) dock_side = DOCK_RIGHT;
+       else if (!wcscmp(side, L"top")) dock_side = DOCK_TOP;
+       else if (!wcscmp(side, L"bottom")) dock_side = DOCK_BOTTOM;
+       else if (!wcscmp(side, L"float")) dock_side = DOCK_FLOAT;
+       return dock_side;
+   }
+
 private:
 	bool isUsedStatusBar() const
 	{

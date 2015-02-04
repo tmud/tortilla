@@ -11,11 +11,17 @@ extern Plugin* _cp;
 int createpanel(lua_State *L)
 {   
     PluginData &p = find_plugin();
-
-
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
     {
+        PanelWindow w;
+        w.size = lua_tointeger(L, 2);
+        w.side = _wndMain.m_gameview.convertSideFromString(TU2W(lua_tostring(L, 1)));
+        if (IsDocked(w.side))
+        {
+            //todo
+        }
 
+        //_wndMain.m_gameview.createPanel()
 
 
     }

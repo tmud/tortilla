@@ -15,7 +15,7 @@
 
 #include "AboutDlg.h"
 
-#define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
+#define WS_DEFCHILD WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
 
 class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, public CIdleHandler
 {
@@ -104,17 +104,31 @@ public:
 
 		rc.top = rc.bottom;
 		rc.bottom = height;
-		Create(dock, rc, NULL, WS_DEFCHILD);
+		Create(dock, rc, NULL, WS_DEFCHILD|WS_VISIBLE);
         m_dock.SetClient(m_hWnd);
         m_bar.setCommandEventCallback(m_hWnd, WM_USER);
         return dock;
     }
 
+    PluginsView* createPanel(const PanelWindow& w, const tstring& plugin_name)
+    {
+        PluginsView *v = new PluginsView(plugin_name);
+        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD, WS_EX_CLIENTEDGE);
+        m_dock.m_simple.AddWindow(*v, w.side, w.size);
+    }
+
+    void deletePanel(PluginsView *v)
+    {
+        HWND hwnd = v->m_hWnd;
+        m_dock.m_simple.RemoveWindow(hwnd);
+        ::DestroyWindow(hwnd);
+        delete v;
+    }
+
     PluginsView* createDockPane(const OutputWindow& w, const tstring& plugin_name)
     {
-        DWORD style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
         PluginsView *v = new PluginsView(plugin_name);
-        v->Create(m_dock, rcDefault, w.name.c_str(), style, WS_EX_CLIENTEDGE);        
+        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_CLIENTEDGE);
         m_dock.AddWindow(*v);
         if (IsDocked(w.side))
         {
@@ -138,7 +152,7 @@ public:
         m_plugins_views.push_back(v);
         return v;
     }
-
+    
     void deleteDockPane(PluginsView *v)
     {
         HWND hwnd = v->m_hWnd;
@@ -238,7 +252,8 @@ public:
     PropertiesData *getPropData() { return m_propData;  }
     PropertiesManager* getPropManager() { return &m_manager; }
     Palette256* getPalette() { return &m_propElements.palette;  }
-    
+    int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
+        
 private:
     BEGIN_MSG_MAP(MudGameView)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

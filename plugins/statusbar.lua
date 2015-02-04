@@ -18,5 +18,5 @@ function statusbar.version()
 end
 
 function statusbar.init()
-  msgbox('привет', 'тестовый', 'ok,cancel,stop')
+  local p = createPanel("bottom", 32)
 end

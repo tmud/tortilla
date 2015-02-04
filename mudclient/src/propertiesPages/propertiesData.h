@@ -280,12 +280,20 @@ struct OutputWindow
     int  lastside;
 };
 
+struct PanelWindow
+{
+    PanelWindow() : side(0), size(0) {}
+    int side;
+    int size;
+};
+
 struct PluginData
 {
     PluginData() : state(false) {}
     tstring name;
     int state;
-    std::vector<OutputWindow> windows;    
+    std::vector<OutputWindow> windows;
+    std::vector<PanelWindow> panels;
 
     void initDefaultPos(int width, int height, OutputWindow *w)
     {
