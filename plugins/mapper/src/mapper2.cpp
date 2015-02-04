@@ -56,7 +56,7 @@ void Mapper::newZone(Room *room, RoomDir dir)
 void Mapper::saveMaps(lua_State *L)
 {
     luaT_run(L, "getPath", "s", "");
-    tstring dir( convert_utf8_to_wide(lua_tostring(L, -1)) );
+    tstring dir( TU2W(lua_tostring(L, -1)) );
     lua_pop(L, 1);
 
     std::vector<tstring> todelete;
@@ -138,10 +138,10 @@ void Mapper::saveMaps(lua_State *L)
         tstring path(dir);
         path.append(zp.name);
         path.append(L".map");
-        if ( !s.save(convert_wide_to_utf8(path.c_str())) )
+        if ( !s.save( TW2U(path.c_str())) )
         {
             u8string error("Ошибка записи файла с зоной:");
-            error.append(convert_wide_to_utf8(zp.name.c_str()));
+            error.append( TW2U(zp.name.c_str()));
             luaT_log(L, error.c_str());
         }
         s.deletenode();
@@ -160,7 +160,7 @@ void Mapper::saveMaps(lua_State *L)
 void Mapper::loadMaps(lua_State *L)
 {
     luaT_run(L, "getPath", "s", "");
-    tstring dir(convert_utf8_to_wide(lua_tostring(L, -1)));
+    tstring dir(TU2W(lua_tostring(L, -1)));
     lua_pop(L, 1);   
 
     tstring mask(dir);
@@ -186,7 +186,7 @@ void Mapper::loadMaps(lua_State *L)
         tstring filepath(dir);
         filepath.append(file);
 
-        u8string fpath(convert_wide_to_utf8(filepath.c_str()) );
+        u8string fpath(TW2U(filepath.c_str()) );
         xml::node zn;
         bool loaded = false;
         Zone *zone = new Zone(name);

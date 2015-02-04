@@ -14,6 +14,8 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
         int cursor;
     };
     std::vector<undata> m_undo;
+    HWND m_callback_hwnd;
+    UINT m_callback_msg;
 
 public:
     BOOL PreTranslateMessage(MSG* pMsg)
@@ -28,7 +30,8 @@ public:
         return FALSE;
     }
 
-    MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0)
+    MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0),
+        m_callback_hwnd(NULL), m_callback_msg(0)
     {
         initCmdBar(1024);
         addUndo(L"", 0);
@@ -38,6 +41,12 @@ public:
     {
         SetMinHeight(size);
         m_edit.SetFont(font);
+    }
+
+    void setCommandEventCallback(HWND hwnd, UINT msg)
+    {
+        m_callback_hwnd = hwnd;
+        m_callback_msg = msg;
     }
 
     void setFocus()
@@ -206,7 +215,7 @@ private:
         if (key == VK_RETURN)
         {
             putTextToBuffer();
-            SendMessage(GetParent(), WM_USER, 0, 0);
+            SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
             return TRUE;
         }
         if (key != VK_TAB && key != VK_ESCAPE)

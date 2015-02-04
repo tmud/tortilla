@@ -3,7 +3,7 @@
 
 // Modified by Goncharenko Maksim (gm79@list.ru, maxim.goncharenko@gmail.com)
 // Fixed bug with redrawing area of window after end of docking
-
+// Extened by panels windows and status bar support
 
 /////////////////////////////////////////////////////////////////////////////
 // atldock.h - Docking framework for the WTL library
@@ -1151,12 +1151,48 @@ public:
 };
 
 ///////////////////////////////////////////////////////
+// CSimplePaneWindow
+template< class T, class TBase = CWindow, class TWinTraits = CControlWinTraits >
+class ATL_NO_VTABLE CSimplePaneWindowImpl :
+    public CWindowImpl < T, TBase, TWinTraits >
+{
+public:
+    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_WINDOW)
+    typedef CSimplePaneWindowImpl< T, TBase, TWinTraits > thisClass;
+
+    BEGIN_MSG_MAP(CSimplePaneWindowImpl)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+    END_MSG_MAP()
+
+    LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        RECT rc; GetClientRect(&rc);
+        CPaintDC dc(m_hWnd); 
+        dc.FillSolidRect(&rc, RGB(230,230,230));
+        return 0;
+    }
+
+    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        return 1; // handled, no background painting needed
+    }
+};
+
+class CSimplePaneWindow : public CSimplePaneWindowImpl<CSimplePaneWindow>
+{
+public:
+    DECLARE_WND_CLASS_EX(_T("WTL_SimplePaneWindow"), CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_WINDOW)
+};
+
+///////////////////////////////////////////////////////
 // CDockingWindow
 template< class T, 
           class TPaneWindow = CDockingPaneWindow,
           class TDockWindow = CDockingPaneChildWindow,
           class TFloatWindow = CFloatingWindow,
-          class TBase = CWindow, 
+          class TSimplePaneWindow = CSimplePaneWindow,
+          class TBase = CWindow,
           class TWinTraits = CControlWinTraits >
 class ATL_NO_VTABLE CDockingWindowImpl : 
    public CWindowImpl< T, TBase, TWinTraits >
@@ -1189,6 +1225,38 @@ public:
    int  m_barHeight;
    DWORD m_dwExtStyle;      // Optional styles
    SIZE m_sizeBorder;       // Size of window borders
+
+   typedef CSimpleValArray<TSimplePaneWindow*> TSimpleList;
+   class SimpleWindowApi
+   {
+   public:
+       TSimpleList& get(short iSide) {
+           ATLASSERT(isDockable(iSide));
+           return wincoll[iSide];
+       }
+       BOOL AddWindow(HWND hWnd, short iSide, int iSize)
+       {
+           ATLASSERT(::IsWindow(hWnd));
+           ATLASSERT(IsDockable(iSide));
+           TSimplePaneWindow* wnd = new TSimplePaneWindow();
+           switch (iSide) {
+           case DOCK_LEFT:
+
+           break;
+           case DOCK_RIGHT:
+           case DOCK_TOP:
+           case DOCK_BOTTOM:
+           }
+
+           if (!wnd->Create(m_hWnd, rcDefault, NULL))
+              { delete wnd; return FALSE; }
+           wincoll[iSide].Add(wnd);
+           return TRUE;
+       }
+
+   private:       
+       TSimpleList wincoll[4]; // Simple windows collection (for each side)
+   } m_simple;
 
    CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0)
    {}

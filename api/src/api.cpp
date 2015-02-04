@@ -64,36 +64,48 @@ private:
   int next;
 } _pull;
 
-const wchar_t* convert_utf8_to_wide(const utf8* string)
+strbuf convert_utf8_to_wide(const utf8* string)
 {
-    MemoryBuffer *buffer = _pull.get();
+    MemoryBuffer *buffer = new MemoryBuffer;
     Utf8ToWideConverter u2w;
     u2w.convert(buffer, string, -1);
-    return (wchar_t*)buffer->getData();
+    return buffer;
 }
 
-const utf8* convert_wide_to_utf8(const wchar_t* string)
+strbuf convert_wide_to_utf8(const wchar_t* string)
 {
-    MemoryBuffer *buffer = _pull.get();
+    MemoryBuffer *buffer = new MemoryBuffer;
     WideToUtf8Converter w2u;    
     w2u.convert(buffer, string, -1);
-    return (utf8*)buffer->getData();
+    return buffer;
 }
 
-const wchar_t* convert_ansi_to_wide(const char* string)
+strbuf convert_ansi_to_wide(const char* string)
 {
-    MemoryBuffer *buffer = _pull.get();
+    MemoryBuffer *buffer = new MemoryBuffer;
     AnsiToWideConverter a2w;
     a2w.convert(buffer, string, -1);
-    return (wchar_t*)buffer->getData();
+    return buffer;
 }
 
-const char* convert_wide_to_ansi(const wchar_t* string)
+strbuf convert_wide_to_ansi(const wchar_t* string)
 {
-    MemoryBuffer *buffer = _pull.get();
+    MemoryBuffer *buffer = new MemoryBuffer;
     WideToAnsiConverter w2a;
     w2a.convert(buffer, string, -1);
-    return (char*)buffer->getData();
+    return buffer;
+}
+
+void* strbuf_ptr(strbuf b)
+{
+    MemoryBuffer *buffer = (MemoryBuffer*)b;
+    return buffer->getData();
+}
+
+void strbuf_destroy(strbuf b)
+{
+    MemoryBuffer *buffer = (MemoryBuffer*)b;
+    delete buffer;
 }
 
 xnode xml_load(const utf8* filename)

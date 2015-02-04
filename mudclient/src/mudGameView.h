@@ -106,6 +106,7 @@ public:
 		rc.bottom = height;
 		Create(dock, rc, NULL, WS_DEFCHILD);
         m_dock.SetClient(m_hWnd);
+        m_bar.setCommandEventCallback(m_hWnd, WM_USER);
         return dock;
     }
 

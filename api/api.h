@@ -343,10 +343,49 @@ private:
 };
 
 // utf8 <-> wide <-> ansi
-const wchar_t* convert_utf8_to_wide(const utf8* string);
-const utf8* convert_wide_to_utf8(const wchar_t* string);
-const wchar_t* convert_ansi_to_wide(const char* string);
-const char* convert_wide_to_ansi(const wchar_t* string);
+typedef void* strbuf;
+void* strbuf_ptr(strbuf b);
+void  strbuf_destroy(strbuf b);
+strbuf convert_utf8_to_wide(const utf8* string);
+strbuf convert_wide_to_utf8(const wchar_t* string);
+strbuf convert_ansi_to_wide(const char* string);
+strbuf convert_wide_to_ansi(const wchar_t* string);
+
+class TU2W
+{
+    strbuf b;
+public:
+    TU2W(const utf8* string) { b = convert_utf8_to_wide(string); }
+    ~TU2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2U
+{
+    strbuf b;
+public:
+    TW2U(const wchar_t* string) { b = convert_wide_to_utf8(string); }
+    ~TW2U() { strbuf_destroy(b); }
+    operator const utf8*() const { return (const utf8*)strbuf_ptr(b); }
+};
+
+class TA2W
+{
+    strbuf b;
+public:
+    TA2W(const char* string) { b = convert_ansi_to_wide(string); }
+    ~TA2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2A
+{
+    strbuf b;
+public:
+    TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
+    ~TW2A() { strbuf_destroy(b); }
+    operator const char*() const { return (const char*)strbuf_ptr(b); }
+};
 
 // xml api
 typedef void* xnode;
@@ -402,12 +441,12 @@ namespace xml
         {
             u8string result;
             if (!get(attribute, &result)) return false;
-            value->assign(convert_utf8_to_wide(result.c_str()));
+            value->assign(TU2W(result.c_str()));
             return true;
         }
         void set(const utf8* attribute, const utf8* value) { xml_set(m_Node, attribute, value); }
         void set(const utf8* attribute, int value) { char buffer[16]; _itoa_s(value, buffer, 10); xml_set(m_Node, attribute, buffer); }
-        void set(const utf8* attribute, const std::wstring& value) { xml_set(m_Node, attribute, convert_wide_to_utf8(value.c_str())); }
+        void set(const utf8* attribute, const std::wstring& value) { xml_set(m_Node, attribute, TW2U(value.c_str())); }
         void gettext(u8string *text) {  text->assign(xml_get_text(m_Node)); }
         void settext(const utf8* text) { xml_set_text(m_Node, text); }
         xml::node createsubnode(const utf8* name) { return xml::node(xml_create_child(m_Node, name)); }
@@ -491,4 +530,3 @@ public:
 private:
     pcre8 regexp;
 };
-

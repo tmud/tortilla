@@ -185,7 +185,7 @@ int stream(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         const char *stream = lua_tostring(L, -1);
-        const wchar_t *wstream = convert_utf8_to_wide (stream);
+        const wchar_t *wstream = TU2W(stream);
         m_mapper_window->processNetworkData(wstream, wcslen(wstream));
     }    
     return 1;
@@ -196,7 +196,7 @@ int gamecmd(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         const char *cmd = lua_tostring(L, -1);
-        const wchar_t *wcmd = convert_utf8_to_wide(cmd);
+        const wchar_t *wcmd = TU2W(cmd);
         m_mapper_window->processCmd(wcmd, wcslen(wcmd));
     }
     return 1;
