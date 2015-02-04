@@ -21,6 +21,8 @@ int pn_create(lua_State *L)
 
 void reg_mt_panels(lua_State *L)
 { 
+    return; // todo
+
     lua_register(L, "createWindow", createpanel);
 
     luaL_newmetatable(L, "panel");
