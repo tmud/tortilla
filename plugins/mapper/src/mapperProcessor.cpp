@@ -17,9 +17,30 @@ void MapperProcessor::setCallback(MapperActions* actions)
     m_pActions = actions;
 }
 
-void MapperProcessor::processNetworkData(MapperNetworkData& ndata)
+void MapperProcessor::updateProps()
 {
+    m_parser.create(TW2U(m_propsData->begin_name.c_str()), TW2U(m_propsData->end_exits.c_str()), 2048);
+
+
+    //m_parser.updateProps(m_propsData);
+    //m_prompt.updateProps(m_propsData);
+    //m_key_trimmer.updateProps(m_propsData);
+}
+
+void MapperProcessor::processNetworkData(u8string& ndata)
+{    
+    int result = m_parser.stream(ndata.c_str());   
+    if (result <= 0)
+        return;
+
+ 
+    
+
     RoomData room;
+    
+    
+    
+    /*RoomData room;
     if (!m_parser.processNetworkData(ndata, &room))
     {
         if (m_prompt.processNetworkData(ndata))
@@ -29,7 +50,8 @@ void MapperProcessor::processNetworkData(MapperNetworkData& ndata)
     }
     popDir();
     processData(room);
-    m_key_trimmer.processNetworkData(ndata);
+    m_key_trimmer.processNetworkData(ndata);*/
+
 }
 
 void MapperProcessor::processCmd(const tstring& cmd)
@@ -524,13 +546,6 @@ level->addRoom(r, x, y);
 m_zones_control.addNewZone(new_zone);
 m_view.Invalidate();
 }*/
-
-void MapperProcessor::updateProps()
-{
-    m_parser.updateProps(m_propsData);
-    m_prompt.updateProps(m_propsData);
-    m_key_trimmer.updateProps(m_propsData);
-}
 
 void MapperProcessor::saveMaps(lua_State *L)
 {

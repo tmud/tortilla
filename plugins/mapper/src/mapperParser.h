@@ -3,7 +3,7 @@
 #include "properties.h"
 #include "mapperObjects.h"
 
-class MapperKeyElement
+/*class MapperKeyElement
 {
 public:
     MapperKeyElement();
@@ -38,23 +38,22 @@ public:
     const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
 private:
     DataQueue buffer;
-};
+};*/
 
-class MapperNetworkData
+/*class MapperNetworkData
 {
 public:
-    MapperNetworkData(const WCHAR *data)
+    MapperNetworkData(const utf8* data)
     {
         assert(data);
         int datalen = (wcslen(data) + 1) *sizeof(WCHAR);
         buffer.alloc(datalen);
         memcpy(buffer.getData(), data, datalen);
     }    
-    const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
-    int getDataLen() const  { return (buffer.getSize() / sizeof(WCHAR)) - 1; }
+    const utf8* getData() const { return (utf8*)buffer.getData(); }
     void append(const WCHAR* data, int size) 
     {
-        int cur_size = getDataLen();
+        int cur_size = buffer.getSize()-1;
         int new_size = (cur_size + size + 1) * sizeof(WCHAR);
         buffer.keepalloc(new_size);
         WCHAR *p = (WCHAR*)buffer.getData() + cur_size;
@@ -78,10 +77,12 @@ public:
         buffer.alloc(len);
     }
 
-private:
-    MemoryBuffer buffer;
+private:    
+    DataQueue buffer;
 };
+*/
 
+/*
 class MapperParser
 {
 public:
@@ -90,6 +91,8 @@ public:
     bool processNetworkData(MapperNetworkData &ndata, RoomData* result);
 
 private:
+
+
     bool searchData(const WCHAR* data, int datalen, RoomData* result);
     void checkBufferLimit();
     MapperDataQueue  m_network_buffer;
@@ -103,4 +106,8 @@ private:
     MapperKeyElement be;        // begin exits
     MapperKeyElement ee;        // end exits
     tstring dark_cs;            // dark room compare string
+
+
+
 };
+*/

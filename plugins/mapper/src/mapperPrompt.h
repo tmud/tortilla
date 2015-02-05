@@ -1,7 +1,7 @@
 #pragma once
 #include "mapperParser.h"
 
-class MapperPrompt
+/*class MapperPrompt
 {
 public:
     MapperPrompt();
@@ -13,3 +13,4 @@ private:
     MapperKeyElement ep;       // end prompt
     MapperDataQueue m_network_buffer;
 };
+*/

@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "mapperPrompt.h"
 
-MapperPrompt::MapperPrompt()
+/*MapperPrompt::MapperPrompt()
 {    
 }
 
@@ -52,3 +52,4 @@ bool MapperPrompt::processNetworkData(MapperNetworkData &ndata)
     }
     return false;
 }
+*/

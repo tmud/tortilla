@@ -195,25 +195,25 @@ int stream(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        const char *stream = lua_tostring(L, -1);
-        MapperNetworkData data(convert_utf8_to_wide(stream));
-        m_mapper_processor->processNetworkData(data);
+        u8string data(lua_tostring(L, -1));
         lua_pop(L, 1);
-        lua_pushstring(L, convert_wide_to_utf8(data.getData()));
+        m_mapper_processor->processNetworkData(data);
+        lua_pushstring(L, data.c_str());
+        return 1;
     }    
-    return 1;
+    return 0;
 }
 
 int gamecmd(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        const char *cmd = lua_tostring(L, -1);
-        const wchar_t *wcmd = convert_utf8_to_wide(cmd);
-        tstring gamecmd(wcmd, wcslen(wcmd));
+        const wchar_t *cmd = TU2W(lua_tostring(L, -1));
+        tstring gamecmd(cmd, wcslen(cmd));
         m_mapper_processor->processCmd(gamecmd);
+        return 1;
     }
-    return 1;
+    return 0;
 }
 
 static const luaL_Reg mapper_methods[] = 

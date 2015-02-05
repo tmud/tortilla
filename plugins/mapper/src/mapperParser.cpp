@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "mapperParser.h"
-
+/*
 MapperKeyElement::MapperKeyElement()
 {
     reset();
@@ -248,3 +248,4 @@ void MapperParser::updateProps(PropertiesMapper *props)
     ee.init(props->end_exits);
     dark_cs = props->dark_room;
 }
+*/

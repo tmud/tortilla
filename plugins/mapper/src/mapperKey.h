@@ -1,5 +1,5 @@
 #pragma once
-#include "mapperParser.h"
+/*#include "mapperParser.h"
 
 class MapperKey
 {
@@ -13,4 +13,4 @@ private:
     MapperKeyElement ek;       // end key
     MapperDataQueue m_buffer;
     bool m_find_end_mode;
-};
+};*/

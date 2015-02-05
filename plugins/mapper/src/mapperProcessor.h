@@ -22,9 +22,9 @@ public:
     MapperProcessor(PropertiesMapper *props);
     ~MapperProcessor();
     void setCallback(MapperActions* actions);
-    void processNetworkData(MapperNetworkData& ndata);
-    void processCmd(const tstring& cmd);
     void updateProps();
+    void processNetworkData(u8string& ndata);
+    void processCmd(const tstring& cmd);    
     void selectDefault();
     void saveMaps(lua_State *L);
     void loadMaps(lua_State *L);
@@ -42,10 +42,15 @@ private:
     PropertiesMapper *m_propsData;
     MapperActions* m_pActions;
 
+    StreamTrigger m_parser;
+    StreamTrigger m_prompt;
+
+
     // Helper to parse incoming data and find rooms
-    MapperParser    m_parser;
-    MapperPrompt    m_prompt;
-    MapperKey       m_key_trimmer;
+    //MapperParser    m_parser;
+    //MapperPrompt    m_prompt;
+    //MapperKey       m_key_trimmer;
+
     MapperHashTable m_table;
 
     // Order for commands

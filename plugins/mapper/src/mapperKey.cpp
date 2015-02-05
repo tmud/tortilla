@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "mapperKey.h"
-
+/*
 MapperKey::MapperKey() : m_find_end_mode(false)
 {
 }
@@ -94,3 +94,4 @@ void MapperKey::processNetworkData(MapperNetworkData &ndata)
         ek.reset();        
     }
 }
+*/
