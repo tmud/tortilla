@@ -38,9 +38,13 @@ wchar_t plugin_buffer[1024];
 int pluginInvArgs(lua_State *L, const utf8* fname) 
 {
     Utf8ToWide f(fname);
-    swprintf(plugin_buffer, L"'%s'.%s: Некорректный набор параметров (%d шт.)", _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
-    pluginLog(plugin_buffer);
-    return 0; 
+    swprintf(plugin_buffer, L"'%s'.%s: Некорректный набор параметров (%d шт.)",
+        _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
+    tstring log(plugin_buffer);
+    
+
+    pluginLog(log.c_str());
+    return 0;
 }
 
 int pluginError(lua_State *L, const utf8* fname, const utf8* error)
@@ -128,9 +132,9 @@ int checkmenu(lua_State *L)
         int code = lua_tointeger(L, -1);
         _tbar->checkMenuItem(findId(code, false), TRUE);
         _tbar->checkToolbarButton(findId(code, true), TRUE);
+        return 0;
     }
-    else { return pluginInvArgs(L, "checkMenu"); }
-    return 0;
+    return pluginInvArgs(L, "checkMenu");
 }
 
 int uncheckmenu(lua_State *L)
@@ -141,9 +145,9 @@ int uncheckmenu(lua_State *L)
         int code = lua_tointeger(L, -1);
         _tbar->checkMenuItem(findId(code, false), FALSE);
         _tbar->checkToolbarButton(findId(code, true), FALSE);
+        return 0;
     }
-    else { return pluginInvArgs(L, "uncheckMenu"); }
-    return 0;
+    return pluginInvArgs(L, "uncheckMenu");
 }
 
 int enablemenu(lua_State *L)
@@ -154,9 +158,9 @@ int enablemenu(lua_State *L)
         int code = lua_tointeger(L, -1);
         _tbar->enableMenuItem(findId(code, false), TRUE);
         _tbar->enableToolbarButton(findId(code, true), TRUE);
+        return 0;
     }
-    else { return pluginInvArgs(L, "enableMenu"); }
-    return 0;
+    return pluginInvArgs(L, "enableMenu");
 }
 
 int disablemenu(lua_State *L)
@@ -167,9 +171,9 @@ int disablemenu(lua_State *L)
         int code = lua_tointeger(L, -1);
         _tbar->enableMenuItem(findId(code, false), FALSE);
         _tbar->enableToolbarButton(findId(code, true), FALSE);
+        return 0;
     }
-    else { return pluginInvArgs(L, "disableMenu"); }
-    return 0;
+    return pluginInvArgs(L, "disableMenu");
 }
 
 int addbutton(lua_State *L)
@@ -197,7 +201,7 @@ int addbutton(lua_State *L)
             else
                 _cp->buttons.push_back(code);
         }
-    }        
+    }
     return 0;
 }
 
@@ -218,18 +222,22 @@ int hidetoolbar(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
+    {
         _tbar->hideToolbar(luaT_towstring(L, 1));
-    else { return pluginInvArgs(L, "hideToolbar"); }
-    return 0;
+        return 0;
+    }
+    return pluginInvArgs(L, "hideToolbar");
 }
 
 int showtoolbar(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
+    {
         _tbar->showToolbar(luaT_towstring(L, 1));
-    else { return pluginInvArgs(L, "showToolbar"); }
-    return 0;
+        return 0;
+    }
+    return pluginInvArgs(L, "showToolbar");
 }
 
 int getpath(lua_State *L)
@@ -244,14 +252,9 @@ int getpath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        else
-        {
-            return pluginError(L, "getPath", "Ошибка создания каталога для плагина");
-        }
+        return pluginError(L, "getPath", "Ошибка создания каталога для плагина");
     }
-    else { return pluginInvArgs(L, "getPath"); }
-    lua_pushnil(L);
-    return 1;
+    return pluginInvArgs(L, "getPath");
 }
 
 int getprofile(lua_State *L)
@@ -366,11 +369,10 @@ int loadtable(lua_State *L)
         doc.deletenode();
         return 1;
     }
-    else { return pluginInvArgs(L, "loadData"); }
-    return 0;
+    return pluginInvArgs(L, "loadData");
 }
 
-int savetable (lua_State *L)
+int savetable(lua_State *L)
 {
     if (!luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
         return pluginInvArgs(L, "saveData");
@@ -523,27 +525,6 @@ int savetable (lua_State *L)
     return 0;
 }
 //----------------------------------------------------------------------------
-PluginData& find_plugin()
-{
-    tstring plugin_name(_cp->get(Plugin::FILE));
-    int index = -1;
-    for (int i = 0, e = _pdata->plugins.size(); i < e; ++i)
-    {
-        const PluginData &p = _pdata->plugins[i];
-        if (p.name == plugin_name)
-            {  index = i; break; }
-    }
-    if (index == -1)
-    {
-        PluginData pd;
-        pd.name = plugin_name;
-        pd.state = _cp->state() ? 1 : 0;
-        _pdata->plugins.push_back(pd);
-        index = _pdata->plugins.size() - 1;
-    }
-    return _pdata->plugins[index];
-}
-
 int createwindow(lua_State *L)
 {
     PluginData &p = find_plugin();
@@ -583,17 +564,19 @@ int createwindow(lua_State *L)
 
 int pluginlog(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    int n = lua_gettop(L);
+    if (n == 0)
+        return pluginInvArgs(L, "log");
+
+    u8string log;
+    for (int i = 1; i <= n; ++i)
     {
-        pluginLog(L, lua_tostring(L, 1));
-        return 0;
+        u8string el;
+        pluginFormatByType(L, i, &el);
+        log.append(el);
     }
-    if (luaT_check(L, 1, LUA_TNUMBER))
-    {
-        pluginLog(L, lua_tostring(L, 1));
-        return 0;
-    }
-    return pluginInvArgs(L, "log");    
+    pluginLog(L, log.c_str());
+    return 0;
 }
 //---------------------------------------------------------------------
 // Metatables for all types
@@ -613,7 +596,7 @@ bool initPluginsSystem()
     lua_pop(L, 1);
     luaopen_table(L);
     lua_setglobal(L, "table");
-    reg_string(L);    
+    reg_string(L);
     lua_register(L, "addCommand", addcommand);
     lua_register(L, "addMenu", addmenu);
     lua_register(L, "addButton", addbutton);
@@ -670,7 +653,6 @@ void pluginDeleteResources(Plugin *plugin)
     plugin->commands.clear();
     _cp = old;
 }
-
 //--------------------------------------------------------------------
 int string_len(lua_State *L)
 {

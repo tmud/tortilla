@@ -446,106 +446,119 @@ bool luaT_load::prepare(const utf8* name, bool last_is_value)
     return true;
 }*/
 
-void luaT_formatByType(lua_State* L, int index, wchar_t *dbuf)
+
+void formatByType(lua_State* L, int index, u8string *buf)
 {
     int i = index;
     int type = lua_type(L, i);
+    utf8 dbuf[32];
+    buf->clear();
+
     switch (type)
     {
     case LUA_TNIL:
-        wcscpy(dbuf, L"nil");
+        buf->append("nil");
         break;
     case LUA_TNUMBER:
-        swprintf(dbuf, L"number: %d", lua_tointeger(L, i));
+        sprintf(dbuf, "number: %d", lua_tointeger(L, i));
+        buf->append(dbuf);
         break;
     case LUA_TBOOLEAN:
-        swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
+        sprintf(dbuf, "boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
+        buf->append(dbuf);
         break;
     case LUA_TSTRING:
-    {
-        wchar_t buffer[96];
-        MultiByteToWideChar(CP_UTF8, 0, lua_tostring(L, i), -1, buffer, 95);        
-        swprintf(dbuf, L"string: %s", buffer);
+        buf->append("string: ");
+        buf->append(lua_tostring(L, i));
         break;
-    }
     case LUA_TUSERDATA:
-        swprintf(dbuf, L"userdata: 0x%p", lua_topointer(L, i));
+        sprintf(dbuf, "userdata: 0x%p", lua_topointer(L, i));
+        buf->append(dbuf);
         break;
     case LUA_TLIGHTUSERDATA:
-        swprintf(dbuf, L"lightuserdata: 0x%p", lua_topointer(L, i));
+        sprintf(dbuf, "lightuserdata: 0x%p", lua_topointer(L, i));
+        buf->append(dbuf);
         break;
     case LUA_TFUNCTION:
-        swprintf(dbuf, L"function: 0x%p", lua_topointer(L, i));
+        sprintf(dbuf, "function: 0x%p", lua_topointer(L, i));
+        buf->append(dbuf);
         break;
     case LUA_TTHREAD:
-        wcscpy(dbuf, L"thread");
+        sprintf(dbuf, "thread: 0x%p", lua_topointer(L, i));
+        buf->append(dbuf);
         break;
     case LUA_TTABLE:
-        swprintf(dbuf, L"table: 0x%p", lua_topointer(L, i));
+        sprintf(dbuf, "table: 0x%p", lua_topointer(L, i));
+        buf->append(dbuf);
         break;
     default:
-        wcscpy(dbuf, L"unknown");
+        buf->append("unknown");
         break;
     }
 }
 
 void luaT_showLuaStack(lua_State* L, const utf8* label)
 {
-    wchar_t dbuf[128];
-    if (label)
-        swprintf(dbuf, L"\r\nLabel: %s\r\n", convert_utf8_to_wide(label));        
-    else
-        wcscpy(dbuf, L"\r\nLabel: ?\r\n");
-    OutputDebugString(dbuf);
+    u8string msg("\r\nLabel: ");
+    msg.append(label ? label : "?");
+    msg.append("\r\n");
+    
     int n = lua_gettop(L);
     int j = -1;
     for (int i = n; i >= 1; --i)
     {
-        luaT_formatByType(L, i, dbuf);
-        std::wstring t(dbuf);
-        swprintf(dbuf, L"[%d][%d] %s\r\n", i, j--, t.c_str());
-        OutputDebugString(dbuf);
+        utf8 dbuf[32];
+        sprintf(dbuf, "[%d][%d]", i, j--);
+        msg.append(dbuf);
+        u8string par;
+        formatByType(L, i, &par);
+        msg.append(par);
+        msg.append("\r\n");
     }
+    OutputDebugString(TU2W(msg.c_str()));
 }
 
 void luaT_showTableOnTop(lua_State* L, const utf8* label)
 {
-    wchar_t dbuf[128];
-    if (label)
-        swprintf(dbuf, L"\r\nLabel: %s\r\n", convert_utf8_to_wide(label));
-    else
-        wcscpy(dbuf, L"\r\nLabel: ?\r\n");
-    OutputDebugString(dbuf);
+    u8string msg("\r\nLabel: ");
+    msg.append(label ? label : "?");
+    msg.append("\r\n");
 
     if (!lua_istable(L, -1))
-    {        
-        OutputDebugString(L"Not TABLE on the top of stack!\r\n");
-        return;
-    }
-    swprintf(dbuf, L"Table 0x%p data:\r\n", lua_topointer(L, -1));
-    OutputDebugString(dbuf);
-
-    lua_pushnil(L);                     // first key
-    while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
     {
-        int type = lua_type(L, -2);
-        switch (type)
-        {
-        case LUA_TNUMBER:
-            swprintf(dbuf, L"number index [%d]=", lua_tointeger(L, -2));
-            break;
-        case LUA_TSTRING:
-            swprintf(dbuf, L"string index [%s]=", convert_utf8_to_wide(lua_tostring(L, -2)));
-            break;
-        default:
-            wcscpy(dbuf, L"unknown type index []=");
-            break;
-        }
-        std::wstring t(dbuf);
-        luaT_formatByType(L, -1, dbuf);
-        t.append(dbuf);
-        t.append(L"\r\n");
-        OutputDebugString(t.c_str());
-        lua_pop(L, 1);              // remove 'value', keeps 'key' for next iteration 
+        msg.append("Not TABLE on the top of stack!\r\n");
     }
+    else
+    {
+        utf8 dbuf[32];
+        sprintf(dbuf, "Table 0x%p\r\n", lua_topointer(L, -1));
+        msg.append(dbuf);
+
+        lua_pushnil(L);                     // first key
+        while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+        {
+            int type = lua_type(L, -2);
+            switch (type)
+            {
+            case LUA_TNUMBER:
+                sprintf(dbuf, "number index [%d]=", lua_tointeger(L, -2));
+                msg.append(dbuf);
+                break;
+            case LUA_TSTRING:
+                msg.append("string index [");
+                msg.append(lua_tostring(L, -2));
+                msg.append("]=");
+                break;
+            default:
+                msg.append("unknown type index []=");
+                break;
+            }
+            u8string par;
+            formatByType(L, -1, &par);
+            msg.append(par);
+            msg.append("\r\n");
+            lua_pop(L, 1);              // remove 'value', keeps 'key' for next iteration 
+        }
+    }
+    OutputDebugString(TU2W(msg.c_str()));
 }

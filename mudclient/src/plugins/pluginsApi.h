@@ -19,3 +19,5 @@ void pluginsUpdateActiveObjects(int type);
 void regFunction(lua_State *L, const char* name, lua_CFunction f);
 void regIndexMt(lua_State *L);
 PluginData& find_plugin();
+
+void pluginFormatByType(lua_State* L, int index, u8string *buf);

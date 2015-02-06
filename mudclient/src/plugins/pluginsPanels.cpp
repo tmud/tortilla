@@ -9,7 +9,7 @@ extern CMainFrame _wndMain;
 extern Plugin* _cp;
 
 int createpanel(lua_State *L)
-{   
+{
     PluginData &p = find_plugin();
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
     {
@@ -22,8 +22,6 @@ int createpanel(lua_State *L)
         }
 
         //_wndMain.m_gameview.createPanel()
-
-
     }
 
     return pluginInvArgs(L, "createPanel");
