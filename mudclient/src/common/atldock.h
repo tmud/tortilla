@@ -1153,14 +1153,14 @@ public:
 ///////////////////////////////////////////////////////
 // CSimplePaneWindow
 template< class T, class TBase = CWindow, class TWinTraits = CControlWinTraits >
-class ATL_NO_VTABLE CSimplePaneWindowImpl :
+class ATL_NO_VTABLE CSimplePanelWindowImpl :
     public CWindowImpl < T, TBase, TWinTraits >
 {
 public:
     DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_WINDOW)
-    typedef CSimplePaneWindowImpl< T, TBase, TWinTraits > thisClass;
+    typedef CSimplePanelWindowImpl< T, TBase, TWinTraits > thisClass;
 
-    BEGIN_MSG_MAP(CSimplePaneWindowImpl)
+    BEGIN_MSG_MAP(CSimplePanelWindowImpl)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
     END_MSG_MAP()
@@ -1179,7 +1179,7 @@ public:
     }
 };
 
-class CSimplePaneWindow : public CSimplePaneWindowImpl<CSimplePaneWindow>
+class CSimplePanelWindow : public CSimplePanelWindowImpl < CSimplePanelWindow >
 {
 public:
     DECLARE_WND_CLASS_EX(_T("WTL_SimplePaneWindow"), CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_WINDOW)
@@ -1191,7 +1191,7 @@ template< class T,
           class TPaneWindow = CDockingPaneWindow,
           class TDockWindow = CDockingPaneChildWindow,
           class TFloatWindow = CFloatingWindow,
-          class TSimplePaneWindow = CSimplePaneWindow,
+          class TSimplePanelWindow = CSimplePanelWindow,
           class TBase = CWindow,
           class TWinTraits = CControlWinTraits >
 class ATL_NO_VTABLE CDockingWindowImpl : 
@@ -1225,41 +1225,44 @@ public:
    int  m_barHeight;
    DWORD m_dwExtStyle;      // Optional styles
    SIZE m_sizeBorder;       // Size of window borders
-
-   typedef CSimpleValArray<TSimplePaneWindow*> TSimpleList;
+   
    class SimpleWindowApi
    {
+       struct TSimpleWindowParams
+       {
+           TSimpleWindowParams() : wnd(NULL), side(0), size(0) {}
+           TSimplePanelWindow* wnd;
+           int side;
+           int size;
+       };
+       CSimpleValArray<TSimpleWindowParams> window;
+
    public:
-       TSimpleList& get(short iSide) {
-           ATLASSERT(IsDocked(iSide));
-           return wincoll[iSide];
-       }
+       SimpleWindowApi() : m_dock(NULL) {}
+
        BOOL AddWindow(HWND hWnd, short iSide, int iSize)
        {
-           /*ATLASSERT(::IsWindow(hWnd));
+           ATLASSERT(::IsWindow(hWnd));
            ATLASSERT(IsDocked(iSide));
-           TSimplePaneWindow* wnd = new TSimplePaneWindow();
-           switch (iSide) 
-           {
-           case DOCK_LEFT:
-           break;
-           case DOCK_RIGHT:
-           case DOCK_TOP:
-           case DOCK_BOTTOM:
-           }
-
-           if (!wnd->Create(m_hWnd, rcDefault, NULL))
-              { delete wnd; return FALSE; }
-           wincoll[iSide].Add(wnd);*/
+           TSimpleWindowParams p;
+           p.wnd = new TSimplePanelWindow();
+           if (!p.wnd->Create(m_dock, rcDefault, NULL))
+              { delete p.wnd; return FALSE; }
+           p.side = iSide;
+           p.size = iSize;
+           window.Add(p);
            return TRUE;
        }
+
        void RemoveWindow(HWND hWnd)
        {
-       }
 
-   private:       
-       TSimpleList wincoll[4]; // Simple windows collection (for each side)
-   } m_simple;
+
+       }
+   private:
+       friend class CDockingWindowImpl;
+       HWND m_dock;
+   } m_panels;
 
    CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0)
    {}
@@ -1495,6 +1498,7 @@ public:
    // Message handlers
    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
    {
+      m_simple.m_dock = m_hWnd;
       for( int i = 0; i < 4; i++ ) {
          m_panes[i].m_Side = (short) i;
          m_panes[i].Create(m_hWnd, rcDefault, NULL, WS_CHILD|WS_VISIBLE);

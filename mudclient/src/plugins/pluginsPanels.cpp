@@ -18,12 +18,13 @@ int createpanel(lua_State *L)
         w.side = _wndMain.m_gameview.convertSideFromString(TU2W(lua_tostring(L, 1)));
         if (IsDocked(w.side))
         {
-            //todo
+            PluginsView *window = _wndMain.m_gameview.createPanel(w, p.name);
+            if (window)
+                _cp->panels.push_back(window);
+            luaT_pushobject(L, window, LUAT_PANEL);
+            return 1;
         }
-
-        //_wndMain.m_gameview.createPanel()
     }
-
     return pluginInvArgs(L, "createPanel");
 }
 
@@ -42,7 +43,7 @@ void reg_mt_panels(lua_State *L)
 
     luaL_newmetatable(L, "panel");
     regFunction(L, "create", pn_create);
-   
+
     regIndexMt(L);
     lua_pop(L, 1);
 }

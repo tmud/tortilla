@@ -37,7 +37,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     HotkeyTable m_hotkeyTable;
     LogicProcessor m_processor;
     std::vector<MudView*> m_views;
-    std::vector<PluginsView*> m_plugins_views;    
+    std::vector<PluginsView*> m_plugins_views;
     PluginsManager m_plugins;
     int m_codepage;
 
@@ -115,6 +115,7 @@ public:
         PluginsView *v = new PluginsView(plugin_name);
         v->Create(m_dock, rcDefault, L"", WS_DEFCHILD, WS_EX_CLIENTEDGE);
         m_dock.m_simple.AddWindow(*v, w.side, w.size);
+        return v;
     }
 
     void deletePanel(PluginsView *v)

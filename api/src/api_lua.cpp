@@ -9,7 +9,7 @@ struct luaT_userdata
     void *data;
 };
 
-const char* metatables[] = { "window", "viewdata", "activeobjects" };
+const char* metatables[] = { "window", "viewdata", "activeobjects", "panel" };
 void getmetatable(lua_State *L, int type)
 {
     type = type - LUAT_WINDOW;  // first type

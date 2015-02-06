@@ -14,6 +14,7 @@ typedef std::string u8string;
 #define LUAT_WINDOW     100
 #define LUAT_VIEWDATA   101
 #define LUAT_ACTIVEOBJS 102
+#define LUAT_PANEL      103
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);

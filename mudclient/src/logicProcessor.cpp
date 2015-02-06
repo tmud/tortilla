@@ -186,7 +186,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     int window = propData->plugins_logs_window;
     if (window >= 0 && window <= OUTPUT_WINDOWS)
     {
-        tstring log(L"[plugins] ");
+        tstring log(L"[plugin] ");
         log.append(cmd);
         processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
     }

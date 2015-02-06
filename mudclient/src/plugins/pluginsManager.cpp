@@ -181,7 +181,7 @@ Plugin* PluginsManager::findPlugin(HWND view)
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
-        std::vector<PluginsView*> &v = m_plugins[i]->views;
+        std::vector<PluginsView*> &v = m_plugins[i]->dockpanes;
         for (int j = 0, je = v.size(); j < je; ++j)
         {
             if (*v[j] == view)

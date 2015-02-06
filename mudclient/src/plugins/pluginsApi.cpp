@@ -33,16 +33,25 @@ void pluginsMenuCmd(UINT id) { m_idcontrol.runPluginCmd(id); }
 void tmcLog(const tstring& msg) { _lp->tmcLog(msg); }
 void pluginLog(const tstring& msg) { _lp->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
+const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
 //---------------------------------------------------------------------
 wchar_t plugin_buffer[1024];
 int pluginInvArgs(lua_State *L, const utf8* fname) 
 {
+    int n = lua_gettop(L);
     Utf8ToWide f(fname);
-    swprintf(plugin_buffer, L"'%s'.%s: Некорректный набор параметров (%d шт.)",
-        _cp->get(Plugin::NAME), (const wchar_t*)f, lua_gettop(L));
+    swprintf(plugin_buffer, L"'%s'.%s: Некорректные параметры(%d): ",
+        _cp->get(Plugin::FILE), (const wchar_t*)f, n);
     tstring log(plugin_buffer);
-    
-
+    for (int i = 1; i <= n; ++i)
+    {
+        int t = lua_type(L, i);
+        if (t >= 0 && t < LUA_NUMTAGS)
+            log.append(lua_types_str[t]);
+        else
+            log.append(L"unknown");
+        if (i != n) log.append(L",");
+    }
     pluginLog(log.c_str());
     return 0;
 }
@@ -553,11 +562,10 @@ int createwindow(lua_State *L)
         }
     }
     else { return pluginInvArgs(L, "createWindow"); }
-   
+
     PluginsView *window =  _wndMain.m_gameview.createDockPane(w, p.name);
     if (window)
-        _cp->views.push_back(window);
-
+        _cp->dockpanes.push_back(window);
     luaT_pushobject(L, window, LUAT_WINDOW);
     return 1;
 }
@@ -590,7 +598,7 @@ bool initPluginsSystem()
 {
     initExternPtrs();
     if (!L)
-        return false;    
+        return false;
 
     luaopen_base(L);
     lua_pop(L, 1);
@@ -640,12 +648,12 @@ void pluginDeleteResources(Plugin *plugin)
     for (int i = 0, e = plugin->toolbars.size(); i<e; ++i)
         _tbar->deleteToolbar(plugin->toolbars[i].c_str());
     plugin->toolbars.clear();
-    for (int i = 0, e = plugin->views.size(); i < e; ++i)
-    {
-        PluginsView *v = plugin->views[i];
-        _wndMain.m_gameview.deleteDockPane(v);
-    }
-    plugin->views.clear();
+    for (int i = 0, e = plugin->dockpanes.size(); i < e; ++i)
+        _wndMain.m_gameview.deleteDockPane(plugin->dockpanes[i]);
+    plugin->dockpanes.clear();
+    for (int i = 0, e = plugin->panels.size(); i < e; ++i)
+        _wndMain.m_gameview.deletePanel(plugin->panels[i]);
+    plugin->panels.clear();
 
     // delete all system commands of plugin
     for (int i = 0, e = plugin->commands.size(); i < e; ++i)
