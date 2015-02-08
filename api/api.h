@@ -321,7 +321,7 @@ const wchar_t* convert_utf8_to_wide(const utf8* string);
 const utf8* convert_wide_to_utf8(const wchar_t* string);
 const wchar_t* convert_ansi_to_wide(const char* string);
 const char* convert_wide_to_ansi(const wchar_t* string);
-#define TU2W(x) convert_utf8_to_wide(x)
+#define TU2W(x) convert_utf8_to_wide(x) //todo справку подправить
 #define TW2U(x) convert_wide_to_utf8(x)
 #define TA2W(x) convert_ansi_to_wide(x)
 #define TW2A(x) convert_wide_to_ansi(x)
@@ -474,7 +474,8 @@ typedef void* trigger;
 trigger trigger_create(const utf8* begin, const utf8* end, int max_len);
 void    trigger_delete(trigger t);
 int     trigger_addstream(trigger t, const utf8* data);
-int     trigger_find(trigger t, const utf8* data);
+int     trigger_find(trigger t, int from, const utf8* data);
+int     trigger_datalen(trigger t);
 const utf8* trigger_get(trigger t, int from, int len);
 
 class StreamTrigger
@@ -489,8 +490,9 @@ public:
         return (t) ? true : false;
     }
     int stream(const utf8* data) { return trigger_addstream(t, data); }
-    int find(const utf8* data) { return trigger_find(t, data); }
+    int find(int from, const utf8* data) { return trigger_find(t, from, data); }
     const utf8* get(int from, int len) { return trigger_get(t, from, len); }
+    int datalen() { return trigger_datalen(t); }
 private:
     trigger t;
 };

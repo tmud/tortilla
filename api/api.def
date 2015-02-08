@@ -43,4 +43,5 @@ EXPORTS
 	trigger_delete
 	trigger_addstream
 	trigger_find
+	trigger_datalen
 	trigger_get

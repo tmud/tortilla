@@ -7,6 +7,20 @@
 #include "mapperHashTable.h"
 #include "mapperRender.h"
 
+class KeyPair
+{
+public:
+    KeyPair() : afterend(0) {}
+    enum kpmode { BEGIN = 0, END, ALL };
+    void init(const tstring &b, const tstring& e);
+    bool get(StreamTrigger &t, kpmode mode, tstring *result);
+    u8string begin;
+    u8string end;
+    int afterend;
+private:
+    void initkey(const tstring& src, u8string* res);
+};    
+
 class MapperActions
 {
 public:
@@ -45,7 +59,12 @@ private:
     StreamTrigger m_parser;
     StreamTrigger m_prompt;
 
-
+    KeyPair kp_name;
+    KeyPair kp_key;
+    KeyPair kp_descr;
+    KeyPair kp_exits;
+    KeyPair kp_prompt;
+    
     // Helper to parse incoming data and find rooms
     //MapperParser    m_parser;
     //MapperPrompt    m_prompt;

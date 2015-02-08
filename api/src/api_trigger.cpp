@@ -22,10 +22,16 @@ int trigger_addstream(trigger t, const utf8* data)
     return tcast(t)->add(data);
 }
 
-int trigger_find(trigger t, const utf8* data)
+int trigger_find(trigger t, int from, const utf8* data)
 {
     if (!t) return -1;
-    return tcast(t)->find(data);
+    return tcast(t)->find(from, data);
+}
+
+int trigger_datalen(trigger t)
+{
+    if (!t) return 0;
+    return tcast(t)->datalen();
 }
 
 const utf8* trigger_get(trigger t, int from, int len)

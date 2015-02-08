@@ -1,6 +1,75 @@
 #include "stdafx.h"
 #include "mapperProcessor.h"
 
+void KeyPair::init(const tstring &b, const tstring& e)
+{
+    initkey(b, &begin);
+    initkey(e, &end);
+}
+
+void KeyPair::initkey(const tstring& src, u8string* res)
+{
+    tstring keydata;
+    const WCHAR *p = src.c_str();
+    bool spec_sym = false;
+    for (; *p; ++p)
+    {
+        if (*p == L'\\')
+        {
+            if (!spec_sym)
+            {
+                spec_sym = true;
+                continue;
+            }
+            spec_sym = false;
+        }
+        if (!spec_sym)
+        {
+            keydata.append(p, 1);
+            continue;
+        }
+
+        WCHAR s[2] = { *p, 0 };
+        switch (*p) {
+        case '$':
+            s[0] = 0x1b;
+            break;
+        case 'n':
+            s[0] = 0xa;
+            break;
+        case 'r':
+            s[0] = 0xd;
+            break;
+        case 's':
+            s[0] = 0x20;
+            break;
+        }
+        keydata.append(s);
+        spec_sym = false;
+    }
+    res->assign(TW2U(keydata.c_str()));
+}
+
+bool KeyPair::get(StreamTrigger &t, kpmode mode, tstring *result)
+{
+    int b = 0;
+    if (mode != KeyPair::BEGIN)
+    {
+        b = t.find(0, begin.c_str());
+        if (b == -1) return false;
+        b = b + begin.length();
+    }
+    int e = t.datalen();
+    if (mode != KeyPair::END)
+    {
+        e = t.find(b, end.c_str());
+        if (e == -1) return false;
+    }  
+    // b - start pos, e - end pos.
+    result->assign(TU2W(t.get(b, e-b)));
+    return true;
+}
+
 MapperProcessor::MapperProcessor(PropertiesMapper *props) : 
 m_propsData(props), m_pActions(NULL), m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL)
 {
@@ -19,12 +88,13 @@ void MapperProcessor::setCallback(MapperActions* actions)
 
 void MapperProcessor::updateProps()
 {
-    m_parser.create(TW2U(m_propsData->begin_name.c_str()), TW2U(m_propsData->end_exits.c_str()), 2048);
-
-
-    //m_parser.updateProps(m_propsData);
-    //m_prompt.updateProps(m_propsData);
-    //m_key_trimmer.updateProps(m_propsData);
+    PropertiesMapper *p = m_propsData;
+    kp_name.init(p->begin_name, p->end_name);
+    kp_key.init(p->begin_key, p->end_key);
+    kp_descr.init(p->begin_descr, p->end_descr);
+    kp_exits.init(p->begin_exits, p->end_exits);
+    kp_prompt.init(p->begin_prompt, p->end_prompt);
+    m_parser.create(kp_name.begin.c_str(), kp_exits.end.c_str(), 2048);
 }
 
 void MapperProcessor::processNetworkData(u8string& ndata)
@@ -33,12 +103,25 @@ void MapperProcessor::processNetworkData(u8string& ndata)
     if (result <= 0)
         return;
 
- 
-    
-
     RoomData room;
-    
-    
+    bool a = kp_name.get(m_parser, KeyPair::BEGIN, &room.name);
+    bool b = kp_descr.get(m_parser, KeyPair::ALL, &room.descr);
+    bool c = kp_key.get(m_parser, KeyPair::ALL, &room.key);
+    bool d = kp_exits.get(m_parser, KeyPair::END, &room.exits);
+
+    /*if (!kp_name.get(m_parser, &room.name) ||
+        !kp_descr.get(m_parser, &room.descr) ||
+        !kp_key.get(m_parser, &room.key) ||
+        !kp_exits.get(m_parser, &room.exits)
+        )*/
+    {
+        int u = 1;
+        return;
+
+    }
+      
+
+    int x = 1;
     
     /*RoomData room;
     if (!m_parser.processNetworkData(ndata, &room))
