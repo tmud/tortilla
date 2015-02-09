@@ -99,30 +99,26 @@ void MapperProcessor::updateProps()
 
 void MapperProcessor::processNetworkData(u8string& ndata)
 {    
-    int result = m_parser.stream(ndata.c_str());   
+    int result = m_parser.stream(ndata.c_str());
     if (result <= 0)
         return;
 
     RoomData room;
     bool a = kp_name.get(m_parser, KeyPair::BEGIN, &room.name);
-    bool b = kp_descr.get(m_parser, KeyPair::ALL, &room.descr);
-    bool c = kp_key.get(m_parser, KeyPair::ALL, &room.key);
-    bool d = kp_exits.get(m_parser, KeyPair::END, &room.exits);
+    bool b = (a) ? kp_descr.get(m_parser, KeyPair::ALL, &room.descr) : false;
+    bool c = (b) ? kp_key.get(m_parser, KeyPair::ALL, &room.key) : false;
+    bool d = (c) ? kp_exits.get(m_parser, KeyPair::END, &room.exits) : false;
 
-    /*if (!kp_name.get(m_parser, &room.name) ||
-        !kp_descr.get(m_parser, &room.descr) ||
-        !kp_key.get(m_parser, &room.key) ||
-        !kp_exits.get(m_parser, &room.exits)
-        )*/
+    if (d)
     {
-        int u = 1;
-        return;
-
+        OutputDebugString(room.name.c_str());
+        OutputDebugString(L"\r\n");
+        OutputDebugString(room.key.c_str());
+        OutputDebugString(L"\r\n");
+        OutputDebugString(room.exits.c_str());
+        OutputDebugString(L"-----------------\r\n");
     }
-      
 
-    int x = 1;
-    
     /*RoomData room;
     if (!m_parser.processNetworkData(ndata, &room))
     {

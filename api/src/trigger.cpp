@@ -25,15 +25,15 @@ findpos _findstrn_min(const utf8* str, const utf8* where_str, int where_len)
 
         // check next symbols
         bool compared = true;
-        len = min(len, str_len);        
-        for (int i = 1; i < len; ++i) {
+        int next_len = min(len, str_len);
+        for (int i = 1; i < next_len; ++i) {
             if (str[i] != p[i]) { compared = false; break; }
         }
         if (compared)
             break;
-        p++; len--;        
+        p++; len--;
     }
-    return findpos(p - where_str, len);
+    return findpos(p - where_str, min(len, str_len));
 }
 
 int _findstrn(const utf8* str, const utf8* where_str, int where_len)
@@ -116,7 +116,7 @@ int Trigger::add(const utf8* data)
 {
     if (m_key_end.isFullComparsion())
     {
-        m_data.truncate(m_key_end.getEnd());
+        m_data.truncate(m_key_end.getEnd() + m_key_begin.getLen());
         reset();
     }
 
@@ -169,7 +169,7 @@ int Trigger::find(int from, const utf8* data)
     block_data b = getdata();
     if (from >= b.second)
         return -1;
-    return _findstrn(data, b.first+from, b.second-from);
+    return from + _findstrn(data, b.first+from, b.second-from);
 }
 
 const utf8* Trigger::get(int from, int len)
@@ -180,7 +180,7 @@ const utf8* Trigger::get(int from, int len)
     {
         block_data b = getdata();
         int bd_len = b.second;
-        if (from < 0 || from >= bd_len || len <= 0 || (from + len) >= bd_len)
+        if (from < 0 || from >= bd_len || len <= 0 || (from + len) > bd_len)
             m_find_buffer.clear();
         else
             m_find_buffer.assign(b.first + from, len);
@@ -198,10 +198,9 @@ int Trigger::datalen()
 
 Trigger::block_data Trigger::getdata()
 {
-    int len = m_key_end.getBegin();
+    int len = m_key_end.getBegin(); // end расчитывался уже за begin, это длина блока между begin/end
     const utf8* p = (const utf8*)m_data.getData();
     p = p + m_key_begin.getLen();
-    len = len - m_key_begin.getLen();
     return block_data(p, len);
 }
 
