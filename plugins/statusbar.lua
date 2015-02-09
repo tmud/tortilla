@@ -19,4 +19,7 @@ end
 
 function statusbar.init()
   local p = createPanel("bottom", 32)
+  createPanel("top", 32)
+  createPanel("left", 32)
+  createPanel("right", 32)
 end

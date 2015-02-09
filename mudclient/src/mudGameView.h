@@ -113,15 +113,15 @@ public:
     PluginsView* createPanel(const PanelWindow& w, const tstring& plugin_name)
     {
         PluginsView *v = new PluginsView(plugin_name);
-        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD, WS_EX_CLIENTEDGE);
-        m_dock.m_simple.AddWindow(*v, w.side, w.size);
+        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD|WS_VISIBLE);
+        m_dock.m_panels.AddWindow(*v, w.side, w.size);
         return v;
     }
 
     void deletePanel(PluginsView *v)
     {
         HWND hwnd = v->m_hWnd;
-        m_dock.m_simple.RemoveWindow(hwnd);
+        m_dock.m_panels.RemoveWindow(hwnd);
         ::DestroyWindow(hwnd);
         delete v;
     }
@@ -129,7 +129,7 @@ public:
     PluginsView* createDockPane(const OutputWindow& w, const tstring& plugin_name)
     {
         PluginsView *v = new PluginsView(plugin_name);
-        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_CLIENTEDGE);
+        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_STATICEDGE);
         m_dock.AddWindow(*v);
         if (IsDocked(w.side))
         {

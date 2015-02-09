@@ -1155,34 +1155,30 @@ public:
 template< class T, class TBase = CWindow, class TWinTraits = CControlWinTraits >
 class ATL_NO_VTABLE CSimplePanelWindowImpl :
     public CWindowImpl < T, TBase, TWinTraits >
-{
+{    
 public:
-    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_WINDOW)
-    typedef CSimplePanelWindowImpl< T, TBase, TWinTraits > thisClass;
-
+    HWND m_hWndClient;
     BEGIN_MSG_MAP(CSimplePanelWindowImpl)
-        MESSAGE_HANDLER(WM_PAINT, OnPaint)
-        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        //MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
 
-    LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&)
+    CSimplePanelWindowImpl() : m_hWndClient(NULL) {}
+    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
     {
-        RECT rc; GetClientRect(&rc);
-        CPaintDC dc(m_hWnd); 
-        dc.FillSolidRect(&rc, RGB(230,230,230));
+        if (::IsWindow(m_hWndClient))
+        {
+            RECT rc; GetClientRect(&rc);
+            CWindow client(m_hWndClient);
+            client.MoveWindow(&rc);
+        }
         return 0;
-    }
-
-    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&)
-    {
-        return 1; // handled, no background painting needed
     }
 };
 
 class CSimplePanelWindow : public CSimplePanelWindowImpl < CSimplePanelWindow >
 {
 public:
-    DECLARE_WND_CLASS_EX(_T("WTL_SimplePaneWindow"), CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_WINDOW)
+    DECLARE_WND_CLASS_EX(_T("WTL_SimplePaneWindow"), CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BTNFACE)
 };
 
 ///////////////////////////////////////////////////////
@@ -1235,7 +1231,7 @@ public:
            int side;
            int size;
        };
-       CSimpleValArray<TSimpleWindowParams> window;
+       CSimpleValArray<TSimpleWindowParams> windows;
 
    public:
        SimpleWindowApi() : m_dock(NULL) {}
@@ -1246,19 +1242,89 @@ public:
            ATLASSERT(IsDocked(iSide));
            TSimpleWindowParams p;
            p.wnd = new TSimplePanelWindow();
-           if (!p.wnd->Create(m_dock, rcDefault, NULL))
+           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE))
               { delete p.wnd; return FALSE; }
+           p.wnd->m_hWndClient = hWnd;
+           ::SetParent(hWnd, *p.wnd);
            p.side = iSide;
            p.size = iSize;
-           window.Add(p);
+           windows.Add(p);
            return TRUE;
        }
 
        void RemoveWindow(HWND hWnd)
        {
-
-
+           for (int i = 0, e = windows.GetSize(); i < e; ++i)
+           {
+               TSimplePanelWindow *wnd = windows[i].wnd;
+               if (wnd->m_hWndClient == hWnd)  
+               {
+                   windows.RemoveAt(i);
+                   ::DestroyWindow(*wnd);
+                   delete wnd;
+                   break;
+               }
+           }
        }
+
+       void movePanels(RECT &pos)
+       {
+           RECT delta = { 0,0,0,0 };
+           for (int i = 0, e = windows.GetSize(); i < e; ++i)
+           {
+               int size = windows[i].size;
+               int side = windows[i].side;
+               if (side == DOCK_TOP)
+               {
+                   int y = pos.top + delta.top;
+                   ::MoveWindow(*windows[i].wnd, pos.left, y, pos.right-pos.left, size, TRUE);
+                   delta.top += size;
+               }
+               else if (side == DOCK_BOTTOM)
+               {
+                   int y = pos.bottom - delta.bottom;
+                   ::MoveWindow(*windows[i].wnd, pos.left, y - size, pos.right-pos.left, size, TRUE);
+                   delta.bottom += size;
+               }
+           }
+           for (int i = 0, e = windows.GetSize(); i < e; ++i)
+           {
+               int size = windows[i].size;
+               int side = windows[i].side;
+               if (side == DOCK_LEFT)
+               {
+                   int x = pos.left + delta.left;
+                   ::MoveWindow(*windows[i].wnd, x, delta.top, size, pos.bottom-delta.bottom-delta.top, TRUE);
+                   delta.left += size;
+               }
+               if (side == DOCK_RIGHT)
+               {
+                   int x = pos.right - delta.right;
+                   ::MoveWindow(*windows[i].wnd, x-size, delta.top, size, pos.bottom-delta.bottom-delta.top, TRUE);
+                   delta.right += size;
+               }
+           }
+           pos.left += delta.left; pos.right -= delta.right;
+           pos.top += delta.top; pos.bottom -= delta.bottom;
+       }
+
+       void recalcIntPos (RECT &pos)
+       {
+           RECT delta = { 0, 0, 0, 0 };
+           for (int i = 0, e = windows.GetSize(); i < e; ++i)
+           {
+               int size = windows[i].size;
+               switch (windows[i].side) {
+                  case DOCK_TOP: delta.top += size; break;
+                  case DOCK_BOTTOM: delta.bottom += size; break;
+                  case DOCK_LEFT: delta.left += size; break;
+                  case DOCK_RIGHT: delta.right += size; break;
+               }
+           }
+           pos.left += delta.left; pos.right -= delta.right;
+           pos.top += delta.top; pos.bottom -= delta.bottom;
+       }
+
    private:
        friend class CDockingWindowImpl;
        HWND m_dock;
@@ -1498,7 +1564,7 @@ public:
    // Message handlers
    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
    {
-      m_simple.m_dock = m_hWnd;
+      m_panels.m_dock = m_hWnd;
       for( int i = 0; i < 4; i++ ) {
          m_panes[i].m_Side = (short) i;
          m_panes[i].Create(m_hWnd, rcDefault, NULL, WS_CHILD|WS_VISIBLE);
@@ -1625,6 +1691,8 @@ public:
 				{
 					if (isUsedStatusBar())
 						rc.bottom -= m_barHeight;
+                    m_panels.recalcIntPos(rc);
+
 					LONG top = rc.top; LONG bottom = rc.bottom;
                     rc.top = rc.top + m_panes[DOCK_TOP].m_cy;
                     rc.bottom = rc.bottom - m_panes[DOCK_BOTTOM].m_cy;
@@ -1648,6 +1716,7 @@ public:
 				case DOCK_BOTTOM:
 					if (isUsedStatusBar())
 						rc.bottom -= m_barHeight;
+                    m_panels.recalcIntPos(rc);
                 break;
             };
 
@@ -1763,6 +1832,8 @@ public:
 		  ::SetWindowPos(m_hwndBar, NULL, bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top, SWP_NOZORDER | SWP_NOACTIVATE);
 		  rect.bottom -= m_barHeight;
 	  }
+
+      m_panels.movePanels(rect);
 
       RECT rcClient = rect;
 
