@@ -11,7 +11,7 @@ struct RoomData
 {
     tstring name;
     tstring zonename;
-    tstring key;
+    tstring roomid;
     tstring descr;
     tstring exits;
     uint    hash;

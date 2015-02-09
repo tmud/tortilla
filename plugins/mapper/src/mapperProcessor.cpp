@@ -64,7 +64,7 @@ bool KeyPair::get(StreamTrigger &t, kpmode mode, tstring *result)
     {
         e = t.find(b, end.c_str());
         if (e == -1) return false;
-    }  
+    }
     // b - start pos, e - end pos.
     result->assign(TU2W(t.get(b, e-b)));
     return true;
@@ -98,30 +98,15 @@ void MapperProcessor::updateProps()
 }
 
 void MapperProcessor::processNetworkData(u8string& ndata)
-{    
-    int result = m_parser.stream(ndata.c_str());
-    if (result <= 0)
-        return;
-
+{
     RoomData room;
-    bool a = kp_name.get(m_parser, KeyPair::BEGIN, &room.name);
-    bool b = (a) ? kp_descr.get(m_parser, KeyPair::ALL, &room.descr) : false;
-    bool c = (b) ? kp_key.get(m_parser, KeyPair::ALL, &room.key) : false;
-    bool d = (c) ? kp_exits.get(m_parser, KeyPair::END, &room.exits) : false;
-
-    if (d)
+    if (!recognizeRoom(ndata, &room))
     {
-        OutputDebugString(room.name.c_str());
-        OutputDebugString(L"\r\n");
-        OutputDebugString(room.key.c_str());
-        OutputDebugString(L"\r\n");
-        OutputDebugString(room.exits.c_str());
-        OutputDebugString(L"-----------------\r\n");
+
     }
-
-    /*RoomData room;
-    if (!m_parser.processNetworkData(ndata, &room))
-    {
+    
+    
+    /*{
         if (m_prompt.processNetworkData(ndata))
             popDir();
         m_key_trimmer.processNetworkData(ndata);
@@ -131,6 +116,38 @@ void MapperProcessor::processNetworkData(u8string& ndata)
     processData(room);
     m_key_trimmer.processNetworkData(ndata);*/
 
+}
+
+bool MapperProcessor::recognizeRoom(u8string& ndata, RoomData *room)
+{
+    int result = m_parser.stream(ndata.c_str());
+    if (result <= 0)
+        return false;
+
+    tstring key;
+    bool a = kp_name.get(m_parser, KeyPair::BEGIN, &room->name);
+    bool b = (a) ? kp_descr.get(m_parser, KeyPair::ALL, &room->descr) : false;
+    bool c = (b) ? kp_key.get(m_parser, KeyPair::ALL, &key) : false;
+    bool d = (c) ? kp_exits.get(m_parser, KeyPair::END, &room->exits) : false;
+
+    if (!d)
+        return false;
+
+    int pos = key.find(L',');
+    if (pos == -1)
+        return false;
+    room->zonename.assign(key.substr(0, pos));
+    room->roomid.append(key.substr(pos + 1));
+
+    OutputDebugString(room->name.c_str());
+    OutputDebugString(L"\r\n");
+    OutputDebugString(room->zonename.c_str());
+    OutputDebugString(L"\r\n");
+    OutputDebugString(room->roomid.c_str());
+    OutputDebugString(L"\r\n");
+    OutputDebugString(room->exits.c_str());
+    OutputDebugString(L"-----------------\r\n");
+    return true;
 }
 
 void MapperProcessor::processCmd(const tstring& cmd)

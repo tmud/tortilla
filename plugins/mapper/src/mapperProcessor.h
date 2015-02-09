@@ -44,6 +44,8 @@ public:
     void loadMaps(lua_State *L);
 
 private:
+    bool  recognizeRoom(u8string& ndata, RoomData *room);
+
     void  processData(const RoomData& room);
     bool  setByDir(Room *room);
     Zone* createZone();
