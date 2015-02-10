@@ -593,6 +593,7 @@ void reg_mt_viewdata(lua_State *L);
 void reg_activeobjects(lua_State *L);
 void reg_string(lua_State *L);
 void reg_mt_panels(lua_State *L);
+void reg_mt_render(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -626,6 +627,7 @@ bool initPluginsSystem()
     reg_mt_window(L);
     reg_mt_viewdata(L);
     reg_mt_panels(L);
+    reg_mt_render(L);
     return true;
 }
 

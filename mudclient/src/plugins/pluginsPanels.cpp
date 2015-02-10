@@ -28,22 +28,35 @@ int createpanel(lua_State *L)
     return pluginInvArgs(L, "createPanel");
 }
 
-int pn_create(lua_State *L)
+int pn_attach(lua_State *L)
 {
-    if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
+    if (luaT_check(L, 2, LUAT_PANEL, LUA_TNUMBER))
     {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        HWND child = (HWND)lua_tointeger(L, 2);
+        v->attachChild(child);
+        return 0;
     }
-    return 0;
+    return pluginInvArgs(L, "panel.attach");
+}
 
+int pn_render(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_PANEL))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        luaT_pushobject(L, v, LUAT_RENDER);
+        return 1;
+    }
+    return pluginInvArgs(L, "panel.render");
 }
 
 void reg_mt_panels(lua_State *L)
 { 
     lua_register(L, "createPanel", createpanel);
-
     luaL_newmetatable(L, "panel");
-    regFunction(L, "create", pn_create);
-
+    regFunction(L, "attach", pn_attach);
+    regFunction(L, "render", pn_render);
     regIndexMt(L);
     lua_pop(L, 1);
 }

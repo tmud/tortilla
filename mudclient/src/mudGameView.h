@@ -114,7 +114,8 @@ public:
     {
         PluginsView *v = new PluginsView(plugin_name);
         v->Create(m_dock, rcDefault, L"", WS_DEFCHILD|WS_VISIBLE);
-        m_dock.m_panels.AddWindow(*v, w.side, w.size);
+        int dt = (w.side == DOCK_LEFT || w.side == DOCK_RIGHT) ? GetSystemMetrics(SM_CXEDGE) : GetSystemMetrics(SM_CYEDGE);
+        m_dock.m_panels.AddWindow(*v, w.side, w.size+dt);
         return v;
     }
 

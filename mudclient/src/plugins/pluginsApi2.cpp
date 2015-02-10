@@ -150,12 +150,23 @@ int window_isvisible(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_WINDOW))
     {
-        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);        
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         int state = v->IsWindowVisible() ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }
     return pluginInvArgs(L, "window.isvisible");
+}
+
+int window_render(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_WINDOW))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        luaT_pushobject(L, v, LUAT_RENDER);
+        return 1;
+    }
+    return pluginInvArgs(L, "window.render");
 }
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
@@ -170,6 +181,7 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "show", window_show);
     regFunction(L, "hide", window_hide);
     regFunction(L, "isvisible", window_isvisible);
+    regFunction(L, "render", window_render);
     regIndexMt(L);
     lua_pop(L, 1);
 }

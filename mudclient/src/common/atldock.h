@@ -1159,7 +1159,7 @@ class ATL_NO_VTABLE CSimplePanelWindowImpl :
 public:
     HWND m_hWndClient;
     BEGIN_MSG_MAP(CSimplePanelWindowImpl)
-        //MESSAGE_HANDLER(WM_SIZE, OnSize)
+       MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
 
     CSimplePanelWindowImpl() : m_hWndClient(NULL) {}
@@ -1242,13 +1242,14 @@ public:
            ATLASSERT(IsDocked(iSide));
            TSimpleWindowParams p;
            p.wnd = new TSimplePanelWindow();
-           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, WS_EX_WINDOWEDGE))
+           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, WS_EX_STATICEDGE))
               { delete p.wnd; return FALSE; }
            p.wnd->m_hWndClient = hWnd;
            ::SetParent(hWnd, *p.wnd);
            p.side = iSide;
            p.size = iSize;
            windows.Add(p);
+           ::PostMessage(m_dock, WM_DOCK_UPDATELAYOUT, 0, 0);
            return TRUE;
        }
 
@@ -1265,6 +1266,7 @@ public:
                    break;
                }
            }
+           ::PostMessage(m_dock, WM_DOCK_UPDATELAYOUT, 0, 0);
        }
 
        void movePanels(RECT &pos)
