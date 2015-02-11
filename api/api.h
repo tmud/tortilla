@@ -93,11 +93,15 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
     }
-    luaT_render render()
+    void setrender(lua_CFunction func)
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "render", "o");
-        return luaT_render(L, luaT_toobject(L, -1));
+        luaT_run(L, "setrender", "oF", func);
+    }
+    void update()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "update", "o");
     }
 };
 
@@ -123,11 +127,15 @@ public:
         luaT_pushobject(L, panel, LUAT_PANEL);
         luaT_run(L, "attach", "od", child);
     }
-    luaT_render render()
+    void setrender(lua_CFunction func)
     {
         luaT_pushobject(L, panel, LUAT_PANEL);
-        luaT_run(L, "render", "o");
-        return luaT_render(L, luaT_toobject(L, -1));
+        luaT_run(L, "setrender", "oF", func);        
+    }
+    void update()
+    {
+        luaT_pushobject(L, panel, LUAT_PANEL);
+        luaT_run(L, "update", "o");
     }
 };
 

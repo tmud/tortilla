@@ -158,15 +158,46 @@ int window_isvisible(lua_State *L)
     return pluginInvArgs(L, "window.isvisible");
 }
 
-int window_render(lua_State *L)
+int window_setrender(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_WINDOW, LUA_TFUNCTION))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        int id = reg_pview_render(L);
+        v->setRender(L, id);
+        return 0;
+    }
+    return pluginInvArgs(L, "window.setrender");
+}
+
+int window_update(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_WINDOW))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        luaT_pushobject(L, v, LUAT_RENDER);
-        return 1;
+        v->update();
+        return 0;
     }
-    return pluginInvArgs(L, "window.render");
+    return pluginInvArgs(L, "window.update");
+}
+
+int window_setbackground(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_WINDOW, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsView *r = (PluginsView *)luaT_toobject(L, 1);
+        COLORREF color = RGB(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
+        r->setBackground(color);
+        return 0;
+    }
+    if (luaT_check(L, 2, LUAT_WINDOW, LUA_TNUMBER))
+    {
+        PluginsView *r = (PluginsView *)luaT_toobject(L, 1);
+        COLORREF color = lua_tounsigned(L, 2);
+        r->setBackground(color);
+        return 0;
+    }
+    return pluginInvArgs(L, "window.setbackground");
 }
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
@@ -181,7 +212,9 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "show", window_show);
     regFunction(L, "hide", window_hide);
     regFunction(L, "isvisible", window_isvisible);
-    regFunction(L, "render", window_render);
+    regFunction(L, "setrender", window_setrender);
+    regFunction(L, "update", window_update);
+    regFunction(L, "setbackground", window_setbackground);
     regIndexMt(L);
     lua_pop(L, 1);
 }

@@ -628,6 +628,7 @@ bool initPluginsSystem()
     reg_mt_viewdata(L);
     reg_mt_panels(L);
     reg_mt_render(L);
+    reg_pview_render_table(L);
     return true;
 }
 

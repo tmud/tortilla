@@ -17,8 +17,12 @@ function statusbar.version()
     return '1.0'
 end
 
+function statusbar.render(r)
+  --r:clear(120, 140, 160)
+end
+
 function statusbar.init()
   local p = createPanel("bottom", 32)
-  local r = p:render()
-  r:setbackground(120, 140, 160)
+  p:setrender(statusbar.render)
+  p:setbackground(140,100,130)
 end

@@ -53,6 +53,12 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
             lua_pushstring(L, str);
             break;
         }
+        case 'F':
+        {
+            void *f = va_arg(args, void*);
+            lua_pushcfunction(L, (lua_CFunction)f);
+            break;
+        }
         case 't':
         {
             on_stack++;
