@@ -1,8 +1,6 @@
 ﻿-- Плагин Status Bar для Tortilla mud client
 -- Список команд, которые нужно блокировать
 
-local msgbox = system.msgbox
-
 statusbar = {}
 function statusbar.name() 
     return 'Плагин гистограммы'
@@ -17,12 +15,19 @@ function statusbar.version()
     return '1.0'
 end
 
-function statusbar.render(r)
+local r = nil
+local objs = {}
+
+local function render()
   --r:clear(120, 140, 160)
+  --local w = r:width()
+  --local h = r:height()
+  --r:rect(2,2,w-2,h-2,st.pen1)
 end
 
 function statusbar.init()
   local p = createPanel("bottom", 32)
-  p:setrender(statusbar.render)
-  p:setbackground(140,100,130)
+  r = p:setrender(render)
+  r:setbackground(140,100,130)  
+  --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 100, g = 200, b = 100 }
 end

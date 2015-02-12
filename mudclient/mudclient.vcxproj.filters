@@ -238,7 +238,7 @@
     <ClInclude Include="src\passwordDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\plugins\pluginsPanels.h">
+    <ClInclude Include="src\plugins\pluginsViewRender.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
   </ItemGroup>
@@ -342,10 +342,10 @@
     <ClCompile Include="src\plugins\pluginsApi3.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
-    <ClCompile Include="src\plugins\pluginsRender.cpp">
+    <ClCompile Include="src\plugins\pluginsView.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
-    <ClCompile Include="src\plugins\pluginsView.cpp">
+    <ClCompile Include="src\plugins\pluginsViewRender.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
   </ItemGroup>

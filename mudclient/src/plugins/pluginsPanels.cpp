@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "pluginsPanels.h"
 #include "pluginsApi.h"
 #include "pluginSupport.h"
 #include "plugin.h"
@@ -45,41 +44,23 @@ int pn_setrender(lua_State *L)
     if (luaT_check(L, 2, LUAT_PANEL, LUA_TFUNCTION))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int id = reg_pview_render(L);
-        v->setRender(L, id);
-        return 0;
+        PluginsViewRender* r = v->setRender(L);
+        luaT_pushobject(L, r, LUAT_RENDER);
+        return 1;
     }
     return pluginInvArgs(L, "panel.setrender");
 }
 
-int pn_update(lua_State *L)
+int pn_hwnd(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_PANEL))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        v->update();
-        return 0;
+        HWND wnd = *v;
+        lua_pushunsigned(L, (unsigned int)wnd);
+        return 1;
     }
-    return pluginInvArgs(L, "panel.update");
-}
-
-int pn_setbackground(lua_State *L)
-{
-    if (luaT_check(L, 4, LUAT_PANEL, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
-    {
-        PluginsView *r = (PluginsView *)luaT_toobject(L, 1);
-        COLORREF color = RGB(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
-        r->setBackground(color);
-        return 0;
-    }
-    if (luaT_check(L, 2, LUAT_PANEL, LUA_TNUMBER))
-    {
-        PluginsView *r = (PluginsView *)luaT_toobject(L, 1);
-        COLORREF color = lua_tounsigned(L, 2);
-        r->setBackground(color);
-        return 0;
-    }
-    return pluginInvArgs(L, "panel.setbackground");
+    return pluginInvArgs(L, "panel.hwnd");
 }
 
 void reg_mt_panels(lua_State *L)
@@ -88,8 +69,7 @@ void reg_mt_panels(lua_State *L)
     luaL_newmetatable(L, "panel");
     regFunction(L, "attach", pn_attach);
     regFunction(L, "setrender", pn_setrender);
-    regFunction(L, "update", pn_update);
-    regFunction(L, "setbackground", pn_setbackground);
+    regFunction(L, "hwnd", pn_hwnd);
     regIndexMt(L);
     lua_pop(L, 1);
 }

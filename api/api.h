@@ -61,12 +61,11 @@ public:
 		window = wnd;
 		return true;
 	}
-
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "hwnd", "o");
-        HWND hwnd = (HWND)lua_tointeger(L, -1);
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
         lua_pop(L, 1);
         return hwnd;
     }
@@ -93,16 +92,6 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
     }
-    void setrender(lua_CFunction func)
-    {
-        luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "setrender", "oF", func);
-    }
-    void update()
-    {
-        luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "update", "o");
-    }
 };
 
 class luaT_panel
@@ -127,15 +116,13 @@ public:
         luaT_pushobject(L, panel, LUAT_PANEL);
         luaT_run(L, "attach", "od", child);
     }
-    void setrender(lua_CFunction func)
+    HWND hwnd()
     {
         luaT_pushobject(L, panel, LUAT_PANEL);
-        luaT_run(L, "setrender", "oF", func);        
-    }
-    void update()
-    {
-        luaT_pushobject(L, panel, LUAT_PANEL);
-        luaT_run(L, "update", "o");
+        luaT_run(L, "hwnd", "o");
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        return hwnd;
     }
 };
 

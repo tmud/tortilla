@@ -1,27 +1,5 @@
 #pragma once
-
-class PluginsViewRender
-{
-public:
-    PluginsViewRender(lua_State *pL, int index) : L(pL), m_render_func_index(index)
-    , m_bkg_color(0)
-    {
-        assert(L && index > 0);
-    }
-    void render(HDC dc, int width, int height);
-    void setBackground(COLORREF color);
-    void clear(COLORREF color);
-private:
-    lua_State *L;
-    int m_render_func_index;
-    int m_width;
-    int m_height;
-    CDCHandle m_dc;
-    COLORREF m_bkg_color;
-};
-
-void reg_pview_render_table(lua_State *L);
-int  reg_pview_render(lua_State* L);
+#include "pluginsViewRender.h"
 
 class PluginsView : public CWindowImpl<PluginsView>
 {
@@ -42,26 +20,17 @@ public:
     void attachChild(HWND wnd)
     {
         m_child_window.Attach(wnd);
+        m_child_window.SetParent(m_hWnd);
         RECT rc; GetClientRect(&rc);
         m_child_window.MoveWindow(&rc);
     }
 
-    void setRender(lua_State *L, int render)
+    PluginsViewRender* setRender(lua_State *L)
     {
         delete m_render;
-        m_render = new PluginsViewRender(L, render);
-    }
-
-    void update()
-    {
-        if (m_child_window.IsWindow())
-            Invalidate();
-    }
-
-    void setBackground(COLORREF color)
-    {
-        if (m_render)
-            {  m_render->setBackground(color); Invalidate(); }
+        int render_id = reg_pview_render(L);
+        m_render = new PluginsViewRender(L, render_id, m_hWnd);
+        return m_render;
     }
 
 private:
@@ -74,12 +43,14 @@ private:
     {
         if (!m_child_window.IsWindow())
         {
-            CPaintDC dc(m_hWnd);
-            RECT rc; GetClientRect(&rc);            
             if (m_render)
-                m_render->render(dc, rc.right, rc.bottom);
+                m_render->render();
             else
-                dc.FillSolidRect(&rc, 0);
+            {
+                CPaintDC dc(m_hWnd);
+                RECT rc; GetClientRect(&rc);
+                dc.FillSolidRect(&rc, GetSysColor(COLOR_BACKGROUND));
+            }
             return 0;
         }
         bHandled = FALSE;
@@ -98,5 +69,6 @@ private:
     {
         return 1; // handled, no background painting needed
     }
+private:
+    int  reg_pview_render(lua_State* L);
 };
-

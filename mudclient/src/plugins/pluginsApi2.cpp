@@ -47,7 +47,7 @@ int window_hwnd(lua_State *L)
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         HWND wnd = *v;
-        lua_pushinteger(L, (int)wnd);
+        lua_pushunsigned(L, (unsigned int)wnd);
         return 1;
     }
     return pluginInvArgs(L, "window.hwnd");
@@ -163,41 +163,11 @@ int window_setrender(lua_State *L)
     if (luaT_check(L, 2, LUAT_WINDOW, LUA_TFUNCTION))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int id = reg_pview_render(L);
-        v->setRender(L, id);
-        return 0;
+        PluginsViewRender* r = v->setRender(L);
+        luaT_pushobject(L, r, LUAT_RENDER);
+        return 1;
     }
     return pluginInvArgs(L, "window.setrender");
-}
-
-int window_update(lua_State *L)
-{
-    if (luaT_check(L, 1, LUAT_WINDOW))
-    {
-        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        v->update();
-        return 0;
-    }
-    return pluginInvArgs(L, "window.update");
-}
-
-int window_setbackground(lua_State *L)
-{
-    if (luaT_check(L, 4, LUAT_WINDOW, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
-    {
-        PluginsView *r = (PluginsView *)luaT_toobject(L, 1);
-        COLORREF color = RGB(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
-        r->setBackground(color);
-        return 0;
-    }
-    if (luaT_check(L, 2, LUAT_WINDOW, LUA_TNUMBER))
-    {
-        PluginsView *r = (PluginsView *)luaT_toobject(L, 1);
-        COLORREF color = lua_tounsigned(L, 2);
-        r->setBackground(color);
-        return 0;
-    }
-    return pluginInvArgs(L, "window.setbackground");
 }
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
@@ -213,8 +183,6 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "hide", window_hide);
     regFunction(L, "isvisible", window_isvisible);
     regFunction(L, "setrender", window_setrender);
-    regFunction(L, "update", window_update);
-    regFunction(L, "setbackground", window_setbackground);
     regIndexMt(L);
     lua_pop(L, 1);
 }
