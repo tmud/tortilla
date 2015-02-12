@@ -1,11 +1,8 @@
 #pragma once
-
 #include "mapperObjects.h"
-#include "mapperParser.h"
-#include "mapperPrompt.h"
-#include "mapperKey.h"
 #include "mapperHashTable.h"
 #include "mapperRender.h"
+#include "properties.h"
 
 class KeyPair
 {
@@ -43,36 +40,31 @@ public:
     void saveMaps(lua_State *L);
     void loadMaps(lua_State *L);
 
-private:
+private:    
     bool  recognizeRoom(u8string& ndata, RoomData *room);
-
+    bool  recognizePrompt(u8string& ndata);
+    void  popDir();
     void  processData(const RoomData& room);
+
     bool  setByDir(Room *room);
     Zone* createZone();
     void  setCurrentRoom(Room *room);
     Room* createRoom(const RoomData& room);
     void  deleteRoom(Room* room);
-    void  popDir();    
+    
 
 private:
     PropertiesMapper *m_propsData;
     MapperActions* m_pActions;
 
+    // Helpers to parse incoming data and recognize rooms and prompt
     StreamTrigger m_parser;
     StreamTrigger m_prompt;
-
     KeyPair kp_name;
     KeyPair kp_key;
     KeyPair kp_descr;
     KeyPair kp_exits;
     KeyPair kp_prompt;
-    
-    // Helper to parse incoming data and find rooms
-    //MapperParser    m_parser;
-    //MapperPrompt    m_prompt;
-    //MapperKey       m_key_trimmer;
-
-    MapperHashTable m_table;
 
     // Order for commands
     std::list<RoomDir> m_path;
@@ -86,4 +78,5 @@ private:
 
     // Zones list
     std::vector<Zone*> m_zones;
+    MapperHashTable m_table;
 };

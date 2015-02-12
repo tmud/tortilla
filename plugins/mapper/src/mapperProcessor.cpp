@@ -95,6 +95,7 @@ void MapperProcessor::updateProps()
     kp_exits.init(p->begin_exits, p->end_exits);
     kp_prompt.init(p->begin_prompt, p->end_prompt);
     m_parser.create(kp_name.begin.c_str(), kp_exits.end.c_str(), 2048);
+    m_prompt.create(kp_prompt.begin.c_str(), kp_prompt.end.c_str(), 2048);
 }
 
 void MapperProcessor::processNetworkData(u8string& ndata)
@@ -102,20 +103,12 @@ void MapperProcessor::processNetworkData(u8string& ndata)
     RoomData room;
     if (!recognizeRoom(ndata, &room))
     {
-
-    }
-    
-    
-    /*{
-        if (m_prompt.processNetworkData(ndata))
+        if (recognizePrompt(ndata))
             popDir();
-        m_key_trimmer.processNetworkData(ndata);
         return;
     }
     popDir();
     processData(room);
-    m_key_trimmer.processNetworkData(ndata);*/
-
 }
 
 bool MapperProcessor::recognizeRoom(u8string& ndata, RoomData *room)
@@ -137,16 +130,17 @@ bool MapperProcessor::recognizeRoom(u8string& ndata, RoomData *room)
     if (pos == -1)
         return false;
     room->zonename.assign(key.substr(0, pos));
-    room->roomid.append(key.substr(pos + 1));
+    room->roomid.append(key.substr(pos + 1));    
+    room->calcHash();
+    room->printDebugData();
+    return true;
+}
 
-    OutputDebugString(room->name.c_str());
-    OutputDebugString(L"\r\n");
-    OutputDebugString(room->zonename.c_str());
-    OutputDebugString(L"\r\n");
-    OutputDebugString(room->roomid.c_str());
-    OutputDebugString(L"\r\n");
-    OutputDebugString(room->exits.c_str());
-    OutputDebugString(L"-----------------\r\n");
+bool MapperProcessor::recognizePrompt(u8string& ndata)
+{
+    int result = m_prompt.stream(ndata.c_str());
+    if (result <= 0)
+        return false;
     return true;
 }
 
@@ -171,6 +165,17 @@ void MapperProcessor::processCmd(const tstring& cmd)
         m_path.push_back(dir);
 }
 
+void MapperProcessor::popDir()
+{
+    if (m_path.empty())
+        m_lastDir = RD_UNKNOWN;
+    else
+    {
+        m_lastDir = *m_path.begin();
+        m_path.pop_front();
+    }
+}
+
 void MapperProcessor::processData(const RoomData& room)
 {
     std::vector<Room*> &vr = m_pos_rooms;
@@ -178,11 +183,10 @@ void MapperProcessor::processData(const RoomData& room)
     m_table.findRooms(room, &vr);
     int count = vr.size();
 
-    // нет ни одной подходящей комнаты 
-    if (count == 0)
+    if (count == 0)                                         // нет ни одной подходящей комнаты
     {
         Room* new_room = createRoom(room);
-        if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN)      // есть местоположение и направление
+        if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN)      // есть и местоположение и направление
         {
             RoomCursor cursor(m_pCurrentRoom, m_lastDir);
             if (!cursor.next())
@@ -427,16 +431,6 @@ void MapperProcessor::deleteRoom(Room* room)
     delete room;
 }
 
-void MapperProcessor::popDir()
-{
-    if (m_path.empty())
-        m_lastDir = RD_UNKNOWN;
-    else
-    {
-        m_lastDir = *m_path.begin();
-        m_path.pop_front();
-    }
-}
 
 /*void Mapper::findOrCreateRooms(const RoomData& room, std::vector<Room*> *vr)
 {

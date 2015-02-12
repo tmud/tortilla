@@ -3,9 +3,6 @@
 #define ROOM_DIRS_COUNT 6
 enum RoomDir { RD_UNKNOWN = -1, RD_NORTH=0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN };
 extern const utf8* RoomDirName[];
-struct Room;
-class RoomsLevel;
-class Zone;
 
 struct RoomData
 {
@@ -15,19 +12,12 @@ struct RoomData
     tstring descr;
     tstring exits;
     uint    hash;
-    uint    dhash;
     bool    dark;
 
     bool equal(const RoomData& rd) const
     {
         assert(hash && rd.hash);
-        return (hash && dhash && hash == rd.hash && dhash == rd.dhash) ? true : false;
-    }
-
-    bool similar(const RoomData& rd) const
-    {
-        assert(hash && rd.hash);
-        return (hash && hash == rd.hash) ? true : false;
+        return(hash && hash == rd.hash) ? true : false;
     }
 
     bool compare(const RoomData& rd) const
@@ -44,38 +34,36 @@ struct RoomData
     void calcHash()
     {
         CRC32 crc;
-        crc.process(name.c_str(), name.length() * sizeof(WCHAR));        
-        crc.process(exits.c_str(), exits.length() * sizeof(WCHAR));
+        crc.process(zonename.c_str(), zonename.length() * sizeof(WCHAR));        
+        crc.process(roomid.c_str(), roomid.length() * sizeof(WCHAR));
         hash = crc.getCRC32();
-        dhash = 0;
-        if (!descr.empty()) 
-        {
-            CRC32 dcrc;
-            dcrc.process(descr.c_str(), descr.length() * sizeof(WCHAR));
-            dhash = dcrc.getCRC32();
-        }
     }
 
-    RoomData() : hash(0), dhash(0), dark(false) {}
+    RoomData() : hash(0), dark(false) {}
 
-#ifdef _DEBUG
     void printDebugData()
     {
+#ifdef _DEBUG
         WCHAR buf[64];
-        swprintf(buf, L"-----\r\nhash: 0x%x, dhash: 0x%x\r\n", hash, dhash);
+        swprintf(buf, L"hash: %x,", hash);
         OutputDebugString(buf);
         OutputDebugString(name.c_str());
         if (dark)
             OutputDebugString(L",dark");
         OutputDebugString(L"\r\n");
+        OutputDebugString(zonename.c_str());
+        OutputDebugString(L"\r\n");
+        OutputDebugString(roomid.c_str());
+        OutputDebugString(L"\r\n");
         OutputDebugString(descr.c_str());
         OutputDebugString(L"\r\n");
         OutputDebugString(exits.c_str());
-        OutputDebugString(L"\r\n");
-    }
+        OutputDebugString(L"---------------------------\r\n");
 #endif
+    }
 };
 
+struct Room;
 struct RoomExit
 {
     RoomExit() : next_room(NULL), exist(false), door(false) {}
@@ -84,6 +72,8 @@ struct RoomExit
     bool door;
 };
 
+class RoomsLevel;
+class Zone;
 struct Room
 {
     Room() : level(NULL), x(0), y(0), icon(0), use_color(0), color(0), special(0) {}
@@ -94,7 +84,7 @@ struct Room
     int icon;                       // icon if exist
     int use_color;                  // flag for use background color
     COLORREF color;                 // background color
-    int special;                    //todo special internal value for algoritms (don't saved)    
+    int special;                    // special internal temp value for algorithms
 };
 
 struct RoomsLevelBox
