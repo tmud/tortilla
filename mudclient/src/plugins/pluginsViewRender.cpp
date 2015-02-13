@@ -60,6 +60,12 @@ int PluginsViewRender::height()
     return rc.bottom;
 }
 
+bool  PluginsViewRender::createPen()
+{    
+    CPen * pen = pens.create(L);
+    return (pen) ? true : false;
+}
+//-------------------------------------------------------------------------------------------------
 int render_setbackground(lua_State *L)
 {
     if (luaT_check(L, 4, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
@@ -101,12 +107,25 @@ int render_height(lua_State *L)
     return pluginInvArgs(L, "render.height");
 }
 
+int render_createpen(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        r->createPen();
+        lua_pushinteger(L, r->width());
+        return 1;
+    }
+    return pluginInvArgs(L, "render.height");
+}
+
 void reg_mt_render(lua_State *L)
 {
     luaL_newmetatable(L, "render");
     regFunction(L, "setbackground", render_setbackground);
     regFunction(L, "width", render_width);
     regFunction(L, "height", render_height);
+    regFunction(L, "createpen", render_createpen);
     regIndexMt(L);
     lua_pop(L, 1);
 }

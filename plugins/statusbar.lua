@@ -29,5 +29,5 @@ function statusbar.init()
   local p = createPanel("bottom", 32)
   r = p:setrender(render)
   r:setbackground(140,100,130)  
-  --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 100, g = 200, b = 100 }
+  objs.pen1 = r:createpen{ style ="solid", width = 1, r = 100, g = 200, b = 100 }
 end

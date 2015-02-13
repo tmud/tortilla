@@ -241,6 +241,9 @@
     <ClInclude Include="src\plugins\pluginsViewRender.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\plugins\pluginsRenderObjects.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\compareObject.cpp">
