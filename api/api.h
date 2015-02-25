@@ -16,6 +16,9 @@ typedef std::string u8string;
 #define LUAT_ACTIVEOBJS 102
 #define LUAT_PANEL      103
 #define LUAT_RENDER     104
+#define LUAT_PEN        105
+#define LUAT_BRUSH      106
+#define LUAT_FONT       107
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -28,19 +31,6 @@ void  luaT_showLuaStack(lua_State* L, const utf8* label);
 void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)
 #define ST(L,n) luaT_showTableOnTop(L,n)
-
-class luaT_render
-{
-    lua_State *L;
-    void *render;
-public:
-    luaT_render(lua_State *pL,  void *r) : L(pL), render(r) {}
-    void setbackground(COLORREF color)
-    {
-        luaT_pushobject(L, render, LUAT_RENDER);
-        luaT_run(L, "setbackground", "oddd", GetRValue(color), GetGValue(color), GetBValue(color) );
-    }
-};
 
 //lua window wrapper
 class luaT_window

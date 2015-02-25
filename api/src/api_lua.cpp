@@ -9,7 +9,7 @@ struct luaT_userdata
     void *data;
 };
 
-const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render" };
+const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render", "pen", "brush", "font" };
 void getmetatable(lua_State *L, int type)
 {
     type = type - LUAT_WINDOW;  // first type
@@ -190,7 +190,10 @@ void luaT_pushobject(lua_State* L, void *object, int type)
     o->data = object;
     o->type = type;
     getmetatable(L, type);
-    lua_setmetatable(L, -2);
+    if (lua_istable(L, -1))
+        lua_setmetatable(L, -2);
+    else
+        lua_pop(L, 1);
 }
 
 bool luaT_isobject(lua_State* L, int type, int index)

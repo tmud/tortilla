@@ -9,12 +9,10 @@ public:
     void setBackground(COLORREF color);
     int  width();
     int  height();
-
-    bool createPen();
-
+    CPen* createPen(lua_State *L);
 
 private:
-    lua_State *L;
+    lua_State *renderL;
     int m_render_func_index;
     CWindow m_wnd;
     CDCHandle m_dc;
@@ -24,7 +22,7 @@ private:
     int m_width;
     int m_height;
 
-    PluginsRenderCollectionT<CPen, reader::Pen> pens;
+    PluginsRenderCollectionT<CPen, PenFactory> pens;
     /*PluginsRenderCollectionT<CBrush> brushes;
     PluginsRenderCollectionT<CFont> fonts;
     PluginsRenderCollectionT<CBitmap> bitmaps;*/

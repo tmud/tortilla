@@ -5,15 +5,36 @@ class PluginsRenderObjectT
 {
 public:
     PluginsRenderObjectT(T* obj, const u8string &k) : object(obj), key(k) {}
-    ~PluginsRenderObjectT<T>() { delete object; }    
+    void destroy() { delete object; }
     T* object;
     u8string key;
 };
 
-template <class T, class R>
+template <class T, class F>
 class PluginsRenderCollectionT
 {
 public:
+    ~PluginsRenderCollectionT()
+    {
+        for (int i=0,e=objects.size();i<e;++i)
+            objects[i].destroy();
+    }
+
+    T* create(lua_State *L)
+    {
+        if (!lua_istable(L, -1))
+            return NULL;        
+        F factory(L);
+        int index = find(factory.key);
+        if (index != -1)
+            return objects[index].object;
+        T* obj = factory.create();
+        if (obj)
+            objects.push_back(PluginsRenderObjectT<T>(obj, factory.key));
+        return obj;
+    }  
+
+private:
     int find(const u8string& key)
     {
         for (int i = 0, e = objects.size(); i < e; ++i) {
@@ -21,28 +42,14 @@ public:
         }
         return -1;
     }
-
-    T* create(lua_State *L)
-    {
-        if (!lua_istable(L, -1))
-            return NULL;        
-        R reader(L);
-        reader.key
-
-        T* obj = reader.create(L);
-        if (obj)
-            objects.push_back(PluginsRenderObjectT<T>(obj, reader.key));
-        return obj;
-    }    
     std::vector<PluginsRenderObjectT<T>> objects;
 };
 
-namespace reader {
-class Reader
+class ParametersReader
 {
-    lua_State *L;    
+    lua_State *L;
 public:
-    Reader(lua_State* pL) : L(pL) {}
+    ParametersReader(lua_State* pL) : L(pL) {}
     void get(const utf8* field, u8string* value)
     {
         lua_pushstring(L, field);
@@ -70,28 +77,73 @@ public:
         get("r", 0, 255, &r);
         get("g", 0, 255, &g);
         get("b", 0, 255, &b);
+        *color = RGB(r, g, b);
     }
 };
 
-struct Pen 
+class KeyFactoryCalc
+{
+public:
+    void calc(int value)
+    {
+        delimeter();
+        utf8 buf[16];
+        sprintf(buf, "%d", value);
+        crc.append(buf);
+    }
+    void calc(const u8string& key)
+    {
+        delimeter();
+        crc.append(key);
+    }
+    void calc(COLORREF color)
+    {
+        delimeter();
+        utf8 buf[16];
+        sprintf(buf, "%d,%d,%d", GetRValue(color),GetGValue(color),GetBValue(color));
+        crc.append(buf);
+    }
+   
+    u8string crc;
+private:
+    void delimeter()
+    {
+        if (!crc.empty())
+            crc.append(",");
+    }
+};
+
+struct PenFactory
 {
     u8string key;
     u8string style;
     int width;
     COLORREF color;
 
-    Pen(lua_State *L) : width(1), color(0)
+    PenFactory(lua_State *L) : width(1), color(0)
     {
-        Reader r(L);
+        ParametersReader r(L);
         r.get("style", &style);
         r.get("width", 1, 10, &width);
         r.getcolor(&color);
+        KeyFactoryCalc k;
+        k.calc(style);
+        k.calc(width);
+        k.calc(color);
+        key = k.crc;
     }
 
     CPen* create()
     {
-        retrun NULL;
-    }    
+        int s = PS_NULL;
+        if (style == "solid" || style == "")
+            s = PS_SOLID;
+        else if (style == "dash")
+            s = PS_DASH;
+        else if (style == "dot")
+            s = PS_DOT;
+        CPen *p = new CPen;
+        p->CreatePen(s, width, color);
+        return p;
+    }
 };
-
-} // reader

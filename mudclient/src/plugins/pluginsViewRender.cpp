@@ -2,14 +2,16 @@
 #include "pluginsApi.h"
 #include "pluginsViewRender.h"
 
-PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : L(pL), m_render_func_index(index), m_wnd(wnd),
+PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
 m_inside_render(false), m_bkg_color(0), m_width(0), m_height(0)
 {
-    assert(L && index > 0);
+    assert(pL && index > 0);
 }
 
 void PluginsViewRender::render()
 {
+    lua_State *L = renderL;
+
     CPaintDC dc(m_wnd);
     m_dc = dc;
 
@@ -60,10 +62,10 @@ int PluginsViewRender::height()
     return rc.bottom;
 }
 
-bool  PluginsViewRender::createPen()
-{    
-    CPen * pen = pens.create(L);
-    return (pen) ? true : false;
+CPen* PluginsViewRender::createPen(lua_State *L)
+{
+    assert(L == renderL);
+    return pens.create(L);
 }
 //-------------------------------------------------------------------------------------------------
 int render_setbackground(lua_State *L)
@@ -101,7 +103,7 @@ int render_height(lua_State *L)
     if (luaT_check(L, 1, LUAT_RENDER))
     {
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
-        lua_pushinteger(L, r->width());
+        lua_pushinteger(L, r->height());
         return 1;
     }
     return pluginInvArgs(L, "render.height");
@@ -109,11 +111,13 @@ int render_height(lua_State *L)
 
 int render_createpen(lua_State *L)
 {
-    if (luaT_check(L, 1, LUAT_RENDER, LUA_TTABLE))
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
     {
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
-        r->createPen();
-        lua_pushinteger(L, r->width());
+        if (r->createPen(L))
+            luaT_pushobject(L, r, LUAT_PEN);
+        else
+            lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, "render.height");
