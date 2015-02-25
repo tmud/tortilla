@@ -116,6 +116,7 @@
     <ClInclude Include="src\mapperZoneControl.h" />
     <ClInclude Include="src\MenuXP.h" />
     <ClInclude Include="src\properties.h" />
+    <ClInclude Include="src\roomCursor.h" />
     <ClInclude Include="src\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -128,6 +129,7 @@
     <ClCompile Include="src\mapperRoomRender.cpp" />
     <ClCompile Include="src\mapper_export.cpp" />
     <ClCompile Include="src\MenuXP.cpp" />
+    <ClCompile Include="src\roomCursor.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

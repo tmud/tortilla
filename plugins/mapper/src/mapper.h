@@ -27,16 +27,16 @@ private:
 private: // actions from processor
     void setCurrentRoom(Room *room) 
     {
-        m_view.setCurrentRoom(room);
-        Zone *zone = room->level->getZone();
-        m_zones_control.zoneChanged(zone);    
+   /*     m_view.setCurrentRoom(room);
+        Zone *zone = room->level->getArea()->getZone();
+        m_zones_control.zoneChanged(zone);*/
     }    
-    void lostPosition() { m_view.setCurrentRoom(NULL); }
+    /*void lostPosition() { m_view.setCurrentRoom(NULL); }
     void setPossibleRooms(const std::vector<Room*>& rooms) {}
-    void addNewZone(Zone *zone) { m_zones_control.addNewZone(zone); }
+    void addNewZone(Zone *zone) { m_zones_control.addNewZone(zone); }*/
 
 private:
-    void setCurrentLevel(RoomsLevel *level) {}
+    //void setCurrentLevel(RoomsLevel *level) {}
     MapperToolbar m_toolbar;
     CSplitterWindowExT<true, 1, 3> m_vSplitter;
     MapperZoneControl m_zones_control;

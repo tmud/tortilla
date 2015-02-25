@@ -24,7 +24,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0 dev");
+    lua_pushstring(L, "0.01 alpha");
     return 1;
 }
 

@@ -77,6 +77,9 @@
     <ClInclude Include="src\MenuXP.h">
       <Filter>Support Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\roomCursor.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -108,6 +111,9 @@
     </ClCompile>
     <ClCompile Include="src\MenuXP.cpp">
       <Filter>Support Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\roomCursor.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "mapperObjects.h"
+#include "mapperProcessor.h"
+
 const utf8* RoomDirName[] = { "north", "south", "west", "east", "up", "down" };
+extern MapperProcessor* m_mapper_processor;
 
 /*RoomCursor::RoomCursor(Room *r) : room(r), x(-1), y(-1), level(0) { assert(room); if (room) updateCoords(); }
 Room* RoomCursor::move(int dir)
@@ -65,10 +68,13 @@ void RoomCursor::updateCoords()
     level = room->level->getLevel();
 }*/
 
-RoomsLevel::RoomsLevel(int width, int height, int level, Zone *parent_zone) : m_pZone(parent_zone), m_level(level)
+//RoomsLevel::RoomsLevel(int width, int height, int level, Zone *parent_zone) : m_pZone(parent_zone), m_level(level)
+
+/*RoomsLevel::RoomsLevel(RoomsArea *parent_area, int level, int w, int h) : m_pArea(parent_area), m_level(level)
 {
-    setsize(width, height);
+    setsize(w, h);
 }
+
 RoomsLevel::~RoomsLevel()
 {
     struct{ void operator() (row* r) { delete r; } } del;
@@ -91,15 +97,13 @@ bool RoomsLevel::set(int x, int y, Room* room)
         room->level = this;
     }    
     rooms[y]->rr[x] = room;
-    m_pZone->setChanged(true);
+    m_pArea->setChanged();
     return true;
 }
 
 Room* RoomsLevel::get(int x, int y) const
 {
-    if (!check(x, y))
-        return NULL;
-    return rooms[y]->rr[x];
+    return (check(x, y)) ? rooms[y]->rr[x] : NULL;
 }
 
 void RoomsLevel::extend(RoomDir d, int count)
@@ -175,7 +179,7 @@ void RoomsLevel::extend(RoomDir d, int count)
 
 void RoomsLevel::setsize(int dx, int dy)
 {
-    assert(dx && dy);
+    if (dx <= 0 || dy <= 0) return;
     for (int i = 0; i < dy; ++i)
     {
         row *r = new row;
@@ -319,7 +323,58 @@ void RoomsLevel::resizeLevel(int x, int y)
 }
 */
 
+/*
+void RoomsArea::extend(RoomDir d, int count)
+{
+    switch (d)
+    {
+    case RD_NORTH:
+    case RD_SOUTH:
+    case RD_WEST:
+    case RD_EAST:
+    {
+        area_iterator it = m_area.begin(), it_end = m_area.end();
+        for (; it != it_end; ++it)
+           it->second->extend(d, count);
+        m_changed = true;
+    }
+    break;
+    case RD_UP:
+    {
+        int w = getWidth(); int h = getHeight();
+        int level = m_area.rbegin()->first + 1;
+        for (; count > 0; --count)
+        {
+            RoomsLevel *new_level = new RoomsLevel(this, level, w, h);
+            m_area[level] = new_level;
+            level++;
+        }
+        m_changed = true;
+    }
+    break;
+    case RD_DOWN:
+    {
+        int w = getWidth(); int h = getHeight();
+        int level = m_area.begin()->first - 1;
+        for (; count > 0; --count)
+        {
+            RoomsLevel *new_level = new RoomsLevel(this, level, w, h);
+            m_area[level] = new_level;
+            level--;
+        }
+        m_changed = true;
+    }
+    break;
+    default:
+        assert(false);
+        break;
+    } // switch
+}
 
+
+
+
+*/
 
 /*void Zone::resizeLevels(int x, int y)
 {
@@ -365,191 +420,173 @@ void RoomsLevel::resizeLevel(int x, int y)
     return it->second;
 }*/
 
-void Zone::extend(RoomDir d, int count)
+bool Table::getLimits(const TablePos& p, TableLimits* limits)
 {
-    switch (d)
+    int zones = m_zones.size();
+    if (p.zone >= 0 && p.zone < zones)
     {
-        case RD_NORTH:
-        case RD_SOUTH:
-        case RD_WEST:
-        case RD_EAST:
+        limits->areas = m_zones[p.zone]->areas.size();
+        if (p.area >= 0 && p.area < limits->areas)
         {
-            lvls_iterator it = m_levels.begin(), it_end = m_levels.end();
-            for (; it != it_end; ++it)
-                it->second->extend(d, count);
-            setChanged(true);
-        }
-        break;
-        case RD_UP:
-        {
-            int w = getWidth(); int h = getHeight();
-            int level = m_levels.rbegin()->first + 1;
-            for (; count > 0; --count)
+            area *parea = m_zones[p.zone]->areas[p.area];
+            limits->minlevel = parea->levels.begin()->first;
+            limits->maxlevel = parea->levels.rbegin()->first;
+            if (p.level >= limits->minlevel && p.level <= limits->maxlevel)
             {
-                RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
-                m_levels[level] = new_level;
-                level++;
+                level *plevel = parea->levels[p.level];
+                limits->height = plevel->lines.size();
+                if (limits->height > 0)
+                {
+                    limits->width = plevel->lines[0]->elements.size();
+                    return true;
+                }
             }
-            setChanged(true);
         }
-        break;
-        case RD_DOWN:
-        {
-            int w = getWidth(); int h = getHeight();
-            int level = m_levels.begin()->first - 1;
-            for (; count > 0; --count)
-            {
-                RoomsLevel *new_level = new RoomsLevel(w, h, level, this);
-                m_levels[level] = new_level;
-                level--;
-            }
-            setChanged(true);
-        }
-        break;
-    default:
-        assert(false);
-        break;
     }
+    return false;
 }
 
-/*RoomCursor::RoomCursor() { reset(); }
-void RoomCursor::reset() { current_room = NULL; new_room = NULL; x=y=z=0; }
-
-RoomsLevel* RoomCursor::getOffsetLevel() const
+Room* Table::get(const TablePos& p)
 {
-if (!current_room) return NULL;
-int pz = current_room->level->getLevel() + z;
-Zone *zone = current_room->level->getZone();
-return zone->getLevel(pz, true);
-}
-
-Room* RoomCursor::getOffsetRoom() const
-{
-RoomsLevel *rlevel = getOffsetLevel();
-if (!rlevel)
-return NULL;
-int rx = current_room->x + x;
-int ry = current_room->y + y;
-return rlevel->getRoom(rx, ry);
-}
-
-bool RoomCursor::setOffsetRoom(Room* room) const
-{
-RoomsLevel *rlevel = getOffsetLevel();
-if (!rlevel)
-return false;
-int rx = current_room->x + x;
-int ry = current_room->y + y;
-if (rlevel->getRoom(rx, ry))
-return false;
-rlevel->addRoom(room, rx, ry);
-return true;
-}
-
-void RoomCursor::move(int dir)
-{
-if (dir == RD_NORTH)
-y -= 1;
-else if (dir == RD_SOUTH)
-y += 1;
-else if (dir == RD_WEST)
-x -= 1;
-else if (dir == RD_EAST)
-x += 1;
-else if (dir == RD_UP)
-z += 1;
-else if (dir == RD_DOWN)
-z -= 1;
-else { assert(false); }
-}*/
-
-RoomCursor::RoomCursor(Room *r, RoomDir d) : room(r), dir(d)
-{
-    assert(r && d != RD_UNKNOWN); 
-}
-
-RoomCursor::RoomCursor(Room *r, int d) : room(r), dir((RoomDir)d)
-{
-    assert(r && d != RD_UNKNOWN);
-}
-
-Room* RoomCursor::next() const
-{
-    return room->dirs[dir].next_room;
-}
-
-void RoomCursor::setNext(Room* r)
-{
-    room->dirs[dir].next_room = r;
-}
-
-/*Room* RoomCursor::revert(RoomDir dir) const
-{
-    Room *next_room = next(dir);
-    return (next_room) ? next_room->dirs[revertDir(dir)].next_room : NULL;
-}*/
-
-bool RoomCursor::isSameByRevert() const
-{
-    Room *next_room = next();
-    if (!next_room)
-        return false;
-    Room *revert = next_room->dirs[revertDir(dir)].next_room;
-    return (revert == room) ? true : false;
-}
-
-bool RoomCursor::delDirByRevert() const
-{
-    Room *next_room = next();
-    if (!next_room)
-        return false;
-    next_room->dirs[revertDir(dir)].next_room = NULL;
-    return true;
-}
-
-bool RoomCursor::isNeighbor(Room* r) const
-{
-    int dx = 0; int dy = 0; int dz = 0;
-    switch (dir)
+    TableLimits limits;
+    if (!getLimits(p, &limits))
+        return NULL;
+    if (p.x >= 0 && p.x < limits.width && p.y >= 0 && p.y < limits.height)
     {
-        case RD_NORTH: dy = -1; break;
-        case RD_SOUTH: dy = 1; break;
-        case RD_WEST: dx = -1; break;
-        case RD_EAST: dx = 1; break;
-        case RD_UP: dz = 1; break;
-        case RD_DOWN: dz = -1; break;
-        default: 
-            return false;
+        area *parea = m_zones[p.zone]->areas[p.area];
+        level *plevel = parea->levels[p.level];
+        return plevel->lines[p.y]->elements[p.x]->room;
+    }
+    return NULL;
+}
+
+Room* Table::addNewRoom(Room *current_room, const RoomData& rd, RoomDir dir)
+{
+    std::vector<Room*> vr;
+    m_hash_table.findRooms(rd, &vr);    
+    int count = vr.size();
+
+    Room *target = NULL;
+    for (int i = 0; i < count; ++i)
+    {
+        TableCell *cell = vr[i]->cell;
+        const RoomData& rdata = cell->room->roomdata;
+        if (rdata.roomid == rd.roomid && rdata.zonename == rd.zonename)
+           {  target = vr[i]; break; }    
     }
 
-    int x = room->x;
-    int y = room->y;
-    int z = room->level->getLevel();
-    Zone* zone = room->level->getZone();
-    RoomsLevel *l = NULL;
-    while (1)
+    if (!current_room || dir == RD_UNKNOWN)
     {
-        x += dx; y += dy; z += dz;
-        l = zone->getLevel(z);
-        if (!l || !l->check(x, y)) return false;
-    } while (l->get(x, y) != r);
-    return true;
+        if (target)
+            return target;
+        TablePos pos;
+        createNewPlace(rd.zonename, &pos);
+        Room* new_room = createRoom(rd);
+        set(pos, new_room);
+        return new_room;
+    }
+    
+    if (target)
+    {
+        current_room->dirs[dir].setNext(target);
+        return target;
+    }
+    
+    TablePos pos;
+    pos.init(current_room);
+    createPlace(pos, dir);
+    Room* new_room = createRoom(rd);
+    set(pos, new_room);
+    current_room->dirs[dir].setNext(new_room);
+    return new_room;
 }
 
-RoomDir RoomCursor::revertDir(RoomDir dir)
+void Table::createNewPlace(const tstring& zone_name, TablePos *pos)
 {
-    if (dir == RD_NORTH)
-        return RD_SOUTH;
-    if (dir == RD_SOUTH)
-        return RD_NORTH;
-    if (dir == RD_WEST)
-        return RD_EAST;
-    if (dir == RD_EAST)
-        return RD_WEST;
-    if (dir == RD_UP)
-        return RD_DOWN;
-    if (dir == RD_DOWN)
-        return RD_UP;
-    assert(false);
-    return RD_UNKNOWN;
+    pos->zone = getZone(zone_name);
+    zone *pzone = m_zones[pos->zone];
+    area *parea = new area();
+    pos->area = pzone->areas.size();
+    pzone->areas.push_back(parea);
+    level *plevel = new level();
+    pos->level = 0;
+    parea->levels[0] = plevel;
+    line *pline = new line();
+    plevel->lines.push_back(pline);
+    pos->y = 0;
+    TableCell* cell = new TableCell();
+    pline->elements.push_back(cell);
+    pos->x = 0;   
+    int index = getIndex(*pos);
+    cell->index = m_indexes[index];
+}
+
+void Table::createPlace(TablePos& p, RoomDir dir)
+{
+    //todo
+
+}
+
+Room* Table::createRoom(const RoomData& room)
+{
+    Room *new_room = new Room();
+    PropertiesMapper *p = m_mapper_processor->m_propsData;
+
+    // parse new_room->roomdata.exits to room->dirs
+    const tstring& e = room.exits;
+    if (e.find(p->north_exit) != -1)
+        new_room->dirs[RD_NORTH].exist = true;
+    if (e.find(p->south_exit) != -1)
+        new_room->dirs[RD_SOUTH].exist = true;
+    if (e.find(p->west_exit) != -1)
+        new_room->dirs[RD_WEST].exist = true;
+    if (e.find(p->east_exit) != -1)
+        new_room->dirs[RD_EAST].exist = true;
+    if (e.find(p->up_exit) != -1)
+        new_room->dirs[RD_UP].exist = true;
+    if (e.find(p->down_exit) != -1)
+        new_room->dirs[RD_DOWN].exist = true;
+
+    new_room->roomdata = room;
+    m_hash_table.addRoom(new_room);
+    return new_room;
+}
+
+void Table::set(const TablePos& p, Room *r)
+{
+    area *parea = m_zones[p.zone]->areas[p.area];
+    level *plevel = parea->levels[p.level];
+    TableCell *cell = plevel->lines[p.y]->elements[p.x];
+    cell->x = p.x;
+    cell->y = p.y;
+    cell->room = r;
+    r->cell = cell;
+}
+
+int Table::getZone(const tstring& name)
+{
+    for (int i = 0, e = m_zones.size(); i < e; ++i)
+        if (m_zones[i]->name == name) { return i; }
+    zone *new_zone = new zone();
+    new_zone->name = name;
+    int index = m_zones.size();
+    m_zones.push_back(new_zone);
+    return index;
+}
+
+int Table::getIndex(const TablePos& p)
+{
+    for (int i = 0, e = m_indexes.size(); i < e; ++i)
+    {
+        TableIndex *index = m_indexes[i];
+        if (index->zone == p.zone && index->area == p.area && index->level == p.level)
+            return i;
+    }
+    TableIndex *index = new TableIndex();
+    index->zone = p.zone;
+    index->area = p.area;
+    index->level = p.level;
+    int ti = m_indexes.size();
+    m_indexes.push_back(index);
+    return ti;
 }

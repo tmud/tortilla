@@ -66,7 +66,9 @@ bool KeyPair::get(StreamTrigger &t, kpmode mode, tstring *result)
         if (e == -1) return false;
     }
     // b - start pos, e - end pos.
-    result->assign(TU2W(t.get(b, e-b)));
+    u8string r;
+    t.get(b, e - b, &r);
+    result->assign(TU2W(r.c_str()));
     return true;
 }
 
@@ -78,7 +80,7 @@ m_propsData(props), m_pActions(NULL), m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL
 
 MapperProcessor::~MapperProcessor()
 {
-    auto_delete<Zone>(m_zones);
+    //auto_delete<Zone>(m_zones);
 }
 
 void MapperProcessor::setCallback(MapperActions* actions)
@@ -178,37 +180,28 @@ void MapperProcessor::popDir()
 
 void MapperProcessor::processData(const RoomData& room)
 {
-    std::vector<Room*> &vr = m_pos_rooms;
-    vr.clear();
-    m_table.findRooms(room, &vr);
-    int count = vr.size();
+    Room *new_room = m_world.addNewRoom(m_pCurrentRoom, room, m_lastDir);
+    m_pCurrentRoom = new_room;
 
+    //setCurrentRoom(new_room);
+
+    //RoomCursor cursor;
+
+   /* int count = vr.size();
     if (count == 0)                                         // нет ни одной подход€щей комнаты
     {
-        Room* new_room = createRoom(room);
-        if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN)      // есть и местоположение и направление
-        {
-            RoomCursor cursor(m_pCurrentRoom, m_lastDir);
-            if (!cursor.next())
-            {
-                cursor.setNext(new_room);
-                if (setByDir(new_room))
-                {
-                    setCurrentRoom(new_room);
-                    return;
-                }
-            }
-        }
-
-        // неизвестны комната и/или направление или это мультивыход
-        Zone* zone = createZone();
-        zone->getDefaultLevel()->set(0, 0, new_room);
+        Room* new_room = cursor.createNewRoom(room);
         setCurrentRoom(new_room);
         return;
     }
-
     if (count == 1)
     {
+        Room* next_room = cursor.moveToRoom(vr[0]);
+        setCurrentRoom(next_room);
+        return;
+    }*/
+
+    { /*
         Room* next_room = vr[0];
         if (m_pCurrentRoom && m_lastDir != RD_UNKNOWN) // есть местоположение и направление
         {
@@ -246,8 +239,11 @@ void MapperProcessor::processData(const RoomData& room)
 
         // неизвестны комната и/или направление
         setCurrentRoom(next_room);
-        return;
+        return;*/
     }
+
+
+
 
     /*Room* new_room = (cached) ? findRoomCached(room) : findRoom(room);
     if (!new_room)
@@ -299,7 +295,7 @@ void MapperProcessor::processData(const RoomData& room)
         if (m_pCurrentLevel) break;
     }*/
 
-bool MapperProcessor::setByDir(Room *room)
+/*bool MapperProcessor::setByDir(Room *room)
 {
     assert(m_pCurrentRoom && m_lastDir != -1);
     Zone *current_zone = m_pCurrentRoom->level->getZone();
@@ -354,32 +350,25 @@ bool MapperProcessor::setByDir(Room *room)
     }
     RoomsLevel *level = current_zone->getLevel(z);
     return level->set(x, y, room);
-}
+}*/
 
-Zone* MapperProcessor::createZone()
+/*Zone* MapperProcessor::createZone(const tstring& zonename)
 {
-    WCHAR buffer[20];
-    for (int i = 1;; ++i)
+    for (int j = 0, e=m_zones.size(); j<e; ++j)
     {
-        swprintf(buffer, L"Ќова€ зона %d", i);
-        bool found = false;
-        for (int j = 0, e=m_zones.size(); j<e; ++j)
-        {
-            const tstring& name = m_zones[j]->getName();
-            if (!name.compare(buffer)) { found = true; break; }
-        }
-        if (!found) break;
+        const tstring& name = m_zones[j]->getName();
+        if (!name.compare(zonename)) 
+            return m_zones[j];
     }
-    Zone *new_zone = new Zone(buffer);
+    Zone *new_zone = new Zone(zonename);
     m_zones.push_back(new_zone);
     if (m_pActions)
         m_pActions->addNewZone(new_zone);
     return new_zone;
-}
+}*/
 
-void MapperProcessor::setCurrentRoom(Room *room)
+/*void MapperProcessor::setCurrentRoom(Room *room)
 {
-    //m_pLastRoom = m_pCurrentRoom;
     m_pCurrentRoom = room;
     if (m_pActions)
     {
@@ -388,33 +377,9 @@ void MapperProcessor::setCurrentRoom(Room *room)
         else
             m_pActions->lostPosition();
     }
-}
+}*/
 
-Room* MapperProcessor::createRoom(const RoomData& room)
-{
-    Room *new_room = new Room();
-    new_room->roomdata = room;
-
-    // parse new_room->roomdata.exits to room->dirs
-    const tstring& e = new_room->roomdata.exits;
-    if (e.find(m_propsData->north_exit) != -1)
-        new_room->dirs[RD_NORTH].exist = true;
-    if (e.find(m_propsData->south_exit) != -1)
-        new_room->dirs[RD_SOUTH].exist = true;
-    if (e.find(m_propsData->west_exit) != -1)
-        new_room->dirs[RD_WEST].exist = true;
-    if (e.find(m_propsData->east_exit) != -1)
-        new_room->dirs[RD_EAST].exist = true;
-    if (e.find(m_propsData->up_exit) != -1)
-        new_room->dirs[RD_UP].exist = true;
-    if (e.find(m_propsData->down_exit) != -1)
-        new_room->dirs[RD_DOWN].exist = true;
-
-    m_table.addRoom(new_room);
-    return new_room;
-}
-
-void MapperProcessor::deleteRoom(Room* room)
+/*void MapperProcessor::deleteRoom(Room* room)
 {
     m_table.deleteRoom(room);    
     for (int i=0, e=ROOM_DIRS_COUNT; i<e; ++i)
@@ -429,7 +394,7 @@ void MapperProcessor::deleteRoom(Room* room)
     //if (m_pLastRoom == room)
     //    m_pLastRoom = NULL;
     delete room;
-}
+}*/
 
 
 /*void Mapper::findOrCreateRooms(const RoomData& room, std::vector<Room*> *vr)
@@ -644,11 +609,6 @@ void MapperProcessor::saveMaps(lua_State *L)
 void MapperProcessor::loadMaps(lua_State *L)
 {
 }
-
-void MapperProcessor::selectDefault()
-{
-}
-
 
 /*void Mapper::saveMaps(lua_State *L)
 {

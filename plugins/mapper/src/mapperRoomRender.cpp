@@ -367,10 +367,10 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
        {
            fillWhite(x+1,y+1,de-1,de-1);
        }
-       else if (!r->dirs[RD_UP].next_room) // unknown room
+      /* else if (!r->dirs[RD_UP].next_room) // unknown room
        {
            fillBlack(x+1,y+1,de-1,de-1);
-       }
+       }*/
        if (anotherZone(r, RD_UP))
        {
            fillExit(x+1,y+1,de-1,de-1);
@@ -400,10 +400,10 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
        {
            fillWhite(x,y,-de+1,-de+1);
        }       
-       else if (!r->dirs[RD_DOWN].next_room) // unknown room
+       /*else if (!r->dirs[RD_DOWN].next_room) // unknown room
        {
           fillBlack(x,y,-de+1,-de+1); 
-       }
+       }*/
        if (anotherZone(r, RD_DOWN)) 
        {
            fillExit(x,y,-de+1,-de+1);
@@ -419,11 +419,12 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
 
 bool MapperRoomRender::anotherZone(Room* r, int dir)
 {
-    Room *r2 = r->dirs[dir].next_room;
+    /*Room *r2 = r->dirs[dir].next_room;
     if (!r2)
         return false;
     RoomHelper rh(r);
-    return (rh.isSameZone(r2)) ? false : true;
+    return (rh.isSameZone(r2)) ? false : true;*/
+    return false;
 }
 
 void MapperRoomRender::renderRect(int x, int y, int dx, int dy)

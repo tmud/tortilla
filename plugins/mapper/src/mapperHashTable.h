@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mapperObjects.h"
-
+struct Room;
+struct RoomData;
 class MapperHashTable
 {
 public:

@@ -25,7 +25,7 @@ void Mapper::onCreate()
     m_zones_control.Create(m_vSplitter, pane_left, style);
     m_view.Create(m_vSplitter, pane_right, NULL, style | WS_VSCROLL | WS_HSCROLL);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_view);
-    m_zones_control.setNotifications(m_hWnd, WM_USER);
+//    m_zones_control.setNotifications(m_hWnd, WM_USER);
 }
 
 void Mapper::onSize()
@@ -41,7 +41,8 @@ void Mapper::onSize()
 
 void Mapper::onZoneChanged()
 {
-    Zone *zone = m_zones_control.getCurrentZone();
+    //todo
+    /*Zone *zone = m_zones_control.getCurrentZone();
     if (zone)
-        setCurrentLevel(zone->getDefaultLevel());
+        setCurrentLevel(zone->getDefaultLevel());*/
 }

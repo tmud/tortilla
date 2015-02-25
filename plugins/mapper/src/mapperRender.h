@@ -7,12 +7,12 @@
 class MapperRender : public CWindowImpl<MapperRender>
 {
     Room *m_room;
-    RoomsLevel *m_level;
+    //RoomsLevel *m_level;
 
     int m_hscroll_pos;
-    int m_hscroll_size;    
+    int m_hscroll_size;
     int m_vscroll_pos;
-    int m_vscroll_size;        
+    int m_vscroll_size;
     bool m_hscroll_flag;
     bool m_vscroll_flag;
     int  m_left, m_right, m_top, m_bottom;
@@ -33,7 +33,7 @@ public:
     void setCurrentRoom(Room *room);    
     void lostPosition();
     void setPossibleRooms(const std::vector<Room*>& rooms);
-    void setCurrentLevel(RoomsLevel *level);
+    //void setCurrentLevel(RoomsLevel *level);
 
 private:
 	BEGIN_MSG_MAP(MapperRender)
@@ -77,15 +77,15 @@ private:
     }
 
 private:
-    void renderMap(RoomsLevel* rlevel, int x, int y);
-    void renderLevel(RoomsLevel* level, int dx, int dy, int type);
+//    void renderMap(RoomsLevel* rlevel, int x, int y);
+//    void renderLevel(RoomsLevel* level, int dx, int dy, int type);
 
     struct room_pos {
         room_pos() : x(-1), y(-1) {}
         bool valid() const { return (x >= 0) ? true : false; }
         int x, y;
     };
-    room_pos findRoomPos(Room* room);
+    //room_pos findRoomPos(Room* room);
 
     Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();

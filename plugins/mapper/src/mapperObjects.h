@@ -6,6 +6,8 @@ extern const utf8* RoomDirName[];
 
 struct RoomData
 {
+    RoomData() : hash(0), dark(false) {}
+
     tstring name;
     tstring zonename;
     tstring roomid;
@@ -14,13 +16,18 @@ struct RoomData
     uint    hash;
     bool    dark;
 
-    bool equal(const RoomData& rd) const
+    /*bool samehash(const RoomData& rd) const
     {
         assert(hash && rd.hash);
         return(hash && hash == rd.hash) ? true : false;
     }
 
-    bool compare(const RoomData& rd) const
+    bool equal(const RoomData& rd) const
+    {
+        return (roomid == rd.roomid && zonename == rd.zonename) ? true : false;
+    }
+
+    bool checkparams(const RoomData& rd) const
     {
         if (name != rd.name)
             return false;
@@ -29,7 +36,7 @@ struct RoomData
         if (descr != rd.descr)
             return false;        
         return true;
-    }
+    }*/
     
     void calcHash()
     {
@@ -38,8 +45,6 @@ struct RoomData
         crc.process(roomid.c_str(), roomid.length() * sizeof(WCHAR));
         hash = crc.getCRC32();
     }
-
-    RoomData() : hash(0), dark(false) {}
 
     void printDebugData()
     {
@@ -58,7 +63,7 @@ struct RoomData
         OutputDebugString(descr.c_str());
         OutputDebugString(L"\r\n");
         OutputDebugString(exits.c_str());
-        OutputDebugString(L"---------------------------\r\n");
+        OutputDebugString(L"\r\n---------------------------\r\n");
 #endif
     }
 };
@@ -66,153 +71,121 @@ struct RoomData
 struct Room;
 struct RoomExit
 {
-    RoomExit() : next_room(NULL), exist(false), door(false) {}
-    Room *next_room;
+    RoomExit() : exist(false), door(false) {}
+    bool isNext() const { return !next_rooms.empty(); }
+    void setNext(Room* r)
+    {
+        std::vector<Room*>& nr = next_rooms;
+        if (std::find(nr.begin(), nr.end(), r) != nr.end())
+            return;
+        nr.push_back(r);
+    }
+    void delNext(Room* r)
+    {
+        std::vector<Room*>& nr = next_rooms;
+        iterator it = std::find(nr.begin(), nr.end(), r);
+        if (it != nr.end())
+            nr.erase(it);
+    }
+    std::vector<Room*> next_rooms;
+    typedef std::vector<Room*>::iterator iterator;
     bool exist;
     bool door;
 };
 
-class RoomsLevel;
-class Zone;
+struct TableCell;
 struct Room
 {
-    Room() : level(NULL), x(0), y(0), icon(0), use_color(0), color(0), special(0) {}
+    Room() : cell(NULL), icon(0), use_color(0), color(0), special(0) {}
+    TableCell *cell;                // position in world
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
-    RoomsLevel *level;              // callback ptr to parent level (owner of room)
-    int x, y;                       // position in level
     int icon;                       // icon if exist
     int use_color;                  // flag for use background color
     COLORREF color;                 // background color
     int special;                    // special internal temp value for algorithms
 };
 
-struct RoomsLevelBox
+struct TableIndex
 {
-    int left;
-    int right;
-    int top;
-    int bottom;
+    int level, area, zone;
 };
 
-class RoomsLevel
+struct TableCell
 {
-public:
-    RoomsLevel(int width, int height, int level, Zone *parent_zone);
-    ~RoomsLevel();
-    Zone* getZone() const { return m_pZone; }
-    int   getLevel() const { return m_level; }
-    bool  set(int x, int y, Room* room);
-    Room* get(int x, int y) const;
-    int   getWidth() const { return rooms.empty() ? 0 : rooms[0]->rr.size(); }
-    int   getHeight() const { return rooms.size(); }
-    void  getBox(RoomsLevelBox *box) const
-    {
-        //todo
-        box->left = 0; box->top = 0;
-        box->right = getWidth(); box->bottom = getHeight();
-    }
-    bool check(int x, int y) const { return (y >= 0 && y < getHeight() && x >= 0 && x < getWidth()) ? true : false; }
-private:
-    friend class Zone;
-    void extend(RoomDir d, int count);    
-    void setsize(int dx, int dy);
-    struct row
-    {   ~row()
-        { struct{ void operator() (Room* r) { delete r; }} del;
-          std::for_each(rr.begin(), rr.end(), del);
-        }
-        std::deque<Room*> rr;
-    };
-    std::deque<row*> rooms;
-    Zone* m_pZone;
-    int m_level;
+    TableCell() : x(0), y(0), index(NULL), room(NULL) {}
+    ~TableCell() { delete room; }
+    int x, y;
+    TableIndex *index;
+    Room  *room;
 };
 
-class Zone
+struct TablePos
 {
-public:
-    Zone(const tstring& zonename) : m_changed(true), m_name(zonename)
-    {
-        m_levels[0] = new RoomsLevel(1, 1, 0, this);
+    TablePos() : x(-1), y(-1), level(0), area(0), zone(0) {}   
+    int x, y, level, area, zone;
+    bool valid() const { return (x >= 0 && y >= 0) ? true : false; }
+    void init(Room *r) { 
+        assert(r);
+        TableCell *c = r->cell;
+        x = c->x; y = c->y;
+        level = c->index->level;
+        area = c->index->area;
+        zone = c->index->zone;
     }
-    Zone(const tstring& zonename, int width, int height, int minlevel, int maxlevel) : m_changed(false), m_name(zonename)
-    {
-        assert(minlevel <= maxlevel);
-        assert(width > 0 && height > 0);
-        for (int i = minlevel; i <= maxlevel; ++i)
-            m_levels[i] = new RoomsLevel(width, height, i, this);
-    }
-    ~Zone() 
-    {
-        lvls_iterator it = m_levels.begin(), it_end = m_levels.end();
-        for (; it != it_end; ++it)
-            delete it->second;
-    }
-    bool  isChanged() const { return m_changed; }
-    void  setChanged(bool changed) { m_changed = changed; }
-    bool  isEmpty() const 
-    {
-        clvls_iterator it = m_levels.begin(), it_end = m_levels.end();
-        for (; it != it_end; ++it) {
-            RoomsLevel *level = it->second;
-            for (int y = 0, ye = level->getHeight(); y < ye; ++y){
-            for (int x = 0, xe = level->getWidth(); x < xe; ++x){
-                if (level->get(x, y)) return false;
-            }}
-        }
-        return true;
-    }
-    void  setName(const tstring& newname) {
-        if (m_name == newname) return;
-        m_name = newname;
-        setChanged(true);
-    }
-    const tstring& getName() const { return m_name; }
-    int   getWidth() const { return getDefaultLevel()->getWidth(); }
-    int   getHeight() const { return getDefaultLevel()->getHeight(); }
-    RoomsLevel* getLevel(int level) const {
-        clvls_iterator it = m_levels.find(level);
-        return (it != m_levels.end()) ? it->second : NULL;
-    }    
-    RoomsLevel* getDefaultLevel() const { return getLevel(0); }
-    int getMinLevel() const { return m_levels.cbegin()->first; }
-    int getMaxLevel() const { return m_levels.crbegin()->first; }
-    void extend(RoomDir d, int count);
-
-    //bool  addRoom(int x, int y, int level, Room* room);
-    //Room* getRoom(int x, int y, int level;
-    //RoomsLevel* getLevelAlways(int level);
-    //void resizeLevels(int x, int y);
-
-private:
-    //RoomsLevel* getl(int level, bool create_if_notexist);    
-
-private:
-    std::map<int, RoomsLevel*> m_levels;
-    typedef std::map<int, RoomsLevel*>::iterator lvls_iterator;
-    typedef std::map<int, RoomsLevel*>::const_iterator clvls_iterator;
-    bool m_changed;
-    tstring m_name;
 };
 
-class RoomCursor
+struct TableLimits
 {
-//public:
-    Room* room;
-    RoomDir dir;
-public:
-    RoomCursor(Room *r, RoomDir d);
-    RoomCursor(Room *r, int d);
-    Room* next() const;
-    void  setNext(Room* r);
-    bool  isSameByRevert() const;
-    bool  delDirByRevert() const;
-    bool  isNeighbor(Room* r) const;
-    static RoomDir revertDir(RoomDir dir);
+    TableLimits() : width(0), height(0), minlevel(0), maxlevel(0), areas(0) {}
+    int width, height, minlevel, maxlevel, areas;
+};
 
-private:
-    //RoomsLevel* getOffsetLevel(int offset);
-    //void updateCoords();
+#include "mapperHashTable.h"
+class Table
+{
+public:
+    bool  getLimits(const TablePos& p, TableLimits* limits);
+    Room* get(const TablePos& p);
+    Room* addNewRoom(Room *current_room, const RoomData& rd, RoomDir dir);
     
+public:
+    Table() {}
+    ~Table() {
+        std::for_each(m_zones.begin(), m_zones.end(), [](zone* obj){ delete obj; });
+        std::for_each(m_indexes.begin(), m_indexes.end(), [](TableIndex* obj){ delete obj; });
+    }
+private:
+    void set(const TablePos& p, Room *r);
+    void createNewPlace(const tstring& zone_name, TablePos *pos);
+    Room* createRoom(const RoomData& room);
+    int getZone(const tstring& name);
+    int getIndex(const TablePos& p);
+    void createPlace(TablePos& p, RoomDir dir);
+
+private:
+    struct line {
+        ~line() { std::for_each(elements.begin(), elements.end(), [](TableCell* obj){ delete obj; }); }
+        std::deque<TableCell*> elements;
+    };
+    struct level {
+        ~level() { std::for_each(lines.begin(), lines.end(), [](line* obj){ delete obj; }); }
+        std::deque<line*> lines;
+    };
+    struct area {
+        ~area() { std::map<int, level*>::iterator it = levels.begin(), it_end= levels.end();
+        for (; it != it_end; ++it) { delete it->second; }
+        }
+        std::map<int, level*> levels;
+    };
+    struct zone {
+        ~zone() { std::for_each(areas.begin(), areas.end(), [](area* obj){ delete obj; }); }
+        std::deque<area*> areas;
+        tstring name;
+    };
+    std::vector<TableIndex*> m_indexes;
+    std::vector<zone*> m_zones;
+    //std::map<uint, Room*> m_hash_table;
+
+    MapperHashTable m_hash_table;
 };

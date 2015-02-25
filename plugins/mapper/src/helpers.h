@@ -4,15 +4,17 @@ class RoomHelper
 {
 public:
     RoomHelper(Room *room) : m_room(room) {}
-    bool isExplored(RoomDir dir)
+   /* bool isExplored(RoomDir dir)
     {
-        Room *r = m_room->dirs[dir].next_room;
+        RoomExit &re = m_room->dirs[dir];
+
+        /*Room *r = m_room->dirs[dir].next_room;
         if (r && samezone(m_room, r))
             return true;
         return false;
-    }
+    }*/
 
-    bool isCycled()
+    /*bool isCycled()
     {
         bool result = false;
 
@@ -49,7 +51,7 @@ public:
 
     // check isCycle first !!!
     void getSubZone(RoomDir dir, std::vector<Room*> *subzone)
-    {        
+    {
         Room *next = m_room->dirs[dir].next_room;
         if (!next) 
             return;
@@ -90,7 +92,9 @@ public:
 private:
     bool samezone(Room *r1, Room *r2) const
     {
-        return (r1->level->getZone() == r2->level->getZone()) ? true : false;
-    }
+        RoomsArea *a1 = r1->level->getArea();
+        RoomsArea *a2 = r2->level->getArea();
+        return (a1->getZone() == a2->getZone()) ? true : false;
+    }*/
     Room* m_room;
 };

@@ -6,7 +6,7 @@ class MapperZoneControl : public CDialogImpl<MapperZoneControl>
 {
     CEditListBox m_list;
     RECT rc_list;
-    std::vector<Zone*> zones;
+    //std::vector<Zone*> zones;
     HWND m_parent;
     UINT m_msg;
 
@@ -16,7 +16,7 @@ public:
     {
     }
 
-    void zoneChanged(Zone *newzone)
+    /*void zoneChanged(Zone *newzone)
     {
         if (!newzone)
         {
@@ -72,7 +72,7 @@ private:
                 return i;
         }
         return -1;
-    }
+    }*/
 
     void getItemText(int item, tstring* text)
     {
@@ -126,7 +126,7 @@ private:
 
     LRESULT OnChanged(int, LPNMHDR pnmh, BOOL&)
     {
-        NMEDITLIST *list = (NMEDITLIST*)pnmh;
+        /*NMEDITLIST *list = (NMEDITLIST*)pnmh;
         int item = list->iIndex;
         tstring text;
         getItemText(item, &text);
@@ -149,7 +149,7 @@ private:
         else
         {
             zones[item]->setName(text);
-        }
+        }*/
         return 0;
     }
 };

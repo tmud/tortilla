@@ -491,7 +491,7 @@ public:
     }
     int stream(const utf8* data) { return trigger_addstream(t, data); }
     int find(int from, const utf8* data) { return trigger_find(t, from, data); }
-    const utf8* get(int from, int len) { return trigger_get(t, from, len); }
+    void get(int from, int len, u8string* result) { result->assign( trigger_get(t, from, len) ); }
     int datalen() { return trigger_datalen(t); }
 private:
     trigger t;

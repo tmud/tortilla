@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "mapperObjects.h"
 #include "mapperHashTable.h"
 
 MapperHashTable::MapperHashTable()
@@ -49,6 +50,7 @@ void MapperHashTable::findRooms(const RoomData& room, std::vector<Room*> *vr)
     iterator it = rooms.find(room.hash);
     if (it == rooms.end())
         return;
+
     // get all rooms
     hash_element &tmp = it->second;
     vr->push_back(tmp.room);
