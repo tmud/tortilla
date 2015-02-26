@@ -203,6 +203,19 @@ bool luaT_isobject(lua_State* L, int type, int index)
     luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, index);
     return (o->type == type) ? true : false;
 }
+
+const utf8* luaT_typename(lua_State* L, int index)
+{
+    if (!lua_isuserdata(L, index))
+        return lua_typename(L, lua_type(L, index));
+    luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, index);
+    if (o && o->type >= LUAT_WINDOW && o->type <= LUAT_LAST)
+    {
+        int ti = o->type - LUAT_WINDOW;
+        return metatables[ti];
+    }
+    return "unknown_ud";
+}
 //-----------------------------------------------------------------------
 typedef std::vector<std::string> tokens;
 void gettokens(const utf8* path, tokens *parts)

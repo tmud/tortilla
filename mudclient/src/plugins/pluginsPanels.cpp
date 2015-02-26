@@ -17,7 +17,7 @@ int createpanel(lua_State *L)
         w.side = _wndMain.m_gameview.convertSideFromString(TU2W(lua_tostring(L, 1)));
         if (IsDocked(w.side))
         {
-            PluginsView *window = _wndMain.m_gameview.createPanel(w, p.name);
+            PluginsView *window = _wndMain.m_gameview.createPanel(w, _cp);
             if (window)
                 _cp->panels.push_back(window);
             luaT_pushobject(L, window, LUAT_PANEL);

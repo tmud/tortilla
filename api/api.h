@@ -19,6 +19,7 @@ typedef std::string u8string;
 #define LUAT_PEN        105
 #define LUAT_BRUSH      106
 #define LUAT_FONT       107
+#define LUAT_LAST       107
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -27,6 +28,7 @@ void  luaT_log(lua_State *L, const utf8* log_message);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
+const utf8* luaT_typename(lua_State* L, int index);
 void  luaT_showLuaStack(lua_State* L, const utf8* label);
 void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)

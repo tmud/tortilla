@@ -110,9 +110,9 @@ public:
         return dock;
     }
 
-    PluginsView* createPanel(const PanelWindow& w, const tstring& plugin_name)
+    PluginsView* createPanel(const PanelWindow& w, Plugin* p)
     {
-        PluginsView *v = new PluginsView(plugin_name);
+        PluginsView *v = new PluginsView(p);
         v->Create(m_dock, rcDefault, L"", WS_DEFCHILD|WS_VISIBLE);
         int dt = (w.side == DOCK_LEFT || w.side == DOCK_RIGHT) ? GetSystemMetrics(SM_CXEDGE) : GetSystemMetrics(SM_CYEDGE);
         m_dock.m_panels.AddWindow(*v, w.side, w.size+dt);
@@ -127,9 +127,9 @@ public:
         delete v;
     }
 
-    PluginsView* createDockPane(const OutputWindow& w, const tstring& plugin_name)
+    PluginsView* createDockPane(const OutputWindow& w, Plugin* p)
     {
-        PluginsView *v = new PluginsView(plugin_name);
+        PluginsView *v = new PluginsView(p);
         v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_STATICEDGE);
         m_dock.AddWindow(*v);
         if (IsDocked(w.side))

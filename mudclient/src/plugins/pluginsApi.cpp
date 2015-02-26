@@ -47,7 +47,12 @@ int pluginInvArgs(lua_State *L, const utf8* fname)
     {
         int t = lua_type(L, i);
         if (t >= 0 && t < LUA_NUMTAGS)
-            log.append(lua_types_str[t]);
+        {
+            tstring type(lua_types_str[t]);
+            if (t == LUA_TUSERDATA)
+                type.assign(TU2W(luaT_typename(L, i)));
+            log.append(type);
+        }
         else
             log.append(L"unknown");
         if (i != n) log.append(L",");
@@ -563,7 +568,7 @@ int createwindow(lua_State *L)
     }
     else { return pluginInvArgs(L, "createWindow"); }
 
-    PluginsView *window =  _wndMain.m_gameview.createDockPane(w, p.name);
+    PluginsView *window =  _wndMain.m_gameview.createDockPane(w, _cp);
     if (window)
         _cp->dockpanes.push_back(window);
     luaT_pushobject(L, window, LUAT_WINDOW);

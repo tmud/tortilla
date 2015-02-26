@@ -13,7 +13,9 @@ public:
 template <class T, class F>
 class PluginsRenderCollectionT
 {
+    HWND m_parent;
 public:
+    PluginsRenderCollectionT() : m_parent(NULL) {}
     ~PluginsRenderCollectionT()
     {
         for (int i=0,e=objects.size();i<e;++i)
@@ -28,12 +30,16 @@ public:
         int index = find(factory.key);
         if (index != -1)
             return objects[index].object;
-        T* obj = factory.create();
+        T* obj = factory.create(m_parent);
         if (obj)
             objects.push_back(PluginsRenderObjectT<T>(obj, factory.key));
         return obj;
-    }  
+    }
 
+    void setParentWnd(HWND wnd)
+    {
+        m_parent = wnd;
+    }
 private:
     int find(const u8string& key)
     {
@@ -71,6 +77,33 @@ public:
         }
         lua_pop(L, 1);
     }
+    bool get(const utf8* field, LONG *value)
+    {
+        bool result = false;
+        lua_pushstring(L, field);
+        lua_gettable(L, -2);
+        if (lua_isnumber(L, -1))
+        {
+            *value = lua_tointeger(L, -1);
+            result = true;
+        }
+        lua_pop(L, 1);
+        return result;
+    }
+    bool get(int index, LONG *value)
+    {
+        bool result = false;
+        lua_pushinteger(L, index);
+        lua_gettable(L, -2);
+        if (lua_isnumber(L, -1))
+        {
+            *value = lua_tointeger(L, -1);
+            result = true;
+        }
+        lua_pop(L, 1);
+        return result;
+    }
+
     void getcolor(COLORREF *color)
     {
         int r = 0, g = 0, b = 0;
@@ -78,6 +111,20 @@ public:
         get("g", 0, 255, &g);
         get("b", 0, 255, &b);
         *color = RGB(r, g, b);
+    }
+    bool getrect(RECT *rc)
+    {
+        if (get("left", &rc->left) &&
+            get("right", &rc->right) &&
+            get("top", &rc->top) &&
+            get("bottom", &rc->bottom))
+            return true;
+        if (get(1, &rc->left) &&
+            get(3, &rc->right) &&
+            get(2, &rc->top) &&
+            get(4, &rc->bottom))
+            return true;
+        return false;
     }
 };
 
@@ -103,7 +150,7 @@ public:
         sprintf(buf, "%d,%d,%d", GetRValue(color),GetGValue(color),GetBValue(color));
         crc.append(buf);
     }
-   
+
     u8string crc;
 private:
     void delimeter()
@@ -133,7 +180,7 @@ struct PenFactory
         key = k.crc;
     }
 
-    CPen* create()
+    CPen* create(HWND)
     {
         int s = PS_NULL;
         if (style == "solid" || style == "")
@@ -145,5 +192,92 @@ struct PenFactory
         CPen *p = new CPen;
         p->CreatePen(s, width, color);
         return p;
+    }
+};
+
+struct BrushFactory
+{
+    u8string key;
+    u8string style;
+    COLORREF color;
+
+    BrushFactory(lua_State *L) : color(0)
+    {
+        ParametersReader r(L);
+        r.get("style", &style);
+        r.getcolor(&color);
+        KeyFactoryCalc k;
+        k.calc(style);
+        k.calc(color);
+        key = k.crc;
+    }
+
+    CBrush* create(HWND)
+    {
+        CBrush *b = new CBrush;
+        if (style == "solid" || style == "")
+            b->CreateSolidBrush(color);
+        else if (style == "vertical")
+            b->CreateHatchBrush(HS_VERTICAL, color);
+        else if (style == "horizontal")
+            b->CreateHatchBrush(HS_HORIZONTAL, color);
+        else if (style == "cross")
+            b->CreateHatchBrush(HS_CROSS, color);
+        else if (style == "diagonal")
+            b->CreateHatchBrush(HS_BDIAGONAL, color);
+        else if (style == "diagcross")
+            b->CreateHatchBrush(HS_DIAGCROSS, color);
+        else
+            b->CreateSolidBrush(color);
+        return b;
+    }
+};
+
+struct FontFactory
+{
+    u8string key;
+    u8string font_name;
+    int font_height;
+    int font_bold;
+    int font_italic;
+
+    FontFactory(lua_State *L) : font_height(9), font_bold(0), font_italic(0)
+    {
+        ParametersReader r(L);
+        r.get("font", &font_name);
+        r.get("height", 8, 20, &font_height);
+        int bold = 0;
+        r.get("bold", 1, 5, &bold);
+        font_bold = bold * 100 + FW_NORMAL;
+        r.get("italic", 0, 1, &font_italic);
+
+        KeyFactoryCalc k;
+        k.calc(font_name);
+        k.calc(font_height);
+        k.calc(font_bold);
+        k.calc(font_italic);
+        key = k.crc;
+    }
+
+    CFont* create(HWND hwnd)
+    {
+        CFont *f = new CFont();
+        LOGFONT lf;
+        lf.lfHeight = -MulDiv(font_height, GetDeviceCaps(GetDC(hwnd), LOGPIXELSY), 72);
+        lf.lfWidth = 0;
+        lf.lfEscapement = 0;
+        lf.lfOrientation = 0;
+        lf.lfWeight = font_bold;
+        lf.lfItalic = font_italic ? 1 : 0;
+        lf.lfUnderline = 0;
+        lf.lfStrikeOut = 0;
+        lf.lfCharSet = DEFAULT_CHARSET;
+        lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+        lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+        lf.lfQuality = DEFAULT_QUALITY;
+        lf.lfPitchAndFamily = DEFAULT_PITCH;
+        wcscpy(lf.lfFaceName, TU2W(font_name.c_str()));
+        f->CreateFontIndirect(&lf);
+        return f;
     }
 };

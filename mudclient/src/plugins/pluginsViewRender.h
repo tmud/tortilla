@@ -10,6 +10,15 @@ public:
     int  width();
     int  height();
     CPen* createPen(lua_State *L);
+    CBrush* createBrush(lua_State *L);
+    CFont* createFont(lua_State *L);
+    void selectPen(CPen* p);
+    void selectBrush(CBrush* b);
+    void selectFont(CFont* f);
+
+    void drawRect(const RECT& r);
+    void drawSolidRect(const RECT& r);
+    void print(int x, int y, const tstring& text);
 
 private:
     lua_State *renderL;
@@ -23,16 +32,10 @@ private:
     int m_height;
 
     PluginsRenderCollectionT<CPen, PenFactory> pens;
-    /*PluginsRenderCollectionT<CBrush> brushes;
-    PluginsRenderCollectionT<CFont> fonts;
-    PluginsRenderCollectionT<CBitmap> bitmaps;*/
-
-private:
-    void push_robject(lua_State* L, void *object)
-    {
-        /*luaT_userdata *o = (luaT_userdata*)lua_newuserdata(L, sizeof(luaT_userdata));
-        o->data = object;
-        o->type = type;*/
-    }
+    PluginsRenderCollectionT<CBrush, BrushFactory> brushes;
+    PluginsRenderCollectionT<CFont, FontFactory> fonts;
+    //PluginsRenderCollectionT<CBitmap, BitmapFactory> bitmaps;
+    CPen* current_pen;
+    CBrush* current_brush;
+    CFont* current_font;
 };
-

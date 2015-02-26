@@ -19,15 +19,20 @@ local r = nil
 local objs = {}
 
 local function render()
-  --r:clear(120, 140, 160)
-  --local w = r:width()
-  --local h = r:height()
-  --r:rect(2,2,w-2,h-2,st.pen1)
+  r:select(objs.pen1)
+  r:select(objs.brush1)
+  --r:rect{left = 10, right = 30, top = 10, bottom = 30}
+  --r:rect{60, 10, 90, 27}
+  r:solidrect{120, 0, 160, 30}
+  r:select(objs.font1)
+  r:print(10, 10, "Абырвалг")
 end
 
 function statusbar.init()
   local p = createPanel("bottom", 32)
   r = p:setrender(render)
   r:setbackground(140,190,130)  
-  objs.pen1 = r:createpen{ style ="solid", width = 1, r = 100, g = 200, b = 100 }
+  objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
+  objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
+  objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
 end
