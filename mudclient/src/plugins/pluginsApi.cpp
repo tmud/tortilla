@@ -626,8 +626,8 @@ bool initPluginsSystem()
     lua_register(L, "getPath", getpath);
     lua_register(L, "getProfile", getprofile);
     lua_register(L, "getParent", getparent);    
-    //todo lua_register(L, "loadTable", loadtable);
-    //lua_register(L, "saveTable", savetable);
+    lua_register(L, "loadTable", loadtable);
+    lua_register(L, "saveTable", savetable);
     lua_register(L, "createWindow", createwindow);
     lua_register(L, "log", pluginlog);
     reg_activeobjects(L);

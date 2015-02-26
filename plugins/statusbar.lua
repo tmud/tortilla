@@ -37,3 +37,7 @@ function statusbar.init()
   --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
   objs.font1 = r:defaultfont()
 end
+
+function statusbar.release()
+	--saveTable({test="123", check="12345"}, getProfile()..".xml")
+end
