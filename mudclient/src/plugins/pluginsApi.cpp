@@ -11,6 +11,7 @@ extern Plugin* _cp;
 ToolbarEx<CMainFrame>* _tbar;
 LogicProcessorMethods* _lp;
 PropertiesData* _pdata;
+CFont* _stdfont;
 Palette256* _palette;
 PropertiesManager* _pmanager;
 PluginsIdTableControl m_idcontrol(PLUGING_MENUID_START, PLUGING_MENUID_END);
@@ -21,6 +22,7 @@ void initExternPtrs()
     _tbar = &_wndMain.m_toolBar;
     _lp = _wndMain.m_gameview.getMethods();
     _pdata = _wndMain.m_gameview.getPropData();
+    _stdfont = _wndMain.m_gameview.getStandardFont();
     _palette = _wndMain.m_gameview.getPalette();
     _pmanager = _wndMain.m_gameview.getPropManager();
 }

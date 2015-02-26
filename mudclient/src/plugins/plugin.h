@@ -20,6 +20,7 @@ public:
     HMODULE getModule() const { return hModule; }
     void closeWindow(HWND wnd);
     bool runMethod(const char* method, int args, int results);
+    void updateProps();
 
     enum PluginState { FILE, FILENAME, NAME, VERSION, DESCRIPTION };
     const wchar_t* get(PluginState state) {

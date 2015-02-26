@@ -193,6 +193,11 @@ Plugin* PluginsManager::findPlugin(HWND view)
 
 void PluginsManager::updateProps()
 {
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        if (m_plugins[i]->state())
+            m_plugins[i]->updateProps();
+    }
 }
 
 void PluginsManager::processStreamData(MemoryBuffer *data)

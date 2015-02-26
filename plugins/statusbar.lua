@@ -34,5 +34,6 @@ function statusbar.init()
   r:setbackground(140,190,130)  
   objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
   objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
-  objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
+  --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
+  objs.font1 = r:defaultfont()
 end

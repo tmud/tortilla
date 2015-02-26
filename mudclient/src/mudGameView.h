@@ -252,10 +252,11 @@ public:
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
+    CFont *getStandardFont() { return &m_propElements.standard_font; }
     PropertiesManager* getPropManager() { return &m_manager; }
     Palette256* getPalette() { return &m_propElements.palette;  }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
-        
+
 private:
     BEGIN_MSG_MAP(MudGameView)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

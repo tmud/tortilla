@@ -62,6 +62,20 @@ bool Plugin::reloadPlugin()
     return result;
 }
 
+void Plugin::updateProps()
+{
+    for (int i = 0, e = dockpanes.size(); i < e; ++i)
+    {
+        CWindow wnd(*dockpanes[i]);
+        wnd.Invalidate();
+    }
+    for (int i = 0, e = panels.size(); i < e; ++i)
+    {
+        CWindow wnd(*panels[i]);
+        wnd.Invalidate();
+    }
+}
+
 void pluginDeleteResources(Plugin *plugin);
 void Plugin::setOn(bool on)
 {
