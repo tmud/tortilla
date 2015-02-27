@@ -244,10 +244,10 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
 
 void LogicProcessor::processNetworkError(const tstring& error)
 {
+    m_prompt_mode = OFF;
+    m_prompt_counter = 0;
     if (m_connected || m_connecting)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
-    m_prompt_mode = OFF;
-    m_prompt_counter = 0;
 }
