@@ -102,9 +102,9 @@ public:
         m_dock.SetStatusBar(bar);
         m_dock.SetStatusBarHeight(m_barHeight);
 
-		rc.top = rc.bottom;
-		rc.bottom = height;
-		Create(dock, rc, NULL, WS_DEFCHILD);
+        rc.bottom = rc.top;
+        rc.top = 0;
+        Create(dock, rc, NULL, WS_DEFCHILD);
         m_dock.SetClient(m_hWnd);
         m_bar.setCommandEventCallback(m_hWnd, WM_USER);
         return dock;
@@ -523,8 +523,8 @@ private:
             m_processor.processTick();
             if (m_history.IsWindowVisible() && m_history.isLastString())
             {
-                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-                m_history.truncateStrings(m_propData->view_history_size);
+               m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
+               m_history.truncateStrings(m_propData->view_history_size);
             }
         }
         else if (id == 2)
@@ -550,7 +550,7 @@ private:
     {
         m_barHeight = m_propElements.font_height + 4;
         m_bar.setParams(m_barHeight, m_propElements.standard_font);
-		m_dock.SetStatusBarHeight(m_barHeight);
+        m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);
         m_hSplitter.MoveWindow(&pos);
     }
