@@ -14,6 +14,12 @@ typedef std::string u8string;
 #define LUAT_WINDOW     100
 #define LUAT_VIEWDATA   101
 #define LUAT_ACTIVEOBJS 102
+#define LUAT_PANEL      103
+#define LUAT_RENDER     104
+#define LUAT_PEN        105
+#define LUAT_BRUSH      106
+#define LUAT_FONT       107
+#define LUAT_LAST       107
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -22,6 +28,7 @@ void  luaT_log(lua_State *L, const utf8* log_message);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
+const utf8* luaT_typename(lua_State* L, int index);
 void  luaT_showLuaStack(lua_State* L, const utf8* label);
 void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)
@@ -46,12 +53,11 @@ public:
 		window = wnd;
 		return true;
 	}
-
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "hwnd", "o");
-        HWND hwnd = (HWND)lua_tointeger(L, -1);
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
         lua_pop(L, 1);
         return hwnd;
     }
@@ -92,6 +98,38 @@ public:
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
+    }
+};
+
+class luaT_panel
+{
+    lua_State *L;
+    void *panel;
+public:
+    bool create(lua_State *pL, const utf8* side, int size)
+    {
+        if (!pL)
+            return false;
+        L = pL;
+        luaT_run(L, "createPanel", "sd", side, size);
+        void *p = luaT_toobject(L, -1);
+        if (!p)
+            return false;
+        panel = p;
+        return true;
+    }
+    void attach(HWND child)
+    {
+        luaT_pushobject(L, panel, LUAT_PANEL);
+        luaT_run(L, "attach", "od", child);
+    }
+    HWND hwnd()
+    {
+        luaT_pushobject(L, panel, LUAT_PANEL);
+        luaT_run(L, "hwnd", "o");
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        return hwnd;
     }
 };
 

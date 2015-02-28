@@ -123,7 +123,7 @@ Zone* Mapper::addNewZone()
         if (!found)
             break;
     }
-        
+
     Zone *new_zone = new Zone(buffer);
     m_zones.push_back(new_zone);
     return new_zone;
@@ -253,7 +253,7 @@ Room* Mapper::findRoom(const RoomData& room)
     {
        if (vr[i]->dirs[revert].next_room == m_pCurrentRoom)
        {
-           return vr[i];  
+           return vr[i];
        }
     }
     if (!m_pCurrentRoom->dirs[m_lastDir].next_room)
@@ -266,11 +266,11 @@ Room* Mapper::findRoom(const RoomData& room)
            return next;
        }
     }
-        
+
     if (size == 1)
     {
         Room *next = vr[0];
-        if (!next->dirs[revert].next_room &&            
+        if (!next->dirs[revert].next_room &&
             !m_pCurrentRoom->dirs[m_lastDir].next_room)
         {
            m_pCurrentRoom->dirs[m_lastDir].next_room = next;
@@ -311,7 +311,7 @@ Room* Mapper::addNewRoom(const RoomData& room)
             return new_room;
         }
     }
-    
+
     // add another room in last direction
     Room *new_room = createNewRoom(room);
     RoomExit &e = m_pCurrentRoom->dirs[m_lastDir];
@@ -422,8 +422,8 @@ void Mapper::onCreate()
 
     GetClientRect(&rc);
     rc.top = m_toolbar_height;
-    m_vSplitter.Create(m_hWnd, rc, NULL, 0, WS_EX_CLIENTEDGE);
-    m_vSplitter.m_cxySplitBar = 3;      
+    m_vSplitter.Create(m_hWnd, rc);
+    m_vSplitter.m_cxySplitBar = 3;
     m_vSplitter.SetSplitterRect();
     m_vSplitter.SetDefaultSplitterPos();
 
@@ -436,7 +436,7 @@ void Mapper::onCreate()
     m_vSplitter.SetSplitterPanes(m_zones_control, m_view);
     m_zones_control.setNotifications(m_hWnd, WM_USER);
 
-    updateProps();    
+    updateProps();
 }
 
 void Mapper::onSize()

@@ -186,7 +186,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     int window = propData->plugins_logs_window;
     if (window >= 0 && window <= OUTPUT_WINDOWS)
     {
-        tstring log(L"[plugins] ");
+        tstring log(L"[plugin] ");
         log.append(cmd);
         processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
     }
@@ -244,10 +244,10 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
 
 void LogicProcessor::processNetworkError(const tstring& error)
 {
+    m_prompt_mode = OFF;
+    m_prompt_counter = 0;
     if (m_connected || m_connecting)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
-    m_prompt_mode = OFF;
-    m_prompt_counter = 0;
 }

@@ -37,7 +37,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     HotkeyTable m_hotkeyTable;
     LogicProcessor m_processor;
     std::vector<MudView*> m_views;
-    std::vector<PluginsView*> m_plugins_views;    
+    std::vector<PluginsView*> m_plugins_views;
     PluginsManager m_plugins;
     int m_codepage;
 
@@ -110,11 +110,27 @@ public:
         return dock;
     }
 
-    PluginsView* createDockPane(const OutputWindow& w, const tstring& plugin_name)
+    PluginsView* createPanel(const PanelWindow& w, Plugin* p)
     {
-        DWORD style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-        PluginsView *v = new PluginsView(plugin_name);
-        v->Create(m_dock, rcDefault, w.name.c_str(), style, WS_EX_CLIENTEDGE);        
+        PluginsView *v = new PluginsView(p);
+        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD|WS_VISIBLE);
+        int dt = (w.side == DOCK_LEFT || w.side == DOCK_RIGHT) ? GetSystemMetrics(SM_CXEDGE) : GetSystemMetrics(SM_CYEDGE);
+        m_dock.m_panels.AddWindow(*v, w.side, w.size+dt);
+        return v;
+    }
+
+    void deletePanel(PluginsView *v)
+    {
+        HWND hwnd = v->m_hWnd;
+        m_dock.m_panels.RemoveWindow(hwnd);
+        ::DestroyWindow(hwnd);
+        delete v;
+    }
+
+    PluginsView* createDockPane(const OutputWindow& w, Plugin* p)
+    {
+        PluginsView *v = new PluginsView(p);
+        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_STATICEDGE);
         m_dock.AddWindow(*v);
         if (IsDocked(w.side))
         {
@@ -138,7 +154,7 @@ public:
         m_plugins_views.push_back(v);
         return v;
     }
-
+    
     void deleteDockPane(PluginsView *v)
     {
         HWND hwnd = v->m_hWnd;
@@ -236,9 +252,11 @@ public:
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
+    CFont *getStandardFont() { return &m_propElements.standard_font; }
     PropertiesManager* getPropManager() { return &m_manager; }
     Palette256* getPalette() { return &m_propElements.palette;  }
-    
+    int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
+
 private:
     BEGIN_MSG_MAP(MudGameView)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

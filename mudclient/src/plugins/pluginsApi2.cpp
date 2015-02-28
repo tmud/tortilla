@@ -47,7 +47,7 @@ int window_hwnd(lua_State *L)
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         HWND wnd = *v;
-        lua_pushinteger(L, (int)wnd);
+        lua_pushunsigned(L, (unsigned int)wnd);
         return 1;
     }
     return pluginInvArgs(L, "window.hwnd");
@@ -55,12 +55,9 @@ int window_hwnd(lua_State *L)
 
 int window_side(const wchar_t* side, bool checkfloat)
 {
-    int dock_side = -1;
-    if (!wcscmp(side,L"left")) dock_side = DOCK_LEFT;
-    else if (!wcscmp(side,L"right")) dock_side = DOCK_RIGHT;
-    else if (!wcscmp(side,L"top")) dock_side = DOCK_TOP;
-    else if (!wcscmp(side,L"bottom")) dock_side = DOCK_BOTTOM;
-    else if (checkfloat && !wcscmp(side, L"float")) dock_side = DOCK_FLOAT;
+    int dock_side = _wndMain.m_gameview.convertSideFromString(side);
+    if (!checkfloat && dock_side == DOCK_FLOAT)
+        dock_side = -1;
     return dock_side;
 }
 
@@ -153,12 +150,24 @@ int window_isvisible(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_WINDOW))
     {
-        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);        
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         int state = v->IsWindowVisible() ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }
     return pluginInvArgs(L, "window.isvisible");
+}
+
+int window_setrender(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_WINDOW, LUA_TFUNCTION))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        PluginsViewRender* r = v->setRender(L);
+        luaT_pushobject(L, r, LUAT_RENDER);
+        return 1;
+    }
+    return pluginInvArgs(L, "window.setrender");
 }
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
@@ -173,6 +182,7 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "show", window_show);
     regFunction(L, "hide", window_hide);
     regFunction(L, "isvisible", window_isvisible);
+    regFunction(L, "setrender", window_setrender);
     regIndexMt(L);
     lua_pop(L, 1);
 }

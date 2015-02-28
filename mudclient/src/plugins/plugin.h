@@ -20,6 +20,7 @@ public:
     HMODULE getModule() const { return hModule; }
     void closeWindow(HWND wnd);
     bool runMethod(const char* method, int args, int results);
+    void updateProps();
 
     enum PluginState { FILE, FILENAME, NAME, VERSION, DESCRIPTION };
     const wchar_t* get(PluginState state) {
@@ -32,8 +33,9 @@ public:
         }
         return &empty; 
     }
-    
-    std::vector<PluginsView*> views;
+
+    std::vector<PluginsView*> dockpanes;
+    std::vector<PluginsView*> panels;
     std::vector<tstring> menus;
     std::vector<int> buttons;
     std::vector<tstring> toolbars;
@@ -44,7 +46,7 @@ private:
     bool loadLuaPlugin(const wchar_t* fname);
     bool initLoadedPlugin(const wchar_t* fname);
     void getparam(const char* state, tstring* value);
-        
+
 private:
     wchar_t empty;
     HMODULE hModule;            // dll module

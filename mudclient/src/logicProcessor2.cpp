@@ -449,7 +449,8 @@ IMPL(connect)
             tmcLog(L"Подключение уже устанавливается...");
             return;
         }
-        tmcLog(L"Подключение...");
+        swprintf(pb.buffer, pb.buffer_len, L"Подключение '%s:%d'...", p->at(0).c_str(), p->toInteger(1));
+        tmcLog(pb.buffer);
         m_connecting = true;
         m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );        
         return;
