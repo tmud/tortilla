@@ -17,7 +17,7 @@ function autowrap.version()
     return '-'
 end
 
-local function div(v)
+function autowrap.div(v)
   local len,index = 0, 0
   for i=1,v:blocks() do
     local s = v:getblocktext(i)
@@ -45,7 +45,7 @@ local count = v:size()
   while i <= count do
     v:select(i)
     if v:gettextlen() > autowrap_maxlen then
-      div(v)
+      autowrap.div(v)
       count = v:size()
     end
     i = i + 1

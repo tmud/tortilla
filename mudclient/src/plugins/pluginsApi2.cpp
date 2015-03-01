@@ -315,7 +315,7 @@ int vd_gethash(lua_State *L)
         if (str)
         {
             u8string data;
-            utf8 buffer[16];
+            utf8 buffer[32];
             MudViewString *ms = pdata->getselected();
             for (int i = 0, e = ms->blocks.size(); i < e; ++i)
             {

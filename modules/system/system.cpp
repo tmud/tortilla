@@ -48,7 +48,6 @@ int system_messagebox(lua_State *L)
 
         params_ok = true;
     }
-
     UINT result = 0;
     if (params_ok)
         result = MessageBox(parent, TU2W(text.c_str()), TU2W(caption.c_str()), buttons);
@@ -57,7 +56,7 @@ int system_messagebox(lua_State *L)
     return 1;
 }
 
-int system_outputdebugstring(lua_State *L)
+int system_debugstack(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
@@ -83,10 +82,50 @@ int system_dbgtable(lua_State *L)
     return 0;
 }
 
+void formatByType(lua_State* L, int index, u8string *buf)
+{
+    int i = index;
+    int type = lua_type(L, i);
+    utf8 dbuf[32];
+    buf->clear();
+    switch (type)
+    {
+    case LUA_TNIL:
+        buf->append("nil");
+        break;
+    case LUA_TNUMBER:
+        sprintf(dbuf, "%d", lua_tointeger(L, i));
+        buf->append(dbuf);
+        break;
+    case LUA_TBOOLEAN:
+        sprintf(dbuf, "%s", (lua_toboolean(L, i) == 0) ? "false" : "true");
+        buf->append(dbuf);
+        break;
+    case LUA_TSTRING:
+        buf->append(lua_tostring(L, i));
+        break;
+    default:
+        buf->append("[?]");
+        break;
+    }
+}
+
+int system_dbglog(lua_State *L)
+{
+    u8string msg;
+    for (int i=1,e=lua_gettop(L); i<=e; ++i)
+    {
+        formatByType(L, i, &msg);
+    }
+    OutputDebugString(TU2W(msg.c_str()));    
+    return 0;
+}
+
 static const luaL_Reg system_methods[] =
 {
-    { "dbgstack", system_outputdebugstring },
+    { "dbgstack", system_debugstack},
     { "dbgtable", system_dbgtable },
+    { "dbglog", system_dbglog },
     { "msgbox", system_messagebox },
     { NULL, NULL }
 };

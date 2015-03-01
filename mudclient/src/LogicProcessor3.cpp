@@ -88,6 +88,8 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         s->blocks.insert(s->blocks.begin(), b);
         int last = p.size() - 1;
         s = p[last]; b.string = L"}";
+        if (parse_data.last_finished)
+            b.string.append(L"#");
         s->blocks.push_back(b);
     }
 #endif
@@ -211,6 +213,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     // div current parseData at 2 parts
     parseData pd;
     pd.update_prev_string = parse_data.update_prev_string;
+    pd.last_finished = true;
     pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin() + last_game_cmd + 1);
     MARKITALIC(pd.strings);     // режим отладки
     printIncoming(pd, flags, 0);
@@ -220,6 +223,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     printStack();
 
     pd.update_prev_string = false;
+    pd.last_finished = parse_data.last_finished;
     pd.strings.assign(parse_data.strings.begin() + last_game_cmd + 1, parse_data.strings.end());
     MARKBLINK(pd.strings);      // режим отладки
     printIncoming(pd, flags, 0);
@@ -249,7 +253,6 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
         flags = flags | SKIP_ACTIONS | SKIP_SUBS;
 
     parseDataStrings &pds = parse_data.strings;
-
     if (parse_data.update_prev_string)
     {
         MudViewString *s = parse_data.strings[0];
@@ -258,6 +261,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
             pds.erase(pds.begin());
             parseData pd;
             pd.update_prev_string = true;
+            pd.last_finished = true;
             pd.strings.push_back(s);
             printParseData(pd, flags | SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_SUBS, window);
             pd.strings.clear();

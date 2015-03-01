@@ -59,6 +59,7 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
         m_current_string = NULL;
         m_last_finished = false;
     }
+    data->last_finished = m_last_finished;
 }
 
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)

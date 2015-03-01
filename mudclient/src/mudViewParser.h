@@ -4,9 +4,10 @@
 typedef std::vector<MudViewString*> parseDataStrings;
 struct parseData
 {
-    parseData() : update_prev_string(false) {}
+    parseData() : update_prev_string(false), last_finished(true) {}
     ~parseData() { autodel<MudViewString> z1(strings); }
     bool update_prev_string;
+    bool last_finished;
     parseDataStrings strings;
 };
 
