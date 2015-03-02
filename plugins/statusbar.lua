@@ -33,12 +33,17 @@ if window ~= 0 then return end
 local size = v:size()
 for i=1,size do
   if (i==1 and v:isfirst()) then
-    log("<<<CONTINUE")
+    log("<CONT")
   end
   v:select(i)
+  if (i==size) then
+    log(">>>")
+  end
   log(v:gettext())
-  if (i==size and v:islast()) then
-    log("LAST FINISHED>>>")
+  if (i==size) then    
+    if (v:islast() or v:isprompt()) then
+	   log("$LP$")
+	end
   end
   log("\r\n")
 end

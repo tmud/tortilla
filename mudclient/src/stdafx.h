@@ -68,7 +68,7 @@ typedef unsigned int uint;
 
 // only for debug (help functions)
 #ifdef _DEBUG
-#define MARKERS_IN_VIEW
+//#define MARKERS_IN_VIEW
 #endif
 
 extern CAppModule _Module;
