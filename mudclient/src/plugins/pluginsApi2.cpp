@@ -272,6 +272,17 @@ int vd_isfirst(lua_State *L)
     return pluginInvArgs(L, "viewdata.isfirst");
 }
 
+int vd_islast (lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        lua_pushboolean(L, (pdata->pdata->last_finished) ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.islast");
+}
+
 int vd_gettext(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -684,6 +695,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "select", vd_select);
     regFunction(L, "getindex", vd_getindex);
     regFunction(L, "isfirst", vd_isfirst);
+    regFunction(L, "islast", vd_islast);
     regFunction(L, "isgamecmd", vd_isgamecmd);
     regFunction(L, "isprompt", vd_isprompt);
     regFunction(L, "getprompt", vd_getprompt);
@@ -894,7 +906,7 @@ int ao_gc(lua_State *L)
 void reg_mt_activeobject(lua_State *L)
 {
     luaL_newmetatable(L, "activeobjects");
-    regFunction(L, "select", ao_select);
+    regFunction(L, "selec2t", ao_select);
     regFunction(L, "set", ao_set);
     regFunction(L, "get", ao_get);
     regFunction(L, "size", ao_size);

@@ -1,5 +1,4 @@
 ﻿-- Плагин Status Bar для Tortilla mud client
--- Список команд, которые нужно блокировать
 
 statusbar = {}
 function statusbar.name() 
@@ -31,12 +30,17 @@ end
 
 function statusbar.before(window, v)
 if window ~= 0 then return end
-for i=1,v:size() do
+local size = v:size()
+for i=1,size do
   if (i==1 and v:isfirst()) then
-    log("###############")
+    log("<<<CONTINUE")
   end
   v:select(i)
-  log(v:gettext().."\r\n")
+  log(v:gettext())
+  if (i==size and v:islast()) then
+    log("LAST FINISHED>>>")
+  end
+  log("\r\n")
 end
 
 end
