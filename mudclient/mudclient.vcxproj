@@ -232,6 +232,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\pluginsManager.cpp" />
     <ClCompile Include="src\plugins\pluginsModules.cpp" />
     <ClCompile Include="src\plugins\pluginsPanels.cpp" />
+    <ClCompile Include="src\plugins\pluginsPcre.cpp" />
     <ClCompile Include="src\plugins\pluginSupport.cpp" />
     <ClCompile Include="src\plugins\pluginsView.cpp" />
     <ClCompile Include="src\plugins\pluginsViewRender.cpp" />

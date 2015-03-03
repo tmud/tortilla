@@ -30,6 +30,11 @@ public:
         return m_render;
     }
 
+    bool isChildAttached() const
+    {
+        return (m_child_window.IsWindow()) ? true : false;
+    }
+
 private:
     BEGIN_MSG_MAP(PluginsView)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)

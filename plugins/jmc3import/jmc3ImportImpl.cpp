@@ -103,8 +103,8 @@ void Jmc3Import::parseString(const u8string& str, std::vector<u8string>* errors)
         return;
 
     u8string t, p;
-    base.getstring(1, &t);      // type
-    base.getstring(2, &p);      // params
+    base.get(1, &t);      // type
+    base.get(2, &p);      // params
     replaceLegacy(&p);
 
     param.findall(p.c_str());
@@ -142,7 +142,7 @@ bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
     for (int i=0; i<n; i++)
     {
         u8string t;
-        param.getstring(i, &t);
+        param.get(i, &t);
         int l = t.size()-2;
         if (l <= 0)
             return false;        

@@ -163,8 +163,13 @@ int window_setrender(lua_State *L)
     if (luaT_check(L, 2, LUAT_WINDOW, LUA_TFUNCTION))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        PluginsViewRender* r = v->setRender(L);
-        luaT_pushobject(L, r, LUAT_RENDER);
+        if (v->isChildAttached())
+            lua_pushnil(L);
+        else
+        {
+            PluginsViewRender* r = v->setRender(L);
+            luaT_pushobject(L, r, LUAT_RENDER);
+        }
         return 1;
     }
     return pluginInvArgs(L, "window.setrender");
@@ -906,7 +911,7 @@ int ao_gc(lua_State *L)
 void reg_mt_activeobject(lua_State *L)
 {
     luaL_newmetatable(L, "activeobjects");
-    regFunction(L, "selec2t", ao_select);
+    regFunction(L, "select", ao_select);
     regFunction(L, "set", ao_set);
     regFunction(L, "get", ao_get);
     regFunction(L, "size", ao_size);

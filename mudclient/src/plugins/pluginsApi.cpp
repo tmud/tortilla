@@ -67,7 +67,7 @@ int pluginError(lua_State *L, const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s'.%s: %s", _cp->get(Plugin::NAME), (const wchar_t*)f, (const wchar_t*)e);
+    swprintf(plugin_buffer, L"'%s'.%s: %s", _cp->get(Plugin::FILE), (const wchar_t*)f, (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
 }
@@ -601,6 +601,7 @@ void reg_activeobjects(lua_State *L);
 void reg_string(lua_State *L);
 void reg_mt_panels(lua_State *L);
 void reg_mt_render(lua_State *L);
+void reg_mt_pcre(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -635,6 +636,7 @@ bool initPluginsSystem()
     reg_mt_viewdata(L);
     reg_mt_panels(L);
     reg_mt_render(L);
+    reg_mt_pcre(L);
     return true;
 }
 

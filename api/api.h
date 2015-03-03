@@ -19,7 +19,8 @@ typedef std::string u8string;
 #define LUAT_PEN        105
 #define LUAT_BRUSH      106
 #define LUAT_FONT       107
-#define LUAT_LAST       107
+#define LUAT_PCRE       108
+#define LUAT_LAST       108
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -143,7 +144,7 @@ public:
     luaT_ViewData() : L(NULL), view_data(NULL) {}
     void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
     int size()             // count of all strings
-    { 
+    {
         runcmd("size");
         return intresult(); 
     }
@@ -161,6 +162,11 @@ public:
     {
         runcmd("isfirst");
         return boolresult(); 
+    }
+    bool islast()
+    {
+        runcmd("islast");
+        return boolresult();
     }
     bool isgamecmd()
     {
@@ -564,7 +570,7 @@ public:
     int  size() { return pcre_size(regexp); }
     int  first(int index) { return pcre_first(regexp, index); }
     int  last(int index) { return pcre_last(regexp, index); }
-    void getstring(int index, u8string *str) { str->assign(pcre_string(regexp, index)); }
+    void get(int index, u8string *str) { str->assign(pcre_string(regexp, index)); }
 private:
     pcre8 regexp;
 };

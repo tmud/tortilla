@@ -44,8 +44,13 @@ int pn_setrender(lua_State *L)
     if (luaT_check(L, 2, LUAT_PANEL, LUA_TFUNCTION))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        PluginsViewRender* r = v->setRender(L);
-        luaT_pushobject(L, r, LUAT_RENDER);
+        if (v->isChildAttached())
+            lua_pushnil(L);
+        else
+        {
+            PluginsViewRender* r = v->setRender(L);
+            luaT_pushobject(L, r, LUAT_RENDER);
+        }
         return 1;
     }
     return pluginInvArgs(L, "panel.setrender");

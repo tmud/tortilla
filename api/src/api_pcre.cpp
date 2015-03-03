@@ -74,7 +74,7 @@ bool pcre_find(pcre8 handle, const utf8* string)
     if (!handle || !string) return false;
     h_pcre* hpcre = (h_pcre*)handle;
     if (!hpcre->regexp) return false;
-        
+
     hpcre->str.assign(string);
     hpcre->indexes.clear();
     int params[30];
@@ -84,7 +84,7 @@ bool pcre_find(pcre8 handle, const utf8* string)
         hpcre->indexes.push_back(params[2 * i]);
         hpcre->indexes.push_back(params[2 * i + 1]);
     }
-    return true;
+    return (count > 0) ? true : false;
 }
 
 bool pcre_findall(pcre8 handle, const utf8* string)
@@ -107,7 +107,7 @@ bool pcre_findall(pcre8 handle, const utf8* string)
         hpcre->indexes.push_back(params[1]);
         pos = params[1];
     }
-    return true;
+    return (hpcre->indexes.empty()) ? false : true;
 }
 
 int pcre_size(pcre8 handle)
