@@ -331,6 +331,9 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (len < 3)
         return 0;
 
+    if (*e == DO)               // block IAC DO option from some muds (lpmud) ?
+        return -3;
+    
     if (e[0] == WILL)
     {
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
