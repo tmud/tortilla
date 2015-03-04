@@ -1,4 +1,5 @@
-﻿-- Плагин historyfilter для Tortilla mud client
+﻿-- historyfilter
+-- Плагин Tortilla mud client
 -- Список команд, которые нужно блокировать
 local cmds_list_for_block = {'с','ю','з','в','вв','вн' }
 

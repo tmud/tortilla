@@ -1,4 +1,5 @@
-﻿-- Плагин autowrap для Tortilla mud client
+﻿-- autowrap
+-- Плагин для Tortilla mud client
 -- Максимальная допустимая длина строки
 local autowrap_maxlen = 100
 

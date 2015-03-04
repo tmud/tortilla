@@ -7,6 +7,7 @@ public:
     PluginsViewRender(lua_State *pL, int index, HWND wnd);
     void render();
     void setBackground(COLORREF color);
+    void setTextColor(COLORREF color);
     int  width();
     int  height();
     CPen* createPen(lua_State *L);
@@ -20,6 +21,7 @@ public:
     void drawRect(const RECT& r);
     void drawSolidRect(const RECT& r);
     void print(int x, int y, const tstring& text);
+    void update();
 
 private:
     lua_State *renderL;
@@ -29,6 +31,7 @@ private:
     bool m_inside_render;
 
     COLORREF m_bkg_color;
+    COLORREF m_text_color;
     int m_width;
     int m_height;
 

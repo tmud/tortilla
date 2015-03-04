@@ -71,14 +71,15 @@ int system_debugstack(lua_State *L)
 
 int system_dbgtable(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
     {
         std::string label(lua_tostring(L, -1));
         lua_pop(L, 1);
         luaT_showTableOnTop(L, label.c_str());
         return 0;
     }
-    luaT_showTableOnTop(L, NULL);
+    if (luaT_check(L, 1, LUA_TTABLE))
+        luaT_showTableOnTop(L, NULL);
     return 0;
 }
 

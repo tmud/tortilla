@@ -5,7 +5,7 @@
 extern CFont* _stdfont;
 
 PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
-m_inside_render(false), m_bkg_color(0), m_width(0), m_height(0),
+m_inside_render(false), m_bkg_color(0), m_text_color(RGB(128,128,128)), m_width(0), m_height(0),
 current_pen(NULL), current_brush(NULL), current_font(NULL)
 {
     assert(pL && index > 0);
@@ -47,6 +47,11 @@ void PluginsViewRender::setBackground(COLORREF color)
 {
     m_bkg_color = color;
     m_wnd.Invalidate();
+}
+
+void PluginsViewRender::setTextColor(COLORREF color)
+{
+    m_text_color = color;
 }
 
 int PluginsViewRender::width()
@@ -131,9 +136,15 @@ void PluginsViewRender::print(int x, int y, const tstring& text)
     if (!m_inside_render)
         return;
     m_dc.SetBkMode(TRANSPARENT);
+    m_dc.SetTextColor(m_text_color);
     if (current_font)
         m_dc.SelectFont(*current_font);
     m_dc.TextOut(x, y, text.c_str(), text.length());
+}
+
+void PluginsViewRender::update()
+{
+    m_wnd.Invalidate();
 }
 //-------------------------------------------------------------------------------------------------
 int render_setbackground(lua_State *L)
@@ -153,6 +164,25 @@ int render_setbackground(lua_State *L)
         return 0;
     }
     return pluginInvArgs(L, "render.setbackground");
+}
+
+int render_textcolor(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        COLORREF color = RGB(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
+        r->setTextColor(color);
+        return 0;
+    }
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        COLORREF color = lua_tounsigned(L, 2);
+        r->setTextColor(color);
+        return 0;
+    }
+    return pluginInvArgs(L, "render.textcolor");
 }
 
 int render_width(lua_State *L)
@@ -303,11 +333,22 @@ int render_print(lua_State *L)
     return pluginInvArgs(L, "render.print");
 }
 
+int render_update(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_RENDER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        r->update();
+        return 0;
+    }
+    return pluginInvArgs(L, "render.update");
+}
 
 void reg_mt_render(lua_State *L)
 {
     luaL_newmetatable(L, "render");
     regFunction(L, "setbackground", render_setbackground);
+    regFunction(L, "textcolor", render_textcolor);
     regFunction(L, "width", render_width);
     regFunction(L, "height", render_height);
     regFunction(L, "createpen", render_createpen);
@@ -318,6 +359,7 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "rect", render_rect);
     regFunction(L, "solidrect", render_solidrect);
     regFunction(L, "print", render_print);
+    regFunction(L, "update", render_update);
     regIndexMt(L);
     lua_pop(L, 1);
 }

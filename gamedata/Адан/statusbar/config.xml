@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <config hp="1" maxhp="1" mv="2" maxmv="2" regexp="^Вы имеете [0-9]+\(([0-9]+)\) единиц здоровья, [0-9]+\(([0-9]+)\) энергетических единиц."/>
+</plugindata>
