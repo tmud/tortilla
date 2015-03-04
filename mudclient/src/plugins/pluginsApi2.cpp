@@ -672,6 +672,34 @@ int vd_deletestring(lua_State *L)
     }
     return pluginInvArgs(L, "viewdata.deletestring");
 }
+
+int vd_find(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUAT_PCRE) || 
+        luaT_check(L, 3, LUAT_VIEWDATA, LUAT_PCRE, LUA_TNUMBER))
+    {
+        bool result = false;
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        Pcre *p = (Pcre *)luaT_toobject(L, 2);
+        int from = (lua_gettop(L) == 3) ? lua_tointeger(L, 3) : 1;
+        int to = pdata->plugins_strings.size();
+        if (!pdata->pdata->last_finished) to -= 1;
+        for (int i = from; i <= to; ++i)
+        {
+            u8string text;
+            pdata->plugins_strings[i-1]->getText(&text);
+            result = p->find(text.c_str());
+            if (result)
+            {
+                pdata->select(i);
+                break;
+            }
+        }
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata.find");
+}
 //--------------------------------------------------------------------
 std::map<u8string, int> vdtypes;
 void init_vdtypes()
@@ -717,6 +745,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "copyblock", vd_copyblock);
     regFunction(L, "deletestring", vd_deletestring);
     regFunction(L, "createstring", vd_createstring);
+    regFunction(L, "find", vd_find);
     regIndexMt(L);
     lua_pop(L, 1);
 }

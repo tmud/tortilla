@@ -195,7 +195,13 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
         p[size] = 0;                                      // set EOF
         if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) // check BOM
             p = p + 3;
-        luaL_dostring(L, (const char*)p);
+        if (luaL_dostring(L, (const char*)p))
+        {
+            Utf8ToWide e(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            pluginLoadError(e, fname);
+            return false;
+        }
         return initLoadedPlugin(fname);
     }
     return false;

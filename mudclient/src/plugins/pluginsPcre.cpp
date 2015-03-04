@@ -102,8 +102,8 @@ int luapcre_gc(lua_State *L)
 
 void reg_mt_pcre(lua_State *L)
 {
+    lua_register(L, "createPcre", luapcre_create);
     luaL_newmetatable(L, "pcre");
-    //regFunction(L, "create", luapcre_create);
     regFunction(L, "find", luapcre_find);
     regFunction(L, "findall", luapcre_findall);
     regFunction(L, "size", luapcre_size);
@@ -113,7 +113,4 @@ void reg_mt_pcre(lua_State *L)
     regFunction(L, "__gc", luapcre_gc);
     regIndexMt(L);
     lua_pop(L, 1);
-    lua_newtable(L);
-    regFunction(L, "create", luapcre_create);
-    lua_setglobal(L, "pcre");
 }

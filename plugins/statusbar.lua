@@ -19,6 +19,7 @@ local r = nil
 local objs = {}
 local log = system.dbglog
 local regexp = nil
+local regexp2 = nil
 local cfg = { 'hp', 'maxhp', 'vp', 'maxvp' }
 local values = {}
 
@@ -45,9 +46,12 @@ for i=1,size do
 	end
   end
 end
-for k,v in pairs(values) do
-  log(k..'='..v..'\r\n')
+if v:find(regexp2) then
+  log('maxhp='..regexp2:get(1)..',maxvp='..regexp2:get(2)..'\r\n')  
 end
+--[[for k,v in pairs(values) do
+  log(k..'='..v..'\r\n')
+end]]
 end
 
 function statusbar.init()
@@ -58,7 +62,8 @@ function statusbar.init()
   objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
   --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
   objs.font1 = r:defaultfont()
-  regexp = pcre.create("[0-9]+")
+  regexp = createPcre("[0-9]+")
+  regexp2 = createPcre("^Вы имеете [0-9]+\\(([0-9]+)\\) единиц здоровья, [0-9]+\\(([0-9]+)\\) энергетических единиц.")
 end
 
 function statusbar.release()

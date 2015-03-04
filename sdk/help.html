@@ -531,11 +531,19 @@ local t = {...} -- правильное написание
 <hr>
 <h4>Преобразование кодировок</h4>
 В <div class="m">API</div> клиента есть методы для переобразования текста между различными кодировками.<br>
+Для преобразования существуют специальные классы-обертки:
 <pre>
-<div class="cmd">const wchar_t* convert_utf8_to_wide(const utf8* string);</div> - конвертация строки из UTF8 в UTF16
-<div class="cmd">const utf8* convert_wide_to_utf8(const wchar_t* string);</div> - конвертация строки из UTF16 в UTF8
-<div class="cmd">const wchar_t* convert_ansi_to_wide(const char* string);</div> - конвертация строки из ANSI в UTF16
-<div class="cmd">const char* convert_wide_to_ansi(const wchar_t* string);</div> - конвертация строки из UTF16 в ANSI
+<div class="cmd">const wchar_t* TU2W(const utf8* string)</div> - конвертация строки из UTF8 в UTF16
+<div class="cmd">const utf8* TW2U(const wchar_t* string)</div> - конвертация строки из UTF16 в UTF8
+<div class="cmd">const wchar_t* TA2W(const char* string)</div> - конвертация строки из ANSI в UTF16
+<div class="cmd">const char* TW2A(const wchar_t* string)</div> - конвертация строки из UTF16 в ANSI
+
+Объекты TU2W, TW2U, TA2W и TW2A - выполнены в виде классов, которые рассчитаны на использование в стиле функции:
+<div class="ee">...
+u8string x( TW2U(L"строка") );
+...
+</div>
+Необходимость класса - удаление временного буфера для строки-результата конвертации.
 </pre>
 <hr>
 <h4>Работа с XML</h4>

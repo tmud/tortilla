@@ -75,7 +75,7 @@ int pluginError(lua_State *L, const utf8* fname, const utf8* error)
 int pluginError(lua_State *L, const utf8* error)
 {
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::NAME), (const wchar_t*)e);
+    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
 }
@@ -83,9 +83,15 @@ int pluginError(lua_State *L, const utf8* error)
 int pluginLog(lua_State *L, const utf8* msg)
 {
     Utf8ToWide e(msg);
-    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::NAME), (const wchar_t*)e);
+    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
+}
+
+void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
+{
+    swprintf(plugin_buffer, L"'%s': %s", fname, msg);
+    pluginLog(plugin_buffer);
 }
 //---------------------------------------------------------------------
 int addcommand(lua_State *L)

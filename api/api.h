@@ -134,6 +134,7 @@ public:
     }
 };
 
+class Pcre;
 class luaT_ViewData
 {
     lua_State *L;
@@ -253,6 +254,13 @@ public:
     bool deletestring()
     {
         runcmd("deletestring");
+        return boolresult();
+    }
+    bool find(Pcre *p)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_pushobject(L, p, LUAT_PCRE);
+        luaT_run(L, "find", "ot");
         return boolresult();
     }
 
