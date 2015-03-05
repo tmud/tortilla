@@ -146,6 +146,18 @@ void PluginsViewRender::update()
 {
     m_wnd.Invalidate();
 }
+
+int  PluginsViewRender::getFontHeight()
+{
+    if (!current_font)
+        return 0;
+    CDC dc(m_wnd.GetDC());
+    HFONT old = dc.SelectFont(*current_font);
+    SIZE sz = { 0, 0 };
+    GetTextExtentPoint32(dc, L"W", 1, &sz);
+    dc.SelectFont(old);
+    return sz.cy;
+}
 //-------------------------------------------------------------------------------------------------
 int render_setbackground(lua_State *L)
 {
@@ -344,6 +356,18 @@ int render_update(lua_State *L)
     return pluginInvArgs(L, "render.update");
 }
 
+int render_fontheight(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_RENDER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        lua_pushinteger(L, r->getFontHeight());
+        return 1;
+    }
+    return pluginInvArgs(L, "render.fontheight");
+}
+
+
 void reg_mt_render(lua_State *L)
 {
     luaL_newmetatable(L, "render");
@@ -360,6 +384,7 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "solidrect", render_solidrect);
     regFunction(L, "print", render_print);
     regFunction(L, "update", render_update);
+    regFunction(L, "fontheight", render_fontheight);
     regIndexMt(L);
     lua_pop(L, 1);
 }

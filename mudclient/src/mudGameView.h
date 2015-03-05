@@ -759,7 +759,7 @@ private:
 
             if (!m_history.IsWindowVisible() && !last)
             {
-                CDCHandle dc(m_view.GetDC());
+                CDC dc(m_view.GetDC());
                 HFONT current_font = dc.SelectFont(m_propElements.standard_font);
                 SIZE sz = {0,0};
                 GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font

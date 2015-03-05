@@ -22,6 +22,7 @@ public:
     void drawSolidRect(const RECT& r);
     void print(int x, int y, const tstring& text);
     void update();
+    int  getFontHeight();
 
 private:
     lua_State *renderL;

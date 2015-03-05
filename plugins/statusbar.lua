@@ -46,7 +46,8 @@ end
 
 function statusbar.print(msg)
   r:select(objs.font1)
-  r:print(10, 10, msg)
+  local y = (r:height()-r:fontheight()) / 2
+  r:print(4, y, msg)
 end
 
 function statusbar.before(window, v)
@@ -73,15 +74,6 @@ end
 end
 
 function statusbar.init()
-  local p = createPanel("bottom", 28)
-  r = p:setrender(statusbar.render)
-  r:setbackground(0,0,0)
-  r:textcolor(192,192,192)
-  --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
-  --objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
-  --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
-  objs.font1 = r:defaultfont()
-  regexp = createPcre("[0-9]+")
   local file = loadTable('config.xml')
   if not file then
     cfg = nil
@@ -89,6 +81,18 @@ function statusbar.init()
     return
   end
   cfg = file.config
+
+  local p = createPanel("bottom", 28)
+  r = p:setrender(statusbar.render)
+  r:setbackground(0,0,0)
+  r:textcolor(192,192,192)
+  objs.font1 = r:defaultfont()
+
+  --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
+  --objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
+  --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
+
+  regexp = createPcre("[0-9]+")  
   values = {}
   regexp2 = cfg.regexp and createPcre(cfg.regexp) or nil
 end
