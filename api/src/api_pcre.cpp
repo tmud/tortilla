@@ -75,14 +75,15 @@ bool pcre_find(pcre8 handle, const utf8* string)
     h_pcre* hpcre = (h_pcre*)handle;
     if (!hpcre->regexp) return false;
 
+    std::vector<int> &hi = hpcre->indexes;
     hpcre->str.assign(string);
-    hpcre->indexes.clear();
+    hi.clear();
     int params[30];
     int count = pcre_exec(hpcre->regexp, hpcre->extra, string, strlen(string), 0, 0, params, 30);
     for (int i = 0; i<count; i++)
     {
-        hpcre->indexes.push_back(params[2 * i]);
-        hpcre->indexes.push_back(params[2 * i + 1]);
+        hi.push_back(params[2 * i]);
+        hi.push_back(params[2 * i + 1]);
     }
     return (count > 0) ? true : false;
 }
@@ -93,8 +94,9 @@ bool pcre_findall(pcre8 handle, const utf8* string)
     h_pcre* hpcre = (h_pcre*)handle;
     if (!hpcre->regexp) return false;
 
+    std::vector<int> &hi = hpcre->indexes;
     hpcre->str.assign(string);
-    hpcre->indexes.clear();
+    hi.clear();
     int params[30];
     int pos = 0;
     int len = strlen(string);
@@ -103,11 +105,20 @@ bool pcre_findall(pcre8 handle, const utf8* string)
         int count = pcre_exec(hpcre->regexp, hpcre->extra, string, len, pos, 0, params, 30);
         if (count <= 0)
             break;
-        hpcre->indexes.push_back(params[0]);
-        hpcre->indexes.push_back(params[1]);
+        hi.push_back(params[0]);
+        hi.push_back(params[1]);
         pos = params[1];
     }
-    return (hpcre->indexes.empty()) ? false : true;
+    if (hi.empty())
+        return false;
+
+    std::vector<int> head;
+    head.push_back(hi[0]);
+    int last = hi.size() - 1;
+    head.push_back(hi[last]);
+
+    hi.insert(hi.begin(), head.begin(), head.end());
+    return true;
 }
 
 int pcre_size(pcre8 handle)

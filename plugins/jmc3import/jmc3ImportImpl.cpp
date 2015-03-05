@@ -137,15 +137,15 @@ void Jmc3Import::parseString(const u8string& str, std::vector<u8string>* errors)
 
 bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
 {
-    int n = param.size();
+    int n = param.size()-1;
     if (n < min || n > max) return false;
-    for (int i=0; i<n; i++)
+    for (int i=1; i<=n; i++)
     {
         u8string t;
         param.get(i, &t);
         int l = t.size()-2;
         if (l <= 0)
-            return false;        
+            return false;
         t = t.substr(1, l);
         params->push_back(t);
     }

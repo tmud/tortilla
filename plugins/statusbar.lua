@@ -21,32 +21,32 @@ local r, regexp, regexp2, values, cfg
 
 function statusbar.render()
   if not cfg then
-    return statusbar.print('Нет файла настроек')
+    return
   end
+  if regexp2 and values.hp and values.mv then
+    if values.maxhp and values.maxmv then
+       statusbar.drawbars()
+    else
+       statusbar.print("Выполните команду 'счет' для настройки плагина.")
+    end
+  end
+  if not regexp2 and values.maxhp and values.maxmv and values.hp and values.mv then
+    statusbar.drawbars()
+  end
+end
+
+function statusbar.drawbars()
   --r:select(objs.pen1)
   --r:select(objs.brush1)
   --r:rect{left = 10, right = 30, top = 10, bottom = 30}
   --r:rect{60, 10, 90, 27}
   --r:solidrect{10, 4, 160, 26}
-  r:select(objs.font1)
-  local msg
-  if regexp2 and values.hp and values.mv then
-    if values.maxhp and values.maxmv then
-        msg = values.hp..'/'..values.maxhp..'HP '..values.mv..'/'..values.maxmv..'MV'
-    else
-        msg = "Выполните команду 'счет' для настройки плагина."
-    end
-  end
-  if not regexp2 and values.maxhp and values.maxmv and values.hp and values.mv then
-    msg = values.hp..'/'..values.maxhp..' HP '..values.mv..'/'..values.maxmv..' MV'
-  end
-  statusbar.print(msg)
+   statusbar.print(values.hp..'/'..values.maxhp..'HP '..values.mv..'/'..values.maxmv..'MV')
 end
 
 function statusbar.print(msg)
-  if msg then 
-    r:print(10, 10, msg)
-  end
+  r:select(objs.font1)
+  r:print(10, 10, msg)
 end
 
 function statusbar.before(window, v)
@@ -55,11 +55,11 @@ for i=1,v:size() do
   v:select(i)
   if v:isprompt() then
     if regexp:findall(v:getprompt()) then
-    values.hp = regexp:get(cfg.hp-1)
-    values.mv = regexp:get(cfg.mv-1)
+    values.hp = regexp:get(cfg.hp)
+    values.mv = regexp:get(cfg.mv)
     if not regexp2 then
-      values.maxhp = regexp:get(cfg.maxhp-1)
-      values.maxmv = regexp:get(cfg.maxmv-1)
+      values.maxhp = regexp:get(cfg.maxhp)
+      values.maxmv = regexp:get(cfg.maxmv)
     end
     r:update()
     end
@@ -68,7 +68,7 @@ end
 if regexp2 and v:find(regexp2) then
   values.maxhp = regexp2:get(cfg.maxhp)
   values.maxmv = regexp2:get(cfg.maxmv)
-  log('maxhp='..values.maxhp..',maxmv='..values.maxmv..'\r\n')  
+  r:update()
 end
 end
 
@@ -91,5 +91,4 @@ function statusbar.init()
   cfg = file.config
   values = {}
   regexp2 = cfg.regexp and createPcre(cfg.regexp) or nil
-  log(cfg.regexp)
 end
