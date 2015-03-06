@@ -72,10 +72,10 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "show", "o");
     }
-    bool isvisible()
+    bool isVisible()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "isvisible", "o");
+        luaT_run(L, "isVisible", "o");
         bool result = (lua_toboolean(L, -1) == 0) ? false : true;
         lua_pop(L, 1);
         return result;
@@ -154,49 +154,49 @@ public:
         runcmdint("select", index);
         return boolresult();
     }
-    int getindex()
+    int getIndex()
     {
-        runcmd("getindex");
+        runcmd("getIndex");
         return intresult();
     }
-    bool isfirst()
+    bool isFirst()
     {
-        runcmd("isfirst");
+        runcmd("isFirst");
         return boolresult(); 
     }
-    bool islast()
+    bool isLast()
     {
-        runcmd("islast");
+        runcmd("isLast");
         return boolresult();
     }
-    bool isgamecmd()
+    bool isGameCmd()
     {
-        runcmd("isgamecmd");
+        runcmd("isGameCmd");
         return boolresult();
     }
-    bool isprompt()
+    bool isPrompt()
     {
-        runcmd("isprompt");
+        runcmd("isPrompt");
         return boolresult();
     }
-    void getprompt(u8string *str)
+    void getPrompt(u8string *str)
     {
-        runcmd("getprompt");
+        runcmd("getPrompt");
         strresult(str);
     }
-    void gettext(u8string* str) 
+    void getText(u8string* str) 
     {
-        runcmd("gettext");
+        runcmd("getText");
         strresult(str); 
     }
-    int gettextlen()
+    int getTextLen()
     {
-        runcmd("gettextlen");
+        runcmd("getTextLen");
         return intresult();
     }
-    void gethash(u8string* str)
+    void getHash(u8string* str)
     {
-        runcmd("gethash");
+        runcmd("getHash");
         strresult(str);
     }
     int blocks()            // count of blocks for selected string
@@ -204,9 +204,9 @@ public:
         runcmd("blocks");
         return intresult(); 
     }
-    void getblocktext(int block, u8string* str)
+    void getBlockText(int block, u8string* str)
     {
-        runcmdint("getblocktext", block);
+        runcmdint("getBlockText", block);
         strresult(str);
     }
     bool get(int block, int param, unsigned int *value)
@@ -224,36 +224,36 @@ public:
         luaT_run(L, "set", "oddu", block, param, value);
         return boolresult();
     }
-    bool setblocktext(int block, const utf8* text)
+    bool setBlockText(int block, const utf8* text)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "setblocktext", "ods", block, text);
+        luaT_run(L, "setBlockText", "ods", block, text);
         return boolresult();
     }
-    bool copyblock(int block, int dst_string, int dst_block)
+    bool copyBlock(int block, int dst_string, int dst_block)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "copyblock", "oddd", block, dst_string, dst_block);
+        luaT_run(L, "copyBlock", "oddd", block, dst_string, dst_block);
         return boolresult();
     }
-    bool deleteblock(int block)
+    bool deleteBlock(int block)
     {
-        runcmdint("deleteblock", block);
+        runcmdint("deleteBlock", block);
         return boolresult();
     }
-    bool deleteallblocks()
+    bool deleteAllBlocks()
     {
-        runcmd("deleteallblocks");
+        runcmd("deleteAllBlocks");
         return boolresult();
     }
-    bool createstring()
+    bool createString()
     {
-        runcmd("createstring");
+        runcmd("createString");
         return boolresult();
     }
-    bool deletestring()
+    bool deleteString()
     {
-        runcmd("deletestring");
+        runcmd("deleteString");
         return boolresult();
     }
     bool find(Pcre *p)
@@ -330,16 +330,16 @@ public:
         luaT_run(L, "delete", "o");
         return boolresult();
     }
-    int getindex()
+    int getIndex()
     {
         if (!getao()) return false;
-        luaT_run(L, "getindex", "o");
+        luaT_run(L, "getIndex", "o");
         return intresult();
     }
-    bool setindex(int index)
+    bool setIndex(int index)
     {
         if (!getao()) return false;
-        luaT_run(L, "setindex", "od", index);
+        luaT_run(L, "setIndex", "od", index);
         return boolresult();
     }
     bool get(int param, u8string* value)

@@ -39,7 +39,7 @@ int pn_attach(lua_State *L)
     return pluginInvArgs(L, "panel.attach");
 }
 
-int pn_setrender(lua_State *L)
+int pn_setRender(lua_State *L)
 {
     if (luaT_check(L, 2, LUAT_PANEL, LUA_TFUNCTION))
     {
@@ -53,7 +53,7 @@ int pn_setrender(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "panel.setrender");
+    return pluginInvArgs(L, "panel.setRender");
 }
 
 int pn_hwnd(lua_State *L)
@@ -73,7 +73,7 @@ void reg_mt_panels(lua_State *L)
     lua_register(L, "createPanel", createpanel);
     luaL_newmetatable(L, "panel");
     regFunction(L, "attach", pn_attach);
-    regFunction(L, "setrender", pn_setrender);
+    regFunction(L, "setRender", pn_setRender);
     regFunction(L, "hwnd", pn_hwnd);
     regIndexMt(L);
     lua_pop(L, 1);

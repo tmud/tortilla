@@ -39,7 +39,7 @@ function statusbar.drawbars()
   --r:select(objs.brush1)
   --r:rect{left = 10, right = 30, top = 10, bottom = 30}
   --r:rect{60, 10, 90, 27}
-  --r:solidrect{10, 4, 160, 26}
+  --r:solidRect{10, 4, 160, 26}
    statusbar.print(values.hp..'/'..values.maxhp..'HP '..values.mv..'/'..values.maxmv..'MV')
 end
 
@@ -53,8 +53,8 @@ function statusbar.before(window, v)
 if window ~= 0 or not cfg then return end
 for i=1,v:size() do
   v:select(i)
-  if v:isprompt() then
-    if regexp:findall(v:getprompt()) then
+  if v:isPrompt() then
+    if regexp:findall(v:getPrompt()) then
     values.hp = regexp:get(cfg.hp)
     values.mv = regexp:get(cfg.mv)
     if not regexp2 then
@@ -90,14 +90,14 @@ function statusbar.init()
   end
 
   local p = createPanel("bottom", 28)
-  r = p:setrender(statusbar.render)
-  r:setbackground(props.backgroundColor())
-  r:textcolor(props.paletteColor(7))
+  r = p:setRender(statusbar.render)
+  r:setBackground(props.backgroundColor())
+  r:textColor(props.paletteColor(7))
   objs.font1 = props.currentFont()
 
-  --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
-  --objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
-  --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
+  --objs.pen1 = r:createPen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
+  --objs.brush1 = r:createBrush{ style ="solid", r = 200, g = 0, b = 200 }
+  --objs.font1 = r:createFont{ font="fixedsys", height = 11, bold = 0 }
 
   regexp = createPcre("[0-9]+")
   values = {}

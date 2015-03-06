@@ -78,7 +78,7 @@ int init(lua_State *L)
 		return luaT_error(L, "Не удалось создать окно для карты");
 
     HWND parent = m_parent_window.hwnd();    
-    map_active = m_parent_window.isvisible();
+    map_active = m_parent_window.isVisible();
 
     m_mapper_window = new Mapper(&m_props);
     RECT rc; ::GetClientRect(parent, &rc);
