@@ -328,7 +328,7 @@ local t = {...} -- правильное написание
 
 <hr>
 <a name="before"></a>
-<h4>before(int view, viewdata data)</h4>
+<h4>void before(int view, viewdata data)</h4>
 <div class="e">Приоритетная функция</div><br>
 <div class="m">Параметры: view - индекс окна, data - объект-массив, со строками</div><br>
 <div class="m">Результат: нет<br></div><br>
@@ -339,13 +339,25 @@ local t = {...} -- правильное написание
 <br>См.также: <a href="#viewdata" class="cmd">viewdata</a>, <a href="#cppviewdata" class="cmd">viewdata в С++</a>.
 <hr>
 <a name="after"></a>
-<h4>after(int view, viewdata data)</h4>
+<h4>void after(int view, viewdata data)</h4>
 <div class="e">Приоритетная функция</div><br>
 <div class="m">Параметры: view - индекс окна, data - объект-массив, со строками</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция идентична команде <a href="#before" class="cmd">before</a>, только она работает ПОСЛЕ (after) обработчиков триггиров, подсветок, замен и др. элементов. После этого метода 
 строки попадают в главное окно мада или output-окно.
 <br>См.также: <a href="#viewdata" class="cmd">viewdata</a>, <a href="#cppviewdata" class="cmd">viewdata в С++</a>.
+<hr>
+<a name="connect"></a>
+<h4>void connect()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается, когда клиент устанавливает соединение с мадом.
+<hr>
+<a name="disconnect"></a>
+<h4>void disconnect()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается, когда клиент теряет соединение с мадом.
 <hr>
 <a name="clientapi"></a>
 <h2>Функции взаимодействия плагина с клиентом, API клиента</h2>

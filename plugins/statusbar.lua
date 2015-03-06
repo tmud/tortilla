@@ -96,3 +96,11 @@ function statusbar.init()
   values = {}
   regexp2 = cfg.regexp and createPcre(cfg.regexp) or nil
 end
+
+function statusbar.disconnect()
+  log("DISCONNECT!!!\r\n")
+end
+
+function statusbar.connect()
+  log("CONNECT!!!\r\n")
+end

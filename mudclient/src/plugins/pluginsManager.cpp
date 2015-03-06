@@ -284,9 +284,9 @@ void PluginsManager::processHistoryCmd(tstring *cmd)
         }
         else
         {
-            if (lua_isboolean(L, -1))            
+            if (lua_isboolean(L, -1))
             {
-                int r = lua_toboolean(L, -1);                
+                int r = lua_toboolean(L, -1);
                 if (!r) 
                 {
                     cmd->clear();
@@ -295,6 +295,32 @@ void PluginsManager::processHistoryCmd(tstring *cmd)
                 }
             }
             lua_pop(L, 1);
+        }
+    }
+}
+
+void PluginsManager::processConnectEvent()
+{
+    doPluginsMethod("connect");
+}
+
+void PluginsManager::processDisconnectEvent()
+{
+    doPluginsMethod("disconnect");
+}
+
+void PluginsManager::doPluginsMethod(const char* method)
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (!p->state()) continue;
+        if (!p->runMethod(method, 0, 0))
+        {
+            // restart plugins
+            turnoffPlugin(method, i);
+            lua_settop(L, 0);
+            i = 0;
         }
     }
 }
@@ -310,12 +336,12 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1) || !lua_isstring(L, -1))
         {
             // restart plugins
-            turnoffPlugin(method, i);            
-            lua_settop(L, 0);            
+            turnoffPlugin(method, i);
+            lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
         }
-    }    
+    }
     if (lua_isstring(L, -1))
     {
         Utf8ToWide u2w(lua_tostring(L, -1));

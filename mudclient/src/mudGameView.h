@@ -494,29 +494,40 @@ private:
         else if (result == NE_CONNECT)
         {
             m_processor.processNetworkConnect();
+            m_plugins.processConnectEvent();
         }
         else if (result == NE_DISCONNECT)
         {
             m_network.disconnect();
             m_processor.processNetworkDisconnect();
+            m_plugins.processDisconnectEvent();
         }
         else if (result == NE_ERROR)
         {
             m_network.disconnect();
             m_processor.processNetworkError();
+            m_plugins.processDisconnectEvent();
         }
         else if (result == NE_ERROR_CONNECT)
         {
             m_network.disconnect();
             m_processor.processNetworkConnectError();
+            m_plugins.processDisconnectEvent();
         }
         else if (result == NE_ERROR_MCCP)
         {
             m_network.disconnect();
             m_processor.processNetworkMccpError();
+            m_plugins.processDisconnectEvent();
         }
         return 0;
-    } 
+    }
+
+    void disconnectFromNetwork()
+    {
+        m_network.disconnect();
+        m_plugins.processDisconnectEvent();
+    }
 
     void sendToNetwork(const tstring& data)
     {
@@ -703,11 +714,6 @@ private:
     void setCmdBarFocus()
     {
         PostMessage(WM_USER + 4);
-    }
-
-    void disconnectFromNetwork()
-    {
-        m_network.disconnect();
     }
 
     MudViewString* getLastString(int view)
