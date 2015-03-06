@@ -3,6 +3,8 @@
 #include "pluginsViewRender.h"
 
 extern CFont* _stdfont;
+extern Palette256* _palette;
+extern PropertiesData* _pdata;
 
 PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
 m_inside_render(false), m_bkg_color(0), m_text_color(RGB(128,128,128)), m_width(0), m_height(0),
@@ -366,7 +368,6 @@ int render_fontheight(lua_State *L)
     }
     return pluginInvArgs(L, "render.fontheight");
 }
-
 
 void reg_mt_render(lua_State *L)
 {

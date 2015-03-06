@@ -114,17 +114,42 @@ public:
     }
     bool getrect(RECT *rc)
     {
-        if (get("left", &rc->left) &&
-            get("right", &rc->right) &&
-            get("top", &rc->top) &&
-            get("bottom", &rc->bottom))
-            return true;
-        if (get(1, &rc->left) &&
-            get(3, &rc->right) &&
-            get(2, &rc->top) &&
-            get(4, &rc->bottom))
-            return true;
-        return false;
+        bool left = false, right = false, top = false, bottom = false;
+
+        if (get("left", &rc->left))
+            left = true;
+        if (get("top", &rc->top))
+            top = true;
+        if (get("right", &rc->right))
+            right = true;
+        if (get("bottom", &rc->bottom))
+            bottom = true;
+
+        if (!left && (get("x", &rc->left) || get(1, &rc->left)) )
+            left = true;
+        if (!top && (get("y", &rc->top) || get(2, &rc->top)) )
+            top = true;
+        if (!right && get(3, &rc->right))
+            right = true;
+        if (!bottom && get(4, &rc->bottom))
+            bottom = true;
+
+        if (get("width", &rc->right))
+        {
+            if (right)
+                return false;
+            rc->right += rc->left;
+            right = true;
+        }
+
+        if (get("height", &rc->bottom))
+        {
+            if (bottom)
+                return false;
+            rc->bottom += rc->top;
+            bottom = true;
+        }
+        return (left && top && right && bottom) ? true : false;     
     }
 };
 

@@ -104,7 +104,7 @@ void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
     pluginLog(plugin_buffer);
 }
 //---------------------------------------------------------------------
-int addcommand(lua_State *L)
+int addCommand(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -121,7 +121,7 @@ int addcommand(lua_State *L)
     return pluginInvArgs(L, "addCommand");
 }
 
-int addmenu(lua_State *L)
+int addMenu(lua_State *L)
 {
     CAN_DO;
     int code = -1;
@@ -156,7 +156,7 @@ int addmenu(lua_State *L)
     return 0;
 }
 
-int checkmenu(lua_State *L)
+int checkMenu(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TNUMBER))
@@ -169,7 +169,7 @@ int checkmenu(lua_State *L)
     return pluginInvArgs(L, "checkMenu");
 }
 
-int uncheckmenu(lua_State *L)
+int uncheckMenu(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TNUMBER))
@@ -182,7 +182,7 @@ int uncheckmenu(lua_State *L)
     return pluginInvArgs(L, "uncheckMenu");
 }
 
-int enablemenu(lua_State *L)
+int enableMenu(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TNUMBER))
@@ -195,7 +195,7 @@ int enablemenu(lua_State *L)
     return pluginInvArgs(L, "enableMenu");
 }
 
-int disablemenu(lua_State *L)
+int disableMenu(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TNUMBER))
@@ -208,7 +208,7 @@ int disablemenu(lua_State *L)
     return pluginInvArgs(L, "disableMenu");
 }
 
-int addbutton(lua_State *L)
+int addButton(lua_State *L)
 {
     CAN_DO;
     int image = -1, code = -1; tstring hover;
@@ -237,7 +237,7 @@ int addbutton(lua_State *L)
     return 0;
 }
 
-int addtoolbar(lua_State *L)
+int addToolbar(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -250,7 +250,7 @@ int addtoolbar(lua_State *L)
     return 0;
 }
 
-int hidetoolbar(lua_State *L)
+int hideToolbar(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -261,7 +261,7 @@ int hidetoolbar(lua_State *L)
     return pluginInvArgs(L, "hideToolbar");
 }
 
-int showtoolbar(lua_State *L)
+int showToolbar(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -272,7 +272,7 @@ int showtoolbar(lua_State *L)
     return pluginInvArgs(L, "showToolbar");
 }
 
-int getpath(lua_State *L)
+int getPath(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
@@ -289,7 +289,7 @@ int getpath(lua_State *L)
     return pluginInvArgs(L, "getPath");
 }
 
-int getprofile(lua_State *L)
+int getProfile(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -299,7 +299,7 @@ int getprofile(lua_State *L)
     return pluginInvArgs(L, "getProfile");
 }
 
-int getparent(lua_State *L)
+int getParent(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -310,7 +310,7 @@ int getparent(lua_State *L)
     return pluginInvArgs(L, "getParent");
 }
 
-int loadtable(lua_State *L)
+int loadTable(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
@@ -404,7 +404,7 @@ int loadtable(lua_State *L)
     return pluginInvArgs(L, "loadData");
 }
 
-int savetable(lua_State *L)
+int saveTable(lua_State *L)
 {
     if (!luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
         return pluginInvArgs(L, "saveData");
@@ -557,7 +557,7 @@ int savetable(lua_State *L)
     return 0;
 }
 //----------------------------------------------------------------------------
-int createwindow(lua_State *L)
+int createWindow(lua_State *L)
 {
     PluginData &p = find_plugin();
     OutputWindow w;
@@ -593,7 +593,7 @@ int createwindow(lua_State *L)
     return 1;
 }
 
-int pluginlog(lua_State *L)
+int pluginLog(lua_State *L)
 {
     int n = lua_gettop(L);
     if (n == 0)
@@ -610,7 +610,7 @@ int pluginlog(lua_State *L)
     return 0;
 }
 
-int pluginterm(lua_State *L)
+int terminatePlugin(lua_State *L)
 {
     int n = lua_gettop(L);
     u8string log;
@@ -625,6 +625,30 @@ int pluginterm(lua_State *L)
     else
         pluginTerminate(L, "Termiated");
     return 0;
+}
+
+int getPaletteColor(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int index = lua_tointeger(L, 1);
+        if (index >= 0 && index <= 255)
+        {
+            lua_pushunsigned(L, _palette->getColor(index));
+            return 1;
+        }
+    }
+    return pluginInvArgs(L, "getPaletteColor");
+}
+
+int getDefaultBackgroundColor(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {       
+        lua_pushunsigned(L, _pdata->bkgnd);
+        return 1;
+    }
+    return pluginInvArgs(L, "getDefaultBackgroundColor");
 }
 //---------------------------------------------------------------------
 // Metatables for all types
@@ -647,24 +671,27 @@ bool initPluginsSystem()
     luaopen_table(L);
     lua_setglobal(L, "table");
     reg_string(L);
-    lua_register(L, "addCommand", addcommand);
-    lua_register(L, "addMenu", addmenu);
-    lua_register(L, "addButton", addbutton);
-    lua_register(L, "addToolbar", addtoolbar);
-    lua_register(L, "hideToolbar", hidetoolbar);
-    lua_register(L, "showToolbar", showtoolbar);
-    lua_register(L, "checkMenu", checkmenu);
-    lua_register(L, "uncheckMenu", uncheckmenu);
-    lua_register(L, "enableMenu", enablemenu);
-    lua_register(L, "disableMenu", disablemenu);
-    lua_register(L, "getPath", getpath);
-    lua_register(L, "getProfile", getprofile);
-    lua_register(L, "getParent", getparent);    
-    lua_register(L, "loadTable", loadtable);
-    lua_register(L, "saveTable", savetable);
-    lua_register(L, "createWindow", createwindow);
-    lua_register(L, "log", pluginlog);
-    lua_register(L, "terminate", pluginterm);
+    lua_register(L, "addCommand", addCommand);
+    lua_register(L, "addMenu", addMenu);
+    lua_register(L, "addButton", addButton);
+    lua_register(L, "addToolbar", addToolbar);
+    lua_register(L, "hideToolbar", hideToolbar);
+    lua_register(L, "showToolbar", showToolbar);
+    lua_register(L, "checkMenu", checkMenu);
+    lua_register(L, "uncheckMenu", uncheckMenu);
+    lua_register(L, "enableMenu", enableMenu);
+    lua_register(L, "disableMenu", disableMenu);
+    lua_register(L, "getPath", getPath);
+    lua_register(L, "getProfile", getProfile);
+    lua_register(L, "getParent", getParent);    
+    lua_register(L, "loadTable", loadTable);
+    lua_register(L, "saveTable", saveTable);
+    lua_register(L, "createWindow", createWindow);
+    lua_register(L, "log", pluginLog);
+    lua_register(L, "terminate", terminatePlugin);
+    lua_register(L, "getPaletteColor", getPaletteColor);
+    lua_register(L, "getDefaultBackgroundColor", getDefaultBackgroundColor);
+
     reg_activeobjects(L);
     reg_mt_window(L);
     reg_mt_viewdata(L);

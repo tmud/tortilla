@@ -16,7 +16,6 @@ function statusbar.version()
 end
 
 local objs = {}
---local log = system.dbglog
 local r, regexp, regexp2, values, cfg
 
 function statusbar.render()
@@ -92,20 +91,21 @@ function statusbar.init()
 
   local p = createPanel("bottom", 28)
   r = p:setrender(statusbar.render)
-  r:setbackground(0,0,0)
-  r:textcolor(192,192,192)
+  r:setbackground(getDefaultBackgroundColor())
+  r:textcolor(getPaletteColor(7))
   objs.font1 = r:defaultfont()
 
   --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
   --objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }
   --objs.font1 = r:createfont{ font="fixedsys", height = 11, bold = 0 }
 
-  regexp = createPcre("[0-9]+")  
+  regexp = createPcre("[0-9]+")
   values = {}
   regexp2 = cfg.regexp and createPcre(cfg.regexp) or nil
 end
 
 function statusbar.term(msg)
   cfg = nil
+  values = {} 
   terminate(msg)
 end
