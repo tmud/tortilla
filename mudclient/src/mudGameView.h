@@ -255,6 +255,7 @@ public:
     CFont *getStandardFont() { return &m_propElements.standard_font; }
     PropertiesManager* getPropManager() { return &m_manager; }
     Palette256* getPalette() { return &m_propElements.palette;  }
+    PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
 
 private:

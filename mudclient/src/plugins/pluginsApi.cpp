@@ -14,6 +14,7 @@ PropertiesData* _pdata;
 CFont* _stdfont;
 Palette256* _palette;
 PropertiesManager* _pmanager;
+PluginsManager* _plugins_manager;
 PluginsIdTableControl m_idcontrol(PLUGING_MENUID_START, PLUGING_MENUID_END);
 luaT_State L;
 
@@ -25,6 +26,7 @@ void initExternPtrs()
     _stdfont = _wndMain.m_gameview.getStandardFont();
     _palette = _wndMain.m_gameview.getPalette();
     _pmanager = _wndMain.m_gameview.getPropManager();
+    _plugins_manager = _wndMain.m_gameview.getPluginsManager();
 }
 //--------------------------------------------------------------------
 UINT getId(int code, bool button) { return m_idcontrol.registerPlugin(_cp, code, button); }
@@ -86,6 +88,14 @@ int pluginLog(lua_State *L, const utf8* msg)
     swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
+}
+
+void pluginTerminate(lua_State *L, const utf8* error)
+{
+    Utf8ToWide e(error);
+    swprintf(plugin_buffer, L"'%s' отключен. %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    pluginLog(plugin_buffer);
+    _plugins_manager->terminatePlugin(_cp);
 }
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
@@ -599,6 +609,23 @@ int pluginlog(lua_State *L)
     pluginLog(L, log.c_str());
     return 0;
 }
+
+int pluginterm(lua_State *L)
+{
+    int n = lua_gettop(L);
+    u8string log;
+    for (int i = 1; i <= n; ++i)
+    {
+        u8string el;
+        pluginFormatByType(L, i, &el);
+        log.append(el);
+    }
+    if (!log.empty())
+        pluginTerminate(L, log.c_str());
+    else
+        pluginTerminate(L, "Termiated");
+    return 0;
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -637,6 +664,7 @@ bool initPluginsSystem()
     lua_register(L, "saveTable", savetable);
     lua_register(L, "createWindow", createwindow);
     lua_register(L, "log", pluginlog);
+    lua_register(L, "terminate", pluginterm);
     reg_activeobjects(L);
     reg_mt_window(L);
     reg_mt_viewdata(L);

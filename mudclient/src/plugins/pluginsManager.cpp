@@ -309,6 +309,22 @@ void PluginsManager::processDisconnectEvent()
     doPluginsMethod("disconnect");
 }
 
+void PluginsManager::terminatePlugin(Plugin* p)
+{
+    if (!p) return;
+    int index = -1;
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        if (p == m_plugins[i])  { index = i; break; }
+    }
+    p->setOn(false);
+    if (index != -1)
+    {
+        PluginsDataValues &modules = m_propData->plugins;
+        modules[index].state = 0;
+    }
+}
+
 void PluginsManager::doPluginsMethod(const char* method)
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)

@@ -16,7 +16,7 @@ function statusbar.version()
 end
 
 local objs = {}
-local log = system.dbglog
+--local log = system.dbglog
 local r, regexp, regexp2, values, cfg
 
 function statusbar.render()
@@ -73,14 +73,22 @@ if regexp2 and v:find(regexp2) then
 end
 end
 
+function statusbar.disconnect()
+  values = {}
+  r:update()
+end
+
 function statusbar.init()
   local file = loadTable('config.xml')
   if not file then
-    cfg = nil
-    error("ошибка") --todo
-    return
+    return statusbar.term("Нет файла с настройками: "..getPath('config.xml'))
   end
+
   cfg = file.config
+  local function isnumber(x) return tonumber(x) ~= nil end
+  if not (isnumber(cfg.hp) and isnumber(cfg.mv) and isnumber(cfg.maxhp) and isnumber(cfg.maxmv)) then
+    return statusbar.term("Ошибка в файле настроек: "..getPath('config.xml'))
+  end
 
   local p = createPanel("bottom", 28)
   r = p:setrender(statusbar.render)
@@ -97,10 +105,7 @@ function statusbar.init()
   regexp2 = cfg.regexp and createPcre(cfg.regexp) or nil
 end
 
-function statusbar.disconnect()
-  log("DISCONNECT!!!\r\n")
-end
-
-function statusbar.connect()
-  log("CONNECT!!!\r\n")
+function statusbar.term(msg)
+  cfg = nil
+  terminate(msg)
 end

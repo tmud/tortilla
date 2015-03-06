@@ -24,6 +24,7 @@ public:
     void processHistoryCmd(tstring *cmd);
     void processConnectEvent();
     void processDisconnectEvent();
+    void terminatePlugin(Plugin* p);
 
 private:
     void initPlugins();
