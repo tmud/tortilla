@@ -2,10 +2,6 @@
 #include "pluginsApi.h"
 #include "pluginsViewRender.h"
 
-extern CFont* _stdfont;
-extern Palette256* _palette;
-extern PropertiesData* _pdata;
-
 PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
 m_inside_render(false), m_bkg_color(0), m_text_color(RGB(128,128,128)), m_width(0), m_height(0),
 current_pen(NULL), current_brush(NULL), current_font(NULL)
@@ -89,11 +85,6 @@ CFont* PluginsViewRender::createFont(lua_State *L)
     assert(L == renderL);
     fonts.setParentWnd(m_wnd);
     return fonts.create(L);
-}
-
-CFont* PluginsViewRender::createDefaultFont()
-{
-    return _stdfont;
 }
 
 void PluginsViewRender::selectPen(CPen* p)
@@ -266,21 +257,6 @@ int render_createfont(lua_State *L)
     return pluginInvArgs(L, "render.createfont");
 }
 
-int render_defaultfont(lua_State *L)
-{
-    if (luaT_check(L, 1, LUAT_RENDER))
-    {
-        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
-        CFont *f = r->createDefaultFont();
-        if (f)
-            luaT_pushobject(L, f, LUAT_FONT);
-        else
-            lua_pushnil(L);
-        return 1;
-    }
-    return pluginInvArgs(L, "render.defaultfont");
-}
-
 int render_select(lua_State *L)
 {
     if (luaT_check(L, 2, LUAT_RENDER, LUAT_PEN))
@@ -341,7 +317,7 @@ int render_print(lua_State *L)
     {
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         tstring text(TU2W(lua_tostring(L, 4)));
-        r->print(lua_tointeger(L, 2), lua_tointeger(L, 3), text);        
+        r->print(lua_tointeger(L, 2), lua_tointeger(L, 3), text);
         return 0;
     }
     return pluginInvArgs(L, "render.print");
@@ -379,7 +355,6 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "createpen", render_createpen);
     regFunction(L, "createbrush", render_createbrush);
     regFunction(L, "createfont", render_createfont);
-    regFunction(L, "defaultfont", render_defaultfont);
     regFunction(L, "select", render_select);
     regFunction(L, "rect", render_rect);
     regFunction(L, "solidrect", render_solidrect);

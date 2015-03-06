@@ -91,9 +91,9 @@ function statusbar.init()
 
   local p = createPanel("bottom", 28)
   r = p:setrender(statusbar.render)
-  r:setbackground(getDefaultBackgroundColor())
-  r:textcolor(getPaletteColor(7))
-  objs.font1 = r:defaultfont()
+  r:setbackground(props.backgroundColor())
+  r:textcolor(props.paletteColor(7))
+  objs.font1 = props.currentFont()
 
   --objs.pen1 = r:createpen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
   --objs.brush1 = r:createbrush{ style ="solid", r = 200, g = 0, b = 200 }

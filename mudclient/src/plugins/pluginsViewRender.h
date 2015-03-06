@@ -13,7 +13,6 @@ public:
     CPen* createPen(lua_State *L);
     CBrush* createBrush(lua_State *L);
     CFont* createFont(lua_State *L);
-    CFont* createDefaultFont();
     void selectPen(CPen* p);
     void selectBrush(CBrush* b);
     void selectFont(CFont* f);

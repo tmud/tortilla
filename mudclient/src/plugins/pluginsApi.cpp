@@ -626,36 +626,13 @@ int terminatePlugin(lua_State *L)
         pluginTerminate(L, "Termiated");
     return 0;
 }
-
-int getPaletteColor(lua_State *L)
-{
-    if (luaT_check(L, 1, LUA_TNUMBER))
-    {
-        int index = lua_tointeger(L, 1);
-        if (index >= 0 && index <= 255)
-        {
-            lua_pushunsigned(L, _palette->getColor(index));
-            return 1;
-        }
-    }
-    return pluginInvArgs(L, "getPaletteColor");
-}
-
-int getDefaultBackgroundColor(lua_State *L)
-{
-    if (luaT_check(L, 0))
-    {       
-        lua_pushunsigned(L, _pdata->bkgnd);
-        return 1;
-    }
-    return pluginInvArgs(L, "getDefaultBackgroundColor");
-}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
 void reg_mt_viewdata(lua_State *L);
 void reg_activeobjects(lua_State *L);
 void reg_string(lua_State *L);
+void reg_props(lua_State *L);
 void reg_mt_panels(lua_State *L);
 void reg_mt_render(lua_State *L);
 void reg_mt_pcre(lua_State *L);
@@ -689,9 +666,8 @@ bool initPluginsSystem()
     lua_register(L, "createWindow", createWindow);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
-    lua_register(L, "getPaletteColor", getPaletteColor);
-    lua_register(L, "getDefaultBackgroundColor", getDefaultBackgroundColor);
 
+    reg_props(L);
     reg_activeobjects(L);
     reg_mt_window(L);
     reg_mt_viewdata(L);
@@ -784,4 +760,47 @@ void reg_string(lua_State *L)
     lua_insert(L, -2);
     lua_setmetatable(L, -2);
     lua_pop(L, 1);
+}
+
+int paletteColor(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int index = lua_tointeger(L, 1);
+        if (index >= 0 && index <= 255)
+        {
+            lua_pushunsigned(L, _palette->getColor(index));
+            return 1;
+        }
+    }
+    return pluginInvArgs(L, "props.paletteColor");
+}
+
+int backgroundColor(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        lua_pushunsigned(L, _pdata->bkgnd);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.backgroundColor");
+}
+
+int currentFont(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        luaT_pushobject(L, _stdfont, LUAT_FONT);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.currentFont");
+}
+
+void reg_props(lua_State *L)
+{
+    lua_newtable(L);
+    regFunction(L, "paletteColor", paletteColor);
+    regFunction(L, "backgroundColor", backgroundColor);
+    regFunction(L, "currentFont", currentFont);
+    lua_setglobal(L, "props");
 }
