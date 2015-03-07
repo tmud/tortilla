@@ -46,6 +46,7 @@ bool PluginsViewRender::render()
             pluginError(L, "render", lua_tostring(L, -1));
         else
             pluginError(L, "render", "неизвестная ошибка");
+        lua_settop(L, 0);
     }
     m_inside_render = false;
     return result;

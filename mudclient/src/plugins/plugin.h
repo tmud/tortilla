@@ -8,7 +8,7 @@
 class Plugin
 {
 public:
-    Plugin() : empty(0), hModule(NULL), load_state(false), current_state(false) {}
+    Plugin() : empty(0), hModule(NULL), load_state(false), current_state(false), error_state(false), render_state(false) {}
     static bool isPlugin(const wchar_t* fname);
     bool loadPlugin(const wchar_t* fname);
     void unloadPlugin();
@@ -21,6 +21,10 @@ public:
     void closeWindow(HWND wnd);
     bool runMethod(const char* method, int args, int results);
     void updateProps();
+    void setErrorState() { error_state = true; }
+    bool isErrorState() const { return error_state; }
+    void setRenderState(bool state) { render_state = state; }
+    bool isRenderState() const { return render_state; }
 
     enum PluginState { FILE, FILENAME, NAME, VERSION, DESCRIPTION };
     const wchar_t* get(PluginState state) {
@@ -52,6 +56,8 @@ private:
     HMODULE hModule;            // dll module
     bool    load_state;
     bool    current_state;
+    bool    error_state;
+    bool    render_state;
     std::string module;         // name of module
     tstring file;
     tstring filename;           // name without extension

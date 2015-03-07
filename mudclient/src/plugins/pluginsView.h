@@ -7,13 +7,14 @@ class PluginsView : public CWindowImpl<PluginsView>
     CWindow m_child_window;
     Plugin *m_plugin;
     PluginsViewRender *m_render;
+    bool m_render_error;
 
 public:
     DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND + 1)
-    PluginsView(Plugin *p) : m_child_window(NULL), m_plugin(p), m_render(NULL) {}
+    PluginsView(Plugin *p) : m_child_window(NULL), m_plugin(p), m_render(NULL), m_render_error(false) {}
     ~PluginsView() { delete m_render; }
     const wchar_t* getPluginName() const;
-    
+
     void attachChild(HWND wnd)
     {
         m_child_window.Attach(wnd);
@@ -35,6 +36,16 @@ public:
         return (m_child_window.IsWindow()) ? true : false;
     }
 
+    bool isRenderErrorState() const
+    {
+        return m_render_error;
+    }
+
+    void resetRenderErrorState()
+    {
+        m_render_error = false;
+    }
+
 private:
     BEGIN_MSG_MAP(PluginsView)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
@@ -46,9 +57,7 @@ private:
     {
         if (!m_child_window.IsWindow())
         {
-            if (m_render)
-                render();
-            else
+            if (!render())
             {
                 CPaintDC dc(m_hWnd);
                 RECT rc; GetClientRect(&rc);
@@ -72,7 +81,6 @@ private:
     {
         return 1; // handled, no background painting needed
     }
-
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&)
     {
         m_hWnd = NULL;
@@ -80,5 +88,5 @@ private:
     }
 private:
     int  reg_pview_render(lua_State* L);
-    void render();
+    bool render();
 };

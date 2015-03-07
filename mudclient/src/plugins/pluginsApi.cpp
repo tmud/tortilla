@@ -28,6 +28,12 @@ void initExternPtrs()
     _pmanager = _wndMain.m_gameview.getPropManager();
     _plugins_manager = _wndMain.m_gameview.getPluginsManager();
 }
+
+void collectGarbage()
+{
+    if (L)
+        lua_gc(L, LUA_GCSTEP, 1);
+}
 //--------------------------------------------------------------------
 UINT getId(int code, bool button) { return m_idcontrol.registerPlugin(_cp, code, button); }
 UINT delCode(int code, bool button) { return m_idcontrol.unregisterByCode(_cp, code, button); }
@@ -88,14 +94,6 @@ int pluginLog(lua_State *L, const utf8* msg)
     swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
     pluginLog(plugin_buffer);
     return 0;
-}
-
-void pluginTerminate(lua_State *L, const utf8* error)
-{
-    Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s' отключен. %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
-    pluginLog(plugin_buffer);
-    _plugins_manager->terminatePlugin(_cp);
 }
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
@@ -319,7 +317,7 @@ int loadTable(lua_State *L)
         filename.assign(pp);
 
         DWORD fa = GetFileAttributes(filename.c_str());
-        if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)        
+        if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)
             return 0;
         xml::node doc;
         if (!doc.load(WideToUtf8(pp)) )
@@ -612,6 +610,9 @@ int pluginLog(lua_State *L)
 
 int terminatePlugin(lua_State *L)
 {
+    if (!_cp)
+        { assert(false); return 0; }
+
     int n = lua_gettop(L);
     u8string log;
     for (int i = 1; i <= n; ++i)
@@ -620,10 +621,13 @@ int terminatePlugin(lua_State *L)
         pluginFormatByType(L, i, &el);
         log.append(el);
     }
-    if (!log.empty())
-        pluginTerminate(L, log.c_str());
-    else
-        pluginTerminate(L, "Termiated");
+    _cp->setErrorState();
+
+    if (log.empty())
+        log.assign("TERMINATE");
+    lua_settop(L, 0);
+    lua_pushstring(L, log.c_str());
+    lua_error(L);
     return 0;
 }
 //---------------------------------------------------------------------

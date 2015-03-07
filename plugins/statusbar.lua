@@ -45,7 +45,7 @@ end
 
 function statusbar.print(msg)
   r:select(objs.font1)
-  local y = (r:height()-r:fontheight()) / 2
+  local y = (r:height()-r:fontHeight()) / 2
   r:print(4, y, msg)
 end
 

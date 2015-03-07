@@ -7,12 +7,6 @@
 extern luaT_State L;
 extern Plugin* _cp;
 
-void collectGarbage()
-{
-    if (L)
-      lua_gc(L, LUA_GCSTEP, 1);
-}
-
 PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props)
 { 
 }
@@ -309,6 +303,16 @@ void PluginsManager::processDisconnectEvent()
     doPluginsMethod("disconnect");
 }
 
+void PluginsManager::processTick()
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (p->state() && p->isErrorState())
+            turnoffPlugin("render", i);
+    }
+}
+
 void PluginsManager::terminatePlugin(Plugin* p)
 {
     if (!p) return;
@@ -430,7 +434,7 @@ void PluginsManager::turnoffPlugin(const char* method, int plugin_index)
     Plugin *p = m_plugins[plugin_index];
     Plugin *old = p;
     _cp = p;
-    pluginError(L, method, "Ошибка в методе. Плагин отключен!");
+    pluginError(L, "Плагин отключен!");
     p->setOn(false);
     _cp = old;
     PluginsDataValues &modules = m_propData->plugins;

@@ -80,6 +80,11 @@ void pluginDeleteResources(Plugin *plugin);
 void Plugin::setOn(bool on)
 {
     if (!current_state && on) {
+        error_state = false;
+        for (int i = 0, e = dockpanes.size(); i < e; ++i)
+            dockpanes[i]->resetRenderErrorState();
+        for (int i = 0, e = panels.size(); i < e; ++i)
+            panels[i]->resetRenderErrorState();
         current_state = true;
         runMethod("init", 0, 0);
     }
@@ -127,6 +132,7 @@ bool Plugin::runMethod(const char* method, int args, int results)
         else
             pluginError(L, method, "неизвестная ошибка");
         _cp = old;
+        lua_settop(L, 0);
         return false;
     }
     _cp = old;

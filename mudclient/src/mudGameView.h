@@ -556,6 +556,7 @@ private:
                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
                m_history.truncateStrings(m_propData->view_history_size);
             }
+            m_plugins.processTick();
         }
         else if (id == 2)
         {

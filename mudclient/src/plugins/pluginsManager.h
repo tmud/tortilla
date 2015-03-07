@@ -1,7 +1,6 @@
 #pragma once
 
 #include "plugin.h"
-void collectGarbage();
 
 class PluginsManager
 {
@@ -24,7 +23,7 @@ public:
     void processHistoryCmd(tstring *cmd);
     void processConnectEvent();
     void processDisconnectEvent();
-    void terminatePlugin(Plugin* p);
+    void processTick();
 
 private:
     void initPlugins();
@@ -32,4 +31,5 @@ private:
     bool doPluginsTableMethod(const char* method, std::vector<tstring>* cmds);
     void doPluginsMethod(const char* method);
     void turnoffPlugin(const char* method, int plugin_index);
+    void terminatePlugin(Plugin* p);
 };
