@@ -76,7 +76,7 @@ function statusbar.drawbars()
 
   pos.x = pos.x + pos.width + delta_bars
   local mvp = statusbar.calcpercents(values.mv, values.maxmv)
-  statusbar.drawbar({text="MV:",percents=mvp,brush1=objs.mvbrush1,brush2=objs.mvbrush2}, pos)
+  statusbar.drawbar({text="MV:",percents=mvp,brush1=objs.mvbrush1,brush2=objs.mvbrush2,color=255*256}, pos)
 end
 
 function statusbar.print(msg)
