@@ -72,7 +72,7 @@ int window_dock(lua_State *L)
             _wndMain.m_gameview.dockDockPane(v, dock_side);
             return 0;
         }
-        pluginError(L, "window.dock", "Некорректный параметр side");
+        pluginError("window.dock", "Некорректный параметр side");
         return 0;
     }
 
@@ -101,7 +101,7 @@ int window_block(lua_State *L)
             _wndMain.m_gameview.blockDockPane(v, dock_side);
             return 0;
         }
-        pluginError(L, "window.block", "Некорректный параметр side");
+        pluginError("window.block", "Некорректный параметр side");
         return 0;
     }
     return pluginInvArgs(L, "window.block");
@@ -118,7 +118,7 @@ int window_unblock(lua_State *L)
             _wndMain.m_gameview.unblockDockPane(v, dock_side);
             return 0;
         }
-        pluginError(L, "window.unblock", "Некорректный параметр side");
+        pluginError("window.unblock", "Некорректный параметр side");
         return 0;
     }
     return pluginInvArgs(L, "window.unblock");

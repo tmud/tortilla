@@ -85,8 +85,9 @@ void Plugin::setOn(bool on)
             dockpanes[i]->resetRenderErrorState();
         for (int i = 0, e = panels.size(); i < e; ++i)
             panels[i]->resetRenderErrorState();
+        if (!runMethod("init", 0, 0))
+            error_state = true;
         current_state = true;
-        runMethod("init", 0, 0);
     }
     else if (current_state && !on) {
         current_state = false;
@@ -128,9 +129,9 @@ bool Plugin::runMethod(const char* method, int args, int results)
     {
         // error in call
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(L, method, lua_tostring(L, -1));
+            pluginError(method, lua_tostring(L, -1));
         else
-            pluginError(L, method, "неизвестная ошибка");
+            pluginError(method, "неизвестная ошибка");
         _cp = old;
         lua_settop(L, 0);
         return false;

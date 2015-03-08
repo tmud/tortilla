@@ -434,7 +434,7 @@ void PluginsManager::turnoffPlugin(const char* method, int plugin_index)
     Plugin *p = m_plugins[plugin_index];
     Plugin *old = p;
     _cp = p;
-    pluginError(L, "Плагин отключен!");
+    pluginError("Плагин отключен!");
     p->setOn(false);
     _cp = old;
     PluginsDataValues &modules = m_propData->plugins;

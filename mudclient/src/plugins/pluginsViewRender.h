@@ -19,7 +19,7 @@ public:
 
     void drawRect(const RECT& r);
     void drawSolidRect(const RECT& r);
-    void print(int x, int y, const tstring& text);
+    int  print(int x, int y, const tstring& text);
     void update();
     int  getFontHeight();
 

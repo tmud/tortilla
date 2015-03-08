@@ -13,10 +13,11 @@ bool PluginsViewRender::render()
 {
     lua_State *L = renderL;
 
-    CPaintDC dc(m_wnd);
-    m_dc = dc;
-
     RECT rc; m_wnd.GetClientRect(&rc);
+    CPaintDC dc(m_wnd);
+    CMemoryDC mdc(dc, rc);
+    m_dc = mdc;
+
     m_width = rc.right; m_height = rc.bottom;
     m_dc.FillSolidRect(&rc, m_bkg_color);
 
@@ -43,9 +44,9 @@ bool PluginsViewRender::render()
         // error in call
         result = false;
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(L, "render", lua_tostring(L, -1));
+            pluginError("render", lua_tostring(L, -1));
         else
-            pluginError(L, "render", "неизвестная ошибка");
+            pluginError("render", "неизвестная ошибка");
         lua_settop(L, 0);
     }
     m_inside_render = false;
@@ -135,15 +136,18 @@ void PluginsViewRender::drawSolidRect(const RECT& r)
     drawRect(r);
 }
 
-void PluginsViewRender::print(int x, int y, const tstring& text)
+int PluginsViewRender::print(int x, int y, const tstring& text)
 {
     if (!m_inside_render)
-        return;
+        return 0;
     m_dc.SetBkMode(TRANSPARENT);
     m_dc.SetTextColor(m_text_color);
     if (current_font)
         m_dc.SelectFont(*current_font);
+    SIZE sz = { 0, 0 };
+    GetTextExtentPoint32(m_dc, text.c_str(), text.length(), &sz);
     m_dc.TextOut(x, y, text.c_str(), text.length());
+    return sz.cx;
 }
 
 void PluginsViewRender::update()
@@ -328,8 +332,9 @@ int render_print(lua_State *L)
     {
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         tstring text(TU2W(lua_tostring(L, 4)));
-        r->print(lua_tointeger(L, 2), lua_tointeger(L, 3), text);
-        return 0;
+        int width = r->print(lua_tointeger(L, 2), lua_tointeger(L, 3), text);
+        lua_pushinteger(L, width);
+        return 1;
     }
     return pluginInvArgs(L, "render.print");
 }

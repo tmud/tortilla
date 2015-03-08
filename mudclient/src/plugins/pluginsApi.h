@@ -12,9 +12,9 @@ void tmcLog(const tstring& msg);
 void pluginLog(const tstring& msg);
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname);
 int  pluginInvArgs(lua_State *L, const utf8* fname);
-int  pluginError(lua_State *L, const utf8* fname, const utf8* error);
-int  pluginError(lua_State *L, const utf8* error);
-int  pluginLog(lua_State *L, const utf8* msg);
+int  pluginError(const utf8* fname, const utf8* error);
+int  pluginError(const utf8* error);
+int  pluginLog(const utf8* msg);
 void pluginsMenuCmd(UINT id);
 void pluginsUpdateActiveObjects(int type);
 

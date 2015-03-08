@@ -71,7 +71,7 @@ int pluginInvArgs(lua_State *L, const utf8* fname)
     return 0;
 }
 
-int pluginError(lua_State *L, const utf8* fname, const utf8* error)
+int pluginError(const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
     Utf8ToWide e(error);
@@ -80,7 +80,7 @@ int pluginError(lua_State *L, const utf8* fname, const utf8* error)
     return 0;
 }
 
-int pluginError(lua_State *L, const utf8* error)
+int pluginError(const utf8* error)
 {
     Utf8ToWide e(error);
     swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
@@ -88,7 +88,7 @@ int pluginError(lua_State *L, const utf8* error)
     return 0;
 }
 
-int pluginLog(lua_State *L, const utf8* msg)
+int pluginLog(const utf8* msg)
 {
     Utf8ToWide e(msg);
     swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
@@ -282,7 +282,7 @@ int getPath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginError(L, "getPath", "Ошибка создания каталога для плагина");
+        return pluginError("getPath", "Ошибка создания каталога для плагина");
     }
     return pluginInvArgs(L, "getPath");
 }
@@ -325,7 +325,7 @@ int loadTable(lua_State *L)
             W2U f(filename);
             utf8 buffer[128];
             sprintf(buffer, "Ошибка чтения: %s", (const utf8*)f);
-            pluginError(L, "loadData", buffer);
+            pluginError("loadData", buffer);
             return 0;
         }
         lua_pop(L, 1);
@@ -542,14 +542,14 @@ int saveTable(lua_State *L)
     }
 
     if (incorrect_data)
-        pluginError(L, "saveData", "Неверные данные в исходных данных.");
+        pluginError("saveData", "Неверные данные в исходных данных.");
 
     if (!result)
     {
        W2U f(filepath);
        utf8 buffer[128];
        sprintf(buffer, "Ошибка записи: %s", (const utf8*)f);
-       pluginError(L, "saveData", buffer);
+       pluginError("saveData", buffer);
     }
     root.deletenode();
     return 0;
@@ -604,7 +604,7 @@ int pluginLog(lua_State *L)
         pluginFormatByType(L, i, &el);
         log.append(el);
     }
-    pluginLog(L, log.c_str());
+    pluginLog(log.c_str());
     return 0;
 }
 
