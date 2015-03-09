@@ -30,6 +30,6 @@ private:
     bool doPluginsStringMethod(const char* method, tstring *str);
     bool doPluginsTableMethod(const char* method, std::vector<tstring>* cmds);
     void doPluginsMethod(const char* method);
-    void turnoffPlugin(const char* method, int plugin_index);
+    void turnoffPlugin(const char* error, int plugin_index);
     void terminatePlugin(Plugin* p);
 };

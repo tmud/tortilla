@@ -109,7 +109,7 @@ void Plugin::closeWindow(HWND wnd)
     runMethod("closewindow", 1, 0);
 }
 
-bool Plugin::runMethod(const char* method, int args, int results)
+bool Plugin::runMethod(const char* method, int args, int results, bool *not_supported)
 {
     lua_getglobal(L, module.c_str());
     if (!lua_istable(L, -1))
@@ -119,6 +119,7 @@ bool Plugin::runMethod(const char* method, int args, int results)
     if (!lua_isfunction(L, -1)) // not supported function in plugin
     {
         lua_pop(L, 2);
+        if (not_supported) *not_supported = true;
         return true;
     }
     lua_insert(L, -(args + 2));
