@@ -131,6 +131,8 @@ NetworkEvents Network::processMsg(DWORD msg_lparam)
     if (error)
     {   if (error == WSAECONNREFUSED || error == WSAETIMEDOUT)
             return NE_ERROR_CONNECT;
+        if (error == WSAECONNABORTED)
+            return NE_DISCONNECT;
         return NE_ERROR;
     }
 

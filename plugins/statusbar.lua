@@ -3,11 +3,11 @@
 
 statusbar = {}
 function statusbar.name() 
-    return 'Гистограммы здоровья и энергии'
+    return 'Гистограммы здоровья, маны и энергии'
 end
 
 function statusbar.description()
-return 'Плагин отображает информацию о здоровье и энергии\r\n\z
+return 'Плагин отображает информацию о здоровье, мане и энергии\r\n\z
 в виде полосок на отдельной панели клиента.'
 end
 
@@ -34,34 +34,32 @@ function statusbar.render()
   end
 end
 
-function statusbar.calcpercents(v, max)
-  local val = tonumber(v)
-  local maxval = tonumber(max)
-  if not val or not maxval then
-    return 0
-  end
-  if val <= 0 or maxval <= 0 then
-    return 0
-  end
-  local percents = 100
-  if val < maxval then
-    pecents = val * 100  / maxval
-  end
-  return percents
-end
-
 function statusbar.drawbar(t, pos)
+  local val = tonumber(t.val)
+  local maxval = tonumber(t.maxval)
+  if not val or not maxval then return false end
+
+  local percents = 0
+  if val > 0 and maxval > 0 then
+    if val < maxval then 
+    percents = val * 100 / maxval
+    else
+      percents = 100
+    end
+  end
+
   local textlen = 0
   if t.text then
     r:textColor(t.color)
     textlen = r:print(pos.x, pos.y, t.text) + 2
   end
   local barlen = pos.width - textlen
-  local v = (barlen * t.percents) / 100
+  local v = (barlen * percents) / 100
   r:select(t.brush1)
-  r:solidRect{ x=pos.x+textlen, y=pos.y, width=v, height = pos.height}
+  r:solidRect{x=pos.x+textlen, y=pos.y, width=v, height = pos.height}
   r:select(t.brush2)
-  r:solidRect{ x=pos.x+textlen+v, y=pos.y, width=barlen-v, height = pos.height}
+  r:solidRect{x=pos.x+textlen+v, y=pos.y, width=barlen-v, height = pos.height}
+  return true
 end
 
 function statusbar.drawbars()
@@ -71,15 +69,22 @@ function statusbar.drawbars()
   local h = r:fontHeight()
   local pos = { x=4, y=(r:height()-h)/2, width=w, height=h }
 
-  local hpp = statusbar.calcpercents(values.hp, values.maxhp)
-  statusbar.drawbar({text="HP:",percents=hpp,brush1=objs.hpbrush1,brush2=objs.hpbrush2,color=255}, pos)
+  local hpbar = {val=values.hp, maxval=values.maxhp,text="HP:",brush1=objs.hpbrush1,brush2=objs.hpbrush2,color={r=255}}
+  if statusbar.drawbar(hpbar, pos) then
+    pos.x = pos.x + pos.width + delta_bars
+  end
 
-  pos.x = pos.x + pos.width + delta_bars
-  local mvp = statusbar.calcpercents(values.mv, values.maxmv)
-  statusbar.drawbar({text="MV:",percents=mvp,brush1=objs.mvbrush1,brush2=objs.mvbrush2}, pos)
+  local mnbar = {val=values.mn, maxval=values.maxmn,text="MA:",brush1=objs.mnbrush1,brush2=objs.mnbrush2,color={b=255}}
+  if statusbar.drawbar(mnbar, pos) then
+    pos.x = pos.x + pos.width + delta_bars
+  end
+
+  local mvbar = {val=values.mv, maxval=values.maxmv,text="MV:",brush1=objs.mvbrush1,brush2=objs.mvbrush2,color={r=255,g=255}}
+  statusbar.drawbar(mvbar, pos)
 end
 
 function statusbar.print(msg)
+  r:textColor(props.paletteColor(7))
   local y = (r:height()-r:fontHeight()) / 2
   r:print(4, y, msg)
 end
@@ -92,9 +97,11 @@ for i=1,v:size() do
     if regexp:findall(v:getPrompt()) then
     values.hp = regexp:get(cfg.hp)
     values.mv = regexp:get(cfg.mv)
+    values.mn = regexp:get(cfg.mn)
     if not regexp2 then
       values.maxhp = regexp:get(cfg.maxhp)
       values.maxmv = regexp:get(cfg.maxmv)
+      valuse.maxmn = regexp:get(cfg.maxmn)
     end
     r:update()
     end
@@ -103,6 +110,7 @@ end
 if regexp2 and v:find(regexp2) then
   values.maxhp = regexp2:get(cfg.maxhp)
   values.maxmv = regexp2:get(cfg.maxmv)
+  values.maxmn = regexp2:get(cfg.maxmn)
   r:update()
 end
 end
@@ -119,10 +127,7 @@ function statusbar.init()
   end
 
   cfg = file.config
-  local function isnumber(x) return tonumber(x) ~= nil end
-  if not (isnumber(cfg.hp) and isnumber(cfg.mv) and isnumber(cfg.maxhp) and isnumber(cfg.maxmv)) then
-    return statusbar.term("Ошибка в файле настроек: "..getPath('config.xml'))
-  end
+
   if cfg.regexp then
     regexp2 = createPcre(cfg.regexp)
     if not regexp2 then
@@ -141,10 +146,9 @@ function statusbar.init()
   objs.hpbrush2 = r:createBrush{ style ="solid", r = 128, g = 0, b = 0 }
   objs.mvbrush1 = r:createBrush{ style ="solid", r = 255, g = 255, b = 0 }
   objs.mvbrush2 = r:createBrush{ style ="solid", r = 128, g = 128, b = 0 }
+  objs.mnbrush1 = r:createBrush{ style ="solid", r = 0, g = 0, b = 255 }
+  objs.mnbrush2 = r:createBrush{ style ="solid", r = 0, g = 0, b = 128 }
 
-  --objs.pen1 = r:createPen{ style ="solid", width = 1, r = 0, g = 0, b = 120 }
-  --objs.brush1 = r:createBrush{ style ="solid", r = 200, g = 0, b = 200 }
-  --objs.font1 = r:createFont{ font="fixedsys", height = 11, bold = 0 }
   values = {}
 end
 

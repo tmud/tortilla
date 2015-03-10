@@ -343,7 +343,7 @@ struct PropertiesData
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(1), clear_bar(1), disable_ya(0)
-       , history_tab(0), timers_on(0), plugins_logs(0), plugins_logs_window(0), recognize_prompt(0)
+       , history_tab(0), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();
