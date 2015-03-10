@@ -373,7 +373,7 @@ private:
         return 0;
     }
 
-    LRESULT OnParentClose(UINT, WPARAM, LPARAM lparam, BOOL&bHandled)    
+    LRESULT OnParentClose(UINT, WPARAM, LPARAM lparam, BOOL&bHandled)
     {
         saveClientWindowPos();
         savePluginWindowPos();
