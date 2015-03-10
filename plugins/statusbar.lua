@@ -101,7 +101,7 @@ for i=1,v:size() do
     if not regexp2 then
       values.maxhp = regexp:get(cfg.maxhp)
       values.maxmv = regexp:get(cfg.maxmv)
-      valuse.maxmn = regexp:get(cfg.maxmn)
+      values.maxmn = regexp:get(cfg.maxmn)
     end
     r:update()
     end
@@ -142,12 +142,12 @@ function statusbar.init()
   r:textColor(props.paletteColor(7))
   r:select(props.currentFont())
 
-  objs.hpbrush1 = r:createBrush{ style ="solid", r = 255, g = 0, b = 0 }
-  objs.hpbrush2 = r:createBrush{ style ="solid", r = 128, g = 0, b = 0 }
-  objs.mvbrush1 = r:createBrush{ style ="solid", r = 255, g = 255, b = 0 }
-  objs.mvbrush2 = r:createBrush{ style ="solid", r = 128, g = 128, b = 0 }
-  objs.mnbrush1 = r:createBrush{ style ="solid", r = 0, g = 0, b = 255 }
-  objs.mnbrush2 = r:createBrush{ style ="solid", r = 0, g = 0, b = 128 }
+  objs.hpbrush1 = r:createBrush{style ="solid", color={r=255}}
+  objs.hpbrush2 = r:createBrush{style ="solid", color={r=128}}
+  objs.mvbrush1 = r:createBrush{style ="solid", color={r=255,g=255}}
+  objs.mvbrush2 = r:createBrush{style ="solid", color={r=128,g=128}}
+  objs.mnbrush1 = r:createBrush{style ="solid", color={b=255}}
+  objs.mnbrush2 = r:createBrush{style ="solid", color={b = 128}}
 
   values = {}
 end

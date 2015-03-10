@@ -104,13 +104,33 @@ public:
         return result;
     }
 
-    void getcolor(COLORREF *color)
+    bool getcolor(COLORREF *color)
     {
-        int r = 0, g = 0, b = 0;
-        get("r", 0, 255, &r);
-        get("g", 0, 255, &g);
-        get("b", 0, 255, &b);
-        *color = RGB(r, g, b);
+        lua_pushstring(L, "color");
+        lua_gettable(L, -2);
+        return parsecolor(color);
+    }
+
+    bool parsecolor(COLORREF *color)
+    {
+        bool result = false;
+        if (lua_isnumber(L, -1))
+        {
+            *color = lua_tounsigned(L, -1);
+            result = true;
+        }
+        else if (lua_istable(L, -1))
+        {
+            int r = 0, g = 0, b = 0;
+            get("r", 0, 255, &r);
+            get("g", 0, 255, &g);
+            get("b", 0, 255, &b);
+            *color = RGB(r, g, b);
+            result = true;
+        }      
+        lua_pop(L, 1);
+        return result;
+
     }
     bool getrect(RECT *rc)
     {

@@ -202,6 +202,15 @@ int render_textColor(lua_State *L)
         r->setTextColor(color);
         return 0;
     }
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        ParametersReader reader(L);
+        COLORREF color = 0;
+        reader.parsecolor(&color);
+        r->setTextColor(color);
+        return 0;
+    }
     return pluginInvArgs(L, "render.textColor");
 }
 
