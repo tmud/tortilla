@@ -623,10 +623,11 @@ u8string x( TW2U(L"строка") );
 <a name="luaapi"></a>
 <h3>API клиента Lua</h3>
 В данно разделе представлен набор функций, которые встроены в виртуальную машину Lua клиента.<br>
-Подключены:
+Подключены следующие функции и модули из стандартных библиотек <div class="m">Lua</div>:
 <ul>
 <li>Все стандартные методы Lua, функции: <div class="m">assert</div>, <div class="m">type</div>, <div class="m">tonumber</div>, <div class="m">tostring</div> и другие (см. документацию к <div class="m">Lua</div>).</li>
 <li>Методы по работе таблицами: <div class="m">table.sort</div>, <div class="m">table.insert</div>, <div class="m">table.remove</div>, <div class="m">table.concat</div>, и др.</li>
+<li>Математические методы: <div class="m">math.floor</div>, <div class="m">math.ceil</div>, <div class="m">math.random</div>, <div class="m">math.min</div>, <div class="m">math.max</div> и др.</li>
 </ul>
 Также подключены и функции <div class="m">API</div>. Данные методы доступны и из <div class="m">С++</div> кода с помощью метода <div class="cmd">luaT_run</div>. Если 
 понять механизм взаимосвязи C++ - Lua, то можно вызывать любые функции Lua из кода С++.

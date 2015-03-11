@@ -118,22 +118,25 @@ void PluginsViewRender::drawRect(const RECT& r)
 {
     if (!m_inside_render)
         return;
+    if (r.left >= r.right || r.top >= r.bottom)
+        return;
     if (current_pen)
-        m_dc.SelectPen(*current_pen);
+        m_dc.SelectPen(*current_pen);    
     m_dc.MoveTo(r.left, r.top);
-    m_dc.LineTo(r.right, r.top);
-    m_dc.LineTo(r.right, r.bottom);
-    m_dc.LineTo(r.left, r.bottom);
-    m_dc.LineTo(r.left, r.top);    
+    m_dc.LineTo(r.right-1, r.top);
+    m_dc.LineTo(r.right-1, r.bottom-1);
+    m_dc.LineTo(r.left, r.bottom-1);
+    m_dc.LineTo(r.left, r.top);
 }
 
 void PluginsViewRender::drawSolidRect(const RECT& r)
 {
     if (!m_inside_render)
         return;
+    if (r.left > r.right || r.top > r.bottom)
+        return;
     if (current_brush)
         m_dc.FillRect(&r, *current_brush);
-    drawRect(r);
 }
 
 int PluginsViewRender::print(int x, int y, const tstring& text)

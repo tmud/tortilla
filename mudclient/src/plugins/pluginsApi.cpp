@@ -649,6 +649,8 @@ bool initPluginsSystem()
 
     luaopen_base(L);
     lua_pop(L, 1);
+    luaopen_math(L);
+    lua_setglobal(L, "math");
     luaopen_table(L);
     lua_setglobal(L, "table");
     reg_string(L);

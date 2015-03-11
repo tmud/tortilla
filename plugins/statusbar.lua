@@ -17,6 +17,7 @@ end
 
 local objs = {}
 local r, regexp, regexp2, values, cfg
+local round = math.floor
 
 function statusbar.render()
   if not cfg then
@@ -54,18 +55,18 @@ function statusbar.drawbar(t, pos)
     textlen = r:print(pos.x, pos.y, t.text) + 2
   end
   local barlen = pos.width - textlen
-  local v = (barlen * percents) / 100
+  local v = round( (barlen * percents) / 100 )
   r:select(t.brush1)
-  r:solidRect{x=pos.x+textlen, y=pos.y, width=v, height = pos.height}
+  r:solidRect{x=pos.x+textlen, y=pos.y, width=v-1, height = pos.height}
   r:select(t.brush2)
   r:solidRect{x=pos.x+textlen+v, y=pos.y, width=barlen-v, height = pos.height}
   return true
 end
 
 function statusbar.drawbars()
-  local bars = 2
+  local bars = 3
   local delta_bars = 8
-  local w = ((r:width()/10*3) - delta_bars*(bars-1)) / bars
+  local w = round( ((r:width()/10*4) - delta_bars*(bars-1)) / bars )
   local h = r:fontHeight()
   local pos = { x=4, y=(r:height()-h)/2, width=w, height=h }
 
@@ -147,7 +148,7 @@ function statusbar.init()
   objs.mvbrush1 = r:createBrush{style ="solid", color={r=255,g=255}}
   objs.mvbrush2 = r:createBrush{style ="solid", color={r=128,g=128}}
   objs.mnbrush1 = r:createBrush{style ="solid", color={b=255}}
-  objs.mnbrush2 = r:createBrush{style ="solid", color={b = 128}}
+  objs.mnbrush2 = r:createBrush{style ="solid", color={b=128}}
 
   values = {}
 end
