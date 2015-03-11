@@ -12,20 +12,20 @@
 class parser
 {
 public:
-    parser(const tstring&cmdname, tstring *error_out) { cmd = new InputCommand(cmdname); perror = error_out; }
-    ~parser() { delete cmd; }
-    int size() const { return cmd->parameters_list.size(); }
-    const tstring& at(int index) const { return cmd->parameters_list[index]; }
-    const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
-    const tstring& params() const { return cmd->parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
+    parser(const tstring&cmdname, tstring *error_out) : cmd(cmdname) { perror = error_out; }
+    int size() const { return cmd.parameters_list.size(); }
+    const tstring& at(int index) const { return cmd.parameters_list[index]; }
+    const tchar* c_str(int index) const { return cmd.parameters_list[index].c_str(); }
+    const tstring& params() const { return cmd.parameters; }
+    bool isInteger(int index) const { const tstring& p = cmd.parameters_list[index];
         return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return _wtoi(p.c_str()); }
-    void error(const tstring& errmsg) { perror->assign(errmsg); }
+    int toInteger(int index) const { const tstring& p = cmd.parameters_list[index];
+        return _wtoi(p.c_str()); }    
     void invalidargs() { error(L"Некорректный набор параметров."); }
+    void invalidoperation() { error(L"Некорректная операция."); }
 private:
-    InputCommand *cmd;
+    void error(const tstring& errmsg) { perror->assign(errmsg); }
+    InputCommand cmd;
     tstring *perror;
 };
 //-------------------------------------------------------------------
@@ -110,7 +110,7 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
             tmcLog(L"Команда заблокирована");
             return;
         }
-        
+
         if (propData->show_system_commands)
             simpleLog(fullcmd);
 
@@ -313,7 +313,7 @@ IMPL(var)
         if (n == 0)
             helper->tmcLog(L"Переменные(vars):");
         else
-        {   
+        {
             swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
@@ -403,7 +403,7 @@ IMPL(group)
         }
         return;
     }
-   
+
     int index = -1;
     tstring group( (n==1) ? p->at(0) : p->at(1) );
     for (int i=0,e=propData->groups.size(); i<e; ++i)
@@ -554,7 +554,7 @@ IMPL(password)
         {
             tstring msg(L"*****\r\n");
             processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS);
-            WCHAR br[2] = { 10, 0 };            
+            WCHAR br[2] = { 10, 0 };
             pass.append(br);
             sendToNetwork(pass);
         }
@@ -586,7 +586,7 @@ IMPL(ifop)
         if (result == IfProcessor::IF_SUCCESS)
             processCommand(p->at(1));
         else if (result == IfProcessor::IF_ERROR)
-            p->error(L"Неизвестное условие");
+            p->invalidoperation();
         return;
     }
     p->invalidargs();
@@ -672,7 +672,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (ext != L"htm" && ext != L"html")
             logfile.append(L".html");
     }
-    
+
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)
     {
@@ -763,10 +763,10 @@ IMPL(wshow)
         {
             int window = p->toInteger(0);
             if (window < 1 || window > OUTPUT_WINDOWS)
-                return invalidwindow(p, 1, window);            
+                return invalidwindow(p, 1, window);
             m_pHost->showWindow(window, true);
             return;
-        }               
+        }
         swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
         tmcLog(buffer);
     }
@@ -781,10 +781,10 @@ IMPL(whide)
         {
             int window = p->toInteger(0);
             if (window < 1 || window > OUTPUT_WINDOWS)
-                return invalidwindow(p, 1, window);            
+                return invalidwindow(p, 1, window);
             m_pHost->showWindow(window, false);
             return;
-        }               
+        }
         swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
         tmcLog(buffer);
     }
@@ -865,7 +865,7 @@ IMPL(tab)
     MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 0)
-    {        
+    {
         helper->skipCheckMode();
         helper->tmcLog(L"Автоподстановки(tabs):");
         int size = propData->tabwords.size();
@@ -931,9 +931,9 @@ IMPL(timer)
         {
             helper->tmcLog(L"Список пуст.");
             return;
-        }            
+        }
         for (int i=0,e=t.size(); i<e; ++i)
-        {            
+        {
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
             swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
@@ -971,7 +971,7 @@ IMPL(timer)
             return p->invalidargs();
         _itow(key, buffer, 10);
         tstring id(buffer);
-        
+
         int index = propData->timers.find(id);
         if (index == -1)
         {
@@ -1036,7 +1036,7 @@ IMPL(timer)
             if (n == 2)
                pt.cmd = tmp.cmd;
         }
-        
+
         tstring value;
         pt.convertToString(&value);
         propData->timers.add(index, id, value, group);
@@ -1081,12 +1081,12 @@ IMPL(message)
         if (!str.empty()) {
             tmcLog(L"Уведомления:");
             simpleLog(str);
-        }          
+        }
         else
             tmcLog(L"Все уведомления отключены");
         return;
     }
-    
+
     if (n == 1 || n == 2)
     {
         MessageCmdHelper mh(propData);

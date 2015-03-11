@@ -207,23 +207,33 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(tstring* cmd)
 {
-    if (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix)
+    bool syscmd = (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix);
+
+    InputCommand icmd(*cmd);
+    std::vector<tstring> &p = icmd.parameters_list;
+    p.insert(p.begin(), (syscmd) ? icmd.command.substr(1) : icmd.command);
+    if (syscmd)
     {
-        tstring excmd(cmd->substr(1));
-        if (doPluginsStringMethod("syscmd", &excmd))
+        if (doPluginsTableMethod("syscmd", &p))
         {
-            if (excmd.empty())
+            if (p.empty())
                 cmd->clear();
             else
             {
                 tchar prefix[2] = { m_propData->cmd_prefix, 0 };
                 cmd->assign(prefix);
-                cmd->append(excmd);
+                for (int i=0,e=p.size();i<e;++i)
+                    cmd->append(p[i]);
             }
         }
         return;
     }
-    doPluginsStringMethod("gamecmd", cmd);
+    if (doPluginsTableMethod("gamecmd", &p))
+    {
+        cmd->clear();
+        for (int i = 0, e = p.size(); i < e; ++i)
+            cmd->append(p[i]);
+    }
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -390,13 +400,13 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     return true;
 }
 
-bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* cmds)
+bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table)
 {
     WideToUtf8 w2u;
     lua_newtable(L);
-    for (int j = 0, je = cmds->size(); j < je; ++j)
+    for (int j = 0, je = table->size(); j < je; ++j)
     {
-        const tstring& s = cmds->at(j);
+        const tstring& s = table->at(j);
         w2u.convert(s.c_str(), s.length());
         lua_pushinteger(L, j + 1);
         lua_pushstring(L, w2u);
@@ -408,15 +418,15 @@ bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstrin
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
         bool not_supported = false;
-        if (!p->runMethod(method, 1, 1, &not_supported) || !lua_istable(L, -1))
+        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется table", i);
+            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil", i);
             lua_settop(L, 0);
             lua_newtable(L);
-            for (int j = 0, je = cmds->size(); j < je; ++j)
+            for (int j = 0, je = table->size(); j < je; ++j)
             {
-                const tstring& s = cmds->at(j);
+                const tstring& s = table->at(j);
                 w2u.convert(s.c_str(), s.length());
                 lua_pushinteger(L, j + 1);
                 lua_pushstring(L, w2u);
@@ -427,26 +437,32 @@ bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstrin
         }
         if (!not_supported)
             processed = true;
+        if (lua_isnil(L, -1))
+            break;
     }
-    if (processed)
+    if (lua_istable(L, -1))
     {
-        lua_len(L, -1);
-        int len = lua_tointeger(L, -1);
-        lua_pop(L, 1);
-        Utf8ToWide u2w;
-        cmds->clear();
-        for (int i = 0; i < len; ++i)
+        if (processed)
         {
-            lua_pushinteger(L, i + 1);
-            lua_gettable(L, -2);
-            u2w.convert(lua_tostring(L, -1));
+            lua_len(L, -1);
+            int len = lua_tointeger(L, -1);
             lua_pop(L, 1);
-            cmds->push_back(tstring(u2w));
+            Utf8ToWide u2w;
+            table->clear();
+            for (int i = 0; i < len; ++i)
+            {
+                lua_pushinteger(L, i + 1);
+                lua_gettable(L, -2);
+                u2w.convert(lua_tostring(L, -1));
+                lua_pop(L, 1);
+                table->push_back(tstring(u2w));
+            }
         }
         lua_pop(L, 1);
-        return true;
+        return processed;
     }
     lua_pop(L, 1);
+    table->clear();
     return false;
 }
 

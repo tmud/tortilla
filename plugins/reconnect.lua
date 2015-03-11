@@ -14,20 +14,34 @@ function reconnect.version()
     return '-'
 end
 
---[[function reconnect.barcmd(t)
-  for _,v in ipairs(t) do
-    log(v)
-  end
-  return t
-end]]
+local connected = false
+local address = nil
+local port = nil
 
-function reconnect.syscmd(cmd)
-  log(cmd)
+function reconnect.syscmd(t)
+  if t[1] == 'connect' and t[2] and t[3] then
+    address = t[2]
+    port = t[3]
+    log('address:'..address..', port:'..port)
+  end
+  if #t == 1 and (t[1] == 'zap' or t[1] == 'disconnect') then
+    connected = false
+  end
   return cmd
 end
 
-function reconnect.disconnect()
+function reconnect.connect()
+  connected = true
+  log('connect !')
 end
 
-function reconnect.init()
+function reconnect.disconnect()
+  if connected and address and port then 
+    log('reconnect !')
+    log('address:'..address..', port:'..port)
+  else
+    address = nil
+    port = nil
+  end
 end
+
