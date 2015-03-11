@@ -82,7 +82,6 @@ public:
     void processNetworkMccpError();
     bool processHotkey(const tstring& hotkey);
     void processCommand(const tstring& cmd);
-    void processSystemCommand(const tstring& cmd);
     void processTick();
     void processStackTick();
     void updateProps();
@@ -95,6 +94,8 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
 
 private:
+    void processSystemCommand(tstring& cmd);
+    void processGameCommand(tstring& cmd);
     enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
            FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);

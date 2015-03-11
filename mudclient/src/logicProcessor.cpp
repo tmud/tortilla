@@ -81,24 +81,9 @@ void LogicProcessor::processCommand(const tstring& cmd)
     {
         tstring cmd = m_input.commands[i]->full_command;
         if (!cmd.empty() && cmd.at(0) == cmd_prefix)
-        {
-            //it is system command for client (not game command)
-            m_pHost->preprocessGameCmd(&cmd);
-            if (!cmd.empty())
-                processSystemCommand(cmd);
-        }
+            processSystemCommand(cmd); //it is system command for client (not game command)
         else
-        {
-            // it is game command
-            bool src_cmd_empty = cmd.empty();
-            m_pHost->preprocessGameCmd(&cmd);
-            if (cmd.empty() && !src_cmd_empty)
-                return;
-            WCHAR br[2] = { 10, 0 };
-            cmd.append(br);
-            processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS | GAME_CMD);
-            sendToNetwork(cmd);
-        }
+            processGameCommand(cmd); // it is game command
     }
 }
 

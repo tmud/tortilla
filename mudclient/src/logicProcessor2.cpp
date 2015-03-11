@@ -36,64 +36,101 @@ const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
-void LogicProcessor::processSystemCommand(const tstring& cmd)
+void LogicProcessor::processSystemCommand(tstring& cmd)
 {
-    if (propData->show_system_commands)
-        simpleLog(cmd);
-
     tstring scmd(cmd);
     tstring_trim(&scmd);
 
     tstring main_cmd;
     int pos = scmd.find(L' ');
     if (pos == -1)
-        main_cmd.append(scmd.substr(1));
+        main_cmd.assign(scmd.substr(1));
     else
-        main_cmd.append(scmd.substr(1, pos-1));
+        main_cmd.assign(scmd.substr(1, pos - 1));
 
-    tstring params(scmd.substr(1));
-    tstring error;
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
+    typedef std::vector<tstring>::iterator piterator;
+
+    tchar prefix[2] = { propData->cmd_prefix, 0 };
+    tstring fullcmd(prefix);
+    tstring error;
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
     if (it != it_end)
-    {
-        parser p(params, &error);
-        it->second(&p);
-    }
+        fullcmd.append(it->first);
     else
     {
-        // пробуем подобрать по сокращенному имени
-        int len = main_cmd.size();
-        if (len >= 3)
+        // команда в системных не найдена - ищем в плагинах
+        piterator p_end = m_plugins_cmds.end();
+        piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+        if (p != p_end)
+            fullcmd.append(*p);
+        else
         {
-            std::vector<tstring> cmds;
-            for (it = m_syscmds.begin(); it != it_end; ++it)
-            {
-                if (!it->first.compare(0, len, main_cmd))
-                    cmds.push_back(it->first);
-            }
-
-            int count = cmds.size();
-            if (count == 1)
-            {
-                it = m_syscmds.find(cmds[0]);
-                parser p(params, &error);
-                it->second(&p);
-            }
-            else if (count == 0)
-            {
+            //пробуем подобрать по сокращенному имени
+            int len = main_cmd.size();
+            if (len < 3)
                 error.append(L"Ќеизвестна€ команда");
-            }
             else
             {
-                error.append(L"”точните команду (варианты): ");
-                for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
+                std::vector<tstring> cmds;
+                for (it = m_syscmds.begin(); it != it_end; ++it)
+                {
+                    if (!it->first.compare(0, len, main_cmd))
+                        cmds.push_back(it->first);
+                }
+                for (p = m_plugins_cmds.begin(); p != p_end; ++p)
+                {
+                    if (!p->compare(0, len, main_cmd))
+                        cmds.push_back(*p);
+                }
+                int count = cmds.size();
+                if (count == 1)
+                    fullcmd.append(cmds[0]);
+                else if (count == 0)
+                    fullcmd.append(main_cmd);       // в словаре команды нет - все равно пробуем пройти через syscmd
+                else {
+                    error.append(L"”точните команду (варианты): ");
+                    for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
+                }
             }
+        }
+    }
+
+    if (error.empty())
+    {
+        if (pos != -1)
+            fullcmd.append(scmd.substr(pos));     // add params
+        m_pHost->preprocessGameCmd(&fullcmd);
+        tstring_trim(&fullcmd);
+        if (fullcmd.empty())
+        {
+            if (propData->show_system_commands)
+                simpleLog(cmd);
+            tmcLog(L" оманда заблокирована");
+            return;
+        }
+        
+        if (propData->show_system_commands)
+            simpleLog(fullcmd);
+
+        pos = fullcmd.find(L' ');
+        if (pos == -1)
+            main_cmd.assign(fullcmd.substr(1));
+        else
+            main_cmd.assign(fullcmd.substr(1, pos - 1));
+        it = m_syscmds.find(main_cmd);
+        if (it != it_end)
+        {
+            parser p(fullcmd.substr(1), &error);
+            it->second(&p);
         }
         else
         {
-            error.append(L"Ќеизвестна€ команда");
+            piterator p_end = m_plugins_cmds.end();
+            piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+            if (p == p_end)
+                error.append(L"Ќеизвестна€ команда");
         }
     }
 
@@ -106,6 +143,18 @@ void LogicProcessor::processSystemCommand(const tstring& cmd)
         msg.append(L"]");
         tmcLog(msg);
     }
+}
+
+void LogicProcessor::processGameCommand(tstring& cmd)
+{
+    bool src_cmd_empty = cmd.empty();
+    m_pHost->preprocessGameCmd(&cmd);
+    if (cmd.empty() && !src_cmd_empty)
+        return;
+    WCHAR br[2] = { 10, 0 };
+    cmd.append(br);
+    processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS | GAME_CMD);
+    sendToNetwork(cmd);
 }
 
 void LogicProcessor::updateProps(int update, int options)

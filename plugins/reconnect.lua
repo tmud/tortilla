@@ -14,12 +14,12 @@ function reconnect.version()
     return '-'
 end
 
-function reconnect.barcmd(t)
+--[[function reconnect.barcmd(t)
   for _,v in ipairs(t) do
     log(v)
   end
   return t
-end
+end]]
 
 function reconnect.syscmd(cmd)
   log(cmd)
