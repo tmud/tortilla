@@ -65,7 +65,11 @@ void PluginsManager::initPlugins()
                 if (plugin_index == -1)
                     m_plugins.push_back(plugin);
             }
-            else { delete plugin; }
+            else {
+               delete plugin;
+               if (plugin_index != -1)
+                  m_plugins.erase(m_plugins.begin() + plugin_index);
+            }
         }
     }
     files.clear();
