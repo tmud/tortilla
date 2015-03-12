@@ -168,6 +168,15 @@ void LogicProcessor::simpleLog(const tstring& cmd)
     processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG);
 }
 
+void LogicProcessor::syscmdLog(const tstring& cmd)
+{
+    if (!propData->show_system_commands)
+        return;
+    tstring log(cmd);
+    log.append(L"\r\n");
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD);
+}
+
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
     if (!propData->plugins_logs)

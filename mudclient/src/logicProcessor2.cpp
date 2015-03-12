@@ -105,14 +105,12 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
         tstring_trim(&fullcmd);
         if (fullcmd.empty())
         {
-            if (propData->show_system_commands)
-                simpleLog(cmd);
+            syscmdLog(cmd);
             tmcLog(L"Êîìàíäà çàáëîêèðîâàíà");
             return;
         }
 
-        if (propData->show_system_commands)
-            simpleLog(fullcmd);
+        syscmdLog(fullcmd);
 
         pos = fullcmd.find(L' ');
         if (pos == -1)
@@ -153,7 +151,7 @@ void LogicProcessor::processGameCommand(tstring& cmd)
         return;
     WCHAR br[2] = { 10, 0 };
     cmd.append(br);
-    processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS | GAME_CMD);
+    processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
     sendToNetwork(cmd);
 }
 
@@ -1122,7 +1120,7 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
-    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+(?:Âûõ)?:[ÑÞÇÂÏÎv^]+>", true);
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+(?:Âûõ)?:[ÑÞÇÂÏÎv^]*>", true);
 
     if (!m_logs.init())
         return false;

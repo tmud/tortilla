@@ -3,11 +3,11 @@
 
 colorgamecmd = {}
 function colorgamecmd.name() 
-    return 'Подсветка игровых команд'
+    return 'Подсветка игровых и системных команд'
 end
 
 function colorgamecmd.description()
-return 'Плагин красит игровые команды в требуемый цвет.'
+return 'Плагин изменяет цвет игровых и системных команд.'
 end
 
 function colorgamecmd.version()
@@ -16,15 +16,11 @@ end
 
 function colorgamecmd.after(window, v)
 if window ~= 0 then return end
-local count = v:size()
-  local i = 1
-  while i <= count do
+  for i=1,v:size() do
     v:select(i)
     if v:isGameCmd() then
-	  local s = v:getBlockText(v:blocks)
-	  local p=v:blocks()
-	  v:set(p,"textcolor",6)
+    local last=v:blocks()
+    v:set(last,"textcolor",3)
     end
-    i = i + 1
   end
 end

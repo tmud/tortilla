@@ -108,8 +108,11 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     }
 
     // collect strings in parse_data in one with same colors params
-    ColorsCollector pc;
-    pc.process(&parse_data);
+    if (!(flags & GAME_CMD))
+    {
+        ColorsCollector pc;
+        pc.process(&parse_data);
+    }
     printIncoming(parse_data, flags, window);
 }
 
