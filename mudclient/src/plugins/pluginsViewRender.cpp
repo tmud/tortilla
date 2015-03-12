@@ -158,16 +158,26 @@ void PluginsViewRender::update()
     m_wnd.Invalidate();
 }
 
-int  PluginsViewRender::getFontHeight()
+int PluginsViewRender::getFontHeight()
 {
-    if (!current_font)
-        return 0;
     CDC dc(m_wnd.GetDC());
-    HFONT old = dc.SelectFont(*current_font);
+    if (current_font)
+        m_dc.SelectFont(*current_font);
+    //HFONT old = dc.SelectFont(*current_font);
     SIZE sz = { 0, 0 };
     GetTextExtentPoint32(dc, L"W", 1, &sz);
-    dc.SelectFont(old);
+    //dc.SelectFont(old);
     return sz.cy;
+}
+
+int PluginsViewRender::getTextWidth(const tstring& text)
+{
+    CDC dc(m_wnd.GetDC());
+    if (current_font)
+        m_dc.SelectFont(*current_font);
+    SIZE sz = { 0, 0 };
+    GetTextExtentPoint32(dc, text.c_str(), text.length(), &sz);
+    return sz.cx;
 }
 //-------------------------------------------------------------------------------------------------
 int render_setBackground(lua_State *L)
@@ -373,6 +383,18 @@ int render_fontHeight(lua_State *L)
     return pluginInvArgs(L, "render.fontHeight");
 }
 
+int render_textWidth(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TSTRING))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        tstring text(TU2W(lua_tostring(L, 2)));
+        lua_pushinteger(L, r->getTextWidth(text));
+        return 1;
+    }
+    return pluginInvArgs(L, "render.fontHeight");
+}
+
 void reg_mt_render(lua_State *L)
 {
     luaL_newmetatable(L, "render");
@@ -389,6 +411,7 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "print", render_print);
     regFunction(L, "update", render_update);
     regFunction(L, "fontHeight", render_fontHeight);
+    regFunction(L, "textWidth", render_textWidth);
     regIndexMt(L);
     lua_pop(L, 1);
 }

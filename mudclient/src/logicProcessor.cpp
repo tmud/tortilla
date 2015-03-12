@@ -81,20 +81,9 @@ void LogicProcessor::processCommand(const tstring& cmd)
     {
         tstring cmd = m_input.commands[i]->full_command;
         if (!cmd.empty() && cmd.at(0) == cmd_prefix)
-        {
-            //it is system command for client (not game command)
-            m_pHost->preprocessGameCmd(&cmd);
-            processSystemCommand(cmd);
-        }
+            processSystemCommand(cmd); //it is system command for client (not game command)
         else
-        {
-            // it is game command
-            m_pHost->preprocessGameCmd(&cmd);
-            WCHAR br[2] = { 10, 0 };
-            cmd.append(br);
-            processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
-            sendToNetwork(cmd);
-        }
+            processGameCommand(cmd); // it is game command
     }
 }
 
@@ -179,6 +168,15 @@ void LogicProcessor::simpleLog(const tstring& cmd)
     processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG);
 }
 
+void LogicProcessor::syscmdLog(const tstring& cmd)
+{
+    if (!propData->show_system_commands)
+        return;
+    tstring log(cmd);
+    log.append(L"\r\n");
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD);
+}
+
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
     if (!propData->plugins_logs)
@@ -224,6 +222,11 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     int index = p.find(cmd);
     p.del(index);
     return true;
+}
+
+void LogicProcessor::doGameCommand(const tstring& cmd)
+{
+    processCommand(cmd);
 }
 
 void LogicProcessor::updateLog(const tstring& msg)

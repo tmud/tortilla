@@ -78,6 +78,14 @@ public:
             if (processKey(pMsg->wParam))
                 return TRUE;
         }
+        if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
+        {
+            if (m_history.IsWindowVisible())                
+            {
+                closeHistory();
+                return TRUE;
+            }
+        }
         if (m_bar.PreTranslateMessage(pMsg))
             return TRUE;
         return FALSE;
@@ -257,6 +265,8 @@ public:
     Palette256* getPalette() { return &m_propElements.palette;  }
     PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
+    const NetworkConnectData* getConnectData() { return &m_networkData; }
+
 
 private:
     BEGIN_MSG_MAP(MudGameView)
@@ -552,10 +562,7 @@ private:
         {
             m_processor.processTick();
             if (m_history.IsWindowVisible() && m_history.isLastString())
-            {
-               m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-               m_history.truncateStrings(m_propData->view_history_size);
-            }
+                closeHistory();
             m_plugins.processTick();
         }
         else if (id == 2)
@@ -886,11 +893,14 @@ private:
             if (maxcount > MAX_VIEW_HISTORY_SIZE) 
                     maxcount = MAX_VIEW_HISTORY_SIZE;
             if (count > maxcount)
-            {
-                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-                m_history.truncateStrings(hs);
-            }
+                closeHistory();
         }
+    }
+
+    void closeHistory()
+    {
+        m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
+        m_history.truncateStrings(m_propData->view_history_size);
     }
 
     void saveClientWindowPos()

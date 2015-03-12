@@ -65,7 +65,11 @@ void PluginsManager::initPlugins()
                 if (plugin_index == -1)
                     m_plugins.push_back(plugin);
             }
-            else { delete plugin; }
+            else {
+               delete plugin;
+               if (plugin_index != -1)
+                  m_plugins.erase(m_plugins.begin() + plugin_index);
+            }
         }
     }
     files.clear();
@@ -207,18 +211,33 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(tstring* cmd)
 {
-    if (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix)
+    bool syscmd = (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix);
+
+    InputCommand icmd(*cmd);
+    std::vector<tstring> &p = icmd.parameters_list;
+    p.insert(p.begin(), (syscmd) ? icmd.command.substr(1) : icmd.command);
+    if (syscmd)
     {
-        tstring excmd(cmd->substr(1));
-        if (doPluginsStringMethod("syscmd", &excmd))
+        if (doPluginsTableMethod("syscmd", &p))
         {
-            tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-            cmd->assign(prefix);
-            cmd->append(excmd);
+            if (p.empty())
+                cmd->clear();
+            else
+            {
+                tchar prefix[2] = { m_propData->cmd_prefix, 0 };
+                cmd->assign(prefix);
+                for (int i=0,e=p.size();i<e;++i)
+                    cmd->append(p[i]);
+            }
         }
         return;
     }
-    doPluginsStringMethod("gamecmd", cmd);
+    if (doPluginsTableMethod("gamecmd", &p))
+    {
+        cmd->clear();
+        for (int i = 0, e = p.size(); i < e; ++i)
+            cmd->append(p[i]);
+    }
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -233,7 +252,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
         if (!p->runMethod(method, 2, 0))
         {
             // restart plugins
-            turnoffPlugin(method, i);
+            turnoffPlugin(NULL, i);
             i = 0;
         }
         lua_settop(L, 0);
@@ -243,18 +262,19 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
 void PluginsManager::processBarCmd(tstring *cmd)
 {
     if (cmd->empty())
-        return;  
+        return;
     tchar separator[2] = { m_propData->cmd_separator, 0 };
     Tokenizer t(cmd->c_str(), separator);
     std::vector<tstring> cmds;
-    t.moveto(&cmds);
-    cmd->clear();
-    if (!doPluginsTableMethod("barcmd", &cmds))
-        return;
-    for (int i = 0, e = cmds.size(); i < e; ++i)
+    t.moveto(&cmds);    
+    if (doPluginsTableMethod("barcmd", &cmds))
     {
-        if (i != 0) cmd->append(separator);
-        cmd->append(cmds[i]);
+        cmd->clear();
+        for (int i = 0, e = cmds.size(); i < e; ++i)
+        {
+            if (i != 0) cmd->append(separator);
+            cmd->append(cmds[i]);
+        }
     }
 }
 
@@ -272,7 +292,7 @@ void PluginsManager::processHistoryCmd(tstring *cmd)
         if (!p->runMethod(method, 1, 1))
         {
             // restart plugins
-            turnoffPlugin(method, i);
+            turnoffPlugin(NULL, i);
             lua_settop(L, 0);
             i = 0;
         }
@@ -309,7 +329,7 @@ void PluginsManager::processTick()
     {
         Plugin *p = m_plugins[i];
         if (p->state() && p->isErrorState())
-            turnoffPlugin("render", i);
+            turnoffPlugin(NULL, i);
     }
 }
 
@@ -338,7 +358,7 @@ void PluginsManager::doPluginsMethod(const char* method)
         if (!p->runMethod(method, 0, 0))
         {
             // restart plugins
-            turnoffPlugin(method, i);
+            turnoffPlugin(NULL, i);
             lua_settop(L, 0);
             i = 0;
         }
@@ -347,93 +367,117 @@ void PluginsManager::doPluginsMethod(const char* method)
 
 bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
 {
+    bool processed = false;
     WideToUtf8 w2u(str->c_str());
     lua_pushstring(L, w2u);
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
-        if (!p->runMethod(method, 1, 1) || !lua_isstring(L, -1))
+        bool not_supported = false;
+        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin(method, i);
+            turnoffPlugin("Неверный тип полученного значения. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
+            processed = false;
         }
+        if (!not_supported)
+            processed = true;
+        if (lua_isnil(L, -1))
+            break;
     }
     if (lua_isstring(L, -1))
     {
-        Utf8ToWide u2w(lua_tostring(L, -1));
+        if (processed)
+        {
+            Utf8ToWide u2w(lua_tostring(L, -1));
+            str->assign(u2w);
+        }
         lua_pop(L, 1);
-        str->assign(u2w);
-        return true;
+        return processed;
     }
-    lua_settop(L, 0);
-    return false;
+    lua_pop(L, 1);
+    str->clear();
+    return true;
 }
 
-bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* cmds)
+bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table)
 {
     WideToUtf8 w2u;
     lua_newtable(L);
-    for (int j = 0, je = cmds->size(); j < je; ++j)
+    for (int j = 0, je = table->size(); j < je; ++j)
     {
-        const tstring& s = cmds->at(j);
+        const tstring& s = table->at(j);
         w2u.convert(s.c_str(), s.length());
         lua_pushinteger(L, j + 1);
         lua_pushstring(L, w2u);
         lua_settable(L, -3);
     }
+    bool processed = false;
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
-        if (!p->runMethod(method, 1, 1) || !lua_istable(L, -1))
+        bool not_supported = false;
+        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin(method, i);
+            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil", i);
             lua_settop(L, 0);
             lua_newtable(L);
-            for (int j = 0, je = cmds->size(); j < je; ++j)
+            for (int j = 0, je = table->size(); j < je; ++j)
             {
-                const tstring& s = cmds->at(j);
+                const tstring& s = table->at(j);
                 w2u.convert(s.c_str(), s.length());
                 lua_pushinteger(L, j + 1);
                 lua_pushstring(L, w2u);
                 lua_settable(L, -3);
             }
             i = 0;
+            processed = false;
         }
+        if (!not_supported)
+            processed = true;
+        if (lua_isnil(L, -1))
+            break;
     }
     if (lua_istable(L, -1))
     {
-        lua_len(L, -1);
-        int len = lua_tointeger(L, -1);
-        lua_pop(L, 1);
-        Utf8ToWide u2w;
-        cmds->clear();
-        for (int i = 0; i < len; ++i)
+        if (processed)
         {
-            lua_pushinteger(L, i + 1);
-            lua_gettable(L, -2);
-            u2w.convert(lua_tostring(L, -1));
+            lua_len(L, -1);
+            int len = lua_tointeger(L, -1);
             lua_pop(L, 1);
-            cmds->push_back(tstring(u2w));
+            Utf8ToWide u2w;
+            table->clear();
+            for (int i = 0; i < len; ++i)
+            {
+                lua_pushinteger(L, i + 1);
+                lua_gettable(L, -2);
+                u2w.convert(lua_tostring(L, -1));
+                lua_pop(L, 1);
+                table->push_back(tstring(u2w));
+            }
         }
         lua_pop(L, 1);
-        return true;
+        return processed;
     }
-    lua_settop(L, 0);
+    lua_pop(L, 1);
+    table->clear();
     return false;
 }
 
-void PluginsManager::turnoffPlugin(const char* method, int plugin_index)
+void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
     Plugin *old = p;
     _cp = p;
+    if (error)
+        pluginError(error);
     pluginError("Плагин отключен!");
     p->setOn(false);
     _cp = old;

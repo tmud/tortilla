@@ -28,8 +28,8 @@ public:
 private:
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
-    bool doPluginsTableMethod(const char* method, std::vector<tstring>* cmds);
+    bool doPluginsTableMethod(const char* method, std::vector<tstring>* table);
     void doPluginsMethod(const char* method);
-    void turnoffPlugin(const char* method, int plugin_index);
+    void turnoffPlugin(const char* error, int plugin_index);
     void terminatePlugin(Plugin* p);
 };

@@ -19,7 +19,7 @@ public:
     void menuCmd(int id);
     HMODULE getModule() const { return hModule; }
     void closeWindow(HWND wnd);
-    bool runMethod(const char* method, int args, int results);
+    bool runMethod(const char* method, int args, int results, bool *not_supported = NULL);
     void updateProps();
     void setErrorState() { error_state = true; }
     bool isErrorState() const { return error_state; }
