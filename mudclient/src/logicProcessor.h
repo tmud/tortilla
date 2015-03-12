@@ -37,6 +37,8 @@ public:
     virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
+    virtual void doGameCommand(const tstring& cmd) = 0;
+    virtual bool getConnectionState() = 0;
 };
 
 class parser;
@@ -92,6 +94,8 @@ public:
     bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
+    void doGameCommand(const tstring& cmd);
+    bool getConnectionState() { return m_connected; }
 
 private:
     void processSystemCommand(tstring& cmd);

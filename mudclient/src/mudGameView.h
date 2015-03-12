@@ -265,6 +265,8 @@ public:
     Palette256* getPalette() { return &m_propElements.palette;  }
     PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
+    const NetworkConnectData* getConnectData() { return &m_networkData; }
+
 
 private:
     BEGIN_MSG_MAP(MudGameView)

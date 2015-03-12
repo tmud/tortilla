@@ -22,6 +22,7 @@ public:
     int  print(int x, int y, const tstring& text);
     void update();
     int  getFontHeight();
+    int  getTextWidth(const tstring& text);
 
 private:
     lua_State *renderL;

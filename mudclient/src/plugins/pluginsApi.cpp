@@ -119,6 +119,18 @@ int addCommand(lua_State *L)
     return pluginInvArgs(L, "addCommand");
 }
 
+int runCommand(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring cmd(TU2W(lua_tostring(L, 1)));
+        _lp->doGameCommand(cmd);
+        return 0;
+    }
+    return pluginInvArgs(L, "runCommand");
+}
+
+
 int addMenu(lua_State *L)
 {
     CAN_DO;
@@ -653,6 +665,7 @@ bool initPluginsSystem()
     lua_setglobal(L, "table");
     reg_string(L);
     lua_register(L, "addCommand", addCommand);
+    lua_register(L, "runCommand", runCommand);
     lua_register(L, "addMenu", addMenu);
     lua_register(L, "addButton", addButton);
     lua_register(L, "addToolbar", addToolbar);
@@ -800,11 +813,82 @@ int currentFont(lua_State *L)
     return pluginInvArgs(L, "props.currentFont");
 }
 
+int cmdPrefix(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        tchar prefix[2] = { _pdata->cmd_prefix, 0 };
+        lua_pushstring(L, TW2U(prefix));
+        return 1;
+    }
+    return pluginInvArgs(L, "props.cmdPrefix");
+}
+
+int cmdSeparator(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        tchar prefix[2] = { _pdata->cmd_separator, 0 };
+        lua_pushstring(L, TW2U(prefix));
+        return 1;
+    }
+    return pluginInvArgs(L, "props.cmdSeparator");
+}
+
+int serverHost(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        if (_lp->getConnectionState())
+        {
+            const NetworkConnectData *cdata = _wndMain.m_gameview.getConnectData();
+            lua_pushstring(L, cdata->address.c_str());
+        }
+        else
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.serverHost");
+}
+
+int serverPort(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        if (_lp->getConnectionState())
+        {
+            const NetworkConnectData *cdata = _wndMain.m_gameview.getConnectData();
+            WCHAR buffer[8];
+            _itow(cdata->port, buffer, 10);
+            lua_pushstring(L, TW2U(buffer));
+        }
+        else
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.serverPort");
+}
+
+int connected(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        lua_pushboolean(L, _lp->getConnectionState() ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.connected");
+}
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
     regFunction(L, "paletteColor", paletteColor);
     regFunction(L, "backgroundColor", backgroundColor);
     regFunction(L, "currentFont", currentFont);
+    regFunction(L, "cmdPrefix", cmdPrefix);
+    regFunction(L, "cmdSeparator", cmdSeparator);
+    regFunction(L, "serverHost", serverHost);
+    regFunction(L, "serverPort", serverPort);
+    regFunction(L, "connected", connected);
     lua_setglobal(L, "props");
 }

@@ -215,6 +215,11 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     return true;
 }
 
+void LogicProcessor::doGameCommand(const tstring& cmd)
+{
+    processCommand(cmd);
+}
+
 void LogicProcessor::updateLog(const tstring& msg)
 {
     m_updatelog.append(msg);
