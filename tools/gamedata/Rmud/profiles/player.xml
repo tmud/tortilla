@@ -8,7 +8,7 @@
   <historytab value="0"/>
   <timersf value="0"/>
   <plogs value="1"/>
-  <plogswnd value="1"/>
+  <plogswnd value="0"/>
   <codepage value="win"/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
@@ -71,5 +71,8 @@
     <plugin key="jmc3import.dll" value="1"/>
     <plugin key="historyfilter.lua" value="1"/>
     <plugin key="autowrap.lua" value="1"/>
+    <plugin key="statusbar.lua" value="1"/>
+    <plugin key="reconnect.lua" value="0"/>
+    <plugin key="colorgamecmd.lua" value="1"/>
   </plugins>
 </profile>

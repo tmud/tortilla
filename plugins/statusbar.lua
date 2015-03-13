@@ -95,7 +95,7 @@ if window ~= 0 or not cfg then return end
 for i=1,v:size() do
   v:select(i)
   if v:isPrompt() then
-    if regexp:findall(v:getPrompt()) then
+    if regexp:findall(v:getPrompt()) and regexp:size() > 3 then
     values.hp = regexp:get(cfg.hp)
     values.mv = regexp:get(cfg.mv)
     values.mn = regexp:get(cfg.mn)
