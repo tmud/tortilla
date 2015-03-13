@@ -196,6 +196,16 @@ int render_setBackground(lua_State *L)
         r->setBackground(color);
         return 0;
     }
+
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        ParametersReader reader(L);
+        COLORREF color = 0;
+        reader.parsecolor(&color);
+        r->setBackground(color);
+        return 0;
+    }
     return pluginInvArgs(L, "render.setBackground");
 }
 
