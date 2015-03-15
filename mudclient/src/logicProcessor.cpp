@@ -92,7 +92,7 @@ void LogicProcessor::updateProps()
     m_helper.updateProps();
     m_input.updateProps(propData);
     m_logs.updateProps(propData);
-
+    m_prompt_mode = OFF;
     if (propData->recognize_prompt)
     {
         // calc regexp from template
