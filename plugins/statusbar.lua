@@ -27,26 +27,34 @@ function statusbar.version()
 end
 
 local objs = {}
-local r, regnum, regmain, regexp, values, cfg
+local regs = {}
+local bars = 0
+local tegs = { 'hp','mn','mv','xp' }
+
+local r, regnum, values, cfg
 local round = math.floor
 
 function statusbar.render()
-  if not cfg then
+  if not cfg or bars == 0 then
     return
   end
+
   local showmsg = false
-  if regexp and not values.exp then
+  if cfg.hp and not values.maxhp then
     showmsg = true
   end
-  if not showmsg and regmain then
-    if not (values.maxhp and values.maxmv) then
-      showmsg = true
-    end
+  if values.hp and values.maxhp and values.hp > values.maxhp then
+    showmsg = true
   end
+  if cfg.mv and not values.maxmv then
+    showmsg = true
+  end   
+  if values.mv and values.maxmv and values.mv > values.maxmv then
+    showmsg = true
+  end  
+  
   if showmsg then
-    if values.hp and values.mv then
-      statusbar.print("Выполните команду 'счет' для настройки плагина.")
-    end
+    statusbar.print("Выполните команду 'счет' для настройки плагина.")
     return
   end
   statusbar.drawbars()
@@ -81,7 +89,6 @@ function statusbar.drawbar(t, pos)
 end
 
 function statusbar.drawbars()
-  local bars = 4
   local delta_bars = 10
   local w = round( ((r:width()/10*5) - delta_bars*(bars-1)) / bars )
   local h = r:fontHeight()
@@ -102,8 +109,13 @@ function statusbar.drawbars()
     pos.x = pos.x + pos.width + delta_bars
   end
 
-  if values.dsu and values.exp then
-    local expbar = {val=values.exp,maxval=values.dsu+values.exp,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
+  if values.xp and values.maxxp then
+    local summ = values.xp + values.maxxp
+	local v = values.maxxp
+	if cfg.extra and cfg.extra.invertxp then
+	  v = values.xp
+	end	
+    local expbar = {val=values.xp,maxval=summ,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
     statusbar.drawbar(expbar, pos)
   end
 end
@@ -114,37 +126,35 @@ function statusbar.print(msg)
   r:print(4, y, msg)
 end
 
-local function get(v) return v and regnum:get(v) or nil end
-local function getm(v) return v and regmain:get(v) or nil end
-
 function statusbar.before(window, v)
 if window ~= 0 or not cfg then return end
-for i=1,v:size() do
-  v:select(i)
-  if v:isPrompt() then
-    if regnum:findall(v:getPrompt()) and regnum:size() > 4 then
-    values.hp = get(cfg.hp)
-    values.mv = get(cfg.mv)
-    values.mn = get(cfg.mn)
-    values.dsu = get(cfg.dsu)
-    if not regmain then
-      values.maxhp = get(cfg.maxhp)
-      values.maxmv = get(cfg.maxmv)
-      values.maxmn = get(cfg.maxmn)
-    end
-    r:update()
+  local update = false
+  for i=1,v:size() do
+    v:select(i)
+    if v:isPrompt() and regnum:findall(v:getPrompt()) and regnum:size()-1 > 2 then
+      for _,teg in pairs(tegs) do
+         local c = cfg[teg]
+         if c then
+           values[teg] = tonumber(regnum:get(c.prompt))
+         end
+      end
+      update = true
     end
   end
-end
-if regmain and v:find(regmain) then
-  values.maxhp = getm(cfg.maxhp)
-  values.maxmv = getm(cfg.maxmv)
-  values.maxmn = getm(cfg.maxmn)
-  r:update()
-end
-if regexp and v:find(regexp) then
-  values.exp = regexp:get(1)
-end
+  for id,regexp in pairs(regs) do
+    if v:find(regexp) then
+      for _,teg in pairs(tegs) do
+        local c = cfg[teg]
+        if c and c.regid == id then
+          values['max'..teg] = tonumber(regexp:get(c.regindex))
+          update = true
+        end
+      end
+    end
+  end
+  if update then
+    r:update()
+  end
 end
 
 function statusbar.disconnect()
@@ -152,26 +162,45 @@ function statusbar.disconnect()
   r:update()
 end
 
+local function readcfg(teg)
+  local id = cfg.maxparams[teg..'id']
+  if id then
+    local score_index = tonumber(cfg.maxparams[teg])
+    local prompt_index= tonumber(cfg.baseparams[teg])
+    if score_index and prompt_index then
+      if not regs[id] then
+        regs[id] = createPcre(cfg.regexp[id])
+        if not regs[id] then
+          log('Ошибка в регулярном выражении '..id..' в настройках: '..getPath('config.xml'))
+        end
+      end
+      if regs[id] then
+        local c = {}
+        c.regindex = score_index
+        c.prompt = prompt_index
+        c.regid = id
+        cfg[teg] = c
+        return true
+      end
+    end
+  end
+  return false
+end
+
 function statusbar.init()
   local file = loadTable('config.xml')
   if not file then
     return statusbar.term("Нет файла с настройками: "..getPath('config.xml'))
   end
-
-  cfg = file.config
-
-  if cfg.regmain then
-    regmain = createPcre(cfg.regmain)
-    if not regmain then
-        return statusbar.term("Ошибка в регулярном выражении regmain в настройках: "..getPath('config.xml'))
+  cfg = file
+  bars = 0
+  regs = {}
+  for _,v in pairs(tegs) do
+    if readcfg(v) then
+      bars = bars + 1
     end
   end
-  if cfg.regexp then
-    regexp = createPcre(cfg.regexp)
-    if not regexp then
-        return statusbar.term("Ошибка в регулярном выражении regexp в настройках: "..getPath('config.xml'))
-    end
-  end
+
   regnum = createPcre("[0-9]+")
 
   local p = createPanel("bottom", 28)

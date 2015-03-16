@@ -186,6 +186,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     {
         tstring log(L"[plugin] ");
         log.append(cmd);
+        log.append(L"\r\n");
         processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
     }
 }
