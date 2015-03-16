@@ -6,8 +6,8 @@ hp1 = {r=240},
 hp2 = {r=128},
 mv1 = {r=240,g=240},
 mv2 = {r=128,g=128},
-mn1 = {b=240},
-mn2 = {b=128},
+mn1 = {g=128,b=255},
+mn2 = {g=64,b=128},
 exp1 = {r=240,g=240,b=240},
 exp2 = {r=128,g=128,b=128}
 }
@@ -29,13 +29,14 @@ end
 local objs = {}
 local regs = {}
 local bars = 0
-local tegs = { 'hp','mn','mv','xp' }
+local connect = false
+local tegs = { 'hp','mn','mv','xp','dsu' }
 
 local r, regnum, values, cfg
 local round = math.floor
 
 function statusbar.render()
-  if not cfg or bars == 0 then
+  if not cfg or not connect or bars == 0 then
     return
   end
 
@@ -43,16 +44,10 @@ function statusbar.render()
   if cfg.hp and not values.maxhp then
     showmsg = true
   end
-  if values.hp and values.maxhp and values.hp > values.maxhp then
-    showmsg = true
-  end
   if cfg.mv and not values.maxmv then
     showmsg = true
-  end   
-  if values.mv and values.maxmv and values.mv > values.maxmv then
-    showmsg = true
-  end  
-  
+  end
+
   if showmsg then
     statusbar.print("Выполните команду 'счет' для настройки плагина.")
     return
@@ -90,7 +85,7 @@ end
 
 function statusbar.drawbars()
   local delta_bars = 10
-  local w = round( ((r:width()/10*5) - delta_bars*(bars-1)) / bars )
+  local w = round( ((r:width()/10*6) - delta_bars*(bars-1)) / bars )
   local h = r:fontHeight()
   local pos = { x=4, y=(r:height()-h)/2, width=w, height=h }
 
@@ -109,15 +104,22 @@ function statusbar.drawbars()
     pos.x = pos.x + pos.width + delta_bars
   end
 
-  if values.xp and values.maxxp then
-    local summ = values.xp + values.maxxp
-	local v = values.maxxp
-	if cfg.extra and cfg.extra.invertxp then
-	  v = values.xp
-	end	
-    local expbar = {val=values.xp,maxval=summ,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
-    statusbar.drawbar(expbar, pos)
+  local val, maxval
+  if values.xp and values.dsu then
+    val = values.xp
+    maxval = values.xp + values.dsu
+  elseif values.xp and values.summ then
+    val = values.xp
+    maxval = values.summ
+  elseif values.dsu and values.summ then
+    val = values.summ - values.dsu
+    maxval = values.summ
+  elseif values.maxdsu and values.maxxp then
+    val = values.maxxp
+    maxval = values.summ
   end
+  local expbar = {val=val,maxval=maxval,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
+  statusbar.drawbar(expbar, pos)
 end
 
 function statusbar.print(msg)
@@ -134,7 +136,7 @@ if window ~= 0 or not cfg then return end
     if v:isPrompt() and regnum:findall(v:getPrompt()) and regnum:size()-1 > 2 then
       for _,teg in pairs(tegs) do
          local c = cfg[teg]
-         if c then
+         if c and c.prompt then
            values[teg] = tonumber(regnum:get(c.prompt))
          end
       end
@@ -152,37 +154,52 @@ if window ~= 0 or not cfg then return end
       end
     end
   end
+  local mxp = tonumber(values.maxxp)
+  local mdsu = tonumber(values.maxdsu)
+  if mxp and mdsu then
+    values.summ = mxp + mdsu
+  end
   if update then
     r:update()
   end
 end
 
+function statusbar.connect()
+  connect = true
+end
+
 function statusbar.disconnect()
+  connect = false
   values = {}
   r:update()
 end
 
 local function readcfg(teg)
-  local id = cfg.maxparams[teg..'id']
-  if id then
-    local score_index = tonumber(cfg.maxparams[teg])
-    local prompt_index= tonumber(cfg.baseparams[teg])
-    if score_index and prompt_index then
-      if not regs[id] then
-        regs[id] = createPcre(cfg.regexp[id])
-        if not regs[id] then
-          log('Ошибка в регулярном выражении '..id..' в настройках: '..getPath('config.xml'))
-        end
+  local score_index = tonumber(cfg.maxparams[teg])
+  local prompt_index= tonumber(cfg.baseparams[teg])
+  if score_index or prompt_index then
+    local id = nil
+    if score_index then
+      id = cfg.maxparams[teg..'id']
+      if not id then
+        return false, 'Не указан индекс регулярного выражения '..teg..'id'
       end
-      if regs[id] then
-        local c = {}
-        c.regindex = score_index
-        c.prompt = prompt_index
-        c.regid = id
-        cfg[teg] = c
-        return true
+      if not cfg.regexp[id] then
+        return false, 'Нет регулярного выражения для '..id
+      end
+      if not regs[id] then
+         regs[id] = createPcre(cfg.regexp[id])
+         if not regs[id] then
+           return false, 'Ошибка в регулярном выражении '..id
+         end
       end
     end
+    local c = {}
+    c.regindex = score_index
+    c.prompt = prompt_index
+    c.regid = id
+    cfg[teg] = c
+    return true
   end
   return false
 end
@@ -190,14 +207,28 @@ end
 function statusbar.init()
   local file = loadTable('config.xml')
   if not file then
-    return statusbar.term("Нет файла с настройками: "..getPath('config.xml'))
+    cfg = nil
+    return terminate("Нет файла с настройками: "..getPath('config.xml'))
   end
   cfg = file
   bars = 0
   regs = {}
+  local msgs = {}
   for _,v in pairs(tegs) do
-    if readcfg(v) then
+    local res,msg = readcfg(v)
+    if not res and msg then
+      msgs[msg] = true
+      msgs.notempty = true
+    end
+    if res then
       bars = bars + 1
+    end
+  end
+  if msgs.notempty then
+    msgs.notempty = nil
+    log('Ошибки в файле настрек: '..getPath('config.xml'))
+    for k,_ in pairs(msgs) do
+      log(k)
     end
   end
 
@@ -209,19 +240,15 @@ function statusbar.init()
   r:textColor(props.paletteColor(7))
   r:select(props.currentFont())
 
-  objs.hpbrush1 = r:createBrush{style ="solid", color=colors.hp1}
-  objs.hpbrush2 = r:createBrush{style ="solid", color=colors.hp2}
-  objs.mvbrush1 = r:createBrush{style ="solid", color=colors.mv1}
-  objs.mvbrush2 = r:createBrush{style ="solid", color=colors.mv2}
-  objs.mnbrush1 = r:createBrush{style ="solid", color=colors.mn1}
-  objs.mnbrush2 = r:createBrush{style ="solid", color=colors.mn2}
-  objs.expbrush1 = r:createBrush{style ="solid", color=colors.exp1}
-  objs.expbrush2 = r:createBrush{style ="solid", color=colors.exp2}
+  objs.hpbrush1 = r:createBrush{color=colors.hp1}
+  objs.hpbrush2 = r:createBrush{color=colors.hp2}
+  objs.mvbrush1 = r:createBrush{color=colors.mv1}
+  objs.mvbrush2 = r:createBrush{color=colors.mv2}
+  objs.mnbrush1 = r:createBrush{color=colors.mn1}
+  objs.mnbrush2 = r:createBrush{color=colors.mn2}
+  objs.expbrush1 = r:createBrush{color=colors.exp1}
+  objs.expbrush2 = r:createBrush{color=colors.exp2}
 
   values = {}
-end
-
-function statusbar.term(msg)
-  cfg = nil
-  terminate(msg)
+  connect = props.connected()
 end

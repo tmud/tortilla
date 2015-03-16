@@ -1,3 +1,0 @@
-промпт %h/%Hhp %m/%Mmn %v/%Vvp %xxp Вых:%e>
-
-промпт %hhp %mmn %vvp %xxp>
