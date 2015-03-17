@@ -58,10 +58,9 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 
         for (int i = 0, e = config.size(); i < e; ++i)
         {
-            std::string &s = config[i];
-            const wchar_t *wide = TA2W( config[i].c_str() );
-            const utf8* ptr = TW2U(wide);
-            parseString(u8string(ptr), errors);
+            TA2W wide(config[i].c_str());
+            TW2U str(wide);
+            parseString(u8string(str), errors);
         }
 
         // update all elements, through updating groups
@@ -103,9 +102,8 @@ void Jmc3Import::parseString(const u8string& str, std::vector<u8string>* errors)
     if (!base.size())
         return;
 
-    u8string s, t, p;
-    base.get(1, &s);      // lead symbol
-    base.get(1, &t);      // type
+    u8string c, p;
+    base.get(1, &c);      // command
     base.get(2, &p);      // params
 
     replaceLegacy(&p);
@@ -118,21 +116,21 @@ void Jmc3Import::parseString(const u8string& str, std::vector<u8string>* errors)
     }
 
     bool result = true;
-    if (t == "action")
+    if (c == "action")
         result = processAction();
-    else if (t == "alias")
+    else if (c == "alias")
         result = processAlias();
-    else if (t == "substitute")
+    else if (c == "substitute")
         result = processSubs();
-    else if (t == "antisubstitute")
+    else if (c == "antisubstitute")
         result = processAntisub();
-    else if (t == "highlight")
+    else if (c == "highlight")
         result = processHighlight();
-    else if (t == "hot")
+    else if (c == "hot")
         result = processHotkey();
-    else if (t == "gag")
+    else if (c == "gag")
         result = processGags();
-    else if (t == "variable")
+    else if (c == "variable")
         result = processVariable();
     if (!result && errors)
         errors->push_back(str);
@@ -257,7 +255,7 @@ void Jmc3Import::initLegacy()
 
 void Jmc3Import::initPcre()
 {
-    base.init("^(.)(.*?) +(.*) *");
+    base.init("^.(.*?) +(.*) *");
     param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
 }
 
