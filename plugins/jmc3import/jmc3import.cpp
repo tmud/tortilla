@@ -15,7 +15,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0");
+    lua_pushstring(L, "1.01");
     return 1;
 }
 
@@ -39,7 +39,7 @@ int menucmd(lua_State *L)
 
         std::vector<u8string> errors;
         Jmc3Import jmc3(L);
-        if (jmc3.import(parent, L, &errors))
+        if (jmc3.import(parent, &errors))
         {
             if (!errors.empty())
             {

@@ -9,15 +9,16 @@ AutoCloseHandle(HANDLE file) : hfile(file) {}
 ~AutoCloseHandle() { CloseHandle(hfile); }
 };
 
-Jmc3Import::Jmc3Import(lua_State *L) : m_aliases(L, "aliases"), m_actions(L, "actions"), m_subs(L, "subs"), m_antisubs(L, "antisubs"),
-m_highlights(L, "highlights"), m_hotkeys(L, "hotkeys"), m_gags(L, "gags"), m_vars(L, "vars"), m_groups(L, "groups")
+Jmc3Import::Jmc3Import(lua_State *pL) : m_aliases(pL, "aliases"), m_actions(pL, "actions"), m_subs(pL, "subs"), m_antisubs(pL, "antisubs"),
+m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups")
 {
+    L = pL;
     initPcre();
-    initLegacy(); 
+    initLegacy();
 }
 Jmc3Import::~Jmc3Import() {}
 
-bool Jmc3Import::import(HWND parent_for_dlgs, lua_State *L, std::vector<u8string>* errors)
+bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 {
     m_parent = parent_for_dlgs;
     SelectFileDlg dlg(m_parent, L"JMC3 config set(*.set)|*.set||");
@@ -102,9 +103,11 @@ void Jmc3Import::parseString(const u8string& str, std::vector<u8string>* errors)
     if (!base.size())
         return;
 
-    u8string t, p;
+    u8string s, t, p;
+    base.get(1, &s);      // lead symbol
     base.get(1, &t);      // type
     base.get(2, &p);      // params
+
     replaceLegacy(&p);
 
     param.findall(p.c_str());
@@ -254,7 +257,7 @@ void Jmc3Import::initLegacy()
 
 void Jmc3Import::initPcre()
 {
-    base.init("^#(.*?) +(.*) *");
+    base.init("^(.)(.*?) +(.*) *");
     param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
 }
 
