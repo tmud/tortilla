@@ -3,7 +3,7 @@
 class Jmc3Import
 {
     HWND m_parent;
-    Pcre base, param;
+    Pcre base, param, pcre_jmcSeparator;
     std::map<u8string, u8string> m_legacy;
     typedef std::map<u8string, u8string>::iterator iterator;
     luaT_ActiveObjects m_aliases, m_actions, m_subs, m_antisubs, m_highlights, m_hotkeys, m_gags, m_vars, m_groups;
@@ -23,8 +23,8 @@ private:
     void initCmdSymbols();
     void initJmcCommands();
     bool isJmcCommand(const u8string& str);
+    bool loadFile(const wchar_t* file, std::vector<u8string>* strings);
     void parseQueue(DataQueue &dq, std::vector<std::string>& out);
-    void parseString(const u8string& str, std::vector<u8string>* errors);
     bool parseParams(int min, int max, std::vector<u8string> *params);
     bool processAlias();
     bool processAction();

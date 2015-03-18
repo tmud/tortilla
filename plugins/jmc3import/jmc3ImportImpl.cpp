@@ -2,13 +2,6 @@
 #include "jmc3ImportImpl.h"
 #include "../mudclient/src/common/selectFileDlg.h"
 
-class AutoCloseHandle {
-    HANDLE hfile;
-public:
-AutoCloseHandle(HANDLE file) : hfile(file) {}
-~AutoCloseHandle() { CloseHandle(hfile); }
-};
-
 Jmc3Import::Jmc3Import(lua_State *pL) : m_aliases(pL, "aliases"), m_actions(pL, "actions"), m_subs(pL, "subs"), m_antisubs(pL, "antisubs"),
 m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups")
 {
@@ -24,52 +17,57 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 {
     m_parent = parent_for_dlgs;
     SelectFileDlg dlg(m_parent, L"JMC3 config set(*.set)|*.set||");
-    if (dlg.DoModal())
+    if (!dlg.DoModal())
+        return false;
+
+    std::vector<u8string> import;
+    if (!loadFile(dlg.GetFile().c_str(), &import))
+        return false;
+
+    // get jmc cmd separator
+    for (int i = 0, e = import.size(); i < e; ++i)
     {
-        std::wstring file(dlg.GetFile());
-        HANDLE hfile = CreateFile(file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-        if (hfile == INVALID_HANDLE_VALUE)
-            return errorBox("Невозможно прочитать данный файл!");
 
-        AutoCloseHandle _ach(hfile);
-
-        DWORD high = 0;
-        DWORD size = GetFileSize(hfile, &high);
-        if (high != 0 || size > (128 * 1024))
-            return errorBox("Файл слишком большого размера!");
-        if (size == 0)
-            return errorBox("Файл пустой!");
-
-        std::vector <std::string> config;
-        DataQueue dq;
-        int buffer_size = 1024;
-        MemoryBuffer buffer(buffer_size);
-        while (size > 0)
-        {
-            DWORD toread = buffer_size;
-            if (toread > size) toread = size;
-            DWORD readed = 0;
-            if (!ReadFile(hfile, buffer.getData(), toread, &readed, NULL) || readed != toread)
-                return errorBox("Ошибка чтения файла!");
-            dq.write(buffer.getData(), toread);
-            parseQueue(dq, config);
-            size -= toread;
-        }
-        char x = 0xa; dq.write(&x, 1);
-        parseQueue(dq, config);
-
-        for (int i = 0, e = config.size(); i < e; ++i)
-        {
-            TA2W wide(config[i].c_str());
-            TW2U str(wide);
-            parseString(u8string(str), errors);
-        }
-
-        // update all elements, through updating groups
-        m_groups.update();
-        return true;
     }
-    return false;
+
+    // get jmc cmd prefix
+    for (int i=0, e=import.size(); i<e; ++i)
+    {
+        base.find(import[i].c_str());
+        if (!base.size())
+            continue;
+        u8string c, p;
+        base.get(1, &jmc_prefix); // command prefix
+        base.get(2, &c);          // command
+        base.get(3, &p);          // params
+
+        param.findall(p.c_str());
+        if (!param.size())        //simple options
+            continue;
+
+        bool result = true;
+        if (c == "action")
+            result = processAction();
+        else if (c == "alias")
+            result = processAlias();
+        else if (c == "substitute")
+            result = processSubs();
+        else if (c == "antisubstitute")
+            result = processAntisub();
+        else if (c == "highlight")
+            result = processHighlight();
+        else if (c == "hot")
+            result = processHotkey();
+        else if (c == "gag")
+            result = processGags();
+        else if (c == "variable")
+            result = processVariable();
+        if (!result && errors)
+            errors->push_back(import[i]);
+    }
+    // update all elements, through updating groups
+    m_groups.update();
+    return true;
 }
 
 void Jmc3Import::parseQueue(DataQueue &dq, std::vector<std::string>& out)
@@ -98,43 +96,54 @@ void Jmc3Import::parseQueue(DataQueue &dq, std::vector<std::string>& out)
     dq.truncate(b-b0);
 }
 
-void Jmc3Import::parseString(const u8string& str, std::vector<u8string>* errors)
-{  
-    base.find(str.c_str());
-    if (!base.size())
-        return;
+class AutoCloseHandle {
+    HANDLE hfile;
+public:
+    AutoCloseHandle(HANDLE file) : hfile(file) {}
+    ~AutoCloseHandle() { CloseHandle(hfile); }
+};
 
-    u8string c, p;
-    base.get(1, &jmc_prefix); // jmc cmd prefix
-    base.get(2, &c);          // command
-    base.get(3, &p);          // params
+bool Jmc3Import::loadFile(const wchar_t* file, std::vector<u8string>* strings)
+{
+    HANDLE hfile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hfile == INVALID_HANDLE_VALUE)
+        return errorBox("Невозможно прочитать данный файл!");
 
-    param.findall(p.c_str());
-    if (!param.size())
+    AutoCloseHandle _ach(hfile);
+
+    DWORD high = 0;
+    DWORD size = GetFileSize(hfile, &high);
+    if (high != 0 || size > (128 * 1024))
+        return errorBox("Файл слишком большого размера!");
+    if (size == 0)
+        return errorBox("Файл пустой!");
+
+    std::vector <std::string> config;
+    DataQueue dq;
+    const int buffer_size = 1024;
+    MemoryBuffer buffer(buffer_size);
+    while (size > 0)
     {
-        //simple options
-        return;
+        DWORD toread = buffer_size;
+        if (toread > size) toread = size;
+        DWORD readed = 0;
+        if (!ReadFile(hfile, buffer.getData(), toread, &readed, NULL) || readed != toread)
+            return errorBox("Ошибка чтения файла!");
+        dq.write(buffer.getData(), toread);
+        parseQueue(dq, config);
+        size -= toread;
     }
-
-    bool result = true;
-    if (c == "action")
-        result = processAction();
-    else if (c == "alias")
-        result = processAlias();
-    else if (c == "substitute")
-        result = processSubs();
-    else if (c == "antisubstitute")
-        result = processAntisub();
-    else if (c == "highlight")
-        result = processHighlight();
-    else if (c == "hot")
-        result = processHotkey();
-    else if (c == "gag")
-        result = processGags();
-    else if (c == "variable")
-        result = processVariable();
-    if (!result && errors)
-        errors->push_back(str);
+    char x = 0xa; dq.write(&x, 1);
+    parseQueue(dq, config);
+    for (int i = 0, e = config.size(); i < e; ++i)
+    {
+        if (config[i].empty())
+            continue;
+        TA2W wide(config[i].c_str());
+        TW2U u8str(wide);
+        strings->push_back(u8string(u8str));
+    }
+    return true;
 }
 
 bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
@@ -230,6 +239,8 @@ void Jmc3Import::convert(u8string *str)
     TU2W tmp(str->c_str());
     OutputDebugString(tmp);
     OutputDebugString(L"\r\n");
+
+
 }
 
 void Jmc3Import::replaceLegacy(u8string *legacy)
@@ -265,8 +276,11 @@ void Jmc3Import::initLegacy()
 
 void Jmc3Import::initPcre()
 {
-    base.init("^(.)(.*?) +(.*) *");
+    base.init("^(\\W)(.*?) +(.*) *");
     param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
+
+    pcre_jmcSeparator.init("(\\W)");
+
 }
 
 void Jmc3Import::initCmdSymbols()
