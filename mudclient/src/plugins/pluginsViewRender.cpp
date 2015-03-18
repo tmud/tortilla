@@ -161,22 +161,22 @@ void PluginsViewRender::update()
 int PluginsViewRender::getFontHeight()
 {
     CDC dc(m_wnd.GetDC());
-    if (current_font)
-        m_dc.SelectFont(*current_font);
-    //HFONT old = dc.SelectFont(*current_font);
+    HFONT old = (current_font) ? dc.SelectFont(*current_font) : NULL;
     SIZE sz = { 0, 0 };
     GetTextExtentPoint32(dc, L"W", 1, &sz);
-    //dc.SelectFont(old);
+    if (current_font)
+        dc.SelectFont(old);
     return sz.cy;
 }
 
 int PluginsViewRender::getTextWidth(const tstring& text)
 {
     CDC dc(m_wnd.GetDC());
-    if (current_font)
-        m_dc.SelectFont(*current_font);
+    HFONT old = (current_font) ? dc.SelectFont(*current_font) : NULL;
     SIZE sz = { 0, 0 };
     GetTextExtentPoint32(dc, text.c_str(), text.length(), &sz);
+    if (current_font)
+        dc.SelectFont(old);
     return sz.cx;
 }
 //-------------------------------------------------------------------------------------------------

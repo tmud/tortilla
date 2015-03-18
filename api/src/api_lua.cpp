@@ -21,6 +21,7 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
     int n = lua_gettop(L);
     int on_stack = 0;
     bool object_method = false;
+    bool simple_method = false;
     bool success = true;
     int oplen = strlen(op);
     va_list args;
@@ -61,6 +62,7 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
         }
         case 't':
         {
+            if (i == 0) { object_method = true; simple_method = true; }
             on_stack++;
             break;
         }
@@ -94,9 +96,13 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
             if (lua_istable(L, required_func_pos))
             {
                 lua_pushstring(L, func);
-                lua_gettable(L, required_func_pos);
+                lua_gettable(L, required_func_pos);                
                 lua_insert(L, required_func_pos);
-                lua_pop(L, 1);
+                if (simple_method)
+                {
+                    lua_pop(L, 1);
+                    oplen--;
+                }
             }
             else
             {
@@ -125,7 +131,6 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
         luaT_error(L, error.c_str());
         return false;
     }
-
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))
     {
         return false;
