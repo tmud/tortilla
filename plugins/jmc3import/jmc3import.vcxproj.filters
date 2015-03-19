@@ -13,6 +13,8 @@
     <ClInclude Include="jmc3ImportImpl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="paramsDlg.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -29,5 +31,8 @@
     <None Include="plugin.def">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="jmc3import.rc" />
   </ItemGroup>
 </Project>

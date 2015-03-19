@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "jmc3ImportImpl.h"
 #include "../mudclient/src/common/selectFileDlg.h"
+#include "paramsDlg.h"
 
 Jmc3Import::Jmc3Import(lua_State *pL) : m_aliases(pL, "aliases"), m_actions(pL, "actions"), m_subs(pL, "subs"), m_antisubs(pL, "antisubs"),
 m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups")
@@ -16,15 +17,12 @@ Jmc3Import::~Jmc3Import() {}
 bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 {
     m_parent = parent_for_dlgs;
-    SelectFileDlg dlg(m_parent, L"JMC3 config set(*.set)|*.set||");
-    if (!dlg.DoModal())
+
+    ParamsDialog params;
+    if (params.DoModal(m_parent) == IDCANCEL)
         return false;
 
-    std::vector<u8string> import;
-    if (!loadFile(dlg.GetFile().c_str(), &import))
-        return false;
-
-    // get jmc cmd separator
+/*    // get jmc cmd separator
     for (int i = 0, e = import.size(); i < e; ++i)
     {
 
@@ -66,85 +64,10 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
             errors->push_back(import[i]);
     }
     // update all elements, through updating groups
-    m_groups.update();
+    m_groups.update();*/
     return true;
 }
 
-void Jmc3Import::parseQueue(DataQueue &dq, std::vector<std::string>& out)
-{
-    const char* b = (const char*)dq.getData();
-    const char* e = b + dq.getSize();
-    const char* p = b;
-    while (p != e)
-    {
-        for (;p != e; ++p)
-        {
-            if (*p == 0xd || *p == 0xa)
-                break;
-        }
-
-        if (p != e)
-        {
-           std::string label(b, p-b);
-           if (!label.empty())
-                out.push_back(label);
-           p++;
-           b = p;
-        }
-    }
-    const char* b0 = (const char*)dq.getData();
-    dq.truncate(b-b0);
-}
-
-class AutoCloseHandle {
-    HANDLE hfile;
-public:
-    AutoCloseHandle(HANDLE file) : hfile(file) {}
-    ~AutoCloseHandle() { CloseHandle(hfile); }
-};
-
-bool Jmc3Import::loadFile(const wchar_t* file, std::vector<u8string>* strings)
-{
-    HANDLE hfile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hfile == INVALID_HANDLE_VALUE)
-        return errorBox("Невозможно прочитать данный файл!");
-
-    AutoCloseHandle _ach(hfile);
-
-    DWORD high = 0;
-    DWORD size = GetFileSize(hfile, &high);
-    if (high != 0 || size > (128 * 1024))
-        return errorBox("Файл слишком большого размера!");
-    if (size == 0)
-        return errorBox("Файл пустой!");
-
-    std::vector <std::string> config;
-    DataQueue dq;
-    const int buffer_size = 1024;
-    MemoryBuffer buffer(buffer_size);
-    while (size > 0)
-    {
-        DWORD toread = buffer_size;
-        if (toread > size) toread = size;
-        DWORD readed = 0;
-        if (!ReadFile(hfile, buffer.getData(), toread, &readed, NULL) || readed != toread)
-            return errorBox("Ошибка чтения файла!");
-        dq.write(buffer.getData(), toread);
-        parseQueue(dq, config);
-        size -= toread;
-    }
-    char x = 0xa; dq.write(&x, 1);
-    parseQueue(dq, config);
-    for (int i = 0, e = config.size(); i < e; ++i)
-    {
-        if (config[i].empty())
-            continue;
-        TA2W wide(config[i].c_str());
-        TW2U u8str(wide);
-        strings->push_back(u8string(u8str));
-    }
-    return true;
-}
 
 bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
 {
@@ -239,8 +162,6 @@ void Jmc3Import::convert(u8string *str)
     TU2W tmp(str->c_str());
     OutputDebugString(tmp);
     OutputDebugString(L"\r\n");
-
-
 }
 
 void Jmc3Import::replaceLegacy(u8string *legacy)
@@ -305,10 +226,4 @@ bool Jmc3Import::isJmcCommand(const u8string& str)
 {
     const std::vector<u8string>::iterator it = std::find(m_jmc_commands.begin(), m_jmc_commands.end(), str);
     return (it == m_jmc_commands.end()) ? false : true;
-}
-
-bool Jmc3Import::errorBox(const utf8* msg)
-{
-    MessageBox(m_parent, TU2W(msg), L"Jmc3 Import", MB_OK | MB_ICONSTOP);
-    return false;
 }

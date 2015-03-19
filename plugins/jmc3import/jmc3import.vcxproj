@@ -57,7 +57,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;JMC3IMPORT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common;..\..\libs\wtl\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -75,7 +75,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;JMC3IMPORT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common;..\..\libs\wtl\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -89,6 +89,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="jmc3ImportImpl.h" />
+    <ClInclude Include="paramsDlg.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -101,6 +103,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="jmc3import.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

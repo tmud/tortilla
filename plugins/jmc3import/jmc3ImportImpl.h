@@ -23,8 +23,6 @@ private:
     void initCmdSymbols();
     void initJmcCommands();
     bool isJmcCommand(const u8string& str);
-    bool loadFile(const wchar_t* file, std::vector<u8string>* strings);
-    void parseQueue(DataQueue &dq, std::vector<std::string>& out);
     bool parseParams(int min, int max, std::vector<u8string> *params);
     bool processAlias();
     bool processAction();
@@ -36,5 +34,4 @@ private:
     bool processVariable();
     void convert(u8string *str);
     void replaceLegacy(u8string *legacy);
-    bool errorBox(const utf8* msg);
 };
