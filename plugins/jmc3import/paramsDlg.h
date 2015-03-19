@@ -13,6 +13,8 @@ class ParamsDialog : public CDialogImpl<ParamsDialog>
 public:
     enum { IDD = IDD_IMPORT_PARAMS };    
     std::vector<u8string> strings;
+    u8string cmdsymbol;
+    u8string separator;
 
 private:
     CEdit m_filepath, m_cmdsymbol, m_separator;
@@ -41,8 +43,9 @@ private:
         logfont.lfWeight = FW_BOLD;
         m_error_font.CreateFontIndirect(&logfont);
         m_error_msg.SetFont(m_error_font);
-
         m_filepath.SetReadOnly();
+        m_cmdsymbol.SetLimitText(1);
+        m_separator.SetLimitText(1);
         enableControls(FALSE);
         setDlgFocus(m_browse);
         CenterWindow(GetParent());
@@ -53,7 +56,7 @@ private:
     {
         SelectFileDlg dlg(m_hWnd, L"JMC3 config set(*.set)|*.set||");
         if (!dlg.DoModal())
-            return 0;
+            return 0;       
         std::wstring file(dlg.GetFile());
         m_filepath.SetWindowText(file.c_str());
         std::wstring error;
@@ -62,9 +65,7 @@ private:
             enableControls(FALSE);
             m_error_msg.SetWindowText(error.c_str());
             return 0;
-        }
-        enableControls(TRUE);
-
+        }        
         //get cmd symbol
         std::map<u8string, int> counter;
         typedef std::map<u8string, int>::iterator iterator;
@@ -77,10 +78,26 @@ private:
             else
                 it->second++;
         }
+        u8string maxsymbol; int maxsize = 0;
+        iterator it = counter.begin(), it_end = counter.end();
+        for (; it != it_end; ++it) {
+            if (it->second > maxsize) { maxsize = it->second; maxsymbol = it->first; }
+        }
+        bool baddata = true;
+        if (!maxsymbol.empty())
+        { 
+            int pos = strspn(maxsymbol.c_str(), "#$%&*!@~`:;'");
+            if (pos == maxsymbol.length()) baddata = false;        
+        }
 
-        u8string maxsymbol;   
-
-        m_cmdsymbol.SetWindowText(L"");
+        if (baddata)
+        {
+            enableControls(FALSE);
+            m_error_msg.SetWindowText(L"Файл поврежден или не является файлом Jmc3!");
+            return 0;
+        }
+        enableControls(TRUE);
+        m_cmdsymbol.SetWindowText(TU2W(maxsymbol.c_str()));
         m_separator.SetWindowText(L";");
         setDlgFocus(m_ok);
         return 0;
@@ -88,12 +105,18 @@ private:
 
     LRESULT OnOk(WORD, WORD, HWND, BOOL&)
     {
+        wchar_t buffer[4];
+        m_cmdsymbol.GetWindowText(buffer, 2);
+        cmdsymbol.assign(TW2U(buffer));
+        m_separator.GetWindowText(buffer, 2);
+        separator.assign(TW2U(buffer));
         EndDialog(IDOK);
         return 0;
     }
 
     LRESULT OnCancel(WORD, WORD, HWND, BOOL&)
     {
+        strings.clear();
         EndDialog(IDCANCEL);
         return 0;
     }
@@ -123,6 +146,7 @@ private:
 private:
     bool loadFile(const wchar_t* file, std::wstring *error)
     {
+        strings.clear();
         HANDLE hfile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
         if (hfile == INVALID_HANDLE_VALUE)
         {

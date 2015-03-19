@@ -3,14 +3,16 @@
 class Jmc3Import
 {
     HWND m_parent;
-    Pcre base, param, pcre_jmcSeparator;
+    Pcre base, param;
     std::map<u8string, u8string> m_legacy;
     typedef std::map<u8string, u8string>::iterator iterator;
     luaT_ActiveObjects m_aliases, m_actions, m_subs, m_antisubs, m_highlights, m_hotkeys, m_gags, m_vars, m_groups;
     lua_State *L;
-    u8string prefix, separator;
+
     std::vector<u8string> m_jmc_commands;
-    u8string jmc_prefix;
+
+    u8string cmdsymbol, separator;
+    u8string jmc_cmdsymbol, jmc_separator;
 
 public:
     Jmc3Import(lua_State *pL);

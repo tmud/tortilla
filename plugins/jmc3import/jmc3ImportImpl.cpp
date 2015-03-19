@@ -17,25 +17,26 @@ Jmc3Import::~Jmc3Import() {}
 bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 {
     m_parent = parent_for_dlgs;
-
     ParamsDialog params;
     if (params.DoModal(m_parent) == IDCANCEL)
         return false;
-
-/*    // get jmc cmd separator
-    for (int i = 0, e = import.size(); i < e; ++i)
-    {
-
-    }
-
+    jmc_cmdsymbol = params.cmdsymbol;
+    jmc_separator = params.separator;
+    
+    std::vector<u8string> &v = params.strings;
+   
     // get jmc cmd prefix
-    for (int i=0, e=import.size(); i<e; ++i)
+    for (int i=0,e=v.size(); i<e; ++i)
     {
-        base.find(import[i].c_str());
+        base.find(v[i].c_str());
         if (!base.size())
             continue;
+        u8string cmdsymbol;
+        base.get(1, &cmdsymbol);
+        if (cmdsymbol != params.cmdsymbol)
+            continue;
+
         u8string c, p;
-        base.get(1, &jmc_prefix); // command prefix
         base.get(2, &c);          // command
         base.get(3, &p);          // params
 
@@ -61,13 +62,13 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         else if (c == "variable")
             result = processVariable();
         if (!result && errors)
-            errors->push_back(import[i]);
+            errors->push_back(import`[i]);
     }
+
     // update all elements, through updating groups
-    m_groups.update();*/
+    m_groups.update();
     return true;
 }
-
 
 bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
 {
@@ -89,7 +90,7 @@ bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
 bool Jmc3Import::processAlias()
 {
     std::vector<u8string> p;
-    if (!parseParams(3, 3, &p)) 
+    if (!parseParams(3, 3, &p))
         return false;
     convert(&p[1]);
     return m_aliases.add(p[0].c_str(), p[1].c_str(), p[2].c_str());
@@ -199,16 +200,13 @@ void Jmc3Import::initPcre()
 {
     base.init("^(\\W)(.*?) +(.*) *");
     param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
-
-    pcre_jmcSeparator.init("(\\W)");
-
 }
 
 void Jmc3Import::initCmdSymbols()
 {
     lua_getglobal(L, "props");
     luaT_run(L, "cmdPrefix", "t");
-    prefix.assign(lua_tostring(L, -1));
+    cmdsymbol.assign(lua_tostring(L, -1));
     lua_pop(L, 1);
     lua_getglobal(L, "props");
     luaT_run(L, "cmdSeparator", "t");
