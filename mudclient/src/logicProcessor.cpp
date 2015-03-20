@@ -81,20 +81,9 @@ void LogicProcessor::processCommand(const tstring& cmd)
     {
         tstring cmd = m_input.commands[i]->full_command;
         if (!cmd.empty() && cmd.at(0) == cmd_prefix)
-        {
-            //it is system command for client (not game command)
-            m_pHost->preprocessGameCmd(&cmd);
-            processSystemCommand(cmd);
-        }
+            processSystemCommand(cmd); //it is system command for client (not game command)
         else
-        {
-            // it is game command
-            m_pHost->preprocessGameCmd(&cmd);
-            WCHAR br[2] = { 10, 0 };
-            cmd.append(br);
-            processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
-            sendToNetwork(cmd);
-        }
+            processGameCommand(cmd); // it is game command
     }
 }
 
@@ -103,7 +92,7 @@ void LogicProcessor::updateProps()
     m_helper.updateProps();
     m_input.updateProps(propData);
     m_logs.updateProps(propData);
-
+    m_prompt_mode = OFF;
     if (propData->recognize_prompt)
     {
         // calc regexp from template
@@ -179,6 +168,15 @@ void LogicProcessor::simpleLog(const tstring& cmd)
     processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG);
 }
 
+void LogicProcessor::syscmdLog(const tstring& cmd)
+{
+    if (!propData->show_system_commands)
+        return;
+    tstring log(cmd);
+    log.append(L"\r\n");
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD);
+}
+
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
     if (!propData->plugins_logs)
@@ -186,8 +184,9 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     int window = propData->plugins_logs_window;
     if (window >= 0 && window <= OUTPUT_WINDOWS)
     {
-        tstring log(L"[plugins] ");
+        tstring log(L"[plugin] ");
         log.append(cmd);
+        log.append(L"\r\n");
         processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
     }
 }
@@ -226,6 +225,11 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     return true;
 }
 
+void LogicProcessor::doGameCommand(const tstring& cmd)
+{
+    processCommand(cmd);
+}
+
 void LogicProcessor::updateLog(const tstring& msg)
 {
     m_updatelog.append(msg);
@@ -244,10 +248,10 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
 
 void LogicProcessor::processNetworkError(const tstring& error)
 {
+    m_prompt_mode = OFF;
+    m_prompt_counter = 0;
     if (m_connected || m_connecting)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
-    m_prompt_mode = OFF;
-    m_prompt_counter = 0;
 }

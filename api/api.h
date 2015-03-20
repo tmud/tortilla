@@ -14,6 +14,13 @@ typedef std::string u8string;
 #define LUAT_WINDOW     100
 #define LUAT_VIEWDATA   101
 #define LUAT_ACTIVEOBJS 102
+#define LUAT_PANEL      103
+#define LUAT_RENDER     104
+#define LUAT_PEN        105
+#define LUAT_BRUSH      106
+#define LUAT_FONT       107
+#define LUAT_PCRE       108
+#define LUAT_LAST       108
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -22,6 +29,7 @@ void  luaT_log(lua_State *L, const utf8* log_message);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
+const utf8* luaT_typename(lua_State* L, int index);
 void  luaT_showLuaStack(lua_State* L, const utf8* label);
 void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)
@@ -34,13 +42,23 @@ class luaT_window
     void *window;
 public:
     luaT_window() : L(NULL), window(NULL) {}
-    void init(lua_State *pL, void *window_object) { L = pL; window = window_object; }
-
+	bool create(lua_State *pL, const utf8* caption, int width, int height)
+	{
+		if (!pL)
+			return false;
+		L = pL;
+		luaT_run(L, "createWindow", "sdd", caption, width, height);
+		void *wnd = luaT_toobject(L, -1);
+		if (!wnd)
+			return false;
+		window = wnd;
+		return true;
+	}
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "hwnd", "o");
-        HWND hwnd = (HWND)lua_tointeger(L, -1);
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
         lua_pop(L, 1);
         return hwnd;
     }
@@ -54,13 +72,28 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "show", "o");
     }
-    bool isvisible()
+    bool isVisible()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "isvisible", "o");
+        luaT_run(L, "isVisible", "o");
         bool result = (lua_toboolean(L, -1) == 0) ? false : true;
         lua_pop(L, 1);
         return result;
+    }
+    void dock(const utf8* side)
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "dock", "os", side);
+    }
+    void undock()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "undock", "o");
+    }
+    void block(const utf8* side)
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "block", "os", side);
     }
     void attach(HWND child)
     {
@@ -69,6 +102,39 @@ public:
     }
 };
 
+class luaT_panel
+{
+    lua_State *L;
+    void *panel;
+public:
+    bool create(lua_State *pL, const utf8* side, int size)
+    {
+        if (!pL)
+            return false;
+        L = pL;
+        luaT_run(L, "createPanel", "sd", side, size);
+        void *p = luaT_toobject(L, -1);
+        if (!p)
+            return false;
+        panel = p;
+        return true;
+    }
+    void attach(HWND child)
+    {
+        luaT_pushobject(L, panel, LUAT_PANEL);
+        luaT_run(L, "attach", "od", child);
+    }
+    HWND hwnd()
+    {
+        luaT_pushobject(L, panel, LUAT_PANEL);
+        luaT_run(L, "hwnd", "o");
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        return hwnd;
+    }
+};
+
+class Pcre;
 class luaT_ViewData
 {
     lua_State *L;
@@ -79,7 +145,7 @@ public:
     luaT_ViewData() : L(NULL), view_data(NULL) {}
     void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
     int size()             // count of all strings
-    { 
+    {
         runcmd("size");
         return intresult(); 
     }
@@ -88,44 +154,49 @@ public:
         runcmdint("select", index);
         return boolresult();
     }
-    int getindex()
+    int getIndex()
     {
-        runcmd("getindex");
+        runcmd("getIndex");
         return intresult();
     }
-    bool isfirst()
+    bool isFirst()
     {
-        runcmd("isfirst");
+        runcmd("isFirst");
         return boolresult(); 
     }
-    bool isgamecmd()
+    bool isLast()
     {
-        runcmd("isgamecmd");
+        runcmd("isLast");
         return boolresult();
     }
-    bool isprompt()
+    bool isGameCmd()
     {
-        runcmd("isprompt");
+        runcmd("isGameCmd");
         return boolresult();
     }
-    void getprompt(u8string *str)
+    bool isPrompt()
     {
-        runcmd("getprompt");
+        runcmd("isPrompt");
+        return boolresult();
+    }
+    void getPrompt(u8string *str)
+    {
+        runcmd("getPrompt");
         strresult(str);
     }
-    void gettext(u8string* str) 
+    void getText(u8string* str) 
     {
-        runcmd("gettext");
+        runcmd("getText");
         strresult(str); 
     }
-    int gettextlen()
+    int getTextLen()
     {
-        runcmd("gettextlen");
+        runcmd("getTextLen");
         return intresult();
     }
-    void gethash(u8string* str)
+    void getHash(u8string* str)
     {
-        runcmd("gethash");
+        runcmd("getHash");
         strresult(str);
     }
     int blocks()            // count of blocks for selected string
@@ -133,9 +204,9 @@ public:
         runcmd("blocks");
         return intresult(); 
     }
-    void getblocktext(int block, u8string* str)
+    void getBlockText(int block, u8string* str)
     {
-        runcmdint("getblocktext", block);
+        runcmdint("getBlockText", block);
         strresult(str);
     }
     bool get(int block, int param, unsigned int *value)
@@ -153,36 +224,43 @@ public:
         luaT_run(L, "set", "oddu", block, param, value);
         return boolresult();
     }
-    bool setblocktext(int block, const utf8* text)
+    bool setBlockText(int block, const utf8* text)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "setblocktext", "ods", block, text);
+        luaT_run(L, "setBlockText", "ods", block, text);
         return boolresult();
     }
-    bool copyblock(int block, int dst_string, int dst_block)
+    bool copyBlock(int block, int dst_string, int dst_block)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "copyblock", "oddd", block, dst_string, dst_block);
+        luaT_run(L, "copyBlock", "oddd", block, dst_string, dst_block);
         return boolresult();
     }
-    bool deleteblock(int block)
+    bool deleteBlock(int block)
     {
-        runcmdint("deleteblock", block);
+        runcmdint("deleteBlock", block);
         return boolresult();
     }
-    bool deleteallblocks()
+    bool deleteAllBlocks()
     {
-        runcmd("deleteallblocks");
+        runcmd("deleteAllBlocks");
         return boolresult();
     }
-    bool createstring()
+    bool createString()
     {
-        runcmd("createstring");
+        runcmd("createString");
         return boolresult();
     }
-    bool deletestring()
+    bool deleteString()
     {
-        runcmd("deletestring");
+        runcmd("deleteString");
+        return boolresult();
+    }
+    bool find(Pcre *p)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_pushobject(L, p, LUAT_PCRE);
+        luaT_run(L, "find", "ot");
         return boolresult();
     }
 
@@ -214,7 +292,7 @@ private:
         if (lua_isstring(L, -1)) res->assign(lua_tostring(L, -1));
         else res->clear();
         lua_pop(L, 1);
-    }    
+    }
 };
 
 // active objects api
@@ -252,16 +330,16 @@ public:
         luaT_run(L, "delete", "o");
         return boolresult();
     }
-    int getindex()
+    int getIndex()
     {
         if (!getao()) return false;
-        luaT_run(L, "getindex", "o");
+        luaT_run(L, "getIndex", "o");
         return intresult();
     }
-    bool setindex(int index)
+    bool setIndex(int index)
     {
         if (!getao()) return false;
-        luaT_run(L, "setindex", "od", index);
+        luaT_run(L, "setIndex", "od", index);
         return boolresult();
     }
     bool get(int param, u8string* value)
@@ -317,14 +395,49 @@ private:
 };
 
 // utf8 <-> wide <-> ansi
-const wchar_t* convert_utf8_to_wide(const utf8* string);
-const utf8* convert_wide_to_utf8(const wchar_t* string);
-const wchar_t* convert_ansi_to_wide(const char* string);
-const char* convert_wide_to_ansi(const wchar_t* string);
-#define TU2W(x) convert_utf8_to_wide(x) //todo справку подправить
-#define TW2U(x) convert_wide_to_utf8(x)
-#define TA2W(x) convert_ansi_to_wide(x)
-#define TW2A(x) convert_wide_to_ansi(x)
+typedef void* strbuf;
+void* strbuf_ptr(strbuf b);
+void  strbuf_destroy(strbuf b);
+strbuf convert_utf8_to_wide(const utf8* string);
+strbuf convert_wide_to_utf8(const wchar_t* string);
+strbuf convert_ansi_to_wide(const char* string);
+strbuf convert_wide_to_ansi(const wchar_t* string);
+
+class TU2W
+{
+    strbuf b;
+public:
+    TU2W(const utf8* string) { b = convert_utf8_to_wide(string); }
+    ~TU2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2U
+{
+    strbuf b;
+public:
+    TW2U(const wchar_t* string) { b = convert_wide_to_utf8(string); }
+    ~TW2U() { strbuf_destroy(b); }
+    operator const utf8*() const { return (const utf8*)strbuf_ptr(b); }
+};
+
+class TA2W
+{
+    strbuf b;
+public:
+    TA2W(const char* string) { b = convert_ansi_to_wide(string); }
+    ~TA2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2A
+{
+    strbuf b;
+public:
+    TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
+    ~TW2A() { strbuf_destroy(b); }
+    operator const char*() const { return (const char*)strbuf_ptr(b); }
+};
 
 // xml api
 typedef void* xnode;
@@ -380,12 +493,12 @@ namespace xml
         {
             u8string result;
             if (!get(attribute, &result)) return false;
-            value->assign(convert_utf8_to_wide(result.c_str()));
+            value->assign(TU2W(result.c_str()));
             return true;
         }
         void set(const utf8* attribute, const utf8* value) { xml_set(m_Node, attribute, value); }
         void set(const utf8* attribute, int value) { char buffer[16]; _itoa_s(value, buffer, 10); xml_set(m_Node, attribute, buffer); }
-        void set(const utf8* attribute, const std::wstring& value) { xml_set(m_Node, attribute, convert_wide_to_utf8(value.c_str())); }
+        void set(const utf8* attribute, const std::wstring& value) { xml_set(m_Node, attribute, TW2U(value.c_str())); }
         void gettext(u8string *text) {  text->assign(xml_get_text(m_Node)); }
         void settext(const utf8* text) { xml_set_text(m_Node, text); }
         xml::node createsubnode(const utf8* name) { return xml::node(xml_create_child(m_Node, name)); }
@@ -465,7 +578,7 @@ public:
     int  size() { return pcre_size(regexp); }
     int  first(int index) { return pcre_first(regexp, index); }
     int  last(int index) { return pcre_last(regexp, index); }
-    void getstring(int index, u8string *str) { str->assign(pcre_string(regexp, index)); }
+    void get(int index, u8string *str) { str->assign(pcre_string(regexp, index)); }
 private:
     pcre8 regexp;
 };

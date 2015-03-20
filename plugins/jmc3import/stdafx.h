@@ -16,3 +16,6 @@
 #include "dataQueue.h"
 #include "memoryBuffer.h"
 
+#include <atlbase.h>
+#include <atlapp.h>
+#include <atlctrls.h>

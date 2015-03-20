@@ -62,12 +62,32 @@ bool Plugin::reloadPlugin()
     return result;
 }
 
+void Plugin::updateProps()
+{
+    for (int i = 0, e = dockpanes.size(); i < e; ++i)
+    {
+        CWindow wnd(*dockpanes[i]);
+        wnd.Invalidate();
+    }
+    for (int i = 0, e = panels.size(); i < e; ++i)
+    {
+        CWindow wnd(*panels[i]);
+        wnd.Invalidate();
+    }
+}
+
 void pluginDeleteResources(Plugin *plugin);
 void Plugin::setOn(bool on)
 {
     if (!current_state && on) {
+        error_state = false;
+        for (int i = 0, e = dockpanes.size(); i < e; ++i)
+            dockpanes[i]->resetRenderErrorState();
+        for (int i = 0, e = panels.size(); i < e; ++i)
+            panels[i]->resetRenderErrorState();
+        if (!runMethod("init", 0, 0))
+            error_state = true;
         current_state = true;
-        runMethod("init", 0, 0);
     }
     else if (current_state && !on) {
         current_state = false;
@@ -89,7 +109,7 @@ void Plugin::closeWindow(HWND wnd)
     runMethod("closewindow", 1, 0);
 }
 
-bool Plugin::runMethod(const char* method, int args, int results)
+bool Plugin::runMethod(const char* method, int args, int results, bool *not_supported)
 {
     lua_getglobal(L, module.c_str());
     if (!lua_istable(L, -1))
@@ -99,6 +119,7 @@ bool Plugin::runMethod(const char* method, int args, int results)
     if (!lua_isfunction(L, -1)) // not supported function in plugin
     {
         lua_pop(L, 2);
+        if (not_supported) *not_supported = true;
         return true;
     }
     lua_insert(L, -(args + 2));
@@ -109,10 +130,11 @@ bool Plugin::runMethod(const char* method, int args, int results)
     {
         // error in call
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(L, method, lua_tostring(L, -1));
+            pluginError(method, lua_tostring(L, -1));
         else
-            pluginError(L, method, "неизвестная ошибка");
+            pluginError(method, "неизвестная ошибка");
         _cp = old;
+        lua_settop(L, 0);
         return false;
     }
     _cp = old;
@@ -181,7 +203,13 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
         p[size] = 0;                                      // set EOF
         if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) // check BOM
             p = p + 3;
-        luaL_dostring(L, (const char*)p);
+        if (luaL_dostring(L, (const char*)p))
+        {
+            Utf8ToWide e(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            pluginLoadError(e, fname);
+            return false;
+        }
         return initLoadedPlugin(fname);
     }
     return false;
@@ -192,7 +220,7 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
     file = fname;
     const wchar_t *ext = wcsrchr(fname, L'.');
     filename.assign(fname, ext - fname);
-    module = convert_wide_to_ansi(filename.c_str());
+    module = TW2A(filename.c_str());
 
     lua_getglobal(L, module.c_str());
     bool loaded = lua_istable(L, -1);

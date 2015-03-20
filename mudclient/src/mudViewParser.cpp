@@ -63,6 +63,7 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
         m_current_string = NULL;
         m_last_finished = false;
     }
+    data->last_finished = m_last_finished;
 }
 
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)
@@ -282,6 +283,20 @@ void ColorsCollector::process(parseData *data)
            }
        }
    }
+}
+
+void StringsWrapper::process(parseData *data)
+{
+    parseDataStrings &s = data->strings;
+    int strings = s.size();
+    for (int i=0; i<strings; ++i)
+    {
+        if (s[i]->getTextLen() <= m_maxlen)
+            continue;
+        MudViewString *newstr = s[i]->divideString(m_maxlen);
+        s.insert(s.begin()+i+1, newstr);
+        strings++;
+    }
 }
 
 #ifdef _DEBUG

@@ -1,7 +1,5 @@
 #pragma once
 
-#define _MULTILOCK
-
 extern "C" {
 #include "../include/lua.h"
 #include "../include/lualib.h"

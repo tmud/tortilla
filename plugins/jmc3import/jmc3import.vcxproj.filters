@@ -5,6 +5,9 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{91d8ef88-fa16-4ab7-a8c7-48e58e52cf45}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -12,6 +15,12 @@
     </ClInclude>
     <ClInclude Include="jmc3ImportImpl.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="paramsDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -26,8 +35,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ResourceCompile Include="jmc3import.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
     <None Include="plugin.def">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>

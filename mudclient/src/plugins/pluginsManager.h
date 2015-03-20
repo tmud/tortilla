@@ -1,7 +1,6 @@
 #pragma once
 
 #include "plugin.h"
-void collectGarbage();
 
 class PluginsManager
 {
@@ -13,8 +12,8 @@ public:
     PluginsManager(PropertiesData *props);
     ~PluginsManager();
     void loadPlugins(const tstring& group, const tstring& profile);
-    void unloadPlugins();    
-    void pluginsPropsDlg();
+    void unloadPlugins();
+    bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
@@ -22,10 +21,15 @@ public:
     void processViewData(const char* method, int view, parseData* data);
     void processBarCmd(tstring *cmd);
     void processHistoryCmd(tstring *cmd);
+    void processConnectEvent();
+    void processDisconnectEvent();
+    void processTick();
 
 private:
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
-    bool doPluginsTableMethod(const char* method, std::vector<tstring>* cmds);
-    void turnoffPlugin(const char* method, int plugin_index);
+    bool doPluginsTableMethod(const char* method, std::vector<tstring>* table);
+    void doPluginsMethod(const char* method);
+    void turnoffPlugin(const char* error, int plugin_index);
+    void terminatePlugin(Plugin* p);
 };

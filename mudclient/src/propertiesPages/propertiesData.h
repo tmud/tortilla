@@ -280,12 +280,20 @@ struct OutputWindow
     int  lastside;
 };
 
+struct PanelWindow
+{
+    PanelWindow() : side(0), size(0) {}
+    int side;
+    int size;
+};
+
 struct PluginData
 {
     PluginData() : state(false) {}
     tstring name;
     int state;
-    std::vector<OutputWindow> windows;    
+    std::vector<OutputWindow> windows;
+    std::vector<PanelWindow> panels;
 
     void initDefaultPos(int width, int height, OutputWindow *w)
     {
@@ -293,6 +301,19 @@ struct PluginData
         int x = 100 + windows_count * 50;
         int y = 250 + windows_count * 50;
         w->initDefaultPos(x, y, width, height);                        
+    }
+
+    bool findWindow(const tstring& window_name, OutputWindow *w)
+    {
+        for (int j = 0, je = windows.size(); j < je; ++j)
+        {
+            if (windows[j].name == window_name)
+            {
+                *w = windows[j];
+                return true;
+            }
+        }
+        return false;
     }
 };
 
@@ -322,7 +343,7 @@ struct PropertiesData
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(1), clear_bar(1), disable_ya(0)
-       , history_tab(0), timers_on(0), plugins_logs(0), plugins_logs_window(0), recognize_prompt(0)
+       , history_tab(0), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();

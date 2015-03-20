@@ -147,7 +147,7 @@ protected:
         int max_index = -1;
         std::vector<int> indexes;
         check_doubles.findall(key);
-        for (int i = 0, e = check_doubles.size(); i<e; ++i)
+        for (int i = 1, e = check_doubles.size(); i<e; ++i)
         {
             int pos = check_doubles.first(i) + 1;
             char symbol = key[pos];

@@ -172,9 +172,11 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\plugins\pluginsApi.h" />
     <ClInclude Include="src\plugins\pluginsDlg.h" />
     <ClInclude Include="src\plugins\pluginsManager.h" />
+    <ClInclude Include="src\plugins\pluginsRenderObjects.h" />
     <ClInclude Include="src\plugins\pluginSupport.h" />
     <ClInclude Include="src\plugins\pluginsView.h" />
     <ClInclude Include="src\plugins\pluginsParseData.h" />
+    <ClInclude Include="src\plugins\pluginsViewRender.h" />
     <ClInclude Include="src\profiles\profileDlgs.h" />
     <ClInclude Include="src\profiles\profileHelpers.h" />
     <ClInclude Include="src\profiles\profilesPath.h" />
@@ -226,9 +228,14 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\plugin.cpp" />
     <ClCompile Include="src\plugins\pluginsApi.cpp" />
     <ClCompile Include="src\plugins\pluginsApi2.cpp" />
+    <ClCompile Include="src\plugins\pluginsApi3.cpp" />
     <ClCompile Include="src\plugins\pluginsManager.cpp" />
     <ClCompile Include="src\plugins\pluginsModules.cpp" />
+    <ClCompile Include="src\plugins\pluginsPanels.cpp" />
+    <ClCompile Include="src\plugins\pluginsPcre.cpp" />
     <ClCompile Include="src\plugins\pluginSupport.cpp" />
+    <ClCompile Include="src\plugins\pluginsView.cpp" />
+    <ClCompile Include="src\plugins\pluginsViewRender.cpp" />
     <ClCompile Include="src\profiles\profileHelpers.cpp" />
     <ClCompile Include="src\profiles\profilesPath.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />

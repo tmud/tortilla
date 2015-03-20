@@ -4,16 +4,12 @@
 typedef std::vector<MudViewString*> parseDataStrings;
 struct parseData
 {
-    parseData() : update_prev_string(false) {}
+    parseData() : update_prev_string(false), last_finished(true) {}
     ~parseData() { autodel<MudViewString> z1(strings); }
     bool update_prev_string;
+    bool last_finished;
     parseDataStrings strings;
 };
-
-// only for debug (help functions)
-#ifdef _DEBUG
-//#define MARKERS_IN_VIEW
-#endif
 
 #ifdef MARKERS_IN_VIEW
 void markBlink(parseDataStrings& strings);
@@ -80,5 +76,12 @@ private:
 class ColorsCollector
 {
 public:
+    void process(parseData *data);
+};
+
+class StringsWrapper
+{  int m_maxlen;
+public:
+    StringsWrapper(int maxlen) : m_maxlen(maxlen) {}
     void process(parseData *data);
 };

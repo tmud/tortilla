@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <baseparams hp="1" mn="2" mv="3" dsu="4"/>
+  <maxparams hp="1" hpid="r1" mn="2" mnid="r1" mv="3" mvid="r1" xp="1" xpid="r2" dsu="1" dsuid="r3"/>
+  <regexp r1="^Вы имеете [0-9]+\(([0-9]+)\) здоровья, [0-9]+\(([0-9]+)\) маны, [0-9]+\(([0-9]+)\) энергии." 
+  r2="^Вы набрали ([0-9]+) опыта.*" 
+  r3="^Вам надо набрать ([0-9]+) опыта.*"/>
+</plugindata>

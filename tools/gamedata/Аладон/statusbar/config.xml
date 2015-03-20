@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <baseparams hp="1" mn="2" mv="3"/>
+  <maxparams hp="1" hpid="r1" mn="1" mnid="r2" mv="1" mvid="r3" xp="1" xpid="r4" dsu="2" dsuid="r4"/>
+  <regexp r1="^\| Жизнь.*?[0-9]+/([0-9]+)" 
+    r2="^\| Магия.*?[0-9]+/([0-9]+)" 
+    r3="^\| Шаги.*?[0-9]+/([0-9]+)" 
+    r4="^\|.*очков: +([0-9]+).*до уровня: +([0-9]+)"/>
+</plugindata>

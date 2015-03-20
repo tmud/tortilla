@@ -1,4 +1,5 @@
-﻿-- Плагин autowrap для Tortilla mud client
+﻿-- autowrap
+-- Плагин для Tortilla mud client
 -- Максимальная допустимая длина строки
 local autowrap_maxlen = 100
 
@@ -17,25 +18,25 @@ function autowrap.version()
     return '-'
 end
 
-local function div(v)
+function autowrap.div(v)
   local len,index = 0, 0
   for i=1,v:blocks() do
-    local s = v:getblocktext(i)
+    local s = v:getBlockText(i)
     local newlen = len + s:len()
     if newlen > autowrap_maxlen then index=i; break; end
     len = newlen
   end
   if index == 0 then return end
-  v:createstring()
-  local new_string = v:getindex() + 1
+  v:createString()
+  local new_string = v:getIndex() + 1
   for i=index,v:blocks() do
-    v:copyblock(i, new_string, i-index+1)
+    v:copyBlock(i, new_string, i-index+1)
   end
-  local ds = v:getblocktext(index)
+  local ds = v:getBlockText(index)
   local p1len = autowrap_maxlen-len
-  v:setblocktext(index, ds:substr(1, p1len))
+  v:setBlockText(index, ds:substr(1, p1len))
   v:select(new_string)
-  v:setblocktext(1, ds:substr(p1len+1, ds:len()-p1len))
+  v:setBlockText(1, ds:substr(p1len+1, ds:len()-p1len))
 end
 
 function autowrap.after(window, v)
@@ -44,8 +45,8 @@ local count = v:size()
   local i = 1
   while i <= count do
     v:select(i)
-    if v:gettextlen() > autowrap_maxlen then
-      div(v)
+    if v:getTextLen() > autowrap_maxlen then
+      autowrap.div(v)
       count = v:size()
     end
     i = i + 1

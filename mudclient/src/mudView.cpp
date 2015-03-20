@@ -35,6 +35,11 @@ void MudView::accLastString(parseData *parse_data)
         return;
     if (!string->gamecmd && last_string->prompt)
         return;
+    if (string->gamecmd && string->blocks.empty())
+    {
+        MudViewStringBlock empty;
+        last_string->blocks.push_back(empty);
+    }
     last_string->moveBlocks(string);
     delete string;
     parse_data->strings[0] = last_string;

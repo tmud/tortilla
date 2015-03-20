@@ -14,7 +14,7 @@ void Mapper::onCreate()
     GetClientRect(&rc);
     rc.top = m_toolbar_height;
     m_vSplitter.Create(m_hWnd, rc, NULL, 0, WS_EX_CLIENTEDGE);
-    m_vSplitter.m_cxySplitBar = 3;      
+    m_vSplitter.m_cxySplitBar = 3;
     m_vSplitter.SetSplitterRect();
     m_vSplitter.SetDefaultSplitterPos();
 

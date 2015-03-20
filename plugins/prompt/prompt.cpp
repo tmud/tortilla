@@ -30,19 +30,19 @@ void checkDoublePrompt(luaT_ViewData &vd)
     for (int i = 1; i <= strings_count; ++i)
     {
         vd.select(i);
-        if (vd.isgamecmd())
+        if (vd.isGameCmd())
         {
             last_prompt.clear();
             empty.clear();
             continue; 
         }
-        vd.gettext(&text);
+        vd.getText(&text);
         if (text.empty())
         {
             empty.push_back(i);
             continue;
         }
-        if (!vd.isprompt())
+        if (!vd.isPrompt())
         {
             last_prompt.clear();
             empty.clear();
@@ -50,18 +50,18 @@ void checkDoublePrompt(luaT_ViewData &vd)
         }
         if (last_prompt.empty())
         {
-            vd.getprompt(&last_prompt);
+            vd.getPrompt(&last_prompt);
             continue;
         }
         u8string prompt;
-        vd.getprompt(&prompt);
+        vd.getPrompt(&prompt);
         if (prompt == last_prompt)
         {
             empty.push_back(i);
             for (int j = empty.size() - 1; j >= 0; --j)
             {
                 vd.select(empty[j]);
-                vd.deletestring();
+                vd.deleteString();
             }
             strings_count = vd.size();
             i = empty[0];

@@ -81,6 +81,7 @@
     <plugin key="autowrap.lua" value="0"/>
     <plugin key="historyfilter.lua" value="0"/>
     <plugin key="mapper.dll" value="0"/>
+    <plugin key="statusbar.lua" value="1"/>
   </plugins>
   <messages>
     <actions value="1"/>

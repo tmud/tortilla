@@ -3,7 +3,9 @@ EXPORTS
 	convert_utf8_to_wide
 	convert_wide_to_utf8
 	convert_ansi_to_wide
-	convert_wide_to_ansi    
+	convert_wide_to_ansi
+	strbuf_ptr
+	strbuf_destroy
 	xml_load
 	xml_save
 	xml_open
@@ -29,6 +31,7 @@ EXPORTS
 	luaT_toobject
 	luaT_pushobject
 	luaT_isobject
+	luaT_typename
 	luaT_showLuaStack
 	luaT_showTableOnTop
 	pcre_create

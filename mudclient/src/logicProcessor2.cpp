@@ -12,20 +12,20 @@
 class parser
 {
 public:
-    parser(const tstring&cmdname, tstring *error_out) { cmd = new InputCommand(cmdname); perror = error_out; }
-    ~parser() { delete cmd; }
-    int size() const { return cmd->parameters_list.size(); }
-    const tstring& at(int index) const { return cmd->parameters_list[index]; }
-    const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
-    const tstring& params() const { return cmd->parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
+    parser(const tstring&cmdname, tstring *error_out) : cmd(cmdname) { perror = error_out; }
+    int size() const { return cmd.parameters_list.size(); }
+    const tstring& at(int index) const { return cmd.parameters_list[index]; }
+    const tchar* c_str(int index) const { return cmd.parameters_list[index].c_str(); }
+    const tstring& params() const { return cmd.parameters; }
+    bool isInteger(int index) const { const tstring& p = cmd.parameters_list[index];
         return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return _wtoi(p.c_str()); }
-    void error(const tstring& errmsg) { perror->assign(errmsg); }
+    int toInteger(int index) const { const tstring& p = cmd.parameters_list[index];
+        return _wtoi(p.c_str()); }    
     void invalidargs() { error(L"Некорректный набор параметров."); }
+    void invalidoperation() { error(L"Некорректная операция."); }
 private:
-    InputCommand *cmd;
+    void error(const tstring& errmsg) { perror->assign(errmsg); }
+    InputCommand cmd;
     tstring *perror;
 };
 //-------------------------------------------------------------------
@@ -36,64 +36,99 @@ const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
-void LogicProcessor::processSystemCommand(const tstring& cmd)
+void LogicProcessor::processSystemCommand(tstring& cmd)
 {
-    if (propData->show_system_commands)
-        simpleLog(cmd);
-
     tstring scmd(cmd);
     tstring_trim(&scmd);
 
     tstring main_cmd;
     int pos = scmd.find(L' ');
     if (pos == -1)
-        main_cmd.append(scmd.substr(1));
+        main_cmd.assign(scmd.substr(1));
     else
-        main_cmd.append(scmd.substr(1, pos-1));
+        main_cmd.assign(scmd.substr(1, pos - 1));
 
-    tstring params(scmd.substr(1));
-    tstring error;
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
+    typedef std::vector<tstring>::iterator piterator;
+
+    tchar prefix[2] = { propData->cmd_prefix, 0 };
+    tstring fullcmd(prefix);
+    tstring error;
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
     if (it != it_end)
-    {
-        parser p(params, &error);
-        it->second(&p);
-    }
+        fullcmd.append(it->first);
     else
     {
-        // пробуем подобрать по сокращенному имени
-        int len = main_cmd.size();
-        if (len >= 3)
+        // команда в системных не найдена - ищем в плагинах
+        piterator p_end = m_plugins_cmds.end();
+        piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+        if (p != p_end)
+            fullcmd.append(*p);
+        else
         {
-            std::vector<tstring> cmds;
-            for (it = m_syscmds.begin(); it != it_end; ++it)
-            {
-                if (!it->first.compare(0, len, main_cmd))
-                    cmds.push_back(it->first);
-            }
-
-            int count = cmds.size();
-            if (count == 1)
-            {
-                it = m_syscmds.find(cmds[0]);
-                parser p(params, &error);
-                it->second(&p);
-            }
-            else if (count == 0)
-            {
+            //пробуем подобрать по сокращенному имени
+            int len = main_cmd.size();
+            if (len < 3)
                 error.append(L"Неизвестная команда");
-            }
             else
             {
-                error.append(L"Уточните команду (варианты): ");
-                for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
+                std::vector<tstring> cmds;
+                for (it = m_syscmds.begin(); it != it_end; ++it)
+                {
+                    if (!it->first.compare(0, len, main_cmd))
+                        cmds.push_back(it->first);
+                }
+                for (p = m_plugins_cmds.begin(); p != p_end; ++p)
+                {
+                    if (!p->compare(0, len, main_cmd))
+                        cmds.push_back(*p);
+                }
+                int count = cmds.size();
+                if (count == 1)
+                    fullcmd.append(cmds[0]);
+                else if (count == 0)
+                    fullcmd.append(main_cmd);       // в словаре команды нет - все равно пробуем пройти через syscmd
+                else {
+                    error.append(L"Уточните команду (варианты): ");
+                    for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
+                }
             }
+        }
+    }
+
+    if (error.empty())
+    {
+        if (pos != -1)
+            fullcmd.append(scmd.substr(pos));     // add params
+        m_pHost->preprocessGameCmd(&fullcmd);
+        tstring_trim(&fullcmd);
+        if (fullcmd.empty())
+        {
+            syscmdLog(cmd);
+            tmcLog(L"Команда заблокирована");
+            return;
+        }
+
+        syscmdLog(fullcmd);
+
+        pos = fullcmd.find(L' ');
+        if (pos == -1)
+            main_cmd.assign(fullcmd.substr(1));
+        else
+            main_cmd.assign(fullcmd.substr(1, pos - 1));
+        it = m_syscmds.find(main_cmd);
+        if (it != it_end)
+        {
+            parser p(fullcmd.substr(1), &error);
+            it->second(&p);
         }
         else
         {
-            error.append(L"Неизвестная команда");
+            piterator p_end = m_plugins_cmds.end();
+            piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+            if (p == p_end)
+                error.append(L"Неизвестная команда");
         }
     }
 
@@ -106,6 +141,18 @@ void LogicProcessor::processSystemCommand(const tstring& cmd)
         msg.append(L"]");
         tmcLog(msg);
     }
+}
+
+void LogicProcessor::processGameCommand(tstring& cmd)
+{
+    bool src_cmd_empty = cmd.empty();
+    m_pHost->preprocessGameCmd(&cmd);
+    if (cmd.empty() && !src_cmd_empty)
+        return;
+    WCHAR br[2] = { 10, 0 };
+    cmd.append(br);
+    processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
+    sendToNetwork(cmd);
 }
 
 void LogicProcessor::updateProps(int update, int options)
@@ -264,7 +311,7 @@ IMPL(var)
         if (n == 0)
             helper->tmcLog(L"Переменные(vars):");
         else
-        {   
+        {
             swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
@@ -354,7 +401,7 @@ IMPL(group)
         }
         return;
     }
-   
+
     int index = -1;
     tstring group( (n==1) ? p->at(0) : p->at(1) );
     for (int i=0,e=propData->groups.size(); i<e; ++i)
@@ -449,7 +496,8 @@ IMPL(connect)
             tmcLog(L"Подключение уже устанавливается...");
             return;
         }
-        tmcLog(L"Подключение...");
+        swprintf(pb.buffer, pb.buffer_len, L"Подключение '%s:%d'...", p->at(0).c_str(), p->toInteger(1));
+        tmcLog(pb.buffer);
         m_connecting = true;
         m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );        
         return;
@@ -504,7 +552,7 @@ IMPL(password)
         {
             tstring msg(L"*****\r\n");
             processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS);
-            WCHAR br[2] = { 10, 0 };            
+            WCHAR br[2] = { 10, 0 };
             pass.append(br);
             sendToNetwork(pass);
         }
@@ -536,7 +584,7 @@ IMPL(ifop)
         if (result == IfProcessor::IF_SUCCESS)
             processCommand(p->at(1));
         else if (result == IfProcessor::IF_ERROR)
-            p->error(L"Неизвестное условие");
+            p->invalidoperation();
         return;
     }
     p->invalidargs();
@@ -622,7 +670,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (ext != L"htm" && ext != L"html")
             logfile.append(L".html");
     }
-    
+
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)
     {
@@ -713,10 +761,10 @@ IMPL(wshow)
         {
             int window = p->toInteger(0);
             if (window < 1 || window > OUTPUT_WINDOWS)
-                return invalidwindow(p, 1, window);            
+                return invalidwindow(p, 1, window);
             m_pHost->showWindow(window, true);
             return;
-        }               
+        }
         swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
         tmcLog(buffer);
     }
@@ -731,10 +779,10 @@ IMPL(whide)
         {
             int window = p->toInteger(0);
             if (window < 1 || window > OUTPUT_WINDOWS)
-                return invalidwindow(p, 1, window);            
+                return invalidwindow(p, 1, window);
             m_pHost->showWindow(window, false);
             return;
-        }               
+        }
         swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
         tmcLog(buffer);
     }
@@ -815,7 +863,7 @@ IMPL(tab)
     MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 0)
-    {        
+    {
         helper->skipCheckMode();
         helper->tmcLog(L"Автоподстановки(tabs):");
         int size = propData->tabwords.size();
@@ -881,9 +929,9 @@ IMPL(timer)
         {
             helper->tmcLog(L"Список пуст.");
             return;
-        }            
+        }
         for (int i=0,e=t.size(); i<e; ++i)
-        {            
+        {
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
             swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
@@ -921,7 +969,7 @@ IMPL(timer)
             return p->invalidargs();
         _itow(key, buffer, 10);
         tstring id(buffer);
-        
+
         int index = propData->timers.find(id);
         if (index == -1)
         {
@@ -986,7 +1034,7 @@ IMPL(timer)
             if (n == 2)
                pt.cmd = tmp.cmd;
         }
-        
+
         tstring value;
         pt.convertToString(&value);
         propData->timers.add(index, id, value, group);
@@ -1031,12 +1079,12 @@ IMPL(message)
         if (!str.empty()) {
             tmcLog(L"Уведомления:");
             simpleLog(str);
-        }          
+        }
         else
             tmcLog(L"Все уведомления отключены");
         return;
     }
-    
+
     if (n == 1 || n == 2)
     {
         MessageCmdHelper mh(propData);
@@ -1072,7 +1120,7 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
-    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+(?:Вых)?:[СЮЗВПОv^]+>", true);
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+.*(?:Вых)?:[СЮЗВПОv^]*>", true);
 
     if (!m_logs.init())
         return false;

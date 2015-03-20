@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.95"
+#define TORTILLA_VERSION L"0.96"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -65,6 +65,11 @@ typedef unsigned int uint;
 
 #define OUTPUT_WINDOWS 6
 #define TIMERS_COUNT 10
+
+// only for debug (help functions)
+#ifdef _DEBUG
+//#define MARKERS_IN_VIEW
+#endif
 
 extern CAppModule _Module;
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")

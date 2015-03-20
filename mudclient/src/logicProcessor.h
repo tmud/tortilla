@@ -37,6 +37,8 @@ public:
     virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
+    virtual void doGameCommand(const tstring& cmd) = 0;
+    virtual bool getConnectionState() = 0;
 };
 
 class parser;
@@ -82,7 +84,6 @@ public:
     void processNetworkMccpError();
     bool processHotkey(const tstring& hotkey);
     void processCommand(const tstring& cmd);
-    void processSystemCommand(const tstring& cmd);
     void processTick();
     void processStackTick();
     void updateProps();
@@ -93,8 +94,13 @@ public:
     bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
+    void doGameCommand(const tstring& cmd);
+    bool getConnectionState() { return m_connected; }
 
 private:
+    void syscmdLog(const tstring& cmd);
+    void processSystemCommand(tstring& cmd);
+    void processGameCommand(tstring& cmd);
     enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
            FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);
