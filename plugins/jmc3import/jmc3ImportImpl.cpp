@@ -47,7 +47,7 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         bool result = true;
         if (c == "action")
             result = processAction();
-        else if (c == "alias")
+       /* else if (c == "alias")
             result = processAlias();
         else if (c == "substitute")
             result = processSubs();
@@ -60,9 +60,9 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         else if (c == "gag")
             result = processGags();
         else if (c == "variable")
-            result = processVariable();
+            result = processVariable();*/
         if (!result && errors)
-            errors->push_back(import`[i]);
+            errors->push_back(v[i]);
     }
 
     // update all elements, through updating groups
@@ -102,7 +102,7 @@ bool Jmc3Import::processAction()
     if (!parseParams(4, 4, &p))
         return false;
     convert(&p[1]);
-    return m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
+    return true; // m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
 }
 
 bool Jmc3Import::processSubs()
@@ -158,11 +158,57 @@ bool Jmc3Import::processVariable()
     return m_vars.add(p[0].c_str(), p[1].c_str(), NULL);
 }
 
-void Jmc3Import::convert(u8string *str)
+bool Jmc3Import::convert(u8string *str)
 {
-    TU2W tmp(str->c_str());
-    OutputDebugString(tmp);
-    OutputDebugString(L"\r\n");
+    std::vector<u8string> cmds;
+    if (!param.findall(str->c_str()))
+        cmds.push_back(*str);
+    else
+    {
+        Pcre find_separators;
+        u8string regexp("\\");
+        regexp.append(jmc_separator);
+        find_separators.init(regexp.c_str());
+        if (!find_separators.findall(str->c_str()))
+            cmds.push_back(*str);
+        else
+        {
+            std::vector<int> pos;
+            for (int i=1, e=find_separators.size(); i < e; ++i)
+            {
+                int sep_pos = find_separators.first(i);
+                bool inside = false;
+                for (int j=1, je = param.size(); j < je; ++j)
+                {
+                    if (sep_pos >= param.first(j) && sep_pos < param.last(j))
+                        { inside = true; break; }
+                }
+                if (!inside)
+                    pos.push_back(sep_pos);
+            }
+            int startpos = 0;
+            for (int i=0, e=pos.size(); i<e; ++i)
+            {
+                cmds.push_back(str->substr(startpos, pos[i] - startpos));
+                startpos = pos[i] + 1;
+            }
+            cmds.push_back(str->substr(startpos));
+        }
+    }
+
+/*    int x = find_separators.size();
+
+    for (int i = 1, e = param.size(); i < e; ++i)
+    {
+        u8string tmp;
+        param.get(i, &tmp);
+        TU2W b(tmp.c_str());
+        OutputDebugString(b);
+        OutputDebugString(L"\r\n");
+    }*/
+
+
+    return true;
 }
 
 void Jmc3Import::replaceLegacy(u8string *legacy)

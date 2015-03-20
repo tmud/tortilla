@@ -34,6 +34,6 @@ private:
     bool processHotkey();
     bool processGags();
     bool processVariable();
-    void convert(u8string *str);
+    bool convert(u8string *str);
     void replaceLegacy(u8string *legacy);
 };

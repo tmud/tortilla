@@ -191,7 +191,7 @@ private:
         for (int i = 0, e = config.size(); i < e; ++i)
         {
             std::string &s = config[i];
-            int pos = strspn(s.c_str(), " ");
+            int pos = strspn(s.c_str(), " "); //trim left
             if (pos != 0)
                 s.assign(s.substr(pos));
             if (s.empty())
