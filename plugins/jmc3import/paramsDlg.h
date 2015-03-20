@@ -11,7 +11,7 @@ public:
 class ParamsDialog : public CDialogImpl<ParamsDialog>
 {
 public:
-    enum { IDD = IDD_IMPORT_PARAMS };    
+    enum { IDD = IDD_IMPORT_PARAMS };
     std::vector<u8string> strings;
     u8string cmdsymbol;
     u8string separator;
@@ -56,7 +56,7 @@ private:
     {
         SelectFileDlg dlg(m_hWnd, L"JMC3 config set(*.set)|*.set||");
         if (!dlg.DoModal())
-            return 0;       
+            return 0;
         std::wstring file(dlg.GetFile());
         m_filepath.SetWindowText(file.c_str());
         std::wstring error;
@@ -65,13 +65,16 @@ private:
             enableControls(FALSE);
             m_error_msg.SetWindowText(error.c_str());
             return 0;
-        }        
+        }
         //get cmd symbol
         std::map<u8string, int> counter;
         typedef std::map<u8string, int>::iterator iterator;
         for (int i=0,e=strings.size(); i<e; ++i)
         {
             u8string symbol(strings[i].substr(0, 1));
+            int pos = strspn(symbol.c_str(), "#$%&*!@~`:;'");
+            if (pos != symbol.length()) 
+                continue;
             iterator it = counter.find(symbol);
             if (it == counter.end())
                 counter[symbol] = 1;
@@ -83,14 +86,7 @@ private:
         for (; it != it_end; ++it) {
             if (it->second > maxsize) { maxsize = it->second; maxsymbol = it->first; }
         }
-        bool baddata = true;
-        if (!maxsymbol.empty())
-        { 
-            int pos = strspn(maxsymbol.c_str(), "#$%&*!@~`:;'");
-            if (pos == maxsymbol.length()) baddata = false;        
-        }
-
-        if (baddata)
+        if (maxsymbol.empty())
         {
             enableControls(FALSE);
             m_error_msg.SetWindowText(L"Файл поврежден или не является файлом Jmc3!");
