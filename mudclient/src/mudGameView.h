@@ -465,7 +465,11 @@ private:
 
     LRESULT OnPlugins(WORD, WORD, HWND, BOOL&)
     {
-        m_plugins.pluginsPropsDlg();
+        if (m_plugins.pluginsPropsDlg())
+        {
+            if (!m_manager.saveProfile())
+                msgBox(m_hWnd, IDS_ERROR_SAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
+        }
         return 0;
     }
 
@@ -630,7 +634,7 @@ private:
     {
         int id = (control_id - ID_WINDOW_1) + 1;
         assert(id >=1 && id <=OUTPUT_WINDOWS);
-        HWND wnd = m_views[id-1]->m_hWnd;     
+        HWND wnd = m_views[id-1]->m_hWnd;
         bool new_state = !isWindowShown(wnd);
         showWindowEx(wnd, new_state);
         setCmdBarFocus();

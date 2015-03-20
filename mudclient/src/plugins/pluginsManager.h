@@ -12,8 +12,8 @@ public:
     PluginsManager(PropertiesData *props);
     ~PluginsManager();
     void loadPlugins(const tstring& group, const tstring& profile);
-    void unloadPlugins();    
-    void pluginsPropsDlg();
+    void unloadPlugins();
+    bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
     void updateProps();
     void processStreamData(MemoryBuffer *data);

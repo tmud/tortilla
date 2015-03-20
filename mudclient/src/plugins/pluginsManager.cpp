@@ -116,12 +116,12 @@ void PluginsManager::unloadPlugins()
         m_plugins[i]->unloadPlugin();
 }
 
-void PluginsManager::pluginsPropsDlg()
+bool PluginsManager::pluginsPropsDlg()
 {
     initPlugins();
     PluginsDlg dlg(&m_plugins);
     if (dlg.DoModal() != IDOK)
-        return;
+        return false;
 
     // grouping plugins to turning off and turning on
     PluginsList turn_on, turn_off;
@@ -173,6 +173,7 @@ void PluginsManager::pluginsPropsDlg()
         }
     }
     modules.swap(new_modules);
+    return true;
 }
 
 Plugin* PluginsManager::findPlugin(HWND view)

@@ -315,6 +315,12 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     // postprocess data via plugins
     if (!(flags & SKIP_PLUGINS))
         m_pHost->postprocessText(window, &parse_data);
+    
+    if (flags & SKIP_PLUGINS)
+    {
+        StringsWrapper wrapper(130);
+        wrapper.process(&parse_data);
+    }
 
     int log = m_wlogs[window];
     if (log != -1)
