@@ -2,7 +2,6 @@
 #include "mapperObjects.h"
 #include "mapperRender.h"
 #include "properties.h"
-#include "roomCursor.h"
 
 class KeyPair
 {
@@ -35,7 +34,7 @@ public:
     void setCallback(MapperActions* actions);
     void updateProps();
     void processNetworkData(u8string& ndata);
-    void processCmd(const tstring& cmd);    
+    void processCmd(const u8string& cmd);
     void saveMaps(lua_State *L);
     void loadMaps(lua_State *L);
     void selectDefault() { //todo

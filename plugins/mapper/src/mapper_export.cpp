@@ -95,14 +95,14 @@ int init(lua_State *L)
     m_mapper_processor = new MapperProcessor(&m_props);
     m_mapper_processor->setCallback(m_mapper_window);
     m_mapper_processor->updateProps();
-    m_mapper_processor->loadMaps(L);
-    m_mapper_processor->selectDefault();
+    /*m_mapper_processor->loadMaps(L);
+    m_mapper_processor->selectDefault();*/
     return 0;
 }
 
 int release(lua_State *L)
 {
-    m_mapper_processor->saveMaps(L);
+    //m_mapper_processor->saveMaps(L);
     xml::node s("mapper");
     s.set("darkroom/label", m_props.dark_room);
     s.set("name/begin", m_props.begin_name);
@@ -192,22 +192,31 @@ int stream(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        const char *stream = lua_tostring(L, -1);
-        const wchar_t *wstream = TU2W(stream);
-        m_mapper_window->processNetworkData(wstream, wcslen(wstream));
+        u8string stream(lua_tostring(L, 1));
+        m_mapper_processor->processNetworkData(stream);
     }
-    return 0;
+    return 1;
 }
 
 int gamecmd(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (luaT_check(L, 1, LUA_TTABLE))
     {
-        const char *cmd = lua_tostring(L, -1);
-        const wchar_t *wcmd = TU2W(cmd);
-        m_mapper_window->processCmd(wcmd, wcslen(wcmd));
+        lua_len(L, 1);
+        int len = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        if (len == 1)
+        {
+            u8string cmd;
+            lua_pushinteger(L, 1);
+            lua_gettable(L, -2);
+            if (lua_isstring(L, -1))
+                cmd.assign(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            m_mapper_processor->processCmd(cmd);
+        }        
     }
-    return 0;
+    return 1;
 }
 
 static const luaL_Reg mapper_methods[] = 

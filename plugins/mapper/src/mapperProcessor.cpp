@@ -146,22 +146,23 @@ bool MapperProcessor::recognizePrompt(u8string& ndata)
     return true;
 }
 
-void MapperProcessor::processCmd(const tstring& cmd)
+void MapperProcessor::processCmd(const u8string& cmd)
 {
     if (cmd.empty())
         return;
+    tstring c(TU2W(cmd.c_str()));
     RoomDir dir = RD_UNKNOWN;
-    if (cmd == m_propsData->north_cmd)
+    if (c == m_propsData->north_cmd)
         dir = RD_NORTH;
-    else if (cmd == m_propsData->south_cmd)
+    else if (c == m_propsData->south_cmd)
         dir = RD_SOUTH;
-    else if (cmd == m_propsData->west_cmd)
+    else if (c == m_propsData->west_cmd)
         dir = RD_WEST;
-    else if (cmd == m_propsData->east_cmd)
+    else if (c == m_propsData->east_cmd)
         dir = RD_EAST;
-    else if (cmd == m_propsData->up_cmd)
+    else if (c == m_propsData->up_cmd)
         dir = RD_UP;
-    else if (cmd == m_propsData->down_cmd)
+    else if (c == m_propsData->down_cmd)
         dir = RD_DOWN;
     if (dir != RD_UNKNOWN)
         m_path.push_back(dir);
