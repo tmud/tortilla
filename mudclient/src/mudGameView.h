@@ -386,7 +386,6 @@ private:
     LRESULT OnParentClose(UINT, WPARAM, LPARAM lparam, BOOL&bHandled)
     {
         saveClientWindowPos();
-        savePluginWindowPos();
         unloadPlugins();
         bHandled = FALSE;
         return 0;
