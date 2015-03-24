@@ -3,11 +3,6 @@
 #include "plugin.h"
 extern Plugin* _cp;
 
-const wchar_t* PluginsView::getPluginName() const
-{
-    return m_plugin->get(Plugin::NAME);
-}
-
 bool PluginsView::render()
 {
     if (m_render_error || !m_render)

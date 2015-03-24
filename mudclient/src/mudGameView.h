@@ -980,7 +980,8 @@ private:
                 w.lastside = ctx->LastSide;
                 w.pos = ctx->rcWindow;
                 w.size = ctx->sizeFloat;
-                m_propData->plugins.saveWindowPos(v->getPluginName(), w);
+                Plugin *p = v->getPlugin();
+                m_propData->plugins.saveWindowPos(p->get(Plugin::FILE), w);
             }
         }
     }
