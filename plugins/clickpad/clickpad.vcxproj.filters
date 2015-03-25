@@ -21,6 +21,9 @@
     <ClInclude Include="mainwnd.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="padbutton.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clickpad.cpp">

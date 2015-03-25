@@ -30,7 +30,7 @@ private:
     {
         if (m_gameview.PreTranslateMessage(pMsg))
            return TRUE;
-        return CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg);        
+        return CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg);
     }
 
     virtual BOOL OnIdle()
@@ -94,7 +94,7 @@ private:
     }
 
     LRESULT OnClose(UINT, WPARAM, LPARAM, BOOL& bHandled)
-    {        
+    {
         bHandled = FALSE;
         return 0;
     }
@@ -123,7 +123,7 @@ private:
     {
         UISetCheck(wparam, lparam);
         return 0;
-    }    
+    }
 
     LRESULT OnSetMenuText(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
     {
@@ -149,7 +149,7 @@ private:
         openURL(L"https://github.com/tmud/tortilla/releases");
         return 0;
     }
-   
+
     LRESULT OnAppAbout(WORD, WORD, HWND, BOOL&)
     {
         CWelcomeDlg dlg;

@@ -3,6 +3,7 @@
 #include "mainwnd.h"
 
 luaT_window m_parent_window;
+HWND m_hwnd_client = NULL;
 ClickpadMainWnd* m_clickpad = NULL;
 
 int get_name(lua_State *L)
@@ -26,6 +27,21 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
+    HWND client_wnd = NULL;
+    luaT_run(L, "getParent", "");
+    if (lua_isnumber(L, -1))
+    {
+        HWND wnd = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        if (::IsWindow(wnd))
+            client_wnd = wnd;
+    }
+    if (client_wnd)
+        m_hwnd_client = client_wnd;
+    else
+        return luaT_error(L, "Ќе удалось получить доступ к главному окну клиента");
+        
+
     if (!m_parent_window.create(L, "Clickpad", 400, 400))
         return luaT_error(L, "Ќе удалось создать окно дл€ Clickpad");
 

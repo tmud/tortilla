@@ -112,6 +112,7 @@ struct DOCKCONTEXT
    HWND hwndRoot;     // Main dock window
    DWORD dwFlags;     // Extra flags
    bool bKeepSize;    // Recommend using current size and avoid rescale
+   bool bNcActivate;  // Helpful flag to sync floating window header with main window
 };
 
 typedef CSimpleValArray<DOCKCONTEXT*> CDockMap;
@@ -390,9 +391,20 @@ public:
       return 0;
    }
 
-   LRESULT OnNcActivate(UINT uMsg, WPARAM, LPARAM lParam, BOOL&)
+   LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&)
    {
-      return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
+       if (!m_pCtx->bNcActivate) // && wParam == TRUE)
+       {
+           wchar_t buffer[32];
+           wsprintf(buffer, L"tool %x, %x\r\n", m_hWnd, m_pCtx->hwndRoot);
+           OutputDebugString(buffer);
+           m_pCtx->bNcActivate = true;
+           SendMessage(m_pCtx->hwndRoot, uMsg, wParam, lParam);
+       }
+       //BOOL flag = GetForegroundWindow() == m_pCtx->hwndRoot;
+       m_pCtx->bNcActivate = false;
+       return DefWindowProc(uMsg, wParam, lParam);
+       //return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
    }
 
    LRESULT OnLeftButtonDown(UINT, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1212,6 +1224,10 @@ public:
       MESSAGE_HANDLER(WM_DOCK_UPDATELAYOUT, OnSize)
       MESSAGE_HANDLER(WM_DOCK_REPOSITIONWINDOW, OnRepositionWindow)
       MESSAGE_HANDLER(WM_DOCK_CLIENT_CLOSE, OnClientClose)
+      MESSAGE_HANDLER(WM_NCACTIVATE, OnNcActivate)
+   ALT_MSG_MAP(1)   //call this map for sync main window/tools captions
+      MESSAGE_HANDLER(WM_NCACTIVATE, OnNcActivate)
+      //MESSAGE_HANDLER(WM_ACTIVATEAPP, OnActivateApp)
    END_MSG_MAP()
 
    TPaneWindow m_panes[4];  // The 4 panel windows (one for each side)
@@ -1418,6 +1434,7 @@ public:
       wndFloat->Create(m_hWnd, rcDefault, szCaption);
       ATLASSERT(::IsWindow(wndFloat->m_hWnd));
       ctx->hwndFloated = *wndFloat;
+      ctx->bNcActivate = false;
 
       ::SetParent(ctx->hwndChild, ctx->hwndDocked);
 
@@ -1591,6 +1608,52 @@ public:
 	  }
       m_map.RemoveAll();
       return 0;
+   }
+
+   LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
+   {
+       //LRESULT lRes = DefWindowProc(uMsg, wParam, lParam);
+       wchar_t buffer[32];
+       wsprintf(buffer, L"main %x, %d\r\n", m_hWnd, wParam ? 1 : 0);
+       OutputDebugString(buffer);
+
+       bool tool_activated = false;
+       for (int i = 0; i < m_map.GetSize(); i++)
+       {
+           DOCKCONTEXT *pCtx = m_map[i];
+           if (pCtx->bNcActivate) tool_activated = true;
+           HWND floated_wnd = pCtx->hwndFloated;
+           if (!pCtx->bNcActivate && ::IsWindowVisible(floated_wnd))
+           {
+               pCtx->bNcActivate = true;
+               wsprintf(buffer, L"sync %x, %d\r\n", floated_wnd, wParam ? 1 : 0);
+               OutputDebugString(buffer);
+               SendMessage(floated_wnd, uMsg, wParam, lParam);
+           }
+       }
+       //if (tool_activated)
+         //  return 1;
+       bHandled = 0;
+       return 1;
+   }
+
+   LRESULT OnActivateApp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
+   {
+       OutputDebugString(L"onactivate\r\n");
+       for (int i = 0; i < m_map.GetSize(); i++)
+       {
+           DOCKCONTEXT *pCtx = m_map[i];
+           HWND floated_wnd = pCtx->hwndFloated;
+           if (::IsWindowVisible(floated_wnd))
+           {
+               wchar_t buffer[32];
+               wsprintf(buffer, L"sync %x, %d\r\n", floated_wnd, wParam ? 1 : 0);
+               OutputDebugString(buffer);
+               SendMessage(floated_wnd, WM_NCACTIVATE, wParam, 0);
+           }
+       }
+       bHandled = FALSE;
+       return 0;
    }
 
    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&)
