@@ -3,6 +3,7 @@
 #define ROOM_DIRS_COUNT 6
 enum RoomDir { RD_UNKNOWN = -1, RD_NORTH=0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN };
 extern const utf8* RoomDirName[];
+#include "mapperHashTable.h"
 
 struct RoomData
 {
@@ -141,7 +142,6 @@ struct TableLimits
     int width, height, minlevel, maxlevel, areas;
 };
 
-#include "mapperHashTable.h"
 class Table
 {
 public:
@@ -162,7 +162,6 @@ private:
     int getZone(const tstring& name);
     int getIndex(const TablePos& p);
     void createPlace(TablePos& p, RoomDir dir);
-
 private:
     struct line {
         ~line() { std::for_each(elements.begin(), elements.end(), [](TableCell* obj){ delete obj; }); }
@@ -185,7 +184,5 @@ private:
     };
     std::vector<TableIndex*> m_indexes;
     std::vector<zone*> m_zones;
-    //std::map<uint, Room*> m_hash_table;
-
     MapperHashTable m_hash_table;
 };

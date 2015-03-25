@@ -463,7 +463,7 @@ Room* Table::get(const TablePos& p)
 Room* Table::addNewRoom(Room *current_room, const RoomData& rd, RoomDir dir)
 {
     std::vector<Room*> vr;
-    m_hash_table.findRooms(rd, &vr);    
+    m_hash_table.findRooms(rd, &vr);
     int count = vr.size();
 
     Room *target = NULL;
@@ -472,7 +472,7 @@ Room* Table::addNewRoom(Room *current_room, const RoomData& rd, RoomDir dir)
         TableCell *cell = vr[i]->cell;
         const RoomData& rdata = cell->room->roomdata;
         if (rdata.roomid == rd.roomid && rdata.zonename == rd.zonename)
-           {  target = vr[i]; break; }    
+           {  target = vr[i]; break; }
     }
 
     if (!current_room || dir == RD_UNKNOWN)
@@ -485,20 +485,45 @@ Room* Table::addNewRoom(Room *current_room, const RoomData& rd, RoomDir dir)
         set(pos, new_room);
         return new_room;
     }
-    
+
     if (target)
     {
         current_room->dirs[dir].setNext(target);
         return target;
     }
-    
+
+    if (current_room->roomdata.zonename != rd.zonename)
+    {
+        TablePos pos;
+        createNewPlace(rd.zonename, &pos);
+        Room* new_room = createRoom(rd);
+        set(pos, new_room);
+        current_room->dirs[dir].setNext(new_room);
+        return new_room;
+    }
+
+    TablePos pos;
+    pos.init(current_room);
+
+    TableLimits limits;
+    getLimits(pos, &limits);
+
+    int x = 1;
+
+
+        //todo
+
+    /*/
+
+
     TablePos pos;
     pos.init(current_room);
     createPlace(pos, dir);
     Room* new_room = createRoom(rd);
     set(pos, new_room);
     current_room->dirs[dir].setNext(new_room);
-    return new_room;
+    return new_room;*/
+    return NULL;
 }
 
 void Table::createNewPlace(const tstring& zone_name, TablePos *pos)
@@ -523,7 +548,9 @@ void Table::createNewPlace(const tstring& zone_name, TablePos *pos)
 
 void Table::createPlace(TablePos& p, RoomDir dir)
 {
-    //todo
+    
+    
+
 
 }
 
