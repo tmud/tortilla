@@ -24,6 +24,15 @@
     <ClInclude Include="padbutton.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
+    <ClInclude Include="settingsDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="constructorWnd.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clickpad.cpp">
@@ -40,5 +49,10 @@
     <None Include="plugin.def">
       <Filter>Main Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="clickpad.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

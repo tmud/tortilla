@@ -84,8 +84,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="constructorWnd.h" />
     <ClInclude Include="padbutton.h" />
     <ClInclude Include="mainwnd.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="settingsDlg.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
@@ -98,6 +101,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="clickpad.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

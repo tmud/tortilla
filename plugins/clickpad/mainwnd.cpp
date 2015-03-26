@@ -10,7 +10,6 @@ void ClickpadMainWnd::onCreate()
 
 void ClickpadMainWnd::onSize()
 {
-
 }
 
 void ClickpadMainWnd::onSetParentFocus()

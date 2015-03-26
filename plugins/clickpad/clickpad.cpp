@@ -1,6 +1,8 @@
 #include "stdafx.h"
+#include "resource.h"
 #include <vector>
 #include "mainwnd.h"
+#include "settingsDlg.h"
 
 luaT_window m_parent_window;
 HWND m_hwnd_client = NULL;
@@ -40,7 +42,8 @@ int init(lua_State *L)
         m_hwnd_client = client_wnd;
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
-        
+
+    luaT_run(L, "addMenu", "sdd", "Плагины/Настройки Clickpad...", 1, 2);
 
     if (!m_parent_window.create(L, "Clickpad", 400, 400))
         return luaT_error(L, "Не удалось создать окно для Clickpad");
@@ -62,6 +65,20 @@ int release(lua_State *L)
     return 0;
 }
 
+int menucmd(lua_State *L)
+{
+    if (!luaT_check(L, 1, LUA_TNUMBER))
+        return 0;
+    int id = lua_tointeger(L, 1);
+    lua_pop(L, 1);
+    if (id == 1)
+    {
+        SettingsDlg dlg;
+        dlg.DoModal();
+    }
+    return 0;
+}
+
 static const luaL_Reg clickpad_methods[] =
 {
     { "name", get_name },
@@ -69,6 +86,7 @@ static const luaL_Reg clickpad_methods[] =
     { "version", get_version },
     { "init", init },
     { "release", release },
+    { "menucmd", menucmd },
     { NULL, NULL }
 };
 
