@@ -114,7 +114,8 @@ struct DOCKCONTEXT
    HWND hwndRoot;     // Main dock window
    DWORD dwFlags;     // Extra flags
    bool bKeepSize;    // Recommend using current size and avoid rescale
-   bool bNcActivate;  // Helpful flag to sync floating window header with main window
+   bool bNcActivate;  // Helpful flags to sync floating window header with main window
+   bool bUseNcActivate;
 };
 
 typedef CSimpleValArray<DOCKCONTEXT*> CDockMap;
@@ -395,29 +396,12 @@ public:
 
    LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
    {
-       if (m_pCtx->bNcActivate)
+       if (!m_pCtx->bUseNcActivate)
            return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
+       if (m_pCtx->bNcActivate)
+           return DefWindowProc(uMsg, TRUE, lParam);
        bHandled = FALSE;
        return 0;
-
-
-       return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
-
-       wchar_t buffer[32];
-       wsprintf(buffer, L"tool %x, %x\r\n", m_hWnd, m_pCtx->hwndRoot);
-       OutputDebugString(buffer);
-
-       if (!m_pCtx->bNcActivate)
-       {          
-           m_pCtx->bNcActivate = true;
-           ::PostMessage(m_pCtx->hwndRoot, WM_USER, wParam, lParam);
-       }
-       //BOOL flag = GetForegroundWindow() == m_pCtx->hwndRoot;
-       m_pCtx->bNcActivate = false;
-       bHandled = FALSE;
-       return 0;
-       //return DefWindowProc(uMsg, wParam, lParam);
-       //return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
    }
 
    LRESULT OnLeftButtonDown(UINT, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1237,12 +1221,11 @@ public:
       MESSAGE_HANDLER(WM_DOCK_UPDATELAYOUT, OnSize)
       MESSAGE_HANDLER(WM_DOCK_REPOSITIONWINDOW, OnRepositionWindow)
       MESSAGE_HANDLER(WM_DOCK_CLIENT_CLOSE, OnClientClose)
-   //   MESSAGE_HANDLER(WM_NCACTIVATE, OnNcActivate)
-   //   MESSAGE_HANDLER(WM_USER, OnMainFrameActivate)
    ALT_MSG_MAP(1)   //call this map for sync main window/tools captions
-      //MESSAGE_HANDLER(WM_CREATE, OnCreateMainFrame)
-      MESSAGE_HANDLER(WM_NCACTIVATE, OnNcActivate)
-      MESSAGE_HANDLER(WM_ACTIVATEAPP, OnActivateApp)
+      MESSAGE_HANDLER(WM_SHOWWINDOW, OnMainShowWindow)
+      MESSAGE_HANDLER(WM_NCACTIVATE, OnMainNcActivate)
+      MESSAGE_HANDLER(WM_ACTIVATEAPP, OnMainActivateApp)
+      MESSAGE_HANDLER(WM_ACTIVATE, OnMainActivate)
    END_MSG_MAP()
 
    TPaneWindow m_panes[4];  // The 4 panel windows (one for each side)
@@ -1252,6 +1235,7 @@ public:
    int  m_barHeight;
    DWORD m_dwExtStyle;      // Optional styles
    SIZE m_sizeBorder;       // Size of window borders
+   bool m_used_activated_mode;
    bool m_activated;
 
    class SimpleWindowApi
@@ -1364,7 +1348,8 @@ public:
        HWND m_dock;
    } m_panels;
 
-   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0), m_activated(false)
+   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0), 
+       m_used_activated_mode(false), m_activated(false)
    {}
 
    // Operations
@@ -1450,7 +1435,8 @@ public:
       wndFloat->Create(m_hWnd, rcDefault, szCaption);
       ATLASSERT(::IsWindow(wndFloat->m_hWnd));
       ctx->hwndFloated = *wndFloat;
-      ctx->bNcActivate = false;
+      ctx->bNcActivate = m_activated;
+      ctx->bUseNcActivate = m_used_activated_mode;
 
       ::SetParent(ctx->hwndChild, ctx->hwndDocked);
 
@@ -1626,86 +1612,57 @@ public:
       return 0;
    }
 
-   LRESULT OnMainFrameActivate(UINT, WPARAM wParam, LPARAM lParam, BOOL&)
+   void syncNcActivateState(bool state)
    {
-       HWND h = GetParent();
-       wchar_t buffer[32];
-       wsprintf(buffer, L"main %x, %d\r\n", h, wParam ? 1 : 0);
-       OutputDebugString(buffer);
-       SendMessage(GetParent(), WM_NCACTIVATE, wParam, lParam); 
-       return 0;
-   }
-
-   LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
-   {
-       //if (m_activated)
-       wchar_t buffer[32];
-       wsprintf(buffer, L"main %d, %d\r\n", m_activated ? 1 : 0, wParam ? 1 : 0);
-       OutputDebugString(buffer);
-       return ::DefWindowProc(GetParent(), uMsg, m_activated, lParam);
-       
-       /*if (m_activated)
-           return TRUE;*/
-
-       bHandled = FALSE;
-       return 0;
-
-
-
-       //LRESULT lRes = DefWindowProc(uMsg, wParam, lParam);
-       //wchar_t buffer[32];
-       wsprintf(buffer, L"main %x, %d\r\n", m_hWnd, wParam ? 1 : 0);
-       OutputDebugString(buffer);
-
-       bool tool_activated = false;
+       m_activated = state;
        for (int i = 0; i < m_map.GetSize(); i++)
        {
            DOCKCONTEXT *pCtx = m_map[i];
-           if (pCtx->bNcActivate) tool_activated = true;
-           HWND floated_wnd = pCtx->hwndFloated;
-           if (!pCtx->bNcActivate && ::IsWindowVisible(floated_wnd))
-           {
-               pCtx->bNcActivate = true;
-               wsprintf(buffer, L"sync %x, %d\r\n", floated_wnd, wParam ? 1 : 0);
-               //OutputDebugString(buffer);
-               SendMessage(floated_wnd, uMsg, wParam, lParam);
-           }
-       }
-       //if (tool_activated)
-         //  return 1;
-       bHandled = 0;
-       return 1;
-   }
-
-   LRESULT OnActivateApp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
-   {
-       if (wParam)
-           OutputDebugString(L"onactivate\r\n");
-       else 
-           OutputDebugString(L"on de activate\r\n");
-
-       //m_app_activated = wParam ? TRUE : FALSE;
-
-       bool activated = wParam ? true : false;
-       m_activated = activated;
-       for (int i = 0; i < m_map.GetSize(); i++)
-       {
-           DOCKCONTEXT *pCtx = m_map[i];
-           pCtx->bNcActivate = activated;
-
+           pCtx->bNcActivate = state;
            HWND floated_wnd = pCtx->hwndFloated;
            if (::IsWindowVisible(floated_wnd))
            {
-               wchar_t buffer[32];
-               wsprintf(buffer, L"sync %x, %d\r\n", floated_wnd, wParam ? 1 : 0);
+               //wchar_t buffer[32];
+               //wsprintf(buffer, L"sync %x, %d\r\n", floated_wnd, wParam ? 1 : 0);
                //OutputDebugString(buffer);
-
-               
-               SendMessage(floated_wnd, WM_NCACTIVATE, wParam, 0);
+               SendMessage(floated_wnd, WM_NCACTIVATE, state ? TRUE : FALSE, 0);
            }
        }
-       SendMessage(GetParent(), WM_NCACTIVATE, wParam, 0);
-       //m_activated = activated;
+   }
+
+   LRESULT OnMainShowWindow(UINT, WPARAM, LPARAM, BOOL&bHandled)
+   {
+       for (int i = 0; i < m_map.GetSize(); i++)
+           m_map[i]->bUseNcActivate = true;
+       m_used_activated_mode = true;
+       syncNcActivateState(true);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
+   {
+       if (m_used_activated_mode)
+           return ::DefWindowProc(GetParent(), uMsg, m_activated, 0);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainActivate(UINT, WPARAM wParam, LPARAM, BOOL&bHandled)
+   {
+       if (m_used_activated_mode && HIWORD(wParam) == 0)
+           syncNcActivateState(true);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainActivateApp(UINT, WPARAM wParam, LPARAM, BOOL&bHandled)
+   {
+       if (m_used_activated_mode)
+       {
+           syncNcActivateState(wParam ? true : false);
+           SendMessage(GetParent(), WM_NCACTIVATE, wParam, 0);
+       }
        bHandled = FALSE;
        return 0;
    }
