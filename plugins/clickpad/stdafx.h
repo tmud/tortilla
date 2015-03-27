@@ -15,3 +15,4 @@
 #include <atlctrlx.h>
 
 #include <deque>
+#include <assert.h>

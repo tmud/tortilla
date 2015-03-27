@@ -10,7 +10,7 @@ ClickpadMainWnd* m_clickpad = NULL;
 
 int get_name(lua_State *L)
 {
-    lua_pushstring(L, "Панель Clickpad");
+    lua_pushstring(L, "Игровая панель Clickpad");
     return 1;
 }
 
@@ -43,17 +43,17 @@ int init(lua_State *L)
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
 
-    luaT_run(L, "addMenu", "sdd", "Плагины/Настройки Clickpad...", 1, 2);
-
-    if (!m_parent_window.create(L, "Clickpad", 400, 400))
+    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 400))
         return luaT_error(L, "Не удалось создать окно для Clickpad");
+
+    luaT_run(L, "addMenu", "sdd", "Плагины/Настройки Clickpad...", 1, 2);
 
     HWND parent = m_parent_window.hwnd();
     m_clickpad = new ClickpadMainWnd();
     RECT rc; ::GetClientRect(parent, &rc);
-    if (rc.right == 0) rc.right = 400; // requeires for splitter inside map window (if parent window hidden)
-    HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+    HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS);
     m_parent_window.attach(res);
+    m_parent_window.block("left,right,top,bottom");
     return 0;
 }
 
@@ -72,10 +72,7 @@ int menucmd(lua_State *L)
     int id = lua_tointeger(L, 1);
     lua_pop(L, 1);
     if (id == 1)
-    {
-        SettingsDlg dlg;
-        dlg.DoModal();
-    }
+        m_clickpad->switchEditMode();
     return 0;
 }
 

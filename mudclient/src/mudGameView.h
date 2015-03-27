@@ -258,6 +258,13 @@ public:
         m_dock.ShowWindow(hwnd);
     }
 
+    HWND getFloatingWnd(PluginsView* v)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        return (ctx) ? ctx->hwndFloated : NULL;
+    }
+
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
     CFont *getStandardFont() { return &m_propElements.standard_font; }

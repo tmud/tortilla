@@ -46,7 +46,7 @@ void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
 //---------------------------------------------------------------------
 wchar_t plugin_buffer[1024];
-int pluginInvArgs(lua_State *L, const utf8* fname) 
+int pluginInvArgs(lua_State *L, const utf8* fname)
 {
     int n = lua_gettop(L);
     Utf8ToWide f(fname);

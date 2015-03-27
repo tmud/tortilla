@@ -53,12 +53,36 @@ int window_hwnd(lua_State *L)
     return pluginInvArgs(L, "window.hwnd");
 }
 
-int window_side(const wchar_t* side, bool checkfloat)
+int window_floathwnd(lua_State *L)
 {
-    int dock_side = _wndMain.m_gameview.convertSideFromString(side);
-    if (!checkfloat && dock_side == DOCK_FLOAT)
-        dock_side = -1;
-    return dock_side;
+    if (luaT_check(L, 1, LUAT_WINDOW))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        HWND wnd = _wndMain.m_gameview.getFloatingWnd(v);
+        lua_pushunsigned(L, (unsigned int)wnd);
+        return 1;
+    }
+    return pluginInvArgs(L, "window.floathwnd");
+}
+
+bool window_side(const wchar_t* side, bool checkfloat, std::vector<int> *sv)
+{
+    Tokenizer tk(side, L",; ");
+    if (tk.empty())
+        return false;
+    for (int i = 0, e = tk.size(); i < e; ++i)
+    {
+        int dock_side = _wndMain.m_gameview.convertSideFromString(tk[i]);
+        if (!checkfloat && dock_side == DOCK_FLOAT)
+            dock_side = -1;
+        if (dock_side == -1)
+        {
+            sv->clear();
+            return false;
+        }
+        sv->push_back(dock_side);
+    }
+    return true;
 }
 
 int window_dock(lua_State *L)
@@ -66,16 +90,14 @@ int window_dock(lua_State *L)
     if (luaT_check(L, 2, LUAT_WINDOW, LUA_TSTRING))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int dock_side = window_side(luaT_towstring(L, 2), false);
-        if (dock_side >= 0) 
+        std::vector<int> sv;
+        if (window_side(luaT_towstring(L, 2), false, &sv))
         {
-            _wndMain.m_gameview.dockDockPane(v, dock_side);
+            for (int i = 0, e = sv.size(); i < e; ++i)
+                _wndMain.m_gameview.dockDockPane(v, sv[i]);
             return 0;
         }
-        pluginError("window.dock", "Некорректный параметр side");
-        return 0;
     }
-
     return pluginInvArgs(L, "window.dock");
 }
 
@@ -95,14 +117,13 @@ int window_block(lua_State *L)
     if (luaT_check(L, 2, LUAT_WINDOW, LUA_TSTRING))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int dock_side = window_side(luaT_towstring(L, 2), true);
-        if (dock_side >= 0)
+        std::vector<int> sv;
+        if (window_side(luaT_towstring(L, 2), true, &sv))
         {
-            _wndMain.m_gameview.blockDockPane(v, dock_side);
+            for (int i = 0, e = sv.size(); i < e; ++i)
+                _wndMain.m_gameview.blockDockPane(v, sv[i]);
             return 0;
         }
-        pluginError("window.block", "Некорректный параметр side");
-        return 0;
     }
     return pluginInvArgs(L, "window.block");
 }
@@ -112,14 +133,13 @@ int window_unblock(lua_State *L)
     if (luaT_check(L, 2, LUAT_WINDOW, LUA_TSTRING))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int dock_side = window_side(luaT_towstring(L, 2), true);
-        if (dock_side >= 0)
+        std::vector<int> sv;
+        if (window_side(luaT_towstring(L, 2), true, &sv))
         {
-            _wndMain.m_gameview.unblockDockPane(v, dock_side);
+            for (int i = 0, e = sv.size(); i < e; ++i)
+                _wndMain.m_gameview.unblockDockPane(v, sv[i]);
             return 0;
         }
-        pluginError("window.unblock", "Некорректный параметр side");
-        return 0;
     }
     return pluginInvArgs(L, "window.unblock");
 }
@@ -180,6 +200,7 @@ void reg_mt_window(lua_State *L)
     luaL_newmetatable(L, "window");
     regFunction(L, "attach", window_attach);
     regFunction(L, "hwnd", window_hwnd);
+    regFunction(L, "floathwnd", window_floathwnd);
     regFunction(L, "dock", window_dock);
     regFunction(L, "undock", window_undock);
     regFunction(L, "block", window_block);
