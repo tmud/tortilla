@@ -80,7 +80,7 @@ public:
         }
         if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
         {
-            if (m_history.IsWindowVisible())                
+            if (m_history.IsWindowVisible())
             {
                 closeHistory();
                 return TRUE;
@@ -162,7 +162,7 @@ public:
         m_plugins_views.push_back(v);
         return v;
     }
-    
+
     void deleteDockPane(PluginsView *v)
     {
         HWND hwnd = v->m_hWnd;
@@ -694,6 +694,7 @@ private:
        m_plugins.updateProps();
        if (m_propData->codepage == L"utf8") m_codepage = CPUTF8;
        else m_codepage = CPWIN;
+       m_network.setUtf8Encoding(m_codepage == CPUTF8 ? true : false);
     }
 
     void updateTitle()
@@ -985,4 +986,7 @@ private:
             }
         }
     }
+
+    void setOscColor(int index, COLORREF color);
+    void resetOscColors();
 };

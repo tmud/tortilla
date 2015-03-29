@@ -24,6 +24,8 @@ public:
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
     virtual void preprocessGameCmd(tstring* cmd) = 0;
+    virtual void setOscColor(int index, COLORREF color) = 0;
+    virtual void resetOscColors() = 0;
 };
 
 class LogicProcessorMethods

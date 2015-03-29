@@ -14,7 +14,7 @@ enum NetworkEvents
 };
 
 struct NetworkConnectData
-{    
+{
     std::string address;
     int port;
     HWND wndToNotify;
@@ -41,7 +41,8 @@ public:
     void disconnect();
     void getMccpRatio(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
-    
+    void setUtf8Encoding(bool flag);
+
 private:
     bool send_ex(const tbyte* data, int len);
     int read_socket();
@@ -51,6 +52,9 @@ private:
     void init_mccp();
     bool process_mccp();
     void close_mccp();
+    void init_mtts();
+    bool process_mtts();
+    void close_mtts();
 
     MemoryBuffer m_input_buffer;            // to receive data from network    
     DataQueue m_mccp_data;                  // accamulated MCCP data from network
@@ -67,4 +71,7 @@ private:
     int  m_totalReaded;
     int  m_totalDecompressed;
     bool m_double_iac_mode;
+    bool m_utf8_encoding;
+
+    int  m_mtts_step;
 };

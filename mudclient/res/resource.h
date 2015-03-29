@@ -5,6 +5,7 @@
 #define IDR_MAINFRAME                   128
 #define IDS_RESET_COLORS_CONFIRM        129
 #define IDS_NETWORK_FAILED              130
+#define IDS_RESET_OSC_CONFIRM           130
 #define IDS_NEW_PROFILE                 131
 #define IDS_NEW_WORLD                   132
 #define IDS_ERROR_INIT_NETWORK          200
@@ -97,6 +98,7 @@
 #define IDC_CHECK_PLUGINSLOGS           1118
 #define IDC_EDIT_PLUGINSLOGS            1119
 #define IDC_EDIT_NEWWORLD_NAME          1120
+#define IDC_CHECK_DISABLE_OSC           1120
 #define IDC_EDIT_NEWWORLD_PROFILE       1121
 #define IDC_COMBO_CODEPAGE              1122
 #define IDC_RADIO_PROMT_GA              1124
@@ -104,6 +106,7 @@
 #define IDC_CHECK_DONTSHOW              1126
 #define IDC_STATIC_RICHBOXPLACE         1129
 #define IDC_EDIT_PASSWORD               1130
+#define IDC_BUTTON_COLOR_RESETOSC       1131
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -126,7 +129,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        222
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1131
+#define _APS_NEXT_CONTROL_VALUE         1132
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

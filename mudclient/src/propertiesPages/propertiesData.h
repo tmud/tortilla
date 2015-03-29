@@ -46,7 +46,7 @@ private:
     {
         int pos = str.find(label);
         if (pos == -1)
-            return false;        
+            return false;
         int pos2 = str.find(L"]", pos);
         if (pos2 == -1)
             return false;
@@ -69,7 +69,7 @@ private:
 struct PropertiesTimer
 {
     void convertToString(tstring *value) const
-    {        
+    {
         value->assign(timer);
         value->append(L";");
         value->append(cmd);
@@ -128,8 +128,8 @@ public:
     void del(int index)
     {
         int size = m_values.size();
-        if (index >= 0 && index < size)        
-            m_values.erase(m_values.begin() + index);        
+        if (index >= 0 && index < size)
+            m_values.erase(m_values.begin() + index);
         else
            { assert(false); }
     }
@@ -175,7 +175,7 @@ public:
     {
         return m_values.size();
     }
-    
+
     void clear()
     {
         m_values.clear();
@@ -208,7 +208,7 @@ public:
     }
 
     void add(int index, const tstring& key)
-    {        
+    {
         if (index == -1)
             m_values.push_back(key);
         else
@@ -244,7 +244,7 @@ public:
     {
         return m_values.size();
     }
-    
+
     void clear()
     {
         m_values.clear();
@@ -269,7 +269,7 @@ struct OutputWindow
     void initDefaultPos(int x, int y, int width, int height)
     {
         lastside = side = DOCK_FLOAT;
-        size = { width, height };        
+        size = { width, height };
         pos = { x, y, x + width, y + height };
     }
 
@@ -300,7 +300,7 @@ struct PluginData
         int windows_count = windows.size();
         int x = 100 + windows_count * 50;
         int y = 250 + windows_count * 50;
-        w->initDefaultPos(x, y, width, height);                        
+        w->initDefaultPos(x, y, width, height);
     }
 
     bool findWindow(const tstring& window_name, OutputWindow *w)
@@ -360,14 +360,14 @@ struct PropertiesData
     PropertiesValues timers;
     PropertiesValues variables;
     PropertiesList   tabwords;
-    PropertiesList   tabwords_commands;   
+    PropertiesList   tabwords_commands;
     PluginsDataValues plugins;
 
     struct message_data { 
     message_data() { initDefault();  }
     void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
     int actions;
-    int aliases;    
+    int aliases;
     int subs;
     int hotkeys;
     int highlights;
@@ -384,6 +384,8 @@ struct PropertiesData
     tstring  codepage;
 
     COLORREF colors[16];
+    COLORREF osc_colors[16];
+    tbyte    osc_flags[16];
     COLORREF bkgnd;
     tstring  font_name;
     int      font_heigth;
@@ -421,7 +423,7 @@ struct PropertiesData
         colors[1] = RGB(128, 0, 0);
         colors[2] = RGB(0, 128, 0);
         colors[3] = RGB(128, 128, 0);
-        colors[4] = RGB(0, 0, 255);
+        colors[4] = RGB(0, 64, 128);
         colors[5] = RGB(128, 0, 128);
         colors[6] = RGB(0, 128, 128);
         colors[7] = RGB(192, 192, 192);
@@ -429,22 +431,28 @@ struct PropertiesData
         colors[9] = RGB(255, 0, 0);
         colors[10] = RGB(0, 255, 0);
         colors[11] = RGB(255, 255, 0);
-        colors[12] = RGB(64, 64, 255);
+        colors[12] = RGB(0, 128, 255);
         colors[13] = RGB(255, 0, 255);
         colors[14] = RGB(0, 255, 255);
-        colors[15] = RGB(255, 255, 255);        
+        colors[15] = RGB(255, 255, 255);
+        resetOSCColors();
         font_heigth = 10;
         font_italic = 0;
-        if (isVistaOrHigher()) 
+        if (isVistaOrHigher())
         {
             font_name.assign(L"Consolas");   // Consolas more pretty font (exist only Vista+)
             font_bold = FW_BOLD;
         }
         else
         {
-            font_name.assign(L"Fixedsys" );
+            font_name.assign(L"Fixedsys");
             font_bold = FW_NORMAL;
-        }        
+        }
+    }
+
+    void resetOSCColors()
+    {
+        for (int i = 0; i < 16; ++i) { osc_colors[i] = 0; osc_flags[i] = 0; }
     }
 
     void initMainWindow()
@@ -497,7 +505,7 @@ struct PropertiesData
         f->lfHeight = -MulDiv(font_heigth, GetDeviceCaps(GetDC(hwnd), LOGPIXELSY), 72);
         f->lfWidth = 0;
         f->lfEscapement = 0;
-        f->lfOrientation = 0;        
+        f->lfOrientation = 0;
         f->lfWeight = font_bold;
         f->lfItalic = font_italic ? 1 : 0;
         f->lfUnderline = 0;
@@ -550,7 +558,7 @@ struct PropertiesData
             property_value &g = groups.getw(i);
             if (g.key == oldname){
                 g.key = newname; break;
-            }        
+            }
         }
     }
 
@@ -580,7 +588,7 @@ private:
         {
             const property_value &v = values->get(i);
             if (v.group == name)
-                values->del(i);            
+                values->del(i);
         }
     }
 
@@ -621,7 +629,7 @@ private:
         windows.clear();
         for (int i=0; i<OUTPUT_WINDOWS; ++i) 
         {
-            OutputWindow w;      
+            OutputWindow w;
             w.size.cx = 350; w.size.cy = 200;
             int d = (i+1) * 70;
             RECT defpos = { d, d, d+w.size.cx, d+w.size.cy };
