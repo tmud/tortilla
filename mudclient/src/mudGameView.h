@@ -490,6 +490,7 @@ private:
             if (len > 0)
             {
                 OUTPUT_BYTES(msdp->getData(), len, len, "MSDP");
+                msdp->clear();
             }
 #endif
             DataQueue* data = m_network.receive();

@@ -31,35 +31,43 @@
 #define TELOPT_MSP       90 // 5a
 #define TELOPT_MXP       91 // 5b
 #define TELOPT_ATCP     200 // c8
+#define TELOPT_GMCP     201 // c9
 #define TELOPT_NAWS      31 // 1f
 #define TELOPT_CHARSET   42 // 2a
 
 #ifdef _DEBUG
 void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
 {
-    if (maxlen > len) maxlen = len;
     std::string l("["); l.append(label);
     char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
     OutputDebugStringA(l.c_str());
+    if (maxlen > len) maxlen = len;
     const unsigned char *bytes = (const unsigned char *)data;
     len = maxlen;
+    const int show_len = 32;
+    unsigned char *buffer = new unsigned char[show_len];
 
     while (len > 0)
     {
-        int toshow = 16;
-        if (toshow > len) toshow = len;     
+        int toshow = show_len;
+        if (toshow > len) toshow = len;
         std::string hex;
         for (int i = 0; i < toshow; ++i)
         {
-            sprintf(tmp, "%.2x ", bytes[i]);            
+            sprintf(tmp, "%.2x ", bytes[i]);
             hex.append(tmp);
         }
-        hex.append((const char*)bytes, toshow);
+        memcpy(buffer, bytes, toshow);
+        for (int i=0; i<toshow; ++i) {
+            if (buffer[i] < 32) buffer[i] = '.';
+        }
+        hex.append((const char*)buffer, toshow);
         OutputDebugStringA(hex.c_str());
         OutputDebugStringA("\r\n");
         bytes += toshow;
         len -= toshow;
     }
+    delete []buffer;
 }
 
 void OutputTelnetOption(const void *data, const char* label)
@@ -386,7 +394,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (e[0] == DO)               // some command via IAC DO option for negotiation
     {
-        //OUTPUT_OPTION(&e[1], "IAC DO");
+        OUTPUT_OPTION(&e[1], "IAC DO");
         if (e[1] == TTYPE)
         {
             tbyte support[3] = { IAC, WILL, e[1] };
@@ -406,7 +414,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (e[0] == DONT)
     {
-        //OUTPUT_OPTION(&e[1], "IAC DONT");
+        OUTPUT_OPTION(&e[1], "IAC DONT");
         if (e[1] == TTYPE)
             close_mtts();
         return -3;
@@ -414,7 +422,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (e[0] == WILL)
     {
-        //OUTPUT_OPTION(&e[1], "IAC WILL");
+        OUTPUT_OPTION(&e[1], "IAC WILL");
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
         {
             tbyte flag = (m_pMccpStream) ? DO : DONT;
@@ -441,7 +449,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (e[0] == WONT)
     {
-        //OUTPUT_OPTION(&e[1], "IAC WONT");
+        OUTPUT_OPTION(&e[1], "IAC WONT");
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
         {
             close_mccp();
