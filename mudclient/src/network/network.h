@@ -2,6 +2,16 @@
 
 #include "zlib.h"
 
+#ifdef _DEBUG
+#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
+#define OUTPUT_OPTION(data, label) OutputTelnetOption(data, label);
+void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label);
+void OutputTelnetOption(const void *data, const char* label);
+#else
+#define OUTPUT_BYTES(data, len, maxlen, label)
+#define OUTPUT_OPTION(data, label)
+#endif
+
 enum NetworkEvents
 {
     NE_NOEVENT = 0,
@@ -34,10 +44,11 @@ class Network
 public:
     Network();
     ~Network();
-    bool connect(const NetworkConnectData& data);    
+    bool connect(const NetworkConnectData& data);
     NetworkEvents processMsg(DWORD msg_lparam);
     DataQueue* receive();
-    int send(const tbyte* data, int len);    
+    DataQueue* receive_msdp();
+    int send(const tbyte* data, int len);
     void disconnect();
     void getMccpRatio(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
@@ -55,6 +66,9 @@ private:
     void init_mtts();
     bool process_mtts();
     void close_mtts();
+    void init_msdp();
+    void process_msdp(const tbyte* buffer, int len);
+    void close_msdp();
 
     MemoryBuffer m_input_buffer;            // to receive data from network    
     DataQueue m_mccp_data;                  // accamulated MCCP data from network
@@ -63,6 +77,7 @@ private:
     DataQueue m_receive_data;               // ready to receive by app
     DataQueue m_output_buffer;              // buffer to compile output data
     DataQueue m_send_data;                  // data for send to server
+    DataQueue m_msdp_data;                  // data of msdp protocol
 
     SOCKET sock;
     z_stream *m_pMccpStream;
@@ -74,4 +89,6 @@ private:
     bool m_utf8_encoding;
 
     int  m_mtts_step;
+
+    bool m_msdp_on;
 };

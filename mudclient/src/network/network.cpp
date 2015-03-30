@@ -70,15 +70,10 @@ void OutputTelnetOption(const void *data, const char* label)
     sprintf(tmp, ": %d (%.2x)\r\n", byte, byte);
     OutputDebugStringA(tmp);
 }
-#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
-#define OUTPUT_OPTION(data, label) OutputTelnetOption(data, label);
-#else
-#define OUTPUT_BYTES(data, len, maxlen, label)
-#define OUTPUT_OPTION(data, label)
 #endif
 
 Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
-m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1)
+m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
 {
     m_input_buffer.alloc(1024);
     m_mccp_buffer.alloc(8192);
@@ -148,6 +143,7 @@ void Network::close()
     sock = NULL;
     close_mccp();
     close_mtts();
+    close_msdp();
 
     m_input_data.clear();
     m_receive_data.clear();
@@ -241,6 +237,11 @@ int Network::send(const tbyte* data, int len)
 DataQueue* Network::receive()
 {
     return &m_receive_data;
+}
+
+DataQueue* Network::receive_msdp()
+{
+    return &m_msdp_data;
 }
 
 int Network::read_socket()
@@ -354,7 +355,6 @@ bool Network::send_ex(const tbyte* data, int len)
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
 {
     const tbyte* b = buffer;
-    const tbyte* e = b;
     if (*b != IAC && *b != 0)     // find iac symbol or zero
     {
         const tbyte* e = b + len;
@@ -373,8 +373,9 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (len < 2)
         return 0;
 
+    const tbyte* e = b;
     e++;
-    if (*e == IAC)               // double iac - continue
+    if (*e == IAC)               // double IAC - continue
         return 2;
 
     if (*e == GA)                // IAC GA - continue
@@ -383,7 +384,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (len < 3)
         return 0;
 
-    if (*e == DO)               // some command via IAC DO option for negotiation
+    if (e[0] == DO)               // some command via IAC DO option for negotiation
     {
         //OUTPUT_OPTION(&e[1], "IAC DO");
         if (e[1] == TTYPE)
@@ -416,11 +417,17 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         //OUTPUT_OPTION(&e[1], "IAC WILL");
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
         {
-            // server send request for enable MCCP
             tbyte flag = (m_pMccpStream) ? DO : DONT;
             tbyte support[3] = { IAC, flag, e[1] };
             if (!send_ex(support, 3))
                { *error = true; return 0; }
+        }
+        else if (e[1] == MSDP)
+        {
+            tbyte support[3] = { IAC, DO, e[1] };
+            if (!send_ex(support, 3))
+               { *error = true; return 0; }
+            init_msdp();
         }
         else
         {
@@ -440,6 +447,10 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
             close_mccp();
             init_mccp();
         }
+        if (e[1] == MSDP)
+        {
+            close_msdp();
+        }
         return -3;
     }
 
@@ -450,6 +461,8 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     {
         if ((e[2] == IAC && e[1] == COMPRESS2) || (e[2] == WILL && e[1] == COMPRESS))
         {
+          if (m_mccp_on)
+               { *error = true; return 0; }
            m_totalDecompressed -= (len-5);
            m_mccp_data.write(e+4, len-5);
            m_mccp_on = true;
@@ -458,6 +471,19 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
            return -len;
         }
         return -5;
+    }
+
+    if (e[0] == SB && e[1] == MSDP)
+    {
+        for (int i = 3; i < len; ++i) {
+            if (e[i] == SE && e[i-1] == IAC && e[i-2] != IAC)
+            { 
+                // finished msdp data block
+                process_msdp(e, i+1);
+                return -(i+2);
+            }
+        }
+        return 0;
     }
 
     if (len < 6)
@@ -470,15 +496,13 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         return -6;
     }
 
-    // other telnet options
+    // other SB options
     if (e[0] == SB)
     {
-        int se = -1;
-        for (int i = 1; i < len; ++i) { if (e[i] == SE) { se = i; break; }}
-        if (se == -1) {
-            return (len > 10) ? -len : 0;
+        for (int i = 2; i < len; ++i) {
+            if (e[i] == SE && e[i-1] == IAC && e[i-2] != IAC) return -(i+2);
         }
-        return -(se+2);
+        return 0;
     }
     return -1;      // skip error IAC
 }
@@ -582,4 +606,21 @@ bool Network::process_mtts()
     bool result = send_ex(tosend, len);
     delete tosend;
     return result;
+}
+
+void Network::init_msdp()
+{
+    m_msdp_on = true;
+}
+
+void Network::close_msdp()
+{
+    m_msdp_on = false;
+    m_msdp_data.clear();
+}
+
+void Network::process_msdp(const tbyte* buffer, int len)
+{
+    if (m_msdp_on)
+        m_msdp_data.write(buffer, len);
 }

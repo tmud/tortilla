@@ -484,6 +484,14 @@ private:
         NetworkEvents result = m_network.processMsg(lparam);
         if (result == NE_NEWDATA)
         {
+#ifdef _DEBUG //todo
+            DataQueue *msdp = m_network.receive_msdp();
+            int len = msdp->getSize();
+            if (len > 0)
+            {
+                OUTPUT_BYTES(msdp->getData(), len, len, "MSDP");
+            }
+#endif
             DataQueue* data = m_network.receive();
             int text_len = data->getSize();
             if (text_len == 0)

@@ -301,16 +301,22 @@ private:
         colorspos.ShowWindow(SW_HIDE);
         m_colors.Create(m_hWnd, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
 
+        setResetOscButtonState();
+        return 0;
+    }
+
+    void setResetOscButtonState()
+    {
         BOOL osc_enable = FALSE;
         for (int i=0; i<16; ++i) {
             if (propData->osc_flags[i]) { osc_enable = TRUE; break; }
         }
         m_reset_osc.EnableWindow(osc_enable);
-        return 0;
     }
 
     LRESULT OnChangedOscColor(UINT, WPARAM, LPARAM, BOOL&)
     {
+        setResetOscButtonState();
         return 0;
     }
 
