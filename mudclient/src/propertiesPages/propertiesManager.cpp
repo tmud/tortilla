@@ -17,7 +17,7 @@ bool PropertiesManager::init()
     if (!groups.init())
         return false;
     int last = groups.getLast();
-    groups.getName(last, &m_configName);   
+    groups.getName(last, &m_configName);
     return true;
 }
 
@@ -39,7 +39,7 @@ bool PropertiesManager::loadSettings()
 
     std::string profile;
     xml::request r(sd, "profile");
-    if (r.size() != 0)          
+    if (r.size() != 0)
         r[0].gettext(&profile);
     if (profile.empty())
         return false;
@@ -84,12 +84,13 @@ bool PropertiesManager::loadProfileData()
     xml::node sd;
     if (!loadFromFile(sd, profile))
         return false;
-    
+
     loadValue(sd, "viewsize", MIN_VIEW_HISTORY_SIZE, MAX_VIEW_HISTORY_SIZE, &m_propData.view_history_size);
     loadValue(sd, "cmdsize", MIN_CMD_HISTORY_SIZE, MAX_CMD_HISTORY_SIZE, &m_propData.cmd_history_size);
     loadValue(sd, "systemcmds", 0, 1, &m_propData.show_system_commands);
     loadValue(sd, "clearbar", 0, 1, &m_propData.clear_bar);
     loadValue(sd, "disableya", 0, 1, &m_propData.disable_ya);
+    loadValue(sd, "disableosc", 0, 1, &m_propData.disable_osc);
     loadValue(sd, "historytab", 0, 1, &m_propData.history_tab);
     loadValue(sd, "timersf", 0, 1, &m_propData.timers_on);
     loadValue(sd, "plogs", 0, 1, &m_propData.plugins_logs);
@@ -147,7 +148,7 @@ bool PropertiesManager::loadProfileData()
     loadList(sd, "tabwords/tabword", &m_propData.tabwords);
     loadArray(sd, "variables/var", true, false, &m_propData.variables);
     m_propData.plugins.clear();
-     
+
     bool default_window = false;
     xml::request mw(sd, "mainwindow");
     if (mw.size())
@@ -164,9 +165,9 @@ bool PropertiesManager::loadProfileData()
             default_window = true;
         }
     }
-        
+
     xml::request cw(sd, "windows/window");
-    int e = cw.size();    
+    int e = cw.size();
     for (int i=0; i<OUTPUT_WINDOWS; ++i) 
     {
         OutputWindow w;
@@ -246,6 +247,7 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, "systemcmds", m_propData.show_system_commands);
     saveValue(sd, "clearbar", m_propData.clear_bar);
     saveValue(sd, "disableya", m_propData.disable_ya);
+    saveValue(sd, "disableosc", m_propData.disable_osc);
     saveValue(sd, "historytab", m_propData.history_tab);
     saveValue(sd, "timersf", m_propData.timers_on);
     saveValue(sd, "plogs", m_propData.plugins_logs);
@@ -291,7 +293,7 @@ bool PropertiesManager::saveProfileData()
     saveList(tabwords, "tabword", m_propData.tabwords);
     xml::node vars = sd.createsubnode("variables");
     saveArray(vars, "var", m_propData.variables);
-    
+
     xml::node windows = sd.createsubnode("windows");
     for (int i=0,e=m_propData.windows.size(); i<e; ++i)
         saveWindow(windows, m_propData.windows[i]);
@@ -332,7 +334,7 @@ bool PropertiesManager::saveProfileData()
     saveValue(ms, "vars", d.variables);
     saveValue(ms, "timers", d.timers);
     saveValue(ms, "tabwords", d.tabwords);
-    
+
     tstring config(L"profiles\\");
     config.append(m_profileName);
     config.append(L".xml");
@@ -418,7 +420,7 @@ void PropertiesManager::loadArray(xml::node parent, const std::string& name, boo
             u2w.convert(key.c_str(), key.length());
             tstring _key(u2w);
             if (values->exist(_key)) 
-                continue;            
+                continue;
             if (values_req)
             {
                 bool value_exists = r[i].get("value", &val);
@@ -435,7 +437,7 @@ void PropertiesManager::loadArray(xml::node parent, const std::string& name, boo
             u2w.convert(val.c_str(), val.length());
             tstring value(u2w);
             u2w.convert(grp.c_str(), grp.length());
-            tstring group(u2w);           
+            tstring group(u2w);
             values->add(-1, _key, value, group);
         }
     }
@@ -475,7 +477,7 @@ void PropertiesManager::loadList(xml::node parent, const std::string& name, Prop
             u2w.convert(val.c_str(), val.length());
             tstring _val(u2w);
             if (values->exist(_val)) 
-                continue;                        
+                continue;
             values->add(-1, _val);
         }
     }
@@ -501,7 +503,7 @@ bool PropertiesManager::loadValue(xml::node parent, const std::string& name, int
     int v = 0;
     if (!r[0].get("value", &v))
         return false;
-    
+
     if (v < min)
         v = min;
     if (v > max)
@@ -546,7 +548,7 @@ bool PropertiesManager::loadRgbColor(xml::node n, std::string* name, COLORREF* c
     if (!n.get("r", &r) ||
         !n.get("g", &g) ||
         !n.get("b", &b)
-       ) return false;        
+       ) return false;
     name->assign(cn);
     *color = RGB(r,g,b);
     return true;
@@ -581,7 +583,7 @@ bool PropertiesManager::loadRECT(xml::node n, RECT *rc)
         !n.get("top", &top) ||
         !n.get("bottom", &bottom))
         return false;
-    
+
     RECT pos = { left, top, right, bottom };
     *rc = pos;
     return true;

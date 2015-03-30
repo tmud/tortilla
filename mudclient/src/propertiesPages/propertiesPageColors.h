@@ -77,7 +77,7 @@ private:
        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBknd)
        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
-       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnMouseClick)       
+       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnMouseClick)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
@@ -170,6 +170,7 @@ private:
             color = dlg.GetColor();
             propData->colors[item] = color;
             propData->osc_flags[item] = 0;
+            ::PostMessage(GetParent(), WM_USER, 0, 0);
             Invalidate();
         }
         return 0;
@@ -284,6 +285,7 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_COLOR_RESET, OnResetColors)
        COMMAND_ID_HANDLER(IDC_BUTTON_FONT, OnSelectFont)
        COMMAND_ID_HANDLER(IDC_BUTTON_COLOR_RESETOSC, OnResetOscColors)
+       MESSAGE_HANDLER(WM_USER, OnChangedOscColor)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -304,6 +306,11 @@ private:
             if (propData->osc_flags[i]) { osc_enable = TRUE; break; }
         }
         m_reset_osc.EnableWindow(osc_enable);
+        return 0;
+    }
+
+    LRESULT OnChangedOscColor(UINT, WPARAM, LPARAM, BOOL&)
+    {
         return 0;
     }
 

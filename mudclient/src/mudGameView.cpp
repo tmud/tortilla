@@ -157,6 +157,8 @@ void MudGameView::preprocessGameCmd(tstring* cmd)
 
 void MudGameView::setOscColor(int index, COLORREF color)
 {
+    if (m_propData->disable_osc)
+        return;
     m_propData->osc_colors[index] = color;
     m_propData->osc_flags[index] = 1;
     m_propElements.palette.setColor(index, color);
@@ -164,6 +166,8 @@ void MudGameView::setOscColor(int index, COLORREF color)
 
 void MudGameView::resetOscColors()
 {
+    if (m_propData->disable_osc)
+        return;
     m_propData->resetOSCColors();
     m_propElements.palette.updateProps(m_propData);
 }
