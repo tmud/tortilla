@@ -120,7 +120,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     PUSHBUTTON      "Ўрифт...",IDC_BUTTON_FONT,261,18,77,19
     PUSHBUTTON      "÷вет фона...",IDC_BUTTON_BKGND_COLOR,261,39,77,19
-    PUSHBUTTON      "—бросить палитру\r\n         сервера",IDC_BUTTON_COLOR_RESETOSC,261,175,77,23,BS_MULTILINE
+    PUSHBUTTON      "—бросить палитру\r\nсервера",IDC_BUTTON_COLOR_RESETOSC,261,175,77,23,BS_CENTER | BS_VCENTER | BS_MULTILINE
     PUSHBUTTON      "—бросить по\r\n умолчанию",IDC_BUTTON_COLOR_RESET,261,200,77,23,BS_CENTER | BS_VCENTER | BS_MULTILINE
     CTEXT           "÷вет и шрифт",IDC_STATIC,145,6,49,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,142,8
