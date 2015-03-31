@@ -128,7 +128,12 @@ int release(lua_State *L)
     lua_pop(L, 1);
 
     if (!s.save(path.c_str()))
-       return luaT_error(L, "Ошибка записи настроек карты: config.xml");
+    {
+        s.deletenode();
+        u8string error("Ошибка записи настроек карты: ");
+        error.append(path);
+        return luaT_error(L, error.c_str());
+    }
     s.deletenode();
     return 0;
 }

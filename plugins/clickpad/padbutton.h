@@ -11,22 +11,21 @@ public:
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
     { 
-        //::PostMessage(GetParent(), WM_USER,0,0);
         bHandled = FALSE;
         return 0; 
     }
 
-
     LRESULT OnClickUp(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
-        ::SendMessage(GetParent(), WM_USER, 0, 0);
+        ::SendMessage(GetParent(), WM_USER, 0, 0); // return back focus to parent windows
         bHandled = FALSE;
         return 0;
     }
+};
 
-  /*  CButton
 
 
+  /*  CButtons
    // override of CBitmapButtonImpl DoPaint(). Adds fillrect
     void DoPaint(CDCHandle dc)
     {
@@ -38,7 +37,6 @@ public:
         // call ancestor DoPaint() method
         CBitmapButtonImpl<CBmpBtn>::DoPaint(dc);
     }*/
-};
 
 /*
 class CBmpBtn : public CBitmapButtonImpl<CBmpBtn>

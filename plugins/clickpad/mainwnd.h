@@ -7,8 +7,17 @@ class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >
 public:
     ClickpadMainWnd();
     ~ClickpadMainWnd();
+
+    void setButtonsNet(int rows, int columns);
+
     void switchEditMode();
-    
+    void beginEditMode();
+    void endEditMode();
+
+    void initDefault();
+    void save(xml::node& node);
+    void load(xml::node& node);
+
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -25,22 +34,20 @@ private:
     LRESULT OnParentSetFocus(UINT, WPARAM, LPARAM, BOOL&) { onSetParentFocus(); return 0; }    
     void onCreate();
     void onSize();
-    void createButton();
     void onSetParentFocus();
 private:
-    void createRow();
-    void createColumn();
+    void createNewRows(int count);
+    void createNewColumns(int count);
+    void createButton(int x, int y);
+    int  getRows() const;
+    int  getColumns() const;
 
 private:
     SettingsDlg m_settings_wnd;    
     bool m_editmode;
 
-    int m_rows;
-    int m_columns;
     int m_button_width;
     int m_button_height;
 
-    std::deque<std::deque<PadButton*>> m_buttons;
-
-
+    std::vector<std::vector<PadButton*>> m_buttons;
 };

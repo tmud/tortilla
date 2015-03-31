@@ -54,14 +54,51 @@ int init(lua_State *L)
     HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS);
     m_parent_window.attach(res);
     m_parent_window.block("left,right,top,bottom");
+
+    luaT_run(L, "getPath", "s", "buttons.xml");
+    u8string path(lua_tostring(L, -1));
+    lua_pop(L, 1);
+
+    xml::node ld;
+    if (!ld.load(path.c_str()))
+    {
+        u8string error("Ошибка загрузки списка с кнопками: ");
+        error.append(path);
+        luaT_log(L, error.c_str());
+        m_clickpad->initDefault();
+    }
+    else
+    {
+        m_clickpad->load(ld);
+    }
+    ld.deletenode();
     return 0;
 }
 
 int release(lua_State *L)
 {
-    if (m_clickpad)
-        m_clickpad->DestroyWindow();
+    if (!m_clickpad)
+        return 0;
+
+    xml::node tosave("clickpad");
+    m_clickpad->save(tosave);
+
+    luaT_run(L, "getPath", "s", "buttons.xml");
+    u8string path(lua_tostring(L, -1));
+    lua_pop(L, 1);
+
+    bool result = tosave.save(path.c_str());
+
+    tosave.deletenode();
+    m_clickpad->DestroyWindow();
     delete m_clickpad;
+
+    if (!result)
+    {
+        u8string error("Ошибка записи списка кнопок: ");
+        error.append(path);
+        return luaT_error(L, error.c_str());
+    }
     return 0;
 }
 

@@ -14,5 +14,5 @@
 #include <atlctrls.h>
 #include <atlctrlx.h>
 
-#include <deque>
+#include <vector>
 #include <assert.h>
