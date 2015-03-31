@@ -38,10 +38,10 @@
 #ifdef _DEBUG
 void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
 {
+    if (maxlen > len) maxlen = len;
     std::string l("["); l.append(label);
     char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
     OutputDebugStringA(l.c_str());
-    if (maxlen > len) maxlen = len;
     const unsigned char *bytes = (const unsigned char *)data;
     len = maxlen;
     const int show_len = 32;
@@ -339,7 +339,7 @@ int Network::write_socket()
     DWORD sent = 0;
     if (WSASend(sock, &buffer, 1, &sent, flags, NULL, NULL) == SOCKET_ERROR)
         return -1;
-    //OUTPUT_BYTES(buffer.buf, sent, 16, "send socket");
+    //OUTPUT_BYTES(buffer.buf, sent, 32, "send socket");
     m_send_data.truncate(sent);
     return sent;
 }
@@ -485,9 +485,9 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     {
         for (int i = 3; i < len; ++i) {
             if (e[i] == SE && e[i-1] == IAC && e[i-2] != IAC)
-            { 
+            {
                 // finished msdp data block
-                process_msdp(e, i+1);
+                process_msdp(e+2, i-4+1);
                 return -(i+2);
             }
         }

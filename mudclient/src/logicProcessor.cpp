@@ -26,11 +26,6 @@ void LogicProcessor::processTick()
 
 void LogicProcessor::processNetworkData(const WCHAR* text, int text_len)
 {
-#ifdef _DEBUG
-    tstring label(text, text_len);
-    label.append(L"\r\n");
-    //OutputDebugString(label.c_str());
-#endif
     processIncoming(text, text_len);
 }
 

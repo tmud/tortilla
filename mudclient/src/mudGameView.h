@@ -484,19 +484,22 @@ private:
         NetworkEvents result = m_network.processMsg(lparam);
         if (result == NE_NEWDATA)
         {
-#ifdef _DEBUG //todo
             DataQueue *msdp = m_network.receive_msdp();
             int len = msdp->getSize();
             if (len > 0)
             {
+                //todo
                 OUTPUT_BYTES(msdp->getData(), len, len, "MSDP");
-                msdp->clear();
             }
-#endif
+            msdp->clear();
+
             DataQueue* data = m_network.receive();
             int text_len = data->getSize();
             if (text_len == 0)
                 return 0;
+
+            //todo
+            //OUTPUT_BYTES(data->getData(), text_len, text_len, "DATA");
 
             MemoryBuffer wide;
             if (m_codepage == CPWIN)
