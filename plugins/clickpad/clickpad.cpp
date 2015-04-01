@@ -72,6 +72,10 @@ int init(lua_State *L)
         m_clickpad->load(ld);
     }
     ld.deletenode();
+
+    CWindow wnd(m_parent_window.floathwnd());
+    //wnd.ModifyStyle(WS_THICKFRAME, 0);
+
     return 0;
 }
 
@@ -87,7 +91,7 @@ int release(lua_State *L)
     u8string path(lua_tostring(L, -1));
     lua_pop(L, 1);
 
-    bool result = tosave.save(path.c_str());
+    bool result = true; //tosave.save(path.c_str());
 
     tosave.deletenode();
     m_clickpad->DestroyWindow();

@@ -84,6 +84,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="buttonDlg.h" />
     <ClInclude Include="padbutton.h" />
     <ClInclude Include="mainwnd.h" />
     <ClInclude Include="resource.h" />

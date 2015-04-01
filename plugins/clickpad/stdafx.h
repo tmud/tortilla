@@ -15,4 +15,7 @@
 #include <atlctrlx.h>
 
 #include <vector>
+#include <string>
 #include <assert.h>
+
+typedef std::wstring tstring;

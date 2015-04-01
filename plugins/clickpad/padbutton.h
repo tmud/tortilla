@@ -2,7 +2,34 @@
 
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
+    tstring m_command;
+
 public:
+    void getText(tstring *text)
+    {
+        int len = GetWindowTextLength() + 1;
+        wchar_t *buffer = new wchar_t[len];
+        GetWindowText(buffer, len);
+        text->assign(buffer);
+        delete []buffer;    
+    }
+
+    void setText(const tstring& text)
+    {
+        SetWindowText(text.c_str());    
+    }
+
+    void getCommand(tstring *cmd)
+    {
+        cmd->assign(m_command);
+    }
+
+    void setCommand(const tstring& cmd)
+    {
+        m_command = cmd;    
+    }
+
+private:
     BEGIN_MSG_MAP(PadButton)
       MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
