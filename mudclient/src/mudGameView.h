@@ -13,6 +13,8 @@
 #include "plugins/pluginsView.h"
 #include "plugins/pluginsManager.h"
 
+#include "msdp/msdpNetwork.h"
+
 #include "AboutDlg.h"
 
 #define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
@@ -39,6 +41,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     std::vector<MudView*> m_views;
     std::vector<PluginsView*> m_plugins_views;
     PluginsManager m_plugins;
+    MsdpNetwork m_msdp_network;
     int m_codepage;
 
 private:
@@ -484,14 +487,7 @@ private:
         NetworkEvents result = m_network.processMsg(lparam);
         if (result == NE_NEWDATA)
         {
-            DataQueue *msdp = m_network.receive_msdp();
-            int len = msdp->getSize();
-            if (len > 0)
-            {
-                //todo
-                OUTPUT_BYTES(msdp->getData(), len, len, "MSDP");
-            }
-            msdp->clear();
+           m_msdp_network.process(&m_network);
 
             DataQueue* data = m_network.receive();
             int text_len = data->getSize();

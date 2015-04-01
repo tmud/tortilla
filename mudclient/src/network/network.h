@@ -12,6 +12,38 @@ void OutputTelnetOption(const void *data, const char* label);
 #define OUTPUT_OPTION(data, label)
 #endif
 
+#define IAC             255 // ff - in hex
+#define DONT            254 // fe
+#define DO              253 // fd
+#define WONT            252 // fc
+#define WILL            251 // fb
+#define SB              250 // fa
+#define SE              240 // f0
+#define GA              249 // f9
+//MCCP
+#define COMPRESS        85  // 55
+#define COMPRESS2       86  // 56
+//MTTS (terminal type)
+#define TTYPE           24  // 18
+#define TTYPE_IS        0
+#define TTYPE_SEND      1
+//MSDP
+#define MSDP            69  // 45
+#define MSDP_VAR         1
+#define MSDP_VAL         2
+#define MSDP_TABLE_OPEN  3
+#define MSDP_TABLE_CLOSE 4
+#define MSDP_ARRAY_OPEN  5
+#define MSDP_ARRAY_CLOSE 6
+//other (not supported yet)
+#define TELOPT_MSSP      70 // 46
+#define TELOPT_MSP       90 // 5a
+#define TELOPT_MXP       91 // 5b
+#define TELOPT_ATCP     200 // c8
+#define TELOPT_GMCP     201 // c9
+#define TELOPT_NAWS      31 // 1f
+#define TELOPT_CHARSET   42 // 2a
+
 enum NetworkEvents
 {
     NE_NOEVENT = 0,
@@ -48,7 +80,8 @@ public:
     NetworkEvents processMsg(DWORD msg_lparam);
     DataQueue* receive();
     DataQueue* receive_msdp();
-    int send(const tbyte* data, int len);
+    bool send(const tbyte* data, int len);
+    bool sendplain(const tbyte* data, int len); // send data directly
     void disconnect();
     void getMccpRatio(MccpStatus* data);
     void setSendDoubleIACmode(bool on);

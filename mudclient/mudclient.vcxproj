@@ -161,6 +161,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\ifProcessor.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
+    <ClInclude Include="src\msdp\msdpNetwork.h" />
     <ClInclude Include="src\mudCommandBar.h" />
     <ClInclude Include="src\mudGameView.h" />
     <ClInclude Include="src\mudView.h" />
@@ -222,6 +223,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\helpManager.cpp" />
     <ClCompile Include="src\LogicProcessor3.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
+    <ClCompile Include="src\msdp\msdpNetwork.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
     <ClCompile Include="src\mudView.cpp" />
     <ClCompile Include="src\mudViewParser.cpp" />

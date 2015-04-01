@@ -3,38 +3,6 @@
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
 
-#define IAC             255 // ff - in hex
-#define DONT            254 // fe
-#define DO              253 // fd
-#define WONT            252 // fc
-#define WILL            251 // fb
-#define SB              250 // fa
-#define SE              240 // f0
-#define GA              249 // f9
-//MCCP
-#define COMPRESS        85  // 55
-#define COMPRESS2       86  // 56
-//MTTS (terminal type)
-#define TTYPE           24  // 18
-#define TTYPE_IS        0
-#define TTYPE_SEND      1
-//MSDP
-#define MSDP            69  // 45
-#define MSDP_VAR         1
-#define MSDP_VAL         2
-#define MSDP_TABLE_OPEN  3
-#define MSDP_TABLE_CLOSE 4
-#define MSDP_ARRAY_OPEN  5
-#define MSDP_ARRAY_CLOSE 6
-//other (not supported yet)
-#define TELOPT_MSSP      70 // 46
-#define TELOPT_MSP       90 // 5a
-#define TELOPT_MXP       91 // 5b
-#define TELOPT_ATCP     200 // c8
-#define TELOPT_GMCP     201 // c9
-#define TELOPT_NAWS      31 // 1f
-#define TELOPT_CHARSET   42 // 2a
-
 #ifdef _DEBUG
 void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
 {
@@ -215,7 +183,7 @@ NetworkEvents Network::processMsg(DWORD msg_lparam)
     return NE_NOEVENT;
 }
 
-int Network::send(const tbyte* data, int len)
+bool Network::send(const tbyte* data, int len)
 {
     const tbyte *b = data;
     const tbyte *e = b + len;
@@ -239,7 +207,12 @@ int Network::send(const tbyte* data, int len)
     int data_len = m_output_buffer.getSize();
     bool result = send_ex((tbyte*)m_output_buffer.getData(), data_len);
     m_output_buffer.truncate(data_len);
-    return result ? len : -1;
+    return result;
+}
+
+bool Network::sendplain(const tbyte* data, int len)
+{
+    return send_ex(data, len);
 }
 
 DataQueue* Network::receive()
@@ -327,9 +300,7 @@ int Network::read_socket()
 int Network::write_socket()
 {
     if (m_send_data.getSize() == 0)
-    {
          return 0;
-    }
 
     WSABUF buffer;
     buffer.buf = (char*)m_send_data.getData();
@@ -346,18 +317,13 @@ int Network::write_socket()
 
 bool Network::send_ex(const tbyte* data, int len)
 {
-    assert(len >= 0);
+    assert(data && len >= 0);
     if (len < 0)
         return false;
-    if (len == 0)
-        return true;
-
-    m_send_data.write(data, len);
-
+    if (len > 0)
+        m_send_data.write(data, len);
     int sent = write_socket();
-    if (sent == -1)
-        return false;
-    return true;
+    return (sent == -1) ? false : true;
 }
 
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
@@ -381,8 +347,8 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (len < 2)
         return 0;
 
-    const tbyte* e = b;
-    e++;
+    const tbyte* e = b + 1;
+
     if (*e == IAC)               // double IAC - continue
         return 2;
 
@@ -487,7 +453,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
             if (e[i] == SE && e[i-1] == IAC && e[i-2] != IAC)
             {
                 // finished msdp data block
-                process_msdp(e+2, i-4+1);
+                process_msdp(b, i+2);
                 return -(i+2);
             }
         }
@@ -618,13 +584,16 @@ bool Network::process_mtts()
 
 void Network::init_msdp()
 {
+    tbyte turnon[3] = { IAC, DO, MSDP };
+    m_msdp_data.write(turnon, 3);
     m_msdp_on = true;
 }
 
 void Network::close_msdp()
 {
+    tbyte turnoff[3] = { IAC, DONT, MSDP };
+    m_msdp_data.write(turnoff, 3);
     m_msdp_on = false;
-    m_msdp_data.clear();
 }
 
 void Network::process_msdp(const tbyte* buffer, int len)
