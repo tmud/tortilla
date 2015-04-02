@@ -15,6 +15,7 @@ CFont* _stdfont;
 Palette256* _palette;
 PropertiesManager* _pmanager;
 PluginsManager* _plugins_manager;
+MsdpNetwork* _msdp_network;
 PluginsIdTableControl m_idcontrol(PLUGING_MENUID_START, PLUGING_MENUID_END);
 luaT_State L;
 
@@ -27,6 +28,7 @@ void initExternPtrs()
     _palette = _wndMain.m_gameview.getPalette();
     _pmanager = _wndMain.m_gameview.getPropManager();
     _plugins_manager = _wndMain.m_gameview.getPluginsManager();
+    _msdp_network = _wndMain.m_gameview.getMsdpNetwork();
 }
 
 void collectGarbage()
@@ -652,6 +654,7 @@ void reg_props(lua_State *L);
 void reg_mt_panels(lua_State *L);
 void reg_mt_render(lua_State *L);
 void reg_mt_pcre(lua_State *L);
+void reg_msdp(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -693,6 +696,7 @@ bool initPluginsSystem()
     reg_mt_panels(L);
     reg_mt_render(L);
     reg_mt_pcre(L);
+    reg_msdp(L);
     return true;
 }
 

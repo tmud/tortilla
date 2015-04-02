@@ -269,6 +269,7 @@ public:
     PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
+    MsdpNetwork* getMsdpNetwork() { return &m_msdp_network; }
 
 
 private:

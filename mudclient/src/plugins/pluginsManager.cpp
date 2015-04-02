@@ -316,12 +316,12 @@ void PluginsManager::processHistoryCmd(tstring *cmd)
 
 void PluginsManager::processConnectEvent()
 {
-    doPluginsMethod("connect");
+    doPluginsMethod("connect", 0);
 }
 
 void PluginsManager::processDisconnectEvent()
 {
-    doPluginsMethod("disconnect");
+    doPluginsMethod("disconnect", 0);
 }
 
 void PluginsManager::processTick()
@@ -332,6 +332,11 @@ void PluginsManager::processTick()
         if (p->state() && p->isErrorState())
             turnoffPlugin(NULL, i);
     }
+}
+
+void PluginsManager::processPluginsMethod(const char* method, int args)
+{
+     doPluginsMethod(method, args);
 }
 
 void PluginsManager::terminatePlugin(Plugin* p)
@@ -350,13 +355,13 @@ void PluginsManager::terminatePlugin(Plugin* p)
     }
 }
 
-void PluginsManager::doPluginsMethod(const char* method)
+void PluginsManager::doPluginsMethod(const char* method, int args)
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
-        if (!p->runMethod(method, 0, 0))
+        if (!p->runMethod(method, args, 0))
         {
             // restart plugins
             turnoffPlugin(NULL, i);

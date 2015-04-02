@@ -24,12 +24,13 @@ public:
     void processConnectEvent();
     void processDisconnectEvent();
     void processTick();
+    void processPluginsMethod(const char* method, int args);
 
 private:
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
     bool doPluginsTableMethod(const char* method, std::vector<tstring>* table);
-    void doPluginsMethod(const char* method);
+    void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const char* error, int plugin_index);
     void terminatePlugin(Plugin* p);
 };
