@@ -38,7 +38,7 @@ int window_attach(lua_State *L)
         v->attachChild(child);
         return 0;
     }
-    return pluginInvArgs(L, "window.attach");
+    return pluginInvArgs(L, "window:attach");
 }
 
 int window_hwnd(lua_State *L)
@@ -50,7 +50,7 @@ int window_hwnd(lua_State *L)
         lua_pushunsigned(L, (unsigned int)wnd);
         return 1;
     }
-    return pluginInvArgs(L, "window.hwnd");
+    return pluginInvArgs(L, "window:hwnd");
 }
 
 int window_side(const wchar_t* side, bool checkfloat)
@@ -72,11 +72,8 @@ int window_dock(lua_State *L)
             _wndMain.m_gameview.dockDockPane(v, dock_side);
             return 0;
         }
-        pluginError("window.dock", "Некорректный параметр side");
-        return 0;
     }
-
-    return pluginInvArgs(L, "window.dock");
+    return pluginInvArgs(L, "window:dock");
 }
 
 int window_undock(lua_State *L)
@@ -87,7 +84,7 @@ int window_undock(lua_State *L)
         _wndMain.m_gameview.undockDockPane(v);
         return 0;
     }
-    return pluginInvArgs(L, "window.undock");
+    return pluginInvArgs(L, "window:undock");
 }
 
 int window_block(lua_State *L)
@@ -101,10 +98,8 @@ int window_block(lua_State *L)
             _wndMain.m_gameview.blockDockPane(v, dock_side);
             return 0;
         }
-        pluginError("window.block", "Некорректный параметр side");
-        return 0;
     }
-    return pluginInvArgs(L, "window.block");
+    return pluginInvArgs(L, "window:block");
 }
 
 int window_unblock(lua_State *L)
@@ -118,10 +113,8 @@ int window_unblock(lua_State *L)
             _wndMain.m_gameview.unblockDockPane(v, dock_side);
             return 0;
         }
-        pluginError("window.unblock", "Некорректный параметр side");
-        return 0;
     }
-    return pluginInvArgs(L, "window.unblock");
+    return pluginInvArgs(L, "window:unblock");
 }
 
 int window_show(lua_State *L)
@@ -132,7 +125,7 @@ int window_show(lua_State *L)
         _wndMain.m_gameview.showDockPane(v);
         return 0;
     }
-    return pluginInvArgs(L, "window.show");
+    return pluginInvArgs(L, "window:show");
 }
 
 int window_hide(lua_State *L)
@@ -143,7 +136,7 @@ int window_hide(lua_State *L)
         _wndMain.m_gameview.hideDockPane(v);
         return 0;
     }
-    return pluginInvArgs(L, "window.hide");
+    return pluginInvArgs(L, "window:hide");
 }
 
 int window_isVisible(lua_State *L)
@@ -155,7 +148,7 @@ int window_isVisible(lua_State *L)
         lua_pushboolean(L, state);
         return 1;
     }
-    return pluginInvArgs(L, "window.isVisible");
+    return pluginInvArgs(L, "window:isVisible");
 }
 
 int window_setRender(lua_State *L)
@@ -172,7 +165,7 @@ int window_setRender(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "window.setRender");
+    return pluginInvArgs(L, "window:setRender");
 }
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
@@ -201,7 +194,7 @@ int vd_size(lua_State *L)
         lua_pushinteger(L, pdata->size());
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.size");
+    return pluginInvArgs(L, "viewdata:size");
 }
 
 int vd_select(lua_State *L)
@@ -213,7 +206,7 @@ int vd_select(lua_State *L)
         lua_pushboolean(L, result);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.select");
+    return pluginInvArgs(L, "viewdata:select");
 }
 
 int vd_getIndex(lua_State *L)
@@ -224,7 +217,7 @@ int vd_getIndex(lua_State *L)
         lua_pushinteger(L, pdata->getindex());
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.getIndex");
+    return pluginInvArgs(L, "viewdata:getIndex");
 }
 
 int vd_isGameCmd(lua_State *L)
@@ -237,7 +230,7 @@ int vd_isGameCmd(lua_State *L)
         lua_pushboolean(L, state);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.isGameCmd");
+    return pluginInvArgs(L, "viewdata:isGameCmd");
 }
 
 int vd_isPrompt(lua_State *L)
@@ -250,7 +243,7 @@ int vd_isPrompt(lua_State *L)
         lua_pushboolean(L, state);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.isPrompt");
+    return pluginInvArgs(L, "viewdata:isPrompt");
 }
 
 int vd_getPrompt(lua_State *L)
@@ -259,11 +252,11 @@ int vd_getPrompt(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         u8string prompt;
-        pdata->getPrompt(&prompt);        
+        pdata->getPrompt(&prompt);
         lua_pushstring(L, prompt.c_str());
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.getPrompt");
+    return pluginInvArgs(L, "viewdata:getPrompt");
 }
 
 int vd_isFirst(lua_State *L)
@@ -274,7 +267,7 @@ int vd_isFirst(lua_State *L)
         lua_pushboolean(L, (pdata->pdata->update_prev_string) ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.isFirst");
+    return pluginInvArgs(L, "viewdata:isFirst");
 }
 
 int vd_isLast (lua_State *L)
@@ -285,7 +278,7 @@ int vd_isLast (lua_State *L)
         lua_pushboolean(L, (pdata->pdata->last_finished) ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.isLast");
+    return pluginInvArgs(L, "viewdata:isLast");
 }
 
 int vd_getText(lua_State *L)
@@ -306,7 +299,7 @@ int vd_getText(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.getText");
+    return pluginInvArgs(L, "viewdata:getText");
 }
 
 int vd_getTextLen(lua_State *L)
@@ -319,7 +312,7 @@ int vd_getTextLen(lua_State *L)
         lua_pushinteger(L, len);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.getTextLen");
+    return pluginInvArgs(L, "viewdata:getTextLen");
 }
 
 int vd_getHash(lua_State *L)
@@ -358,7 +351,7 @@ int vd_getHash(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.getHash");
+    return pluginInvArgs(L, "viewdata:getHash");
 }
 
 int vd_blocks(lua_State *L)
@@ -370,7 +363,7 @@ int vd_blocks(lua_State *L)
         lua_pushinteger(L, str ? str->blocks.size() : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.blocks");
+    return pluginInvArgs(L, "viewdata:blocks");
 }
 
 tbyte _check(unsigned int val, unsigned int min, unsigned int max)
@@ -393,7 +386,7 @@ int vd_get(lua_State *L)
         {
             type = vd_gettype(lua_tostring(L, 3));
             if (type == -1)
-                return pluginInvArgs(L, "viewdata.get");
+                return pluginInvArgs(L, "viewdata:get");
         }
 
         bool ok = false;
@@ -458,8 +451,8 @@ int vd_get(lua_State *L)
         if (!ok)
             lua_pushnil(L);
         return 1;
-    }       
-    return pluginInvArgs(L, "viewdata.get");
+    }
+    return pluginInvArgs(L, "viewdata:get");
 }
 
 int vd_copyBlock(lua_State *L)
@@ -471,7 +464,7 @@ int vd_copyBlock(lua_State *L)
         lua_pushboolean(L, (ok) ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.copyBlock");
+    return pluginInvArgs(L, "viewdata:copyBlock");
 }
 
 int vd_set(lua_State *L)
@@ -482,11 +475,11 @@ int vd_set(lua_State *L)
         int type = 0;
         if (lua_isnumber(L, 3))
             type = lua_tointeger(L, 3);
-        else            
+        else
         {
             type = vd_gettype(lua_tostring(L, 3));
             if (type == -1)
-                return pluginInvArgs(L, "viewdata.set");
+                return pluginInvArgs(L, "viewdata:set");
         }
 
         bool ok = false;
@@ -547,10 +540,10 @@ int vd_set(lua_State *L)
                 }
             }
         }
-        lua_pushboolean(L, ok ? 1 : 0);        
+        lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.set");
+    return pluginInvArgs(L, "viewdata:set");
 }
 
 int vd_getBlockText(lua_State *L)
@@ -565,7 +558,7 @@ int vd_getBlockText(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.getBlockText");
+    return pluginInvArgs(L, "viewdata:getBlockText");
 }
 
 int vd_setBlockText(lua_State *L)
@@ -588,7 +581,7 @@ int vd_setBlockText(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.setBlockText");
+    return pluginInvArgs(L, "viewdata:setBlockText");
 }
 
 int vd_deleteBlock(lua_State *L)
@@ -614,7 +607,7 @@ int vd_deleteBlock(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.deleteBlock");
+    return pluginInvArgs(L, "viewdata:deleteBlock");
 }
 
 int vd_deleteAllBlocks(lua_State *L)
@@ -636,7 +629,7 @@ int vd_deleteAllBlocks(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.deleteAllBlocks");
+    return pluginInvArgs(L, "viewdata:deleteAllBlocks");
 }
 
 int vd_createString(lua_State *L)
@@ -653,7 +646,7 @@ int vd_createString(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.createString");
+    return pluginInvArgs(L, "viewdata:createString");
 }
 
 int vd_deleteString(lua_State *L)
@@ -670,7 +663,7 @@ int vd_deleteString(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.deleteString");
+    return pluginInvArgs(L, "viewdata:deleteString");
 }
 
 int vd_find(lua_State *L)
@@ -698,7 +691,7 @@ int vd_find(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewdata.find");
+    return pluginInvArgs(L, "viewdata:find");
 }
 //--------------------------------------------------------------------
 std::map<u8string, int> vdtypes;
@@ -770,7 +763,7 @@ int ao_select(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return ao_inv_args(L, "activeobjects.select");
+    return ao_inv_args(L, "activeobjects:select");
 }
 
 int ao_size(lua_State *L)
@@ -781,7 +774,7 @@ int ao_size(lua_State *L)
         lua_pushinteger(L, ao->size());
         return 1;
     }
-    return ao_inv_args(L, "activeobjects.size");
+    return ao_inv_args(L, "activeobjects:size");
 }
 
 int ao_checktype(const utf8* type)
@@ -821,7 +814,7 @@ int ao_get(lua_State *L)
             return 1;
         }
     }
-    return ao_inv_args(L, "activeobjects.get");
+    return ao_inv_args(L, "activeobjects:get");
 }
 
 int ao_set(lua_State *L)
@@ -844,7 +837,7 @@ int ao_set(lua_State *L)
             return 1;
         }
     }
-    return ao_inv_args(L, "activeobjects.set");
+    return ao_inv_args(L, "activeobjects:set");
 }
 
 int ao_add(lua_State *L)
@@ -878,7 +871,7 @@ int ao_add(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return ao_inv_args(L, "activeobjects.add");
+    return ao_inv_args(L, "activeobjects:add");
 }
 
 int ao_delete(lua_State *L)
@@ -890,7 +883,7 @@ int ao_delete(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return ao_inv_args(L, "activeobjects.delete");
+    return ao_inv_args(L, "activeobjects:delete");
 }
 
 int ao_getIndex(lua_State *L)
@@ -901,7 +894,7 @@ int ao_getIndex(lua_State *L)
         lua_pushinteger(L, ao->getindex());
         return 1;
     }
-    return ao_inv_args(L, "activeobjects.getIndex");
+    return ao_inv_args(L, "activeobjects:getIndex");
 }
 
 int ao_setIndex(lua_State *L)
@@ -913,7 +906,7 @@ int ao_setIndex(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return ao_inv_args(L, "activeobjects.setIndex");
+    return ao_inv_args(L, "activeobjects:setIndex");
 }
 
 int ao_update(lua_State *L)
@@ -924,7 +917,7 @@ int ao_update(lua_State *L)
         ao->update();
         return 0;
     }
-    return ao_inv_args(L, "activeobjects.setindex");
+    return ao_inv_args(L, "activeobjects:update");
 }
 
 int ao_gc(lua_State *L)
