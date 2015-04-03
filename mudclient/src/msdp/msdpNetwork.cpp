@@ -159,9 +159,7 @@ bool MsdpNetwork::process_val(cursor& c)
      if (*b >= ' ')
      {
          while (b != c.e && *b >= ' ') b++;
-         if (b == c.e)
-             return false;
-         if (*b != MSDP_VAR && *b != MSDP_VAL && *b != MSDP_ARRAY_CLOSE && *b != MSDP_TABLE_CLOSE)
+         if (b != c.e && *b != MSDP_VAR && *b != MSDP_VAL && *b != MSDP_ARRAY_CLOSE && *b != MSDP_TABLE_CLOSE)
              return false;
          u8string value((const utf8*)(p+1), b-p-1);
          lua_pushstring(L, value.c_str());
@@ -214,6 +212,13 @@ bool MsdpNetwork::process_val(cursor& c)
                     return true;
                 }
           }
+     }
+     else if (*b == MSDP_VAL || *b == MSDP_VAR)
+     {
+         lua_pushstring(L, "");
+         lua_settable(L, -3);
+         c.p = b;
+         return true;
      }
      return false;
 }

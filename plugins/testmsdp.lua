@@ -26,13 +26,16 @@ LISTS
 function testmsdp.msdpon()
     msdp.list("REPORTABLE_VARIABLES")
     msdp.report('ROOM')
+    msdp.report('ROOM_VNUM')
+    msdp.report('ROOM_NAME')
+    msdp.report('MOVEMENT')
 end
 
 local function dump_table(level,t)
   for k,v in pairs(t) do
-      local s = level..'['..k..']='..type(v)
+      local s = level..'['..k..']='
       if (type(v) == 'string') then
-        s = s..':'..tostring(v)
+        s = s..tostring(v)
       end
       log(s)
       if type(v) == 'table' then
