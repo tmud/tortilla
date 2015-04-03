@@ -24,10 +24,27 @@ LISTS
 ]]
 
 function testmsdp.msdpon()
-    --msdp.list("REPORTABLE_VARIABLES")
-    msdp.report("ROOM")
+    msdp.list("REPORTABLE_VARIABLES")
+    msdp.report('ROOM')
+end
+
+local function dump_table(level,t)
+  for k,v in pairs(t) do
+      local s = level..'['..k..']='..type(v)
+      if (type(v) == 'string') then
+        s = s..':'..tostring(v)
+      end
+      log(s)
+      if type(v) == 'table' then
+        dump_table(level..'  ', v)
+      end
+   end
 end
 
 function testmsdp.msdp(t)
-    log("data")
+    if type(t) ~= 'table' then
+      log('NOT TABLE!')
+      return
+    end
+    dump_table('', t)
 end
