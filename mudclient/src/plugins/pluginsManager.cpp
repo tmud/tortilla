@@ -339,6 +339,23 @@ void PluginsManager::processPluginsMethod(const char* method, int args)
      doPluginsMethod(method, args);
 }
 
+void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
+{
+    if (!p->state())
+        return;
+    if (!p->runMethod(method, args, 0))
+    {
+        int index = -1;
+        for (int i = 0, e = m_plugins.size(); i < e; ++i)
+        {
+            if (m_plugins[i] == p) { index = i; break;}
+        }
+        if (index != -1)
+            turnoffPlugin(NULL, index);
+        lua_settop(L, 0);
+    }
+}
+
 void PluginsManager::terminatePlugin(Plugin* p)
 {
     if (!p) return;

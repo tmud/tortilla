@@ -7,17 +7,23 @@
 extern luaT_State L;
 extern PluginsManager* _plugins_manager;
 extern MsdpNetwork* _msdp_network;
+extern Plugin* _cp;
 
 MsdpNetwork::MsdpNetwork() : m_state(false)
 {
-    m_to_send.setBufferSize(512);
+    m_to_send.setBufferSize(1024);
 }
 
-void MsdpNetwork::process(Network *network)
+void MsdpNetwork::processReceived(Network *network)
 {
     DataQueue *msdp_data = network->receive_msdp();
     if (msdp_data->getSize() > 0)
         translate(msdp_data);
+    sendExist(network);
+}
+
+void MsdpNetwork::sendExist(Network *network)
+{
     if (m_to_send.getSize() > 0)
     {
         network->sendplain((const tbyte*)m_to_send.getData(), m_to_send.getSize());
@@ -59,6 +65,8 @@ void MsdpNetwork::translate(DataQueue *msdp)
         {
             m_state = true;
             msdp->truncate(3);
+            send_varval("CLIENT_NAME", "TORTILLA");
+            send_varval("CLIENT_VERSION", W2U(TORTILLA_VERSION));
             _plugins_manager->processPluginsMethod("msdpon", 0);
         }
         else if (cmd == DONT)
@@ -78,18 +86,21 @@ void MsdpNetwork::translate(DataQueue *msdp)
     }
 }
 
-void MsdpNetwork::send_command(const char* cmd, const char* val)
+void MsdpNetwork::send_varval(const utf8* var, const utf8* val)
 {
     send_begin();
-    send_param(MSDP_VAR, cmd);
+    send_param(MSDP_VAR, var);
     send_param(MSDP_VAL, val);
     send_end();
 }
 
-void MsdpNetwork::send_param(tbyte param, const char* param_text)
+void MsdpNetwork::send_varvals(const utf8* var, const std::vector<u8string>& vals)
 {
-    m_to_send.write(&param, 1);
-    m_to_send.write(param_text, strlen(param_text));
+    send_begin();
+    send_param(MSDP_VAR, var);
+    for (int i=0,e=vals.size(); i<e; ++i)
+        send_param(MSDP_VAL, vals[i].c_str());
+    send_end();
 }
 
 void MsdpNetwork::send_begin()
@@ -104,10 +115,15 @@ void MsdpNetwork::send_end()
     m_to_send.write(end, 2);
 }
 
+void MsdpNetwork::send_param(tbyte param, const char* param_text)
+{
+    m_to_send.write(&param, 1);
+    m_to_send.write(param_text, strlen(param_text));
+}
+
 bool MsdpNetwork::run_plugins_msdp(const tbyte* data, int len)
 {
     //OUTPUT_BYTES(data, len, len, "PLUGINS MSDP");
-
     // translate msdp data into lua table
     lua_newtable(L);
     cursor c; c.p = data; c.e = data + len;
@@ -118,7 +134,6 @@ bool MsdpNetwork::run_plugins_msdp(const tbyte* data, int len)
         if (!process_val(c))
             { lua_pop(L, 1); return false; }
     }
-
     // run plugins
     _plugins_manager->processPluginsMethod("msdp", 1);
     return true;
@@ -223,6 +238,101 @@ bool MsdpNetwork::process_val(cursor& c)
      return false;
 }
 
+void MsdpNetwork::report(Plugin* p, std::vector<u8string> *report)
+{
+    std::vector<u8string> new_report;
+    for (int i=0,e=report->size(); i<e; ++i)
+    {
+        const u8string &cmd = report->at(i);
+        PluginIterator it = m_plugins_reports.find(cmd);
+        if (it != m_plugins_reports.end())
+        {
+            PluginReport *pr = it->second;
+            if (std::find(pr->begin(), pr->end(), p) == pr->end())
+                pr->push_back(p);
+        }
+        else
+        {
+            PluginReport *pr = new PluginReport;
+            m_plugins_reports[cmd] = pr;
+            pr->push_back(p);
+            new_report.push_back(cmd);
+        }
+    }
+    report->swap(new_report);
+}
+
+void MsdpNetwork::unreport(Plugin* p, std::vector<u8string> *report)
+{
+    std::vector<u8string> new_report;
+    for (int i = 0, e = report->size(); i < e; ++i)
+    {
+        const u8string &cmd = report->at(i);
+        PluginIterator it = m_plugins_reports.find(cmd);
+        if (it == m_plugins_reports.end())
+            continue;
+        PluginReport *pr = it->second;
+        PluginReportIterator pt = std::find(pr->begin(), pr->end(), p);
+        if (pt == pr->end())
+            continue;
+        pr->erase(pt);
+        if (pr->empty())
+        {
+            m_plugins_reports.erase(it);
+            delete pr;
+            new_report.push_back(cmd);
+        }
+    }
+    report->swap(new_report);
+}
+
+void MsdpNetwork::loadPlugin(Plugin *p)
+{
+    if (!m_state)
+        return;
+    _plugins_manager->processPluginMethod(p, "msdpon", 0);
+}
+
+void MsdpNetwork::unloadPlugin(Plugin *p)
+{
+    if (!m_state)
+        return;
+    _plugins_manager->processPluginMethod(p, "msdpoff", 0);
+    std::vector<u8string> unreport;
+    PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
+    for (;it!=it_end;++it)
+    {
+        PluginReport* pr = it->second;
+        PluginReportIterator pt = std::find(pr->begin(), pr->end(), p);
+        if (pt == pr->end())
+            continue;
+        pr->erase(pt);
+        if (pr->empty())
+        {
+            m_plugins_reports.erase(it);
+            delete pr;
+            unreport.push_back(it->first);
+        }
+    }
+}
+
+void MsdpNetwork::loadPlugins()
+{
+    if (!m_state)
+        return;
+    _plugins_manager->processPluginsMethod("msdpon", 0);
+}
+
+void MsdpNetwork::uloadPlugins()
+{
+    if (!m_state)
+        return;
+    _plugins_manager->processPluginsMethod("msdpoff", 0);
+
+
+
+
+}
 
 bool msdp_isoff()
 {
@@ -243,29 +353,63 @@ int msdp_list(lua_State *L)
 
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        _msdp_network->send_command("LIST", lua_tostring(L, 1));
+        _msdp_network->send_varval("LIST", lua_tostring(L, 1));
         return 0;
     }
     return pluginInvArgs(L, "msdp.list");
 }
 
-int msdp_report(lua_State *L)
+int msdp_multi_command(lua_State *L, const utf8* cmd, const utf8* cmdname)
 {
     if (msdp_isoff())
-        return msdpOffError(L, "msdp.report");
-
-    if (luaT_check(L, 1, LUA_TSTRING))
+        return msdpOffError(L, cmdname);
+    int n = lua_gettop(L);
+    if (n == 0)
+        return pluginInvArgs(L, cmdname);
+    for (int i=1; i<=n; ++i)
     {
-        _msdp_network->send_command("REPORT", lua_tostring(L, 1));
-        return 0;
+        if (!lua_isstring(L, i))
+            return pluginInvArgs(L, cmdname);
     }
-    return pluginInvArgs(L, "msdp.report");
+    std::vector<u8string> vals;
+    for (int i = 1; i <= n; ++i)
+        vals.push_back(lua_tostring(L, i));
+    if (!strcmp(cmd,"REPORT"))
+        _msdp_network->report(_cp, &vals);
+    else if (!strcmp(cmd,"UNREPORT"))
+        _msdp_network->unreport(_cp, &vals);
+    if (!vals.empty())
+        _msdp_network->send_varvals(cmd, vals);
+    return 0;
+}
+
+int msdp_reset(lua_State *L)
+{
+    return msdp_multi_command(L, "RESET", "msdp.reset");
+}
+
+int msdp_send(lua_State *L)
+{
+    return msdp_multi_command(L, "SEND", "msdp.send");
+}
+
+int msdp_report(lua_State *L)
+{
+    return msdp_multi_command(L, "REPORT", "msdp.report");
+}
+
+int msdp_unreport(lua_State *L)
+{
+    return msdp_multi_command(L, "UNREPORT", "msdp.unreport");
 }
 
 void reg_msdp(lua_State *L)
 {
     lua_newtable(L);
     regFunction(L, "list", msdp_list);
+    regFunction(L, "reset", msdp_reset);
+    regFunction(L, "send", msdp_send);
     regFunction(L, "report", msdp_report);
+    regFunction(L, "unreport", msdp_unreport);
     lua_setglobal(L, "msdp");
 }

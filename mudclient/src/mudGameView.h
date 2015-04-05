@@ -488,14 +488,13 @@ private:
         NetworkEvents result = m_network.processMsg(lparam);
         if (result == NE_NEWDATA)
         {
-           m_msdp_network.process(&m_network);
+            m_msdp_network.processReceived(&m_network);
 
             DataQueue* data = m_network.receive();
             int text_len = data->getSize();
             if (text_len == 0)
                 return 0;
 
-            //todo
             //OUTPUT_BYTES(data->getData(), text_len, text_len, "DATA");
 
             MemoryBuffer wide;
@@ -581,6 +580,7 @@ private:
         else if (id == 2)
         {
             m_processor.processStackTick();
+            m_msdp_network.sendExist(&m_network);
         }
         return 0;
     }

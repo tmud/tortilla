@@ -25,6 +25,7 @@ public:
     void processDisconnectEvent();
     void processTick();
     void processPluginsMethod(const char* method, int args);
+    void processPluginMethod(Plugin *p, char* method, int args);
 
 private:
     void initPlugins();

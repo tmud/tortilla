@@ -24,10 +24,14 @@ LISTS
 ]]
 
 function testmsdp.msdpon()
+	--[[msdp.list("LISTS")
+	msdp.list("COMMANDS")
     msdp.list("REPORTABLE_VARIABLES")
+	msdp.list("CONFIGURABLE_VARIABLES")]]
+	
     msdp.report('ROOM')
-    msdp.report('ROOM_VNUM')
-    msdp.report('ROOM_NAME')
+    --msdp.report('ROOM_VNUM')
+    --msdp.report('ROOM_NAME')
     msdp.report('MOVEMENT')
 end
 
