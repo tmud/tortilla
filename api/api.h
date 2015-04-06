@@ -458,6 +458,14 @@ public:
         luaT_run(L, "backgroundColor", "t");
         return uintresult();
     }
+    HFONT currentFont()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "currentFontHandle", "t");
+        if (!luaT_isobject(L, LUAT_FONT, -1))
+            return NULL;
+        return (HFONT)uintresult();
+    }
     void cmdPrefix(u8string* str)
     {
         lua_getglobal(L, obj);

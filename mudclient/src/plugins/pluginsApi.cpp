@@ -817,6 +817,17 @@ int currentFont(lua_State *L)
     return pluginInvArgs(L, "props.currentFont");
 }
 
+int currentFontHandle(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        HFONT handle = *_stdfont;
+        lua_pushunsigned(L, (DWORD)handle);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.currentFontHandle");
+}
+
 int cmdPrefix(lua_State *L)
 {
     if (luaT_check(L, 0))
@@ -889,6 +900,7 @@ void reg_props(lua_State *L)
     regFunction(L, "paletteColor", paletteColor);
     regFunction(L, "backgroundColor", backgroundColor);
     regFunction(L, "currentFont", currentFont);
+    regFunction(L, "currentFontHandle", currentFontHandle);
     regFunction(L, "cmdPrefix", cmdPrefix);
     regFunction(L, "cmdSeparator", cmdSeparator);
     regFunction(L, "serverHost", serverHost);
