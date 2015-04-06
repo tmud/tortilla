@@ -107,6 +107,7 @@ class luaT_panel
     lua_State *L;
     void *panel;
 public:
+    luaT_panel() : L(NULL), panel(NULL) {}
     bool create(lua_State *pL, const utf8* side, int size)
     {
         if (!pL)
@@ -437,6 +438,76 @@ public:
     TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
     ~TW2A() { strbuf_destroy(b); }
     operator const char*() const { return (const char*)strbuf_ptr(b); }
+};
+
+class luaT_Props
+{
+    lua_State *L;
+    const char* obj = "props";
+public:
+    luaT_Props(lua_State *pL) : L(pL) {}
+    COLORREF paletteColor(int index)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "paletteColor", "td", index);
+        return uintresult();
+    }
+    COLORREF backgroundColor()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "backgroundColor", "t");
+        return uintresult();
+    }
+    void cmdPrefix(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "cmdPrefix", "t");
+        strresult(str);
+    }
+    void cmdSeparator(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "cmdSeparator", "t");
+        strresult(str);
+    }
+    void serverHost(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "serverHost", "t");
+        strresult(str);
+    }
+    void serverPort(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "serverPort", "t");
+        strresult(str);
+    }
+    bool connected()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "connected", "t");
+        return boolresult();
+    }
+
+private:
+    bool boolresult()
+    {
+        int result = (lua_isboolean(L, -1)) ? lua_toboolean(L, -1) : 0;
+        lua_pop(L, 1);
+        return result ? true : false;
+    }
+    unsigned int uintresult()
+    {
+        int result = (lua_isnumber(L, -1)) ? lua_tounsigned(L, -1) : 0;
+        lua_pop(L, 1);
+        return result;
+    }
+    void strresult(u8string *res)
+    {
+        if (lua_isstring(L, -1)) res->assign(lua_tostring(L, -1));
+        else res->clear();
+        lua_pop(L, 1);
+    }
 };
 
 // xml api

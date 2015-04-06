@@ -6,12 +6,16 @@
 
 extern luaT_State L;
 extern PluginsManager* _plugins_manager;
-extern MsdpNetwork* _msdp_network;
 extern Plugin* _cp;
 
 MsdpNetwork::MsdpNetwork() : m_state(false)
 {
     m_to_send.setBufferSize(1024);
+}
+
+MsdpNetwork::~MsdpNetwork()
+{
+    releaseReports();
 }
 
 void MsdpNetwork::processReceived(Network *network)
@@ -74,6 +78,7 @@ void MsdpNetwork::translate(DataQueue *msdp)
             m_state = false;
             msdp->truncate(3);
             _plugins_manager->processPluginsMethod("msdpoff", 0);
+            releaseReports();
         }
         else
         {
@@ -309,11 +314,13 @@ void MsdpNetwork::unloadPlugin(Plugin *p)
         pr->erase(pt);
         if (pr->empty())
         {
+            unreport.push_back(it->first);
             m_plugins_reports.erase(it);
             delete pr;
-            unreport.push_back(it->first);
         }
     }
+    if (!unreport.empty())
+        send_varvals("UNREPORT", unreport);
 }
 
 void MsdpNetwork::loadPlugins()
@@ -323,20 +330,39 @@ void MsdpNetwork::loadPlugins()
     _plugins_manager->processPluginsMethod("msdpon", 0);
 }
 
-void MsdpNetwork::uloadPlugins()
+void MsdpNetwork::unloadPlugins()
 {
     if (!m_state)
         return;
     _plugins_manager->processPluginsMethod("msdpoff", 0);
+    std::vector<u8string> unreport;
+    PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
+    for (;it!=it_end;++it)
+        unreport.push_back(it->first);
+    releaseReports();
+    if (!unreport.empty())
+        send_varvals("UNREPORT", unreport);
+}
 
+void MsdpNetwork::releaseReports()
+{
+    PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
+    for (;it!=it_end;++it)
+    {
+        PluginReport* pr = it->second;
+        delete pr;
+    }
+    m_plugins_reports.clear();
+}
 
-
-
+MsdpNetwork* getMsdp()
+{
+    return _plugins_manager->getMsdp();
 }
 
 bool msdp_isoff()
 {
-   return (!_msdp_network->state()) ? true : false;
+   return (!getMsdp()->state()) ? true : false;
 }
 
 int msdpOffError(lua_State *L, const utf8* fname) 
@@ -353,7 +379,7 @@ int msdp_list(lua_State *L)
 
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        _msdp_network->send_varval("LIST", lua_tostring(L, 1));
+        getMsdp()->send_varval("LIST", lua_tostring(L, 1));
         return 0;
     }
     return pluginInvArgs(L, "msdp.list");
@@ -375,11 +401,11 @@ int msdp_multi_command(lua_State *L, const utf8* cmd, const utf8* cmdname)
     for (int i = 1; i <= n; ++i)
         vals.push_back(lua_tostring(L, i));
     if (!strcmp(cmd,"REPORT"))
-        _msdp_network->report(_cp, &vals);
+        getMsdp()->report(_cp, &vals);
     else if (!strcmp(cmd,"UNREPORT"))
-        _msdp_network->unreport(_cp, &vals);
+        getMsdp()->unreport(_cp, &vals);
     if (!vals.empty())
-        _msdp_network->send_varvals(cmd, vals);
+        getMsdp()->send_varvals(cmd, vals);
     return 0;
 }
 

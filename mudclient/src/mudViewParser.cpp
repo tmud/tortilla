@@ -390,8 +390,6 @@ void printByIndex(const parseDataStrings& strings, int index)
 {
     tstring text;
     strings[index]->getText(&text);
-    OutputDebugString(text.c_str());
-    OutputDebugString(L"\r\n");
 }
 
 void markPromptUnderline(parseDataStrings& strings)

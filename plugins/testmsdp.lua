@@ -35,6 +35,11 @@ function testmsdp.msdpon()
     msdp.report('MOVEMENT')
 end
 
+function testmsdp.msdpoff()
+	msdp.unreport("ROOM")
+	msdp.unreport("MOVEMENT")
+end
+
 local function dump_table(level,t)
   for k,v in pairs(t) do
       local s = level..'['..k..']='

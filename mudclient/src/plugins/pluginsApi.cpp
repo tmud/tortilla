@@ -15,7 +15,6 @@ CFont* _stdfont;
 Palette256* _palette;
 PropertiesManager* _pmanager;
 PluginsManager* _plugins_manager;
-MsdpNetwork* _msdp_network;
 PluginsIdTableControl m_idcontrol(PLUGING_MENUID_START, PLUGING_MENUID_END);
 luaT_State L;
 
@@ -28,7 +27,6 @@ void initExternPtrs()
     _palette = _wndMain.m_gameview.getPalette();
     _pmanager = _wndMain.m_gameview.getPropManager();
     _plugins_manager = _wndMain.m_gameview.getPluginsManager();
-    _msdp_network = _wndMain.m_gameview.getMsdpNetwork();
 }
 
 void collectGarbage()
@@ -307,7 +305,7 @@ int getProfile(lua_State *L)
     {
         luaT_pushwstring(L, _pmanager->getProfileName().c_str());
         return 1;
-    }    
+    }
     return pluginInvArgs(L, "getProfile");
 }
 

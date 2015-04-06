@@ -96,12 +96,15 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
             if (lua_istable(L, required_func_pos))
             {
                 lua_pushstring(L, func);
-                lua_gettable(L, required_func_pos);                
+                lua_gettable(L, required_func_pos);
                 lua_insert(L, required_func_pos);
                 if (simple_method)
                 {
-                    lua_pop(L, 1);
                     oplen--;
+                    if (oplen > 0)
+                        lua_remove(L, required_func_pos+1);
+                    else
+                        lua_pop(L, 1);
                 }
             }
             else

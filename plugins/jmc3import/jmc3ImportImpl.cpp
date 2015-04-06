@@ -308,12 +308,7 @@ void Jmc3Import::initPcre()
 
 void Jmc3Import::initCmdSymbols()
 {
-    lua_getglobal(L, "props");
-    luaT_run(L, "cmdPrefix", "t");
-    cmdsymbol.assign(lua_tostring(L, -1));
-    lua_pop(L, 1);
-    lua_getglobal(L, "props");
-    luaT_run(L, "cmdSeparator", "t");
-    separator.assign(lua_tostring(L, -1));
-    lua_pop(L, 1);
+    luaT_Props p(L);
+    p.cmdPrefix(&cmdsymbol);
+    p.cmdSeparator(&separator);
 }

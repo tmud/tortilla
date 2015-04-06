@@ -5,6 +5,7 @@ class MsdpNetwork
 {
 public:
     MsdpNetwork();
+    ~MsdpNetwork();
     bool state() const { return m_state; }
     void processReceived(Network *network);
     void sendExist(Network *network);
@@ -15,7 +16,7 @@ public:
     void loadPlugin(Plugin *p);
     void unloadPlugin(Plugin *p);
     void loadPlugins();
-    void uloadPlugins();
+    void unloadPlugins();
 
 private:
     void translate(DataQueue *msdp);
@@ -29,6 +30,8 @@ private:
     };
     bool process_var(cursor& c);
     bool process_val(cursor& c);
+
+    void releaseReports();
 
 private:
     DataQueue m_to_send;

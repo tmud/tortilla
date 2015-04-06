@@ -1,12 +1,14 @@
 #pragma once
 
 #include "plugin.h"
+#include "msdp/msdpNetwork.h"
 
 class PluginsManager
 {
    PropertiesData *m_propData;
    PluginsList m_plugins;
    tstring m_profile;
+   MsdpNetwork m_msdp_network;
 
 public:
     PluginsManager(PropertiesData *props);
@@ -26,6 +28,9 @@ public:
     void processTick();
     void processPluginsMethod(const char* method, int args);
     void processPluginMethod(Plugin *p, char* method, int args);
+    void processReceived(Network *network);
+    void processToSend(Network* network);
+    MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
     void initPlugins();

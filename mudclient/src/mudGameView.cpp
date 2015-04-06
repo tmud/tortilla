@@ -143,12 +143,10 @@ void MudGameView::onNewWorld()
 void MudGameView::loadPlugins()
 {
     m_plugins.loadPlugins(m_manager.getProfileGroup(), m_manager.getProfileName());
-    m_msdp_network.loadPlugins();
 }
 
 void MudGameView::unloadPlugins()
 {
-    m_msdp_network.uloadPlugins();
     m_plugins.unloadPlugins();
 }
 

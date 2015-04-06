@@ -8,7 +8,7 @@ extern luaT_State L;
 extern Plugin* _cp;
 
 PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props)
-{ 
+{
 }
 
 PluginsManager::~PluginsManager() 
@@ -25,6 +25,7 @@ void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
         return;
     m_profile = tmp;
     initPlugins();
+    m_msdp_network.loadPlugins();
 }
 
 void PluginsManager::initPlugins()
@@ -112,6 +113,7 @@ void PluginsManager::initPlugins()
 
 void PluginsManager::unloadPlugins()
 {
+    m_msdp_network.unloadPlugins();
     for(int i=0,e=m_plugins.size(); i<e; ++i)
         m_plugins[i]->unloadPlugin();
 }
@@ -140,8 +142,12 @@ bool PluginsManager::pluginsPropsDlg()
 
     // turn off plugins first
     for (int i = 0, e = turn_off.size(); i < e; ++i)
-        turn_off[i]->unloadPlugin();
- 
+    {
+        Plugin *p = turn_off[i];
+        m_msdp_network.unloadPlugin(p);
+        p->unloadPlugin();
+    }
+
     // turn on new plugins
     for (int i=0,e=turn_on.size(); i<e; ++i)
     {
@@ -152,6 +158,10 @@ bool PluginsManager::pluginsPropsDlg()
             error.append(p->get(Plugin::FILE));
             error.append(L"'. Плагин работать не будет.");
             tmcLog(error.c_str());
+       }
+       else
+       {
+           m_msdp_network.loadPlugin(p);
        }
     }
 
@@ -267,7 +277,7 @@ void PluginsManager::processBarCmd(tstring *cmd)
     tchar separator[2] = { m_propData->cmd_separator, 0 };
     Tokenizer t(cmd->c_str(), separator);
     std::vector<tstring> cmds;
-    t.moveto(&cmds);    
+    t.moveto(&cmds);
     if (doPluginsTableMethod("barcmd", &cmds))
     {
         cmd->clear();
@@ -506,4 +516,14 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     _cp = old;
     PluginsDataValues &modules = m_propData->plugins;
     modules[plugin_index].state = 0;
+}
+
+void PluginsManager::processReceived(Network *network)
+{
+    m_msdp_network.processReceived(network);
+}
+
+void PluginsManager::processToSend(Network* network)
+{
+    m_msdp_network.sendExist(network);
 }
