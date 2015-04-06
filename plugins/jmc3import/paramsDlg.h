@@ -66,13 +66,15 @@ private:
             m_error_msg.SetWindowText(error.c_str());
             return 0;
         }
+
         //get cmd symbol
-        std::map<u8string, int> counter;
-        typedef std::map<u8string, int>::iterator iterator;
+        std::map<std::wstring, int> counter;
+        typedef std::map<std::wstring, int>::iterator iterator;
         for (int i=0,e=strings.size(); i<e; ++i)
         {
-            u8string symbol(strings[i].substr(0, 1));
-            int pos = strspn(symbol.c_str(), "#$%&*!@~`:;'");
+            std::wstring wstr( TU2W(strings[i].c_str()) );
+            std::wstring symbol( wstr.substr(0, 1) );
+            int pos = wcsspn(symbol.c_str(), L"#$%&*!@~`:;'¹^|\\/_=.,");
             if (pos != symbol.length()) 
                 continue;
             iterator it = counter.find(symbol);
@@ -81,7 +83,7 @@ private:
             else
                 it->second++;
         }
-        u8string maxsymbol; int maxsize = 0;
+        std::wstring maxsymbol; int maxsize = 0;
         iterator it = counter.begin(), it_end = counter.end();
         for (; it != it_end; ++it) {
             if (it->second > maxsize) { maxsize = it->second; maxsymbol = it->first; }
@@ -93,7 +95,7 @@ private:
             return 0;
         }
         enableControls(TRUE);
-        m_cmdsymbol.SetWindowText(TU2W(maxsymbol.c_str()));
+        m_cmdsymbol.SetWindowText(maxsymbol.c_str());
         m_separator.SetWindowText(L";");
         setDlgFocus(m_ok);
         return 0;
