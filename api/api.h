@@ -7,6 +7,7 @@
 #endif
 
 #include <string>
+#include <vector>
 typedef char utf8;
 typedef std::string u8string;
 
@@ -515,6 +516,52 @@ private:
         if (lua_isstring(L, -1)) res->assign(lua_tostring(L, -1));
         else res->clear();
         lua_pop(L, 1);
+    }
+};
+
+class luaT_Msdp
+{
+     lua_State *L;
+      const char* obj = "msdp";
+public:
+    luaT_Msdp(lua_State *pL) : L(pL) {}
+    void list(const u8string& list_name) 
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "list", "ts", list_name.c_str());
+    }
+    void reset(const std::vector<u8string>& vars)
+    {
+        runf("reset", vars);
+    }
+    void send(const std::vector<u8string>& vars)
+    {
+        runf("send", vars);
+    }
+    void report(const std::vector<u8string>& vars)
+    {
+        runf("report", vars);
+    }
+    void unreport(const std::vector<u8string>& vars)
+    {
+        runf("unreport", vars);
+    }
+private:
+    void runf(const utf8* fname, const std::vector<u8string>& t)
+    {
+        lua_getglobal(L, obj);
+        pushtable(t);
+        luaT_run(L, fname, "tt");
+    }
+    void pushtable(const std::vector<u8string>& t)
+    {
+        lua_newtable(L);
+        for (int i=0,e=t.size();i<e;++i)
+        {
+            lua_pushinteger(L, i+1);
+            lua_pushstring(L, t[i].c_str());
+            lua_settable(L, -3);
+        }
     }
 };
 
