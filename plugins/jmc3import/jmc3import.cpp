@@ -23,7 +23,7 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
-    luaT_run(L, "addMenu", "sdd", "Плагины/Импорт из JMC3...", 1, 2);
+    base::addMenu(L, "Плагины/Импорт из JMC3...", 1, 2);
     return 0;
 }
 

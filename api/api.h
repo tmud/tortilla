@@ -36,6 +36,56 @@ void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
+namespace base {
+    inline void addMenu(lua_State* L, const utf8* path, int pos, int id) {
+        luaT_run(L, "addMenu", "sdd", path, pos, id); 
+    }
+    inline void addCommand(lua_State* L, const utf8* cmd) {
+        luaT_run(L, "addCommand", "s", cmd);
+    }
+    inline void runCommand(lua_State* L, const utf8* cmd)  {
+        luaT_run(L, "runCommand", "s", cmd);
+    }
+    inline void addButton(lua_State *L, int bmp, int id, const utf8* tooltip) {
+        luaT_run(L, "addButton", "dds", bmp, id, tooltip);
+    }
+    inline void addToolbar(lua_State *L, const utf8* name, int button_size) {
+        luaT_run(L, "addToolbar","sd", name, button_size);
+    }
+    inline void addToolbar(lua_State *L, const utf8* name) {
+        luaT_run(L, "addToolbar","s", name);
+    }
+    inline void showToolbar(lua_State *L, const utf8* name) {
+        luaT_run(L, "showToolbar","s", name);
+    }
+    inline void hideToolbar(lua_State *L, const utf8* name) {
+        luaT_run(L, "hideToolbar","s", name);
+    }
+    inline void checkMenu(lua_State *L, int id) {
+        luaT_run(L, "checkMenu","d", id);
+    }
+    inline void uncheckMenu(lua_State *L, int id) {
+        luaT_run(L, "uncheckMenu","d", id);
+    }
+    inline void enableMenu(lua_State *L, int id) {
+        luaT_run(L, "enableMenu","d", id);
+    }
+    inline void disableMenu(lua_State *L, int id) {
+        luaT_run(L, "disableMenu","d", id);
+    }
+    inline void getPath(lua_State *L, const utf8* file, u8string* path) {
+        luaT_run(L, "getPath", "s", file);
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline void getProfile(lua_State *L, u8string* profile) {
+        luaT_run(L, "getProfile", "");
+        profile->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+
+} // namespace base
+
 //lua window wrapper
 class luaT_window
 {
