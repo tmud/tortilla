@@ -389,24 +389,31 @@ int msdp_multi_command(lua_State *L, const utf8* cmd, const utf8* cmdname)
 {
     if (msdp_isoff())
         return msdpOffError(L, cmdname);
-    int n = lua_gettop(L);
-    if (n == 0)
-        return pluginInvArgs(L, cmdname);
-    for (int i=1; i<=n; ++i)
+    if (luaT_check(L, 1, LUA_TSTRING) || luaT_check(L, 1, LUA_TTABLE))
     {
-        if (!lua_isstring(L, i))
-            return pluginInvArgs(L, cmdname);
+        std::vector<u8string> vals;
+        if (lua_isstring(L, 1))
+            vals.push_back(lua_tostring(L, 1));
+        else
+        {
+            lua_pushnil(L);                     // first key
+            while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+            {
+                if (!lua_isstring(L, -1))
+                    pluginInvArgs(L, cmdname);
+                vals.push_back(lua_tostring(L, -1));
+                lua_pop(L, 1);
+            }
+        }
+        if (!strcmp(cmd,"REPORT"))
+            getMsdp()->report(_cp, &vals);
+        else if (!strcmp(cmd,"UNREPORT"))
+            getMsdp()->unreport(_cp, &vals);
+        if (!vals.empty())
+            getMsdp()->send_varvals(cmd, vals);
+        return 0;
     }
-    std::vector<u8string> vals;
-    for (int i = 1; i <= n; ++i)
-        vals.push_back(lua_tostring(L, i));
-    if (!strcmp(cmd,"REPORT"))
-        getMsdp()->report(_cp, &vals);
-    else if (!strcmp(cmd,"UNREPORT"))
-        getMsdp()->unreport(_cp, &vals);
-    if (!vals.empty())
-        getMsdp()->send_varvals(cmd, vals);
-    return 0;
+    return pluginInvArgs(L, cmdname);
 }
 
 int msdp_reset(lua_State *L)

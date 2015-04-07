@@ -361,6 +361,30 @@ local t = {...} -- правильное написание
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается, когда клиент теряет соединение с мадом.
 <hr>
+<a name="msdp"></a>
+<h4>void msdp(table data)</h4>
+<div class="m">Параметры: data - таблица с данными протокола MSDP.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается клиентом, когда от сервера получены данные по протоколу MSDP. Данные передаются в виде таблицы Lua 
+(в виде ключ-переменная + значение в виде строк). В качестве значений могут быть пустые строки и таблицы. Таблица используется 
+в случае, если получены msdp-массив или msdp-таблица. Для msdp-массива используются цифровые индексы 1+, для msdp-таблицы строковые ключи 
+со значениями. Сам стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
+<hr>
+<a name="msdpon"></a>
+<h4>void msdpon()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается клиентом, когда установлено соединение по протоколу MSDP. После вызова этого метода можно вызывать функции для 
+работы с протоколом. Cм. <a href="#luamsdp" class="cmd">lua msdp</a>, <a href="#cppmsdp" class="cmd">luaT_Msdp</a>. Далее все данные будут поступать 
+через функцию <a href="#msdp" class="cmd">msdp</a>.
+<hr>
+<a name="msdpoff"></a>
+<h4>void msdpoff()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается клиентом, когда соединение по протоколу MSDP закрылось. Тут можно произвести сброс плагина.
+См. <a href="#msdpon" class="cmd">msdpon</a>.
+<hr>
 <a name="clientapi"></a>
 <h2>Функции взаимодействия плагина с клиентом, API клиента</h2>
 <div class="m">API клиента</div> делиться на 2 части:
@@ -376,13 +400,13 @@ local t = {...} -- правильное написание
 В плагинах используется кодировка <div class="m">UTF8</div>, обратите внимание! Это достигается за счет макроса в файле <div class="m">base.h</div>. 
 Все ansi-строки в исходных текстах, при наличии макроса, компилируются как UTF8. Данный макрос работает только в Visual Studio.
 <hr>
-<h4>bool  luaT_check(lua_State *L, int n, ...);</h4>
+<h4>bool luaT_check(lua_State *L, int n, ...);</h4>
 <div class="m">Параметры: n - количество параметров, ... - параметры</div><br>
 <div class="m">Результат: true/false<br></div><br>
 Функция проверяет состояние стека Lua машины на соответствие параметрам. Нужно указать количество параметров и их типы. Функция 
 предназначена для выбора нужной ветки кода в зависимости от параметров в С++ обработчиках вызовов со стороны Lua.
 <hr>
-<h4>bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);</h4>
+<h4>bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);</h4>
 <div class="m">Параметры: func - название функции для запуска, op - количество и число параметров, ... - параметры</div><br>
 <div class="m">Результат: true/false<br></div><br>
 Функция запускает Lua-функцию с заданным именем. Следующий параметр определяет количество и число параметров (одна буква - один параметр):
@@ -560,6 +584,19 @@ local t = {...} -- правильное написание
 <div class="cmd">bool connected()</div> - признак, что клиент подключен к маду.
 <div class="cmd">HFONT currentFont()</div> - хэндл текущего шрифта клиента.
 </pre>
+<hr>
+<a name="cppmsdp"></a>
+<h4>class luaT_Msdp</h4>
+Класс предназначен для работы с протоколом MSDP. Методы класса отправляют серверу управялющие команды протокола. Данные поступают через 
+метод <a href="#msdp" class="cmd">msdp</a> плагина. Стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
+<pre>
+<div class="cmd">void list(const u8string&amp; listname)</div> - получение списка переменных заданной категории(списка).
+<div class="cmd">void send(const std::vector&lt;u8string&gt;&amp; vars)</div> - однократное получение текущих значений переменных.
+<div class="cmd">void reset(const std::vector&lt;u8string&gt;&amp; vars)</div> - сброс переменных в исходное состояние.
+<div class="cmd">void report(const std::vector&lt;u8string&gt;&amp; vars)</div> - подписка на оповещение об изменении переменных.
+<div class="cmd">void unreport(const std::vector&lt;u8string&gt;&amp; vars)</div> - отписка от оповещения.
+</pre>
+См. также <a href="#luamsdp" class="cmd">msdp</a>.
 <hr>
 <h4>Преобразование кодировок</h4>
 В <div class="m">API</div> клиента есть методы для переобразования текста между различными кодировками.<br>
@@ -984,6 +1021,22 @@ render:rect(r2)
 Если поиск удался, то найденная строка становится текущей. Параметр from - необязательный, можно указать с какой 
 строки начинать поиск. См. также <a href="#pcre" class="cmd">pcre</a>.
 </pre>
+<hr>
+<a name="luamsdp"></a>
+<h4>msdp</h4>
+Объект предназначен для управления протоколом MSDP из плагина. Все данные по протоколу плагин будет получать через свой метод <a href="#msdp" class="cmd">msdp</a>. 
+Сам стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
+
+<pre>
+<div class="cmd">void list(string listname)</div> - запрос на получение списка команд/переменных нужной категории из числа поддерживаемых сервером. 
+Чтобы получить список поддерживаемых категорий следует вызвать с параметром "LISTS" (см. станадрт протокола).
+<div class="cmd">void send(string var|table vars)</div> - запрос на однократное получение текущих значений требуемых переменных. В качестве параметра - 
+строка с именем переменной или таблица со списком переменных.
+<div class="cmd">void reset(string var|table vars)</div> - запрос на сброс значений требуемых переменных в исходное состояние.
+<div class="cmd">void report(string var|table vars)</div> - подписывание на оповещение сервером об изменении значений нужных переменных.
+<div class="cmd">void unreport(string var|table vars)</div> - отказ об оповещения сервером об изменении значений переменных.
+</pre>
+См. также <a href="#cppmsdp" class="cmd">luaT_Msdp</a>.
 <hr>
 <a name="pcre"></a>
 <h4>pcre</h4>

@@ -525,10 +525,10 @@ class luaT_Msdp
       const char* obj = "msdp";
 public:
     luaT_Msdp(lua_State *pL) : L(pL) {}
-    void list(const u8string& list_name) 
+    void list(const u8string& listname)
     {
         lua_getglobal(L, obj);
-        luaT_run(L, "list", "ts", list_name.c_str());
+        luaT_run(L, "list", "ts", listname.c_str());
     }
     void reset(const std::vector<u8string>& vars)
     {

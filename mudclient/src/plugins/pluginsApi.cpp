@@ -461,7 +461,6 @@ int saveTable(lua_State *L)
                     incorrect_data = true;
                     continue;
                 }
-                int x = 1;
             }
             if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING || value_type == LUA_TBOOLEAN)
             {
