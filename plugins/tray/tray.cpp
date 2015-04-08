@@ -1,5 +1,7 @@
 #include "stdafx.h"
-//#include "resource.h"
+#include "traymain.h"
+
+TrayMainObject g_tray;
 
 int get_name(lua_State *L)
 {
@@ -12,11 +14,10 @@ int get_description(lua_State *L)
     luaT_Props p(L);
     u8string prefix;
     p.cmdPrefix(&prefix);
-    u8string text("ѕлагин добавл€ет в клиент команду ");
-    text.append(prefix);
+    u8string text("ѕлагин добавл€ет в клиент команду "); text.append(prefix);
     text.append("tray. ƒанна€ команда выводит текстовое сообшение\r\n"
          "в системный трей Windows в виде всплывающей подсказки. “акже хранит историю\r\n"
-        "непрочитанных сообщений.");
+         "непрочитанных сообщений.");
     lua_pushstring(L, text.c_str());
     return 1;
 }
@@ -30,6 +31,8 @@ int get_version(lua_State *L)
 int init(lua_State *L)
 {
     base::addCommand(L, "tray");
+    luaT_Props p(L);
+    g_tray.setFont(p.currentFont());
     return 0;
 }
 
@@ -55,11 +58,15 @@ int syscmd(lua_State *L)
             {
                 lua_pushinteger(L, i);
                 lua_gettable(L, -2);
-                if (lua_isstring(L, i))
-                    text.append(lua_tostring(L, i));
+                if (lua_isstring(L, -1))
+                {
+                    if (!text.empty())
+                        text.append(" ");
+                    text.append(lua_tostring(L, -1));
+                }
                 lua_pop(L, 1);
             }
-            show_message(text);            
+            g_tray.showMessage(text);            
             lua_pop(L, 1);
             lua_pushnil(L);
             return 1;

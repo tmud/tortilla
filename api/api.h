@@ -513,7 +513,7 @@ public:
     {
         lua_getglobal(L, obj);
         luaT_run(L, "currentFontHandle", "t");
-        if (!luaT_isobject(L, LUAT_FONT, -1))
+        if (!lua_isnumber(L, -1))
             return NULL;
         return (HFONT)uintresult();
     }

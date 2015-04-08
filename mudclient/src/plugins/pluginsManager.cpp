@@ -238,7 +238,10 @@ void PluginsManager::processGameCmd(tstring* cmd)
                 tchar prefix[2] = { m_propData->cmd_prefix, 0 };
                 cmd->assign(prefix);
                 for (int i=0,e=p.size();i<e;++i)
+                {
+                    if (i != 0) cmd->append(L" ");
                     cmd->append(p[i]);
+                }
             }
         }
         return;
@@ -247,7 +250,10 @@ void PluginsManager::processGameCmd(tstring* cmd)
     {
         cmd->clear();
         for (int i = 0, e = p.size(); i < e; ++i)
+        {
+            if (i != 0) cmd->append(L" ");
             cmd->append(p[i]);
+        }
     }
 }
 

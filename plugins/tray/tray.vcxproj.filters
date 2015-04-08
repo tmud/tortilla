@@ -18,15 +18,24 @@
     <ClInclude Include="stdafx.h">
       <Filter>Main Files</Filter>
     </ClInclude>
+    <ClInclude Include="traymain.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="popupWindow.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="tray.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="stdafx.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
     <ClCompile Include="traymain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tray.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
+    <ClCompile Include="popupWindow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

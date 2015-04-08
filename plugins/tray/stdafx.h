@@ -9,10 +9,12 @@
 #include "api/api.h"
 
 #include <atlbase.h>
+#include <atlwin.h>
 #include <atlapp.h>
 #include <atldlgs.h>
 #include <atlctrls.h>
-#include <atlctrlx.h>
+#include <atlmisc.h>
+
 
 #include <vector>
 #include <string>
