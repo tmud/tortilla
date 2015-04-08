@@ -83,10 +83,24 @@ namespace base {
         profile->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-
+    inline HWND getParent(lua_State *L) {
+        luaT_run(L, "getParent", "");
+        HWND parent = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        return parent;
+    }
+    inline void saveTable(lua_State* L, const utf8* file) {
+        if (lua_istable(L, -1))
+            luaT_run(L, "saveTable", "rs", file);
+    }
+    inline bool loadTable(lua_State* L, const utf8* file) {
+        luaT_run(L, "loadTable", "s", file);
+        return lua_istable(L, -1) ? true : false;
+    }
+    // createWindow, createPanel, pcre -> classes below
+    // log -> luaT_log
 } // namespace base
 
-//lua window wrapper
 class luaT_window
 {
     lua_State *L;

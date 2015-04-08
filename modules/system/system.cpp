@@ -3,15 +3,9 @@
 
 int system_messagebox(lua_State *L)
 {
-    HWND parent = NULL;
-    luaT_run(L, "getParent", "");
-    if (lua_isnumber(L, -1))
-    {
-        HWND wnd = (HWND)lua_tounsigned(L, -1);
-        lua_pop(L, 1);
-        if (::IsWindow(wnd))
-            parent = wnd;
-    }
+    HWND parent = base::getParent(L);
+    if (!::IsWindow(parent))
+        parent = NULL;
 
     bool params_ok = false;
 
