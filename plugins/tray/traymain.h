@@ -5,13 +5,13 @@
 class TrayMainObject
 {
 public:
+    TrayMainObject();
+    ~TrayMainObject();
     void setFont(HFONT font);
-    void showMessage(const u8string& msg);
+    bool showMessage(const u8string& msg, COLORREF bkgnd, COLORREF text);
     
 private:
-    void createWindow(const u8string& msg);
-    void startAnimation(int window_index);
-    void stopAnimation(int window_index);
+    void startAnimation(int window_index, COLORREF bkgnd, COLORREF text);
 
 private:
     CFont m_font;

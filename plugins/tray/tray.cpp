@@ -50,7 +50,7 @@ int syscmd(lua_State *L)
         lua_gettable(L, -2);
         u8string cmd(lua_tostring(L, -1));
         lua_pop(L, 1);
-        if (cmd == "tray") 
+        if (cmd == "tray")
         {
             int n = luaL_len(L, -1);
             u8string text;
@@ -66,11 +66,12 @@ int syscmd(lua_State *L)
                 }
                 lua_pop(L, 1);
             }
-            g_tray.showMessage(text);            
-            lua_pop(L, 1);
-            lua_pushnil(L);
+            luaT_Props p(L);
+            g_tray.showMessage(text, p.backgroundColor(), p.paletteColor(7));
+            //lua_pop(L, 1);
+            //lua_pushnil(L);
             return 1;
-        }    
+        }
     }
     return 1;
 }

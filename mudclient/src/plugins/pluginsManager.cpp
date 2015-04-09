@@ -230,31 +230,11 @@ void PluginsManager::processGameCmd(tstring* cmd)
     if (syscmd)
     {
         if (doPluginsTableMethod("syscmd", &p))
-        {
-            if (p.empty())
-                cmd->clear();
-            else
-            {
-                tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-                cmd->assign(prefix);
-                for (int i=0,e=p.size();i<e;++i)
-                {
-                    if (i != 0) cmd->append(L" ");
-                    cmd->append(p[i]);
-                }
-            }
-        }
+            concatCommand(p, true, cmd);
         return;
     }
     if (doPluginsTableMethod("gamecmd", &p))
-    {
-        cmd->clear();
-        for (int i = 0, e = p.size(); i < e; ++i)
-        {
-            if (i != 0) cmd->append(L" ");
-            cmd->append(p[i]);
-        }
-    }
+        concatCommand(p, false, cmd);
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -532,4 +512,29 @@ void PluginsManager::processReceived(Network *network)
 void PluginsManager::processToSend(Network* network)
 {
     m_msdp_network.sendExist(network);
+}
+
+void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool system, tstring* cmd)
+{
+    cmd->clear();
+    if (parts.empty())
+        return;
+    if (system)
+    {
+        tchar prefix[2] = { m_propData->cmd_prefix, 0 };
+        cmd->assign(prefix);
+    }
+    for (int i=0,e=parts.size();i<e;++i)
+    {
+        const tstring& s = parts[i];
+        if (i != 0) cmd->append(L" ");
+        if (s.find(L" ") == -1)
+            cmd->append(s);
+        else
+        {
+            cmd->append(L"'");
+            cmd->append(s);
+            cmd->append(L"'");
+        }
+    }
 }

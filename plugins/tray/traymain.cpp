@@ -2,6 +2,20 @@
 #include "traymain.h"
 //#include "resource.h"
 
+TrayMainObject::TrayMainObject()
+{
+}
+
+TrayMainObject::~TrayMainObject()
+{
+    for (int i=0,e=m_popups.size(); i<e;++i)
+    {
+        PopupWindow *pw = m_popups[i];
+        pw->DestroyWindow();
+        delete pw;
+    }
+}
+
 void TrayMainObject::setFont(HFONT font)
 {
     if (!m_font.IsNull())
@@ -12,20 +26,22 @@ void TrayMainObject::setFont(HFONT font)
     m_font.CreateFontIndirect(&lf);
 }
 
-void TrayMainObject::showMessage(const u8string& msg)
-{
-    createWindow(msg);
-    startAnimation(0);
-}
-
-void TrayMainObject::createWindow(const u8string& msg)
+bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF text)
 {
    PopupWindow *wnd = new PopupWindow(msg, &m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_CHILD);
+   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
+   if (!wnd->IsWindow())
+   {
+       delete wnd;
+       return false;
+   }
    m_popups.push_back(wnd);
+   int index = m_popups.size() - 1;
+   startAnimation(index, bkgnd, text);
+   return true;
 }
 
-void TrayMainObject::startAnimation(int window_index)
+void TrayMainObject::startAnimation(int window_index, COLORREF bkgnd, COLORREF text)
 {
     PopupWindow *w = getWindow(window_index);
     if (!w || w->isAnimated()) { assert(false); return; }
@@ -39,24 +55,28 @@ void TrayMainObject::startAnimation(int window_index)
         if (!m_popups[i]->isAnimated()) 
             continue;
         on_screen++;
-        const Animation &a = w->getAnimation();
-        POINT p = a.start_pos;
+        RECT pos;
+        m_popups[i]->GetWindowRect(&pos);
+        POINT p = { GetSystemMetrics(SM_CXSCREEN), pos.top-4 };
         if (rb.x < 0 || rb.y > p.y) rb = p;
     }
 
     if (on_screen == 0)
         rb = GetTaskbarRB();
+    else
+    {
+        int x = 1;
+    }
     rb.y -= sz.cy;
     a.start_pos = rb;
-    a.pos = rb;
-    rb.x -= sz.cx;
+    rb.x -= (sz.cx+4);
     a.end_pos = rb;
-    a.speed = 1.0f;
+    a.speed = 0.002f;
+    a.timer_msec = 10;
+    a.wait_sec = 2;
+    a.bkgnd = bkgnd;
+    a.text = text;
     w->startAnimation(a);
-}
-
-void TrayMainObject::stopAnimation(int window_index)
-{
 }
 
 PopupWindow* TrayMainObject::getWindow(int index) const
