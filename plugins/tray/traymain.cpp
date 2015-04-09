@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "traymain.h"
-//#include "resource.h"
 
 TrayMainObject::TrayMainObject()
 {
@@ -28,7 +27,16 @@ void TrayMainObject::setFont(HFONT font)
 
 bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF text)
 {
-   PopupWindow *wnd = new PopupWindow(msg, &m_font);
+  for (int i=0,e=m_popups.size();i<e;++i)
+  {
+      if (!m_popups[i]->isAnimated())
+      {
+          startAnimation(i, msg, bkgnd, text);
+          return true;
+      }
+  }
+
+   PopupWindow *wnd = new PopupWindow(&m_font);
    wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
    if (!wnd->IsWindow())
    {
@@ -37,14 +45,16 @@ bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF t
    }
    m_popups.push_back(wnd);
    int index = m_popups.size() - 1;
-   startAnimation(index, bkgnd, text);
+   startAnimation(index, msg, bkgnd, text);
    return true;
 }
 
-void TrayMainObject::startAnimation(int window_index, COLORREF bkgnd, COLORREF text)
+void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORREF bkgnd, COLORREF text)
 {
     PopupWindow *w = getWindow(window_index);
     if (!w || w->isAnimated()) { assert(false); return; }
+
+    w->setText(msg);
 
     Animation a;
     SIZE sz = w->getSize();
@@ -63,10 +73,6 @@ void TrayMainObject::startAnimation(int window_index, COLORREF bkgnd, COLORREF t
 
     if (on_screen == 0)
         rb = GetTaskbarRB();
-    else
-    {
-        int x = 1;
-    }
     rb.y -= sz.cy;
     a.start_pos = rb;
     rb.x -= (sz.cx+4);
@@ -74,8 +80,8 @@ void TrayMainObject::startAnimation(int window_index, COLORREF bkgnd, COLORREF t
     a.speed = 0.002f;
     a.timer_msec = 10;
     a.wait_sec = 2;
-    a.bkgnd = bkgnd;
-    a.text = text;
+    a.bkgnd_color = bkgnd;
+    a.text_color = text;
     w->startAnimation(a);
 }
 

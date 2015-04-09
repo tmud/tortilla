@@ -29,8 +29,8 @@ struct Animation
     float speed;
     int   timer_msec;
     int   wait_sec;
-    COLORREF bkgnd;
-    COLORREF text;
+    COLORREF bkgnd_color;
+    COLORREF text_color;
 };
 
 class PopupWindow : public CWindowImpl<PopupWindow>
@@ -48,13 +48,15 @@ class PopupWindow : public CWindowImpl<PopupWindow>
 
 public:
     DECLARE_WND_CLASS(NULL)
-    PopupWindow(const u8string& text, CFont *font) : m_font(font), m_animation_state(ANIMATION_NONE), wait_timer(0)
+    PopupWindow(CFont *font) : m_font(font), m_animation_state(ANIMATION_NONE), wait_timer(0), pos_x(0), pos_y(0), dx(0), dy(0)
     {
-        m_text.assign( TU2W(text.c_str()) );
         m_dc_size.cx = 0;
         m_dc_size.cy = 0;
-        pos_x = pos_y = 0;
-        dx = dy = 0;
+    }
+    void setText(const u8string& text)
+    {
+        m_text.assign( TU2W(text.c_str()) );
+        calcDCSize();
     }
     const SIZE& getSize() const
     {

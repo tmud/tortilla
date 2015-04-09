@@ -3,7 +3,6 @@
 
 void PopupWindow::onCreate()
 {
-    calcDCSize();
 }
 
 void PopupWindow::onTimer()
@@ -80,10 +79,10 @@ void PopupWindow::onPaint(HDC dc)
     CDCHandle pdc(dc);
     RECT rc;
     GetClientRect(&rc);
-    pdc.FillSolidRect(&rc, m_animation.bkgnd);
+    pdc.FillSolidRect(&rc, m_animation.bkgnd_color);
     HFONT old_font = pdc.SelectFont(*m_font);
-    pdc.SetBkColor(m_animation.bkgnd);
-    pdc.SetTextColor(m_animation.text);
+    pdc.SetBkColor(m_animation.bkgnd_color);
+    pdc.SetTextColor(m_animation.text_color);
     pdc.DrawText(m_text.c_str(), m_text.length(), &rc, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
     pdc.SelectFont(old_font);
 }
