@@ -90,6 +90,7 @@
   <ItemGroup>
     <ClInclude Include="popupWindow.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="timeoutWindow.h" />
     <ClInclude Include="traymain.h" />
   </ItemGroup>
   <ItemGroup>

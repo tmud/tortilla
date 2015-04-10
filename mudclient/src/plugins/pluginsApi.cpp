@@ -313,7 +313,7 @@ int getParent(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
-        HWND hwnd = _wndMain.m_gameview;
+        HWND hwnd = _wndMain; //.m_gameview;
         lua_pushunsigned(L, (DWORD)hwnd);
         return 1;
     }

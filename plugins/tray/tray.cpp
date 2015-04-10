@@ -2,7 +2,6 @@
 #include "traymain.h"
 
 TrayMainObject g_tray;
-
 int get_name(lua_State *L)
 {
     lua_pushstring(L, "ѕлагин оповещени€ в трее");
@@ -33,6 +32,7 @@ int init(lua_State *L)
     base::addCommand(L, "tray");
     luaT_Props p(L);
     g_tray.setFont(p.currentFont());
+    g_tray.setAlarmWnd(base::getParent(L));
     return 0;
 }
 
@@ -41,7 +41,6 @@ int release(lua_State *L)
     return 0;
 }
 
-void show_message(const u8string& msg);
 int syscmd(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TTABLE))
@@ -66,9 +65,12 @@ int syscmd(lua_State *L)
                 }
                 lua_pop(L, 1);
             }
-            //luaT_Props p(L);
-            //g_tray.showMessage(text, p.paletteColor(7),  p.backgroundColor()); // reversed colors - специально.
-            g_tray.showMessage(text, GetSysColor(COLOR_INFOBK), GetSysColor(COLOR_INFOTEXT));
+            if (!text.empty())
+            {
+                //luaT_Props p(L);
+                //g_tray.showMessage(text, p.paletteColor(7),  p.backgroundColor()); // reversed colors - специально.
+                g_tray.showMessage(text, GetSysColor(COLOR_INFOBK), GetSysColor(COLOR_INFOTEXT));
+            }
             lua_pop(L, 1);
             lua_pushnil(L);
             return 1;
@@ -77,14 +79,28 @@ int syscmd(lua_State *L)
     return 1;
 }
 
+int activated(lua_State *L)
+{
+    g_tray.setActivated(true);
+    return 0;
+}
+
+int deactivated(lua_State *L)
+{
+    g_tray.setActivated(false);
+    return 0;
+}
+
 static const luaL_Reg tray_methods[] =
 {
     { "name", get_name },
     { "description", get_description },
     { "version", get_version },
     { "init", init },
-    //{ "release", release },
+    { "release", release },
     { "syscmd", syscmd },
+    { "activated", activated },
+    { "deactivated", deactivated },
     { NULL, NULL }
 };
 

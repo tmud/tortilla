@@ -24,6 +24,9 @@
     <ClInclude Include="popupWindow.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="timeoutWindow.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

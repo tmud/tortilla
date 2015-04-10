@@ -23,11 +23,8 @@ public:
 
 struct Animation
 {
-    POINT start_pos;
-    POINT end_pos;
-    SIZE  window_size;
+    POINT pos;
     float speed;
-    int   timer_msec;
     int   wait_sec;
     COLORREF bkgnd_color;
     COLORREF text_color;
@@ -41,14 +38,13 @@ class PopupWindow : public CWindowImpl<PopupWindow>
     Animation m_animation;
     int  m_animation_state;
     enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT };   
-    float pos_x, pos_y;
-    float dx, dy;
     int wait_timer;
     Ticker m_ticker;
+    float alpha;
 
 public:
     DECLARE_WND_CLASS(NULL)
-    PopupWindow(CFont *font) : m_font(font), m_animation_state(ANIMATION_NONE), wait_timer(0), pos_x(0), pos_y(0), dx(0), dy(0)
+    PopupWindow(CFont *font) : m_font(font), m_animation_state(ANIMATION_NONE), wait_timer(0), alpha(0)
     {
         m_dc_size.cx = 0;
         m_dc_size.cy = 0;
@@ -76,8 +72,7 @@ private:
     void onPaint(HDC dc);
     void setState(int newstate);
     void calcDCSize();
-    void initAnimationVals();
-    void moveWindow();
+    void setAlpha(float a);
 
 private:
     BEGIN_MSG_MAP(PopupWindow)

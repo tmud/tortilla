@@ -3,6 +3,10 @@
 
 void PopupWindow::onCreate()
 {
+    long l = GetWindowLong(GWL_EXSTYLE);
+    l |= WS_EX_LAYERED;
+    SetWindowLong(GWL_EXSTYLE, l);
+    setAlpha(0);
 }
 
 void PopupWindow::onTimer()
@@ -12,66 +16,71 @@ void PopupWindow::onTimer()
         assert(false);
         return;
     }
-
     DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
     if (m_animation_state == ANIMATION_WAIT)
     {        
-        wait_timer += dt;        
+        wait_timer += dt;
         int end_timer = m_animation.wait_sec * 1000;
         if (wait_timer >= end_timer)
             setState(ANIMATION_TOSTART);
         return;
-    }
-
-    const Animation &a = m_animation;
-    pos_x += dx * dt;
-    pos_y += dy * dt;
-
-    LONG x = static_cast<LONG>(pos_x);
-    LONG y = static_cast<LONG>(pos_y);
-    
-    bool finished = false;
+    }    
+    float da = static_cast<float>(dt) * m_animation.speed;
     if (m_animation_state == ANIMATION_TOEND)
     {
-        if ((a.start_pos.x < a.end_pos.x && x >= a.end_pos.x) ||
-            (a.start_pos.x > a.end_pos.x && x <= a.end_pos.x))
-        {
-            pos_x = static_cast<float>(a.end_pos.x);
-            finished = true;
-        }
-        if ((a.start_pos.y < a.end_pos.y && y >= a.end_pos.y) ||
-            (a.start_pos.y > a.end_pos.y && y <= a.end_pos.y))
-        {
-            pos_y = static_cast<float>(a.end_pos.y);
-            finished = true;
-        }
+        alpha = min(alpha+da, 255);
+        setAlpha(alpha);
+        if (alpha == 255)
+            setState(ANIMATION_WAIT);
     }
-    
     if (m_animation_state == ANIMATION_TOSTART)
     {
-        if ((a.start_pos.x < a.end_pos.x && x <= a.start_pos.x) ||
-            (a.start_pos.x > a.end_pos.x && x >= a.start_pos.x))
-        {
-            pos_x = static_cast<float>(a.start_pos.x);
-            finished = true;
-        }
-        if ((a.start_pos.y < a.end_pos.y && y <= a.start_pos.y) ||
-            (a.start_pos.y > a.end_pos.y && y >= a.start_pos.y))
-        {
-            pos_y = static_cast<float>(a.start_pos.y);
-            finished = true;
-        }    
-    }
-
-    moveWindow();
-    if (finished)
-    {
-        if (m_animation_state == ANIMATION_TOEND)
-            setState(ANIMATION_WAIT);
-        else if (m_animation_state == ANIMATION_TOSTART)
+        alpha = max(alpha-da, 0);
+        setAlpha(alpha);
+        if (alpha == 0)
             setState(ANIMATION_NONE);
     }
+}
+
+void PopupWindow::startAnimation(const Animation& a)
+{
+    m_animation = a;
+    setState(ANIMATION_TOEND);    
+}
+
+void PopupWindow::setState(int newstate)
+{
+    const Animation &a = m_animation;
+    m_animation_state = newstate;
+    switch(m_animation_state)
+    {
+    case ANIMATION_TOEND:
+    {
+        const SIZE &sz = getSize();
+        RECT pos = { a.pos.x, a.pos.y, a.pos.x + sz.cx, a.pos.y + sz.cy };
+        MoveWindow(&pos);
+        ShowWindow(SW_SHOWNOACTIVATE);
+        SetTimer(1, 10);
+    }
+    break;
+    case ANIMATION_NONE:
+        setAlpha(0);
+        ShowWindow(SW_HIDE);
+        KillTimer(1);
+        wait_timer = 0;
+        alpha = 0;
+    break;
+    }
+    m_ticker.sync();
+}
+
+void PopupWindow::calcDCSize()
+{
+    CDC dc(GetDC());
+    HFONT oldfont = dc.SelectFont(*m_font);
+    GetTextExtentPoint32(dc, m_text.c_str(), m_text.length(), &m_dc_size);
+    dc.SelectFont(oldfont);
 }
 
 void PopupWindow::onPaint(HDC dc)
@@ -83,78 +92,21 @@ void PopupWindow::onPaint(HDC dc)
     HFONT old_font = pdc.SelectFont(*m_font);
     pdc.SetBkColor(m_animation.bkgnd_color);
     pdc.SetTextColor(m_animation.text_color);
-    pdc.DrawText(m_text.c_str(), m_text.length(), &rc, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+    pdc.DrawText(m_text.c_str(), m_text.length(), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     pdc.SelectFont(old_font);
+
+    CPen p;
+    p.CreatePen(PS_SOLID, 2, m_animation.text_color);
+    HPEN old = pdc.SelectPen(p);
+    pdc.MoveTo(rc.left+1, rc.top+1);
+    pdc.LineTo(rc.right-1, rc.top+1);
+    pdc.LineTo(rc.right-1, rc.bottom-1);
+    pdc.LineTo(rc.left+1, rc.bottom-1);
+    pdc.LineTo(rc.left+1, rc.top);
 }
 
-void PopupWindow::startAnimation(const Animation& a)
+void PopupWindow::setAlpha(float a)
 {
-    m_animation = a;
-    setState(ANIMATION_TOEND);
-}
-
-void PopupWindow::setState(int newstate)
-{
-    const Animation &a = m_animation;
-    m_animation_state = newstate;
-    switch(m_animation_state)
-    {
-    case ANIMATION_TOEND:
-        initAnimationVals();
-        ShowWindow(SW_SHOWNOACTIVATE);
-        SetTimer(1, a.timer_msec);
-    break;
-    case ANIMATION_WAIT:
-    case ANIMATION_TOSTART:
-        initAnimationVals();
-    break;
-    case ANIMATION_NONE:
-        ShowWindow(SW_HIDE);
-        KillTimer(1);
-    break;
-    }
-    m_ticker.sync();
-}
-
-void PopupWindow::initAnimationVals()
-{
-    const Animation &a = m_animation;
-    float speed = a.speed;
-    switch(m_animation_state)
-    {
-    case ANIMATION_TOEND:
-        dx = (a.end_pos.x - a.start_pos.x) * speed;
-        dy = (a.end_pos.y - a.start_pos.y) * speed; 
-        pos_x = static_cast<float>(a.start_pos.x);
-        pos_y = static_cast<float>(a.start_pos.y);
-    break;
-    case ANIMATION_TOSTART:
-        dx = (a.start_pos.x - a.end_pos.x) * speed;
-        dy = (a.start_pos.y - a.end_pos.y) * speed;
-        pos_x = static_cast<float>(a.end_pos.x);
-        pos_y = static_cast<float>(a.end_pos.y);
-    break;
-    case ANIMATION_WAIT:
-        dx = 0;
-        dy = 0;
-        wait_timer = 0;
-    break;
-    }
-}
-
-void PopupWindow::moveWindow()
-{
-    const Animation &a = m_animation;
-    LONG x = static_cast<LONG>(pos_x);
-    LONG y = static_cast<LONG>(pos_y);
-    RECT pos = { x, y, x + a.window_size.cx, y + a.window_size.cy };
-    MoveWindow(&pos);
-}
-
-void PopupWindow::calcDCSize()
-{
-    CDC dc(GetDC());
-    HFONT oldfont = dc.SelectFont(*m_font);
-    GetTextExtentPoint32(dc, m_text.c_str(), m_text.length(), &m_dc_size);
-    dc.SelectFont(oldfont);
+    int va = static_cast<int>(a);
+    SetLayeredWindowAttributes(m_hWnd, 0, va, LWA_ALPHA);
 }

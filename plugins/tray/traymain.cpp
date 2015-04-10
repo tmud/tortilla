@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "traymain.h"
 
-TrayMainObject::TrayMainObject()
+TrayMainObject::TrayMainObject() : m_activated(false)
 {
 }
 
@@ -25,6 +25,18 @@ void TrayMainObject::setFont(HFONT font)
     m_font.CreateFontIndirect(&lf);
 }
 
+void TrayMainObject::setAlarmWnd(HWND wnd)
+{
+    m_timeout_wnd.setAlarmWnd(wnd);
+}
+
+ void TrayMainObject::setActivated(bool activated)
+ {
+     m_activated = activated;
+     if (m_activated)
+         m_timeout_wnd.stop();
+ }
+
 bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF text)
 {
   for (int i=0,e=m_popups.size();i<e;++i)
@@ -46,6 +58,8 @@ bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF t
    m_popups.push_back(wnd);
    int index = m_popups.size() - 1;
    startAnimation(index, msg, bkgnd, text);
+   if (!m_activated)
+       m_timeout_wnd.start();
    return true;
 }
 
@@ -58,7 +72,6 @@ void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORR
 
     Animation a;
     SIZE sz = w->getSize();
-    a.window_size = sz;
 
     int on_screen = 0; POINT rb = { -1, -1 };
     for (int i=0,e=m_popups.size();i<e;++i) {
@@ -73,12 +86,11 @@ void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORR
 
     if (on_screen == 0)
         rb = GetTaskbarRB();
+    rb.x -= 2;
     rb.y -= sz.cy;
-    a.start_pos = rb;
-    rb.x -= (sz.cx+4);
-    a.end_pos = rb;
-    a.speed = 0.002f;
-    a.timer_msec = 10;
+    rb.x -= sz.cx;
+    a.pos = rb;
+    a.speed = 0.5f;
     a.wait_sec = 3;
     a.bkgnd_color = bkgnd;
     a.text_color = text;
