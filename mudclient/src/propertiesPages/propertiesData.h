@@ -319,10 +319,10 @@ struct PluginData
 
 struct PluginsDataValues : public std::vector<PluginData>
 {
-    void saveWindowPos(const tstring& plugin_name, const OutputWindow&  w)
+    void saveWindowPos(const tstring& plugin_filename, const OutputWindow&  w)
     {
         for (int i = 0, e = size(); i < e; ++i) {
-        if (plugin_name == at(i).name) 
+        if (plugin_filename == at(i).name) 
         {
             PluginData &p = at(i);
             int index = -1;

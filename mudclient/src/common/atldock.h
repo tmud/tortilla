@@ -104,7 +104,7 @@ struct DOCKCONTEXT
    HWND hwndDocked;   // The docked pane
    HWND hwndFloated;  // The floating pane
    HWND hwndChild;    // The view window
-   HWND hwndOrigPrnt; // The original parent window
+   HWND hwndOrigPrnt; // The original parent window   
    short Side;        // Dock state
    short LastSide;    // Last dock state
    RECT rcWindow;     // Preferred window size
@@ -112,6 +112,8 @@ struct DOCKCONTEXT
    HWND hwndRoot;     // Main dock window
    DWORD dwFlags;     // Extra flags
    bool bKeepSize;    // Recommend using current size and avoid rescale
+   bool bNcActivate;  // Helpful flags to sync floating window header with main window
+   bool bUseNcActivate;
 };
 
 typedef CSimpleValArray<DOCKCONTEXT*> CDockMap;
@@ -222,7 +224,7 @@ public:
          }
          switch( msg.message ) {
          case WM_LBUTTONUP:
-         {  
+         {
             CancelTracking();
             if( m_bDragging ) pT->OnEndDrag(); else pT->OnEndResize();
             return true;
@@ -244,7 +246,7 @@ public:
          case WM_LBUTTONDOWN:
          case WM_RBUTTONDOWN:
             CancelTracking();
-            return false;      
+            return false;
          default:
             // Just dispatch rest of the messages
             ::DispatchMessage(&msg);
@@ -340,7 +342,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_DBLCLKS, NULL)
 
    typedef CFloatingWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CFloatingWindowImpl)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
       MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -359,7 +361,7 @@ public:
 
    CFloatingWindowImpl(DOCKCONTEXT* pCtx) :
       m_pCtx(pCtx)
-   { 
+   {
    }
 
    HWND Create(HWND hWndParent, RECT& rcPos, LPCTSTR szWindowName = NULL,
@@ -390,9 +392,14 @@ public:
       return 0;
    }
 
-   LRESULT OnNcActivate(UINT uMsg, WPARAM, LPARAM lParam, BOOL&)
+   LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
    {
-      return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
+       if (!m_pCtx->bUseNcActivate)
+           return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
+       if (m_pCtx->bNcActivate)
+           return DefWindowProc(uMsg, TRUE, lParam);
+       bHandled = FALSE;
+       return 0;
    }
 
    LRESULT OnLeftButtonDown(UINT, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -534,7 +541,7 @@ class ATL_NO_VTABLE CDockingPaneChildWindowImpl :
 public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, NULL)
    typedef CDockingPaneChildWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingPaneChildWindowImpl)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -758,7 +765,7 @@ public:
       bool bVertical = IsDockedVertically(m_pCtx->Side);
 
       // Reposition splitter and gripper bars
-      RECT rect;   
+      RECT rect;
       GetClientRect(&rect);
       if( bVertical ) {
          int nGap = 0;
@@ -843,7 +850,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, COLOR_WINDOW)
 
    typedef CDockingPaneWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingPaneWindowImpl)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -1197,7 +1204,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, NULL)
 
    typedef CDockingWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingWindowImpl)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
       MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -1212,6 +1219,11 @@ public:
       MESSAGE_HANDLER(WM_DOCK_UPDATELAYOUT, OnSize)
       MESSAGE_HANDLER(WM_DOCK_REPOSITIONWINDOW, OnRepositionWindow)
       MESSAGE_HANDLER(WM_DOCK_CLIENT_CLOSE, OnClientClose)
+   ALT_MSG_MAP(1)   //call this map for sync main window/tools captions
+      MESSAGE_HANDLER(WM_SHOWWINDOW, OnMainShowWindow)
+      MESSAGE_HANDLER(WM_NCACTIVATE, OnMainNcActivate)
+      MESSAGE_HANDLER(WM_ACTIVATEAPP, OnMainActivateApp)
+      MESSAGE_HANDLER(WM_ACTIVATE, OnMainActivate)
    END_MSG_MAP()
 
    TPaneWindow m_panes[4];  // The 4 panel windows (one for each side)
@@ -1221,7 +1233,9 @@ public:
    int  m_barHeight;
    DWORD m_dwExtStyle;      // Optional styles
    SIZE m_sizeBorder;       // Size of window borders
-   
+   bool m_used_activated_mode;
+   bool m_activated;
+
    class SimpleWindowApi
    {
        struct TSimpleWindowParams
@@ -1332,7 +1346,8 @@ public:
        HWND m_dock;
    } m_panels;
 
-   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0)
+   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0), 
+       m_used_activated_mode(false), m_activated(false)
    {}
 
    // Operations
@@ -1418,6 +1433,8 @@ public:
       wndFloat->Create(m_hWnd, rcDefault, szCaption);
       ATLASSERT(::IsWindow(wndFloat->m_hWnd));
       ctx->hwndFloated = *wndFloat;
+      ctx->bNcActivate = m_activated;
+      ctx->bUseNcActivate = m_used_activated_mode;
 
       ::SetParent(ctx->hwndChild, ctx->hwndDocked);
 
@@ -1591,6 +1608,58 @@ public:
 	  }
       m_map.RemoveAll();
       return 0;
+   }
+
+   void syncNcActivateState(bool state)
+   {
+       m_activated = state;
+       for (int i = 0; i < m_map.GetSize(); i++)
+       {
+           DOCKCONTEXT *pCtx = m_map[i];
+           pCtx->bNcActivate = state;
+           HWND floated_wnd = pCtx->hwndFloated;
+           if (::IsWindowVisible(floated_wnd))
+           {
+               SendMessage(floated_wnd, WM_NCACTIVATE, state ? TRUE : FALSE, 0);
+           }
+       }
+   }
+
+   LRESULT OnMainShowWindow(UINT, WPARAM, LPARAM, BOOL&bHandled)
+   {
+       for (int i = 0; i < m_map.GetSize(); i++)
+           m_map[i]->bUseNcActivate = true;
+       m_used_activated_mode = true;
+       syncNcActivateState(true);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
+   {
+       if (m_used_activated_mode)
+           return ::DefWindowProc(GetParent(), uMsg, m_activated, 0);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainActivate(UINT, WPARAM wParam, LPARAM, BOOL&bHandled)
+   {
+       if (m_used_activated_mode && HIWORD(wParam) == 0)
+           syncNcActivateState(true);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainActivateApp(UINT, WPARAM wParam, LPARAM, BOOL&bHandled)
+   {
+       if (m_used_activated_mode)
+       {
+           syncNcActivateState(wParam ? true : false);
+           SendMessage(GetParent(), WM_NCACTIVATE, wParam, 0);
+       }
+       bHandled = FALSE;
+       return 0;
    }
 
    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&)
@@ -2059,7 +2128,6 @@ private:
 	{
 		return (m_barHeight > 0 && ::IsWindow(m_hwndBar) && ::IsWindowVisible(m_hWnd)) ? true : false;
 	}
-
 };
 
 class CDockingWindow : public CDockingWindowImpl<CDockingWindow>

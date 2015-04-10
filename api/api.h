@@ -127,6 +127,14 @@ public:
         lua_pop(L, 1);
         return hwnd;
     }
+    HWND floathwnd()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "floathwnd", "o");
+        HWND hwnd = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        return hwnd;
+    }
     void hide()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);

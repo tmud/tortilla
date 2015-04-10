@@ -13,7 +13,7 @@ public:
     DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND + 1)
     PluginsView(Plugin *p) : m_child_window(NULL), m_plugin(p), m_render(NULL), m_render_error(false) {}
     ~PluginsView() { delete m_render; }
-    const wchar_t* getPluginName() const;
+    Plugin* getPlugin() const { return m_plugin; }
 
     void attachChild(HWND wnd)
     {

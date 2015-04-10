@@ -307,30 +307,24 @@ xnode xml_move(xnode node, const utf8* path, int create)
         if (p.empty())
             return node;
     }
-    
+
     xml::request r(node, p.c_str());
     if (!create)
     {
-        if (r.size() == 1) 
+        if (r.size() != 0)
             return r[0];
         return NULL;
     }
-    if (r.size() == 1)
-        return r[0];
-    if (r.size() != 0)
-        return NULL;
-    
+
     Tokenizer tk(p.c_str());
-    for (int i = 0, e = tk.size(); i < e; ++i)
+    for (int i = 0, e = tk.size()-1; i <= e; ++i)
     {
         xml::request r(node, tk[i].c_str());
-        if (r.size() > 1)
-            return NULL;
-        if (r.size() == 1)
-            node = r[0];
+        if (r.size() != 0 && i != e)
+           node = r[0];
         else
-            node = xmlCreateNode(node, tk[i].c_str());
-    }    
+           node = xmlCreateNode(node, tk[i].c_str());
+    }
     return node;
 }
 
