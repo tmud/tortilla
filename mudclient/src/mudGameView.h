@@ -41,6 +41,8 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     PluginsManager m_plugins;
     int m_codepage;
 
+    bool m_activated;
+
 private:
     void onStart();
     void onClose();
@@ -57,7 +59,7 @@ public:
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN)
+        m_codepage(CPWIN), m_activated(false)
     {
     }
 
@@ -116,6 +118,11 @@ public:
         m_dock.SetClient(m_hWnd);
         m_bar.setCommandEventCallback(m_hWnd, WM_USER);
         return dock;
+    }
+
+    bool activated() const
+    {
+        return m_activated;
     }
 
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
@@ -299,6 +306,7 @@ private:
         MESSAGE_HANDLER(WM_DOCK_FOCUS, OnBarSetFocus)
         COMMAND_ID_HANDLER(ID_PLUGINS, OnPlugins)
         COMMAND_RANGE_HANDLER(PLUGING_MENUID_START, PLUGING_MENUID_END, OnPluginMenuCmd)
+		MESSAGE_HANDLER(WM_ACTIVATEAPP, OnActivateApp)
         CHAIN_MSG_MAP_ALT_MEMBER(m_dock, 1) // processing some system messages
     END_MSG_MAP()
 
@@ -477,6 +485,14 @@ private:
     LRESULT OnBarSetFocus(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
         m_bar.setFocus();
+        return 0;
+    }
+
+    LRESULT OnActivateApp(UINT, WPARAM wparam, LPARAM, BOOL&bHandled)
+    {
+        m_activated = (wparam) ? true : false;
+        m_plugins.processPluginsMethod(m_activated ? "activated" : "deactivated", 0);
+        bHandled = FALSE;
         return 0;
     }
 

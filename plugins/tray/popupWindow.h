@@ -61,7 +61,7 @@ public:
     const SIZE& getSize() const
     {
         CSize sz(m_dc_size);
-        sz += CSize(8,8);
+        sz += CSize(12,12);
         return sz;
     }
     bool isAnimated()

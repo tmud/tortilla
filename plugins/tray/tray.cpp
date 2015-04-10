@@ -66,10 +66,11 @@ int syscmd(lua_State *L)
                 }
                 lua_pop(L, 1);
             }
-            luaT_Props p(L);
-            g_tray.showMessage(text, p.backgroundColor(), p.paletteColor(7));
-            //lua_pop(L, 1);
-            //lua_pushnil(L);
+            //luaT_Props p(L);
+            //g_tray.showMessage(text, p.paletteColor(7),  p.backgroundColor()); // reversed colors - специально.
+            g_tray.showMessage(text, GetSysColor(COLOR_INFOBK), GetSysColor(COLOR_INFOTEXT));
+            lua_pop(L, 1);
+            lua_pushnil(L);
             return 1;
         }
     }
@@ -82,7 +83,7 @@ static const luaL_Reg tray_methods[] =
     { "description", get_description },
     { "version", get_version },
     { "init", init },
-    { "release", release },
+    //{ "release", release },
     { "syscmd", syscmd },
     { NULL, NULL }
 };

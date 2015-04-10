@@ -286,7 +286,7 @@ int Network::read_socket()
                 m_receive_data.write(in, 1);
             else if (processed == 2 && in[0] == IAC && in[1] == GA)
             {
-                unsigned char bytes[2] = { 0x1b, GA };
+                unsigned char bytes[2] = { 0x1b, 0x5c };
                 m_receive_data.write(bytes, 2);
             }
             else

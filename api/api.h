@@ -569,6 +569,12 @@ public:
         luaT_run(L, "connected", "t");
         return boolresult();
     }
+    bool activated()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "activated", "t");
+        return boolresult();
+    }
 
 private:
     bool boolresult()

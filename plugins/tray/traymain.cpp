@@ -79,7 +79,7 @@ void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORR
     a.end_pos = rb;
     a.speed = 0.002f;
     a.timer_msec = 10;
-    a.wait_sec = 2;
+    a.wait_sec = 3;
     a.bkgnd_color = bkgnd;
     a.text_color = text;
     w->startAnimation(a);

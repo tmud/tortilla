@@ -22,7 +22,7 @@ function reconnect.syscmd(t)
   if #t == 1 and (t[1] == 'zap' or t[1] == 'disconnect') then
     connected = false
   end
-  return cmd
+  return t
 end
 
 function reconnect.connect()
