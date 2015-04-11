@@ -1,13 +1,10 @@
 #include "stdafx.h"
 #include "inputProcessor.h"
 
-class InputCommandHelper
-{
+class InputCommandHelper {
 public:
+    InputCommandHelper() {  pcre.setRegExp(L"\\{.*?\\}|\\\".*?\\\"|\\'.*?\\'|[^ ]+", true); }
     Pcre16 pcre;
-    InputCommandHelper() {
-         pcre.setRegExp(L"\\{.*?\\}|\\\".*?\\\"|\\'.*?\\'|[^ ]+", true);
-    }    
 } m_ich;
 
 InputCommand::InputCommand(const tstring& cmd)
@@ -137,17 +134,44 @@ void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList
 {
     // truncate to separate commands
     WCHAR separator = pData->cmd_separator;
-    size_t pos0 = 0;
-    size_t pos = sep_cmd.find(separator);
-    while (pos != tstring::npos)
+    const WCHAR *p = sep_cmd.c_str();
+    const WCHAR *e = p + sep_cmd.length();
+    std::vector<WCHAR> stack;
+
+    const WCHAR *b = p;
+    while (p != e)
     {
-        InputCommand *icmd = new InputCommand( sep_cmd.substr(pos0, pos-pos0) );
-        result->push_back(icmd);        
-        pos0 = pos+1;
-        pos = sep_cmd.find(separator, pos0);
+        if (*p == separator && stack.empty())
+        {
+            InputCommand *icmd = new InputCommand( tstring(b, p-b) );
+            result->push_back(icmd);
+            p++; b = p;
+            continue;
+        }
+        if (wcschr(L"{}\"'", *p))
+        {
+            bool skip_push = false;
+            if (!stack.empty())
+            {
+                int last = stack.size()-1;
+                if (((*p == L'\'' || *p == L'"') && stack[last] == *p) ||
+                    (*p == L'}' && stack[last] == L'{'))
+                {
+                    stack.pop_back();
+                    skip_push = true;
+                }
+            }
+            //if (!skip_push && *p != L'}')
+            else if (*p != L'}')
+                { stack.push_back(*p); }
+        }
+        p++;
     }
-    InputCommand *icmd = new InputCommand( sep_cmd.substr(pos0) );
-    result->push_back(icmd);
+    if (b != e)
+    {
+        InputCommand *icmd = new InputCommand(b);
+        result->push_back(icmd);
+    }
 }
 
 void InputProcessor::processParameters(const tstring& cmd, InputCommand* params, tstring* result)
