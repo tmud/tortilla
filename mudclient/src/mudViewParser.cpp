@@ -114,7 +114,7 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
     if (b[1] == L']') //0x5d
         return process_osc(b, len);
 
-    if (b[1] == 249) // string terminator (GA)
+    if (b[1] == 0x5c) // string terminator (GA)
     {
         m_current_string->setPrompt();
         return parserResult(PARSE_STRING_IACGA, 2);

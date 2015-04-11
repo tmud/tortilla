@@ -33,6 +33,7 @@ public:
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
+    void concatCommand(const std::vector<tstring>& parts, bool system, tstring* cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
     bool doPluginsTableMethod(const char* method, std::vector<tstring>* table);

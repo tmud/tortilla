@@ -23,7 +23,7 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
-    luaT_run(L, "addMenu", "sdd", "Плагины/Импорт из JMC3...", 1, 2);
+    base::addMenu(L, "Плагины/Импорт из JMC3...", 1, 2);
     return 0;
 }
 
@@ -35,10 +35,7 @@ int menucmd(lua_State *L)
     lua_pop(L, 1);
     if (menuid == 1)
     {
-        luaT_run(L, "getParent", "");
-        HWND parent = (HWND)lua_tounsigned(L, -1);
-        lua_pop(L, 1);
-
+        HWND parent = base::getParent(L);
         std::vector<u8string> errors;
         Jmc3Import jmc3(L);
         if (jmc3.import(parent, &errors))

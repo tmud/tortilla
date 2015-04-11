@@ -46,7 +46,7 @@ void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
 //---------------------------------------------------------------------
 wchar_t plugin_buffer[1024];
-int pluginInvArgs(lua_State *L, const utf8* fname) 
+int pluginInvArgs(lua_State *L, const utf8* fname)
 {
     int n = lua_gettop(L);
     Utf8ToWide f(fname);
@@ -313,7 +313,7 @@ int getParent(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
-        HWND hwnd = _wndMain.m_gameview;
+        HWND hwnd = _wndMain; //.m_gameview;
         lua_pushunsigned(L, (DWORD)hwnd);
         return 1;
     }
@@ -782,7 +782,7 @@ void reg_string(lua_State *L)
     lua_pop(L, 1);
 }
 
-int paletteColor(lua_State *L)
+int props_paletteColor(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TNUMBER))
     {
@@ -796,7 +796,7 @@ int paletteColor(lua_State *L)
     return pluginInvArgs(L, "props.paletteColor");
 }
 
-int backgroundColor(lua_State *L)
+int props_backgroundColor(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -806,7 +806,7 @@ int backgroundColor(lua_State *L)
     return pluginInvArgs(L, "props.backgroundColor");
 }
 
-int currentFont(lua_State *L)
+int props_currentFont(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -816,7 +816,7 @@ int currentFont(lua_State *L)
     return pluginInvArgs(L, "props.currentFont");
 }
 
-int currentFontHandle(lua_State *L)
+int props_currentFontHandle(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -827,7 +827,7 @@ int currentFontHandle(lua_State *L)
     return pluginInvArgs(L, "props.currentFontHandle");
 }
 
-int cmdPrefix(lua_State *L)
+int props_cmdPrefix(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -838,7 +838,7 @@ int cmdPrefix(lua_State *L)
     return pluginInvArgs(L, "props.cmdPrefix");
 }
 
-int cmdSeparator(lua_State *L)
+int props_cmdSeparator(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -849,7 +849,7 @@ int cmdSeparator(lua_State *L)
     return pluginInvArgs(L, "props.cmdSeparator");
 }
 
-int serverHost(lua_State *L)
+int props_serverHost(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -865,7 +865,7 @@ int serverHost(lua_State *L)
     return pluginInvArgs(L, "props.serverHost");
 }
 
-int serverPort(lua_State *L)
+int props_serverPort(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -883,7 +883,7 @@ int serverPort(lua_State *L)
     return pluginInvArgs(L, "props.serverPort");
 }
 
-int connected(lua_State *L)
+int props_connected(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -893,17 +893,29 @@ int connected(lua_State *L)
     return pluginInvArgs(L, "props.connected");
 }
 
+int props_activated(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int state = _wndMain.m_gameview.activated() ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.activated");
+}
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
-    regFunction(L, "paletteColor", paletteColor);
-    regFunction(L, "backgroundColor", backgroundColor);
-    regFunction(L, "currentFont", currentFont);
-    regFunction(L, "currentFontHandle", currentFontHandle);
-    regFunction(L, "cmdPrefix", cmdPrefix);
-    regFunction(L, "cmdSeparator", cmdSeparator);
-    regFunction(L, "serverHost", serverHost);
-    regFunction(L, "serverPort", serverPort);
-    regFunction(L, "connected", connected);
+    regFunction(L, "paletteColor", props_paletteColor);
+    regFunction(L, "backgroundColor", props_backgroundColor);
+    regFunction(L, "currentFont", props_currentFont);
+    regFunction(L, "currentFontHandle", props_currentFontHandle);
+    regFunction(L, "cmdPrefix", props_cmdPrefix);
+    regFunction(L, "cmdSeparator", props_cmdSeparator);
+    regFunction(L, "serverHost", props_serverHost);
+    regFunction(L, "serverPort", props_serverPort);
+    regFunction(L, "connected", props_connected);
+    regFunction(L, "activated", props_activated);
     lua_setglobal(L, "props");
 }

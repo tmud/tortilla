@@ -41,11 +41,10 @@ function statusbar.render()
   end
 
   local showmsg = false
-  if cfg.hp and not values.maxhp then
-    showmsg = true
-  end
-  if cfg.mv and not values.maxmv then
-    showmsg = true
+  if cfg.hp and cfg.mv then
+    if not values.maxhp or not values.maxmv then
+        showmsg = true
+    end
   end
 
   if showmsg then

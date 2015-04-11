@@ -41,6 +41,8 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     PluginsManager m_plugins;
     int m_codepage;
 
+    bool m_activated;
+
 private:
     void onStart();
     void onClose();
@@ -57,7 +59,7 @@ public:
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN)
+        m_codepage(CPWIN), m_activated(false)
     {
     }
 
@@ -116,6 +118,11 @@ public:
         m_dock.SetClient(m_hWnd);
         m_bar.setCommandEventCallback(m_hWnd, WM_USER);
         return dock;
+    }
+
+    bool activated() const
+    {
+        return m_activated;
     }
 
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
@@ -258,6 +265,13 @@ public:
         m_dock.ShowWindow(hwnd);
     }
 
+    HWND getFloatingWnd(PluginsView* v)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        return (ctx) ? ctx->hwndFloated : NULL;
+    }
+
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
     CFont *getStandardFont() { return &m_propElements.standard_font; }
@@ -277,7 +291,7 @@ private:
         MESSAGE_HANDLER(WM_USER+1, OnNetwork)
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
-        MESSAGE_HANDLER(WM_USER+4, OnSetFocus)
+        MESSAGE_HANDLER(WM_USER+4, OnBarSetFocus)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -289,9 +303,11 @@ private:
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
         MESSAGE_HANDLER(WM_DOCK_PANE_CLOSE, OnCloseWindow)
-        MESSAGE_HANDLER(WM_DOCK_FOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_DOCK_FOCUS, OnBarSetFocus)
         COMMAND_ID_HANDLER(ID_PLUGINS, OnPlugins)
         COMMAND_RANGE_HANDLER(PLUGING_MENUID_START, PLUGING_MENUID_END, OnPluginMenuCmd)
+		MESSAGE_HANDLER(WM_ACTIVATEAPP, OnActivateApp)
+        CHAIN_MSG_MAP_ALT_MEMBER(m_dock, 1) // processing some system messages
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM lparam, BOOL& bHandled)
@@ -385,7 +401,6 @@ private:
     LRESULT OnParentClose(UINT, WPARAM, LPARAM lparam, BOOL&bHandled)
     {
         saveClientWindowPos();
-        savePluginWindowPos();
         unloadPlugins();
         bHandled = FALSE;
         return 0;
@@ -456,9 +471,28 @@ private:
         return 0;
     }
 
+    void setCmdBarFocus()
+    {
+        PostMessage(WM_USER+4);
+    }
+
     LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
     {
+        setCmdBarFocus();
+        return 0;
+    }
+
+    LRESULT OnBarSetFocus(UINT, WPARAM, LPARAM, BOOL&bHandled)
+    {
         m_bar.setFocus();
+        return 0;
+    }
+
+    LRESULT OnActivateApp(UINT, WPARAM wparam, LPARAM, BOOL&bHandled)
+    {
+        m_activated = (wparam) ? true : false;
+        m_plugins.processPluginsMethod(m_activated ? "activated" : "deactivated", 0);
+        bHandled = FALSE;
         return 0;
     }
 
@@ -729,11 +763,6 @@ private:
             m_processor.processNetworkConnectError();
     }
 
-    void setCmdBarFocus()
-    {
-        PostMessage(WM_USER + 4);
-    }
-
     MudViewString* getLastString(int view)
     {
         MudViewString *s = NULL;
@@ -986,7 +1015,8 @@ private:
                 w.lastside = ctx->LastSide;
                 w.pos = ctx->rcWindow;
                 w.size = ctx->sizeFloat;
-                m_propData->plugins.saveWindowPos(v->getPluginName(), w);
+                Plugin *p = v->getPlugin();
+                m_propData->plugins.saveWindowPos(p->get(Plugin::FILE), w);
             }
         }
     }

@@ -60,6 +60,11 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
             lua_pushcfunction(L, (lua_CFunction)f);
             break;
         }
+        case 'r':
+        {
+            on_stack++;
+            break;
+        }
         case 't':
         {
             if (i == 0) { object_method = true; simple_method = true; }
