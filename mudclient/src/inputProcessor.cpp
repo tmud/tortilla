@@ -167,7 +167,7 @@ void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList
         }
         p++;
     }
-    if (b != e)
+    if (b != e || sep_cmd.empty())
     {
         InputCommand *icmd = new InputCommand(b);
         result->push_back(icmd);
