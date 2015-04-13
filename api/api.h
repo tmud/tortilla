@@ -485,16 +485,16 @@ strbuf utf8_trim(const utf8* string);
 
 //u8string wrapper
 class U8
-{   u8string& s;    
+{   u8string& s;
 public:
     U8(u8string& string) : s(string) {}
     operator u8string&() { return s; }
     operator u8string*() { return &s; }
-    void at(int index, u8string *symbol) const {
+    u8string at(int index) const {
         int pos = utf8_sympos(s.c_str(), index);
-        if (pos == -1) { symbol->clear(); return; }
-        //symbol->assign()
-        //return  utf8_symlen(s.c_str()+pos);
+        if (pos == -1) return u8string();
+        const utf8 *p = s.c_str()+pos;
+        return u8string(p, utf8_symlen(p));
     }
     void trim() {
         strbuf b = utf8_trim(s.c_str()); 

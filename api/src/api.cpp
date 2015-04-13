@@ -347,17 +347,64 @@ xnode xml_list_getnode(xlist list, int index)
 
 int utf8_symlen(const utf8* symbol)
 {
-    return 0;
+    int len = 0;
+    if (symbol && *symbol)
+    {
+        unsigned char c = *symbol;
+        if (c < 0x80) len = 1;
+        else if (c >= 0xc0)
+        {
+            if ((c & 0xe0) == 0xc0) len = 2;
+            else if ((c & 0xf0) == 0xe0) len = 3;
+            else if ((c & 0xf8) == 0xf0) len = 4;
+        }
+    }
+    return len;
+}
+
+int utf8_strnlen(const utf8* str, int str_len)
+{
+    if (!str) return 0;
+    int len = 0;
+    int p = 0;
+    while (str_len > 0)
+    {
+        const unsigned char &c = str[p];
+        if (c < 0x80) { len++; str_len--; p++; }
+        else if (c < 0xc0 || c > 0xf7) break;  // ошибка в строке - выходим
+        else
+        {
+            int sym_len = 2;
+            if ((c & 0xf0) == 0xe0) sym_len = 3;
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;
+            if (sym_len > str_len) break;      // ошибка - выходим
+            len++;
+            str_len -= sym_len;
+            p += sym_len;
+        }
+    }
+    return len;
 }
 
 int utf8_strlen(const utf8* string)
 {
-    return 0;
+    return utf8_strnlen(string, ::strlen(string));
 }
 
 int utf8_sympos(const utf8* string, int index)
 {
-    return 0;
+    if (!string || !*string || index < 0)
+        return -1;
+    int pos = 0;
+    while (index > 0)
+    {
+        int len = utf8_symlen(string);
+        if (len == 0)
+            return -1;
+        string += len;
+        index--;
+    }
+    return pos;
 }
 
 void utf8_trim(u8string *str)
