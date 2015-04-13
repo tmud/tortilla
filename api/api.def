@@ -42,3 +42,7 @@ EXPORTS
 	pcre_first
 	pcre_last
 	pcre_string
+	utf8_symlen
+	utf8_strlen
+	utf8_sympos
+	utf8_trim

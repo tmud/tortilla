@@ -98,12 +98,14 @@ strbuf convert_wide_to_ansi(const wchar_t* string)
 
 void* strbuf_ptr(strbuf b)
 {
+    if (!b) return NULL;
     MemoryBuffer *buffer = (MemoryBuffer*)b;
     return buffer->getData();
 }
 
 void strbuf_destroy(strbuf b)
 {
+    if (!b) return;
     MemoryBuffer *buffer = (MemoryBuffer*)b;
     delete buffer;
 }
@@ -341,4 +343,34 @@ int xml_list_size(xlist list)
 xnode xml_list_getnode(xlist list, int index)
 {
     return xmlGetListNode(list, index);
+}
+
+int utf8_symlen(const utf8* symbol)
+{
+    return 0;
+}
+
+int utf8_strlen(const utf8* string)
+{
+    return 0;
+}
+
+int utf8_sympos(const utf8* string, int index)
+{
+    return 0;
+}
+
+void utf8_trim(u8string *str)
+{
+    int pos = strspn(str->c_str(), " ");
+    if (pos != 0)
+        str->assign(str->substr(pos));
+    if (str->empty())
+        return;
+    int last = str->size() - 1;
+    pos = last;
+    while (str->at(pos) == ' ')
+        pos--;
+    if (pos != last)
+        str->assign(str->substr(0, pos + 1));
 }

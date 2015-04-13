@@ -217,11 +217,17 @@ bool Jmc3Import::convert(u8string *str)
         if (i != 0)
             str->append(separator);
 
-        u8string &s = cmds[i];
-        trim(&s);
-        replaceLegacy(&s);
-        utf8 p[2] = { s.at(0), 0 };
-        if (jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) // not command
+        U8 s(cmds[i]);
+        s.trim();
+        replaceLegacy(s);
+
+        u8string p(s);
+        //u8string p(s, utf8_symlen(s.c_str()));
+        //utf8 p[2] = { s.at(0), 0 };
+       
+        if (s.compare(jmc_cmdsymbol)) 
+            
+            jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) // not command
              str->append(s);
         else
         {

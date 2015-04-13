@@ -477,6 +477,32 @@ strbuf convert_wide_to_utf8(const wchar_t* string);
 strbuf convert_ansi_to_wide(const char* string);
 strbuf convert_wide_to_ansi(const wchar_t* string);
 
+//utf8 helpers functions
+int utf8_symlen(const utf8* symbol);
+int utf8_strlen(const utf8* string);
+int utf8_sympos(const utf8* string, int index);
+strbuf utf8_trim(const utf8* string);
+
+//u8string wrapper
+class U8
+{   u8string& s;    
+public:
+    U8(u8string& string) : s(string) {}
+    operator u8string&() { return s; }
+    operator u8string*() { return &s; }
+    void at(int index, u8string *symbol) const {
+        int pos = utf8_sympos(s.c_str(), index);
+        if (pos == -1) { symbol->clear(); return; }
+        //symbol->assign()
+        //return  utf8_symlen(s.c_str()+pos);
+    }
+    void trim() {
+        strbuf b = utf8_trim(s.c_str()); 
+        s.assign((const utf8*)strbuf_ptr(b));
+        strbuf_destroy(b);
+    }
+};
+
 class TU2W
 {
     strbuf b;
