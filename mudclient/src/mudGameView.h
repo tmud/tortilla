@@ -87,6 +87,12 @@ public:
                 closeHistory();
                 return TRUE;
             }
+            int last = m_view.getLastString();
+            if (last != m_view.getViewString())
+            {
+                m_view.setViewString(last);
+                return TRUE;
+            }
         }
         if (m_bar.PreTranslateMessage(pMsg))
             return TRUE;
