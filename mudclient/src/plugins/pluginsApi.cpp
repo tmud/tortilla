@@ -652,6 +652,7 @@ void reg_mt_panels(lua_State *L);
 void reg_mt_render(lua_State *L);
 void reg_mt_pcre(lua_State *L);
 void reg_msdp(lua_State *L);
+void reg_mt_trigger(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -694,6 +695,7 @@ bool initPluginsSystem()
     reg_mt_render(L);
     reg_mt_pcre(L);
     reg_msdp(L);
+    reg_mt_trigger(L);
     return true;
 }
 

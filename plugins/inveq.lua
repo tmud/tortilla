@@ -29,9 +29,16 @@ end
 function inveq.init()
   --local p = createWindow("right", 256, 400)
   --p:dock("right")
-  local p = createPanel("right", 300)
+  --[[local p = createPanel("right", 300)
   r = p:setRender(inveq.render)
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(text_color))
-  r:select(props.currentFont())
+  r:select(props.currentFont())]]
+
+
+  createTrigger("Вы хотите %1", inveq.event)
+end
+
+function inveq.event(s)
+  log("Сработал триггер")
 end

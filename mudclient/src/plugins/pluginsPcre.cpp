@@ -3,17 +3,9 @@
 
 int luapcre_create(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (luaT_check(L, 1, LUA_TSTRING, LUA_TFUNCTION))   
     {
-        Pcre *p = new Pcre();
-        if (p->init(lua_tostring(L, 1)))
-            luaT_pushobject(L, p, LUAT_PCRE);
-        else
-        {
-            delete p;
-            lua_pushnil(L);
-        }
-        return 1;
+        return 0;
     }
     return pluginInvArgs(L, "createPcre");
 }

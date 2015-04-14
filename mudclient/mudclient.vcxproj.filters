@@ -250,6 +250,9 @@
     <ClInclude Include="src\msdp\msdpNetwork.h">
       <Filter>Source Files\Msdp</Filter>
     </ClInclude>
+    <ClInclude Include="src\plugins\pluginsTriggers.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\compareObject.cpp">
@@ -362,6 +365,9 @@
     </ClCompile>
     <ClCompile Include="src\msdp\msdpNetwork.cpp">
       <Filter>Source Files\Msdp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluiginsTriggers.cpp">
+      <Filter>Source Files\Plugins</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
