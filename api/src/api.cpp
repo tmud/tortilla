@@ -371,13 +371,13 @@ int utf8_strnlen(const utf8* str, int str_len)
     {
         const unsigned char &c = str[p];
         if (c < 0x80) { len++; str_len--; p++; }
-        else if (c < 0xc0 || c > 0xf7) break;  // ошибка в строке - выходим
+        else if (c < 0xc0 || c > 0xf7) return -1;  // ошибка в строке - выходим
         else
         {
             int sym_len = 2;
             if ((c & 0xf0) == 0xe0) sym_len = 3;
             else if ((c & 0xf8) == 0xf0) sym_len = 4;
-            if (sym_len > str_len) break;      // ошибка - выходим
+            if (sym_len > str_len) return -1;      // ошибка - выходим
             len++;
             str_len -= sym_len;
             p += sym_len;
@@ -402,22 +402,29 @@ int utf8_sympos(const utf8* string, int index)
         if (len == 0)
             return -1;
         string += len;
+        pos += len;
         index--;
     }
     return pos;
 }
 
-void utf8_trim(u8string *str)
+strbuf utf8_trim(const utf8* string)
 {
-    int pos = strspn(str->c_str(), " ");
+    u8string str(string);
+    int pos = strspn(str.c_str(), " ");
     if (pos != 0)
-        str->assign(str->substr(pos));
-    if (str->empty())
-        return;
-    int last = str->size() - 1;
-    pos = last;
-    while (str->at(pos) == ' ')
-        pos--;
-    if (pos != last)
-        str->assign(str->substr(0, pos + 1));
+        str.assign(str.substr(pos));
+    if (!str.empty())
+    {
+        int last = str.size() - 1;
+        pos = last;
+        while (str.at(pos) == ' ')
+            pos--;
+        if (pos != last)
+            str.assign(str.substr(0, pos + 1));
+    }
+    int len = str.length()+1;
+    MemoryBuffer *buffer = new MemoryBuffer(len);
+    memcpy(buffer->getData(), str.c_str(), len);
+    return buffer;
 }

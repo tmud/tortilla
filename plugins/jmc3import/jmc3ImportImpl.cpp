@@ -3,21 +3,6 @@
 #include "../mudclient/src/common/selectFileDlg.h"
 #include "paramsDlg.h"
 
-void trim(u8string *str)
-{
-    int pos = strspn(str->c_str(), " ");
-    if (pos != 0)
-        str->assign(str->substr(pos));
-    if (str->empty())
-        return;
-    int last = str->size() - 1;
-    pos = last;
-    while (str->at(pos) == ' ')
-        pos--;
-    if (pos != last)
-        str->assign(str->substr(0, pos + 1));
-}
-
 Jmc3Import::Jmc3Import(lua_State *pL) : m_aliases(pL, "aliases"), m_actions(pL, "actions"), m_subs(pL, "subs"), m_antisubs(pL, "antisubs"),
 m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups")
 {
@@ -175,39 +160,44 @@ bool Jmc3Import::processVariable()
 bool Jmc3Import::convert(u8string *str)
 {
     std::vector<u8string> cmds;
-    if (!param.findall(str->c_str()))
+    bool params_exists = param.findall(str->c_str());
+    Pcre find_separators;
+    u8string regexp("\\");
+    regexp.append(jmc_separator);
+    find_separators.init(regexp.c_str());
+    if (!find_separators.findall(str->c_str()))
         cmds.push_back(*str);
     else
     {
-        Pcre find_separators;
-        u8string regexp("\\");
-        regexp.append(jmc_separator);
-        find_separators.init(regexp.c_str());
-        if (!find_separators.findall(str->c_str()))
-            cmds.push_back(*str);
-        else
+        std::vector<int> pos;
+        for (int i=1, e=find_separators.size(); i < e; ++i)
         {
-            std::vector<int> pos;
-            for (int i=1, e=find_separators.size(); i < e; ++i)
+            int sep_pos = find_separators.first(i);
+            bool inside = false;
+            if (params_exists)
             {
-                int sep_pos = find_separators.first(i);
-                bool inside = false;
                 for (int j=1, je = param.size(); j < je; ++j)
                 {
                     if (sep_pos >= param.first(j) && sep_pos < param.last(j))
                         { inside = true; break; }
                 }
-                if (!inside)
-                    pos.push_back(sep_pos);
             }
-            int startpos = 0;
-            for (int i=0, e=pos.size(); i<e; ++i)
-            {
-                cmds.push_back(str->substr(startpos, pos[i] - startpos));
-                startpos = pos[i] + 1;
-            }
-            cmds.push_back(str->substr(startpos));
+            if (!inside)
+                pos.push_back(sep_pos);
         }
+        int startpos = 0;
+        for (int i=0, e=pos.size(); i<e; ++i)
+        {
+            u8string cmd(str->substr(startpos, pos[i] - startpos));
+            U8 t(cmd); t.trim();
+            if (!cmd.empty())
+                cmds.push_back(cmd);
+            startpos = pos[i] + 1;
+        }
+        u8string cmd(str->substr(startpos));
+        U8 t(cmd); t.trim();
+        if (!cmd.empty())
+            cmds.push_back(cmd);
     }
 
     str->clear();
@@ -217,25 +207,20 @@ bool Jmc3Import::convert(u8string *str)
         if (i != 0)
             str->append(separator);
 
-        U8 s(cmds[i]);
-        s.trim();
-        replaceLegacy(s);
+        u8string s(cmds[i]);
+        U8 t(s); t.trim();
+        replaceLegacy(&s);
+        u8string p(t.at(0));
 
-        u8string p(s);
-        //u8string p(s, utf8_symlen(s.c_str()));
-        //utf8 p[2] = { s.at(0), 0 };
-       
-        if (s.compare(jmc_cmdsymbol)) 
-            
-            jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) // not command
-             str->append(s);
+        if (jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) 
+             str->append(s);        // it game command
         else
         {
             u8string new_cmd(cmdsymbol);
             if (!ifcmd.find(s.c_str())) 
             {
                 if (!base.find(s.c_str()))
-                    new_cmd.append(s.substr(1));
+                    new_cmd.append(s.substr(p.length()));
                 else {
                 u8string curr_cmd;
                 base.get(2, &curr_cmd);
@@ -255,7 +240,8 @@ bool Jmc3Import::convert(u8string *str)
               if_cmds.assign(if_cmds.substr(1, len));
               if (!convert(&if_cmds))
                   return false;
-              new_cmd.append(s.substr(1, right_index-1));
+              int pos = p.length(); // postition after prefix
+              new_cmd.append(s.substr(pos, right_index-pos));
               new_cmd.append("{");
               new_cmd.append(if_cmds);
               new_cmd.append("}");
