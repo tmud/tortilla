@@ -214,7 +214,7 @@ class luaT_ViewData
     lua_State *L;
     void *view_data;
 public:
-    enum { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
+    enum vdparam { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
 
     luaT_ViewData() : L(NULL), view_data(NULL) {}
     void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
@@ -283,19 +283,19 @@ public:
         runcmdint("getBlockText", block);
         strresult(str);
     }
-    bool get(int block, int param, unsigned int *value)
+    bool get(int block, vdparam param, unsigned int *value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "get", "odd", block, param);
+        luaT_run(L, "get", "odd", block, (int)param);
         bool result = false;
         if (lua_isnumber(L, -1)) { *value = lua_tounsigned(L, -1); result = true; }
         lua_pop(L, 1);
         return result;
     }
-    bool set(int block, int param, unsigned int value)
+    bool set(int block, vdparam param, unsigned int value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "set", "oddu", block, param, value);
+        luaT_run(L, "set", "oddu", block, (int)param, value);
         return boolresult();
     }
     bool setBlockText(int block, const utf8* text)

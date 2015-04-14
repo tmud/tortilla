@@ -82,6 +82,9 @@
     <plugin key="historyfilter.lua" value="0"/>
     <plugin key="mapper.dll" value="0"/>
     <plugin key="statusbar.lua" value="1"/>
+    <plugin key="clickpad.dll" value="0"/>
+    <plugin key="colorgamecmd.lua" value="0"/>
+    <plugin key="reconnect.lua" value="0"/>
   </plugins>
   <messages>
     <actions value="1"/>

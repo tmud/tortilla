@@ -7,7 +7,7 @@ class TimeoutWindow : public CWindowImpl < TimeoutWindow >
 public:
     DECLARE_WND_CLASS(NULL)
     TimeoutWindow() : m_alarm_wnd(NULL), m_started(false) {}
-    ~TimeoutWindow() { stop(); DestroyWindow(); }
+    ~TimeoutWindow() { stop(); if (IsWindow()) DestroyWindow(); }
     void setAlarmWnd(HWND alarm_wnd) 
     {
         m_alarm_wnd = alarm_wnd; 
