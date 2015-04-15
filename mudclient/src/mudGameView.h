@@ -94,6 +94,11 @@ public:
                 return TRUE;
             }
         }
+        if (msg == WM_SYSKEYDOWN && pMsg->wParam == VK_F10 && (GetKeyState(VK_SHIFT) < 0))
+        {
+            // Shift+F10 - settings
+            return TRUE;
+        }
         if (m_bar.PreTranslateMessage(pMsg))
             return TRUE;
         return FALSE;
