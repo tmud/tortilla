@@ -21,7 +21,9 @@ typedef std::string u8string;
 #define LUAT_BRUSH      106
 #define LUAT_FONT       107
 #define LUAT_PCRE       108
-#define LUAT_LAST       108
+#define LUAT_TRIGGER    109
+#define LUAT_VIEWSTRING 110
+#define LUAT_LAST       110
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -468,14 +470,9 @@ private:
     }
 };
 
-// utf8 <-> wide <-> ansi
 typedef void* strbuf;
 void* strbuf_ptr(strbuf b);
 void  strbuf_destroy(strbuf b);
-strbuf convert_utf8_to_wide(const utf8* string);
-strbuf convert_wide_to_utf8(const wchar_t* string);
-strbuf convert_ansi_to_wide(const char* string);
-strbuf convert_wide_to_ansi(const wchar_t* string);
 
 //utf8 helpers functions
 int utf8_symlen(const utf8* symbol);
@@ -502,6 +499,12 @@ public:
         strbuf_destroy(b);
     }
 };
+
+// utf8 <-> wide <-> ansi (used by TU2W, etc classes).
+strbuf convert_utf8_to_wide(const utf8* string);
+strbuf convert_wide_to_utf8(const wchar_t* string);
+strbuf convert_ansi_to_wide(const char* string);
+strbuf convert_wide_to_ansi(const wchar_t* string);
 
 class TU2W
 {

@@ -366,7 +366,7 @@
     <ClCompile Include="src\msdp\msdpNetwork.cpp">
       <Filter>Source Files\Msdp</Filter>
     </ClCompile>
-    <ClCompile Include="src\plugins\pluiginsTriggers.cpp">
+    <ClCompile Include="src\plugins\pluginsTriggers.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
   </ItemGroup>

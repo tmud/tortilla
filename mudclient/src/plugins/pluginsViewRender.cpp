@@ -9,6 +9,19 @@ current_pen(NULL), current_brush(NULL), current_font(NULL)
     assert(pL && index > 0);
 }
 
+PluginsViewRender::~PluginsViewRender()
+{
+    lua_State *L = renderL;
+    lua_getglobal(L, "_pvrender");
+    if (lua_istable(L, -1) && m_render_func_index > 0)
+    {
+        lua_pushinteger(L, m_render_func_index);
+        lua_pushnil(L);
+        lua_settable(L, -3);
+    }
+    lua_pop(L, 1);
+}
+
 bool PluginsViewRender::render()
 {
     lua_State *L = renderL;
@@ -21,7 +34,7 @@ bool PluginsViewRender::render()
     m_width = rc.right; m_height = rc.bottom;
     m_dc.FillSolidRect(&rc, m_bkg_color);
 
-    lua_getglobal(L, "pvrender");
+    lua_getglobal(L, "_pvrender");
     if (!lua_istable(L, -1))
     {
         lua_pop(L, 1);

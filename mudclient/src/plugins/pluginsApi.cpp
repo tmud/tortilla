@@ -724,11 +724,17 @@ void pluginDeleteResources(Plugin *plugin)
     for (int i = 0, e = plugin->panels.size(); i < e; ++i)
         _wndMain.m_gameview.deletePanel(plugin->panels[i]);
     plugin->panels.clear();
-
     // delete all system commands of plugin
     for (int i = 0, e = plugin->commands.size(); i < e; ++i)
         _lp->deleteSystemCommand(plugin->commands[i]);
     plugin->commands.clear();
+    // delete all triggers
+    for (int i = 0,  e = plugin->triggers.size(); i<e; ++i)
+    {
+        PluginsTrigger *t = plugin->triggers[i];
+        delete t;
+    }
+    plugin->triggers.clear();
     _cp = old;
 }
 //--------------------------------------------------------------------

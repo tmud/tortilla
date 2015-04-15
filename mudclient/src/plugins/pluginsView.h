@@ -25,9 +25,11 @@ public:
 
     PluginsViewRender* setRender(lua_State *L)
     {
-        delete m_render;
+        if (m_render)
+            { delete m_render; m_render = NULL; }
         int render_id = reg_pview_render(L);
-        m_render = new PluginsViewRender(L, render_id, m_hWnd);
+        if (render_id > 0)
+            m_render = new PluginsViewRender(L, render_id, m_hWnd);
         return m_render;
     }
 

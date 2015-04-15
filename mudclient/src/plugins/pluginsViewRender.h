@@ -5,6 +5,7 @@ class PluginsViewRender
 {
 public:
     PluginsViewRender(lua_State *pL, int index, HWND wnd);
+    ~PluginsViewRender();
     bool render();
     void setBackground(COLORREF color);
     void setTextColor(COLORREF color);
