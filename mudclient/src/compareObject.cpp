@@ -115,13 +115,13 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
     tstring_replace(&tmp, L"%%", L".*");
 
     // replace parameters, like %0 etc. to regexp
-    int pos = 0;
+    int pos = 0; int len = tmp.length();
     ParamsHelper ph(tmp);
     for (int i=0,e=ph.getSize(); i<e; ++i)
     {
         prce_template->append(tmp.substr(pos, ph.getFirst(i) - pos));
         pos = ph.getLast(i);
-        tstring flag(tmp.substr(pos,1));
+        /*tstring flag(tmp.substr(pos,1));
         if (flag == L"%") // %x% variant
         {
             int last = tmp.size() - 1;
@@ -132,7 +132,12 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
             pos++;
         }
         else              // %x variant
-          { prce_template->append(L"([^ ]+)"); }
+          { prce_template->append(L"([^ ]*)"); }*/
+        if (pos == len)   // for last %x in string
+            prce_template->append(L"(.*)");
+        else
+            prce_template->append(L"(.*?)");
+
     }
     prce_template->append(tmp.substr(pos));
 }
