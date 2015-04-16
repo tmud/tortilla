@@ -685,6 +685,10 @@ private:
             if (!m_manager.saveProfile())
                 msgBox(m_hWnd, IDS_ERROR_SAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
         }
+        else
+        {
+            data.dlg = tmp.dlg;
+        }
         return 0;
     }
 

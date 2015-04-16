@@ -33,14 +33,16 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     tstring m_currentGroup;
     bool m_deleted;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
 
 public:
      enum { IDD = IDD_PROPERTY_TWOPARAMS };
      PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false) {}
-     void setParams(PropertiesValues *values, PropertiesValues *groups, const PropertyTwoConfig& cfg)
+     void setParams(PropertiesValues *values, PropertiesValues *groups, PropertiesDlgPageState *state, const PropertyTwoConfig& cfg)
      {
          propValues = values;
          propGroups = groups;
+         dlg_state = state;
          m_config = cfg;
      }
 

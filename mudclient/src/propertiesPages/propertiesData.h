@@ -52,7 +52,7 @@ private:
             return false;
         pos += label.length();
         tstring tmp(str.substr(pos, pos2-pos));
-        swscanf(tmp.c_str(), L"%d,%d,%d", &v->a, &v->b, &v->c);      
+        swscanf(tmp.c_str(), L"%d,%d,%d", &v->a, &v->b, &v->c);
         return true;
     }
     bool checkColor(const value& v, COLORREF *clr)
@@ -224,8 +224,8 @@ public:
     void del(int index)
     {
         int size = m_values.size();
-        if (index >= 0 && index < size)        
-            m_values.erase(m_values.begin() + index);        
+        if (index >= 0 && index < size)
+            m_values.erase(m_values.begin() + index);
         else
            { assert(false); }
     }
@@ -337,6 +337,45 @@ struct PluginsDataValues : public std::vector<PluginData>
     }
 };
 
+struct PropertiesDlgPageState
+{
+    PropertiesDlgPageState() : item(-1), filtermode(0) {}
+    int item;
+    int filtermode;
+    tstring group;
+};
+
+struct PropertiesDlgData
+{
+    PropertiesDlgData() : current_page(0) {}
+    void clear()
+    {
+        current_page = 0;
+        pages.clear();
+    }
+    void deleteGroup(const tstring& name)
+    {
+        for (int i=0,e=pages.size();i<e;++i)
+        {
+            PropertiesDlgPageState& s = pages[i];
+            if (s.group == name)
+                { s.item = -1; s.filtermode = 0; s.group.clear(); }
+        }
+    }
+    void renameGroup(const tstring& oldname, const tstring& newname)
+    {
+        for (int i=0,e=pages.size();i<e;++i)
+        {
+            PropertiesDlgPageState& s = pages[i];
+            if (s.group == oldname)
+                s.group = newname;        
+        }
+    }
+public:
+    int current_page;
+    std::vector<PropertiesDlgPageState> pages;
+};
+
 struct PropertiesData
 {
     PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
@@ -362,6 +401,7 @@ struct PropertiesData
     PropertiesList   tabwords;
     PropertiesList   tabwords_commands;
     PluginsDataValues plugins;
+    PropertiesDlgData dlg;
 
     struct message_data { 
     message_data() { initDefault();  }
@@ -492,6 +532,7 @@ struct PropertiesData
         initPlugins();
         recognize_prompt = 0;
         recognize_prompt_template.clear();
+        dlg.clear();
     }
 
     void initPlugins()
@@ -527,6 +568,7 @@ struct PropertiesData
 
     void deleteGroup(const tstring& name)
     {
+        dlg.deleteGroup(name);
         delGroupInArray(name, &aliases);
         delGroupInArray(name, &actions);
         delGroupInArray(name, &subs);
@@ -546,6 +588,7 @@ struct PropertiesData
 
     void renameGroup(const tstring& oldname, const tstring& newname)
     {
+        dlg.renameGroup(oldname, newname);
         renGroupInArray(oldname, newname, &aliases);
         renGroupInArray(oldname, newname, &actions);
         renGroupInArray(oldname, newname, &subs);
