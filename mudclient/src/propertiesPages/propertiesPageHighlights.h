@@ -12,6 +12,7 @@ class PropertyHighlights :  public CDialogImpl<PropertyHighlights>, public Prope
     CEdit m_pattern;
     CButton m_add;
     CButton m_del;
+    CButton m_replace;
     CButton m_filter;
     CComboBox m_cbox;
     bool m_filterMode;
@@ -33,7 +34,7 @@ public:
          m_exampleWnd(data), m_deleted(false), m_update_mode(false)
      {
          propValues = &data->highlights;
-         propGroups = &data->groups;     
+         propGroups = &data->groups;
      }
 
 private:
@@ -50,6 +51,7 @@ private:
        COMMAND_ID_HANDLER(IDC_CHECK_HIGHLIGHTS_ITALIC, OnFontItalic)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
        COMMAND_HANDLER(IDC_EDIT_HIGHLIGHT_TEXT, EN_CHANGE, OnPatternEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
@@ -95,7 +97,7 @@ private:
         m_list_values.add(index, pattern, hl, m_currentGroup);
 
         if (index == -1)
-        {            
+        {
             int pos = m_list.GetItemCount();
             m_list.addItem(pos, 0, pattern);
             m_list.addItem(pos, 1, flags);
@@ -116,16 +118,16 @@ private:
     }
 
     LRESULT OnDeleteElement(WORD, WORD, HWND, BOOL&)
-    {   
+    {
         std::vector<int> selected;
         m_list.getSelected(&selected);
-        int items = selected.size();        
+        int items = selected.size();
         if (items == 1)
             m_deleted = true;
         for (int i = 0; i < items; ++i)
         {
             int index = selected[i];
-            m_list.DeleteItem(index);        
+            m_list.DeleteItem(index);
             m_list_values.del(index);
         }
         m_deleted = false;
@@ -133,16 +135,23 @@ private:
         return 0;
     }
 
+    LRESULT OnReplaceElement(WORD, WORD, HWND, BOOL&)
+    {
+        updateCurrentItem(true);
+        m_list.SetFocus();
+        return 0;
+    }
+
     LRESULT OnFontUnderlined(WORD, WORD, HWND, BOOL&)
     {
         bool checked = m_underline.GetCheck() ? true : false;
-        m_exampleWnd.setUnderlined(checked);        
+        m_exampleWnd.setUnderlined(checked);
         int item = m_list.getOnlySingleSelection();
         if (item != -1)
         {
             highlight_value& v = m_list_values.getw(item);
             v.value.underlined = checked ? 1 : 0;
-            updateCurrentItem();
+            updateCurrentItem(false);
         }
         return 0;
     }
@@ -156,7 +165,7 @@ private:
         {
             highlight_value& v = m_list_values.getw(item);
             v.value.border = checked ? 1 : 0;
-            updateCurrentItem();
+            updateCurrentItem(false);
         }
         return 0;
     }
@@ -170,7 +179,7 @@ private:
         {
             highlight_value& v = m_list_values.getw(item);
             v.value.italic = checked ? 1 : 0;
-            updateCurrentItem();
+            updateCurrentItem(false);
         }
         return 0;
     }
@@ -191,17 +200,17 @@ private:
         if (!m_filterMode)
         {
             m_currentGroup = group;
-            updateCurrentItem();
+            updateCurrentItem(false);
             return 0;
-        }        
+        }
         tstring old = m_currentGroup;
         m_currentGroup = group;
-        updateCurrentItem();
+        updateCurrentItem(false);
         m_currentGroup = old;
         saveValues();
         m_currentGroup = group;
         loadValues();
-        update();        
+        update();
         return 0;
     }
 
@@ -209,33 +218,45 @@ private:
     {
          if (!m_update_mode)
         {
+            BOOL currelement = FALSE;
             int len = m_pattern.GetWindowTextLength();
-            m_add.EnableWindow(len == 0 ? FALSE : TRUE);
+            int selected = m_list.getOnlySingleSelection();
             if (len > 0)
             {
                 tstring pattern;
                 getWindowText(m_pattern, &pattern);
                 int index = m_list_values.find(pattern);
-                if (index != -1)
+                currelement = (index != -1 && index == selected) ? TRUE : FALSE;
+                if (index != -1 && !currelement)
                 {
                     m_list.SelectItem(index);
                     m_pattern.SetSel(len, len);
-                    updateCurrentItem();
+                    updateCurrentItem(false);
+                    return 0;
                 }
             }
+            m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
+            m_add.EnableWindow(len == 0 ? FALSE : !currelement);
+            if (currelement)
+                updateCurrentItem(false);
         }
         return 0;
     }
 
-    void updateCurrentItem()
+    void updateCurrentItem(bool update_key)
     {
         int item = m_list.getOnlySingleSelection();
         if (item == -1) return;
+        m_update_mode = true;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         highlight_value& v = m_list_values.getw(item);
-        if (v.key != pattern) return;
-
+        if (v.key != pattern) 
+        {
+            if (!update_key) { m_update_mode = false; return; }
+            v.key = pattern;
+            m_list.setItem(item, 0, pattern);
+        }
         PropertiesHighlight &hl = v.value;
         tstring flags;
         getFlags(hl, &flags);
@@ -246,10 +267,13 @@ private:
             v.group = m_currentGroup;
             m_list.setItem(item, 4, m_currentGroup);
         }
+        m_update_mode = false;
     }
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
+        if (m_update_mode)
+            return 0;
         m_update_mode = true;
         int items_selected = m_list.GetSelectedCount();
         if (items_selected == 0)
@@ -261,6 +285,7 @@ private:
         }
         else if (items_selected == 1)
         {
+            m_add.EnableWindow(FALSE);
             enableColorControls(TRUE);
             m_del.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
@@ -284,13 +309,14 @@ private:
         {
             enableColorControls(FALSE);
             m_del.EnableWindow(TRUE);
-            m_add.EnableWindow(FALSE);            
+            m_add.EnableWindow(FALSE);
             m_pattern.SetWindowText(L"");
         }
+        m_replace.EnableWindow(FALSE);
         m_update_mode = false;
         return 0;
     }
-    
+
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
@@ -309,7 +335,7 @@ private:
         tc.ShowWindow(SW_HIDE);
         ScreenToClient(&rc);
         m_textColor.Create(m_hWnd, rc, NULL, WS_CHILD|WS_VISIBLE|WS_TABSTOP);
-        
+
         CStatic bc(GetDlgItem(IDC_STATIC_BKGCOLOR));
         bc.GetWindowRect(&rc);
         bc.ShowWindow(SW_HIDE);
@@ -320,9 +346,10 @@ private:
         he.GetWindowRect(&rc);
         he.ShowWindow(SW_HIDE);
         ScreenToClient(&rc);
-        m_exampleWnd.Create(m_hWnd, rc, NULL, WS_CHILD|WS_VISIBLE);               
+        m_exampleWnd.Create(m_hWnd, rc, NULL, WS_CHILD|WS_VISIBLE);
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
 
@@ -338,9 +365,10 @@ private:
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_replace.EnableWindow(FALSE);
         m_underline.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_UNDERLINE));
         m_border.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_FLASH));
-        m_italic.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_ITALIC));      
+        m_italic.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_ITALIC));
         loadValues();
         return 0;
     }
@@ -350,14 +378,14 @@ private:
         saveValues();
         return 0;
     }
-  
+
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        if (wparam)        
+        if (wparam)
         {
             loadValues();
             m_pattern.SetWindowText(L"");
-            update();         
+            update();
             m_exampleWnd.updateProps();
         }
         else
@@ -366,7 +394,7 @@ private:
             saveValues();
         }
         return 0;
-    }    
+    }
 
     LRESULT OnTextColor(UINT, WPARAM, LPARAM, BOOL&)
     {
@@ -382,7 +410,7 @@ private:
             {
                 highlight_value& v = m_list_values.getw(item);
                 v.value.textcolor = color;
-                updateCurrentItem();
+                updateCurrentItem(false);
             }
         }
         return 0;
@@ -402,7 +430,7 @@ private:
             {
                 highlight_value& v = m_list_values.getw(item);
                 v.value.bkgcolor = color;
-                updateCurrentItem();
+                updateCurrentItem(false);
             }
         }
         return 0;
@@ -437,7 +465,7 @@ private:
         {
             const highlight_value& hv = m_list_values.get(i);
             const PropertiesHighlight& hl = hv.value;
-            
+
             tstring flags;
             getFlags(hl, &flags);
             m_list.addItem(i, 0, hv.key);

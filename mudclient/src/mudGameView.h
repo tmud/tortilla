@@ -94,9 +94,10 @@ public:
                 return TRUE;
             }
         }
-        if (msg == WM_SYSKEYDOWN && pMsg->wParam == VK_F10 && (GetKeyState(VK_SHIFT) < 0))
+        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && (GetKeyState(VK_SHIFT) < 0))
         {
-            // Shift+F10 - settings
+            // Shift+F12 - hot key for settings
+            PostMessage(WM_USER+5);
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
@@ -303,6 +304,7 @@ private:
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
         MESSAGE_HANDLER(WM_USER+4, OnBarSetFocus)
+        MESSAGE_HANDLER(WM_USER+5, OnSettingsHk)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
@@ -661,6 +663,13 @@ private:
     LRESULT OnNewWorld(WORD, WORD, HWND, BOOL&)
     {
         onNewWorld();
+        return 0;
+    }
+
+    LRESULT OnSettingsHk(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        BOOL b = FALSE;
+        OnSettings(0,0,0,b);
         return 0;
     }
 

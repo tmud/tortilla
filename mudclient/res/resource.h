@@ -107,6 +107,7 @@
 #define IDC_STATIC_RICHBOXPLACE         1129
 #define IDC_EDIT_PASSWORD               1130
 #define IDC_BUTTON_COLOR_RESETOSC       1131
+#define IDC_BUTTON_REPLACE              1132
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -129,7 +130,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        222
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1132
+#define _APS_NEXT_CONTROL_VALUE         1133
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

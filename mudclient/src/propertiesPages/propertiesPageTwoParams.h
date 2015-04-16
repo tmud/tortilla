@@ -23,6 +23,7 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     CEdit m_text;
     CButton m_add;
     CButton m_del;
+    CButton m_replace;
     CButton m_up;
     CButton m_down;
     CButton m_filter;
@@ -50,6 +51,7 @@ private:
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
@@ -66,7 +68,7 @@ private:
     {
         tstring pattern, text;
         getWindowText(m_pattern, &pattern);
-        getWindowText(m_text, &text);        
+        getWindowText(m_text, &text);
 
         int index = m_list_values.find(pattern);
         if (index == -1 && m_filterMode)
@@ -102,20 +104,27 @@ private:
     {
         std::vector<int> selected;
         m_list.getSelected(&selected);
-        int items = selected.size();        
+        int items = selected.size();
         if (items == 1)
             m_deleted = true;
         for (int i = 0; i < items; ++i)
         {
             int index = selected[i];
             m_list.DeleteItem(index);
-            m_list_values.del(index);            
+            m_list_values.del(index);
         }
         m_deleted = false;
         m_list.SetFocus();
         return 0;
     }
-    
+
+    LRESULT OnReplaceElement(WORD, WORD, HWND, BOOL&)
+    {
+        updateCurrentItem(true);
+        m_list.SetFocus();
+        return 0;
+    }
+
     LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
     {
         int index = m_list.getOnlySingleSelection();
@@ -159,19 +168,19 @@ private:
         if (!m_filterMode)
         {
             m_currentGroup = group;
-            updateCurrentItem();
+            updateCurrentItem(false);
             return 0;
         }
         tstring old = m_currentGroup;
         m_currentGroup = group;
-        updateCurrentItem();
+        updateCurrentItem(false);
         m_currentGroup = old;
         saveValues();
-        m_currentGroup = group;        
-        loadValues();        
+        m_currentGroup = group;
+        loadValues();
         m_up.EnableWindow(FALSE);
-        m_down.EnableWindow(FALSE);        
-        update();        
+        m_down.EnableWindow(FALSE);
+        update();
         return 0;
     }
 
@@ -179,31 +188,51 @@ private:
     {
         if (!m_update_mode)
         {
+            BOOL currelement = FALSE;
             int len = m_pattern.GetWindowTextLength();
-            m_add.EnableWindow(len == 0 ? FALSE : TRUE);
+            int selected = m_list.getOnlySingleSelection();
             if (len > 0)
             {
                 tstring pattern;
                 getWindowText(m_pattern, &pattern);
                 int index = m_list_values.find(pattern);
-                if (index != -1)
+                currelement = (index != -1 && index == selected) ? TRUE : FALSE;
+                if (index != -1 && !currelement)
                 {
                     m_list.SelectItem(index);
                     m_pattern.SetSel(len, len);
+                    return 0;
                 }
             }
+            m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
+            m_add.EnableWindow(len == 0 ? FALSE : !currelement);
+            if (currelement)
+                updateCurrentItem(false);
         }
         return 0;
     }
 
-    void updateCurrentItem()
+    LRESULT OnPatternTextChanged(WORD, WORD, HWND, BOOL&)
+    {
+        if (!m_update_mode)
+            updateCurrentItem(false);
+        return 0;
+    }
+
+    void updateCurrentItem(bool update_key)
     {
         int item = m_list.getOnlySingleSelection();
-        if (item == -1) return;      
+        if (item == -1) return;
+        m_update_mode = true;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         property_value& v = m_list_values.getw(item);
-        if (v.key != pattern) return;
+        if (v.key != pattern) 
+        {
+            if (!update_key) { m_update_mode = false; return; }
+            v.key = pattern;
+            m_list.setItem(item, 0, pattern);
+        }
         tstring text;
         getWindowText(m_text, &text);
         if (v.value != text)
@@ -216,17 +245,13 @@ private:
             v.group = m_currentGroup;
             m_list.setItem(item, 2, m_currentGroup);
         }
-    }
-
-    LRESULT OnPatternTextChanged(WORD, WORD, HWND, BOOL&)
-    {
-        if (!m_update_mode)
-            updateCurrentItem();
-        return 0;
+        m_update_mode = false;
     }
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
+        if (m_update_mode)
+            return 0;
         m_update_mode = true;
         int items_selected = m_list.GetSelectedCount();
         if (items_selected == 0)
@@ -242,6 +267,7 @@ private:
         }
         else if (items_selected == 1)
         {
+            m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
             m_up.EnableWindow(TRUE);
             m_down.EnableWindow(TRUE);
@@ -251,7 +277,7 @@ private:
             m_text.SetWindowText( v.value.c_str() );
             int index = getGroupIndex(v.group);
             m_cbox.SetCurSel(index);
-            m_currentGroup = v.group;            
+            m_currentGroup = v.group;
         }
         else
         {
@@ -262,9 +288,10 @@ private:
             m_pattern.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
+        m_replace.EnableWindow(FALSE);
         m_update_mode = false;
         return 0;
-    }    
+    }
 
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
@@ -280,7 +307,7 @@ private:
             loadValues();
             m_pattern.SetWindowText(L"");
             m_text.SetWindowText(L"");
-            update();            
+            update();
         }
         else
         {
@@ -288,8 +315,8 @@ private:
             saveValues();
         }
         return 0;
-    } 
-    
+    }
+
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
         CStatic t(GetDlgItem(IDC_STATIC_TITLE)); t.SetWindowText(m_config.title.c_str());
@@ -299,6 +326,7 @@ private:
         m_text.Attach(GetDlgItem(IDC_EDIT_PATTERN_TEXT));
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
         m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
@@ -312,6 +340,7 @@ private:
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_replace.EnableWindow(FALSE);
         m_up.EnableWindow(FALSE);
         m_down.EnableWindow(FALSE);
         if (!m_config.use_priority)
@@ -347,7 +376,7 @@ private:
         m_list.DeleteAllItems();
         for (int i=0,e=m_list_values.size(); i<e; ++i)
         {
-            const property_value& v = m_list_values.get(i);          
+            const property_value& v = m_list_values.get(i);
             m_list.addItem(i, 0, v.key);
             m_list.addItem(i, 1, v.value);
             m_list.addItem(i, 2, v.group);
@@ -358,9 +387,9 @@ private:
         getWindowText(m_pattern, &pattern);
         if (!pattern.empty())
             index = m_list_values.find(pattern);
-        m_list.SelectItem(index);                    
+        m_list.SelectItem(index);
     }
-    
+
     void swapItems(int index1, int index2)
     {
         const property_value& i1 = m_list_values.get(index1);

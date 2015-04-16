@@ -10,6 +10,7 @@ class PropertyTabwords :  public CDialogImpl<PropertyTabwords>
     CEdit m_pattern;
     CButton m_add;
     CButton m_del;
+    CButton m_replace;
     bool m_update_mode;
 
 public:
@@ -27,6 +28,7 @@ private:
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
        COMMAND_HANDLER(IDC_EDIT_PATTERN, EN_CHANGE, OnPatternEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
@@ -73,22 +75,36 @@ private:
         return 0;
     }
 
+    LRESULT OnReplaceElement(WORD, WORD, HWND, BOOL&)
+    {
+        updateCurrentItem(true);
+        m_list.SetFocus();
+        return 0;
+    }
+
     LRESULT OnPatternEditChanged(WORD, WORD, HWND, BOOL&)
     {
         if (!m_update_mode)
         {
+            BOOL currelement = FALSE;
             int len = m_pattern.GetWindowTextLength();
-            m_add.EnableWindow(len == 0 ? FALSE : TRUE);
+            int selected = m_list.getOnlySingleSelection();
             if (len > 0)
             {
                 tstring pattern;
                 getWindowText(m_pattern, &pattern);
                 int index = m_list_values.find(pattern);
-                if (index != -1)
+                currelement = (index != -1 && index == selected) ? TRUE : FALSE;
+                if (index != -1 && !currelement)
                 {
                     m_list.SelectItem(index);
                     m_pattern.SetSel(len, len);
+                    return 0;
                 }
+                m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
+                m_add.EnableWindow(len == 0 ? FALSE : !currelement);
+                if (currelement)
+                    updateCurrentItem(false);
             }
         }
         return 0;
@@ -105,6 +121,7 @@ private:
         }
         else if (items_selected == 1)
         {
+            m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const tstring &v = m_list_values.get(item);
@@ -116,6 +133,7 @@ private:
             m_add.EnableWindow(FALSE);
             m_pattern.SetWindowText( L"" );
         }
+        m_replace.EnableWindow(FALSE);
         m_update_mode = false;
         return 0;
     }    
@@ -148,6 +166,7 @@ private:
         m_pattern.Attach(GetDlgItem(IDC_EDIT_PATTERN));
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Ключевые слова", 90);        
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
@@ -155,6 +174,7 @@ private:
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_replace.EnableWindow(FALSE);
         loadValues();
         return 0;
     }
@@ -182,6 +202,23 @@ private:
             if (index != -1)
                 m_list.SelectItem(index);
         }
+    }
+
+    void updateCurrentItem(bool update_key)
+    {
+        int item = m_list.getOnlySingleSelection();
+        if (item == -1) return;
+        m_update_mode = true;
+        tstring pattern;
+        getWindowText(m_pattern, &pattern);
+        tstring& v = m_list_values.getw(item);
+        if (v != pattern) 
+        {
+            if (!update_key) { m_update_mode = false; return; }
+            v = pattern;
+            m_list.setItem(item, 0, pattern);
+        }
+        m_update_mode = false;
     }
 
     void loadValues()
