@@ -250,6 +250,9 @@
     <ClInclude Include="src\msdp\msdpNetwork.h">
       <Filter>Source Files\Msdp</Filter>
     </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\compareObject.cpp">

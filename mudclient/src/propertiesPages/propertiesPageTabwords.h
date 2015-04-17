@@ -12,13 +12,16 @@ class PropertyTabwords :  public CDialogImpl<PropertyTabwords>
     CButton m_del;
     CButton m_replace;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_TABWORDS };
      PropertyTabwords() : m_update_mode(false) {}
-     void setParams(PropertiesList *values)
+     void setParams(PropertiesList *values, PropertiesDlgPageState *state)
      {
          propValues = values;
+         dlg_state = state;
      }
 
 private:
@@ -26,6 +29,7 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER, OnSetFocus)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
@@ -69,7 +73,7 @@ private:
         for (int i = 0; i < items; ++i)
         {
             int index = selected[i];
-            m_list.DeleteItem(index);        
+            m_list.DeleteItem(index);
             m_list_values.del(index);
         }
         return 0;
@@ -109,7 +113,7 @@ private:
         }
         return 0;
     }
-    
+
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
         m_update_mode = true;
@@ -136,22 +140,24 @@ private:
         m_replace.EnableWindow(FALSE);
         m_update_mode = false;
         return 0;
-    }    
+    }
 
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
             m_list.SelectItem(-1);
         return 0;
-    }    
+    }
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        if (wparam)        
+        if (wparam)
         {
             loadValues();
             m_pattern.SetWindowText(L"");
             update();
+            PostMessage(WM_USER); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
@@ -160,7 +166,13 @@ private:
         }
         return 0;
     } 
-    
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
+        return 0;
+    }
+
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
         m_pattern.Attach(GetDlgItem(IDC_EDIT_PATTERN));
@@ -175,6 +187,7 @@ private:
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
         m_replace.EnableWindow(FALSE);
+        m_state_helper.init(dlg_state, &m_list);
         loadValues();
         return 0;
     }
@@ -194,14 +207,12 @@ private:
             m_list.addItem(i, 0, v);
         }
 
+        int index = -1;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         if (!pattern.empty())
-        {
-            int index = m_list_values.find(pattern);
-            if (index != -1)
-                m_list.SelectItem(index);
-        }
+            index = m_list_values.find(pattern);
+        m_state_helper.loadCursorAndTopPos(index);
     }
 
     void updateCurrentItem(bool update_key)
@@ -231,9 +242,10 @@ private:
 
     void saveValues()
     {
+        m_state_helper.save(L"", false);
         propValues->clear();
         for (int i=0,e=m_list_values.size(); i<e; ++i) {
             propValues->add(-1, m_list_values.get(i));
-        }        
+        }
     }
 };

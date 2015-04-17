@@ -87,11 +87,10 @@ private:
             return;
         if (m_currentPage != -1)
             ::ShowWindow(getPage(m_currentPage), SW_HIDE);
-        m_currentPage = page;        
+        m_currentPage = page;
         PropertiesDlgData& d = propData->dlg;
         d.current_page = page;
         ::ShowWindow(newpage, SW_SHOW);
-        ::SetFocus(newpage);
     }
 
     HWND getPage(int page)
@@ -130,7 +129,7 @@ private:
 	LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
         PropertiesDlgData& d = propData->dlg;
-        d.pages.resize(12);
+        d.pages.resize(10);
 
         // add pages
         PropertyTwoConfig c;
@@ -140,27 +139,32 @@ private:
         c.label1 = L"Шаблон"; c.label2 = L"Триггер(action)"; c.list1 = L"Шаблон"; c.list2 = L"Action"; c.title = L"Триггеры (Actions)"; c.use_priority = true;
         m_actions.setParams(&propData->actions, &propData->groups, &d.pages[1], c);
         m_actions.Create(m_hWnd);
-        m_highlights.Create(m_hWnd);
+        m_highlights.setParams(&d.pages[2]);
+        m_highlights.Create(m_hWnd);        
+        m_hotkeys.setParams(&d.pages[3]);
         m_hotkeys.Create(m_hWnd);
         c.label1 = L"Шаблон"; c.label2 = L"Замена"; c.list1 = L"Шаблон"; c.list2 = L"Замена"; c.title = L"Замены (Subs)"; c.use_priority = true;
-        m_subs.setParams(&propData->subs, &propData->groups, &d.pages[2], c);
+        m_subs.setParams(&propData->subs, &propData->groups, &d.pages[4], c);
         m_subs.Create(m_hWnd);
 
         PropertyOneConfig c0; c0.title = L"Антизамены (Antisubs)"; c0.label = L"Шаблон"; c0.list = L"Шаблон";
-        m_antisubs.setParams(&propData->antisubs, &propData->groups, c0);
+        m_antisubs.setParams(&propData->antisubs, &propData->groups, &d.pages[5], c0);
         m_antisubs.Create(m_hWnd);
 
         c0.title = L"Фильтры (Gags)";
-        m_gags.setParams(&propData->gags, &propData->groups, c0);
+        m_gags.setParams(&propData->gags, &propData->groups, &d.pages[6], c0);
         m_gags.Create(m_hWnd);
 
+        m_groups.setParams(&d.pages[7]);
         m_groups.Create(m_hWnd);
+
         m_colors.Create(m_hWnd);
         m_common.Create(m_hWnd);
-        m_tabwords.setParams(&propData->tabwords);
+
+        m_tabwords.setParams(&propData->tabwords, &d.pages[8]);
         m_tabwords.Create(m_hWnd);
 
-        m_timers.setParams(&propData->timers, &propData->groups);
+        m_timers.setParams(&propData->timers, &propData->groups, &d.pages[9]);
         m_timers.Create(m_hWnd);
 
         // line delimeter

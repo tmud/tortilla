@@ -1,5 +1,7 @@
 #pragma once
 
+#include "propertiesSaveHelper.h"
+
 struct PropertyOneConfig
 {
     PropertyOneConfig() : use_priority(false) {}
@@ -30,14 +32,17 @@ class PropertyOneParam :  public CDialogImpl<PropertyOneParam>
     tstring m_currentGroup;
     bool m_deleted;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_ONEPARAM };
-     PropertyOneParam() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false) {}
-     void setParams(PropertiesValues *values, PropertiesValues *groups, const PropertyOneConfig& cfg)
+     PropertyOneParam() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
+     void setParams(PropertiesValues *values, PropertiesValues *groups, PropertiesDlgPageState *state, const PropertyOneConfig& cfg)
      {
          propValues = values;
          propGroups = groups;
+         dlg_state = state;
          m_config = cfg;
      }
 
@@ -46,6 +51,7 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER, OnSetFocus)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
@@ -288,6 +294,8 @@ private:
             loadValues();
             m_pattern.SetWindowText(L"");
             update();
+            PostMessage(WM_USER); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
@@ -295,7 +303,13 @@ private:
             saveValues();
         }
         return 0;
-    } 
+    }
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
+        return 0;
+    }
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
@@ -325,6 +339,10 @@ private:
             m_up.ShowWindow(SW_HIDE);
             m_down.ShowWindow(SW_HIDE);
         }
+        m_state_helper.init(dlg_state, &m_list);
+        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+        if (m_filterMode)
+            m_filter.SetCheck(BST_CHECKED);
         loadValues();
         return 0;
     }
@@ -363,7 +381,7 @@ private:
         getWindowText(m_pattern, &pattern);
         if (!pattern.empty())
             index = m_list_values.find(pattern);
-        m_list.SelectItem(index);
+        m_state_helper.loadCursorAndTopPos(index);
     }
 
     void swapItems(int index1, int index2)
@@ -397,6 +415,7 @@ private:
 
     void saveValues()
     {
+        m_state_helper.save(m_currentGroup, m_filterMode);
         if (!m_filterMode)
         {
             *propValues = m_list_values;

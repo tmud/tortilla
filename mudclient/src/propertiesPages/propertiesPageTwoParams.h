@@ -1,5 +1,7 @@
 #pragma once
 
+#include "propertiesSaveHelper.h"
+
 struct PropertyTwoConfig
 {
     PropertyTwoConfig() : use_priority(false) {}
@@ -34,10 +36,11 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     bool m_deleted;
     bool m_update_mode;
     PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_TWOPARAMS };
-     PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false) {}
+     PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
      void setParams(PropertiesValues *values, PropertiesValues *groups, PropertiesDlgPageState *state, const PropertyTwoConfig& cfg)
      {
          propValues = values;
@@ -51,6 +54,7 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER, OnSetFocus)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
@@ -310,12 +314,20 @@ private:
             m_pattern.SetWindowText(L"");
             m_text.SetWindowText(L"");
             update();
+            PostMessage(WM_USER); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
             m_del.EnableWindow(FALSE);
             saveValues();
         }
+        return 0;
+    }
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
         return 0;
     }
 
@@ -350,6 +362,10 @@ private:
             m_up.ShowWindow(SW_HIDE);
             m_down.ShowWindow(SW_HIDE);
         }
+        m_state_helper.init(dlg_state, &m_list);
+        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+        if (m_filterMode)
+            m_filter.SetCheck(BST_CHECKED);
         loadValues();
         return 0;
     }
@@ -389,7 +405,7 @@ private:
         getWindowText(m_pattern, &pattern);
         if (!pattern.empty())
             index = m_list_values.find(pattern);
-        m_list.SelectItem(index);
+        m_state_helper.loadCursorAndTopPos(index);
     }
 
     void swapItems(int index1, int index2)
@@ -425,6 +441,8 @@ private:
 
     void saveValues()
     {
+        m_state_helper.save(m_currentGroup, m_filterMode);
+
         if (!m_filterMode)
         {
             *propValues = m_list_values;

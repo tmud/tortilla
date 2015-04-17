@@ -339,9 +339,11 @@ struct PluginsDataValues : public std::vector<PluginData>
 
 struct PropertiesDlgPageState
 {
-    PropertiesDlgPageState() : item(-1), filtermode(0) {}
+    PropertiesDlgPageState() : item(-1), topitem(-1), filtermode(false), cansave(false) {}
     int item;
-    int filtermode;
+    int topitem;
+    bool filtermode;
+    bool cansave;
     tstring group;
 };
 
@@ -359,7 +361,7 @@ struct PropertiesDlgData
         {
             PropertiesDlgPageState& s = pages[i];
             if (s.group == name)
-                { s.item = -1; s.filtermode = 0; s.group.clear(); }
+                { s.item = -1; s.topitem = -1; s.filtermode = false; s.group.clear(); }
         }
     }
     void renameGroup(const tstring& oldname, const tstring& newname)
@@ -368,7 +370,7 @@ struct PropertiesDlgData
         {
             PropertiesDlgPageState& s = pages[i];
             if (s.group == oldname)
-                s.group = newname;        
+                s.group = newname;
         }
     }
 public:

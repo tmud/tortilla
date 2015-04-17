@@ -1,5 +1,7 @@
 #pragma once
+
 #include "propertiesPagesElements.h"
+#include "propertiesSaveHelper.h"
 
 class PropertyHighlights :  public CDialogImpl<PropertyHighlights>, public PropertyListCtrlHandler
 {
@@ -26,15 +28,21 @@ class PropertyHighlights :  public CDialogImpl<PropertyHighlights>, public Prope
     COLORREF m_windowColor;
     bool m_deleted;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_HIGHLIGHTS };
      PropertyHighlights(PropertiesData *data) : m_filterMode(false), 
          m_textColor(RGB(192,192,192), WM_USER), m_bkgColor(RGB(0,0,0), WM_USER+1),
-         m_exampleWnd(data), m_deleted(false), m_update_mode(false)
+         m_exampleWnd(data), m_deleted(false), m_update_mode(false), dlg_state(NULL)
      {
          propValues = &data->highlights;
          propGroups = &data->groups;
+     }
+     void setParams( PropertiesDlgPageState *state)
+     {
+          dlg_state = state;
      }
 
 private:
@@ -42,6 +50,7 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER, OnSetFocus)
        MESSAGE_HANDLER(WM_USER, OnTextColor)
        MESSAGE_HANDLER(WM_USER+1, OnBkgColor)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
@@ -369,6 +378,10 @@ private:
         m_underline.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_UNDERLINE));
         m_border.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_FLASH));
         m_italic.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_ITALIC));
+        m_state_helper.init(dlg_state, &m_list);        
+        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+        if (m_filterMode)
+            m_filter.SetCheck(BST_CHECKED);
         loadValues();
         return 0;
     }
@@ -387,12 +400,20 @@ private:
             m_pattern.SetWindowText(L"");
             update();
             m_exampleWnd.updateProps();
+            PostMessage(WM_USER); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
             m_del.EnableWindow(FALSE);
             saveValues();
         }
+        return 0;
+    }
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
         return 0;
     }
 
@@ -473,14 +494,12 @@ private:
             m_list.addItem(i, 4, hv.group);
         }
 
+        int index = -1;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         if (!pattern.empty())
-        {
-            int index = m_list_values.find(pattern);
-            if (index != -1)
-                m_list.SelectItem(index);
-        }
+            index = m_list_values.find(pattern);
+        m_state_helper.loadCursorAndTopPos(index);
     }
 
     void loadValues()
@@ -499,6 +518,8 @@ private:
 
     void saveValues()
     {
+        m_state_helper.save(m_currentGroup, m_filterMode);
+
         if (!m_filterMode)
         {
             propValues->clear();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "propertiesSaveHelper.h"
+
 class PropertyTimers:  public CDialogImpl<PropertyTimers>
 {
     PropertiesValues *propValues;
@@ -17,14 +19,17 @@ class PropertyTimers:  public CDialogImpl<PropertyTimers>
     bool m_filterMode;
     tstring m_currentGroup;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_TIMERS };
-     PropertyTimers() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_update_mode(false) {}
-     void setParams(PropertiesValues *values, PropertiesValues *groups)
+     PropertyTimers() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_update_mode(false), dlg_state(NULL) {}
+     void setParams(PropertiesValues *values, PropertiesValues *groups, PropertiesDlgPageState *state)
      {
          propValues = values;
          propGroups = groups;
+         dlg_state = state;
      }
 
 private:
@@ -32,6 +37,7 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER, OnSetFocus)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged);
@@ -196,6 +202,8 @@ private:
             m_text.SetWindowText(L"");
             m_update_mode = false;
             update();
+            PostMessage(WM_USER); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
@@ -204,6 +212,12 @@ private:
         }
         return 0;
     } 
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
+        return 0;
+    }
     
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{        
@@ -226,6 +240,10 @@ private:
         m_del.EnableWindow(FALSE);
         m_pattern.EnableWindow(FALSE);
         m_text.EnableWindow(FALSE);
+        m_state_helper.init(dlg_state, &m_list);
+        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+        if (m_filterMode)
+            m_filter.SetCheck(BST_CHECKED);
         loadValues();
         return 0;
     }
@@ -265,8 +283,7 @@ private:
         tstring number;
         getWindowText(m_number, &number);
         int index = m_list_values.find(number);
-        if (index != -1)
-           m_list.SelectItem(index);
+        m_state_helper.loadCursorAndTopPos(index);
     }
     
     void loadValues()
@@ -309,6 +326,8 @@ private:
 
     void saveValues()
     {
+        m_state_helper.save(m_currentGroup, m_filterMode);
+
         if (!m_filterMode)
         {
             propValues->clear();

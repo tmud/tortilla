@@ -1,11 +1,12 @@
 #pragma once
 
 #include "hotkeyTable.h"
+#include "propertiesSaveHelper.h"
 
 class HotkeyBox :  public CWindowImpl<HotkeyBox, CEdit>
 {
     HotkeyTable m_table;
-  
+
     BEGIN_MSG_MAP(HotkeyBox)
        MESSAGE_HANDLER(WM_KEYUP, OnKeyUp)
        MESSAGE_HANDLER(WM_SYSKEYUP, OnKeyUp)
@@ -35,7 +36,7 @@ class HotkeyBox :  public CWindowImpl<HotkeyBox, CEdit>
 };
 
 class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
-{ 
+{
     PropertiesValues *propValues;
     PropertiesValues *propGroups;
     PropertiesValues m_list_values;
@@ -52,13 +53,19 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
     tstring m_currentGroup;
     bool m_deleted;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
     enum { IDD = IDD_PROPERTY_HOTKEYS };
-    PropertyHotkeys(PropertiesData *data) : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false) 
+    PropertyHotkeys(PropertiesData *data) : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false), dlg_state(NULL) 
     {
         propValues = &data->hotkeys;
         propGroups = &data->groups;
+    }
+    void setParams( PropertiesDlgPageState *state)
+    {
+        dlg_state = state;
     }
 
 private:
@@ -66,9 +73,10 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER+1, OnSetFocus)
        MESSAGE_HANDLER(WM_USER, OnHotkeyEditChanged)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
-       COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)    
+       COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
        COMMAND_HANDLER(IDC_EDIT_HOTKEY_TEXT, EN_CHANGE, OnHotkeyTextChanged)
@@ -116,16 +124,16 @@ private:
     }
 
     LRESULT OnDeleteElement(WORD, WORD, HWND, BOOL&)
-    {   
+    {
         std::vector<int> selected;
         m_list.getSelected(&selected);
-        int items = selected.size();        
+        int items = selected.size();
         if (items == 1)
             m_deleted = true;
         for (int i = 0; i < items; ++i)
         {
             int index = selected[i];
-            m_list.DeleteItem(index);        
+            m_list.DeleteItem(index);
             m_list_values.del(index);
         }
         m_deleted = false;
@@ -151,7 +159,7 @@ private:
             m_currentGroup = group;
             updateCurrentItem();
             return 0;
-        }        
+        }
         tstring old = m_currentGroup;
         m_currentGroup = group;
         updateCurrentItem();
@@ -159,10 +167,10 @@ private:
         saveValues();
         m_currentGroup = group;
         loadValues();
-        update();        
+        update();
         return 0;
     }
-    
+
     LRESULT OnHotkeyEditChanged(UINT, WPARAM, LPARAM, BOOL&)
     {
         if (!m_update_mode)
@@ -236,7 +244,7 @@ private:
             m_text.SetWindowText( v.value.c_str() );
             int index = getGroupIndex(v.group);
             m_cbox.SetCurSel(index);
-            m_currentGroup = v.group;            
+            m_currentGroup = v.group;
         }
         else
         {
@@ -258,18 +266,26 @@ private:
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        if (wparam)        
+        if (wparam)
         {
             loadValues();
             m_hotkey.SetWindowText(L"");
             m_text.SetWindowText(L"");
             update();
+            PostMessage(WM_USER+1); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
             m_del.EnableWindow(FALSE);
             saveValues();
         }
+        return 0;
+    }
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
         return 0;
     }
 
@@ -290,6 +306,10 @@ private:
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_state_helper.init(dlg_state, &m_list);
+        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+        if (m_filterMode)
+            m_filter.SetCheck(BST_CHECKED);
         loadValues();
         return 0;
     }
@@ -318,20 +338,18 @@ private:
         m_list.DeleteAllItems();
         for (int i=0,e=m_list_values.size(); i<e; ++i)
         {
-            const property_value& v = m_list_values.get(i);          
+            const property_value& v = m_list_values.get(i);
             m_list.addItem(i, 0, v.key);
             m_list.addItem(i, 1, v.value);
             m_list.addItem(i, 2, v.group);
         }
 
+        int index = -1;
         tstring hotkey;
         getWindowText(m_hotkey, &hotkey);
         if (!hotkey.empty())
-        {
-            int index = m_list_values.find(hotkey);
-            if (index != -1)
-                m_list.SelectItem(index);
-        }
+            index = m_list_values.find(hotkey);
+        m_state_helper.loadCursorAndTopPos(index);
     }
 
     void loadValues()
@@ -354,6 +372,8 @@ private:
 
     void saveValues()
     {
+        m_state_helper.save(m_currentGroup, m_filterMode);
+
         if (!m_filterMode)
         {
             *propValues = m_list_values;
