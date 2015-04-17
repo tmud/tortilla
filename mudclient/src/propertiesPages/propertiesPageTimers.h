@@ -72,7 +72,7 @@ private:
         m_del.EnableWindow(FALSE);
         return 0;
     }
-        
+
     LRESULT OnFilter(WORD, WORD, HWND, BOOL&)
     {
         saveValues();
@@ -112,8 +112,8 @@ private:
         tstring timer, cmd;
         getWindowText(m_pattern, &timer);
         processTimer(&timer);
-        getWindowText(m_text, &cmd);        
-        timer_value& v = m_list_values.getw(item);        
+        getWindowText(m_text, &cmd);
+        timer_value& v = m_list_values.getw(item);
         PropertiesTimer& t = v.value;
         t.timer = timer;
         t.cmd = cmd;
@@ -134,7 +134,7 @@ private:
         if (t.timer != timer)
             m_list.setItem(item, 1, t.timer);
         if (t.cmd != cmd)
-            m_list.setItem(item, 2, t.cmd);        
+            m_list.setItem(item, 2, t.cmd);
         if (v.group != m_currentGroup)
         {
             v.group = m_currentGroup;
@@ -218,9 +218,9 @@ private:
         m_list.SetFocus();
         return 0;
     }
-    
+
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
-	{        
+	{
         m_number.Attach(GetDlgItem(IDC_EDIT_NUMBER));
         m_pattern.Attach(GetDlgItem(IDC_EDIT_PATTERN));
         m_pattern.SetLimitText(3);
@@ -229,7 +229,7 @@ private:
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_list.Attach(GetDlgItem(IDC_LIST));
-        
+
         m_list.addColumn(L"Номер", 20);
         m_list.addColumn(L"Интервал", 20);
         m_list.addColumn(L"Действие", 40);
@@ -285,7 +285,7 @@ private:
         int index = m_list_values.find(number);
         m_state_helper.loadCursorAndTopPos(index);
     }
-    
+
     void loadValues()
     {
         TimerValues tmp;
@@ -326,7 +326,8 @@ private:
 
     void saveValues()
     {
-        m_state_helper.save(m_currentGroup, m_filterMode);
+        if (!m_state_helper.save(m_currentGroup, m_filterMode))
+            return;
 
         if (!m_filterMode)
         {

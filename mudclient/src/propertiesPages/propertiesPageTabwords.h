@@ -154,7 +154,9 @@ private:
         if (wparam)
         {
             loadValues();
+            m_update_mode = true;
             m_pattern.SetWindowText(L"");
+            m_update_mode = false;
             update();
             PostMessage(WM_USER); // OnSetFocus to list
             m_state_helper.setCanSaveState();
@@ -242,7 +244,8 @@ private:
 
     void saveValues()
     {
-        m_state_helper.save(L"", false);
+        if (!m_state_helper.save(L"", false))
+            return;
         propValues->clear();
         for (int i=0,e=m_list_values.size(); i<e; ++i) {
             propValues->add(-1, m_list_values.get(i));

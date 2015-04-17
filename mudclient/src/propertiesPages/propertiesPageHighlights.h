@@ -397,7 +397,9 @@ private:
         if (wparam)
         {
             loadValues();
+            m_update_mode = true;
             m_pattern.SetWindowText(L"");
+            m_update_mode = false;
             update();
             m_exampleWnd.updateProps();
             PostMessage(WM_USER); // OnSetFocus to list
@@ -518,7 +520,8 @@ private:
 
     void saveValues()
     {
-        m_state_helper.save(m_currentGroup, m_filterMode);
+        if (!m_state_helper.save(m_currentGroup, m_filterMode))
+            return;
 
         if (!m_filterMode)
         {
