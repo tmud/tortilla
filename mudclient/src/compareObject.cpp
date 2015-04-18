@@ -52,7 +52,7 @@ bool CompareObject::checkToCompare(const tstring& str, const CompareVar* object)
 
 void CompareObject::getParameters(std::vector<tstring>* params) const
 {
-    assert(params);    
+    assert(params);
     std::vector<tstring> &p = *params;
     int size = m_pcre.getSize();
     if (size == 0)  { p.clear(); return; }

@@ -813,7 +813,10 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
         }
         else
         {
-            block.string = params[i];
+            block.string.clear();
+            if (i != 0)
+                block.string.append(L" ");
+            block.string.append(params[i]);
             new_string->blocks.push_back(block);
         }
     }
