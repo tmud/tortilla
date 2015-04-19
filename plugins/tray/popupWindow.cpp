@@ -110,3 +110,8 @@ void PopupWindow::setAlpha(float a)
     int va = static_cast<int>(a);
     SetLayeredWindowAttributes(m_hWnd, 0, va, LWA_ALPHA);
 }
+
+void PopupWindow::onClickButton()
+{
+    setState(ANIMATION_TOSTART);
+}

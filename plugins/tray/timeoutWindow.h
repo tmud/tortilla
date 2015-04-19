@@ -14,12 +14,12 @@ public:
         createMe();
     }
 
-    void start() 
+    void start(int interval)
     {
         if (m_started) return;
         createMe();
         const DWORD one_min = 60000;
-        SetTimer(1, 15*one_min);
+        SetTimer(1, interval*one_min);
         m_started = true;
     }
 

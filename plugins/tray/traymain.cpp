@@ -37,16 +37,19 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
          m_timeout_wnd.stop();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF text)
+bool TrayMainObject::showMessage(const u8string& msg)
 {
-  for (int i=0,e=m_popups.size();i<e;++i)
-  {
+    const TraySettings &s = m_settings;
+    COLORREF tcolor = (s.syscolor) ? GetSysColor(COLOR_INFOTEXT) : s.text;
+    COLORREF bcolor = (s.syscolor) ? GetSysColor(COLOR_INFOBK) : s.background;
+    for (int i=0,e=m_popups.size();i<e;++i)
+    {
       if (!m_popups[i]->isAnimated())
       {
-          startAnimation(i, msg, bkgnd, text);
+          startAnimation(i, msg, bcolor, tcolor);
           return true;
       }
-  }
+    }
 
    PopupWindow *wnd = new PopupWindow(&m_font);
    wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
@@ -57,9 +60,9 @@ bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF t
    }
    m_popups.push_back(wnd);
    int index = m_popups.size() - 1;
-   startAnimation(index, msg, bkgnd, text);
+   startAnimation(index, msg, bcolor, tcolor);
    if (!m_activated)
-       m_timeout_wnd.start();
+       m_timeout_wnd.start(m_settings.interval);
    return true;
 }
 
@@ -91,7 +94,7 @@ void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORR
     rb.x -= sz.cx;
     a.pos = rb;
     a.speed = 0.5f;
-    a.wait_sec = 3;
+    a.wait_sec = m_settings.timeout;
     a.bkgnd_color = bkgnd;
     a.text_color = text;
     w->startAnimation(a);
@@ -118,4 +121,13 @@ POINT TrayMainObject::GetTaskbarRB()
         }
     }
     return pt;
+}
+
+TraySettings& TrayMainObject::traySettings()
+{
+   return m_settings;
+}
+
+void TrayMainObject::updateSettings()
+{
 }

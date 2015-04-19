@@ -50,7 +50,7 @@ private:
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
-       MESSAGE_HANDLER(WM_USER, OnSetFocus)
+       MESSAGE_HANDLER(WM_USER+2, OnSetFocus)
        MESSAGE_HANDLER(WM_USER, OnTextColor)
        MESSAGE_HANDLER(WM_USER+1, OnBkgColor)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
@@ -402,7 +402,7 @@ private:
             m_update_mode = false;
             update();
             m_exampleWnd.updateProps();
-            PostMessage(WM_USER); // OnSetFocus to list
+            PostMessage(WM_USER+2); // OnSetFocus to list
             m_state_helper.setCanSaveState();
         }
         else

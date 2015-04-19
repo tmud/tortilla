@@ -73,6 +73,7 @@ private:
     void setState(int newstate);
     void calcDCSize();
     void setAlpha(float a);
+    void onClickButton();
 
 private:
     BEGIN_MSG_MAP(PopupWindow)
@@ -80,6 +81,8 @@ private:
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
@@ -91,4 +94,5 @@ private:
         onPaint(dc);
         return 0; 
     }
+    LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&) { onClickButton(); return 0;  }
 };
