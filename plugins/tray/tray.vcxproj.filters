@@ -20,9 +20,6 @@
     <ClInclude Include="popupWindow.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="timeoutWindow.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Main Files</Filter>
     </ClInclude>

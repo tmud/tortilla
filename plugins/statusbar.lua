@@ -145,6 +145,7 @@ if window ~= 0 or not cfg then return end
   end
   for id,regexp in pairs(regs) do
     if v:find(regexp) then
+	  system.dbglog(teg)
       for _,teg in pairs(tegs) do
         local c = cfg[teg]
         if c and c.regid == id then

@@ -11,13 +11,18 @@ void PopupWindow::onCreate()
 
 void PopupWindow::onTimer()
 {
+    DWORD dt = m_ticker.getDiff();
+    m_ticker.sync();
+    if (m_move_animation_state == ANIMATION_MOVE)
+    {    
+    }
+
     if (m_animation_state == ANIMATION_NONE)
     {
         assert(false);
         return;
     }
-    DWORD dt = m_ticker.getDiff();
-    m_ticker.sync();
+
     if (m_animation_state == ANIMATION_WAIT)
     {        
         wait_timer += dt;
@@ -49,6 +54,12 @@ void PopupWindow::startAnimation(const Animation& a)
     setState(ANIMATION_TOEND);    
 }
 
+void PopupWindow::startMoveAnimation(POINT newpos)
+{
+    m_moveanimation = newpos;
+    m_move_animation_state = ANIMATION_MOVE;
+}
+
 void PopupWindow::setState(int newstate)
 {
     const Animation &a = m_animation;
@@ -70,6 +81,8 @@ void PopupWindow::setState(int newstate)
         KillTimer(1);
         wait_timer = 0;
         alpha = 0;
+        if (m_animation.notify_wnd)
+            ::PostMessage(m_animation.notify_wnd, m_animation.notify_msg, m_animation.notify_param, 0);
     break;
     }
     m_ticker.sync();

@@ -57,8 +57,9 @@ void parse_color(const u8string& text, COLORREF *color)
 int init(lua_State *L)
 {
     base::addCommand(L, "tray");
-    base::addMenu(L, "Плагины/Оповещения (tray)...", 2, 1);    
-    
+    base::addMenu(L, "Плагины/Оповещения (tray)...", 2, 1);
+
+    g_tray.create();
     luaT_Props p(L);
     g_tray.setFont(p.currentFont());
     g_tray.setAlarmWnd(base::getParent(L));
@@ -77,7 +78,7 @@ int init(lua_State *L)
     xml::node ld;
     if (ld.load(path.c_str()) && ld.move("params"))
     {
-        if (ld.get("timeout", &s.timeout))        
+        if (ld.get("timeout", &s.timeout))
             check_minmax(&s.timeout, 1, 5, MAX_TIMEOUT, MAX_TIMEOUT);
         if (ld.get("interval", &s.interval))
             check_minmax(&s.interval, 5, 5, MAX_INTERVAL, MAX_INTERVAL);
@@ -104,7 +105,7 @@ int release(lua_State *L)
     sv.create("params");
     sv.set("timeout", s.timeout);
     sv.set("interval", s.interval);
-    sv.set("syscolors", s.syscolor ? 1 : 0);    
+    sv.set("syscolors", s.syscolor ? 1 : 0);
     utf8 buffer[16];
     sprintf(buffer, "%d,%d,%d", GetRValue(s.text), GetGValue(s.text), GetBValue(s.text));
     sv.set("textcolor", buffer);
@@ -132,10 +133,7 @@ int menucmd(lua_State *L)
     TraySettingsDlg dlg;
     dlg.settings = g_tray.traySettings();
     if (dlg.DoModal() == IDOK)
-    {
         g_tray.traySettings() = dlg.settings;
-        g_tray.updateSettings();
-    }
     return 0;
 }
 

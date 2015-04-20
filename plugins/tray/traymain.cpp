@@ -1,18 +1,21 @@
 #include "stdafx.h"
 #include "traymain.h"
 
-TrayMainObject::TrayMainObject() : m_activated(false)
-{
-}
-
 TrayMainObject::~TrayMainObject()
 {
+    stopTimer();
     for (int i=0,e=m_popups.size(); i<e;++i)
     {
         PopupWindow *pw = m_popups[i];
         pw->DestroyWindow();
         delete pw;
     }
+    DestroyWindow();
+}
+
+void TrayMainObject::create()
+{
+    Create(NULL, NULL, NULL, WS_POPUP);
 }
 
 void TrayMainObject::setFont(HFONT font)
@@ -27,14 +30,14 @@ void TrayMainObject::setFont(HFONT font)
 
 void TrayMainObject::setAlarmWnd(HWND wnd)
 {
-    m_timeout_wnd.setAlarmWnd(wnd);
+    m_alarmWnd = wnd;
 }
 
  void TrayMainObject::setActivated(bool activated)
  {
-     m_activated = activated;
-     if (m_activated)
-         m_timeout_wnd.stop();
+    m_activated = activated;
+    if (m_activated)
+        stopTimer();
  }
 
 bool TrayMainObject::showMessage(const u8string& msg)
@@ -62,7 +65,7 @@ bool TrayMainObject::showMessage(const u8string& msg)
    int index = m_popups.size() - 1;
    startAnimation(index, msg, bcolor, tcolor);
    if (!m_activated)
-       m_timeout_wnd.start(m_settings.interval);
+      startTimer();
    return true;
 }
 
@@ -97,7 +100,15 @@ void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORR
     a.wait_sec = m_settings.timeout;
     a.bkgnd_color = bkgnd;
     a.text_color = text;
+    a.notify_wnd = m_hWnd;
+    a.notify_msg = WM_USER;
+    a.notify_param = window_index;
     w->startAnimation(a);
+}
+
+void TrayMainObject::onFinishedAnimation(int id)
+{
+    int x = 1;
 }
 
 PopupWindow* TrayMainObject::getWindow(int index) const
@@ -111,7 +122,7 @@ POINT TrayMainObject::GetTaskbarRB()
     POINT pt = { GetSystemMetrics(SM_CXSCREEN),  GetSystemMetrics(SM_CYSCREEN) };
     RECT rect;
     HWND taskBar = FindWindow(L"Shell_traywnd", NULL);
-    if(taskBar && GetWindowRect(taskBar, &rect)) 
+    if(taskBar && ::GetWindowRect(taskBar, &rect)) 
     {
         int height = rect.bottom - rect.top;
         int width = rect.right - rect.left;
@@ -128,6 +139,30 @@ TraySettings& TrayMainObject::traySettings()
    return m_settings;
 }
 
-void TrayMainObject::updateSettings()
+void TrayMainObject::startTimer()
 {
+    if (m_timerStarted) return;    
+    const DWORD one_min = 60000;
+    SetTimer(1, m_settings.interval*one_min);
+    m_timerStarted = true;
+}
+
+void TrayMainObject::stopTimer()
+{
+    if (!m_timerStarted) return;    
+    KillTimer(1);
+    m_timerStarted = false;
+}
+
+void TrayMainObject::onTimer()
+{
+    if (!::IsWindow(m_alarmWnd))
+       return;
+    FLASHWINFO fw;
+    fw.cbSize = sizeof(FLASHWINFO);
+    fw.hwnd = m_alarmWnd;
+    fw.uCount = 5;
+    fw.dwFlags = FLASHW_ALL;
+    fw.dwTimeout = 0;
+    ::FlashWindowEx(&fw);
 }

@@ -28,6 +28,9 @@ struct Animation
     int   wait_sec;
     COLORREF bkgnd_color;
     COLORREF text_color;
+    HWND notify_wnd;
+    UINT notify_msg;
+    WPARAM notify_param;
 };
 
 class PopupWindow : public CWindowImpl<PopupWindow>
@@ -35,19 +38,27 @@ class PopupWindow : public CWindowImpl<PopupWindow>
     CFont *m_font;
     std::wstring m_text;
     SIZE m_dc_size;
+
+    enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
     Animation m_animation;
     int  m_animation_state;
-    enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT };   
+    int  m_move_animation_state;
+    POINT m_moveanimation;
+
     int wait_timer;
     Ticker m_ticker;
     float alpha;
 
 public:
     DECLARE_WND_CLASS(NULL)
-    PopupWindow(CFont *font) : m_font(font), m_animation_state(ANIMATION_NONE), wait_timer(0), alpha(0)
+    PopupWindow(CFont *font) : m_font(font),
+        m_animation_state(ANIMATION_NONE), m_move_animation_state(ANIMATION_NONE),
+        wait_timer(0), alpha(0)
     {
         m_dc_size.cx = 0;
         m_dc_size.cy = 0;
+        m_moveanimation.x = 0;
+        m_moveanimation.y = 0;
     }
     void setText(const u8string& text)
     {
@@ -57,7 +68,7 @@ public:
     const SIZE& getSize() const
     {
         CSize sz(m_dc_size);
-        sz += CSize(12,12);
+        sz += CSize(18,16);
         return sz;
     }
     bool isAnimated()
@@ -65,6 +76,7 @@ public:
         return (m_animation_state==ANIMATION_NONE) ? false : true;
     }
     void startAnimation(const Animation& a);
+    void startMoveAnimation(POINT newpos);
 
 private:
     void onCreate();
