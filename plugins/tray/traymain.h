@@ -31,6 +31,7 @@ private:
     PopupWindow* getFreeWindow();
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
+    bool isHeightLimited();
 private:
     CFont m_font;
     std::vector<PopupWindow*> m_windows;
@@ -40,4 +41,5 @@ private:
     bool m_timerStarted;
     HWND m_alarmWnd;
     POINT m_point0;
+    std::vector<u8string> m_cache;
 };

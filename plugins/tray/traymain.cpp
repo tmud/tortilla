@@ -45,6 +45,12 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
 
 bool TrayMainObject::showMessage(const u8string& msg)
 {
+    if (isHeightLimited())
+    {
+        m_cache.push_back(msg);
+        return true;
+    }
+
     PopupWindow *w = getFreeWindow();
     if (!w) 
         return false;
@@ -124,6 +130,7 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
          }
          p.y -= (sz.cy+4);
     }
+
 }
 
 PopupWindow* TrayMainObject::getFreeWindow()
@@ -166,6 +173,16 @@ POINT TrayMainObject::GetTaskbarRB()
         }
     }
     return pt;
+}
+
+bool TrayMainObject::isHeightLimited()
+{
+    if (m_windows.empty())
+        return false;
+    int last = m_windows.size() - 1;
+    const POINT &p = m_windows[last]->getAnimation().pos;
+    int limit_height = (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
+    return(p.y < limit_height) ? true : false;
 }
 
 TraySettings& TrayMainObject::traySettings()
