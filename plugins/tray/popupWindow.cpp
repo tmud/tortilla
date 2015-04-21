@@ -13,8 +13,28 @@ void PopupWindow::onTimer()
 {
     DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
-    if (m_move_animation_state == ANIMATION_MOVE)
-    {    
+    if (m_animation_state == ANIMATION_MOVE)
+    {
+        POINT &p = m_animation.pos;
+        const POINT& target = m_move_animation.pos;
+
+        float x = static_cast<float>(p.x);
+        float y = static_cast<float>(p.y);
+        x = x + m_move_dx * m_move_animation.speed * dt;
+        y = y + m_move_dy * m_move_animation.speed * dt;
+        p.x = static_cast<LONG>(x);
+        p.y = static_cast<LONG>(y);
+
+        bool stop = false;
+        if ((m_move_dx < 0 && p.x <= target.x) || (m_move_dx > 0 && p.x >= target.x))
+            { p.x = target.x; stop = true; }
+        if ((m_move_dy < 0 && p.y <= target.y) || (m_move_dy > 0 && p.y >= target.y))
+            { p.y = target.y; stop = true; }
+        SIZE sz = getSize();
+        RECT pos = { p.x, p.y, p.x+sz.cx, p.y+sz.cy };
+        MoveWindow(&pos);
+        if (stop)
+            setState(ANIMATION_WAIT);
     }
 
     if (m_animation_state == ANIMATION_NONE)
@@ -24,13 +44,13 @@ void PopupWindow::onTimer()
     }
 
     if (m_animation_state == ANIMATION_WAIT)
-    {        
+    {
         wait_timer += dt;
         int end_timer = m_animation.wait_sec * 1000;
         if (wait_timer >= end_timer)
             setState(ANIMATION_TOSTART);
         return;
-    }    
+    }
     float da = static_cast<float>(dt) * m_animation.speed;
     if (m_animation_state == ANIMATION_TOEND)
     {
@@ -51,13 +71,16 @@ void PopupWindow::onTimer()
 void PopupWindow::startAnimation(const Animation& a)
 {
     m_animation = a;
-    setState(ANIMATION_TOEND);    
+    setState(ANIMATION_TOEND);
 }
 
-void PopupWindow::startMoveAnimation(POINT newpos)
+void PopupWindow::startMoveAnimation(const MoveAnimation& a)
 {
-    m_moveanimation = newpos;
-    m_move_animation_state = ANIMATION_MOVE;
+    const POINT &p = m_animation.pos;
+    m_move_dx = static_cast<float>(a.pos.x - p.x);
+    m_move_dy = static_cast<float>(a.pos.y - p.y);
+    m_move_animation = a;
+    setState(ANIMATION_MOVE);
 }
 
 void PopupWindow::setState(int newstate)
@@ -75,14 +98,16 @@ void PopupWindow::setState(int newstate)
         SetTimer(1, 10);
     }
     break;
+    case ANIMATION_WAIT:
+        //sendNotify();
+    break;
     case ANIMATION_NONE:
         setAlpha(0);
         ShowWindow(SW_HIDE);
         KillTimer(1);
         wait_timer = 0;
         alpha = 0;
-        if (m_animation.notify_wnd)
-            ::PostMessage(m_animation.notify_wnd, m_animation.notify_msg, m_animation.notify_param, 0);
+        sendNotify();
     break;
     }
     m_ticker.sync();
@@ -127,4 +152,10 @@ void PopupWindow::setAlpha(float a)
 void PopupWindow::onClickButton()
 {
     setState(ANIMATION_TOSTART);
+}
+
+void PopupWindow::sendNotify()
+{
+     if (m_animation.notify_wnd)
+            ::PostMessage(m_animation.notify_wnd, m_animation.notify_msg, m_animation.notify_param, 0);
 }

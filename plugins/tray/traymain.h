@@ -17,25 +17,27 @@ public:
     TraySettings& traySettings();
 
 private:
-    void startAnimation(int window_index, const u8string&msg, COLORREF bkgnd, COLORREF text);    
     BEGIN_MSG_MAP(TimeoutWindow)
        MESSAGE_HANDLER(WM_TIMER, OnTimer)
        MESSAGE_HANDLER(WM_USER, OnFinishedAnimation)
     END_MSG_MAP()
     LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&) { onTimer(); return 0; }
-    LRESULT OnFinishedAnimation(UINT, WPARAM wparam, LPARAM, BOOL&) { onFinishedAnimation(wparam); return 0; }
+    LRESULT OnFinishedAnimation(UINT, WPARAM wparam, LPARAM, BOOL&) { onFinishedAnimation((PopupWindow*)wparam); return 0; }
+
     void startTimer();
     void stopTimer();
     void onTimer();
-    void onFinishedAnimation(int id);
-
-    PopupWindow* getWindow(int index) const;
+    void onFinishedAnimation(PopupWindow *w);
+    PopupWindow* getFreeWindow();
+    void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
 private:
     CFont m_font;
-    std::vector<PopupWindow*> m_popups;
+    std::vector<PopupWindow*> m_windows;
+    std::vector<PopupWindow*> m_free_windows;
     TraySettings m_settings;
     bool m_activated;
     bool m_timerStarted;
-    HWND m_alarmWnd;    
+    HWND m_alarmWnd;
+    POINT m_point0;
 };

@@ -33,32 +33,34 @@ struct Animation
     WPARAM notify_param;
 };
 
+struct MoveAnimation
+{
+     POINT pos;
+     float speed;
+};
+
 class PopupWindow : public CWindowImpl<PopupWindow>
 {
     CFont *m_font;
     std::wstring m_text;
-    SIZE m_dc_size;
+    CSize m_dc_size;
 
-    enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
     Animation m_animation;
+    MoveAnimation m_move_animation;
     int  m_animation_state;
-    int  m_move_animation_state;
-    POINT m_moveanimation;
 
     int wait_timer;
     Ticker m_ticker;
     float alpha;
+    float m_move_dx, m_move_dy;
 
 public:
+    enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };    
     DECLARE_WND_CLASS(NULL)
     PopupWindow(CFont *font) : m_font(font),
-        m_animation_state(ANIMATION_NONE), m_move_animation_state(ANIMATION_NONE),
-        wait_timer(0), alpha(0)
+        m_animation_state(ANIMATION_NONE),
+        wait_timer(0), alpha(0), m_move_dx(0), m_move_dy(0)
     {
-        m_dc_size.cx = 0;
-        m_dc_size.cy = 0;
-        m_moveanimation.x = 0;
-        m_moveanimation.y = 0;
     }
     void setText(const u8string& text)
     {
@@ -68,15 +70,16 @@ public:
     const SIZE& getSize() const
     {
         CSize sz(m_dc_size);
-        sz += CSize(18,16);
+        sz += CSize(18,14);
         return sz;
     }
-    bool isAnimated()
-    {
-        return (m_animation_state==ANIMATION_NONE) ? false : true;
-    }
+
+    bool isAnimated() const {  return (m_animation_state==ANIMATION_NONE) ? false : true; }
+    int  getAnimationType() const { return m_animation_state; }
+    const Animation& getAnimation() const { return m_animation; }
+    const MoveAnimation& getMoveAnimation() const { return m_move_animation; }
     void startAnimation(const Animation& a);
-    void startMoveAnimation(POINT newpos);
+    void startMoveAnimation(const MoveAnimation& a);
 
 private:
     void onCreate();
@@ -86,7 +89,7 @@ private:
     void calcDCSize();
     void setAlpha(float a);
     void onClickButton();
-
+    void sendNotify();
 private:
     BEGIN_MSG_MAP(PopupWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -104,7 +107,7 @@ private:
     {
         CPaintDC dc(m_hWnd);
         onPaint(dc);
-        return 0; 
+        return 0;
     }
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&) { onClickButton(); return 0;  }
 };
