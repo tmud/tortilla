@@ -55,7 +55,8 @@ class PopupWindow : public CWindowImpl<PopupWindow>
     float m_move_dx, m_move_dy;
 
 public:
-    enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };    
+    enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
+    enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED };
     DECLARE_WND_CLASS(NULL)
     PopupWindow(CFont *font) : m_font(font),
         m_animation_state(ANIMATION_NONE),
@@ -89,7 +90,7 @@ private:
     void calcDCSize();
     void setAlpha(float a);
     void onClickButton();
-    void sendNotify();
+    void sendNotify(int state);
 private:
     BEGIN_MSG_MAP(PopupWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

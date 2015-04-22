@@ -18,6 +18,7 @@
 
 #include <vector>
 #include <string>
+#include <deque>
 #include <assert.h>
 
 typedef std::wstring tstring;

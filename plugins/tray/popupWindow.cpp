@@ -34,7 +34,10 @@ void PopupWindow::onTimer()
         RECT pos = { p.x, p.y, p.x+sz.cx, p.y+sz.cy };
         MoveWindow(&pos);
         if (stop)
+        {
             setState(ANIMATION_WAIT);
+            sendNotify(MOVEANIMATION_FINISHED);
+        }
     }
 
     if (m_animation_state == ANIMATION_NONE)
@@ -98,16 +101,13 @@ void PopupWindow::setState(int newstate)
         SetTimer(1, 10);
     }
     break;
-    case ANIMATION_WAIT:
-        //sendNotify();
-    break;
     case ANIMATION_NONE:
         setAlpha(0);
         ShowWindow(SW_HIDE);
         KillTimer(1);
         wait_timer = 0;
         alpha = 0;
-        sendNotify();
+        sendNotify(ANIMATION_FINISHED);
     break;
     }
     m_ticker.sync();
@@ -154,8 +154,8 @@ void PopupWindow::onClickButton()
     setState(ANIMATION_TOSTART);
 }
 
-void PopupWindow::sendNotify()
+void PopupWindow::sendNotify(int state)
 {
      if (m_animation.notify_wnd)
-            ::PostMessage(m_animation.notify_wnd, m_animation.notify_msg, m_animation.notify_param, 0);
+            ::PostMessage(m_animation.notify_wnd, m_animation.notify_msg, m_animation.notify_param, state);
 }

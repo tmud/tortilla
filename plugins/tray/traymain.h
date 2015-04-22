@@ -19,19 +19,28 @@ public:
 private:
     BEGIN_MSG_MAP(TimeoutWindow)
        MESSAGE_HANDLER(WM_TIMER, OnTimer)
-       MESSAGE_HANDLER(WM_USER, OnFinishedAnimation)
+       MESSAGE_HANDLER(WM_USER, OnPopupEvent)
     END_MSG_MAP()
     LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&) { onTimer(); return 0; }
-    LRESULT OnFinishedAnimation(UINT, WPARAM wparam, LPARAM, BOOL&) { onFinishedAnimation((PopupWindow*)wparam); return 0; }
-
+    LRESULT OnPopupEvent(UINT, WPARAM wparam, LPARAM lparam, BOOL&) 
+    {
+        PopupWindow *w = (PopupWindow*)wparam;
+        if (lparam == PopupWindow::ANIMATION_FINISHED)
+            onFinishedAnimation(w);
+        if (lparam == PopupWindow::MOVEANIMATION_FINISHED)
+            onFinishedMoveAnimation(w);
+        return 0; 
+    }
     void startTimer();
     void stopTimer();
     void onTimer();
     void onFinishedAnimation(PopupWindow *w);
+    void onFinishedMoveAnimation(PopupWindow *w);
     PopupWindow* getFreeWindow();
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
-    bool isHeightLimited();
+    bool isHeightLimited() const;
+    int  getHeightLimit() const;
 private:
     CFont m_font;
     std::vector<PopupWindow*> m_windows;
@@ -41,5 +50,5 @@ private:
     bool m_timerStarted;
     HWND m_alarmWnd;
     POINT m_point0;
-    std::vector<u8string> m_cache;
+    std::deque<u8string> m_cache;
 };

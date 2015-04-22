@@ -130,7 +130,29 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
          }
          p.y -= (sz.cy+4);
     }
+}
 
+void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
+{
+    if (m_windows.empty())
+        return;
+    int last = m_windows.size() - 1;
+    if (m_windows[last] != w)
+        return;
+    if (m_cache.empty() || isHeightLimited())
+        return;
+
+    int h = m_windows[last]->getSize().cy;
+    int y = m_windows[last]->getAnimation().pos.y;
+    int count = (y - getHeightLimit()) / h;
+    int maxcount = m_cache.size();
+    count = min(count, maxcount);
+    for (;count>0;count--)
+    {
+        u8string msg(m_cache[0]);
+        m_cache.pop_front();
+        showMessage(msg);    
+    }
 }
 
 PopupWindow* TrayMainObject::getFreeWindow()
@@ -175,14 +197,18 @@ POINT TrayMainObject::GetTaskbarRB()
     return pt;
 }
 
-bool TrayMainObject::isHeightLimited()
+bool TrayMainObject::isHeightLimited() const
 {
     if (m_windows.empty())
         return false;
     int last = m_windows.size() - 1;
     const POINT &p = m_windows[last]->getAnimation().pos;
-    int limit_height = (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
-    return(p.y < limit_height) ? true : false;
+    return(p.y < getHeightLimit()) ? true : false;
+}
+
+int TrayMainObject::getHeightLimit() const
+{
+    return (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
 }
 
 TraySettings& TrayMainObject::traySettings()
