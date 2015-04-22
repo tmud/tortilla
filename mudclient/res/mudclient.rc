@@ -593,6 +593,12 @@ BEGIN
     ID_MUDCLIENT_HELP       "\nСправка"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_ERROR_LOADPROFILE_FAILED 
+                            "Ошибка при загрузке профиля. Файл профиля отсутствует или поврежден."
+END
+
 #endif    // Russian (Russia) resources
 /////////////////////////////////////////////////////////////////////////////
 

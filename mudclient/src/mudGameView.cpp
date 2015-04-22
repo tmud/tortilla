@@ -95,7 +95,11 @@ void MudGameView::onLoadProfile()
             return;
         }
         if (!m_manager.loadNewProfile(group, name))
-            msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+        {
+            msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+            m_propData->initAllDefault();
+            m_propData->addDefaultGroup();
+        }
         updateProps();
         loadClientWindowPos();
         loadPlugins();
@@ -124,7 +128,11 @@ void MudGameView::onNewWorld()
         if (!data.from_name.empty())
         {
             if (!m_manager.loadNewProfile(data.from_name, data.from_profile))
-                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK | MB_ICONSTOP);
+            {
+                msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK | MB_ICONSTOP);
+                m_propData->initAllDefault();
+                m_propData->addDefaultGroup();
+            }
             if (!m_manager.renameProfile(data.name, data.profile))
                 msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
         }

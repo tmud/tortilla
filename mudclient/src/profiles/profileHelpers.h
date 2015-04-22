@@ -14,6 +14,7 @@ public:
 
 private:
     bool getFileTime(const tstring& file, FILETIME *ft);
+    void initEmptyGroupList(const std::vector<tstring>& dirs);
 };
 
 class ProfilesList

@@ -21,18 +21,20 @@ int Run(LPTSTR /*lpstrCmdLine*/, int nCmdShow = SW_SHOWDEFAULT)
         return 0;
     }
 
+#ifndef _DEBUG  // для запуска новых копий клиента из панели задач
     {
-        ProfilesListHelper ph;
-        if (ph.profiles.empty())
+        DWORD a = GetFileAttributes(L"gamedata");
+        if (a == INVALID_FILE_ATTRIBUTES || !(a&FILE_ATTRIBUTE_DIRECTORY))
         {
-            WCHAR path[MAX_PATH];
-            GetModuleFileName(NULL, path, MAX_PATH);        
+            WCHAR path[MAX_PATH+1];
+            GetModuleFileName(NULL, path, MAX_PATH);
             WCHAR *p = wcsrchr(path, L'\\');
             int len = p-path+1;
             std::wstring new_cdir(path, len);
             SetCurrentDirectory(new_cdir.c_str());
         }
     }
+#endif
 
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);

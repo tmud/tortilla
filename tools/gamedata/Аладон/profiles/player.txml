@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <profile>
-  <viewsize value="5000"/>
+  <viewsize value="3000"/>
   <cmdsize value="30"/>
   <systemcmds value="0"/>
   <clearbar value="1"/>
   <disableya value="0"/>
-  <historytab value="0"/>
+  <historytab value="1"/>
   <timersf value="0"/>
   <plogs value="1"/>
   <plogswnd value="0"/>
   <codepage value="win"/>
+  <prompt value="1"/>
+  <ptemplate value="*mv&gt;"/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
@@ -32,7 +34,6 @@
   <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
     <action key="Enter Charset:" value="1" group="base"/>
-    <action key="*** НАЖМИТЕ ВВОД:" value="#cr" group="base"/>
   </actions>
   <aliases/>
   <hotkeys>
@@ -43,7 +44,7 @@
     <hotkey key="NUM7" value="вв" group="base"/>
     <hotkey key="NUM1" value="вн" group="base"/>
     <hotkey key="NUM0" value="см" group="base"/>
-    <hotkey key="F12" value="#connect game.mudlast.ru 2700" group="base"/>
+    <hotkey key="F12" value="#connect aladon.sovintel.ru 9000" group="base"/>
     <hotkey key="NUMDEL" value="сч" group="base"/>
     <hotkey key="NUM5" value="огл" group="base"/>
   </hotkeys>
@@ -51,7 +52,7 @@
   <asubs/>
   <gags/>
   <highlights>
-    <highlight key="[tortilla] %%" value="txt[0,128,255],bkg[0,0,0],ubi[0,0,0]" group="base"/>
+    <highlight key="[tortilla] %%" value="txt[0,128,192],bkg[0,0,0],ubi[0,0,0]" group="base"/>
   </highlights>
   <timers/>
   <groups>
@@ -60,15 +61,6 @@
   </groups>
   <tabwords/>
   <variables/>
-  <windows>
-    <window name="Окно 1" left="70" right="420" top="70" bottom="270" side="5" lastside="4" width="350" height="200"/>
-    <window name="Окно 2" left="140" right="490" top="140" bottom="340" side="5" lastside="4" width="350" height="200"/>
-    <window name="Окно 3" left="210" right="560" top="210" bottom="410" side="5" lastside="4" width="350" height="200"/>
-    <window name="Окно 4" left="280" right="630" top="280" bottom="480" side="5" lastside="4" width="350" height="200"/>
-    <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
-    <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
-  </windows>
-  <mainwindow left="329" right="1612" top="32" bottom="913" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="0"/>
     <plugin key="jmc3import.dll" value="1"/>

@@ -13,7 +13,8 @@ TrayMainObject::~TrayMainObject()
         delete pw;
     }
     m_windows.clear();
-    DestroyWindow();
+    if (IsWindow())
+        DestroyWindow();
 }
 
 void TrayMainObject::create()

@@ -1,10 +1,10 @@
 #pragma once
 
-#define DEFAULT_CMD_HISTORY_SIZE 20
-#define DEFAULT_VIEW_HISTORY_SIZE 1000
+#define DEFAULT_CMD_HISTORY_SIZE 30
+#define DEFAULT_VIEW_HISTORY_SIZE 3000
 #define MIN_CMD_HISTORY_SIZE 10
+#define MAX_CMD_HISTORY_SIZE 50
 #define MIN_VIEW_HISTORY_SIZE 100
-#define MAX_CMD_HISTORY_SIZE 500
 #define MAX_VIEW_HISTORY_SIZE 30000
 
 struct PropertiesHighlight
@@ -383,8 +383,8 @@ struct PropertiesData
     PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
-       , show_system_commands(1), clear_bar(1), disable_ya(0), disable_osc(0)
-       , history_tab(0), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
+       , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
+       , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();

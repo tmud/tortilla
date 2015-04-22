@@ -23,6 +23,7 @@
 #define IDD_PROPERTY_COLORS_FONT        207
 #define IDS_ERROR_MODULES               207
 #define IDD_LOAD_PROFILE                208
+#define IDS_ERROR_LOADPROFILE_FAILED    208
 #define IDD_NEW_PROFILE                 209
 #define IDD_PROPERTY_COMMON             210
 #define IDD_PROPERTY_GROUPS             211
