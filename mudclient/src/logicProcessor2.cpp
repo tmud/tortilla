@@ -796,11 +796,13 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
     MudViewStringBlock block;
     HighlightTestControl tc;
 
+    bool last_color_teg = true;
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
         if (tc.checkText(&p))       // it color teg
         {
+            last_color_teg = true;
             PropertiesHighlight hl;
             hl.convertFromString(p);
             MudViewStringParams &p = block.params;
@@ -813,11 +815,19 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
         }
         else
         {
-            block.string.clear();
-            if (i != 0)
-                block.string.append(L" ");
-            block.string.append(params[i]);
-            new_string->blocks.push_back(block);
+            if (last_color_teg)
+            {
+                last_color_teg = false;
+                block.string.assign(params[i]);
+                new_string->blocks.push_back(block);
+            }
+            else
+            {
+                int last = new_string->blocks.size() - 1;
+                tstring &s = new_string->blocks[last].string;
+                s.append(L" ");
+                s.append(params[i]);
+            }
         }
     }
 

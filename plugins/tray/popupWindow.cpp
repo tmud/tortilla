@@ -20,16 +20,27 @@ void PopupWindow::onTimer()
 
         float x = static_cast<float>(p.x);
         float y = static_cast<float>(p.y);
-        x = x + m_move_dx * m_move_animation.speed * dt;
-        y = y + m_move_dy * m_move_animation.speed * dt;
-        p.x = static_cast<LONG>(x);
-        p.y = static_cast<LONG>(y);
+
+        float dx = m_move_dx * m_move_animation.speed * dt;
+        float dy = m_move_dy * m_move_animation.speed * dt;
+        if (abs(dx) > 6 || abs(dy) > 6)
+        {
+            p.x = target.x;
+            p.y = target.y;
+        }
+        else
+        {
+            p.x = static_cast<LONG>(x+dx);
+            p.y = static_cast<LONG>(y+dy);
+        }
 
         bool stop = false;
         if ((m_move_dx < 0 && p.x <= target.x) || (m_move_dx > 0 && p.x >= target.x))
             { p.x = target.x; stop = true; }
         if ((m_move_dy < 0 && p.y <= target.y) || (m_move_dy > 0 && p.y >= target.y))
             { p.y = target.y; stop = true; }
+        if (!stop && p.x == target.x && p.y == target.y)
+            { stop = true; }
         SIZE sz = getSize();
         RECT pos = { p.x, p.y, p.x+sz.cx, p.y+sz.cy };
         MoveWindow(&pos);

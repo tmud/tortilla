@@ -124,8 +124,9 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
          if (w_pos.x != p.x || w_pos.y != p.y)
          {
              MoveAnimation ma;
-             ma.pos = p;
-             ma.speed = 0.003f;
+             ma.pos.y = p.y;
+             ma.pos.x = w_pos.x;
+             ma.speed = 0.002f;
              w->startMoveAnimation(ma);
          }
          p.y -= (sz.cy+4);
