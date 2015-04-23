@@ -7,7 +7,7 @@
 extern luaT_State L;
 extern Plugin* _cp;
 
-PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props)
+PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props), m_plugins_loaded(false)
 {
 }
 
@@ -21,7 +21,7 @@ void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
     tstring tmp(group);
     tmp.append(profile);
     bool profile_changed = (tmp == m_profile) ? false : true;
-    if (!profile_changed)
+    if (!profile_changed && m_plugins_loaded)
         return;
     m_profile = tmp;
     initPlugins();
@@ -109,6 +109,7 @@ void PluginsManager::initPlugins()
         new_plugins[i]->setOn(state);
     }
     m_plugins.swap(new_plugins);
+    m_plugins_loaded = true;
 }
 
 void PluginsManager::unloadPlugins()
@@ -116,6 +117,7 @@ void PluginsManager::unloadPlugins()
     m_msdp_network.unloadPlugins();
     for(int i=0,e=m_plugins.size(); i<e; ++i)
         m_plugins[i]->unloadPlugin();
+    m_plugins_loaded = false;
 }
 
 bool PluginsManager::pluginsPropsDlg()

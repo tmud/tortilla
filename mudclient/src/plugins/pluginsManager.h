@@ -9,6 +9,7 @@ class PluginsManager
    PluginsList m_plugins;
    tstring m_profile;
    MsdpNetwork m_msdp_network;
+   bool m_plugins_loaded;
 
 public:
     PluginsManager(PropertiesData *props);

@@ -77,37 +77,41 @@ bool ProfilesGroupList::getFileTime(const tstring& file, FILETIME *ft)
 
 void ProfilesGroupList::initEmptyGroupList(const std::vector<tstring>& dirs)
 {
+   xml::node f("settings");
+   xml::node n(f.createsubnode("profile"));
    for (int i = 0, e = dirs.size(); i < e; ++i)
    {
       const tstring& group = dirs[i];
+      ProfilePath ph(group, L"settings.xml");
       ProfilesList pl;
       pl.init(group);
       if (pl.getCount())
+      {
+          tstring name;
+          pl.getName(0, &name);
+          n.settext(TW2U(name.c_str()));
+          f.save(TW2U(ph));
           m_groups_list.push_back(group);
+      }
       else
       {
-          ProfilePath ph(group, L"profiles\\player.txml");
-          DWORD a = GetFileAttributes(ph);
+          ProfilePath ph1(group, L"profiles\\player.txml");
+          DWORD a = GetFileAttributes(ph1);
           if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY))
           {
               ProfilePath ph2(group, L"profiles\\player.xml");
-              if (CopyFile(ph, ph2, FALSE))
-                m_groups_list.push_back(group);
+              if (CopyFile(ph1, ph2, FALSE))
+              {
+                  n.settext("player");
+                  f.save(TW2U(ph));
+                  m_groups_list.push_back(group);
+              }
           }
       }
   }
+  f.deletenode();
   if (m_groups_list.empty())
       return;
-
-  xml::node f("settings");
-  xml::node n(f.createsubnode("profile"));
-  n.settext("player");
-  for (int i = 0, e = m_groups_list.size(); i<e; ++i)
-  {
-      ProfilePath ph(m_groups_list[i], L"settings.xml");
-      f.save(TW2U(ph));
-  }
-  f.deletenode();
   m_last_accessed = 0;
 }
 //---------------------------------------------------------------------------

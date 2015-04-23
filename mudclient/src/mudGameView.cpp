@@ -23,12 +23,17 @@ bool MudGameView::initialize()
 
     if (!m_manager.loadProfile())
     {
-        if (!m_manager.createNewProfile(L"player"))
-        {
-            msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+        if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
             return false;
+        if (!m_manager.loadNewProfile(m_manager.getProfileGroup(), L"player"))
+        {
+            if (!m_manager.createNewProfile(L"player"))
+            {
+                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+                return false;
+            }
         }
-    }    
+    }
     return true;
 }
 
@@ -48,23 +53,32 @@ void MudGameView::onClose()
 void MudGameView::onNewProfile()
 {
     NewProfileDlg dlg;
-    dlg.loadProfiles(m_manager.getProfileGroup());    
+    dlg.loadProfiles(m_manager.getProfileGroup());
     if (dlg.DoModal() == IDOK)
     {
         tstring source, name;
         dlg.getProfiles(&source, &name);
-        
+
         unloadPlugins();
+
+        tstring cgroup = m_manager.getProfileGroup();
+        tstring cname = m_manager.getProfileName();
+        bool successed = true;
         if (source.empty())
-        {            
-            if (!m_manager.createNewProfile(name))
-                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+        {
+            if (!m_manager.createNewProfile(name)) {
+                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP); successed = false;
+            }
         }
         else
         {
-            if (!m_manager.createCopyProfile(source, name))
-                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+            if (!m_manager.createCopyProfile(source, name)) {
+                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, MB_OK|MB_ICONSTOP); successed = false;
+            }
         }
+        if (!successed)
+            m_manager.loadNewProfile(cgroup, cname);
+
         updateProps();
         loadClientWindowPos();
         loadPlugins();
@@ -76,7 +90,7 @@ void MudGameView::onLoadProfile()
     LoadProfileDlg dlg;
     if (dlg.DoModal() == IDOK)
     {
-        tstring group, name;        
+        tstring group, name;
         dlg.getProfiles(&group, &name);
         if (name.empty())
             return;
@@ -89,16 +103,17 @@ void MudGameView::onLoadProfile()
         unloadPlugins();
         if (!m_manager.saveProfile())
         {
-            loadPlugins();
-            loadClientWindowPos();
             msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+            loadClientWindowPos();
+            loadPlugins();
             return;
         }
+        tstring cgroup = m_manager.getProfileGroup();
+        tstring cname = m_manager.getProfileName();
         if (!m_manager.loadNewProfile(group, name))
         {
             msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK|MB_ICONSTOP);
-            m_propData->initAllDefault();
-            m_propData->addDefaultGroup();
+            m_manager.loadNewProfile(cgroup, cname);
         }
         updateProps();
         loadClientWindowPos();
@@ -119,28 +134,32 @@ void MudGameView::onNewWorld()
         unloadPlugins();
         if (!m_manager.saveProfile())
         {
-            loadPlugins();
-            loadClientWindowPos();
             msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
+            loadPlugins();
+            loadClientWindowPos();            
             return;
         }
 
+        tstring cgroup = m_manager.getProfileGroup();
+        tstring cname = m_manager.getProfileName();
+        bool successed = true;
         if (!data.from_name.empty())
         {
-            if (!m_manager.loadNewProfile(data.from_name, data.from_profile))
-            {
-                msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK | MB_ICONSTOP);
-                m_propData->initAllDefault();
-                m_propData->addDefaultGroup();
+            if (!m_manager.loadNewProfile(data.from_name, data.from_profile)) {
+                msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
             }
-            if (!m_manager.renameProfile(data.name, data.profile))
-                msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
+            else if (!m_manager.renameProfile(data.name, data.profile)) {
+                msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false; 
+            }
         }
         else
         {
-            if (!m_manager.createNewProfile(data.name, data.profile))
-                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK | MB_ICONSTOP);
+            if (!m_manager.createNewProfile(data.name, data.profile)) {
+                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
+            }
         }
+        if (!successed)
+            m_manager.loadNewProfile(cgroup, cname);
 
         updateProps();
         loadClientWindowPos();
