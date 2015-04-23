@@ -63,6 +63,7 @@ int init(lua_State *L)
     luaT_Props p(L);
     g_tray.setFont(p.currentFont());
     g_tray.setAlarmWnd(base::getParent(L));
+    g_tray.setActivated(p.activated());
 
     luaT_run(L, "getPath", "s", "config.xml");
     u8string path(lua_tostring(L, -1));
@@ -72,6 +73,7 @@ int init(lua_State *L)
     s.syscolor = 1;
     s.timeout = 5;
     s.interval = 15;
+    s.showactive = 0;
     s.text = GetSysColor(COLOR_INFOTEXT);
     s.background = GetSysColor(COLOR_INFOBK);
 
@@ -82,6 +84,10 @@ int init(lua_State *L)
             check_minmax(&s.timeout, 1, 5, MAX_TIMEOUT, MAX_TIMEOUT);
         if (ld.get("interval", &s.interval))
             check_minmax(&s.interval, 5, 5, MAX_INTERVAL, MAX_INTERVAL);
+        int showactive = 0;
+        if (ld.get("showactive", &showactive))
+            check_minmax(&showactive, 0, 0, 1, 0);
+        s.showactive = showactive ? true : false;
         int syscolors = 1;
         if (ld.get("syscolors", &syscolors))
             check_minmax(&syscolors, 0, 1, 1, 1);
@@ -106,6 +112,7 @@ int release(lua_State *L)
     sv.set("timeout", s.timeout);
     sv.set("interval", s.interval);
     sv.set("syscolors", s.syscolor ? 1 : 0);
+    sv.set("showactive", s.showactive ? 1 : 0);
     utf8 buffer[16];
     sprintf(buffer, "%d,%d,%d", GetRValue(s.text), GetGValue(s.text), GetBValue(s.text));
     sv.set("textcolor", buffer);

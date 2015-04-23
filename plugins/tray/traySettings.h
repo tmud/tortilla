@@ -49,7 +49,7 @@ private:
     LRESULT OnDrawItem(UINT, WPARAM wParam, LPARAM lParam, BOOL&)
     {
         DRAWITEMSTRUCT* lpDIS = (DRAWITEMSTRUCT*)lParam;
-        const RECT &rc = lpDIS->rcItem;        
+        const RECT &rc = lpDIS->rcItem;
         CDCHandle dc = lpDIS->hDC;
         if (!IsWindowEnabled())
         {
@@ -59,7 +59,7 @@ private:
         }
         dc.Rectangle(&rc);
         /*bool bSelected = (ODS_SELECTED & lpDIS->itemState) == ODS_SELECTED;
-        if (bSelected)            
+        if (bSelected)
             dc.Draw3dRect(&rc, m_crDarkShadow, m_crHiLight);
         else
             dc.Draw3dRect(&rc, m_crHiLight, m_crDarkShadow);*/
@@ -84,12 +84,13 @@ private:
 
 struct TraySettings
 {
-    TraySettings() : timeout(5), interval(15), text(0), background(0), syscolor(true) {}
+    TraySettings() : timeout(5), interval(15), text(0), background(0), syscolor(true), showactive(false) {}
     int timeout;
     int interval;
     COLORREF text;
     COLORREF background;
     bool syscolor;
+    bool showactive;
 };
 
 class TraySettingsDlg :  public CDialogImpl < TraySettingsDlg >
@@ -104,6 +105,7 @@ private:
     HighlightSelectColor m_textColor;
     HighlightSelectColor m_bkgColor;
     CButton m_syscolors;
+    CButton m_showactive;
     wchar_t m_buffer[32];
 
 private:
@@ -117,6 +119,7 @@ private:
         COMMAND_HANDLER(IDC_EDIT_TIMEOUT, EN_KILLFOCUS, OnTimeout)
         COMMAND_HANDLER(IDC_EDIT_INTERVAL, EN_KILLFOCUS, OnInterval)
         COMMAND_ID_HANDLER(IDC_CHECK_SYSCOLORS, OnSyscolors)
+        COMMAND_ID_HANDLER(IDC_CHECK_SHOWACTIVE, OnShowActive)
         REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
 
@@ -168,6 +171,10 @@ private:
         m_syscolors.Attach(GetDlgItem(IDC_CHECK_SYSCOLORS));
         if (settings.syscolor)
             m_syscolors.SetCheck(BST_CHECKED);
+
+        m_showactive.Attach(GetDlgItem(IDC_CHECK_SHOWACTIVE));
+        if (settings.showactive)
+            m_showactive.SetCheck(BST_CHECKED);
 
         /*m_timeout.SetFocus();
         int pos = m_timeout.GetWindowTextLength();
@@ -229,7 +236,13 @@ private:
 
     LRESULT OnSyscolors(WORD, WORD, HWND, BOOL&)
     {
-        settings.syscolor = m_syscolors.GetCheck() ? true : false;
+        settings.syscolor = (m_syscolors.GetCheck()==BST_CHECKED) ? true : false;
+        return 0;
+    }
+
+    LRESULT OnShowActive(WORD, WORD, HWND, BOOL&)
+    {
+        settings.showactive = (m_showactive.GetCheck()==BST_CHECKED) ? true : false;
         return 0;
     }
 

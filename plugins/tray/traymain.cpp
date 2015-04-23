@@ -46,6 +46,11 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
 
 bool TrayMainObject::showMessage(const u8string& msg)
 {
+#ifndef _DEBUG
+    if (m_activated && !m_settings.showactive)
+       return true;
+#endif
+
     if (isHeightLimited())
     {
         m_cache.push_back(msg);
