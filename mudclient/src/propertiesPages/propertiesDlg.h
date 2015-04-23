@@ -133,25 +133,25 @@ private:
 
         // add pages
         PropertyTwoConfig c;
-        c.label1 = L"Макрос(alias)"; c.label2 = L"Текст"; c.list1 = L"Alias"; c.list2 = L"Текст"; c.title = L"Макросы (Aliases)";
+        c.label1 = L"Макрос(alias)"; c.label2 = L"Текст"; c.list1 = L"Alias"; c.list2 = L"Текст"; c.title = L"Макросы (Aliases)"; c.newbutton = L"Новый";
         m_aliases.setParams(&propData->aliases, &propData->groups, &d.pages[0], c);
         m_aliases.Create(m_hWnd);
-        c.label1 = L"Шаблон"; c.label2 = L"Триггер(action)"; c.list1 = L"Шаблон"; c.list2 = L"Action"; c.title = L"Триггеры (Actions)"; c.use_priority = true;
+        c.label1 = L"Шаблон"; c.label2 = L"Триггер(action)"; c.list1 = L"Шаблон"; c.list2 = L"Action"; c.title = L"Триггеры (Actions)"; c.use_priority = true; c.newbutton = L"Новый";
         m_actions.setParams(&propData->actions, &propData->groups, &d.pages[1], c);
         m_actions.Create(m_hWnd);
         m_highlights.setParams(&d.pages[2]);
-        m_highlights.Create(m_hWnd);        
+        m_highlights.Create(m_hWnd);
         m_hotkeys.setParams(&d.pages[3]);
         m_hotkeys.Create(m_hWnd);
-        c.label1 = L"Шаблон"; c.label2 = L"Замена"; c.list1 = L"Шаблон"; c.list2 = L"Замена"; c.title = L"Замены (Subs)"; c.use_priority = true;
+        c.label1 = L"Шаблон"; c.label2 = L"Замена"; c.list1 = L"Шаблон"; c.list2 = L"Замена"; c.title = L"Замены (Subs)"; c.use_priority = true; c.newbutton = L"Новая";
         m_subs.setParams(&propData->subs, &propData->groups, &d.pages[4], c);
         m_subs.Create(m_hWnd);
 
-        PropertyOneConfig c0; c0.title = L"Антизамены (Antisubs)"; c0.label = L"Шаблон"; c0.list = L"Шаблон";
+        PropertyOneConfig c0; c0.title = L"Антизамены (Antisubs)"; c0.label = L"Шаблон"; c0.list = L"Шаблон"; c0.newbutton = L"Новая";
         m_antisubs.setParams(&propData->antisubs, &propData->groups, &d.pages[5], c0);
         m_antisubs.Create(m_hWnd);
 
-        c0.title = L"Фильтры (Gags)";
+        c0.title = L"Фильтры (Gags)"; c0.newbutton = L"Новый";
         m_gags.setParams(&propData->gags, &propData->groups, &d.pages[6], c0);
         m_gags.Create(m_hWnd);
 

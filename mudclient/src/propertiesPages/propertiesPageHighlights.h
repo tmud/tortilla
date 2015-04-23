@@ -15,6 +15,7 @@ class PropertyHighlights :  public CDialogImpl<PropertyHighlights>, public Prope
     CButton m_add;
     CButton m_del;
     CButton m_replace;
+    CButton m_reset;
     CButton m_filter;
     CComboBox m_cbox;
     bool m_filterMode;
@@ -61,6 +62,7 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_HANDLER(IDC_EDIT_HIGHLIGHT_TEXT, EN_CHANGE, OnPatternEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
@@ -148,6 +150,13 @@ private:
     {
         updateCurrentItem(true);
         m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        m_list.SelectItem(-1);
+        m_pattern.SetFocus();
         return 0;
     }
 
@@ -246,6 +255,7 @@ private:
             }
             m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
             m_add.EnableWindow(len == 0 ? FALSE : !currelement);
+            m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
             if (currelement)
                 updateCurrentItem(false);
         }
@@ -291,12 +301,14 @@ private:
             m_del.EnableWindow(FALSE);
             if (!m_deleted)
                 m_pattern.SetWindowText(L"");
+            m_reset.EnableWindow(FALSE);
         }
         else if (items_selected == 1)
         {
             m_add.EnableWindow(FALSE);
             enableColorControls(TRUE);
             m_del.EnableWindow(TRUE);
+            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const highlight_value& hv = m_list_values.get(item);
             const PropertiesHighlight& hl = hv.value;
@@ -319,6 +331,7 @@ private:
             enableColorControls(FALSE);
             m_del.EnableWindow(TRUE);
             m_add.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
             m_pattern.SetWindowText(L"");
         }
         m_replace.EnableWindow(FALSE);
@@ -359,6 +372,7 @@ private:
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
 
@@ -375,6 +389,7 @@ private:
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
         m_replace.EnableWindow(FALSE);
+        m_reset.EnableWindow(FALSE);
         m_underline.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_UNDERLINE));
         m_border.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_FLASH));
         m_italic.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_ITALIC));

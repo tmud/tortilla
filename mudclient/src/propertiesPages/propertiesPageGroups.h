@@ -9,6 +9,7 @@ class PropertyGroups :  public CDialogImpl<PropertyGroups>
     CEdit m_group;
     CButton m_add;
     CButton m_del;
+    CButton m_reset;
     CButton m_onoff;
     CButton m_rename;
     tstring m_OnStatus;
@@ -34,6 +35,7 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_ON, OnGroupChecked)
        COMMAND_ID_HANDLER(IDC_BUTTON_RENAME, OnRenameElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_HANDLER(IDC_EDIT_GROUP, EN_CHANGE, OnEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
@@ -104,6 +106,14 @@ private:
         return 0;
     }
 
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        m_list.SelectItem(-1);
+        m_group.SetWindowTextW(L"");
+        m_group.SetFocus();
+        return 0;
+    }
+
     LRESULT OnGroupChecked(WORD, WORD, HWND, BOOL&)
     {
         tstring state = (m_onoff.GetCheck() == BST_CHECKED) ? L"1" : L"0";
@@ -120,6 +130,7 @@ private:
         int string_len = m_group.GetWindowTextLength();
         BOOL flag = string_len == 0 ? FALSE : TRUE;
         m_add.EnableWindow(flag);
+        m_reset.EnableWindow(flag);
         if (flag)
         {
             int index = m_list.GetSelectedIndex();
@@ -152,6 +163,7 @@ private:
             m_onoff.EnableWindow(FALSE);
             if (!m_deleted)
                 m_group.SetWindowText(L"");
+            m_reset.EnableWindow(FALSE);
         }
         else
         {
@@ -160,6 +172,7 @@ private:
             m_onoff.SetCheck(checkEnableItem(item_selected) ? BST_CHECKED : BST_UNCHECKED);
             const property_value& g = propData->groups.get(item_selected);
             m_group.SetWindowText(g.key.c_str());
+            m_reset.EnableWindow(TRUE);
         }
         m_rename.EnableWindow(FALSE);
         return 0;
@@ -203,6 +216,7 @@ private:
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
         m_onoff.Attach(GetDlgItem(IDC_CHECK_GROUP_ON));
         m_rename.Attach(GetDlgItem(IDC_BUTTON_RENAME));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Группа", 50);
         m_list.addColumn(L"Статус", 20);
@@ -213,6 +227,7 @@ private:
         m_del.EnableWindow(FALSE);
         m_onoff.EnableWindow(FALSE);
         m_rename.EnableWindow(FALSE);
+        m_reset.EnableWindow(FALSE);
         m_state_helper.init(dlg_state, &m_list);
         for (int i=0,e=propData->groups.size(); i<e; ++i)
         {

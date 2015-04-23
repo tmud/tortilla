@@ -10,6 +10,7 @@ struct PropertyTwoConfig
     tstring label2;
     tstring list1;
     tstring list2;
+    tstring newbutton;
     bool use_priority;
 };
 
@@ -26,6 +27,7 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     CButton m_add;
     CButton m_del;
     CButton m_replace;
+    CButton m_reset;
     CButton m_up;
     CButton m_down;
     CButton m_filter;
@@ -58,6 +60,7 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
@@ -128,6 +131,13 @@ private:
     {
         updateCurrentItem(true);
         m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        m_list.SelectItem(-1);
+        m_pattern.SetFocus();
         return 0;
     }
 
@@ -212,6 +222,7 @@ private:
             }
             m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
             m_add.EnableWindow(len == 0 ? FALSE : !currelement);
+            m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
             if (currelement)
                 updateCurrentItem(false);
         }
@@ -219,7 +230,10 @@ private:
     }
 
     LRESULT OnPatternTextChanged(WORD, WORD, HWND, BOOL&)
-    {
+	{
+     	tstring text;
+        getWindowText(m_text, &text);
+        m_reset.EnableWindow(text.empty() ? FALSE : TRUE);
         if (!m_update_mode)
             updateCurrentItem(false);
         return 0;
@@ -270,6 +284,7 @@ private:
                 m_pattern.SetWindowText(L"");
                 m_text.SetWindowText(L"");
             }
+            m_reset.EnableWindow(FALSE);
         }
         else if (items_selected == 1)
         {
@@ -277,6 +292,7 @@ private:
             m_del.EnableWindow(TRUE);
             m_up.EnableWindow(TRUE);
             m_down.EnableWindow(TRUE);
+            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const property_value& v = m_list_values.get(item);
             m_pattern.SetWindowText( v.key.c_str() );
@@ -291,6 +307,7 @@ private:
             m_add.EnableWindow(FALSE);
             m_up.EnableWindow(FALSE);
             m_down.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
             m_pattern.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
@@ -343,6 +360,8 @@ private:
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
+        m_reset.SetWindowText(m_config.newbutton.c_str());
         m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
         m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
@@ -357,6 +376,7 @@ private:
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
         m_replace.EnableWindow(FALSE);
+        m_reset.EnableWindow(FALSE);
         m_up.EnableWindow(FALSE);
         m_down.EnableWindow(FALSE);
         if (!m_config.use_priority)

@@ -11,6 +11,7 @@ class PropertyTabwords :  public CDialogImpl<PropertyTabwords>
     CButton m_add;
     CButton m_del;
     CButton m_replace;
+    CButton m_reset;
     bool m_update_mode;
     PropertiesDlgPageState *dlg_state;
     PropertiesSaveHelper m_state_helper;
@@ -33,6 +34,7 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_HANDLER(IDC_EDIT_PATTERN, EN_CHANGE, OnPatternEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
@@ -85,6 +87,13 @@ private:
         m_list.SetFocus();
         return 0;
     }
+    
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        m_list.SelectItem(-1);
+        m_pattern.SetFocus();
+        return 0;
+    }
 
     LRESULT OnPatternEditChanged(WORD, WORD, HWND, BOOL&)
     {
@@ -107,6 +116,7 @@ private:
                 }
                 m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
                 m_add.EnableWindow(len == 0 ? FALSE : !currelement);
+                m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
                 if (currelement)
                     updateCurrentItem(false);
             }
@@ -122,11 +132,13 @@ private:
         {
             m_del.EnableWindow(FALSE);
             m_pattern.SetWindowText(L"");
+            m_reset.EnableWindow(FALSE);
         }
         else if (items_selected == 1)
         {
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
+            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const tstring &v = m_list_values.get(item);
             m_pattern.SetWindowText( v.c_str() );
@@ -135,6 +147,7 @@ private:
         {
             m_del.EnableWindow(TRUE);
             m_add.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
             m_pattern.SetWindowText( L"" );
         }
         m_replace.EnableWindow(FALSE);
@@ -180,6 +193,7 @@ private:
         m_pattern.Attach(GetDlgItem(IDC_EDIT_PATTERN));
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Ключевые слова", 90);        
@@ -188,6 +202,7 @@ private:
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_reset.EnableWindow(FALSE);
         m_replace.EnableWindow(FALSE);
         m_state_helper.init(dlg_state, &m_list);
         loadValues();

@@ -49,11 +49,12 @@
 #define IDC_STATIC_BLLINE               1010
 #define IDC_BUTTON_PROP_TABWORDS        1011
 #define IDC_BUTTON_PROP_TIMERS          1012
-#define IDC_BUTTON_ADD                  1016
-#define IDC_BUTTON_DEL                  1017
-#define IDC_STATIC_BL1                  1018
-#define IDC_STATIC_BL2                  1019
-#define IDC_EDIT_ALIAS                  1020
+#define IDC_BUTTON_ADD                  1013
+#define IDC_BUTTON_DEL                  1014
+#define IDC_STATIC_BL1                  1015
+#define IDC_STATIC_BL2                  1016
+#define IDC_EDIT_ALIAS                  1017
+#define IDC_BUTTON_RESET                1020
 #define IDC_BUTTON_RENAME               1021
 #define IDC_EDIT_PATTERN                1022
 #define IDC_EDIT_ALIAS_TEXT             1023
