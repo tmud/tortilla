@@ -641,7 +641,7 @@ private:
 
     void initCommandBar()
     {
-        m_barHeight = m_propElements.font_height + 4;
+        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - доп. высота, чтобы Пуск не наезжал на буквы когда окно максимизировано
         m_bar.setParams(m_barHeight, m_propElements.standard_font);
         m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);
