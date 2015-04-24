@@ -248,6 +248,11 @@ public:
         runcmd("isGameCmd");
         return boolresult();
     }
+    bool isSystem()
+    {
+        runcmd("isSystem");
+        return boolresult();
+    }
     bool isPrompt()
     {
         runcmd("isPrompt");
@@ -323,6 +328,12 @@ public:
     bool createString()
     {
         runcmd("createString");
+        return boolresult();
+    }
+    bool createString(bool system, bool gamecmd)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "createString", "obb", system, gamecmd);
         return boolresult();
     }
     bool deleteString()

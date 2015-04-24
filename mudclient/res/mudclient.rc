@@ -501,7 +501,7 @@ BEGIN
             VALUE "FileDescription", "Client for Multi User Dangeon games"
             VALUE "FileVersion", "0.9.7.0"
             VALUE "InternalName", "Tortilla"
-            VALUE "LegalCopyright", "http://tmud.net"
+            VALUE "LegalCopyright", "http://tmud.github.io"
             VALUE "OriginalFilename", "tortilla.exe"
             VALUE "ProductName", "Tortilla Mud Client"
             VALUE "ProductVersion", "0.9.7.0"

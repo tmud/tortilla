@@ -535,6 +535,7 @@ local t = {...} -- правильное написание
 <div class="cmd">bool isFirst()</div> - первая строка является продолжением последней строки (завершение предыдущей строки).
 <div class="cmd">bool isLast()</div> - последняя строка является завершенной, ее продолжения в следующей коллекции не будет.
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
+<div class="cmd">bool isSystem()</div> - это строка с логом клиента.
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
 <div class="cmd">void getPrompt(u8string *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(u8string* str)</div> - полный текст строки (без учета расцветки).
@@ -550,6 +551,7 @@ local t = {...} -- правильное написание
 <div class="cmd">bool deleteBlock(int block)</div> - удаляет блок текущей строки.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
 <div class="cmd">bool createString()</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней.
+<div class="cmd">bool createString(bool system, bool gamecmd)</div> - новая строка. Параметры задают соответствующие флаги новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет текущую строку.
 </pre>
 <hr>
@@ -1016,6 +1018,7 @@ render:rect(r2)
 <div class="cmd">bool isFirst()</div> - возвращает признак, что первая строка - это продолжение последней строки прошлой коллекции.
 <div class="cmd">bool isLast()</div> - последняя строка является завершенной, ее продолжения в следующей коллекции не будет.
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
+<div class="cmd">bool isSystem()</div> - это строка с логом клиента.
 <div class="cmd">bool isPrompt()</div> - это prompt-строка.
 <div class="cmd">string getPrompt()</div> - содежимое prompt-строки (без игровых команд).
 <div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных частей).
@@ -1030,7 +1033,8 @@ render:rect(r2)
 <div class="cmd">bool copyBlock(int block, int dst_string, int dst_block)</div> - копирует заданный блок текущей строки в другую строку.
 <div class="cmd">bool deleteBlock(int index)</div> - удаляет блок.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
-<div class="cmd">bool createString()</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней.
+<div class="cmd">bool createString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней. 
+Необязательные параметры system, gamecmd - задают соответствующие флаги для новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет строку.
 <div class="cmd">bool find(pcre regexp [,int from])</div> - ищет в массиве строк <div class="cmd">viewdata</div> строку, которая совпадает с регулярным выражением. 
 Если поиск удался, то найденная строка становится текущей. Параметр from - необязательный, можно указать с какой 

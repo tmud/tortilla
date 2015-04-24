@@ -262,6 +262,19 @@ int vd_isGameCmd(lua_State *L)
     return pluginInvArgs(L, "viewdata:isGameCmd");
 }
 
+int vd_isSystem(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString* s = pdata->getselected();
+        int state = (s && s->system) ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isSystem");
+}
+
 int vd_isPrompt(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -663,13 +676,18 @@ int vd_deleteAllBlocks(lua_State *L)
 
 int vd_createString(lua_State *L)
 {
-    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    if (luaT_check(L, 1, LUAT_VIEWDATA) || luaT_check(L, 3, LUAT_VIEWDATA, LUA_TBOOLEAN, LUA_TBOOLEAN))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         bool ok = false;
+        bool system = false; bool gamecmd = false;
+        if (lua_gettop(L) == 3) {
+            system = lua_toboolean(L, 2) != 0 ? true : false;
+            gamecmd = lua_toboolean(L, 3) != 0 ? true : false;
+        }
         if (pdata->getselected_pvs())
         {
-            pdata->insert_new_string();
+            pdata->insert_new_string(gamecmd, system);
             ok = true;
         }
         lua_pushboolean(L, ok ? 1 : 0);
@@ -752,6 +770,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "isFirst", vd_isFirst);
     regFunction(L, "isLast", vd_isLast);
     regFunction(L, "isGameCmd", vd_isGameCmd);
+    regFunction(L, "isSystem", vd_isSystem);
     regFunction(L, "isPrompt", vd_isPrompt);
     regFunction(L, "getPrompt", vd_getPrompt);
     regFunction(L, "getText", vd_getText);

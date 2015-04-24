@@ -89,13 +89,16 @@ public:
         selected = -1;
     }
 
-    void insert_new_string()
+    void insert_new_string(bool gamecmd, bool system)
     {
         if (isselected())
         {
             plugins_strings.insert(plugins_strings.begin() + selected + 1, new PluginViewString);
             parseDataStrings &ss = pdata->strings;
-            ss.insert(ss.begin() + selected + 1, new MudViewString);
+            MudViewString *s = new MudViewString;
+            s->gamecmd = gamecmd;
+            s->system = system;
+            ss.insert(ss.begin() + selected + 1, s);
         }
     }
 
