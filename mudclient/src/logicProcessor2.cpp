@@ -1104,7 +1104,7 @@ IMPL(message)
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
             if (n == 1)
-                swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->at(0).c_str());
+                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
             else
                 swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
             tmcLog(buffer);

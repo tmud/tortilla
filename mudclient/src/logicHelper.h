@@ -219,8 +219,16 @@ public:
             L"Подсветки (highlights)", L"Горячие клавиши (hotkeys)", L"Группы (groups)", L"Переменные (vars)", L"Таймеры (timers)", L"Подстановки (tabs)" };
         static const int ids[] = { LogicHelper::UPDATE_ACTIONS, LogicHelper::UPDATE_ALIASES, LogicHelper::UPDATE_SUBS,
             LogicHelper::UPDATE_ANTISUBS, LogicHelper::UPDATE_GAGS, LogicHelper::UPDATE_HIGHLIGHTS, LogicHelper::UPDATE_HOTKEYS,
-            LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS, 0 };
+            LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS, 0 };        
         int stateid = recognizeState(state);
+        if (stateid == LogicHelper::UPDATE_ALL)
+        {
+            str->assign(L"Все элементы (all)");
+            str->append(stateStrEx(getState(LogicHelper::UPDATE_ACTIONS)));
+            removeLastRN(str);
+            return;
+        }
+
         for (int i = 0; ids[i]; ++i)
         {
             if (stateid == ids[i])
@@ -228,7 +236,7 @@ public:
                 str->assign(cmds[i]);
                 str->append(stateStrEx(getState(stateid)));
                 removeLastRN(str);
-                break;             
+                break;
             }
         }
     }
