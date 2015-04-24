@@ -4,6 +4,7 @@
 
 LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
 {
+     m_if_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|!=|<|>|<=|>=) *('.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
 }
 
 bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
@@ -136,38 +137,58 @@ void LogicHelper::resetTimers()
     m_ticker.sync();
 }
 
-void LogicHelper::processVars(tstring *cmdline)
+bool LogicHelper::canSetVar(const tstring& var)
 {
-    tstring &cmd = *cmdline;
-    m_vars_regexp.findAllMatches(cmd);
-    int vars = m_vars_regexp.getSize();
-    if (!vars) return;
+    return m_varproc.canset(var);
+}
 
-    tstring new_cmd_line(cmd.substr(0, m_vars_regexp.getFirst(0)));
-    for (int i = 0,e=vars-1; i <= e; ++i)
-    {
-        tstring tmp;
-        m_vars_regexp.getString(i, &tmp);
-        int index = m_propData->variables.find( tmp.substr(1) );
-        if (index != -1)
-        {
-            const tstring &var = m_propData->variables.get(index).value;
-            new_cmd_line.append(var);
-        }
+bool LogicHelper::getVar(const tstring& var, tstring *value)
+{
+    return m_varproc.getVar(m_propData->variables, var, value);
+}
 
-        if (i < e)
-        {
-            int end = m_vars_regexp.getLast(i);
-            int next = m_vars_regexp.getFirst(i+1);
-            new_cmd_line.append(cmd.substr(end, next - end));
-        }
-        else
-        {
-            int end = m_vars_regexp.getLast(i);
-            new_cmd_line.append(cmd.substr(end));
-        }
-    }
-    cmdline->assign(new_cmd_line);
+LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
+{
+     m_if_regexp.find(param);
+     if (m_if_regexp.getSize() != 4)
+         return IF_ERROR;
+
+     tstring p1, p2, cond;
+     m_if_regexp.getString(1, &p1);  //1st parameter
+     m_if_regexp.getString(3, &p2);  //2nd parameter
+     m_if_regexp.getString(2, &cond);//condition
+
+     if (m_varproc.processVars(&p1, m_propData->variables, true) &&
+         m_varproc.processVars(&p2, m_propData->variables, true))
+     {
+         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         {
+             int n1 = _wtoi(p1.c_str());
+             int n2 = _wtoi(p2.c_str());
+             if (n1 == n2 && (cond == L"=" || cond == L"<=" || cond == L">="))
+                 return IF_SUCCESS;
+             if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!="))
+                 return IF_SUCCESS;
+             if (n1 > n2 && (cond == L">" || cond == L">=" || cond == L"!="))
+                 return IF_SUCCESS;
+          }
+          else
+          {
+             int result = wcscmp(p1.c_str(), p2.c_str());
+             if (result == 0 && (cond == L"=" || cond == L"<=" || cond == L">="))
+                 return IF_SUCCESS;
+             if (result < 0 && (cond == L"<" || cond == L"<=" || cond == L"!="))
+                 return IF_SUCCESS;
+             if (result > 0 && (cond == L">" || cond == L">=" || cond == L"!="))
+                 return IF_SUCCESS;
+           }
+     }
+     return IF_FAIL;
+}
+
+bool LogicHelper::processVars(tstring *cmdline)
+{
+    return m_varproc.processVars(cmdline, m_propData->variables, false);
 }
 
 void LogicHelper::updateProps(int what)
@@ -196,10 +217,4 @@ void LogicHelper::updateProps(int what)
         m_highlights.init(&m_propData->highlights, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_TIMERS)
         m_timers.init(&m_propData->timers, active_groups);
-
-    tchar separator[2] = { m_propData->cmd_separator, 0 };
-    tstring regexp(L"\\$[^ ");
-    regexp.append(separator);
-    regexp.append(L"]+");
-    m_vars_regexp.setRegExp(regexp, true);
 }

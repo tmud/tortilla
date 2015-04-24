@@ -10,6 +10,7 @@
 extern CMainFrame _wndMain;
 extern Palette256* _palette;
 extern PropertiesData* _pdata;
+extern LogicProcessorMethods* _lp;
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f)
 {
@@ -981,6 +982,16 @@ void reg_activeobject(lua_State *L, const utf8* type, void *object)
     lua_setglobal(L, type);
 }
 
+class VarsFilter : public ActiveObjectsFilter
+{
+public:
+    bool canset(const u8string& var) 
+    {
+        TU2W v(var.c_str());
+        return _lp->canSetVar(tstring(v));
+    }
+} _vars_filter;
+
 void reg_activeobjects(lua_State *L)
 {
     reg_mt_activeobject(L);
@@ -995,6 +1006,5 @@ void reg_activeobjects(lua_State *L)
     reg_activeobject(L, "groups", new AO_Groups(p));
     reg_activeobject(L, "tabs", new AO_Tabs(p));
     reg_activeobject(L, "timers", new AO_Timers(p));
-    reg_activeobject(L, "vars", new AO_Vars(p));    
+    reg_activeobject(L, "vars", new AO_Vars(p, &_vars_filter));
 }
-

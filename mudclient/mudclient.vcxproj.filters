@@ -235,9 +235,6 @@
     <ClInclude Include="..\libs\common\elapsedTimeCounter.h">
       <Filter>External Common Libs</Filter>
     </ClInclude>
-    <ClInclude Include="src\ifProcessor.h">
-      <Filter>Source Files\LogicProcessor</Filter>
-    </ClInclude>
     <ClInclude Include="src\passwordDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -252,6 +249,9 @@
     </ClInclude>
     <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h">
       <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\varProcessor.h">
+      <Filter>Source Files\LogicProcessor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -365,6 +365,9 @@
     </ClCompile>
     <ClCompile Include="src\msdp\msdpNetwork.cpp">
       <Filter>Source Files\Msdp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\varProcessor.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

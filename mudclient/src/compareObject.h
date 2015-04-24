@@ -7,19 +7,13 @@ struct CompareRange
     int end;
 };
 
-class CompareVar
-{
-public:
-    virtual bool get(const tstring& var, tstring* value) const = 0;
-};
-
 class CompareObject
 {
 public:
     CompareObject();
     ~CompareObject();
     bool init(const tstring& key);
-    bool checkToCompare(const tstring& str, const CompareVar* object);
+    bool checkToCompare(const tstring& str);
     void getParameters(std::vector<tstring>* params) const;
     void getRange(CompareRange *range) const;
 

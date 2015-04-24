@@ -333,10 +333,18 @@ IMPL(var)
 
     if (n == 2)
     {
-        int index = propData->variables.find(p->at(0));
-        propData->variables.add(index, p->at(0), p->at(1), L"");       
-        swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", p->c_str(0), p->c_str(1));
-        helper->tmcLog(pb.buffer);
+        if (!m_helper.canSetVar(p->at(0)))
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную '%s' изменить невозможно", p->c_str(0));
+            helper->tmcLog(pb.buffer);
+        }
+        else
+        {
+            int index = propData->variables.find(p->at(0));
+            propData->variables.add(index, p->at(0), p->at(1), L"");
+            swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", p->c_str(0), p->c_str(1));
+            helper->tmcLog(pb.buffer);
+        }
         return;
     }
     p->invalidargs();
@@ -349,6 +357,13 @@ IMPL(unvar)
     int n = p->size();
     if (n == 1)
     {
+        if (!m_helper.canSetVar(p->at(0)))
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную '%s' удалить невозможно.", p->c_str(0));
+            helper->tmcLog(pb.buffer);
+            return;
+        }
+
         int index = propData->variables.find(p->at(0));
         if (index == -1)
         {
@@ -499,7 +514,7 @@ IMPL(connect)
         swprintf(pb.buffer, pb.buffer_len, L"Подключение '%s:%d'...", p->at(0).c_str(), p->toInteger(1));
         tmcLog(pb.buffer);
         m_connecting = true;
-        m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );        
+        m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );
         return;
     }
     p->invalidargs();
@@ -580,10 +595,10 @@ IMPL(ifop)
 {
     if (p->size() == 2)
     {
-        IfProcessor::Result result = m_ifproc.compare(p->at(0), propData->variables);
-        if (result == IfProcessor::IF_SUCCESS)
+        LogicHelper::IfResult result = m_helper.compareIF(p->at(0));
+        if (result == LogicHelper::IF_SUCCESS)
             processCommand(p->at(1));
-        else if (result == IfProcessor::IF_ERROR)
+        else if (result == LogicHelper::IF_ERROR)
             p->invalidoperation();
         return;
     }
@@ -738,7 +753,7 @@ IMPL(wname)
     if (n == 2)
     {
         int window = p->toInteger(0);
-        if (window < 1 || window > OUTPUT_WINDOWS)        
+        if (window < 1 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 1, window);
         m_pHost->setWindowName(window, p->at(1));
         return;
@@ -800,6 +815,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
+        m_helper.processVars(&p);
         if (tc.checkText(&p))       // it color teg
         {
             last_color_teg = true;
@@ -818,7 +834,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
             if (last_color_teg)
             {
                 last_color_teg = false;
-                block.string.assign(params[i]);
+                block.string.assign(p);
                 new_string->blocks.push_back(block);
             }
             else
@@ -826,7 +842,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
                 int last = new_string->blocks.size() - 1;
                 tstring &s = new_string->blocks[last].string;
                 s.append(L" ");
-                s.append(params[i]);
+                s.append(p);
             }
         }
     }

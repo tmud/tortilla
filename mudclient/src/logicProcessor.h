@@ -4,7 +4,6 @@
 #include "logicHelper.h"
 #include "inputProcessor.h"
 #include "logsProcessor.h"
-#include "IfProcessor.h"
 #include "network/network.h"
 
 class LogicProcessorHost
@@ -41,6 +40,8 @@ public:
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
     virtual void doGameCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
+    virtual bool canSetVar(const tstring& var) = 0;
+    virtual bool getVar(const tstring& var, tstring* value) = 0;
 };
 
 class parser;
@@ -61,7 +62,6 @@ class LogicProcessor : public LogicProcessorMethods
     int m_wlogs[OUTPUT_WINDOWS+1];
     std::map<tstring, syscmd_fun> m_syscmds;
     std::vector<tstring> m_plugins_cmds;
-    IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
     MudViewParser m_parser2;
     struct stack_el {
@@ -98,6 +98,8 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
     void doGameCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
+    bool canSetVar(const tstring& var)  { return m_helper.canSetVar(var); }    
+    bool getVar(const tstring& var, tstring* value) { return m_helper.getVar(var, value); }
 
 private:
     void syscmdLog(const tstring& cmd);

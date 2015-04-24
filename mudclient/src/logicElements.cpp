@@ -1,23 +1,6 @@
 #include "stdafx.h"
 #include "logicElements.h"
 
-extern PropertiesData* _pdata;
-class CompareVarHelper : public CompareVar
-{
-    PropertiesData *m_pdata;
-public:
-    CompareVarHelper(PropertiesData *pdata) : m_pdata(pdata)  {}
-    bool get(const tstring& var, tstring* value) const
-    {
-        int index = m_pdata->variables.find(var);
-        if (index == -1) return false;
-        const tstring& current_value = m_pdata->variables.get(index).value;
-        value->assign(current_value);
-        return true;
-    }
-};
-
-
 CompareData::CompareData(MudViewString *s) : string(s), start(0)
 {
     reinit();
@@ -154,9 +137,8 @@ Action::Action(const property_value& v) : m_value(v.value)
 }
 
 bool Action::processing(CompareData& data, tstring* newcmd)
-{    
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+{
+    if (!m_compare.checkToCompare(data.fullstr))
         return false;
     
     std::vector<tstring> params;            // values of params in key
@@ -197,8 +179,7 @@ Sub::Sub(const property_value& v) : m_value(v.value)
 
 bool Sub::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.checkToCompare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -229,8 +210,7 @@ AntiSub::AntiSub(const property_value& v)
 
 bool AntiSub::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.checkToCompare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -252,8 +232,7 @@ Gag::Gag(const property_value& v)
 
 bool Gag::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.checkToCompare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -283,8 +262,7 @@ Highlight::Highlight(const property_value& v)
 
 bool Highlight::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.checkToCompare(data.fullstr))
         return false;
   
     CompareRange range;

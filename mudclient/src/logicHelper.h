@@ -2,6 +2,7 @@
 
 #include "propertiesPages/propertiesData.h"
 #include "logicElements.h"
+#include "varProcessor.h"
 
 template <class T>
 class LogicWrapper : public std::vector<T*>
@@ -110,7 +111,11 @@ public:
     void processHighlights(parseData *parse_data);
     void processTimers(std::vector<tstring>* new_cmds);
     void resetTimers();
-    void processVars(tstring *cmdline);
+    bool canSetVar(const tstring& var);
+    bool getVar(const tstring& var, tstring *value);
+    bool processVars(tstring *cmdline);
+    enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
+    IfResult compareIF(const tstring& param);
 
 private:
     // current workable elements
@@ -122,7 +127,8 @@ private:
     LogicWrapper<Gag> m_gags;
     LogicWrapper<Highlight> m_highlights;
     LogicWrapperTimers m_timers;
-    Pcre16 m_vars_regexp;
+    VarProcessor m_varproc;
+    Pcre16 m_if_regexp;
     PropertiesData *m_propData;
     Ticker m_ticker;
 };

@@ -158,7 +158,6 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\helpManager.h" />
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />
-    <ClInclude Include="src\ifProcessor.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />
@@ -215,6 +214,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\common\splitterEx.h" />
     <ClInclude Include="src\common\wideToAnsi.h" />
     <ClInclude Include="src\common\wideToUtf8.h" />
+    <ClInclude Include="src\varProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
@@ -257,6 +257,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\common\common.cpp" />
     <ClCompile Include="src\common\luaSupport.cpp" />
     <ClCompile Include="src\common\paramsHelper.cpp" />
+    <ClCompile Include="src\varProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico" />

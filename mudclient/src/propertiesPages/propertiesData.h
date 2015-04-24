@@ -481,12 +481,12 @@ struct PropertiesData
         resetOSCColors();
         font_heigth = 10;
         font_italic = 0;
-        if (isVistaOrHigher())
+        /*if (isVistaOrHigher())
         {
             font_name.assign(L"Consolas");   // Consolas more pretty font (exist only Vista+)
             font_bold = FW_BOLD;
         }
-        else
+        else*/
         {
             font_name.assign(L"Fixedsys");
             font_bold = FW_NORMAL;

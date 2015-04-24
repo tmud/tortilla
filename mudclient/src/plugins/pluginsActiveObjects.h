@@ -5,13 +5,19 @@
 #include "logicHelper.h"
 void pluginsUpdateActiveObjects(int type);
 
+class ActiveObjectsFilter
+{
+public:
+    virtual bool canset(const u8string& var) = 0;
+};
+
 class ActiveObjects
 {
 public:
-    ActiveObjects() {}    
+    ActiveObjects() {}
     virtual ~ActiveObjects() {}
     virtual const utf8* type() const = 0;
-    virtual bool select(int index) = 0;      
+    virtual bool select(int index) = 0;
     virtual bool get(int param, u8string* value) = 0;
     virtual bool set(int param, const utf8* value) = 0;
     virtual int  size() const = 0;
@@ -29,7 +35,7 @@ protected:
         return true;
     }
     bool _set(tstring& dst, const utf8 *value)
-    {        
+    {
         u2w.convert(value);
         dst.assign(u2w);
         return true;
@@ -68,7 +74,7 @@ public:
             return false;
         if (selected >= 0 && selected < size())
         {
-            const property_value &v = actobj->get(selected);            
+            const property_value &v = actobj->get(selected);
             if (param == luaT_ActiveObjects::KEY)
                 return _get(v.key, value);
             if (param == luaT_ActiveObjects::VALUE)
@@ -90,7 +96,7 @@ public:
             u8string val(value);
             if (!canset(param, val))
                 return false;
-            property_value &v = actobj->getw(selected);           
+            property_value &v = actobj->getw(selected);
             if (param == luaT_ActiveObjects::KEY)
             {
                 if (find(val.c_str()) != -1)
@@ -272,9 +278,9 @@ public:
     AO_Highlihts(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->highlights, "highlights", LogicHelper::UPDATE_HIGHLIGHTS, CAN_ALL)
     {
     }
-    bool canset(const utf8* name, u8string& value)
+    bool canset(int param, u8string& value)
     {
-        if (!strcmp(name,"value"))
+        if (param == luaT_ActiveObjects::VALUE)
         {
             U2W c(value);
             tstring color(c);
@@ -311,9 +317,9 @@ public:
     AO_Hotkeys(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->hotkeys, "hotkeys", LogicHelper::UPDATE_HOTKEYS, CAN_ALL)
     {
     }
-    bool canset(const utf8* name, u8string& value)
+    bool canset(int param, u8string& value)
     {
-        if (!strcmp(name, "key"))
+        if (param == luaT_ActiveObjects::KEY)
         {
             U2W k(value.c_str());
             tstring key(k);
@@ -358,8 +364,9 @@ public:
 
 class AO_Vars : public ActiveObjectsEx
 {
+    ActiveObjectsFilter *m_pFilter;
 public:
-    AO_Vars(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->variables, "vars", -1, CAN_VALUE)
+    AO_Vars(PropertiesData* obj, ActiveObjectsFilter* filter) : ActiveObjectsEx(obj, &obj->variables, "vars", -1, CAN_VALUE), m_pFilter(filter)
     {
     }
     bool add(const utf8* key, const utf8* value, const utf8* group)
@@ -367,6 +374,13 @@ public:
         if (find(key) != -1)
             return false;
         add3(-1, key, value, "");
+        return true;
+    }
+
+    bool canset(int param, u8string& value)
+    {
+        if (param == luaT_ActiveObjects::KEY && m_pFilter)
+            return m_pFilter->canset(value);
         return true;
     }
 };
@@ -377,13 +391,13 @@ public:
     AO_Timers(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->timers, "timers", LogicHelper::UPDATE_TIMERS, CAN_ALL)
     {
     }
-    bool canset(const utf8* name, u8string& value)
+    bool canset(int param, u8string& value)
     {
-        if (!strcmp(name, "key"))
+        if (param == luaT_ActiveObjects::KEY)
         {
             return isindex(value.c_str());
         }
-        if (!strcmp(name, "value"))
+        if (param == luaT_ActiveObjects::VALUE)
         {
             const utf8 *v = value.c_str();
             const utf8 *p = strchr(v, ';');
@@ -402,7 +416,7 @@ public:
             const utf8 *p = strchr(value, ';');
             if (!p) return false;
             u8string period(value, p - value);
-            if (!isnumber(period.c_str())) return false;            
+            if (!isnumber(period.c_str())) return false;
             u8string action(p + 1);
             if (action.empty()) return false;
             if (find(key) != -1)
@@ -433,16 +447,16 @@ public:
     AO_Groups(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->groups, "groups", LogicHelper::UPDATE_ALL, CAN_VALUE)
     {
     }
-    bool canset(const utf8* name, u8string& value)
+    bool canset(int param, u8string& value)
     {
-        if (!strcmp(name, "value"))
+        if (param == luaT_ActiveObjects::VALUE)
         {
             if (value == "0" || value == "1")
                 return true;
             return false;
-        }        
+        }
         return true;
-    }    
+    }
     bool add(const utf8* key, const utf8* value, const utf8* group)
     {
         if (find(key) != -1)
@@ -450,7 +464,7 @@ public:
         u8string v(value);
         if (v.empty())
             v = "0";
-        if (v == "0" || v == "1")            
+        if (v == "0" || v == "1")
         {
             add3(-1, key, v.c_str(), "");
             return true;
