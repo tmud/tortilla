@@ -14,10 +14,11 @@ public:
     ~CompareObject();
     bool init(const tstring& key);
     bool checkToCompare(const tstring& str);
-    void getParameters(std::vector<tstring>* params) const;
     void getRange(CompareRange *range) const;
+    void translateParameters(const tstring& value, tstring* result) const;
 
 private:
+    void getParameters(std::vector<tstring>* params) const;
     void createCheckPcre(const tstring& key, tstring *prce_template);
     void checkVars(tstring *pcre_template);
 

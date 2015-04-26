@@ -847,6 +847,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
         }
     }
 
+    new_string->system = true;
     data.strings.push_back(new_string);
 
     int log = m_wlogs[view];

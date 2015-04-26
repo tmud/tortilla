@@ -140,25 +140,9 @@ bool Action::processing(CompareData& data, tstring* newcmd)
 {
     if (!m_compare.checkToCompare(data.fullstr))
         return false;
-    
-    std::vector<tstring> params;            // values of params in key
-    m_compare.getParameters(&params);
-    int params_count = params.size();
 
     // parse value and generate result
-    int pos = 0;
-    ParamsHelper values(m_value);
-
-    newcmd->clear();
-    for (int i=0,e=values.getSize(); i<e; ++i)
-    {
-        newcmd->append( m_value.substr(pos, values.getFirst(i)-pos) );
-        int id = values.getId(i);
-        if (id < params_count)
-            newcmd->append(params[id]);            
-        pos = values.getLast(i);        
-    }
-    newcmd->append(m_value.substr(pos));
+    m_compare.translateParameters(m_value, newcmd);
 
     // drop mode -> change source MudViewString
     if (m_value.find(L"drop") != tstring::npos)
@@ -198,7 +182,9 @@ bool Sub::processing(CompareData& data)
 
     int pos = data.fold(range);
     if (pos == -1) return false;
-    data.string->blocks[pos].string = m_value;
+
+    m_compare.translateParameters(m_value, &data.string->blocks[pos].string);
+
     data.start = pos+1;
     return true;
 }
