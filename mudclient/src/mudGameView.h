@@ -726,7 +726,8 @@ private:
             {
                 int vs = m_view.getViewString();
                 int page = m_view.getStringsOnDisplay();
-                showHistory(vs-page, -1);
+                if (vs > page)
+                    showHistory(vs-page, -1);
                 return true;
             }
 
