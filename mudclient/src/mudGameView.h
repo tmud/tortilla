@@ -722,6 +722,14 @@ private:
     {
         if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
         {
+            if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
+            {
+                int vs = m_view.getViewString();
+                int page = m_view.getStringsOnDisplay();
+                showHistory(vs-page, -1);
+                return true;
+            }
+
             MudView &view = (m_history.IsWindowVisible()) ? m_history : m_view;
             int visible_string = view.getViewString();
             int page = view.getStringsOnDisplay();
@@ -822,30 +830,14 @@ private:
             return;
         if (view == 0)
         {
-            bool last = m_view.isLastString();
             int vs = m_view.getViewString();
+            bool last = m_view.isLastString();            
             m_view.addText(parse_data, &m_history);
             checkHistorySize();
 
             if (!m_history.IsWindowVisible() && !last)
             {
-                CDC dc(m_view.GetDC());
-                HFONT current_font = dc.SelectFont(m_propElements.standard_font);
-                SIZE sz = {0,0};
-                GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
-                dc.SelectFont(current_font);
-
-                RECT rc; m_hSplitter.GetClientRect(&rc);
-                int lines0 = rc.bottom / sz.cy;
-                int dy0 = rc.bottom - (lines0 * sz.cy);
-                int curpos = m_hSplitter.GetSplitterPos();
-                int lines = curpos / sz.cy;
-                curpos = dy0 + (lines * sz.cy);
-                vs = vs - (lines0 - lines) + (m_history.getLastString() - m_view.getLastString());
-
-                m_hSplitter.SetSplitterPos(curpos);
-                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_NONE);
-                m_history.setViewString(vs);
+                showHistory(vs, 1);
             }
             else
             {
@@ -956,6 +948,27 @@ private:
     {
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
         m_history.truncateStrings(m_propData->view_history_size);
+    }
+
+    void showHistory(int vs, int dt)
+    {
+        CDC dc(m_view.GetDC());
+        HFONT current_font = dc.SelectFont(m_propElements.standard_font);
+        SIZE sz = { 0, 0 };
+        GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
+        dc.SelectFont(current_font);
+
+        RECT rc; m_hSplitter.GetClientRect(&rc);
+        int lines0 = rc.bottom / sz.cy;
+        int dy0 = rc.bottom - (lines0 * sz.cy);
+        int curpos = m_hSplitter.GetSplitterPos();
+        int lines = curpos / sz.cy;
+        curpos = dy0 + (lines * sz.cy);
+        vs = vs - (lines0 - lines) * dt + (m_history.getLastString() - m_view.getLastString());
+
+        m_hSplitter.SetSplitterPos(curpos);
+        m_hSplitter.SetSinglePaneMode(SPLIT_PANE_NONE);
+        m_history.setViewString(vs);
     }
 
     void saveClientWindowPos()
