@@ -152,6 +152,13 @@ public:
         }
     }
 
+    void reset()
+    {
+        m_history_index = -1;
+        clear();
+        m_undo.clear();
+    }
+
 private:
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

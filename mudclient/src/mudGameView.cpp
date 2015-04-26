@@ -82,6 +82,7 @@ void MudGameView::onNewProfile()
         updateProps();
         loadClientWindowPos();
         loadPlugins();
+        m_bar.reset();
     }
 }
 
@@ -118,6 +119,7 @@ void MudGameView::onLoadProfile()
         updateProps();
         loadClientWindowPos();
         loadPlugins();
+        m_bar.reset();
     }
 }
 
@@ -164,6 +166,7 @@ void MudGameView::onNewWorld()
         updateProps();
         loadClientWindowPos();
         loadPlugins();
+        m_bar.reset();
     }
 }
 
