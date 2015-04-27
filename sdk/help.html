@@ -577,7 +577,10 @@ local t = {...} -- правильное написание
 <div class="cmd">luaT_ActiveObjects(lua_State *pL, const char* type)</div> - инициализация (конструктор), возможные типы см. выше.
 <div class="cmd">int  size()</div> - количество элементов.
 <div class="cmd">bool select(int index)</div> - выбор нужного элемента по индексу.
-<div class="cmd">bool add(const utf8* key, const utf8* value, const utf8* group)</div> - добавление нового элемента.
+<div class="cmd">bool add(const utf8* key, const utf8* value, const utf8* group)</div> - добавление нового элемента. Если элемент существует, 
+то выходит с ошибкой.
+<div class="cmd">bool replace(const utf8* key, const utf8* value, const utf8* group)</div> - заменяет текущий элемент. Если элемент не существует, 
+то добавляет новый.
 <div class="cmd">bool del()</div> - удаление текущего элемента.
 <div class="cmd">int  getIndex()</div> - получение позиции текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - переместить текущий элемент в нужную позицию.
@@ -996,7 +999,9 @@ render:rect(r2)
 Возможные варианты атрибута: 'key', 'value', 'group'.
 <div class="cmd">string get(string type)</div> - возвращает значения атрибута. Если атрибут неверный, возвращается nul.
 <div class="cmd">bool add(string key[ ,string value, string group])</div> - добавляет новый элемент. Если не указана группа, то 
-элемент добавляется в первую группу.
+элемент добавляется в первую группу. Если элемент существует, то происходит ошибка и добавление не происходит.
+<div class="cmd">bool replace(string key[ ,string value, string group])</div> - заменяет текущий элемент. Если элемент не 
+существует, то он добавляется.
 <div class="cmd">bool delete()</div> - удаляет текущий элемент.
 <div class="cmd">int  getIndex()</div> - возвращает индекс-приоритет текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - установка текущего приоритета у текущего элемента.

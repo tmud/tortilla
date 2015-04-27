@@ -11,6 +11,7 @@ class Jmc3Import
     lua_State *L;
     u8string cmdsymbol, separator;
     u8string jmc_cmdsymbol, jmc_separator;
+    bool rewrite_mode;
 
 public:
     Jmc3Import(lua_State *pL);

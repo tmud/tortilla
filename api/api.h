@@ -409,6 +409,12 @@ public:
         luaT_run(L, "add", "osss", key, value, group);
         return boolresult();
     }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "replace", "osss", key, value, group);
+        return boolresult();
+    }
     bool del()
     {
         if (!getao()) return false;

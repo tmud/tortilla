@@ -47,6 +47,7 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
     CEdit m_text;
     CButton m_add;
     CButton m_del;
+    CButton m_reset;
     CButton m_filter;
     CComboBox m_cbox;
     bool m_filterMode;
@@ -77,6 +78,7 @@ private:
        MESSAGE_HANDLER(WM_USER, OnHotkeyEditChanged)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
        COMMAND_HANDLER(IDC_EDIT_HOTKEY_TEXT, EN_CHANGE, OnHotkeyTextChanged)
@@ -141,6 +143,21 @@ private:
         return 0;
     }
 
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        int sel = m_list.getOnlySingleSelection();
+        m_list.SelectItem(-1);
+        m_text.SetWindowText(L"");
+        m_hotkey.SetWindowText(L"");
+        if (sel == -1)
+        {
+            m_add.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
+        }
+        m_hotkey.SetFocus();
+        return 0;
+    }
+
     LRESULT OnFilter(WORD, WORD, HWND, BOOL&)
     {
         saveValues();
@@ -177,6 +194,7 @@ private:
         {
              int len = m_hotkey.GetWindowTextLength();
              m_add.EnableWindow(len == 0 ? FALSE : TRUE);
+             m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
              if (len > 0)
              {
                 tstring hotkey;
@@ -229,6 +247,7 @@ private:
         {
             m_del.EnableWindow(FALSE);
             m_add.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
             if (!m_deleted) 
             {
               m_hotkey.SetWindowText(L"");
@@ -238,6 +257,7 @@ private:
         else if (items_selected == 1)
         {
             m_del.EnableWindow(TRUE);
+            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const property_value& v = m_list_values.get(item);
             m_hotkey.SetWindowText( v.key.c_str() );
@@ -250,6 +270,7 @@ private:
         {
             m_del.EnableWindow(TRUE);
             m_add.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
             m_hotkey.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
@@ -297,6 +318,7 @@ private:
         m_text.Attach(GetDlgItem(IDC_EDIT_HOTKEY_TEXT));
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Hotkey", 20);
@@ -308,6 +330,7 @@ private:
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_reset.EnableWindow(FALSE);
         m_state_helper.init(dlg_state, &m_list);
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
         if (m_filterMode)

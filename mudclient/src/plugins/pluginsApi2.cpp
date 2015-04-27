@@ -922,6 +922,40 @@ int ao_add(lua_State *L)
     return ao_inv_args(L, "activeobjects:add");
 }
 
+int ao_replace(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), lua_tostring(L, 3), lua_tostring(L, 4));
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 4, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TNIL, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), "", lua_tostring(L, 4));
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 4, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TSTRING, LUA_TNIL) ||
+        luaT_check(L, 3, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), lua_tostring(L, 3), "");
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 2, LUAT_ACTIVEOBJS, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), "", "");
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    return ao_inv_args(L, "activeobjects:replace");
+}
+
 int ao_delete(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_ACTIVEOBJS))
@@ -986,6 +1020,7 @@ void reg_mt_activeobject(lua_State *L)
     regFunction(L, "get", ao_get);
     regFunction(L, "size", ao_size);
     regFunction(L, "add", ao_add);
+    regFunction(L, "replace", ao_replace);
     regFunction(L, "delete", ao_delete);
     regFunction(L, "getindex", ao_getIndex);
     regFunction(L, "setindex", ao_setIndex);

@@ -45,14 +45,15 @@ void pluginLog(const tstring& msg) { _lp->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
 //---------------------------------------------------------------------
-wchar_t plugin_buffer[1024];
+MemoryBuffer pluginBuffer(16384*sizeof(wchar_t));
+wchar_t* plugin_buffer() { return (wchar_t*)pluginBuffer.getData(); }
 int pluginInvArgs(lua_State *L, const utf8* fname)
 {
     int n = lua_gettop(L);
     Utf8ToWide f(fname);
-    swprintf(plugin_buffer, L"'%s'.%s: Некорректные параметры(%d): ",
+    swprintf(plugin_buffer(), L"'%s'.%s: Некорректные параметры(%d): ",
         _cp->get(Plugin::FILE), (const wchar_t*)f, n);
-    tstring log(plugin_buffer);
+    tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
         int t = lua_type(L, i);
@@ -75,31 +76,31 @@ int pluginError(const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s'.%s: %s", _cp->get(Plugin::FILE), (const wchar_t*)f, (const wchar_t*)e);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp->get(Plugin::FILE), (const wchar_t*)f, (const wchar_t*)e);
+    pluginLog(plugin_buffer());
     return 0;
 }
 
 int pluginError(const utf8* error)
 {
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    pluginLog(plugin_buffer());
     return 0;
 }
 
 int pluginLog(const utf8* msg)
 {
     Utf8ToWide e(msg);
-    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    pluginLog(plugin_buffer());
     return 0;
 }
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 {
-    swprintf(plugin_buffer, L"'%s': %s", fname, msg);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s': %s", fname, msg);
+    pluginLog(plugin_buffer());
 }
 //---------------------------------------------------------------------
 int addCommand(lua_State *L)

@@ -22,6 +22,7 @@ public:
     virtual bool set(int param, const utf8* value) = 0;
     virtual int  size() const = 0;
     virtual bool add(const utf8* key, const utf8* value, const utf8* group) = 0;
+    virtual bool replace(const utf8* key, const utf8* value, const utf8* group) = 0;
     virtual int  getindex() = 0;
     virtual bool setindex(int index) = 0;
     virtual void update() = 0;
@@ -218,6 +219,14 @@ public:
         add3(-1, key, value, group);
         return true;
     }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (checkDoubles(key))
+            return false;
+        int index = find(key);
+        add3(index, key, value, group);
+        return true;
+    }
 };
 
 class AO_Subs : public ActiveObjectsEx
@@ -233,6 +242,14 @@ public:
         if (find(key) != -1)
             return false;
         add3(-1, key, value, group);
+        return true;
+    }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (checkDoubles(key))
+            return false;
+        int index = find(key);
+        add3(index, key, value, group);
         return true;
     }
 };
@@ -252,6 +269,14 @@ public:
         add3(-1, key, "", group);
         return true;
     }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (checkDoubles(key))
+            return false;
+        int index = find(key);
+        add3(index, key, "", group);
+        return true;
+    }
 };
 
 class AO_Actions : public ActiveObjectsEx
@@ -267,6 +292,14 @@ public:
         if (find(key) != -1)
             return false;
         add3(-1, key, value, group);
+        return true;
+    }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (checkDoubles(key))
+            return false;
+        int index = find(key);
+        add3(index, key, value, group);
         return true;
     }
 };
@@ -294,9 +327,20 @@ public:
     }
     bool add(const utf8* key, const utf8* value, const utf8* group)
     {
+        return add(key, value, group,false);
+    }
+
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        return add(key, value, group,true);
+    }
+private:
+    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    {
         if (checkDoubles(key))
             return false;
-        if (find(key) != -1)
+        int index = find(key);
+        if (index != -1 && !replace_mode)
             return false;
         U2W c(value);
         tstring color(c);
@@ -305,8 +349,8 @@ public:
             return false;
         U2W _key(key), _group(group);
         pdata->addGroup(_group);
-        actobj->add(-1, _key, color, _group);
-        return true;      
+        actobj->add(index, _key, color, _group);
+        return true;
     }
 };
 
@@ -328,7 +372,19 @@ public:
         }
         return true;
     }
+
     bool add(const utf8* key, const utf8* value, const utf8* group)
+    {
+        return add(key, value, group, false);
+    }
+
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        return add(key, value, group, true);
+    }
+
+private:
+    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
     {
         U2W k(key);
         tstring _key(k);
@@ -336,11 +392,12 @@ public:
         if (!hk.isKey(_key, &normkey))
             return false;
         W2U nk(normkey.c_str());
-        if (find(nk) != -1)
+        int index = find(nk);
+        if (index != -1 && !replace_mode)
             return false;
         U2W _value(value), _group(group);
         pdata->addGroup(_group);
-        actobj->add(-1, normkey, _value, _group);
+        actobj->add(index, normkey, _value, _group);
         return true;
     }
 };
@@ -360,6 +417,14 @@ public:
         add3(-1, key, "", group);
         return true;
     }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (checkDoubles(key))
+            return false;
+        int index = find(key);
+        add3(index, key, "", group);
+        return true;
+    }
 };
 
 class AO_Vars : public ActiveObjectsEx
@@ -374,6 +439,13 @@ public:
         if (find(key) != -1)
             return false;
         add3(-1, key, value, "");
+        return true;
+    }
+
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        int index = find(key);
+        add3(index, key, value, "");
         return true;
     }
 
@@ -410,6 +482,17 @@ public:
 
     bool add(const utf8* key, const utf8* value, const utf8* group)
     {
+        return add(key, value, group, false);
+    }
+
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        return add(key, value, group, true);
+    }
+
+private:
+    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    {
         // key = 1..10, value = interval;action (ex. 1;drink)
         if (isindex(key))
         {
@@ -419,15 +502,15 @@ public:
             if (!isnumber(period.c_str())) return false;
             u8string action(p + 1);
             if (action.empty()) return false;
-            if (find(key) != -1)
+            int index = find(key);
+            if (index != -1 && !replace_mode)
                 return false;
-            add3(-1, key, value, group);
+            add3(index, key, value, group);
             return true;
         }
         return false;
     }
 
-private:
     bool isnumber(const utf8* str) const
     {
         return (strspn(str, "0123456789") != strlen(str)) ? false : true;
@@ -440,7 +523,7 @@ private:
         return (index >= 1 && index <= 10) ? true : false;
     }
 };
-   
+
 class AO_Groups : public ActiveObjectsEx
 {
 public:
@@ -459,14 +542,24 @@ public:
     }
     bool add(const utf8* key, const utf8* value, const utf8* group)
     {
-        if (find(key) != -1)
+        return add(key, value, group, false);
+    }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        return false;
+    }
+private:
+    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    {
+        int index = find(key);
+        if (index != -1 && !replace_mode)
             return false;
         u8string v(value);
         if (v.empty())
             v = "0";
         if (v == "0" || v == "1")
         {
-            add3(-1, key, v.c_str(), "");
+            add3(index, key, v.c_str(), "");
             return true;
         }
         return false;
@@ -527,6 +620,17 @@ public:
         if (tabs.find(new_tab) != -1)
             return false;
         tabs.add(-1, new_tab);
+        return true;
+    }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        u2w.convert(key);
+        tstring new_tab(u2w);
+        if (new_tab.empty())
+            return false;
+        PropertiesList &tabs = data->tabwords;
+        int index = tabs.find(new_tab);
+        tabs.add(index, new_tab);
         return true;
     }
     bool del()

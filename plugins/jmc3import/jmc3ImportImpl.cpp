@@ -4,7 +4,7 @@
 #include "paramsDlg.h"
 
 Jmc3Import::Jmc3Import(lua_State *pL) : m_aliases(pL, "aliases"), m_actions(pL, "actions"), m_subs(pL, "subs"), m_antisubs(pL, "antisubs"),
-m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups")
+m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups"), rewrite_mode(false)
 {
     L = pL;
     initPcre();
@@ -21,6 +21,9 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         return false;
     jmc_cmdsymbol = params.cmdsymbol;
     jmc_separator = params.separator;
+    rewrite_mode = params.rewrite_mode;
+
+    HCURSOR cursor = SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_WAIT)));
 
     std::vector<u8string> &v = params.strings;
 
@@ -63,6 +66,7 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         if (!result && errors)
             errors->push_back(v[i]);
     }
+    SetCursor(cursor);
 
     // update all elements, through updating groups
     m_groups.update();
@@ -92,7 +96,8 @@ bool Jmc3Import::processAlias()
     if (!parseParams(3, 3, &p))
         return false;
     convert(&p[1]);
-    return m_aliases.add(p[0].c_str(), p[1].c_str(), p[2].c_str());
+    return(rewrite_mode) ? m_aliases.replace(p[0].c_str(), p[1].c_str(), p[2].c_str()) :
+     m_aliases.add(p[0].c_str(), p[1].c_str(), p[2].c_str());
 }
 
 bool Jmc3Import::processAction()
@@ -101,7 +106,8 @@ bool Jmc3Import::processAction()
     if (!parseParams(4, 4, &p))
         return false;
     convert(&p[1]);
-    return m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
+    return (rewrite_mode) ? m_actions.replace(p[0].c_str(), p[1].c_str(), p[3].c_str()) :
+        m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
 }
 
 bool Jmc3Import::processSubs()
@@ -109,7 +115,8 @@ bool Jmc3Import::processSubs()
     std::vector<u8string> p;
     if (!parseParams(2, 2, &p))
         return false;
-    return m_subs.add(p[0].c_str(), p[1].c_str(), "default");
+    return (rewrite_mode) ? m_subs.replace(p[0].c_str(), p[1].c_str(), "default") :
+        m_subs.add(p[0].c_str(), p[1].c_str(), "default");
 }
 
 bool Jmc3Import::processAntisub()
@@ -117,7 +124,8 @@ bool Jmc3Import::processAntisub()
     std::vector<u8string> p;
     if (!parseParams(1, 1, &p))
         return false;
-    return m_antisubs.add(p[0].c_str(), NULL, "default");
+    return (rewrite_mode) ? m_antisubs.replace(p[0].c_str(), NULL, "default") :
+        m_antisubs.add(p[0].c_str(), NULL, "default");
 }
 
 bool Jmc3Import::processHotkey()
@@ -130,7 +138,8 @@ bool Jmc3Import::processHotkey()
     if (ps == 3)
         group = p[2];
     convert(&p[1]);
-    return m_hotkeys.add(p[0].c_str(), p[1].c_str(), group.c_str());
+    return (rewrite_mode) ? m_hotkeys.replace(p[0].c_str(), p[1].c_str(), group.c_str()) :
+        m_hotkeys.add(p[0].c_str(), p[1].c_str(), group.c_str());
 }
 
 bool Jmc3Import::processGags()
@@ -138,7 +147,8 @@ bool Jmc3Import::processGags()
     std::vector<u8string> p;
     if (!parseParams(1, 1, &p))
         return false;
-    return m_gags.add(p[0].c_str(), NULL, "default");
+    return (rewrite_mode) ? m_gags.replace(p[0].c_str(), NULL, "default") :
+        m_gags.add(p[0].c_str(), NULL, "default");
 }
 
 bool Jmc3Import::processHighlight()
@@ -146,7 +156,8 @@ bool Jmc3Import::processHighlight()
     std::vector<u8string> p;
     if (!parseParams(3, 3, &p))
         return false;
-    return m_highlights.add(p[1].c_str(), p[0].c_str(), p[2].c_str());
+    return (rewrite_mode) ? m_highlights.replace(p[1].c_str(), p[0].c_str(), p[2].c_str()) :
+        m_highlights.add(p[1].c_str(), p[0].c_str(), p[2].c_str());
 }
 
 bool Jmc3Import::processVariable()
@@ -154,7 +165,8 @@ bool Jmc3Import::processVariable()
     std::vector<u8string> p;
     if (!parseParams(2, 2, &p)) 
         return false;
-    return m_vars.add(p[0].c_str(), p[1].c_str(), NULL);
+    return (rewrite_mode) ?  m_vars.replace(p[0].c_str(), p[1].c_str(), NULL) :
+        m_vars.add(p[0].c_str(), p[1].c_str(), NULL);
 }
 
 bool Jmc3Import::convert(u8string *str)
@@ -258,37 +270,48 @@ void Jmc3Import::replaceLegacy(u8string *legacy)
     for (; it!=it_end; ++it)
     {
         int pos = legacy->find(it->first);
-        if (pos == -1)
-            continue;
-        u8string newstr(legacy->substr(0, pos));
-        newstr.append(it->second);
-        pos = pos + it->first.length();
-        newstr.append(legacy->substr(pos));
-        legacy->swap(newstr);
+        while (pos != -1)
+        {         
+            u8string newstr(legacy->substr(0, pos));
+            newstr.append(it->second);
+            pos = pos + it->first.length();
+            newstr.append(legacy->substr(pos));
+            legacy->swap(newstr);
+            pos = legacy->find(it->first);
+        }
     }
 }
 
 void Jmc3Import::replaceCommand(u8string *cmd)
 {
-     iterator it = m_commands.find(*cmd);
-     if (it != m_commands.end())
-         cmd->assign(it->second);
+    if (cmd->length() < 3)
+        return;
+     iterator it = m_commands.begin(), it_end = m_commands.end();
+     for (;it!=it_end;++it)
+     {
+         const u8string& key = it->first;
+         if (!strncmp(key.c_str(), cmd->c_str(), cmd->length()))
+         {
+            cmd->assign(it->second);
+            return;
+         }
+     }
 }
 
 void Jmc3Import::initLegacy()
 {
     std::map<u8string, u8string>& l = m_legacy;
     l["%%"] = "%";
-    l = m_commands;
-    l["daa"] = "hide";
-    l["restorewindow"] = "showwindow";
-    l["showme"] = "output";
-    l["substitute"] = "sub";
-    l["antisubstitute"] = "antisub";
-    l["unantisubstitute"] = "unantisub";
-    l["tabadd"] = "tab";
-    l["tabdel"] = "untab";
-    l["variable"] = "var";    
+    std::map<u8string, u8string>& c = m_commands;    
+    c["daa"] = "hide";
+    c["restorewindow"] = "showwindow";
+    c["showme"] = "output";
+    c["substitute"] = "sub";
+    c["antisubstitute"] = "antisub";
+    c["unantisubstitute"] = "unantisub";
+    c["tabadd"] = "tab";
+    c["tabdel"] = "untab";
+    c["variable"] = "var";    
 }
 
 void Jmc3Import::initPcre()
