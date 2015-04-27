@@ -385,11 +385,8 @@ private:
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
 
-        if (m_propElements.global.welcome)
-        {
-            m_propElements.global.welcome = 0;
-            PostMessage(WM_USER + 3);
-        }
+        if (m_manager.isFirstStartup())
+            PostMessage(WM_USER+3);
 
         SetTimer(1, 200);
         SetTimer(2, 50);

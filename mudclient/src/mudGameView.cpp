@@ -23,8 +23,11 @@ bool MudGameView::initialize()
 
     if (!m_manager.loadProfile())
     {
-        if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
-            return false;
+        if (!m_manager.isDefaultProfile())
+        {
+            if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
+                return false;
+        }
         if (!m_manager.loadNewProfile(m_manager.getProfileGroup(), L"player"))
         {
             if (!m_manager.createNewProfile(L"player"))

@@ -1,8 +1,9 @@
 #include "stdafx.h"
 #include "profileHelpers.h"
 #include "profilesPath.h"
+#include "AboutDlg.h"
 
-ProfilesGroupList::ProfilesGroupList() : m_last_accessed(-1)
+ProfilesGroupList::ProfilesGroupList() : m_last_accessed(-1), m_empty_group_list(false), m_first_startup(false)
 {
 }
 
@@ -34,10 +35,11 @@ bool ProfilesGroupList::init()
         initEmptyGroupList(ph.dirs);
 
     tstring config(L"mudworld");
-    if (!m_groups_list.empty())
+    if (m_last_accessed != -1 && !m_groups_list.empty())
         config.assign(m_groups_list[m_last_accessed]);
     else
     {
+        m_groups_list.clear();
         m_groups_list.push_back(config);
         m_last_accessed = 0;
     }
@@ -110,9 +112,22 @@ void ProfilesGroupList::initEmptyGroupList(const std::vector<tstring>& dirs)
       }
   }
   f.deletenode();
+
+  m_empty_group_list = true;
+  m_first_startup = true;
+  m_last_accessed = -1;
   if (m_groups_list.empty())
       return;
-  m_last_accessed = 0;
+
+  CStartupWorldDlg dlg;
+  dlg.setList(m_groups_list);
+
+  if (dlg.DoModal() != IDOK)
+      return;
+
+  m_last_accessed = dlg.getItem();
+  if (!dlg.getAboutState())
+      m_first_startup = false;
 }
 //---------------------------------------------------------------------------
 void ProfilesList::init(const tstring& group)

@@ -324,6 +324,19 @@ BEGIN
     LTEXT           "Введите пароль:",IDC_STATIC,7,13,61,8
 END
 
+IDD_STARTUP_WORLD DIALOGEX 0, 0, 300, 159
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Выберите мир"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,192,138,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,243,138,50,14
+    LTEXT           "Для начала работы с клиентом выберите мир, в котором вы начнете игру:",IDC_STATIC,7,7,286,8
+    LISTBOX         IDC_LIST_STARTUP_WORLD,7,18,286,115,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Открыть описание возможностей клиента",IDC_CHECK_OPEN_ABOUT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,137,160,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -432,6 +445,14 @@ BEGIN
         RIGHTMARGIN, 221
         TOPMARGIN, 7
         BOTTOMMARGIN, 42
+    END
+
+    IDD_STARTUP_WORLD, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 293
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 152
     END
 END
 #endif    // APSTUDIO_INVOKED
