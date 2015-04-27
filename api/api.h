@@ -435,13 +435,13 @@ public:
     }
     bool get(int param, u8string* value)
     {
-        if (!param || !value || !getao()) return false;
+        if (!value || !getao()) return false;
         luaT_run(L, "get", "od", param);
         return strresult(value);
     }
     bool set(int param, const utf8* value)
     {
-        if (!param || !value || !getao()) return false;
+        if (!value || !getao()) return false;
         luaT_run(L, "set", "ods", param, value);
         return boolresult();
     }

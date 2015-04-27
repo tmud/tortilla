@@ -27,6 +27,8 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 
     std::vector<u8string> &v = params.strings;
 
+    std::vector<u8string> disabled_groups;
+
     // get jmc cmd prefix
     for (int i=0,e=v.size(); i<e; ++i)
     {
@@ -44,7 +46,15 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 
         param.findall(p.c_str());
         if (!param.size())        //simple options
+        {
+            if (c == "group" && disable_group.find(p.c_str()) )
+            {
+                u8string group;
+                disable_group.get(1, &group);
+                disabled_groups.push_back(group);            
+            }
             continue;
+        }
 
         bool result = true;
         if (c == "action")
@@ -65,7 +75,22 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
             result = processVariable();
         if (!result && errors)
             errors->push_back(v[i]);
+    }    
+    for (int i=0,e=disabled_groups.size(); i<e; ++i)
+    {
+        for (int j=1,je=m_groups.size(); j<=je; ++j)
+        {
+            m_groups.select(j);
+            u8string group;
+            m_groups.get(luaT_ActiveObjects::KEY, &group);
+            if (group == disabled_groups[i])
+            {
+                m_groups.set(luaT_ActiveObjects::VALUE, "0");
+                break;
+            }
+        }
     }
+
     SetCursor(cursor);
 
     // update all elements, through updating groups
@@ -319,6 +344,7 @@ void Jmc3Import::initPcre()
     base.init("^(\\W)(.*?) +(.*) *");
     param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
     ifcmd.init("^.if .*");
+    disable_group.init("disable (.*)");
 }
 
 void Jmc3Import::initCmdSymbols()
