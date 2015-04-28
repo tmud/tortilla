@@ -29,9 +29,11 @@ InputCommand::InputCommand(const tstring& cmd) : empty(true)
     }
     command.assign(fcmd.substr(0,pos));
     parameters.assign(fcmd.substr(pos+1));
+    fcmd.resize(pos+1);
 
     BracketsMarker bm;
     bm.unmark(&parameters, &parameters_list);
+    fcmd.append(parameters);
 
     // get parameters
     /*const WCHAR* p = fcmd.c_str() + pos + 1;
@@ -48,19 +50,23 @@ InputCommand::InputCommand(const tstring& cmd) : empty(true)
     }*/
 }
 
-InputProcessor::InputProcessor() : m_separator(0), m_prefix(0)
+void InputCommand::replace_command(const tstring& cmd)
+{
+    if (cmd == command)
+        return;
+    command.assign(cmd);
+    full_command.assign(cmd);
+    full_command.append(L" ");
+    full_command.append(parameters);
+}
+
+InputProcessor::InputProcessor(tchar separator, tchar prefix) : m_separator(separator), m_prefix(prefix)
 {
 }
 
 InputProcessor::~InputProcessor()
 {
     clear();
-}
-
-void InputProcessor::updateProps(PropertiesData *pdata) 
-{
-    m_prefix = pdata->cmd_prefix;
-    m_separator = pdata->cmd_separator;
 }
 
 void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds)

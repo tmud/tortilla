@@ -7,6 +7,7 @@ class InputCommand
 {
 public:
     InputCommand(const tstring& cmd);
+    void replace_command(const tstring& cmd);
     tstring full_command;                   // full command (with parameters)
     tstring command;                        // only command
     tstring parameters;                     // only parameters (without command) as single line (without trimming)
@@ -18,9 +19,8 @@ typedef std::vector<InputCommand*> InputCommandsList;
 class InputProcessor
 {   
 public:
-    InputProcessor();
+    InputProcessor(tchar separator, tchar prefix);
     ~InputProcessor();
-    void updateProps(PropertiesData *pdata);
     void process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds);
     InputCommandsList commands;
 

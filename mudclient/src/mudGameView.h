@@ -632,6 +632,8 @@ private:
         tstring history(cmd);
         m_plugins.processHistoryCmd(&history);
         m_bar.addToHistory(history);
+        BracketsMarker bm;
+        bm.mark(&cmd);
         m_processor.processCommand(cmd);
         return 0;
     }
@@ -924,7 +926,7 @@ private:
         return m_parent;
     }
 
-    void preprocessGameCmd(tstring* cmd);
+    void preprocessGameCmd(InputCommand* cmd);
 
     void checkHistorySize()
     {

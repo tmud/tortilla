@@ -293,6 +293,8 @@ bool Hotkey::processing(const tstring& key, tstring *newcmd)
 Action::Action(const property_value& v) : m_value(v.value)
 {
     m_compare.init(v.key);
+    BracketsMarker bm;
+    bm.mark(&m_value);
 }
 
 bool Action::processing(CompareData& data, tstring* newcmd)
@@ -300,15 +302,11 @@ bool Action::processing(CompareData& data, tstring* newcmd)
     if (!m_compare.checkToCompare(data.fullstr))
         return false;
 
-    BracketsMarker bm;
-    tstring value(m_value);
-    bm.mark(&value);
-
     // parse value and generate result
-    m_compare.translateParameters(value, newcmd);
+    m_compare.translateParameters(m_value, newcmd);
 
     // drop mode -> change source MudViewString
-    if (value.find(L"drop") != tstring::npos)
+    if (m_value.find(L"drop") != tstring::npos)
     {
         CompareRange range;
         m_compare.getRange(&range);

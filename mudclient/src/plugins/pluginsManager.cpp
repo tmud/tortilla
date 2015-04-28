@@ -222,13 +222,13 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
     }
 }
 
-void PluginsManager::processGameCmd(tstring* cmd)
+void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    bool syscmd = (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix);
-
-    InputCommand icmd(*cmd);
-    std::vector<tstring> &p = icmd.parameters_list;
-    p.insert(p.begin(), (syscmd) ? icmd.command.substr(1) : icmd.command);
+    //todo
+    /*bool syscmd = (!cmd->empty && cmd->command.at(0) == m_propData->cmd_prefix);
+    std::vector<tstring> p;
+    p.push_back((syscmd) ? cmd->command.substr(1) : cmd->command);
+    p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
     if (syscmd)
     {
         if (doPluginsTableMethod("syscmd", &p))
@@ -236,7 +236,7 @@ void PluginsManager::processGameCmd(tstring* cmd)
         return;
     }
     if (doPluginsTableMethod("gamecmd", &p))
-        concatCommand(p, false, cmd);
+        concatCommand(p, false, cmd);*/
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -516,9 +516,9 @@ void PluginsManager::processToSend(Network* network)
     m_msdp_network.sendExist(network);
 }
 
-void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool system, tstring* cmd)
+void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {
-    cmd->clear();
+    /*cmd->clear();
     if (parts.empty())
         return;
     if (system)
@@ -538,5 +538,5 @@ void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool syste
             cmd->append(s);
             cmd->append(L"'");
         }
-    }
+    }*/
 }

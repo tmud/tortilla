@@ -1,6 +1,7 @@
 // In that file - Code for scripting
 #include "stdafx.h"
 #include "logicProcessor.h"
+#include "inputProcessor.h"
 #include "helpManager.h"
 #include "passwordDlg.h"
 
@@ -12,20 +13,20 @@
 class parser
 {
 public:
-    parser(const tstring&cmdname, tstring *error_out) : cmd(cmdname) { perror = error_out; }
-    int size() const { return cmd.parameters_list.size(); }
-    const tstring& at(int index) const { return cmd.parameters_list[index]; }
-    const tchar* c_str(int index) const { return cmd.parameters_list[index].c_str(); }
-    const tstring& params() const { return cmd.parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd.parameters_list[index];
+    parser(InputCommand *pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
+    int size() const { return cmd->parameters_list.size(); }
+    const tstring& at(int index) const { return cmd->parameters_list[index]; }
+    const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
+    const tstring& params() const { return cmd->parameters; }
+    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
         return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd.parameters_list[index];
-        return _wtoi(p.c_str()); }    
+    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
+        return _wtoi(p.c_str()); }
     void invalidargs() { error(L"Некорректный набор параметров."); }
     void invalidoperation() { error(L"Некорректная операция."); }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
-    InputCommand cmd;
+    InputCommand *cmd;
     tstring *perror;
 };
 //-------------------------------------------------------------------
@@ -38,15 +39,7 @@ LogicProcessor* g_lprocessor = NULL;
 //------------------------------------------------------------------
 void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring scmd(cmd->full_command);
-    tstring_trim(&scmd);
-
-    tstring main_cmd;
-    int pos = scmd.find(L' ');
-    if (pos == -1)
-        main_cmd.assign(scmd.substr(1));
-    else
-        main_cmd.assign(scmd.substr(1, pos - 1));
+    tstring main_cmd(cmd->command.substr(1));
 
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
     typedef std::vector<tstring>::iterator piterator;
@@ -99,28 +92,21 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
     if (error.empty())
     {
-        if (pos != -1)
-            fullcmd.append(scmd.substr(pos));     // add params
-        m_pHost->preprocessGameCmd(&fullcmd);
-        tstring_trim(&fullcmd);
-        if (fullcmd.empty())
+        cmd->replace_command(fullcmd);
+        fullcmd.assign(cmd->full_command);
+        m_pHost->preprocessGameCmd(cmd);        
+        if (cmd->empty)
         {
-            syscmdLog(cmd->full_command);
+            syscmdLog(fullcmd);
             tmcLog(L"Команда заблокирована");
             return;
         }
 
-        syscmdLog(fullcmd);
-
-        pos = fullcmd.find(L' ');
-        if (pos == -1)
-            main_cmd.assign(fullcmd.substr(1));
-        else
-            main_cmd.assign(fullcmd.substr(1, pos - 1));
+        syscmdLog(cmd->full_command);
         it = m_syscmds.find(main_cmd);
         if (it != it_end)
         {
-            parser p(fullcmd.substr(1), &error);
+            parser p(cmd, &error);
             it->second(&p);
         }
         else
@@ -137,7 +123,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        msg.append(scmd);
+        msg.append(cmd->full_command);
         msg.append(L"]");
         tmcLog(msg);
     }
@@ -145,8 +131,8 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
 void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
+    m_pHost->preprocessGameCmd(cmd);
     tstring tmp(cmd->full_command);
-    m_pHost->preprocessGameCmd(&tmp);
     if (tmp.empty() && !cmd->empty)
         return;
     tchar br[2] = { 10, 0 };
@@ -160,8 +146,6 @@ void LogicProcessor::updateProps(int update, int options)
     if (update)
     {
         m_helper.updateProps(options);
-        if (options == LogicHelper::UPDATE_ALIASES)
-            m_input.updateProps(propData);
         if (!m_updatelog.empty())
             tmcLog(m_updatelog);
     }

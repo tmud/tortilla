@@ -2,10 +2,10 @@
 
 #include "mudViewParser.h"
 #include "logicHelper.h"
-#include "inputProcessor.h"
 #include "logsProcessor.h"
 #include "network/network.h"
 
+class InputCommand;
 class LogicProcessorHost
 {
 public:
@@ -22,7 +22,7 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessGameCmd(tstring* cmd) = 0;
+    virtual void preprocessGameCmd(InputCommand* cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
 };
@@ -53,7 +53,6 @@ class LogicProcessor : public LogicProcessorMethods
     PropertiesData *propData;
     LogicProcessorHost *m_pHost;
     MudViewParser m_parser;
-    InputProcessor m_input;
     LogicHelper m_helper; 
     bool m_connecting;
     bool m_connected;
