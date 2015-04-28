@@ -74,11 +74,12 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
     for (int i=0,e=m_input.commands.size(); i<e; ++i)
     {
-        tstring cmd = m_input.commands[i]->full_command;
-        if (!cmd.empty() && cmd.at(0) == cmd_prefix)
+        InputCommand *cmd = m_input.commands[i];
+        const tstring& fcmd = m_input.commands[i]->full_command;
+        if (!fcmd.empty() && fcmd.at(0) == cmd_prefix)
             processSystemCommand(cmd); //it is system command for client (not game command)
         else
-            processGameCommand(cmd); // it is game command
+            processGameCommand(cmd);   // it is game command
     }
 }
 

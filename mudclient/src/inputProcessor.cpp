@@ -7,7 +7,7 @@ public:
     Pcre16 pcre;
 } m_ich;
 
-InputCommand::InputCommand(const tstring& cmd)
+InputCommand::InputCommand(const tstring& cmd) : empty(true)
 {
     // save command
     full_command.assign(cmd);
@@ -17,7 +17,9 @@ InputCommand::InputCommand(const tstring& cmd)
     tstring_trimleft(&fcmd);
     if (fcmd.empty())
         return;
-        
+
+    empty = false;
+
     // divide cmd for cmd+parameters
     int pos = fcmd.find(L' ');
     if (pos == -1)
@@ -26,11 +28,13 @@ InputCommand::InputCommand(const tstring& cmd)
         return;
     }
     command.assign(fcmd.substr(0,pos));
-    parameters.append(fcmd.substr(pos+1));
-    tstring_trimleft(&parameters);
+    parameters.assign(fcmd.substr(pos+1));
+
+    BracketsMarker bm;
+    bm.unmark(&parameters, &parameters_list);
 
     // get parameters
-    const WCHAR* p = fcmd.c_str() + pos + 1;
+    /*const WCHAR* p = fcmd.c_str() + pos + 1;
     m_ich.pcre.findAllMatches(p);
     for (int i=0,e=m_ich.pcre.getSize(); i<e; ++i)
     {
@@ -41,10 +45,10 @@ InputCommand::InputCommand(const tstring& cmd)
         if (t == L'{' || t == L'\'' || t == L'\"')        
             tmp = tmp.substr(1, tmp.length()-2);
         parameters_list.push_back(tmp);
-    }
+    }*/
 }
 
-InputProcessor::InputProcessor() : pData(NULL)
+InputProcessor::InputProcessor() : m_separator(0), m_prefix(0)
 {
 }
 
@@ -55,7 +59,8 @@ InputProcessor::~InputProcessor()
 
 void InputProcessor::updateProps(PropertiesData *pdata) 
 {
-    pData = pdata;
+    m_prefix = pdata->cmd_prefix;
+    m_separator = pdata->cmd_separator;
 }
 
 void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds)
@@ -64,7 +69,7 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
     clear();
 
     // process separators
-    processSeparators(cmd, &commands);   
+    processSeparators(cmd, &commands);
 
     // process aliases
     int queue_size = commands.size();
@@ -78,10 +83,9 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
         loops_hunter.push_back(commands[i]->command);
         
         bool alias_found = false;
-        WCHAR prefix = pData->cmd_prefix;
         tstring cmd(commands[i]->command);
         tstring alias;
-        if (!cmd.empty() && cmd.at(0) != prefix // skip empty and system commands
+        if (!cmd.empty() && cmd.at(0) != m_prefix // skip empty and system commands
             && helper->processAliases(cmd, &alias))
         {
             if (alias != cmd)
@@ -133,7 +137,6 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
 void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList* result)
 {
     // truncate to separate commands
-    WCHAR separator = pData->cmd_separator;
     const WCHAR *p = sep_cmd.c_str();
     const WCHAR *e = p + sep_cmd.length();
     std::vector<WCHAR> stack;
@@ -141,7 +144,7 @@ void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList
     const WCHAR *b = p;
     while (p != e)
     {
-        if (*p == separator && stack.empty())
+        if (*p == m_separator && stack.empty())
         {
             InputCommand *icmd = new InputCommand( tstring(b, p-b) );
             result->push_back(icmd);
@@ -150,7 +153,7 @@ void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList
         }
         if (wcschr(L"{}\"'", *p))
         {
-            bool skip_push = false;
+            //bool skip_push = false;
             if (!stack.empty())
             {
                 int last = stack.size()-1;
@@ -158,7 +161,11 @@ void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList
                     (*p == L'}' && stack[last] == L'{'))
                 {
                     stack.pop_back();
-                    skip_push = true;
+                    //.skip_push = true;
+                }
+                else
+                {
+                    stack.push_back(*p);
                 }
             }
             //if (!skip_push && *p != L'}')

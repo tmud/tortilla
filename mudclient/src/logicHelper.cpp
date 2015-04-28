@@ -186,6 +186,11 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      return IF_FAIL;
 }
 
+bool LogicHelper::mathOp(const tstring& expr, const tstring& tarhetvar)
+{
+    return false;
+}
+
 bool LogicHelper::processVars(tstring *cmdline)
 {
     return m_varproc.processVars(cmdline, m_propData->variables, false);

@@ -103,8 +103,8 @@ public:
 
 private:
     void syscmdLog(const tstring& cmd);
-    void processSystemCommand(tstring& cmd);
-    void processGameCommand(tstring& cmd);
+    void processSystemCommand(InputCommand* cmd);
+    void processGameCommand(InputCommand* cmd);
     enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
            FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);
@@ -138,6 +138,7 @@ public: // system commands
     DEF(password);
     DEF(hide);
     DEF(highlight);
+    DEF(math);
     DEF(ifop);
     DEF(unhighlight);
     DEF(gag);

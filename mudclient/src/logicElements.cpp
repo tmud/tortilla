@@ -109,6 +109,165 @@ int CompareData::findpos(int pos, int d)
     return bi;
 }
 
+void BracketsMarker::mark(tstring *parameters)
+{
+    assert(parameters);
+
+    const tchar marker[2] = { MARKER , 0 };
+    const tchar *p = parameters->c_str();
+    const tchar *e = p + parameters->length();
+    
+    const tchar* bracket_begin = NULL;
+    std::vector<tchar> stack;
+    tstring newp;
+
+    const tchar* b = p;
+    while (p != e)
+    {
+        if (!isbracket(p))
+            { p++; continue;}        
+        if (stack.empty() && *p != L'}')
+        {
+            stack.push_back(*p);
+            bracket_begin = p;
+        }
+        else
+        {
+            if (((*p == L'\'' || *p == L'"') && *bracket_begin == *p) ||
+                (*p == L'}' && *bracket_begin == L'{' && stack.size() == 1))
+            {
+               stack.clear();
+               // mark pair brackets
+               newp.append(b, bracket_begin-b);
+               newp.append(marker);
+               newp.append(bracket_begin, p-bracket_begin);
+               newp.append(marker);
+               newp.append(p, 1);
+               b = p + 1;
+               p = b;
+               continue;
+            }
+            else
+            {
+               if (*p == L'{')
+                   stack.push_back(*p);
+               else if (*p == L'}')
+                   stack.pop_back();
+            }
+        }
+        p++;
+    }
+    if (b != e)
+        newp.append(b);
+    parameters->swap(newp);
+}
+
+void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameters_list)
+{
+   assert(parameters && parameters_list);
+   if (parameters->empty())
+       return;
+
+   std::vector<tstring> &tp = *parameters_list;
+
+   // get parameters, delete markers from parameters
+   const WCHAR *p = parameters->c_str();
+   const WCHAR *e = p + parameters->length();
+
+   const tchar* bracket_begin = NULL;
+   bool combo_bracket = false;
+   tstring newp;
+
+   const WCHAR *b = p;
+   while (p != e)
+   {
+       if (*p == MARKER /*&& (p+1)!=e*/ && isbracket(&p[1]))
+       {
+           if (!bracket_begin)
+               bracket_begin = p;
+           else if (*bracket_begin != MARKER)
+           {
+               newp.append(b, p-b);
+               // get parameter without left spaces
+               tstring cp(bracket_begin, p-bracket_begin);
+               tp.push_back(cp);
+
+               bracket_begin = p;
+               p = p +1;
+               b = p;
+               combo_bracket = true;
+               continue;
+           }
+           else
+           {
+               newp.append(b, bracket_begin-b);
+               bracket_begin++;
+               newp.append(bracket_begin, p-bracket_begin);
+
+               // get parameter without brackets
+               tstring cp(bracket_begin+1, p-bracket_begin-1);
+               if (combo_bracket)
+               {
+                   int last = tp.size()-1;
+                   tp[last].append(cp);
+                   combo_bracket = false;
+               }
+               else {
+                   tp.push_back(cp); 
+               }
+
+               p++;
+               newp.append(p, 1);
+               p++;
+               b = p;
+               bracket_begin = NULL;
+               continue;
+           }           
+       }
+       else if (*p != L' ' && !bracket_begin)
+       {
+           bracket_begin = p;
+       }
+       else if (*p == L' ' && bracket_begin && *bracket_begin != MARKER)
+       {
+           newp.append(b, p-b);
+           
+           // get parameter without left spaces
+           tstring cp(bracket_begin, p-bracket_begin);
+           tp.push_back(cp);
+           bracket_begin = NULL;
+           b = p;
+           continue;
+       }
+       p++;
+   }
+   if (b != e)
+   {
+       if (bracket_begin && *bracket_begin == MARKER)
+       {
+           b++;
+           newp.append(b);
+           b++;
+           tp.push_back(b);
+       }
+       else
+       {
+           newp.append(b);
+           tstring tmp(b);
+           tstring_trimleft(&tmp);
+           tp.push_back(tmp);
+       }
+   }
+
+   parameters->swap(newp);
+   int x = 1;
+}
+
+bool BracketsMarker::isbracket(const tchar *p)
+{
+    return (wcschr(L"{}\"'", *p)) ? true : false;
+}
+
 Alias::Alias(const property_value& v) : m_key(v.key), m_cmd(v.value)
 {
 }
@@ -141,11 +300,15 @@ bool Action::processing(CompareData& data, tstring* newcmd)
     if (!m_compare.checkToCompare(data.fullstr))
         return false;
 
+    BracketsMarker bm;
+    tstring value(m_value);
+    bm.mark(&value);
+
     // parse value and generate result
-    m_compare.translateParameters(m_value, newcmd);
+    m_compare.translateParameters(value, newcmd);
 
     // drop mode -> change source MudViewString
-    if (m_value.find(L"drop") != tstring::npos)
+    if (value.find(L"drop") != tstring::npos)
     {
         CompareRange range;
         m_compare.getRange(&range);

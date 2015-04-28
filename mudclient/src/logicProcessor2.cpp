@@ -36,9 +36,9 @@ const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
-void LogicProcessor::processSystemCommand(tstring& cmd)
+void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring scmd(cmd);
+    tstring scmd(cmd->full_command);
     tstring_trim(&scmd);
 
     tstring main_cmd;
@@ -105,7 +105,7 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
         tstring_trim(&fullcmd);
         if (fullcmd.empty())
         {
-            syscmdLog(cmd);
+            syscmdLog(cmd->full_command);
             tmcLog(L"Команда заблокирована");
             return;
         }
@@ -143,16 +143,16 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
     }
 }
 
-void LogicProcessor::processGameCommand(tstring& cmd)
+void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
-    bool src_cmd_empty = cmd.empty();
-    m_pHost->preprocessGameCmd(&cmd);
-    if (cmd.empty() && !src_cmd_empty)
+    tstring tmp(cmd->full_command);
+    m_pHost->preprocessGameCmd(&tmp);
+    if (tmp.empty() && !cmd->empty)
         return;
-    WCHAR br[2] = { 10, 0 };
-    cmd.append(br);
-    processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
-    sendToNetwork(cmd);
+    tchar br[2] = { 10, 0 };
+    tmp.append(br);
+    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
+    sendToNetwork(tmp);
 }
 
 void LogicProcessor::updateProps(int update, int options)
@@ -586,6 +586,17 @@ IMPL(hide)
         tstring cmd(p->params());
         cmd.append(br);
         sendToNetwork(cmd);
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(math)
+{
+    if (p->size() == 2)
+    {
+        if (!m_helper.mathOp(p->at(1), p->at(0)))
+            p->invalidoperation();
         return;
     }
     p->invalidargs();
@@ -1183,6 +1194,7 @@ bool LogicProcessor::init()
     regCommand("password", password);
     regCommand("hide", hide);
     regCommand("if", ifop);
+    regCommand("math", math);
     regCommand("group", group);
 
     regCommand("wshow", wshow);

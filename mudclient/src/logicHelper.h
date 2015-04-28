@@ -116,6 +116,7 @@ public:
     bool processVars(tstring *cmdline);
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
+    bool mathOp(const tstring& expr, const tstring& tarhetvar);
 
 private:
     // current workable elements
