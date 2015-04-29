@@ -35,7 +35,7 @@
     <Filter Include="Source Files\Msdp">
       <UniqueIdentifier>{968a0d61-02b8-47d4-bb8f-84841e4ca3c1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Logs\Main">
+    <Filter Include="Source Files\Main">
       <UniqueIdentifier>{ab0c2ef1-67c2-41c1-85bf-d4d648ad0066}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -113,7 +113,7 @@
       <Filter>Source Files\PropertiesPages</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
-      <Filter>Source Files\Logs\Main</Filter>
+      <Filter>Source Files\Main</Filter>
     </ClInclude>
     <ClInclude Include="src\network\network.h">
       <Filter>Source Files\Network</Filter>
@@ -274,10 +274,10 @@
       <Filter>Source Files\PropertiesPages</Filter>
     </ClCompile>
     <ClCompile Include="src\mudclient.cpp">
-      <Filter>Source Files\Logs\Main</Filter>
+      <Filter>Source Files\Main</Filter>
     </ClCompile>
     <ClCompile Include="src\stdafx.cpp">
-      <Filter>Source Files\Logs\Main</Filter>
+      <Filter>Source Files\Main</Filter>
     </ClCompile>
     <ClCompile Include="src\network\network.cpp">
       <Filter>Source Files\Network</Filter>
