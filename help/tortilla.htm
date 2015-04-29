@@ -675,7 +675,7 @@ actions. В триггерах, вместо определенных часте
 Примеры:<br>
 <div class="e">#if '$fight = 0' 'есть;пить'</div> - Переменная $fight отвечает за состояние в бою/нет. Если персонаж не в бою, то можно подкрепиться.<br>
 <div class="e">#if {$curMoney &lt; $oldMoney} {#output red 'Меня обокрали !!!'}</div> - если вдруг стало меньше денег, то вывысти сообщение о краже.<br><br>
-См.также: <a href="#var" class="cmd">#var</a>, <a href="#alias" class="cmd">#alias</a>, <a href="#action" class="cmd">#action</a>, <a href="#timer" class="cmd">#timer</a>, <a href="#hotkey" class="cmd">#hotkey</a>
+См.также: <a href="#var" class="cmd">#var</a>, <a href="#math" class="cmd">#math</a>, <a href="#alias" class="cmd">#alias</a>, <a href="#action" class="cmd">#action</a>, <a href="#timer" class="cmd">#timer</a>, <a href="#hotkey" class="cmd">#hotkey</a>
 <hr>
 <a name="gag"></a>
 <h4>#gag</h4>
@@ -762,7 +762,7 @@ off<br>
 <hr>
 <a name="hidewindow"></a>
 <h4>#hidewindow</h4>
-Сворачивает окно клиента в панель задач или в трей (зависит от настроек). У команды нет параметров.<br>
+Сворачивает окно клиента в панель задач. У команды нет параметров.<br>
 <br>Пример:<br>
 <div class="e">#hidewindow</div><br>
 См.также: <a href="#showwindow" class="cmd">#showwindow</a>
@@ -803,7 +803,7 @@ off<br>
 - <div class="t">INS, DEL, HOME, END, PGUP, PGDN</div> - Insert, Delete, Home, End, PageUp, PageDown<br>
 - <div class="t">ENTER, SPACE, UP, DOWN, LEFT, RIGHT</div> - Enter, Пробел, Стрелка вверх, Стрелка вниз, Стрелка влево, Стрелка вправо<br>
 - <div class="t">NUN1-NUM9</div> - клавиши цифрового блока<br>
-- <div class="t">DIV, MUL, MINUS, PLUS, NUMENTER</div> - клавиши /, *, -, +, enter цифрового блока<br>
+- <div class="t">DIV, MUL, MIN, ADD, RETURN</div> - клавиши /, *, -, +, enter цифрового блока<br>
 - <div class="t">ESC, BACK, TAB</div> - Escape, Backspace(удаление), Tab<br>
  <br>См.также: <a href="#unhotkey" class="cmd">#unhotkey</a>
  <p align="right"><a href="#top">В начало</a></p>
@@ -824,6 +824,26 @@ off<br>
 Команда без параметров закрывает текущий лог.
 <br>См.также: <a href="#wlog" class="cmd">#wlog</a>
 <hr>
+<a name="math"></a>
+<h4>#math</h4>
+Команда вычисляет заданное математическое выражение и сохраняет его результат в указанной переменной. Работает только с целыми числами. 
+Допустимые операции: 
+<ul>
+<li><div class="t">*</div> умножение</li>
+<li><div class="t">/</div> деление</li>
+<li><div class="t">+</div> сложение</li>
+<li><div class="t">-</div> вычитание</li>
+</ul>
+Синтаксис команды:<br>
+<div class="t">#math targetvar 'operand1 op operand2'</div><br>
+- targetvar - имя переменной, куда нужно записать результат.<br>
+- operand1 и operand2 - это число или имя переменной, начинающейся со знака $.<br>
+- op - сама операция умножения, деления, сложения или вычитания.<br><br>
+Примеры:
+<div class="ee">#math a $b+1<br>
+#math d $c/$b
+</div>
+См.также: <a href="#var" class="cmd">#var</a>, <a href="#if" class="cmd">#if</a>.
 <a name="mccp"></a>
 <h4>#mccp</h4>
 Клиент поддерживает, стандартный для мадов, алгоритм сжатия игрового трафика <a href="#aboutmccp">mccp</a>. Команда <div class="t">#mccp</div> 
@@ -858,7 +878,6 @@ off<br>
 Если указан, то устанавливает заданный режим для уведомлений. Возможные варианты:<br>
 <div class="m">on</div>, <div class="m">вкл</div>, <div class="m">enable</div>, <div class="m">1</div></li> - включение уведомлений.<br>
 <div class="m">off</div>, <div class="m">выкл</div>, <div class="m">disable</div>, <div class="m">0</div></li> - выключение уведомлений.<br>
-
 <hr>
 <a name="password"></a>
 <h4>#password</h4>
@@ -1027,6 +1046,7 @@ off<br>
 <div class="t">#untab 'автоподстановка'</div><br>
 <br>См.также: <a href="#tab" class="cmd">#tab</a>
 <hr>
+<a name="unvar"></a>
 <h4>#unvar</h4>
 Команда удаляет переменную.
 <br>Синтаксис команды:<br>
@@ -1053,7 +1073,7 @@ off<br>
 Команда без параметров выводит список всех переменных.<br>
 <div class="t">#var 'строка'</div><br>
 Команда выводит все переменные, которые в своем имени содержат заданную строку.<br>
-<br>См.также: <a href="#unvar" class="cmd">#unvar</a><br><br>
+<br>См.также: <a href="#unvar" class="cmd">#unvar</a>, <a href="#if" class="cmd">#if</a>, <a href="#math" class="cmd">#math</a>.<br><br>
 <hr>
 <a name="whide"></a>
 <h4>#whide</h4>

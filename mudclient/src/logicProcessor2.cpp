@@ -24,6 +24,7 @@ public:
         return _wtoi(p.c_str()); }
     void invalidargs() { error(L"Некорректный набор параметров."); }
     void invalidoperation() { error(L"Некорректная операция."); }
+    void invalidvars() { error(L"Используются неизвестные переменные"); }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
     InputCommand *cmd;
@@ -44,20 +45,16 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
     typedef std::vector<tstring>::iterator piterator;
 
-    tchar prefix[2] = { propData->cmd_prefix, 0 };
-    tstring fullcmd(prefix);
     tstring error;
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
-    if (it != it_end)
-        fullcmd.append(it->first);
-    else
+    if (it == it_end)
     {
         // команда в системных не найдена - ищем в плагинах
         piterator p_end = m_plugins_cmds.end();
         piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
         if (p != p_end)
-            fullcmd.append(*p);
+            main_cmd.assign(*p);
         else
         {
             //пробуем подобрать по сокращенному имени
@@ -79,10 +76,9 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
                 }
                 int count = cmds.size();
                 if (count == 1)
-                    fullcmd.append(cmds[0]);
-                else if (count == 0)
-                    fullcmd.append(main_cmd);       // в словаре команды нет - все равно пробуем пройти через syscmd
-                else {
+                    main_cmd.assign(cmds[0]);
+                else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
+                {
                     error.append(L"Уточните команду (варианты): ");
                     for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
                 }
@@ -90,11 +86,15 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         }
     }
 
+    tchar prefix[2] = { propData->cmd_prefix, 0 };
+    tstring fullcmd(prefix);
+    fullcmd.append(main_cmd);
+
     if (error.empty())
     {
         cmd->replace_command(fullcmd);
         fullcmd.assign(cmd->full_command);
-        m_pHost->preprocessGameCmd(cmd);        
+        m_pHost->preprocessGameCmd(cmd);
         if (cmd->empty)
         {
             syscmdLog(fullcmd);
@@ -283,6 +283,35 @@ IMPL(unantisub)
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
+IMPL(math)
+{
+    int n = p->size();
+    if (p->size() == 2)
+    {
+        ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+        MethodsHelper* helper = ph;
+        if (!m_helper.canSetVar(p->at(0)))
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+            helper->tmcLog(pb.buffer);
+            return;
+        }
+
+        tstring result;
+        LogicHelper::MathResult r = m_helper.mathOp(p->at(1), &result);
+        if (r == LogicHelper::MATH_ERROR)
+            { p->invalidoperation(); return; }
+        else if (r == LogicHelper::MATH_VARNOTEXIST)
+            { p->invalidvars(); return; }
+
+        m_helper.setVar(p->at(0), result);
+        swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+        helper->tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
+
 IMPL(var)
 {
     ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
@@ -306,7 +335,7 @@ IMPL(var)
             const property_value& v = propData->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", v.key.c_str(), v.value.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", v.key.c_str(), v.value.c_str());
             helper->simpleLog(pb.buffer);
             found = true;
         }
@@ -319,14 +348,13 @@ IMPL(var)
     {
         if (!m_helper.canSetVar(p->at(0)))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменную '%s' изменить невозможно", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
         else
         {
-            int index = propData->variables.find(p->at(0));
-            propData->variables.add(index, p->at(0), p->at(1), L"");
-            swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", p->c_str(0), p->c_str(1));
+            m_helper.setVar(p->at(0), p->at(1));
+            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
             helper->tmcLog(pb.buffer);
         }
         return;
@@ -343,7 +371,7 @@ IMPL(unvar)
     {
         if (!m_helper.canSetVar(p->at(0)))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменную '%s' удалить невозможно.", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s удалить невозможно.", p->c_str(0));
             helper->tmcLog(pb.buffer);
             return;
         }
@@ -351,12 +379,12 @@ IMPL(unvar)
         int index = propData->variables.find(p->at(0));
         if (index == -1)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменная '%s' не существует.", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s не существует.", p->c_str(0));
             helper->tmcLog(pb.buffer);
             return;
         }
         propData->variables.del(index);
-        swprintf(pb.buffer, pb.buffer_len, L"Переменная '%s' удалена.", p->c_str(0));
+        swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -385,7 +413,7 @@ IMPL(group)
     if (n > 2)
         return p->invalidargs();
 
-    ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+    ElementsHelper ph(this, LogicHelper::UPDATE_GROUPS);
     MethodsHelper* helper = ph;
     if (n == 0)
     {
@@ -575,24 +603,18 @@ IMPL(hide)
     p->invalidargs();
 }
 
-IMPL(math)
-{
-    if (p->size() == 2)
-    {
-        if (!m_helper.mathOp(p->at(1), p->at(0)))
-            p->invalidoperation();
-        return;
-    }
-    p->invalidargs();
-}
-
 IMPL(ifop)
 {
     if (p->size() == 2)
     {
         LogicHelper::IfResult result = m_helper.compareIF(p->at(0));
         if (result == LogicHelper::IF_SUCCESS)
-            processCommand(p->at(1));
+        {
+            tstring cmd(p->at(1));
+            BracketsMarker bm;
+            bm.mark(&cmd);
+            processCommand(cmd);
+        }
         else if (result == LogicHelper::IF_ERROR)
             p->invalidoperation();
         return;
@@ -1172,13 +1194,13 @@ bool LogicProcessor::init()
     regCommand("ungag", ungag);
     regCommand("antisub", antisub);
     regCommand("unantisub", unantisub);
+    regCommand("math", math);
     regCommand("var", var);
     regCommand("unvar", unvar);
 
     regCommand("password", password);
     regCommand("hide", hide);
     regCommand("if", ifop);
-    regCommand("math", math);
     regCommand("group", group);
 
     regCommand("wshow", wshow);

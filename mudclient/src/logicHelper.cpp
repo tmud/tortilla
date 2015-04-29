@@ -5,6 +5,7 @@
 LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
 {
      m_if_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|!=|<|>|<=|>=) *('.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
+     m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
 }
 
 bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
@@ -124,6 +125,8 @@ void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
         if (m_timers[i]->tick(dt))
         {
             tstring cmd(m_timers[i]->cmd);
+            BracketsMarker bm;
+            bm.mark(&cmd);
             processVars(&cmd);
             new_cmds->push_back(cmd);
         }
@@ -147,11 +150,16 @@ bool LogicHelper::getVar(const tstring& var, tstring *value)
     return m_varproc.getVar(m_propData->variables, var, value);
 }
 
+void LogicHelper::setVar(const tstring& var, const tstring &value)
+{
+    m_varproc.setVar(m_propData->variables, var, value);
+}
+
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 {
      m_if_regexp.find(param);
      if (m_if_regexp.getSize() != 4)
-         return IF_ERROR;
+         return LogicHelper::IF_ERROR;
 
      tstring p1, p2, cond;
      m_if_regexp.getString(1, &p1);  //1st parameter
@@ -166,29 +174,60 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
              int n1 = _wtoi(p1.c_str());
              int n2 = _wtoi(p2.c_str());
              if (n1 == n2 && (cond == L"=" || cond == L"<=" || cond == L">="))
-                 return IF_SUCCESS;
+                 return LogicHelper::IF_SUCCESS;
              if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!="))
-                 return IF_SUCCESS;
+                 return LogicHelper::IF_SUCCESS;
              if (n1 > n2 && (cond == L">" || cond == L">=" || cond == L"!="))
-                 return IF_SUCCESS;
+                 return LogicHelper::IF_SUCCESS;
           }
           else
           {
              int result = wcscmp(p1.c_str(), p2.c_str());
              if (result == 0 && (cond == L"=" || cond == L"<=" || cond == L">="))
-                 return IF_SUCCESS;
+                 return LogicHelper::IF_SUCCESS;
              if (result < 0 && (cond == L"<" || cond == L"<=" || cond == L"!="))
-                 return IF_SUCCESS;
+                 return LogicHelper::IF_SUCCESS;
              if (result > 0 && (cond == L">" || cond == L">=" || cond == L"!="))
-                 return IF_SUCCESS;
+                 return LogicHelper::IF_SUCCESS;
            }
      }
-     return IF_FAIL;
+     return LogicHelper::IF_FAIL;
 }
 
-bool LogicHelper::mathOp(const tstring& expr, const tstring& tarhetvar)
+LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result)
 {
-    return false;
+    m_math_regexp.find(expr);
+    if (m_math_regexp.getSize() != 4)
+         return LogicHelper::MATH_ERROR;
+
+     tstring p1, p2, op;
+     m_math_regexp.getString(1, &p1);  //1st parameter
+     m_math_regexp.getString(3, &p2);  //2nd parameter
+     m_math_regexp.getString(2, &op);  //operator
+
+     if (m_varproc.processVars(&p1, m_propData->variables, true) &&
+         m_varproc.processVars(&p2, m_propData->variables, true))
+     {
+         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         {
+             int r = 0;
+             int n1 = _wtoi(p1.c_str());
+             int n2 = _wtoi(p2.c_str());
+             if (op == L"*")
+                 r = n1 * n2;
+             else if (op == L"/")
+                 r = (n2 != 0) ? n1 / n2 : 0;
+             else if (op == L"+")
+                 r = n1 + n2;
+             else if (op == L"-")
+                 r = n1 - n2;
+             tchar buffer[16]; _itow(r, buffer, 10);
+             result->assign(buffer);
+             return LogicHelper::MATH_SUCCESS;
+         }
+         return LogicHelper::MATH_ERROR;
+     }
+     return LogicHelper::MATH_VARNOTEXIST;
 }
 
 bool LogicHelper::processVars(tstring *cmdline)

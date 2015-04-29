@@ -4,6 +4,7 @@
 #include "pluginsApi.h"
 #include "api/api.h"
 #include "pluginsParseData.h"
+#include "inputProcessor.h"
 extern luaT_State L;
 extern Plugin* _cp;
 
@@ -224,8 +225,7 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    //todo
-    /*bool syscmd = (!cmd->empty && cmd->command.at(0) == m_propData->cmd_prefix);
+    bool syscmd = (!cmd->empty && cmd->command.at(0) == m_propData->cmd_prefix);
     std::vector<tstring> p;
     p.push_back((syscmd) ? cmd->command.substr(1) : cmd->command);
     p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
@@ -236,7 +236,7 @@ void PluginsManager::processGameCmd(InputCommand* cmd)
         return;
     }
     if (doPluginsTableMethod("gamecmd", &p))
-        concatCommand(p, false, cmd);*/
+        concatCommand(p, false, cmd);
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -518,25 +518,38 @@ void PluginsManager::processToSend(Network* network)
 
 void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {
-    /*cmd->clear();
     if (parts.empty())
         return;
+
+    tstring newcmd;
     if (system)
     {
         tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-        cmd->assign(prefix);
+        newcmd.append(prefix);
     }
-    for (int i=0,e=parts.size();i<e;++i)
+    newcmd.append(parts[0]);
+    cmd->command.assign(newcmd);
+    cmd->parameters_list.clear();
+
+    tstring symbols(L"{}\"' ");
+    tstring params;
+    for (int i=1,e=parts.size();i<e;++i)
     {
-        const tstring& s = parts[i];
-        if (i != 0) cmd->append(L" ");
-        if (s.find(L" ") == -1)
-            cmd->append(s);
+        const tstring& s = parts[i];        
+        cmd->parameters_list.push_back(s);
+        if (i != 1) 
+            params.append(L" ");
+        if (!isExistSymbols(s, symbols))
+            params.append(s);
         else
         {
-            cmd->append(L"'");
-            cmd->append(s);
-            cmd->append(L"'");
+            params.append(L"{");
+            params.append(s);
+            params.append(L"}");
         }
-    }*/
+    }
+    cmd->parameters = params;
+    newcmd.append(L" ");
+    newcmd.append(params);
+    cmd->full_command.assign(newcmd);
 }

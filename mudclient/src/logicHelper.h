@@ -113,10 +113,12 @@ public:
     void resetTimers();
     bool canSetVar(const tstring& var);
     bool getVar(const tstring& var, tstring *value);
+    void setVar(const tstring& var, const tstring& value);
     bool processVars(tstring *cmdline);
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
-    bool mathOp(const tstring& expr, const tstring& tarhetvar);
+    enum MathResult { MATH_SUCCESS = 0, MATH_VARNOTEXIST, MATH_ERROR };
+    MathResult mathOp(const tstring& expr, tstring* result);
 
 private:
     // current workable elements
@@ -130,6 +132,7 @@ private:
     LogicWrapperTimers m_timers;
     VarProcessor m_varproc;
     Pcre16 m_if_regexp;
+    Pcre16 m_math_regexp;
     PropertiesData *m_propData;
     Ticker m_ticker;
 };

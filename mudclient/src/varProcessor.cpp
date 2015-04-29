@@ -49,6 +49,12 @@
      return true;
 }
 
+void VarProcessor::setVar(PropertiesValues &vars, const tstring& var, const tstring& value)
+{
+    int index = vars.find(var);
+    vars.add(index, var, value, L"");
+}
+
 bool VarProcessor::getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const
 {
      citerator it = m_specvars.find(var);

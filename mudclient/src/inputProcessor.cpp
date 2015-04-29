@@ -1,12 +1,6 @@
 #include "stdafx.h"
 #include "inputProcessor.h"
 
-class InputCommandHelper {
-public:
-    InputCommandHelper() {  pcre.setRegExp(L"\\{.*?\\}|\\\".*?\\\"|\\'.*?\\'|[^ ]+", true); }
-    Pcre16 pcre;
-} m_ich;
-
 InputCommand::InputCommand(const tstring& cmd) : empty(true)
 {
     // save command
@@ -34,20 +28,6 @@ InputCommand::InputCommand(const tstring& cmd) : empty(true)
     BracketsMarker bm;
     bm.unmark(&parameters, &parameters_list);
     fcmd.append(parameters);
-
-    // get parameters
-    /*const WCHAR* p = fcmd.c_str() + pos + 1;
-    m_ich.pcre.findAllMatches(p);
-    for (int i=0,e=m_ich.pcre.getSize(); i<e; ++i)
-    {
-        int f = m_ich.pcre.getFirst(i);
-        int l = m_ich.pcre.getLast(i);
-        tstring tmp(p+f, l-f);
-        WCHAR t = tmp.at(0);
-        if (t == L'{' || t == L'\'' || t == L'\"')        
-            tmp = tmp.substr(1, tmp.length()-2);
-        parameters_list.push_back(tmp);
-    }*/
 }
 
 void InputCommand::replace_command(const tstring& cmd)

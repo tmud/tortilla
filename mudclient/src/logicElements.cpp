@@ -116,7 +116,7 @@ void BracketsMarker::mark(tstring *parameters)
     const tchar marker[2] = { MARKER , 0 };
     const tchar *p = parameters->c_str();
     const tchar *e = p + parameters->length();
-    
+
     const tchar* bracket_begin = NULL;
     std::vector<tchar> stack;
     tstring newp;
@@ -125,7 +125,7 @@ void BracketsMarker::mark(tstring *parameters)
     while (p != e)
     {
         if (!isbracket(p))
-            { p++; continue;}        
+            { p++; continue;}
         if (stack.empty() && *p != L'}')
         {
             stack.push_back(*p);
@@ -147,7 +147,7 @@ void BracketsMarker::mark(tstring *parameters)
                p = b;
                continue;
             }
-            else
+            else if (*bracket_begin != L'\'' && *bracket_begin != L'"')
             {
                if (*p == L'{')
                    stack.push_back(*p);
@@ -193,8 +193,8 @@ void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameter
                tp.push_back(cp);
 
                bracket_begin = p;
-               p = p +1;
                b = p;
+               p++;
                combo_bracket = true;
                continue;
            }
@@ -222,7 +222,7 @@ void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameter
                b = p;
                bracket_begin = NULL;
                continue;
-           }           
+           }
        }
        else if (*p != L' ' && !bracket_begin)
        {
@@ -231,7 +231,7 @@ void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameter
        else if (*p == L' ' && bracket_begin && *bracket_begin != MARKER)
        {
            newp.append(b, p-b);
-           
+
            // get parameter without left spaces
            tstring cp(bracket_begin, p-bracket_begin);
            tp.push_back(cp);
@@ -260,7 +260,6 @@ void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameter
    }
 
    parameters->swap(newp);
-   int x = 1;
 }
 
 bool BracketsMarker::isbracket(const tchar *p)
@@ -270,24 +269,30 @@ bool BracketsMarker::isbracket(const tchar *p)
 
 Alias::Alias(const property_value& v) : m_key(v.key), m_cmd(v.value)
 {
+    BracketsMarker bm;
+    bm.mark(&m_cmd);
 }
 
 bool Alias::processing(const tstring& key, tstring *newcmd)
 {
-    if (key == m_key)
-        { newcmd->assign(m_cmd); return true; }
-    return false;
+    if (key != m_key)
+        return false;
+    newcmd->assign(m_cmd);
+    return true;
 }
 
 Hotkey::Hotkey(const property_value& v) : m_key(v.key), m_cmd(v.value)
 {
+    BracketsMarker bm;
+    bm.mark(&m_cmd);
 }
 
 bool Hotkey::processing(const tstring& key, tstring *newcmd)
 {
-    if (key == m_key)
-        { newcmd->assign(m_cmd); return true; }
-    return false;
+    if (key != m_key)
+        return false;
+    newcmd->assign(m_cmd);
+    return true;
 }
 
 Action::Action(const property_value& v) : m_value(v.value)

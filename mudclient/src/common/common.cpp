@@ -37,21 +37,22 @@ void getWindowText(HWND handle, tstring *string)
     string->assign(buffer);
 }
 
-bool isOnlySymbolsA(const std::string& str, const std::string& symbols)
-{
-   int pos = strspn(str.c_str(), symbols.c_str());
-   return (pos != str.length()) ? false : true;
-}
-
 bool isOnlyDigitsA(const std::string& str)
 {
-    return isOnlySymbolsA(str, "0123456789");
+    if (str.empty()) return false;
+    const char* p = str.c_str();
+    int len = str.length();
+    if (*p == '-') { p++; len--; }
+    return (strspn(p, "0123456789") != len) ? false : true;
 }
 
 bool isOnlyDigits(const tstring& str)
 {
-   int pos = wcsspn(str.c_str(), L"0123456789");
-   return (pos != str.length()) ? false : true;
+   if (str.empty()) return false;
+   const tchar* p = str.c_str();
+   int len = str.length();
+   if (*p == L'-') { p++; len--;}
+   return (wcsspn(p, L"0123456789") != len) ? false : true;
 }
 
 bool isOnlySpaces(const tstring& str)
