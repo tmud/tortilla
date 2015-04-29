@@ -255,7 +255,8 @@ void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameter
            newp.append(b);
            tstring tmp(b);
            tstring_trimleft(&tmp);
-           tp.push_back(tmp);
+           if (!tmp.empty())
+              tp.push_back(tmp);
        }
    }
 
