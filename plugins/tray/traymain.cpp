@@ -76,8 +76,6 @@ bool TrayMainObject::showMessage(const u8string& msg)
 
     w->setText(msg);
     const TraySettings &s = m_settings;
-    COLORREF tcolor = (s.syscolor) ? GetSysColor(COLOR_INFOTEXT) : s.text;
-    COLORREF bcolor = (s.syscolor) ? GetSysColor(COLOR_INFOBK) : s.background;
     SIZE sz = w->getSize();
 
     rb.x -= 2;
@@ -86,8 +84,8 @@ bool TrayMainObject::showMessage(const u8string& msg)
     a.pos = rb;
     a.speed = 0.5f;
     a.wait_sec = m_settings.timeout;
-    a.bkgnd_color = bcolor;
-    a.text_color = tcolor;
+    a.bkgnd_color = s.background;
+    a.text_color = s.text;
     a.notify_wnd = m_hWnd;
     a.notify_msg = WM_USER;
     a.notify_param = (WPARAM)w;

@@ -70,7 +70,6 @@ int init(lua_State *L)
     lua_pop(L, 1);
 
     TraySettings &s = g_tray.traySettings();
-    s.syscolor = 1;
     s.timeout = 5;
     s.interval = 15;
     s.showactive = 0;
@@ -88,10 +87,6 @@ int init(lua_State *L)
         if (ld.get("showactive", &showactive))
             check_minmax(&showactive, 0, 0, 1, 0);
         s.showactive = showactive ? true : false;
-        int syscolors = 1;
-        if (ld.get("syscolors", &syscolors))
-            check_minmax(&syscolors, 0, 1, 1, 1);
-        s.syscolor = syscolors ? true : false;
         u8string text, bkgnd;
         if (ld.get("textcolor", &text))
             parse_color(text, &s.text);
@@ -111,7 +106,6 @@ int release(lua_State *L)
     sv.create("params");
     sv.set("timeout", s.timeout);
     sv.set("interval", s.interval);
-    sv.set("syscolors", s.syscolor ? 1 : 0);
     sv.set("showactive", s.showactive ? 1 : 0);
     utf8 buffer[16];
     sprintf(buffer, "%d,%d,%d", GetRValue(s.text), GetGValue(s.text), GetBValue(s.text));
