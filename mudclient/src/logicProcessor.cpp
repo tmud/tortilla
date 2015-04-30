@@ -52,6 +52,13 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
     return false;
 }
 
+void LogicProcessor::processUserCommand(const tstring& cmd)
+{
+    tstring cmdline(cmd);
+    m_helper.processVars(&cmdline);
+    processCommand(cmdline);
+}
+
 void LogicProcessor::processCommand(const tstring& cmd)
 {
     std::vector<tstring> loops;

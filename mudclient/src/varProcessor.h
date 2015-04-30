@@ -16,7 +16,8 @@ public:
     }
     bool processVars(tstring *p, const PropertiesValues &vars, bool strong_mode);
     bool getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const;
-    void setVar(PropertiesValues &vars, const tstring& var, const tstring& value);
+    bool setVar(PropertiesValues &vars, const tstring& var, const tstring& value);
+    bool delVar(PropertiesValues &vars, const tstring& var);
 private:
     void getSpecVar(int id, tstring *value) const;
 };

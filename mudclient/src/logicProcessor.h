@@ -83,8 +83,8 @@ public:
     void processNetworkConnectError();
     void processNetworkError();
     void processNetworkMccpError();
+    void processUserCommand(const tstring& cmd);
     bool processHotkey(const tstring& hotkey);
-    void processCommand(const tstring& cmd);
     void processTick();
     void processStackTick();
     void updateProps();
@@ -101,6 +101,7 @@ public:
     bool getVar(const tstring& var, tstring* value) { return m_helper.getVar(var, value); }
 
 private:
+    void processCommand(const tstring& cmd);
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);

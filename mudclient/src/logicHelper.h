@@ -113,7 +113,8 @@ public:
     void resetTimers();
     bool canSetVar(const tstring& var);
     bool getVar(const tstring& var, tstring *value);
-    void setVar(const tstring& var, const tstring& value);
+    bool setVar(const tstring& var, const tstring& value);
+    bool delVar(const tstring& var);
     bool processVars(tstring *cmdline);
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
