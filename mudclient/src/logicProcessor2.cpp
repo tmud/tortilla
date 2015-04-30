@@ -304,8 +304,10 @@ IMPL(math)
         else if (r == LogicHelper::MATH_VARNOTEXIST)
             { p->invalidvars(); return; }
 
-        m_helper.setVar(p->at(0), result);
-        swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+        if (m_helper.setVar(p->at(0), result))
+            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+        else
+            swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -347,16 +349,15 @@ IMPL(var)
     if (n == 2)
     {
         if (!m_helper.canSetVar(p->at(0)))
-        {
             swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
-            helper->tmcLog(pb.buffer);
-        }
         else
         {
-            m_helper.setVar(p->at(0), p->at(1));
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
-            helper->tmcLog(pb.buffer);
+            if (m_helper.setVar(p->at(0), p->at(1)))
+                swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
+            else
+                swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         }
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -375,16 +376,10 @@ IMPL(unvar)
             helper->tmcLog(pb.buffer);
             return;
         }
-
-        int index = propData->variables.find(p->at(0));
-        if (index == -1)
-        {
+        if (!m_helper.delVar(p->at(0)))
             swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s не существует.", p->c_str(0));
-            helper->tmcLog(pb.buffer);
-            return;
-        }
-        propData->variables.del(index);
-        swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
+		else
+        	swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -832,7 +827,6 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
-        m_helper.processVars(&p);
         if (tc.checkText(&p))       // it color teg
         {
             last_color_teg = true;

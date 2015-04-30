@@ -150,9 +150,14 @@ bool LogicHelper::getVar(const tstring& var, tstring *value)
     return m_varproc.getVar(m_propData->variables, var, value);
 }
 
-void LogicHelper::setVar(const tstring& var, const tstring &value)
+bool LogicHelper::setVar(const tstring& var, const tstring &value)
 {
-    m_varproc.setVar(m_propData->variables, var, value);
+    return m_varproc.setVar(m_propData->variables, var, value);
+}
+
+bool LogicHelper::delVar(const tstring& var)
+{
+    return m_varproc.delVar(m_propData->variables, var);
 }
 
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)

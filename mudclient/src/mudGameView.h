@@ -634,7 +634,7 @@ private:
         m_bar.addToHistory(history);
         BracketsMarker bm;
         bm.mark(&cmd);
-        m_processor.processCommand(cmd);
+        m_processor.processUserCommand(cmd);
         return 0;
     }
 

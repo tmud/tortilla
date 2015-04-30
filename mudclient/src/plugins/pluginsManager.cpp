@@ -549,7 +549,10 @@ void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool syste
         }
     }
     cmd->parameters = params;
-    newcmd.append(L" ");
-    newcmd.append(params);
+    if (!params.empty())
+    {
+        newcmd.append(L" ");
+        newcmd.append(params);
+    }
     cmd->full_command.assign(newcmd);
 }
