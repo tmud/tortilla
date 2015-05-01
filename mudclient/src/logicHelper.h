@@ -2,6 +2,7 @@
 
 #include "propertiesPages/propertiesData.h"
 #include "logicElements.h"
+#include "varProcessor.h"
 
 template <class T>
 class LogicWrapper : public std::vector<T*>
@@ -110,7 +111,15 @@ public:
     void processHighlights(parseData *parse_data);
     void processTimers(std::vector<tstring>* new_cmds);
     void resetTimers();
-    void processVars(tstring *cmdline);
+    bool canSetVar(const tstring& var);
+    bool getVar(const tstring& var, tstring *value);
+    bool setVar(const tstring& var, const tstring& value);
+    bool delVar(const tstring& var);
+    bool processVars(tstring *cmdline);
+    enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
+    IfResult compareIF(const tstring& param);
+    enum MathResult { MATH_SUCCESS = 0, MATH_VARNOTEXIST, MATH_ERROR };
+    MathResult mathOp(const tstring& expr, tstring* result);
 
 private:
     // current workable elements
@@ -122,7 +131,9 @@ private:
     LogicWrapper<Gag> m_gags;
     LogicWrapper<Highlight> m_highlights;
     LogicWrapperTimers m_timers;
-    Pcre16 m_vars_regexp;
+    VarProcessor m_varproc;
+    Pcre16 m_if_regexp;
+    Pcre16 m_math_regexp;
     PropertiesData *m_propData;
     Ticker m_ticker;
 };
@@ -219,8 +230,16 @@ public:
             L"Подсветки (highlights)", L"Горячие клавиши (hotkeys)", L"Группы (groups)", L"Переменные (vars)", L"Таймеры (timers)", L"Подстановки (tabs)" };
         static const int ids[] = { LogicHelper::UPDATE_ACTIONS, LogicHelper::UPDATE_ALIASES, LogicHelper::UPDATE_SUBS,
             LogicHelper::UPDATE_ANTISUBS, LogicHelper::UPDATE_GAGS, LogicHelper::UPDATE_HIGHLIGHTS, LogicHelper::UPDATE_HOTKEYS,
-            LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS, 0 };
+            LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS, 0 };        
         int stateid = recognizeState(state);
+        if (stateid == LogicHelper::UPDATE_ALL)
+        {
+            str->assign(L"Все элементы (all)");
+            str->append(stateStrEx(getState(LogicHelper::UPDATE_ACTIONS)));
+            removeLastRN(str);
+            return;
+        }
+
         for (int i = 0; ids[i]; ++i)
         {
             if (stateid == ids[i])
@@ -228,7 +247,7 @@ public:
                 str->assign(cmds[i]);
                 str->append(stateStrEx(getState(stateid)));
                 removeLastRN(str);
-                break;             
+                break;
             }
         }
     }

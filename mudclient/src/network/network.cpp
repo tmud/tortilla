@@ -3,38 +3,53 @@
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
 
-#define IAC             255 // ff - in hex
-#define DONT            254 // fe
-#define DO              253 // fd
-#define WONT            252 // fc
-#define WILL            251 // fb
-#define SB              250 // fa
-#define SE              240 // f0
-#define GA              249 // f9
-#define COMPRESS        85  // 55
-#define COMPRESS2       86  // 56
-
 #ifdef _DEBUG
 void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
 {
-    OutputDebugStringA(label);
-    char tmp[32]; sprintf(tmp, " len=%d\r\n", len);
-    OutputDebugStringA(tmp);
     if (maxlen > len) maxlen = len;
+    std::string l("["); l.append(label);
+    char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
+    OutputDebugStringA(l.c_str());
     const unsigned char *bytes = (const unsigned char *)data;
-    for (int i = 0; i < maxlen; ++i)
+    len = maxlen;
+    const int show_len = 32;
+    unsigned char *buffer = new unsigned char[show_len];
+
+    while (len > 0)
     {
-        sprintf(tmp, "%.2x ", bytes[i]);
-        OutputDebugStringA(tmp);
+        int toshow = show_len;
+        if (toshow > len) toshow = len;
+        std::string hex;
+        for (int i = 0; i < toshow; ++i)
+        {
+            sprintf(tmp, "%.2x ", bytes[i]);
+            hex.append(tmp);
+        }
+        memcpy(buffer, bytes, toshow);
+        for (int i=0; i<toshow; ++i) {
+            if (buffer[i] < 32) buffer[i] = '.';
+        }
+        hex.append((const char*)buffer, toshow);
+        OutputDebugStringA(hex.c_str());
+        OutputDebugStringA("\r\n");
+        bytes += toshow;
+        len -= toshow;
     }
-    OutputDebugStringA("\r\n");
+    delete []buffer;
 }
-#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
-#else
-#define OUTPUT_BYTES(data, len, maxlen, label)
+
+void OutputTelnetOption(const void *data, const char* label)
+{
+    OutputDebugStringA(label);
+    char tmp[32];
+    unsigned char byte = *(const char*)data;
+    sprintf(tmp, ": %d (%.2x)\r\n", byte, byte);
+    OutputDebugStringA(tmp);
+}
 #endif
 
-Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), m_double_iac_mode(true)
+Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
+m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
 {
     m_input_buffer.alloc(1024);
     m_mccp_buffer.alloc(8192);
@@ -49,11 +64,6 @@ bool Network::connect(const NetworkConnectData& data)
 {
     sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
     if (sock == INVALID_SOCKET)
-        return false;
-
-    // non blocking mode
-    u_long mode = 1;
-    if (ioctlsocket(sock, FIONBIO, &mode) != NO_ERROR)
         return false;
 
     sockaddr_in peer; 
@@ -74,7 +84,8 @@ bool Network::connect(const NetworkConnectData& data)
        peer.sin_addr.s_addr = inet_addr( data.address.c_str() );
     }
 
-    if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE) == SOCKET_ERROR)
+    long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE; //|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
+    if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, events) == SOCKET_ERROR)
     {
         close();
         return false;
@@ -103,6 +114,8 @@ void Network::close()
     closesocket(sock);
     sock = NULL;
     close_mccp();
+    close_mtts();
+    close_msdp();
 
     m_input_data.clear();
     m_receive_data.clear();
@@ -123,6 +136,11 @@ void Network::getMccpRatio(MccpStatus* data)
 void Network::setSendDoubleIACmode(bool on)
 {
     m_double_iac_mode = on;
+}
+
+void Network::setUtf8Encoding(bool flag)
+{
+    m_utf8_encoding = flag;
 }
 
 NetworkEvents Network::processMsg(DWORD msg_lparam)
@@ -161,7 +179,7 @@ NetworkEvents Network::processMsg(DWORD msg_lparam)
     return NE_NOEVENT;
 }
 
-int Network::send(const tbyte* data, int len)
+bool Network::send(const tbyte* data, int len)
 {
     const tbyte *b = data;
     const tbyte *e = b + len;
@@ -185,12 +203,22 @@ int Network::send(const tbyte* data, int len)
     int data_len = m_output_buffer.getSize();
     bool result = send_ex((tbyte*)m_output_buffer.getData(), data_len);
     m_output_buffer.truncate(data_len);
-    return result ? len : -1;
+    return result;
+}
+
+bool Network::sendplain(const tbyte* data, int len)
+{
+    return send_ex(data, len);
 }
 
 DataQueue* Network::receive()
 {
     return &m_receive_data;
+}
+
+DataQueue* Network::receive_msdp()
+{
+    return &m_msdp_data;
 }
 
 int Network::read_socket()
@@ -208,9 +236,9 @@ int Network::read_socket()
             if (WSAGetLastError() != WSAEWOULDBLOCK)
                 return -1;
         }
-        //OUTPUT_BYTES(buffer.buf, readed, 8, "read socket");
         if (readed == 0)
             break;
+        //OUTPUT_BYTES(buffer.buf, readed, readed, "read socket");
 
         m_totalReaded += readed;
         if (!m_mccp_on)
@@ -240,7 +268,7 @@ int Network::read_socket()
         if (error)
             return -1;
 
-        if (processed == 0)      // low data for processing
+        if (processed == 0)      // low/no data for processing
         {
             break;
         }
@@ -254,7 +282,7 @@ int Network::read_socket()
                 m_receive_data.write(in, 1);
             else if (processed == 2 && in[0] == IAC && in[1] == GA)
             {
-                char bytes[2] = { 0x1b, 0x5c };
+                unsigned char bytes[2] = { 0x1b, 0x5c };
                 m_receive_data.write(bytes, 2);
             }
             else
@@ -268,9 +296,7 @@ int Network::read_socket()
 int Network::write_socket()
 {
     if (m_send_data.getSize() == 0)
-    {
          return 0;
-    }
 
     WSABUF buffer;
     buffer.buf = (char*)m_send_data.getData();
@@ -280,31 +306,25 @@ int Network::write_socket()
     DWORD sent = 0;
     if (WSASend(sock, &buffer, 1, &sent, flags, NULL, NULL) == SOCKET_ERROR)
         return -1;
-    //OUTPUT_BYTES(buffer.buf, sent, 8, "send socket");
+    //OUTPUT_BYTES(buffer.buf, sent, 32, "send socket");
     m_send_data.truncate(sent);
     return sent;
 }
 
 bool Network::send_ex(const tbyte* data, int len)
 {
-    assert(len >= 0);
+    assert(data && len >= 0);
     if (len < 0)
         return false;
-    if (len == 0)
-        return true;
-
-    m_send_data.write(data, len);
-
+    if (len > 0)
+        m_send_data.write(data, len);
     int sent = write_socket();
-    if (sent == -1)
-        return false;
-    return true;
+    return (sent == -1) ? false : true;
 }
 
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
 {
     const tbyte* b = buffer;
-    const tbyte* e = b;
     if (*b != IAC && *b != 0)     // find iac symbol or zero
     {
         const tbyte* e = b + len;
@@ -323,8 +343,9 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (len < 2)
         return 0;
 
-    e++;
-    if (*e == IAC)               // double iac - continue
+    const tbyte* e = b + 1;
+
+    if (*e == IAC)               // double IAC - continue
         return 2;
 
     if (*e == GA)                // IAC GA - continue
@@ -333,18 +354,50 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (len < 3)
         return 0;
 
-    if (*e == DO)               // block IAC DO option from some muds (lpmud) ?
+    if (e[0] == DO)               // some command via IAC DO option for negotiation
+    {
+        OUTPUT_OPTION(&e[1], "IAC DO");
+        if (e[1] == TTYPE)
+        {
+            tbyte support[3] = { IAC, WILL, e[1] };
+            if (!send_ex(support, 3))
+                {  *error = true; return 0; }
+            init_mtts();
+        }
+        else
+        {
+            // report, what client don't support other Telnet options
+            tbyte not_support[3] = { IAC, WONT, e[1] };
+            if (!send_ex(not_support, 3))
+                {  *error = true; return 0; }
+        }
         return -3;
-    
+    }
+
+    if (e[0] == DONT)
+    {
+        OUTPUT_OPTION(&e[1], "IAC DONT");
+        if (e[1] == TTYPE)
+            close_mtts();
+        return -3;
+    }
+
     if (e[0] == WILL)
     {
+        OUTPUT_OPTION(&e[1], "IAC WILL");
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
         {
-            // server send request for enable MCCP
             tbyte flag = (m_pMccpStream) ? DO : DONT;
             tbyte support[3] = { IAC, flag, e[1] };
             if (!send_ex(support, 3))
                { *error = true; return 0; }
+        }
+        else if (e[1] == MSDP)
+        {
+            tbyte support[3] = { IAC, DO, e[1] };
+            if (!send_ex(support, 3))
+               { *error = true; return 0; }
+            init_msdp();
         }
         else
         {
@@ -358,10 +411,15 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (e[0] == WONT)
     {
+        OUTPUT_OPTION(&e[1], "IAC WONT");
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
         {
             close_mccp();
             init_mccp();
+        }
+        if (e[1] == MSDP)
+        {
+            close_msdp();
         }
         return -3;
     }
@@ -372,9 +430,11 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
     if (e[0] == SB && (e[1] == COMPRESS || e[1] == COMPRESS2) && e[3] == SE)
     {
         if ((e[2] == IAC && e[1] == COMPRESS2) || (e[2] == WILL && e[1] == COMPRESS))
-        { 
+        {
+          if (m_mccp_on)
+               { *error = true; return 0; }
            m_totalDecompressed -= (len-5);
-           m_mccp_data.write(e+4, len-5 );
+           m_mccp_data.write(e+4, len-5);
            m_mccp_on = true;
            if (!process_mccp())
                 { *error = true; return 0; }
@@ -383,15 +443,36 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         return -5;
     }
 
-    // other telnet options
+    if (e[0] == SB && e[1] == MSDP)
+    {
+        for (int i = 3; i < len; ++i) {
+            if (e[i] == SE && e[i-1] == IAC && e[i-2] != IAC)
+            {
+                // finished msdp data block
+                process_msdp(b, i+2);
+                return -(i+2);
+            }
+        }
+        return 0;
+    }
+
+    if (len < 6)
+        return 0;
+
+    if (e[0] == SB && e[1] == TTYPE && e[2] == TTYPE_SEND && e[3] == IAC && e[4] == SE)
+    {
+        if (!process_mtts())
+             { *error = true; return 0; }
+        return -6;
+    }
+
+    // other SB options
     if (e[0] == SB)
     {
-        int se = -1;
-        for (int i = 1; i < len; ++i) { if (e[i] == SE) { se = i; break; }}
-        if (se == -1) {
-            return (len > 10) ? -len : 0;
+        for (int i = 2; i < len; ++i) {
+            if (e[i] == SE && e[i-1] == IAC && e[i-2] != IAC) return -(i+2);
         }
-        return -(se+2);
+        return 0;
     }
     return -1;      // skip error IAC
 }
@@ -457,4 +538,62 @@ void Network::close_mccp()
     m_pMccpStream = NULL;
     m_mccp_on = false;
     m_mccp_data.clear();
+}
+
+void Network::init_mtts()
+{
+    m_mtts_step = 0;
+}
+
+void Network::close_mtts()
+{
+     m_mtts_step = -1;
+}
+
+// ref: http://tintin.sourceforge.net/mtts/
+bool Network::process_mtts()
+{
+    if (m_mtts_step == -1) 
+        return true;
+    std::string str("MTTS 41");
+    if (m_mtts_step == 0)
+        str.assign("TORTILLA");
+    else if (m_mtts_step == 1)
+        str.assign("ANSI-256COLOR");
+    else if (m_utf8_encoding)
+        str.assign("MTTS 45");
+    m_mtts_step++;
+
+    int len = str.length() + 6;
+    tbyte *tosend = new tbyte[len];
+    tosend[0] = IAC;
+    tosend[1] = SB;
+    tosend[2] = TTYPE;
+    tosend[3] = TTYPE_IS;
+    memcpy(&tosend[4], str.c_str(), str.length());
+    tosend[len-2] = IAC;
+    tosend[len-1] = SE;
+    bool result = send_ex(tosend, len);
+    delete tosend;
+    return result;
+}
+
+void Network::init_msdp()
+{
+    tbyte turnon[3] = { IAC, DO, MSDP };
+    m_msdp_data.write(turnon, 3);
+    m_msdp_on = true;
+}
+
+void Network::close_msdp()
+{
+    tbyte turnoff[3] = { IAC, DONT, MSDP };
+    m_msdp_data.write(turnoff, 3);
+    m_msdp_on = false;
+}
+
+void Network::process_msdp(const tbyte* buffer, int len)
+{
+    if (m_msdp_on)
+        m_msdp_data.write(buffer, len);
 }

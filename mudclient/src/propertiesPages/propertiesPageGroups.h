@@ -9,22 +9,33 @@ class PropertyGroups :  public CDialogImpl<PropertyGroups>
     CEdit m_group;
     CButton m_add;
     CButton m_del;
+    CButton m_reset;
     CButton m_onoff;
     CButton m_rename;
     tstring m_OnStatus;
     bool m_deleted;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_GROUPS };
-     PropertyGroups(PropertiesData *data) : propData(data), m_OnStatus(L"Вкл"), m_deleted(false) {}
+     PropertyGroups(PropertiesData *data) : propData(data), m_OnStatus(L"Вкл"), m_deleted(false),dlg_state(NULL) {}
+     void setParams(PropertiesDlgPageState *state)
+     {
+         dlg_state = state;
+     }
 
 private:
     BEGIN_MSG_MAP(PropertyGroups)
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+       MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
+       MESSAGE_HANDLER(WM_USER, OnSetFocus)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_ON, OnGroupChecked)
        COMMAND_ID_HANDLER(IDC_BUTTON_RENAME, OnRenameElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_HANDLER(IDC_EDIT_GROUP, EN_CHANGE, OnEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
@@ -50,7 +61,7 @@ private:
         {
             m_list.setItem(index, 0, group);
             m_list.setItem(index, 1, m_OnStatus);
-        }        
+        }
         if (index == -1)
             index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
@@ -60,20 +71,20 @@ private:
     }
 
     LRESULT OnDeleteElement(WORD, WORD, HWND, BOOL&)
-    {   
+    {
         tstring title;
         loadString(IDR_MAINFRAME, &title);
         if (propData->groups.size() == 1)
         {
             MessageBox(L"Последнюю группу удалить нельзя!", title.c_str(), MB_OK|MB_ICONSTOP);
             return 0;
-        }       
+        }
         if (MessageBox(L"Вы уверены, что хотите удалить группу со всеми ее триггерами, заменами и другими элементами?", 
             title.c_str(), MB_YESNO|MB_ICONQUESTION) == IDYES)
         {
             m_deleted = true;
             int index = m_list.GetSelectedIndex();
-            m_list.DeleteItem(index);            
+            m_list.DeleteItem(index);
             const property_value& g = propData->groups.get(index);
             propData->deleteGroup(g.key);
             m_deleted = false;
@@ -82,7 +93,7 @@ private:
     }
 
     LRESULT OnRenameElement(WORD, WORD, HWND, BOOL&)
-    {   
+    {
         tstring group;
         getWindowText(m_group, &group);
 
@@ -92,6 +103,14 @@ private:
         propData->renameGroup(oldname, group);
 
         m_list.setItem(index, 0, group);
+        return 0;
+    }
+
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        m_list.SelectItem(-1);
+        m_group.SetWindowTextW(L"");
+        m_group.SetFocus();
         return 0;
     }
 
@@ -110,7 +129,8 @@ private:
     {
         int string_len = m_group.GetWindowTextLength();
         BOOL flag = string_len == 0 ? FALSE : TRUE;
-        m_add.EnableWindow(flag);        
+        m_add.EnableWindow(flag);
+        m_reset.EnableWindow(flag);
         if (flag)
         {
             int index = m_list.GetSelectedIndex();
@@ -143,6 +163,7 @@ private:
             m_onoff.EnableWindow(FALSE);
             if (!m_deleted)
                 m_group.SetWindowText(L"");
+            m_reset.EnableWindow(FALSE);
         }
         else
         {
@@ -151,10 +172,11 @@ private:
             m_onoff.SetCheck(checkEnableItem(item_selected) ? BST_CHECKED : BST_UNCHECKED);
             const property_value& g = propData->groups.get(item_selected);
             m_group.SetWindowText(g.key.c_str());
+            m_reset.EnableWindow(TRUE);
         }
         m_rename.EnableWindow(FALSE);
         return 0;
-    }    
+    }
 
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
@@ -163,7 +185,30 @@ private:
             m_del.EnableWindow(FALSE);
         return 0;
     }
-    
+
+    LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam)
+        {
+            PostMessage(WM_USER); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
+            m_state_helper.loadCursorAndTopPos(-1);
+        }
+        return 0;
+    }
+
+    LRESULT OnCloseDialog(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        m_state_helper.save(L"", false);
+        return 0;
+    }
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
+        return 0;
+    }
+
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
         m_group.Attach(GetDlgItem(IDC_EDIT_GROUP));
@@ -171,6 +216,7 @@ private:
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
         m_onoff.Attach(GetDlgItem(IDC_CHECK_GROUP_ON));
         m_rename.Attach(GetDlgItem(IDC_BUTTON_RENAME));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Группа", 50);
         m_list.addColumn(L"Статус", 20);
@@ -181,7 +227,8 @@ private:
         m_del.EnableWindow(FALSE);
         m_onoff.EnableWindow(FALSE);
         m_rename.EnableWindow(FALSE);
-
+        m_reset.EnableWindow(FALSE);
+        m_state_helper.init(dlg_state, &m_list);
         for (int i=0,e=propData->groups.size(); i<e; ++i)
         {
             const property_value& g = propData->groups.get(i);

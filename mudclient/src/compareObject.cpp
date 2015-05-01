@@ -1,5 +1,7 @@
 #include "stdafx.h"
 #include "compareObject.h"
+#include "logicProcessor.h"
+extern LogicProcessorMethods* _lp;
 
 CompareObject::CompareObject() {}
 CompareObject::~CompareObject() {}
@@ -19,7 +21,7 @@ bool CompareObject::init(const tstring& key)
     return result;
 }
 
-bool CompareObject::checkToCompare(const tstring& str, const CompareVar* object)
+bool CompareObject::checkToCompare(const tstring& str)
 {
     if (!m_vars_pcre_parts.empty())
     {
@@ -33,7 +35,7 @@ bool CompareObject::checkToCompare(const tstring& str, const CompareVar* object)
             else
             {
                 tstring value;
-                if (!object->get(v.c_str() + 1, &value))
+                if (!_lp->getVar(v.c_str() + 1, &value))
                     return false;
                 regexp.append(value);
             }
@@ -50,9 +52,29 @@ bool CompareObject::checkToCompare(const tstring& str, const CompareVar* object)
     return true;
 }
 
+void CompareObject::translateParameters(const tstring& value, tstring* result) const
+{
+    std::vector<tstring> params;            // values of params in key
+    getParameters(&params);
+    int params_count = params.size();
+
+    int pos = 0;
+    ParamsHelper values(value);
+    result->clear();
+    for (int i = 0, e = values.getSize(); i < e; ++i)
+    {
+        result->append(value.substr(pos, values.getFirst(i) - pos));
+        int id = values.getId(i);
+        if (id < params_count)
+            result->append(params[id]);
+        pos = values.getLast(i);
+    }
+    result->append(value.substr(pos));
+}
+
 void CompareObject::getParameters(std::vector<tstring>* params) const
 {
-    assert(params);    
+    assert(params);
     std::vector<tstring> &p = *params;
     int size = m_pcre.getSize();
     if (size == 0)  { p.clear(); return; }
@@ -111,17 +133,16 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
     }
     tmp.append(b);
 
-    // replace parameter %% to regexp .* (all combination of symbols)
-    tstring_replace(&tmp, L"%%", L".*");
-
     // replace parameters, like %0 etc. to regexp
-    int pos = 0;
-    ParamsHelper ph(tmp);
+    int pos = 0; int len = tmp.length();
+    ParamsHelper ph(tmp, true);
     for (int i=0,e=ph.getSize(); i<e; ++i)
     {
         prce_template->append(tmp.substr(pos, ph.getFirst(i) - pos));
         pos = ph.getLast(i);
-        tstring flag(tmp.substr(pos,1));
+        int id = ph.getId(i);
+        
+        /*tstring flag(tmp.substr(pos,1));
         if (flag == L"%") // %x% variant
         {
             int last = tmp.size() - 1;
@@ -132,7 +153,13 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
             pos++;
         }
         else              // %x variant
-          { prce_template->append(L"([^ ]+)"); }
+          { prce_template->append(L"([^ ]*)"); }*/
+
+        if (pos == len)   // for last %x in string
+            prce_template->append( (id == -1) ? L".*" : L"(.*)");
+        else
+            prce_template->append( (id == -1) ? L".*?" : L"(.*?)");
+
     }
     prce_template->append(tmp.substr(pos));
 }

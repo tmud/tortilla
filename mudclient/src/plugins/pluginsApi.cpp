@@ -45,14 +45,15 @@ void pluginLog(const tstring& msg) { _lp->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
 //---------------------------------------------------------------------
-wchar_t plugin_buffer[1024];
+MemoryBuffer pluginBuffer(16384*sizeof(wchar_t));
+wchar_t* plugin_buffer() { return (wchar_t*)pluginBuffer.getData(); }
 int pluginInvArgs(lua_State *L, const utf8* fname)
 {
     int n = lua_gettop(L);
     Utf8ToWide f(fname);
-    swprintf(plugin_buffer, L"'%s'.%s: Некорректные параметры(%d): ",
+    swprintf(plugin_buffer(), L"'%s'.%s: Некорректные параметры(%d): ",
         _cp->get(Plugin::FILE), (const wchar_t*)f, n);
-    tstring log(plugin_buffer);
+    tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
         int t = lua_type(L, i);
@@ -75,31 +76,31 @@ int pluginError(const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s'.%s: %s", _cp->get(Plugin::FILE), (const wchar_t*)f, (const wchar_t*)e);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp->get(Plugin::FILE), (const wchar_t*)f, (const wchar_t*)e);
+    pluginLog(plugin_buffer());
     return 0;
 }
 
 int pluginError(const utf8* error)
 {
     Utf8ToWide e(error);
-    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    pluginLog(plugin_buffer());
     return 0;
 }
 
 int pluginLog(const utf8* msg)
 {
     Utf8ToWide e(msg);
-    swprintf(plugin_buffer, L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    pluginLog(plugin_buffer());
     return 0;
 }
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 {
-    swprintf(plugin_buffer, L"'%s': %s", fname, msg);
-    pluginLog(plugin_buffer);
+    swprintf(plugin_buffer(), L"'%s': %s", fname, msg);
+    pluginLog(plugin_buffer());
 }
 //---------------------------------------------------------------------
 int addCommand(lua_State *L)
@@ -305,7 +306,7 @@ int getProfile(lua_State *L)
     {
         luaT_pushwstring(L, _pmanager->getProfileName().c_str());
         return 1;
-    }    
+    }
     return pluginInvArgs(L, "getProfile");
 }
 
@@ -313,7 +314,7 @@ int getParent(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
-        HWND hwnd = _wndMain.m_gameview;
+        HWND hwnd = _wndMain; //.m_gameview;
         lua_pushunsigned(L, (DWORD)hwnd);
         return 1;
     }
@@ -461,7 +462,6 @@ int saveTable(lua_State *L)
                     incorrect_data = true;
                     continue;
                 }
-                int x = 1;
             }
             if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING || value_type == LUA_TBOOLEAN)
             {
@@ -652,6 +652,7 @@ void reg_props(lua_State *L);
 void reg_mt_panels(lua_State *L);
 void reg_mt_render(lua_State *L);
 void reg_mt_pcre(lua_State *L);
+void reg_msdp(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -693,6 +694,7 @@ bool initPluginsSystem()
     reg_mt_panels(L);
     reg_mt_render(L);
     reg_mt_pcre(L);
+    reg_msdp(L);
     return true;
 }
 
@@ -781,7 +783,7 @@ void reg_string(lua_State *L)
     lua_pop(L, 1);
 }
 
-int paletteColor(lua_State *L)
+int props_paletteColor(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TNUMBER))
     {
@@ -795,7 +797,7 @@ int paletteColor(lua_State *L)
     return pluginInvArgs(L, "props.paletteColor");
 }
 
-int backgroundColor(lua_State *L)
+int props_backgroundColor(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -805,7 +807,7 @@ int backgroundColor(lua_State *L)
     return pluginInvArgs(L, "props.backgroundColor");
 }
 
-int currentFont(lua_State *L)
+int props_currentFont(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -815,7 +817,18 @@ int currentFont(lua_State *L)
     return pluginInvArgs(L, "props.currentFont");
 }
 
-int cmdPrefix(lua_State *L)
+int props_currentFontHandle(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        HFONT handle = *_stdfont;
+        lua_pushunsigned(L, (DWORD)handle);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.currentFontHandle");
+}
+
+int props_cmdPrefix(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -826,7 +839,7 @@ int cmdPrefix(lua_State *L)
     return pluginInvArgs(L, "props.cmdPrefix");
 }
 
-int cmdSeparator(lua_State *L)
+int props_cmdSeparator(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -837,7 +850,7 @@ int cmdSeparator(lua_State *L)
     return pluginInvArgs(L, "props.cmdSeparator");
 }
 
-int serverHost(lua_State *L)
+int props_serverHost(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -853,7 +866,7 @@ int serverHost(lua_State *L)
     return pluginInvArgs(L, "props.serverHost");
 }
 
-int serverPort(lua_State *L)
+int props_serverPort(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -871,7 +884,7 @@ int serverPort(lua_State *L)
     return pluginInvArgs(L, "props.serverPort");
 }
 
-int connected(lua_State *L)
+int props_connected(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -881,16 +894,29 @@ int connected(lua_State *L)
     return pluginInvArgs(L, "props.connected");
 }
 
+int props_activated(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int state = _wndMain.m_gameview.activated() ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.activated");
+}
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
-    regFunction(L, "paletteColor", paletteColor);
-    regFunction(L, "backgroundColor", backgroundColor);
-    regFunction(L, "currentFont", currentFont);
-    regFunction(L, "cmdPrefix", cmdPrefix);
-    regFunction(L, "cmdSeparator", cmdSeparator);
-    regFunction(L, "serverHost", serverHost);
-    regFunction(L, "serverPort", serverPort);
-    regFunction(L, "connected", connected);
+    regFunction(L, "paletteColor", props_paletteColor);
+    regFunction(L, "backgroundColor", props_backgroundColor);
+    regFunction(L, "currentFont", props_currentFont);
+    regFunction(L, "currentFontHandle", props_currentFontHandle);
+    regFunction(L, "cmdPrefix", props_cmdPrefix);
+    regFunction(L, "cmdSeparator", props_cmdSeparator);
+    regFunction(L, "serverHost", props_serverHost);
+    regFunction(L, "serverPort", props_serverPort);
+    regFunction(L, "connected", props_connected);
+    regFunction(L, "activated", props_activated);
     lua_setglobal(L, "props");
 }

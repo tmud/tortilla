@@ -33,12 +33,20 @@ void markPromptUnderline(parseDataStrings& strings);
 #define MARKINVERSEDCOLOR(x, c) {}
 #endif
 
+struct MudViewParserOscPalette
+{
+    MudViewParserOscPalette() : reset_colors(false) {}
+    std::map<tbyte, COLORREF> colors;
+    typedef std::map<tbyte, COLORREF>::iterator colors_iterator;
+    bool reset_colors;
+};
+
 class MudViewParser
 {
 public:
     MudViewParser();
     ~MudViewParser();
-    void parse(const WCHAR* text, int len, bool newline_iacga, parseData* data);
+    void parse(const WCHAR* text, int len, bool newline_iacga, parseData* data, MudViewParserOscPalette *palette);
 
 private:
     enum parserResultCode {
@@ -64,13 +72,14 @@ private:
     parserResult process_0xa(const WCHAR* b, int len);
     parserResult process_esc(const WCHAR* b, int len);
     parserResult process_csi(const WCHAR* b, int len);
-    parserResult process_csr(const WCHAR* b, int len);    
-
+    parserResult process_csr(const WCHAR* b, int len);
+    parserResult process_osc(const WCHAR* b, int len);
 private:
     DataQueue m_buffer;
     MudViewString *m_current_string;
     MudViewStringBlock m_current_block;
     bool m_last_finished;
+    MudViewParserOscPalette *m_palette;
 };
 
 class ColorsCollector

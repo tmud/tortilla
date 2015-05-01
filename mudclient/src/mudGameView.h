@@ -41,6 +41,8 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     PluginsManager m_plugins;
     int m_codepage;
 
+    bool m_activated;
+
 private:
     void onStart();
     void onClose();
@@ -57,7 +59,7 @@ public:
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN)
+        m_codepage(CPWIN), m_activated(false)
     {
     }
 
@@ -85,6 +87,19 @@ public:
                 closeHistory();
                 return TRUE;
             }
+            int last = m_view.getLastString();
+            if (last != m_view.getViewString())
+            {
+                m_view.setViewString(last);
+                return TRUE;
+            }
+        }
+        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && (GetKeyState(VK_SHIFT) < 0))
+        {
+            // Shift+F12 - hot key for settings
+            BOOL b = FALSE;
+            OnSettings(0,0,0,b);
+            return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
             return TRUE;
@@ -116,6 +131,11 @@ public:
         m_dock.SetClient(m_hWnd);
         m_bar.setCommandEventCallback(m_hWnd, WM_USER);
         return dock;
+    }
+
+    bool activated() const
+    {
+        return m_activated;
     }
 
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
@@ -162,7 +182,7 @@ public:
         m_plugins_views.push_back(v);
         return v;
     }
-    
+
     void deleteDockPane(PluginsView *v)
     {
         HWND hwnd = v->m_hWnd;
@@ -274,7 +294,6 @@ public:
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
 
-
 private:
     BEGIN_MSG_MAP(MudGameView)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -300,6 +319,7 @@ private:
         MESSAGE_HANDLER(WM_DOCK_FOCUS, OnBarSetFocus)
         COMMAND_ID_HANDLER(ID_PLUGINS, OnPlugins)
         COMMAND_RANGE_HANDLER(PLUGING_MENUID_START, PLUGING_MENUID_END, OnPluginMenuCmd)
+		MESSAGE_HANDLER(WM_ACTIVATEAPP, OnActivateApp)
         CHAIN_MSG_MAP_ALT_MEMBER(m_dock, 1) // processing some system messages
     END_MSG_MAP()
 
@@ -365,11 +385,8 @@ private:
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
 
-        if (m_propElements.global.welcome)
-        {
-            m_propElements.global.welcome = 0;
-            PostMessage(WM_USER + 3);
-        }
+        if (m_manager.isFirstStartup())
+            PostMessage(WM_USER+3);
 
         SetTimer(1, 200);
         SetTimer(2, 50);
@@ -481,6 +498,14 @@ private:
         return 0;
     }
 
+    LRESULT OnActivateApp(UINT, WPARAM wparam, LPARAM, BOOL&bHandled)
+    {
+        m_activated = (wparam) ? true : false;
+        m_plugins.processPluginsMethod(m_activated ? "activated" : "deactivated", 0);
+        bHandled = FALSE;
+        return 0;
+    }
+
     LRESULT OnPlugins(WORD, WORD, HWND, BOOL&)
     {
         if (m_plugins.pluginsPropsDlg())
@@ -502,10 +527,14 @@ private:
         NetworkEvents result = m_network.processMsg(lparam);
         if (result == NE_NEWDATA)
         {
+            m_plugins.processReceived(&m_network);
+
             DataQueue* data = m_network.receive();
             int text_len = data->getSize();
             if (text_len == 0)
                 return 0;
+
+            //OUTPUT_BYTES(data->getData(), text_len, text_len, "DATA");
 
             MemoryBuffer wide;
             if (m_codepage == CPWIN)
@@ -590,6 +619,7 @@ private:
         else if (id == 2)
         {
             m_processor.processStackTick();
+            m_plugins.processToSend(&m_network);
         }
         return 0;
     }
@@ -602,13 +632,15 @@ private:
         tstring history(cmd);
         m_plugins.processHistoryCmd(&history);
         m_bar.addToHistory(history);
-        m_processor.processCommand(cmd);
+        BracketsMarker bm;
+        bm.mark(&cmd);
+        m_processor.processUserCommand(cmd);
         return 0;
     }
 
     void initCommandBar()
     {
-        m_barHeight = m_propElements.font_height + 4;
+        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - доп. высота, чтобы Пуск не наезжал на буквы когда окно максимизировано
         m_bar.setParams(m_barHeight, m_propElements.standard_font);
         m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);
@@ -644,6 +676,10 @@ private:
             updateProps();
             if (!m_manager.saveProfile())
                 msgBox(m_hWnd, IDS_ERROR_SAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+        }
+        else
+        {
+            data.dlg = tmp.dlg;
         }
         return 0;
     }
@@ -685,6 +721,15 @@ private:
     {
         if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
         {
+            if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
+            {
+                int vs = m_view.getViewString();
+                int page = m_view.getStringsOnDisplay();
+                if (vs > page)
+                    showHistory(vs-page, -1);
+                return true;
+            }
+
             MudView &view = (m_history.IsWindowVisible()) ? m_history : m_view;
             int visible_string = view.getViewString();
             int page = view.getStringsOnDisplay();
@@ -712,6 +757,7 @@ private:
        m_plugins.updateProps();
        if (m_propData->codepage == L"utf8") m_codepage = CPUTF8;
        else m_codepage = CPWIN;
+       m_network.setUtf8Encoding(m_codepage == CPUTF8 ? true : false);
     }
 
     void updateTitle()
@@ -784,30 +830,14 @@ private:
             return;
         if (view == 0)
         {
-            bool last = m_view.isLastString();
             int vs = m_view.getViewString();
+            bool last = m_view.isLastString();            
             m_view.addText(parse_data, &m_history);
             checkHistorySize();
 
             if (!m_history.IsWindowVisible() && !last)
             {
-                CDC dc(m_view.GetDC());
-                HFONT current_font = dc.SelectFont(m_propElements.standard_font);
-                SIZE sz = {0,0};
-                GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
-                dc.SelectFont(current_font);
-
-                RECT rc; m_hSplitter.GetClientRect(&rc);
-                int lines0 = rc.bottom / sz.cy;
-                int dy0 = rc.bottom - (lines0 * sz.cy);
-                int curpos = m_hSplitter.GetSplitterPos();
-                int lines = curpos / sz.cy;
-                curpos = dy0 + (lines * sz.cy);
-                vs = vs - (lines0 - lines) + (m_history.getLastString() - m_view.getLastString());
-
-                m_hSplitter.SetSplitterPos(curpos);
-                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_NONE);
-                m_history.setViewString(vs);
+                showHistory(vs, 1);
             }
             else
             {
@@ -896,7 +926,7 @@ private:
         return m_parent;
     }
 
-    void preprocessGameCmd(tstring* cmd);
+    void preprocessGameCmd(InputCommand* cmd);
 
     void checkHistorySize()
     {
@@ -918,6 +948,27 @@ private:
     {
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
         m_history.truncateStrings(m_propData->view_history_size);
+    }
+
+    void showHistory(int vs, int dt)
+    {
+        CDC dc(m_view.GetDC());
+        HFONT current_font = dc.SelectFont(m_propElements.standard_font);
+        SIZE sz = { 0, 0 };
+        GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
+        dc.SelectFont(current_font);
+
+        RECT rc; m_hSplitter.GetClientRect(&rc);
+        int lines0 = rc.bottom / sz.cy;
+        int dy0 = rc.bottom - (lines0 * sz.cy);
+        int curpos = m_hSplitter.GetSplitterPos();
+        int lines = curpos / sz.cy;
+        curpos = dy0 + (lines * sz.cy);
+        vs = vs - (lines0 - lines) * dt + (m_history.getLastString() - m_view.getLastString());
+
+        m_hSplitter.SetSplitterPos(curpos);
+        m_hSplitter.SetSinglePaneMode(SPLIT_PANE_NONE);
+        m_history.setViewString(vs);
     }
 
     void saveClientWindowPos()
@@ -999,4 +1050,7 @@ private:
             }
         }
     }
+
+    void setOscColor(int index, COLORREF color);
+    void resetOscColors();
 };

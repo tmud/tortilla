@@ -206,7 +206,7 @@ int render_setBackground(lua_State *L)
         r->setBackground(color);
         return 0;
     }
-    return pluginInvArgs(L, "render.setBackground");
+    return pluginInvArgs(L, "render:setBackground");
 }
 
 int render_textColor(lua_State *L)
@@ -234,7 +234,7 @@ int render_textColor(lua_State *L)
         r->setTextColor(color);
         return 0;
     }
-    return pluginInvArgs(L, "render.textColor");
+    return pluginInvArgs(L, "render:textColor");
 }
 
 int render_width(lua_State *L)
@@ -245,7 +245,7 @@ int render_width(lua_State *L)
         lua_pushinteger(L, r->width());
         return 1;
     }
-    return pluginInvArgs(L, "render.width");
+    return pluginInvArgs(L, "render:width");
 }
 
 int render_height(lua_State *L)
@@ -256,7 +256,7 @@ int render_height(lua_State *L)
         lua_pushinteger(L, r->height());
         return 1;
     }
-    return pluginInvArgs(L, "render.height");
+    return pluginInvArgs(L, "render:height");
 }
 
 int render_createPen(lua_State *L)
@@ -271,7 +271,7 @@ int render_createPen(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render.createPen");
+    return pluginInvArgs(L, "render:createPen");
 }
 
 int render_createBrush(lua_State *L)
@@ -286,7 +286,7 @@ int render_createBrush(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render.createBrush");
+    return pluginInvArgs(L, "render:createBrush");
 }
 
 int render_createFont(lua_State *L)
@@ -301,7 +301,7 @@ int render_createFont(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render.createFont");
+    return pluginInvArgs(L, "render:createFont");
 }
 
 int render_select(lua_State *L)
@@ -327,7 +327,7 @@ int render_select(lua_State *L)
         r->selectFont(f);
         return 0;
     }
-    return pluginInvArgs(L, "render.select");
+    return pluginInvArgs(L, "render:select");
 }
 
 int render_rect(lua_State *L)
@@ -341,7 +341,7 @@ int render_rect(lua_State *L)
         r->drawRect(rc);
         return 0;
     }
-    return pluginInvArgs(L, "render.rect");
+    return pluginInvArgs(L, "render:rect");
 }
 
 int render_solidRect(lua_State *L)
@@ -355,7 +355,7 @@ int render_solidRect(lua_State *L)
         r->drawSolidRect(rc);
         return 0;
     }
-    return pluginInvArgs(L, "render.solidRect");
+    return pluginInvArgs(L, "render:solidRect");
 }
 
 int render_print(lua_State *L)
@@ -368,7 +368,7 @@ int render_print(lua_State *L)
         lua_pushinteger(L, width);
         return 1;
     }
-    return pluginInvArgs(L, "render.print");
+    return pluginInvArgs(L, "render:print");
 }
 
 int render_update(lua_State *L)
@@ -379,7 +379,7 @@ int render_update(lua_State *L)
         r->update();
         return 0;
     }
-    return pluginInvArgs(L, "render.update");
+    return pluginInvArgs(L, "render:update");
 }
 
 int render_fontHeight(lua_State *L)
@@ -390,7 +390,7 @@ int render_fontHeight(lua_State *L)
         lua_pushinteger(L, r->getFontHeight());
         return 1;
     }
-    return pluginInvArgs(L, "render.fontHeight");
+    return pluginInvArgs(L, "render:fontHeight");
 }
 
 int render_textWidth(lua_State *L)
@@ -402,7 +402,7 @@ int render_textWidth(lua_State *L)
         lua_pushinteger(L, r->getTextWidth(text));
         return 1;
     }
-    return pluginInvArgs(L, "render.fontHeight");
+    return pluginInvArgs(L, "render:textWidth");
 }
 
 void reg_mt_render(lua_State *L)

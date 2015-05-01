@@ -15,7 +15,7 @@ int luapcre_create(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "pcre.create");
+    return pluginInvArgs(L, "createPcre");
 }
 
 int luapcre_find(lua_State *L)
@@ -27,7 +27,7 @@ int luapcre_find(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "pcre.find");
+    return pluginInvArgs(L, "pcre:find");
 }
 
 int luapcre_findall(lua_State *L)
@@ -39,7 +39,7 @@ int luapcre_findall(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "pcre.findall");
+    return pluginInvArgs(L, "pcre:findall");
 }
 
 int luapcre_size(lua_State *L)
@@ -50,7 +50,7 @@ int luapcre_size(lua_State *L)
         lua_pushinteger(L, p->size());
         return 1;
     }
-    return pluginInvArgs(L, "pcre.size");
+    return pluginInvArgs(L, "pcre:size");
 }
 
 int luapcre_first(lua_State *L)
@@ -62,7 +62,7 @@ int luapcre_first(lua_State *L)
         lua_pushinteger(L, first);
         return 1;
     }
-    return pluginInvArgs(L, "pcre.first");
+    return pluginInvArgs(L, "pcre:first");
 }
 
 int luapcre_last(lua_State *L)
@@ -74,7 +74,7 @@ int luapcre_last(lua_State *L)
         lua_pushinteger(L, last);
         return 1;
     }
-    return pluginInvArgs(L, "pcre.last");
+    return pluginInvArgs(L, "pcre:last");
 }
 
 int luapcre_get(lua_State *L)
@@ -87,7 +87,7 @@ int luapcre_get(lua_State *L)
         lua_pushstring(L, str.c_str());
         return 1;
     }
-    return pluginInvArgs(L, "pcre.get");
+    return pluginInvArgs(L, "pcre:get");
 }
 
 int luapcre_gc(lua_State *L)

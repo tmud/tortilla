@@ -158,9 +158,9 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\helpManager.h" />
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />
-    <ClInclude Include="src\ifProcessor.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
+    <ClInclude Include="src\msdp\msdpNetwork.h" />
     <ClInclude Include="src\mudCommandBar.h" />
     <ClInclude Include="src\mudGameView.h" />
     <ClInclude Include="src\mudView.h" />
@@ -194,6 +194,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\propertiesPages\propertiesPageTabwords.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageTimers.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageTwoParams.h" />
+    <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h" />
     <ClInclude Include="src\propertiesPages\propertyList.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\network\network.h" />
@@ -213,6 +214,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\common\splitterEx.h" />
     <ClInclude Include="src\common\wideToAnsi.h" />
     <ClInclude Include="src\common\wideToUtf8.h" />
+    <ClInclude Include="src\varProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
@@ -222,6 +224,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\helpManager.cpp" />
     <ClCompile Include="src\LogicProcessor3.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
+    <ClCompile Include="src\msdp\msdpNetwork.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
     <ClCompile Include="src\mudView.cpp" />
     <ClCompile Include="src\mudViewParser.cpp" />
@@ -254,6 +257,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\common\common.cpp" />
     <ClCompile Include="src\common\luaSupport.cpp" />
     <ClCompile Include="src\common\paramsHelper.cpp" />
+    <ClCompile Include="src\varProcessor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico" />

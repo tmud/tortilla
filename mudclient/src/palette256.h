@@ -29,9 +29,14 @@ public:
     {
         assert(data);
         for (tbyte i=0; i<=15; ++i)
-            xterm_colors[i] = data->colors[i];
+            xterm_colors[i] = (data->osc_flags[i]) ? data->osc_colors[i] : data->colors[i];
     }
 
-private:   
+    void setColor(tbyte color, COLORREF value)
+    {
+        xterm_colors[color] = value;
+    }
+
+private:
     COLORREF xterm_colors[256];
 };

@@ -36,7 +36,7 @@ int pn_attach(lua_State *L)
         v->attachChild(child);
         return 0;
     }
-    return pluginInvArgs(L, "panel.attach");
+    return pluginInvArgs(L, "panel:attach");
 }
 
 int pn_setRender(lua_State *L)
@@ -53,7 +53,7 @@ int pn_setRender(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "panel.setRender");
+    return pluginInvArgs(L, "panel:setRender");
 }
 
 int pn_hwnd(lua_State *L)
@@ -65,7 +65,7 @@ int pn_hwnd(lua_State *L)
         lua_pushunsigned(L, (unsigned int)wnd);
         return 1;
     }
-    return pluginInvArgs(L, "panel.hwnd");
+    return pluginInvArgs(L, "panel:hwnd");
 }
 
 void reg_mt_panels(lua_State *L)

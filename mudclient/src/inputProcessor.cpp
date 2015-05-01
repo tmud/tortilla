@@ -1,16 +1,7 @@
 #include "stdafx.h"
 #include "inputProcessor.h"
 
-class InputCommandHelper
-{
-public:
-    Pcre16 pcre;
-    InputCommandHelper() {
-         pcre.setRegExp(L"\\{.*?\\}|\\\".*?\\\"|\\'.*?\\'|[^ ]+", true);
-    }    
-} m_ich;
-
-InputCommand::InputCommand(const tstring& cmd)
+InputCommand::InputCommand(const tstring& cmd) : empty(true)
 {
     // save command
     full_command.assign(cmd);
@@ -20,7 +11,9 @@ InputCommand::InputCommand(const tstring& cmd)
     tstring_trimleft(&fcmd);
     if (fcmd.empty())
         return;
-        
+
+    empty = false;
+
     // divide cmd for cmd+parameters
     int pos = fcmd.find(L' ');
     if (pos == -1)
@@ -29,25 +22,25 @@ InputCommand::InputCommand(const tstring& cmd)
         return;
     }
     command.assign(fcmd.substr(0,pos));
-    parameters.append(fcmd.substr(pos+1));
-    tstring_trimleft(&parameters);
+    parameters.assign(fcmd.substr(pos+1));
+    fcmd.resize(pos+1);
 
-    // get parameters
-    const WCHAR* p = fcmd.c_str() + pos + 1;
-    m_ich.pcre.findAllMatches(p);
-    for (int i=0,e=m_ich.pcre.getSize(); i<e; ++i)
-    {
-        int f = m_ich.pcre.getFirst(i);
-        int l = m_ich.pcre.getLast(i);
-        tstring tmp(p+f, l-f);
-        WCHAR t = tmp.at(0);
-        if (t == L'{' || t == L'\'' || t == L'\"')        
-            tmp = tmp.substr(1, tmp.length()-2);
-        parameters_list.push_back(tmp);
-    }
+    BracketsMarker bm;
+    bm.unmark(&parameters, &parameters_list);
+    fcmd.append(parameters);
 }
 
-InputProcessor::InputProcessor() : pData(NULL)
+void InputCommand::replace_command(const tstring& cmd)
+{
+    if (cmd == command)
+        return;
+    command.assign(cmd);
+    full_command.assign(cmd);
+    full_command.append(L" ");
+    full_command.append(parameters);
+}
+
+InputProcessor::InputProcessor(tchar separator, tchar prefix) : m_separator(separator), m_prefix(prefix)
 {
 }
 
@@ -56,18 +49,13 @@ InputProcessor::~InputProcessor()
     clear();
 }
 
-void InputProcessor::updateProps(PropertiesData *pdata) 
-{
-    pData = pdata;
-}
-
 void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds)
 {   
     // clear data
     clear();
 
     // process separators
-    processSeparators(cmd, &commands);   
+    processSeparators(cmd, &commands);
 
     // process aliases
     int queue_size = commands.size();
@@ -81,10 +69,9 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
         loops_hunter.push_back(commands[i]->command);
         
         bool alias_found = false;
-        WCHAR prefix = pData->cmd_prefix;
         tstring cmd(commands[i]->command);
         tstring alias;
-        if (!cmd.empty() && cmd.at(0) != prefix // skip empty and system commands
+        if (!cmd.empty() && cmd.at(0) != m_prefix // skip empty and system commands
             && helper->processAliases(cmd, &alias))
         {
             if (alias != cmd)
@@ -136,18 +123,48 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
 void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList* result)
 {
     // truncate to separate commands
-    WCHAR separator = pData->cmd_separator;
-    size_t pos0 = 0;
-    size_t pos = sep_cmd.find(separator);
-    while (pos != tstring::npos)
+    const WCHAR *p = sep_cmd.c_str();
+    const WCHAR *e = p + sep_cmd.length();
+    std::vector<WCHAR> stack;
+
+    const WCHAR *b = p;
+    while (p != e)
     {
-        InputCommand *icmd = new InputCommand( sep_cmd.substr(pos0, pos-pos0) );
-        result->push_back(icmd);        
-        pos0 = pos+1;
-        pos = sep_cmd.find(separator, pos0);
+        if (*p == m_separator && stack.empty())
+        {
+            InputCommand *icmd = new InputCommand( tstring(b, p-b) );
+            result->push_back(icmd);
+            p++; b = p;
+            continue;
+        }
+        if (wcschr(L"{}\"'", *p))
+        {
+            //bool skip_push = false;
+            if (!stack.empty())
+            {
+                int last = stack.size()-1;
+                if (((*p == L'\'' || *p == L'"') && stack[last] == *p) ||
+                    (*p == L'}' && stack[last] == L'{'))
+                {
+                    stack.pop_back();
+                    //.skip_push = true;
+                }
+                else
+                {
+                    stack.push_back(*p);
+                }
+            }
+            //if (!skip_push && *p != L'}')
+            else if (*p != L'}')
+                { stack.push_back(*p); }
+        }
+        p++;
     }
-    InputCommand *icmd = new InputCommand( sep_cmd.substr(pos0) );
-    result->push_back(icmd);
+    if (b != e || sep_cmd.empty())
+    {
+        InputCommand *icmd = new InputCommand(b);
+        result->push_back(icmd);
+    }
 }
 
 void InputProcessor::processParameters(const tstring& cmd, InputCommand* params, tstring* result)

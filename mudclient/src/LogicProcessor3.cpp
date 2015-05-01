@@ -33,12 +33,25 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
     if (window == 0)
-        m_parser.parse(text, text_len, true, &parse_data);
+    {
+        MudViewParserOscPalette palette;
+        m_parser.parse(text, text_len, true, &parse_data, &palette);
+
+        // Работа с OSC палитрой
+        if (palette.reset_colors)
+            m_pHost->resetOscColors();
+        else if (!palette.colors.empty())
+        {
+            MudViewParserOscPalette::colors_iterator it  = palette.colors.begin(), it_end = palette.colors.end();
+            for (;it!=it_end;++it)
+                m_pHost->setOscColor(it->first, it->second);
+        }
+    }
     else
     {
         // используем отдельный parser для дополнительных окон,
         // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
-        m_parser2.parse(text, text_len, false, &parse_data);
+        m_parser2.parse(text, text_len, false, &parse_data, NULL);
     }
 
     if (flags & GAME_CMD)

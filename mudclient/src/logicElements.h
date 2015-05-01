@@ -22,6 +22,16 @@ private:
     int  findpos(int pos, int d);
 };
 
+class BracketsMarker
+{
+    const tchar MARKER = L'\t';
+public:
+    void mark(tstring *parameters);
+    void unmark(tstring* parameters, std::vector<tstring>* parameters_list);
+private:
+    bool isbracket(const tchar *p);
+};
+
 class Alias
 {
 public:

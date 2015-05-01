@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.96"
+#define TORTILLA_VERSION L"0.97"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -66,7 +66,7 @@ typedef unsigned int uint;
 #define OUTPUT_WINDOWS 6
 #define TIMERS_COUNT 10
 
-// only for debug (help functions)
+// only for debug (debuging text formatting)
 #ifdef _DEBUG
 //#define MARKERS_IN_VIEW
 #endif

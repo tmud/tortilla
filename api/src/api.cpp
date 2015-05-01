@@ -98,12 +98,14 @@ strbuf convert_wide_to_ansi(const wchar_t* string)
 
 void* strbuf_ptr(strbuf b)
 {
+    if (!b) return NULL;
     MemoryBuffer *buffer = (MemoryBuffer*)b;
     return buffer->getData();
 }
 
 void strbuf_destroy(strbuf b)
 {
+    if (!b) return;
     MemoryBuffer *buffer = (MemoryBuffer*)b;
     delete buffer;
 }
@@ -341,4 +343,88 @@ int xml_list_size(xlist list)
 xnode xml_list_getnode(xlist list, int index)
 {
     return xmlGetListNode(list, index);
+}
+
+int utf8_symlen(const utf8* symbol)
+{
+    int len = 0;
+    if (symbol && *symbol)
+    {
+        unsigned char c = *symbol;
+        if (c < 0x80) len = 1;
+        else if (c >= 0xc0)
+        {
+            if ((c & 0xe0) == 0xc0) len = 2;
+            else if ((c & 0xf0) == 0xe0) len = 3;
+            else if ((c & 0xf8) == 0xf0) len = 4;
+        }
+    }
+    return len;
+}
+
+int utf8_strnlen(const utf8* str, int str_len)
+{
+    if (!str) return 0;
+    int len = 0;
+    int p = 0;
+    while (str_len > 0)
+    {
+        const unsigned char &c = str[p];
+        if (c < 0x80) { len++; str_len--; p++; }
+        else if (c < 0xc0 || c > 0xf7) return -1;  // ошибка в строке - выходим
+        else
+        {
+            int sym_len = 2;
+            if ((c & 0xf0) == 0xe0) sym_len = 3;
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;
+            if (sym_len > str_len) return -1;      // ошибка - выходим
+            len++;
+            str_len -= sym_len;
+            p += sym_len;
+        }
+    }
+    return len;
+}
+
+int utf8_strlen(const utf8* string)
+{
+    return utf8_strnlen(string, ::strlen(string));
+}
+
+int utf8_sympos(const utf8* string, int index)
+{
+    if (!string || !*string || index < 0)
+        return -1;
+    int pos = 0;
+    while (index > 0)
+    {
+        int len = utf8_symlen(string);
+        if (len == 0)
+            return -1;
+        string += len;
+        pos += len;
+        index--;
+    }
+    return pos;
+}
+
+strbuf utf8_trim(const utf8* string)
+{
+    u8string str(string);
+    int pos = strspn(str.c_str(), " ");
+    if (pos != 0)
+        str.assign(str.substr(pos));
+    if (!str.empty())
+    {
+        int last = str.size() - 1;
+        pos = last;
+        while (str.at(pos) == ' ')
+            pos--;
+        if (pos != last)
+            str.assign(str.substr(0, pos + 1));
+    }
+    int len = str.length()+1;
+    MemoryBuffer *buffer = new MemoryBuffer(len);
+    memcpy(buffer->getData(), str.c_str(), len);
+    return buffer;
 }

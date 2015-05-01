@@ -5,6 +5,7 @@
   <systemcmds value="0"/>
   <clearbar value="1"/>
   <disableya value="0"/>
+  <disableosc value="0"/>
   <historytab value="0"/>
   <timersf value="0"/>
   <plogs value="1"/>
@@ -69,7 +70,7 @@
     <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
   </windows>
-  <mainwindow left="207" right="1743" top="71" bottom="973" width="3840" height="1080" fullscreen="0"/>
+  <mainwindow left="2177" right="3606" top="94" bottom="935" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="0"/>
     <plugin key="jmc3import.dll" value="1"/>
@@ -79,6 +80,10 @@
     <plugin key="colorgamecmd.lua" value="1"/>
     <plugin key="mapper.dll" value="0"/>
     <plugin key="statusbar.lua" value="1"/>
+    <plugin key="clickpad.dll" value="0"/>
+    <plugin key="testmsdp.lua" value="0"/>
+    <plugin key="tray.dll" value="0"/>
+    <plugin key="inveq.lua" value="0"/>
   </plugins>
   <messages>
     <actions value="1"/>

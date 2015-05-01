@@ -99,8 +99,6 @@ inline bool IsFloating(short Side) { return Side == DOCK_FLOAT; };
 class CDockingPaneChildWindow;
 class CFloatingWindow;
 
-//BOOL m_app_activated = FALSE;    // Activated flag
-
 struct DOCKCONTEXT 
 {
    HWND hwndDocked;   // The docked pane
@@ -226,7 +224,7 @@ public:
          }
          switch( msg.message ) {
          case WM_LBUTTONUP:
-         {  
+         {
             CancelTracking();
             if( m_bDragging ) pT->OnEndDrag(); else pT->OnEndResize();
             return true;
@@ -248,7 +246,7 @@ public:
          case WM_LBUTTONDOWN:
          case WM_RBUTTONDOWN:
             CancelTracking();
-            return false;      
+            return false;
          default:
             // Just dispatch rest of the messages
             ::DispatchMessage(&msg);
@@ -344,7 +342,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_DBLCLKS, NULL)
 
    typedef CFloatingWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CFloatingWindowImpl)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
       MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -363,7 +361,7 @@ public:
 
    CFloatingWindowImpl(DOCKCONTEXT* pCtx) :
       m_pCtx(pCtx)
-   { 
+   {
    }
 
    HWND Create(HWND hWndParent, RECT& rcPos, LPCTSTR szWindowName = NULL,
@@ -543,7 +541,7 @@ class ATL_NO_VTABLE CDockingPaneChildWindowImpl :
 public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, NULL)
    typedef CDockingPaneChildWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingPaneChildWindowImpl)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -767,7 +765,7 @@ public:
       bool bVertical = IsDockedVertically(m_pCtx->Side);
 
       // Reposition splitter and gripper bars
-      RECT rect;   
+      RECT rect;
       GetClientRect(&rect);
       if( bVertical ) {
          int nGap = 0;
@@ -852,7 +850,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, COLOR_WINDOW)
 
    typedef CDockingPaneWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingPaneWindowImpl)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -1622,9 +1620,6 @@ public:
            HWND floated_wnd = pCtx->hwndFloated;
            if (::IsWindowVisible(floated_wnd))
            {
-               //wchar_t buffer[32];
-               //wsprintf(buffer, L"sync %x, %d\r\n", floated_wnd, wParam ? 1 : 0);
-               //OutputDebugString(buffer);
                SendMessage(floated_wnd, WM_NCACTIVATE, state ? TRUE : FALSE, 0);
            }
        }

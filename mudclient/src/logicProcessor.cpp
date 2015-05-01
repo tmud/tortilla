@@ -1,5 +1,6 @@
 // In that file - Code for processing game data
 #include "stdafx.h"
+#include "inputProcessor.h"
 #include "logicProcessor.h"
 
 LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
@@ -26,11 +27,6 @@ void LogicProcessor::processTick()
 
 void LogicProcessor::processNetworkData(const WCHAR* text, int text_len)
 {
-#ifdef _DEBUG
-    tstring label(text, text_len);
-    label.append(L"\r\n");
-    //OutputDebugString(label.c_str());
-#endif
     processIncoming(text, text_len);
 }
 
@@ -56,11 +52,19 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
     return false;
 }
 
+void LogicProcessor::processUserCommand(const tstring& cmd)
+{
+    tstring cmdline(cmd);
+    m_helper.processVars(&cmdline);
+    processCommand(cmdline);
+}
+
 void LogicProcessor::processCommand(const tstring& cmd)
 {
     std::vector<tstring> loops;
     WCHAR cmd_prefix = propData->cmd_prefix;
-    m_input.process(cmd, &m_helper, &loops);
+    InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
+    ip.process(cmd, &m_helper, &loops);
 
     if (!loops.empty())
     {
@@ -77,20 +81,19 @@ void LogicProcessor::processCommand(const tstring& cmd)
         tmcLog(msg);
     }
 
-    for (int i=0,e=m_input.commands.size(); i<e; ++i)
+    for (int i=0,e=ip.commands.size(); i<e; ++i)
     {
-        tstring cmd = m_input.commands[i]->full_command;
-        if (!cmd.empty() && cmd.at(0) == cmd_prefix)
+        InputCommand *cmd = ip.commands[i];
+        if (!cmd->empty && cmd->full_command.at(0) == cmd_prefix)
             processSystemCommand(cmd); //it is system command for client (not game command)
         else
-            processGameCommand(cmd); // it is game command
+            processGameCommand(cmd);   // it is game command
     }
 }
 
 void LogicProcessor::updateProps()
 {
     m_helper.updateProps();
-    m_input.updateProps(propData);
     m_logs.updateProps(propData);
     m_prompt_mode = OFF;
     if (propData->recognize_prompt)

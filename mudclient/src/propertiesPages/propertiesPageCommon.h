@@ -10,6 +10,7 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CButton m_show_system_cmds;
     CButton m_clear_bar;
     CButton m_disable_ya;
+    CButton m_disable_osc;
     CButton m_history_tab;
     CButton m_plugins_logs;
     CEdit   m_plugins_logs_window;
@@ -30,6 +31,7 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_SHOW_SYSTEM_CMDS, OnShowSysCmds)
         COMMAND_ID_HANDLER(IDC_CHECK_CLEAR_BAR, OnClearBar)
         COMMAND_ID_HANDLER(IDC_CHECK_DISABLE_DOUBLE_YA, OnDisableYa)
+        COMMAND_ID_HANDLER(IDC_CHECK_DISABLE_OSC, OnDisableOsc)
         COMMAND_ID_HANDLER(IDC_CHECK_HISTORYTAB, OnHistoryTab)
         COMMAND_ID_HANDLER(IDC_CHECK_PLUGINSLOGS, OnPluginsLogs)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
@@ -51,6 +53,7 @@ private:
         m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));        
         m_history_tab.Attach(GetDlgItem(IDC_CHECK_HISTORYTAB));
         m_disable_ya.Attach(GetDlgItem(IDC_CHECK_DISABLE_DOUBLE_YA));
+        m_disable_osc.Attach(GetDlgItem(IDC_CHECK_DISABLE_OSC));
         m_plugins_logs.Attach(GetDlgItem(IDC_CHECK_PLUGINSLOGS));
         m_plugins_logs_window.Attach(GetDlgItem(IDC_EDIT_PLUGINSLOGS));
         m_plugins_logs_window.SetLimitText(1);
@@ -85,7 +88,8 @@ private:
         m_show_system_cmds.SetCheck(propData->show_system_commands ? BST_CHECKED : BST_UNCHECKED);
         m_clear_bar.SetCheck(propData->clear_bar ? BST_CHECKED : BST_UNCHECKED);
         m_history_tab.SetCheck(propData->history_tab ? BST_CHECKED : BST_UNCHECKED);
-        m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);        
+        m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);
+        m_disable_osc.SetCheck(propData->disable_osc ? BST_CHECKED : BST_UNCHECKED);
         m_plugins_logs.SetCheck(propData->plugins_logs ? BST_CHECKED : BST_UNCHECKED);
         _itow(propData->plugins_logs_window, buffer, 10);
         m_plugins_logs_window.SetWindowText(buffer);
@@ -150,6 +154,13 @@ private:
     {
         int state = (m_disable_ya.GetCheck() == BST_CHECKED) ? 1 : 0;
         propData->disable_ya = state;
+        return 0;
+    }
+
+    LRESULT OnDisableOsc(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_disable_osc.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->disable_osc = state;
         return 0;
     }
 

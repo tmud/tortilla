@@ -34,7 +34,7 @@ public:
         RECT tmp = pos;
         return ParentClass::Create(parent, tmp, NULL, dwStyle, dwExStyle);
     }
-    
+
     bool LoadRTF(void *data, int len)
     {
         // Stream RTF into control
@@ -137,6 +137,72 @@ private:
     LRESULT OnFocus(UINT, WPARAM, LPARAM, BOOL&)
     {
         m_rich.SetFocus();
+        return 0;
+    }
+};
+
+
+class CStartupWorldDlg : public CDialogImpl<CStartupWorldDlg>
+{
+    CListBox m_list;
+    CButton  m_show_about;
+    CButton  m_ok;
+    std::vector<tstring> m_data;
+    int  m_selected_item;
+    bool m_show_about_state;
+
+public:
+    CStartupWorldDlg() : m_selected_item(-1), m_show_about_state(true) {}
+    enum { IDD = IDD_STARTUP_WORLD };
+    void setList(const std::vector<tstring>& list)
+    {
+        m_data.assign(list.begin(), list.end());
+    }
+
+    int getItem() const { return m_selected_item; }
+    bool getAboutState() const { return m_show_about_state; }
+
+private:
+    BEGIN_MSG_MAP(CStartupWorldDlg)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_USER, OnFocus)
+        COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
+        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+        COMMAND_HANDLER(IDC_LIST_STARTUP_WORLD, LBN_SELCHANGE, OnListChanged)
+    END_MSG_MAP()
+
+    LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        CenterWindow(GetParent());
+        m_list.Attach(GetDlgItem(IDC_LIST_STARTUP_WORLD));
+        m_show_about.Attach(GetDlgItem(IDC_CHECK_OPEN_ABOUT));
+        m_ok.Attach(GetDlgItem(IDOK));
+        for (int i=0,e=m_data.size();i<e;++i)
+            m_list.AddString(m_data[i].c_str());
+        m_show_about.SetCheck(BST_CHECKED);
+        m_ok.EnableWindow(FALSE);
+        PostMessage(WM_USER, 0, 0);
+        return TRUE;
+    }
+
+    LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
+    {
+        m_selected_item = m_list.GetCurSel();
+        m_show_about_state = (m_show_about.GetCheck() == BST_CHECKED) ? true : false;
+        EndDialog(wID);
+        return 0;
+    }
+
+    LRESULT OnFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnListChanged(WORD, WORD, HWND, BOOL&)
+    {
+        int item = m_list.GetCurSel();
+        m_ok.EnableWindow(item == -1 ? FALSE : TRUE);
         return 0;
     }
 };

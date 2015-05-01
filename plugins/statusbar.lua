@@ -19,7 +19,8 @@ end
 
 function statusbar.description()
 return 'Плагин отображает информацию о здоровье, мане, энергии и опыте\r\n\z
-в виде полосок на отдельной панели клиента.'
+в виде полосок на отдельной панели клиента. Требует настройки. Про настройку\r\n\z
+читайте в справке к клиенту (#help plugin_statusbar).'
 end
 
 function statusbar.version()
@@ -41,11 +42,10 @@ function statusbar.render()
   end
 
   local showmsg = false
-  if cfg.hp and not values.maxhp then
-    showmsg = true
-  end
-  if cfg.mv and not values.maxmv then
-    showmsg = true
+  if values.hp and values.mv then
+    if not values.maxhp or not values.maxmv then
+        showmsg = true
+    end
   end
 
   if showmsg then

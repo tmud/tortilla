@@ -7,6 +7,7 @@
 #endif
 
 #include <string>
+#include <vector>
 typedef char utf8;
 typedef std::string u8string;
 
@@ -35,7 +36,71 @@ void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define SS(L,n) luaT_showLuaStack(L,n)
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
-//lua window wrapper
+namespace base {
+    inline void addMenu(lua_State* L, const utf8* path, int pos, int id) {
+        luaT_run(L, "addMenu", "sdd", path, pos, id); 
+    }
+    inline void addCommand(lua_State* L, const utf8* cmd) {
+        luaT_run(L, "addCommand", "s", cmd);
+    }
+    inline void runCommand(lua_State* L, const utf8* cmd)  {
+        luaT_run(L, "runCommand", "s", cmd);
+    }
+    inline void addButton(lua_State *L, int bmp, int id, const utf8* tooltip) {
+        luaT_run(L, "addButton", "dds", bmp, id, tooltip);
+    }
+    inline void addToolbar(lua_State *L, const utf8* name, int button_size) {
+        luaT_run(L, "addToolbar","sd", name, button_size);
+    }
+    inline void addToolbar(lua_State *L, const utf8* name) {
+        luaT_run(L, "addToolbar","s", name);
+    }
+    inline void showToolbar(lua_State *L, const utf8* name) {
+        luaT_run(L, "showToolbar","s", name);
+    }
+    inline void hideToolbar(lua_State *L, const utf8* name) {
+        luaT_run(L, "hideToolbar","s", name);
+    }
+    inline void checkMenu(lua_State *L, int id) {
+        luaT_run(L, "checkMenu","d", id);
+    }
+    inline void uncheckMenu(lua_State *L, int id) {
+        luaT_run(L, "uncheckMenu","d", id);
+    }
+    inline void enableMenu(lua_State *L, int id) {
+        luaT_run(L, "enableMenu","d", id);
+    }
+    inline void disableMenu(lua_State *L, int id) {
+        luaT_run(L, "disableMenu","d", id);
+    }
+    inline void getPath(lua_State *L, const utf8* file, u8string* path) {
+        luaT_run(L, "getPath", "s", file);
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline void getProfile(lua_State *L, u8string* profile) {
+        luaT_run(L, "getProfile", "");
+        profile->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline HWND getParent(lua_State *L) {
+        luaT_run(L, "getParent", "");
+        HWND parent = (HWND)lua_tounsigned(L, -1);
+        lua_pop(L, 1);
+        return parent;
+    }
+    inline void saveTable(lua_State* L, const utf8* file) {
+        if (lua_istable(L, -1))
+            luaT_run(L, "saveTable", "rs", file);
+    }
+    inline bool loadTable(lua_State* L, const utf8* file) {
+        luaT_run(L, "loadTable", "s", file);
+        return lua_istable(L, -1) ? true : false;
+    }
+    // createWindow, createPanel, pcre -> classes below
+    // log -> luaT_log
+} // namespace base
+
 class luaT_window
 {
     lua_State *L;
@@ -115,6 +180,7 @@ class luaT_panel
     lua_State *L;
     void *panel;
 public:
+    luaT_panel() : L(NULL), panel(NULL) {}
     bool create(lua_State *pL, const utf8* side, int size)
     {
         if (!pL)
@@ -148,7 +214,7 @@ class luaT_ViewData
     lua_State *L;
     void *view_data;
 public:
-    enum { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
+    enum vdparam { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
 
     luaT_ViewData() : L(NULL), view_data(NULL) {}
     void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
@@ -180,6 +246,11 @@ public:
     bool isGameCmd()
     {
         runcmd("isGameCmd");
+        return boolresult();
+    }
+    bool isSystem()
+    {
+        runcmd("isSystem");
         return boolresult();
     }
     bool isPrompt()
@@ -217,19 +288,19 @@ public:
         runcmdint("getBlockText", block);
         strresult(str);
     }
-    bool get(int block, int param, unsigned int *value)
+    bool get(int block, vdparam param, unsigned int *value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "get", "odd", block, param);
+        luaT_run(L, "get", "odd", block, (int)param);
         bool result = false;
         if (lua_isnumber(L, -1)) { *value = lua_tounsigned(L, -1); result = true; }
         lua_pop(L, 1);
         return result;
     }
-    bool set(int block, int param, unsigned int value)
+    bool set(int block, vdparam param, unsigned int value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "set", "oddu", block, param, value);
+        luaT_run(L, "set", "oddu", block, (int)param, value);
         return boolresult();
     }
     bool setBlockText(int block, const utf8* text)
@@ -257,6 +328,12 @@ public:
     bool createString()
     {
         runcmd("createString");
+        return boolresult();
+    }
+    bool createString(bool system, bool gamecmd)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "createString", "obb", system, gamecmd);
         return boolresult();
     }
     bool deleteString()
@@ -332,6 +409,12 @@ public:
         luaT_run(L, "add", "osss", key, value, group);
         return boolresult();
     }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "replace", "osss", key, value, group);
+        return boolresult();
+    }
     bool del()
     {
         if (!getao()) return false;
@@ -352,13 +435,13 @@ public:
     }
     bool get(int param, u8string* value)
     {
-        if (!param || !value || !getao()) return false;
+        if (!value || !getao()) return false;
         luaT_run(L, "get", "od", param);
         return strresult(value);
     }
     bool set(int param, const utf8* value)
     {
-        if (!param || !value || !getao()) return false;
+        if (!value || !getao()) return false;
         luaT_run(L, "set", "ods", param, value);
         return boolresult();
     }
@@ -411,6 +494,32 @@ strbuf convert_wide_to_utf8(const wchar_t* string);
 strbuf convert_ansi_to_wide(const char* string);
 strbuf convert_wide_to_ansi(const wchar_t* string);
 
+//utf8 helpers functions
+int utf8_symlen(const utf8* symbol);
+int utf8_strlen(const utf8* string);
+int utf8_sympos(const utf8* string, int index);
+strbuf utf8_trim(const utf8* string);
+
+//u8string wrapper
+class U8
+{   u8string& s;
+public:
+    U8(u8string& string) : s(string) {}
+    operator u8string&() { return s; }
+    operator u8string*() { return &s; }
+    u8string at(int index) const {
+        int pos = utf8_sympos(s.c_str(), index);
+        if (pos == -1) return u8string();
+        const utf8 *p = s.c_str()+pos;
+        return u8string(p, utf8_symlen(p));
+    }
+    void trim() {
+        strbuf b = utf8_trim(s.c_str()); 
+        s.assign((const utf8*)strbuf_ptr(b));
+        strbuf_destroy(b);
+    }
+};
+
 class TU2W
 {
     strbuf b;
@@ -445,6 +554,136 @@ public:
     TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
     ~TW2A() { strbuf_destroy(b); }
     operator const char*() const { return (const char*)strbuf_ptr(b); }
+};
+
+class luaT_Props
+{
+    lua_State *L;
+    const char* obj = "props";
+public:
+    luaT_Props(lua_State *pL) : L(pL) {}
+    COLORREF paletteColor(int index)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "paletteColor", "td", index);
+        return uintresult();
+    }
+    COLORREF backgroundColor()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "backgroundColor", "t");
+        return uintresult();
+    }
+    HFONT currentFont()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "currentFontHandle", "t");
+        if (!lua_isnumber(L, -1))
+            return NULL;
+        return (HFONT)uintresult();
+    }
+    void cmdPrefix(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "cmdPrefix", "t");
+        strresult(str);
+    }
+    void cmdSeparator(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "cmdSeparator", "t");
+        strresult(str);
+    }
+    void serverHost(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "serverHost", "t");
+        strresult(str);
+    }
+    void serverPort(u8string* str)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "serverPort", "t");
+        strresult(str);
+    }
+    bool connected()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "connected", "t");
+        return boolresult();
+    }
+    bool activated()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "activated", "t");
+        return boolresult();
+    }
+
+private:
+    bool boolresult()
+    {
+        int result = (lua_isboolean(L, -1)) ? lua_toboolean(L, -1) : 0;
+        lua_pop(L, 1);
+        return result ? true : false;
+    }
+    unsigned int uintresult()
+    {
+        int result = (lua_isnumber(L, -1)) ? lua_tounsigned(L, -1) : 0;
+        lua_pop(L, 1);
+        return result;
+    }
+    void strresult(u8string *res)
+    {
+        if (lua_isstring(L, -1)) res->assign(lua_tostring(L, -1));
+        else res->clear();
+        lua_pop(L, 1);
+    }
+};
+
+class luaT_Msdp
+{
+     lua_State *L;
+      const char* obj = "msdp";
+public:
+    luaT_Msdp(lua_State *pL) : L(pL) {}
+    void list(const u8string& listname)
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "list", "ts", listname.c_str());
+    }
+    void reset(const std::vector<u8string>& vars)
+    {
+        runf("reset", vars);
+    }
+    void send(const std::vector<u8string>& vars)
+    {
+        runf("send", vars);
+    }
+    void report(const std::vector<u8string>& vars)
+    {
+        runf("report", vars);
+    }
+    void unreport(const std::vector<u8string>& vars)
+    {
+        runf("unreport", vars);
+    }
+private:
+    void runf(const utf8* fname, const std::vector<u8string>& t)
+    {
+        lua_getglobal(L, obj);
+        pushtable(t);
+        luaT_run(L, fname, "tt");
+    }
+    void pushtable(const std::vector<u8string>& t)
+    {
+        lua_newtable(L);
+        for (int i=0,e=t.size();i<e;++i)
+        {
+            lua_pushinteger(L, i+1);
+            lua_pushstring(L, t[i].c_str());
+            lua_settable(L, -3);
+        }
+    }
 };
 
 // xml api

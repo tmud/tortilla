@@ -1,17 +1,19 @@
 #include "stdafx.h"
 #include "mudViewParser.h"
 
-MudViewParser::MudViewParser() : m_current_string(NULL), m_last_finished(true)
+MudViewParser::MudViewParser() : m_current_string(NULL), m_last_finished(true), m_palette(NULL)
 {
 }
 
 MudViewParser::~MudViewParser()
-{ 
+{
     delete m_current_string;
 }
 
-void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseData* data)
+void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseData* data, MudViewParserOscPalette *palette)
 {
+    m_palette = palette;
+
     if (!m_last_finished)
         data->update_prev_string = true;
 
@@ -109,6 +111,9 @@ MudViewParser::parserResult MudViewParser::process_esc(const WCHAR* b, int len)
     if (b[1] == L'[') //0x5b
        return process_csi(b, len);
 
+    if (b[1] == L']') //0x5d
+        return process_osc(b, len);
+
     if (b[1] == 0x5c) // string terminator (GA)
     {
         m_current_string->setPrompt();
@@ -151,8 +156,7 @@ MudViewParser::parserResult MudViewParser::process_csi(const WCHAR* b, int len)
     if (*p == L'm')
         return process_csr(b, (p-b)+1);
 
-    int block_len = p-b;
-    return parserResult(PARSE_NOT_SUPPORTED, block_len); // skip all other csi codes
+    return parserResult(PARSE_NOT_SUPPORTED, (p-b)+1);   // skip all other csi codes
 }
 
 MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
@@ -182,13 +186,20 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
             if ((e-p) < 5)
                 return parserResult(PARSE_ERROR_DATA, len);
 
-            if (p[1] == L';' && p[2] == 5 && p[3] == L';')
+            if (p[0] == L';' && p[1] == L'5' && p[2] == L';')
             {
-                 tbyte color = p[4] - 0;
+                 code_str.assign(&p[3], (e-p)-4);
+                 int color = _wtoi(code_str.c_str());
                  if (code == 38)
-                     pa.text_color = color;
+                 {
+                    if (color < 0 || color > 255) color = 7; //default color
+                    pa.text_color = color;
+                 }
                  else
-                     pa.bkg_color = color;
+                 {
+                    if (color < 0 || color > 255) color = 0;
+                    pa.bkg_color = color;
+                 }
                  p = p + 5;
              }
              else
@@ -253,6 +264,41 @@ MudViewParser::parserResult MudViewParser::process_csr(const WCHAR* b, int len)
          }
     }
     return parserResult(PARSE_NO_ERROR, len);
+}
+
+MudViewParser::parserResult MudViewParser::process_osc(const WCHAR* b, int len)
+{
+    // osc: b[0]=0x1b, b[1]=']'
+    if (len < 3)
+        return parserResult(PARSE_LOW_DATA, 0);
+    const WCHAR *p = b+2;
+    if (*p == L'R')
+    {   // reset all osc colors
+        if (m_palette)
+            m_palette->reset_colors = true;
+        return parserResult(PARSE_NO_ERROR, 3);
+    }
+    if (*p == L'P')
+    {
+        if (len < 10)
+             return parserResult(PARSE_LOW_DATA, 0);
+        // set osc color
+        if (m_palette)
+        {
+            int index = 0;
+            std::string _i((const char*)&p[1], 1);
+            sscanf(_i.c_str(), "%x", &index);
+            if (index >= 0 && index <= 15)
+            {
+                COLORREF color = 0;
+                std::string _c((const char*)&p[2], 6);
+                sscanf(_c.c_str(), "%x", &color);
+                m_palette->colors[index] = RGB((color>>16)&0xff,(color>>8)&0xff,color&0xff);
+            }
+        }
+        return parserResult(PARSE_NO_ERROR, 10);
+    }
+     return parserResult(PARSE_NOT_SUPPORTED, 3);   // skip all other codes
 }
 
 // collect strings in parse_data in one with same colors 
@@ -344,8 +390,6 @@ void printByIndex(const parseDataStrings& strings, int index)
 {
     tstring text;
     strings[index]->getText(&text);
-    OutputDebugString(text.c_str());
-    OutputDebugString(L"\r\n");
 }
 
 void markPromptUnderline(parseDataStrings& strings)

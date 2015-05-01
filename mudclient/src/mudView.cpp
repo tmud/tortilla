@@ -489,6 +489,7 @@ void MudView::stopDraging()
     }
     else
     {
+        if (drag_end < 0) drag_end = 0;
         if (drag_end < drag_begin) { int t = drag_end; drag_end = drag_begin; drag_begin = t; }
         tstring data;
         tstring text;

@@ -1,6 +1,7 @@
 // In that file - Code for scripting
 #include "stdafx.h"
 #include "logicProcessor.h"
+#include "inputProcessor.h"
 #include "helpManager.h"
 #include "passwordDlg.h"
 
@@ -12,20 +13,21 @@
 class parser
 {
 public:
-    parser(const tstring&cmdname, tstring *error_out) : cmd(cmdname) { perror = error_out; }
-    int size() const { return cmd.parameters_list.size(); }
-    const tstring& at(int index) const { return cmd.parameters_list[index]; }
-    const tchar* c_str(int index) const { return cmd.parameters_list[index].c_str(); }
-    const tstring& params() const { return cmd.parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd.parameters_list[index];
+    parser(InputCommand *pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
+    int size() const { return cmd->parameters_list.size(); }
+    const tstring& at(int index) const { return cmd->parameters_list[index]; }
+    const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
+    const tstring& params() const { return cmd->parameters; }
+    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
         return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd.parameters_list[index];
-        return _wtoi(p.c_str()); }    
+    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
+        return _wtoi(p.c_str()); }
     void invalidargs() { error(L"Некорректный набор параметров."); }
     void invalidoperation() { error(L"Некорректная операция."); }
+    void invalidvars() { error(L"Используются неизвестные переменные"); }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
-    InputCommand cmd;
+    InputCommand *cmd;
     tstring *perror;
 };
 //-------------------------------------------------------------------
@@ -36,35 +38,23 @@ const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
-void LogicProcessor::processSystemCommand(tstring& cmd)
+void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring scmd(cmd);
-    tstring_trim(&scmd);
-
-    tstring main_cmd;
-    int pos = scmd.find(L' ');
-    if (pos == -1)
-        main_cmd.assign(scmd.substr(1));
-    else
-        main_cmd.assign(scmd.substr(1, pos - 1));
+    tstring main_cmd(cmd->command.substr(1));
 
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
     typedef std::vector<tstring>::iterator piterator;
 
-    tchar prefix[2] = { propData->cmd_prefix, 0 };
-    tstring fullcmd(prefix);
     tstring error;
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
-    if (it != it_end)
-        fullcmd.append(it->first);
-    else
+    if (it == it_end)
     {
         // команда в системных не найдена - ищем в плагинах
         piterator p_end = m_plugins_cmds.end();
         piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
         if (p != p_end)
-            fullcmd.append(*p);
+            main_cmd.assign(*p);
         else
         {
             //пробуем подобрать по сокращенному имени
@@ -86,10 +76,9 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
                 }
                 int count = cmds.size();
                 if (count == 1)
-                    fullcmd.append(cmds[0]);
-                else if (count == 0)
-                    fullcmd.append(main_cmd);       // в словаре команды нет - все равно пробуем пройти через syscmd
-                else {
+                    main_cmd.assign(cmds[0]);
+                else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
+                {
                     error.append(L"Уточните команду (варианты): ");
                     for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
                 }
@@ -97,30 +86,27 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
         }
     }
 
+    tchar prefix[2] = { propData->cmd_prefix, 0 };
+    tstring fullcmd(prefix);
+    fullcmd.append(main_cmd);
+
     if (error.empty())
     {
-        if (pos != -1)
-            fullcmd.append(scmd.substr(pos));     // add params
-        m_pHost->preprocessGameCmd(&fullcmd);
-        tstring_trim(&fullcmd);
-        if (fullcmd.empty())
+        cmd->replace_command(fullcmd);
+        fullcmd.assign(cmd->full_command);
+        m_pHost->preprocessGameCmd(cmd);
+        if (cmd->empty)
         {
-            syscmdLog(cmd);
+            syscmdLog(fullcmd);
             tmcLog(L"Команда заблокирована");
             return;
         }
 
-        syscmdLog(fullcmd);
-
-        pos = fullcmd.find(L' ');
-        if (pos == -1)
-            main_cmd.assign(fullcmd.substr(1));
-        else
-            main_cmd.assign(fullcmd.substr(1, pos - 1));
+        syscmdLog(cmd->full_command);
         it = m_syscmds.find(main_cmd);
         if (it != it_end)
         {
-            parser p(fullcmd.substr(1), &error);
+            parser p(cmd, &error);
             it->second(&p);
         }
         else
@@ -137,22 +123,22 @@ void LogicProcessor::processSystemCommand(tstring& cmd)
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        msg.append(scmd);
+        msg.append(cmd->full_command);
         msg.append(L"]");
         tmcLog(msg);
     }
 }
 
-void LogicProcessor::processGameCommand(tstring& cmd)
+void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
-    bool src_cmd_empty = cmd.empty();
-    m_pHost->preprocessGameCmd(&cmd);
-    if (cmd.empty() && !src_cmd_empty)
+    m_pHost->preprocessGameCmd(cmd);
+    tstring tmp(cmd->full_command);
+    if (tmp.empty() && !cmd->empty)
         return;
-    WCHAR br[2] = { 10, 0 };
-    cmd.append(br);
-    processIncoming(cmd.c_str(), cmd.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
-    sendToNetwork(cmd);
+    tchar br[2] = { 10, 0 };
+    tmp.append(br);
+    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
+    sendToNetwork(tmp);
 }
 
 void LogicProcessor::updateProps(int update, int options)
@@ -160,8 +146,6 @@ void LogicProcessor::updateProps(int update, int options)
     if (update)
     {
         m_helper.updateProps(options);
-        if (options == LogicHelper::UPDATE_ALIASES)
-            m_input.updateProps(propData);
         if (!m_updatelog.empty())
             tmcLog(m_updatelog);
     }
@@ -299,6 +283,37 @@ IMPL(unantisub)
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
+IMPL(math)
+{
+    int n = p->size();
+    if (p->size() == 2)
+    {
+        ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+        MethodsHelper* helper = ph;
+        if (!m_helper.canSetVar(p->at(0)))
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+            helper->tmcLog(pb.buffer);
+            return;
+        }
+
+        tstring result;
+        LogicHelper::MathResult r = m_helper.mathOp(p->at(1), &result);
+        if (r == LogicHelper::MATH_ERROR)
+            { p->invalidoperation(); return; }
+        else if (r == LogicHelper::MATH_VARNOTEXIST)
+            { p->invalidvars(); return; }
+
+        if (m_helper.setVar(p->at(0), result))
+            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+        else
+            swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
+        helper->tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
+
 IMPL(var)
 {
     ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
@@ -322,7 +337,7 @@ IMPL(var)
             const property_value& v = propData->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", v.key.c_str(), v.value.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", v.key.c_str(), v.value.c_str());
             helper->simpleLog(pb.buffer);
             found = true;
         }
@@ -333,9 +348,15 @@ IMPL(var)
 
     if (n == 2)
     {
-        int index = propData->variables.find(p->at(0));
-        propData->variables.add(index, p->at(0), p->at(1), L"");       
-        swprintf(pb.buffer, pb.buffer_len, L"%s = '%s'", p->c_str(0), p->c_str(1));
+        if (!m_helper.canSetVar(p->at(0)))
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+        else
+        {
+            if (m_helper.setVar(p->at(0), p->at(1)))
+                swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
+            else
+                swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
+        }
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -349,15 +370,16 @@ IMPL(unvar)
     int n = p->size();
     if (n == 1)
     {
-        int index = propData->variables.find(p->at(0));
-        if (index == -1)
+        if (!m_helper.canSetVar(p->at(0)))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменная '%s' не существует.", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s удалить невозможно.", p->c_str(0));
             helper->tmcLog(pb.buffer);
             return;
         }
-        propData->variables.del(index);
-        swprintf(pb.buffer, pb.buffer_len, L"Переменная '%s' удалена.", p->c_str(0));
+        if (!m_helper.delVar(p->at(0)))
+            swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s не существует.", p->c_str(0));
+		else
+        	swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -386,7 +408,7 @@ IMPL(group)
     if (n > 2)
         return p->invalidargs();
 
-    ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+    ElementsHelper ph(this, LogicHelper::UPDATE_GROUPS);
     MethodsHelper* helper = ph;
     if (n == 0)
     {
@@ -499,7 +521,7 @@ IMPL(connect)
         swprintf(pb.buffer, pb.buffer_len, L"Подключение '%s:%d'...", p->at(0).c_str(), p->toInteger(1));
         tmcLog(pb.buffer);
         m_connecting = true;
-        m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );        
+        m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );
         return;
     }
     p->invalidargs();
@@ -580,10 +602,15 @@ IMPL(ifop)
 {
     if (p->size() == 2)
     {
-        IfProcessor::Result result = m_ifproc.compare(p->at(0), propData->variables);
-        if (result == IfProcessor::IF_SUCCESS)
-            processCommand(p->at(1));
-        else if (result == IfProcessor::IF_ERROR)
+        LogicHelper::IfResult result = m_helper.compareIF(p->at(0));
+        if (result == LogicHelper::IF_SUCCESS)
+        {
+            tstring cmd(p->at(1));
+            BracketsMarker bm;
+            bm.mark(&cmd);
+            processCommand(cmd);
+        }
+        else if (result == LogicHelper::IF_ERROR)
             p->invalidoperation();
         return;
     }
@@ -738,7 +765,7 @@ IMPL(wname)
     if (n == 2)
     {
         int window = p->toInteger(0);
-        if (window < 1 || window > OUTPUT_WINDOWS)        
+        if (window < 1 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 1, window);
         m_pHost->setWindowName(window, p->at(1));
         return;
@@ -796,11 +823,13 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
     MudViewStringBlock block;
     HighlightTestControl tc;
 
+    bool last_color_teg = true;
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
         if (tc.checkText(&p))       // it color teg
         {
+            last_color_teg = true;
             PropertiesHighlight hl;
             hl.convertFromString(p);
             MudViewStringParams &p = block.params;
@@ -813,11 +842,23 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
         }
         else
         {
-            block.string = params[i];
-            new_string->blocks.push_back(block);
+            if (last_color_teg)
+            {
+                last_color_teg = false;
+                block.string.assign(p);
+                new_string->blocks.push_back(block);
+            }
+            else
+            {
+                int last = new_string->blocks.size() - 1;
+                tstring &s = new_string->blocks[last].string;
+                s.append(L" ");
+                s.append(p);
+            }
         }
     }
 
+    new_string->system = true;
     data.strings.push_back(new_string);
 
     int log = m_wlogs[view];
@@ -1091,7 +1132,7 @@ IMPL(message)
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
             if (n == 1)
-                swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->at(0).c_str());
+                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
             else
                 swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
             tmcLog(buffer);
@@ -1147,6 +1188,7 @@ bool LogicProcessor::init()
     regCommand("ungag", ungag);
     regCommand("antisub", antisub);
     regCommand("unantisub", unantisub);
+    regCommand("math", math);
     regCommand("var", var);
     regCommand("unvar", unvar);
 

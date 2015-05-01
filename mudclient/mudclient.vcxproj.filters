@@ -7,9 +7,6 @@
     <Filter Include="Source Files\PropertiesPages">
       <UniqueIdentifier>{955ba0dd-16f0-4c63-94e9-913c7030d7f8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Main">
-      <UniqueIdentifier>{ab0c2ef1-67c2-41c1-85bf-d4d648ad0066}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Network">
       <UniqueIdentifier>{f5d41049-9b0b-451d-ac73-91f3325952df}</UniqueIdentifier>
     </Filter>
@@ -34,6 +31,12 @@
     </Filter>
     <Filter Include="Source Files\Profiles">
       <UniqueIdentifier>{e9c79636-8982-4bcc-a30e-a6462c0df900}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Msdp">
+      <UniqueIdentifier>{968a0d61-02b8-47d4-bb8f-84841e4ca3c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Main">
+      <UniqueIdentifier>{ab0c2ef1-67c2-41c1-85bf-d4d648ad0066}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -232,9 +235,6 @@
     <ClInclude Include="..\libs\common\elapsedTimeCounter.h">
       <Filter>External Common Libs</Filter>
     </ClInclude>
-    <ClInclude Include="src\ifProcessor.h">
-      <Filter>Source Files\LogicProcessor</Filter>
-    </ClInclude>
     <ClInclude Include="src\passwordDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -243,6 +243,15 @@
     </ClInclude>
     <ClInclude Include="src\plugins\pluginsRenderObjects.h">
       <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\msdp\msdpNetwork.h">
+      <Filter>Source Files\Msdp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\varProcessor.h">
+      <Filter>Source Files\LogicProcessor</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -353,6 +362,12 @@
     </ClCompile>
     <ClCompile Include="src\plugins\pluginsPcre.cpp">
       <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\msdp\msdpNetwork.cpp">
+      <Filter>Source Files\Msdp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\varProcessor.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

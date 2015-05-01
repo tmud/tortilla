@@ -4,11 +4,12 @@
 #include "pluginsApi.h"
 #include "api/api.h"
 #include "pluginsParseData.h"
+#include "inputProcessor.h"
 extern luaT_State L;
 extern Plugin* _cp;
 
-PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props)
-{ 
+PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props), m_plugins_loaded(false)
+{
 }
 
 PluginsManager::~PluginsManager() 
@@ -21,10 +22,11 @@ void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
     tstring tmp(group);
     tmp.append(profile);
     bool profile_changed = (tmp == m_profile) ? false : true;
-    if (!profile_changed)
+    if (!profile_changed && m_plugins_loaded)
         return;
     m_profile = tmp;
     initPlugins();
+    m_msdp_network.loadPlugins();
 }
 
 void PluginsManager::initPlugins()
@@ -108,12 +110,15 @@ void PluginsManager::initPlugins()
         new_plugins[i]->setOn(state);
     }
     m_plugins.swap(new_plugins);
+    m_plugins_loaded = true;
 }
 
 void PluginsManager::unloadPlugins()
 {
+    m_msdp_network.unloadPlugins();
     for(int i=0,e=m_plugins.size(); i<e; ++i)
         m_plugins[i]->unloadPlugin();
+    m_plugins_loaded = false;
 }
 
 bool PluginsManager::pluginsPropsDlg()
@@ -140,8 +145,12 @@ bool PluginsManager::pluginsPropsDlg()
 
     // turn off plugins first
     for (int i = 0, e = turn_off.size(); i < e; ++i)
-        turn_off[i]->unloadPlugin();
- 
+    {
+        Plugin *p = turn_off[i];
+        m_msdp_network.unloadPlugin(p);
+        p->unloadPlugin();
+    }
+
     // turn on new plugins
     for (int i=0,e=turn_on.size(); i<e; ++i)
     {
@@ -152,6 +161,10 @@ bool PluginsManager::pluginsPropsDlg()
             error.append(p->get(Plugin::FILE));
             error.append(L"'. Плагин работать не будет.");
             tmcLog(error.c_str());
+       }
+       else
+       {
+           m_msdp_network.loadPlugin(p);
        }
     }
 
@@ -210,35 +223,20 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
     }
 }
 
-void PluginsManager::processGameCmd(tstring* cmd)
+void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    bool syscmd = (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix);
-
-    InputCommand icmd(*cmd);
-    std::vector<tstring> &p = icmd.parameters_list;
-    p.insert(p.begin(), (syscmd) ? icmd.command.substr(1) : icmd.command);
+    bool syscmd = (!cmd->empty && cmd->command.at(0) == m_propData->cmd_prefix);
+    std::vector<tstring> p;
+    p.push_back((syscmd) ? cmd->command.substr(1) : cmd->command);
+    p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
     if (syscmd)
     {
         if (doPluginsTableMethod("syscmd", &p))
-        {
-            if (p.empty())
-                cmd->clear();
-            else
-            {
-                tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-                cmd->assign(prefix);
-                for (int i=0,e=p.size();i<e;++i)
-                    cmd->append(p[i]);
-            }
-        }
+            concatCommand(p, true, cmd);
         return;
     }
     if (doPluginsTableMethod("gamecmd", &p))
-    {
-        cmd->clear();
-        for (int i = 0, e = p.size(); i < e; ++i)
-            cmd->append(p[i]);
-    }
+        concatCommand(p, false, cmd);
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -267,7 +265,7 @@ void PluginsManager::processBarCmd(tstring *cmd)
     tchar separator[2] = { m_propData->cmd_separator, 0 };
     Tokenizer t(cmd->c_str(), separator);
     std::vector<tstring> cmds;
-    t.moveto(&cmds);    
+    t.moveto(&cmds);
     if (doPluginsTableMethod("barcmd", &cmds))
     {
         cmd->clear();
@@ -316,12 +314,12 @@ void PluginsManager::processHistoryCmd(tstring *cmd)
 
 void PluginsManager::processConnectEvent()
 {
-    doPluginsMethod("connect");
+    doPluginsMethod("connect", 0);
 }
 
 void PluginsManager::processDisconnectEvent()
 {
-    doPluginsMethod("disconnect");
+    doPluginsMethod("disconnect", 0);
 }
 
 void PluginsManager::processTick()
@@ -331,6 +329,28 @@ void PluginsManager::processTick()
         Plugin *p = m_plugins[i];
         if (p->state() && p->isErrorState())
             turnoffPlugin(NULL, i);
+    }
+}
+
+void PluginsManager::processPluginsMethod(const char* method, int args)
+{
+     doPluginsMethod(method, args);
+}
+
+void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
+{
+    if (!p->state())
+        return;
+    if (!p->runMethod(method, args, 0))
+    {
+        int index = -1;
+        for (int i = 0, e = m_plugins.size(); i < e; ++i)
+        {
+            if (m_plugins[i] == p) { index = i; break;}
+        }
+        if (index != -1)
+            turnoffPlugin(NULL, index);
+        lua_settop(L, 0);
     }
 }
 
@@ -350,13 +370,13 @@ void PluginsManager::terminatePlugin(Plugin* p)
     }
 }
 
-void PluginsManager::doPluginsMethod(const char* method)
+void PluginsManager::doPluginsMethod(const char* method, int args)
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
-        if (!p->runMethod(method, 0, 0))
+        if (!p->runMethod(method, args, 0))
         {
             // restart plugins
             turnoffPlugin(NULL, i);
@@ -484,4 +504,55 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     _cp = old;
     PluginsDataValues &modules = m_propData->plugins;
     modules[plugin_index].state = 0;
+}
+
+void PluginsManager::processReceived(Network *network)
+{
+    m_msdp_network.processReceived(network);
+}
+
+void PluginsManager::processToSend(Network* network)
+{
+    m_msdp_network.sendExist(network);
+}
+
+void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool system, InputCommand* cmd)
+{
+    if (parts.empty())
+        return;
+
+    tstring newcmd;
+    if (system)
+    {
+        tchar prefix[2] = { m_propData->cmd_prefix, 0 };
+        newcmd.append(prefix);
+    }
+    newcmd.append(parts[0]);
+    cmd->command.assign(newcmd);
+    cmd->parameters_list.clear();
+
+    tstring symbols(L"{}\"' ");
+    tstring params;
+    for (int i=1,e=parts.size();i<e;++i)
+    {
+        const tstring& s = parts[i];        
+        cmd->parameters_list.push_back(s);
+        if (i != 1) 
+            params.append(L" ");
+        if (!isExistSymbols(s, symbols))
+            params.append(s);
+        else
+        {
+            params.append(L"{");
+            params.append(s);
+            params.append(L"}");
+        }
+    }
+    cmd->parameters = params;
+    if (!params.empty())
+    {
+        newcmd.append(L" ");
+        newcmd.append(params);
+    }
+    cmd->full_command.assign(newcmd);
 }
