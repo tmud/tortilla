@@ -66,11 +66,6 @@ bool Network::connect(const NetworkConnectData& data)
     if (sock == INVALID_SOCKET)
         return false;
 
-    // non blocking mode
-    u_long mode = 1;
-    if (ioctlsocket(sock, FIONBIO, &mode) != NO_ERROR)
-        return false;
-
     sockaddr_in peer; 
     memset(&peer, 0, sizeof(sockaddr_in));
     peer.sin_family = AF_INET;
@@ -89,7 +84,8 @@ bool Network::connect(const NetworkConnectData& data)
        peer.sin_addr.s_addr = inet_addr( data.address.c_str() );
     }
 
-    if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE) == SOCKET_ERROR)
+    long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE; //|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
+    if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, events) == SOCKET_ERROR)
     {
         close();
         return false;
