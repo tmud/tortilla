@@ -285,6 +285,23 @@ public:
         return (ctx) ? ctx->hwndFloated : NULL;
     }
 
+    void setBlockedMode(PluginsView *v, int width, int height)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        if (!ctx) return;
+        CWindow p(ctx->hwndFloated);
+        if (!p.IsWindow()) return;
+        width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
+        height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+        RECT pos; p.GetWindowRect(&pos);
+        pos.right = pos.left + width - 1;
+        pos.bottom = pos.top + height - 1;
+        ctx->bBlockFloatingResizeBox = true;
+        ctx->dwFlags |= DCK_NOLEFT|DCK_NORIGHT|DCK_NOTOP|DCK_NOBOTTOM;
+        p.MoveWindow(&pos);
+    }
+
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
     CFont *getStandardFont() { return &m_propElements.standard_font; }

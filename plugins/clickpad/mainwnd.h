@@ -1,7 +1,6 @@
 #include "resource.h"
 #include "padbutton.h"
-#include "settingsDlg.h"
-#include "buttonDlg.h"
+//#include "buttonDlg.h"
 
 class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >
 {
@@ -44,8 +43,9 @@ private:
     void setWorkWindowSize();
 
 private:
-    SettingsDlg m_settings_wnd;
-    ButtonDlg m_button_wnd;
+    //SettingsDlg m_settings_wnd;
+    //ButtonDlg m_button_wnd;
+
     bool m_editmode;
 
     int m_button_width;

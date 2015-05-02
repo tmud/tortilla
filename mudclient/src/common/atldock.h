@@ -114,6 +114,7 @@ struct DOCKCONTEXT
    bool bKeepSize;    // Recommend using current size and avoid rescale
    bool bNcActivate;  // Helpful flags to sync floating window header with main window
    bool bUseNcActivate;
+   bool bBlockFloatingResizeBox;
 };
 
 typedef CSimpleValArray<DOCKCONTEXT*> CDockMap;
@@ -355,6 +356,7 @@ public:
       MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnLeftButtonDown)
       MESSAGE_HANDLER(WM_NCRBUTTONDOWN, OnRightButtonDown)
       MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnButtonDblClick)
+      MESSAGE_HANDLER(WM_NCHITTEST, OnNcHittest)
    END_MSG_MAP()
 
    DOCKCONTEXT* m_pCtx;
@@ -390,6 +392,14 @@ public:
       pT->UpdateLayout();
       GetWindowRect(&m_pCtx->rcWindow);
       return 0;
+   }
+
+   LRESULT OnNcHittest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+   {
+       LRESULT lresult = DefWindowProc(uMsg, wParam, lParam);
+       if (m_pCtx->bBlockFloatingResizeBox && lresult >= HTLEFT && wParam <= HTBOTTOMRIGHT)
+           return HTCAPTION;
+       return lresult;
    }
 
    LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
@@ -1435,6 +1445,7 @@ public:
       ctx->hwndFloated = *wndFloat;
       ctx->bNcActivate = m_activated;
       ctx->bUseNcActivate = m_used_activated_mode;
+      ctx->bBlockFloatingResizeBox = false;
 
       ::SetParent(ctx->hwndChild, ctx->hwndDocked);
 

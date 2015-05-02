@@ -37,9 +37,9 @@ private:
     END_MSG_MAP()
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
-    { 
+    {
         bHandled = FALSE;
-        return 0; 
+        return 0;
     }
 
     LRESULT OnClickUp(UINT, WPARAM, LPARAM, BOOL&bHandled)
@@ -49,8 +49,6 @@ private:
         return 0;
     }
 };
-
-
 
   /*  CButtons
    // override of CBitmapButtonImpl DoPaint(). Adds fillrect

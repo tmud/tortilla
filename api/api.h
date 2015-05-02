@@ -173,6 +173,11 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
     }
+    void setBlocked(int width, int height)
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "setBlocked", "odd", width, height);
+    }
 };
 
 class luaT_panel

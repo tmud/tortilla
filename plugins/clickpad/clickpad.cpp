@@ -2,11 +2,14 @@
 #include "resource.h"
 #include <vector>
 #include "mainwnd.h"
-#include "settingsDlg.h"
+#include "settingsWnd.h"
 
-luaT_window m_parent_window;
 HWND m_hwnd_client = NULL;
+luaT_window m_parent_window;
 ClickpadMainWnd* m_clickpad = NULL;
+luaT_window m_settings_window;
+//SettingsWnd* m_settings = NULL;
+SettingsDlg* m_settings = NULL;
 
 int get_name(lua_State *L)
 {
@@ -43,8 +46,9 @@ int init(lua_State *L)
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
 
-    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 400))
-        return luaT_error(L, "Не удалось создать окно для Clickpad");
+    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100) ||
+        !m_settings_window.create(L, "Настройки Clickpad", 250, 250))
+            return luaT_error(L, "Не удалось создать окно для Clickpad");
 
     luaT_run(L, "addMenu", "sdd", "Плагины/Настройки Clickpad...", 1, 2);
 
@@ -53,25 +57,40 @@ int init(lua_State *L)
     RECT rc; ::GetClientRect(parent, &rc);
     HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS);
     m_parent_window.attach(res);
-    m_parent_window.block("left,right,top,bottom");
+    m_parent_window.setBlocked(0,0);
+
+    parent = m_settings_window.hwnd();
+    m_settings = new SettingsDlg();    
+    res = m_settings->Create(parent); 
+    m_settings->GetClientRect(&rc);
+
+    m_settings_window.attach(res);
+    m_settings_window.setBlocked(rc.right, rc.bottom);
 
     luaT_run(L, "getPath", "s", "buttons.xml");
     u8string path(lua_tostring(L, -1));
     lua_pop(L, 1);
 
-    xml::node ld;
-    if (!ld.load(path.c_str()))
+    DWORD fa = GetFileAttributes(TU2W(path.c_str()));
+    if (fa != INVALID_FILE_ATTRIBUTES && fa&FILE_ATTRIBUTE_NORMAL && !(fa&FILE_ATTRIBUTE_DIRECTORY))
     {
-        u8string error("Ошибка загрузки списка с кнопками: ");
-        error.append(path);
-        luaT_log(L, error.c_str());
-        m_clickpad->initDefault();
+        xml::node ld;
+        if (!ld.load(path.c_str())) {
+            u8string error("Ошибка загрузки списка с кнопками: ");
+            error.append(path);
+            luaT_log(L, error.c_str());
+            m_clickpad->initDefault();
+        }
+        else
+        {
+            m_clickpad->load(ld);
+        }
+        ld.deletenode();
     }
     else
     {
-        m_clickpad->load(ld);
+        m_clickpad->initDefault();
     }
-    ld.deletenode();
 
     CWindow wnd(m_parent_window.floathwnd());
     //wnd.ModifyStyle(WS_THICKFRAME, 0);

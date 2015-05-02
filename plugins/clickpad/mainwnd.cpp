@@ -12,12 +12,10 @@ ClickpadMainWnd::~ClickpadMainWnd()
 {
 }
 
-
 void ClickpadMainWnd::setButtonsNet(int rows, int columns)
 {
     createNewRows(rows);
     createNewColumns(columns);
-
     for (int y=0; y<rows; ++y)
     {
         for (int x=0; x<columns; ++x)
@@ -57,8 +55,8 @@ void ClickpadMainWnd::createNewColumns(int count)
 void ClickpadMainWnd::onCreate()
 {    
     //RECT pos = { 100, 100, 400, 400 };
-    m_settings_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
-    m_button_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
+    //m_settings_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
+    //m_button_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
 }
 
 void ClickpadMainWnd::onSize()
@@ -81,11 +79,7 @@ void ClickpadMainWnd::switchEditMode()
 
 void ClickpadMainWnd::beginEditMode()
 {
-    assert(!m_editmode);
-    if (m_editmode)
-        return;
-
-    CWindow floatwnd(m_parent_window.floathwnd());
+    /*CWindow floatwnd(m_parent_window.floathwnd());
     RECT pos;
     floatwnd.GetClientRect(&pos);
     int height = pos.bottom; int width = pos.right;
@@ -103,14 +97,16 @@ void ClickpadMainWnd::beginEditMode()
     settings_pos.top += height;
     settings_pos.bottom += height;
     m_settings_wnd.MoveWindow(&settings_pos);
-    m_button_wnd.MoveWindow(&settings_pos);
+    //m_button_wnd.MoveWindow(&settings_pos);
     m_settings_wnd.ShowWindow(SW_SHOW);
-    m_editmode = true;
+    m_editmode = true;*/
 }
 
 void ClickpadMainWnd::endEditMode()
 {
-    m_editmode = false;
+    /*m_settings_wnd.ShowWindow(SW_HIDE);
+    setWorkWindowSize();
+    m_editmode = false;*/
 }
 
 void ClickpadMainWnd::onSetParentFocus()
@@ -170,8 +166,8 @@ void ClickpadMainWnd::setWorkWindowSize()
     CWindow wnd(m_parent_window.floathwnd());
     RECT rc; wnd.GetWindowRect(&rc);
     int width = getColumns() * m_button_width + (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
-    int height = getRows() * m_button_height + (GetSystemMetrics(SM_CYDLGFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYCAPTION);
-    rc.right = rc.left + width;
-    rc.bottom = rc.top + height;
+    int height = getRows() * m_button_height + (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+    rc.right = rc.left + width - 1;
+    rc.bottom = rc.top + height - 1;
     wnd.MoveWindow(&rc);
 }
