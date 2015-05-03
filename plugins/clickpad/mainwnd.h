@@ -12,6 +12,8 @@ public:
     void setButtonsNet(int rows, int columns);
 
     void switchEditMode();
+    void showClickPad();
+
     void beginEditMode();
     void endEditMode();
 

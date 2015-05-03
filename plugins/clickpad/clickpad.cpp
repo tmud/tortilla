@@ -8,7 +8,6 @@ HWND m_hwnd_client = NULL;
 luaT_window m_parent_window;
 ClickpadMainWnd* m_clickpad = NULL;
 luaT_window m_settings_window;
-//SettingsWnd* m_settings = NULL;
 SettingsDlg* m_settings = NULL;
 
 int get_name(lua_State *L)
@@ -49,7 +48,8 @@ int init(lua_State *L)
     if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100) ||
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250))
             return luaT_error(L, "Не удалось создать окно для Clickpad");
-
+    
+    luaT_run(L, "addMenu", "sdd", "Плагины/Окно Clickpad", 2, 2);
     luaT_run(L, "addMenu", "sdd", "Плагины/Настройки Clickpad...", 1, 2);
 
     HWND parent = m_parent_window.hwnd();
@@ -60,12 +60,13 @@ int init(lua_State *L)
     m_parent_window.setBlocked(0,0);
 
     parent = m_settings_window.hwnd();
-    m_settings = new SettingsDlg();    
+    m_settings = new SettingsDlg();
     res = m_settings->Create(parent); 
     m_settings->GetClientRect(&rc);
 
     m_settings_window.attach(res);
     m_settings_window.setBlocked(rc.right, rc.bottom);
+    m_settings_window.hide();
 
     luaT_run(L, "getPath", "s", "buttons.xml");
     u8string path(lua_tostring(L, -1));
@@ -91,10 +92,6 @@ int init(lua_State *L)
     {
         m_clickpad->initDefault();
     }
-
-    CWindow wnd(m_parent_window.floathwnd());
-    //wnd.ModifyStyle(WS_THICKFRAME, 0);
-
     return 0;
 }
 
@@ -115,6 +112,8 @@ int release(lua_State *L)
     tosave.deletenode();
     m_clickpad->DestroyWindow();
     delete m_clickpad;
+    m_settings->DestroyWindow();
+    delete m_settings;
 
     if (!result)
     {
@@ -133,6 +132,8 @@ int menucmd(lua_State *L)
     lua_pop(L, 1);
     if (id == 1)
         m_clickpad->switchEditMode();
+    if (id == 2)
+        m_clickpad->showClickPad();
     return 0;
 }
 

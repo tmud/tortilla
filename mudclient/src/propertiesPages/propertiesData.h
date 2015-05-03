@@ -266,9 +266,11 @@ struct OutputWindow
         pos.left = pos.right = pos.top = pos.bottom = 0;
         size.cx = size.cy = 0;
     }
-    void initDefaultPos(int x, int y, int width, int height)
+    void initDefaultPos(int x, int y, int width, int height, bool visible)
     {
         lastside = side = DOCK_FLOAT;
+        if (!visible)
+            side = DOCK_HIDDEN;
         size = { width, height };
         pos = { x, y, x + width, y + height };
     }
@@ -295,12 +297,12 @@ struct PluginData
     std::vector<OutputWindow> windows;
     std::vector<PanelWindow> panels;
 
-    void initDefaultPos(int width, int height, OutputWindow *w)
+    void initDefaultPos(int width, int height, bool visible, OutputWindow *w)
     {
         int windows_count = windows.size();
         int x = 100 + windows_count * 50;
         int y = 250 + windows_count * 50;
-        w->initDefaultPos(x, y, width, height);
+        w->initDefaultPos(x, y, width, height, visible);
     }
 
     bool findWindow(const tstring& window_name, OutputWindow *w)

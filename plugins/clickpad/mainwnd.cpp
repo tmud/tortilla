@@ -77,6 +77,11 @@ void ClickpadMainWnd::switchEditMode()
         endEditMode();
 }
 
+void ClickpadMainWnd::showClickPad()
+{
+
+}
+
 void ClickpadMainWnd::beginEditMode()
 {
     /*CWindow floatwnd(m_parent_window.floathwnd());

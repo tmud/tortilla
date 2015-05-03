@@ -571,7 +571,7 @@ int createWindow(lua_State *L)
 {
     PluginData &p = find_plugin();
     OutputWindow w;
-    p.initDefaultPos(300, 300, &w);
+    p.initDefaultPos(300, 300, true, &w);
 
     if (luaT_check(L, 1, LUA_TSTRING))
     {
@@ -582,14 +582,16 @@ int createWindow(lua_State *L)
             p.windows.push_back(w);
         }
     }
-    else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER ))
+    else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER )|| 
+             luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TBOOLEAN))
     {
         tstring name(U2W(lua_tostring(L, 1)));
         if (!p.findWindow(name, &w))
         {
             int height = lua_tointeger(L, 3);
             int width = lua_tointeger(L, 2);
-            p.initDefaultPos(width, height, &w);
+            bool visible = (lua_gettop(L) == 4) ? (lua_toboolean(L, 4) ? true : false) : true;
+            p.initDefaultPos(width, height, visible, &w);
             w.name = name;
             p.windows.push_back(w);
         }
