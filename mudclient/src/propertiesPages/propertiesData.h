@@ -261,18 +261,20 @@ private:
 
 struct OutputWindow
 {
-    OutputWindow() : side(0), lastside(0)
+    OutputWindow() : side(DOCK_FLOAT), lastside(DOCK_FLOAT)
     {
         pos.left = pos.right = pos.top = pos.bottom = 0;
         size.cx = size.cy = 0;
     }
-    void initDefaultPos(int x, int y, int width, int height, bool visible)
+    void initDefaultPos(int x, int y, int width, int height)
     {
-        lastside = side = DOCK_FLOAT;
-        if (!visible)
-            side = DOCK_HIDDEN;
         size = { width, height };
         pos = { x, y, x + width, y + height };
+    }
+    void initVisible(bool visible)
+    {
+        if (!visible)
+            side = DOCK_HIDDEN;
     }
 
     tstring name;
@@ -297,12 +299,17 @@ struct PluginData
     std::vector<OutputWindow> windows;
     std::vector<PanelWindow> panels;
 
-    void initDefaultPos(int width, int height, bool visible, OutputWindow *w)
+    void initDefaultPos(int width, int height, OutputWindow *w)
     {
         int windows_count = windows.size();
         int x = 100 + windows_count * 50;
         int y = 250 + windows_count * 50;
-        w->initDefaultPos(x, y, width, height, visible);
+        w->initDefaultPos(x, y, width, height);
+    }
+
+    void setVisible(bool visible, OutputWindow *w)
+    {
+        w->initVisible(visible);
     }
 
     bool findWindow(const tstring& window_name, OutputWindow *w)

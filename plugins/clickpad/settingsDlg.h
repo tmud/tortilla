@@ -27,7 +27,7 @@ private:
 */
 
 class SettingsDlg : public CDialogImpl<SettingsDlg>
-{    
+{
 public:
     enum { IDD = IDD_SETTINGS };
     //CEdit m_edit_columns;
@@ -73,5 +73,5 @@ private:
     {
         EndDialog(wID);
         return 0;
-    }
+    }   
 };

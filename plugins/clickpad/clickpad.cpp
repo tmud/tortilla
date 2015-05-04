@@ -2,7 +2,7 @@
 #include "resource.h"
 #include <vector>
 #include "mainwnd.h"
-#include "settingsWnd.h"
+#include "settingsDlg.h"
 
 HWND m_hwnd_client = NULL;
 luaT_window m_parent_window;
@@ -45,12 +45,13 @@ int init(lua_State *L)
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
 
-    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100) ||
-        !m_settings_window.create(L, "Настройки Clickpad", 250, 250))
+    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true) ||
+        !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
             return luaT_error(L, "Не удалось создать окно для Clickpad");
     
-    luaT_run(L, "addMenu", "sdd", "Плагины/Окно Clickpad", 2, 2);
-    luaT_run(L, "addMenu", "sdd", "Плагины/Настройки Clickpad...", 1, 2);
+    base::addMenu(L, "Плагины/Окно Clickpad...", 2, 2);
+    base::checkMenu(L, 2);
+    base::addMenu(L, "Плагины/Настройки Clickpad...", 1, 2);
 
     HWND parent = m_parent_window.hwnd();
     m_clickpad = new ClickpadMainWnd();
@@ -66,7 +67,6 @@ int init(lua_State *L)
 
     m_settings_window.attach(res);
     m_settings_window.setBlocked(rc.right, rc.bottom);
-    m_settings_window.hide();
 
     luaT_run(L, "getPath", "s", "buttons.xml");
     u8string path(lua_tostring(L, -1));
@@ -131,9 +131,31 @@ int menucmd(lua_State *L)
     int id = lua_tointeger(L, 1);
     lua_pop(L, 1);
     if (id == 1)
-        m_clickpad->switchEditMode();
+    {
+        if (!m_settings_window.isVisible())
+        {
+            base::checkMenu(L, 1);
+            m_settings_window.show();        
+        }
+        else
+        {
+            base::uncheckMenu(L, 1);
+            m_settings_window.hide();        
+        }
+    }
     if (id == 2)
-        m_clickpad->showClickPad();
+    {
+        if (!m_parent_window.isVisible())
+        {
+            base::checkMenu(L, 2);
+            m_parent_window.show();
+        }
+        else
+        {
+            base::uncheckMenu(L, 2);
+            m_parent_window.hide();
+        }                        
+    }
     return 0;
 }
 

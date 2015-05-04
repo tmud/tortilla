@@ -57,6 +57,9 @@ void ClickpadMainWnd::onCreate()
     //RECT pos = { 100, 100, 400, 400 };
     //m_settings_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
     //m_button_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
+
+
+
 }
 
 void ClickpadMainWnd::onSize()
@@ -69,49 +72,13 @@ void ClickpadMainWnd::onSize()
     m_settings_wnd.MoveWindow(&pos);*/
 }
 
-void ClickpadMainWnd::switchEditMode()
+void ClickpadMainWnd::showSettings()
 {
-    if (!m_editmode)
-        beginEditMode();
-    else
-        endEditMode();
+
 }
 
 void ClickpadMainWnd::showClickPad()
 {
-
-}
-
-void ClickpadMainWnd::beginEditMode()
-{
-    /*CWindow floatwnd(m_parent_window.floathwnd());
-    RECT pos;
-    floatwnd.GetClientRect(&pos);
-    int height = pos.bottom; int width = pos.right;
-    floatwnd.GetWindowRect(&pos);
-    
-    RECT settings_pos;
-    m_settings_wnd.GetClientRect(&settings_pos);
-    pos.bottom += settings_pos.bottom;
-    if (width < settings_pos.right)
-        pos.right = pos.left + settings_pos.right;
-    else if (width > settings_pos.right)
-        settings_pos.right += (width - settings_pos.right);
-    floatwnd.MoveWindow(&pos);
-
-    settings_pos.top += height;
-    settings_pos.bottom += height;
-    m_settings_wnd.MoveWindow(&settings_pos);
-    //m_button_wnd.MoveWindow(&settings_pos);
-    m_settings_wnd.ShowWindow(SW_SHOW);
-    m_editmode = true;*/
-}
-
-void ClickpadMainWnd::endEditMode()
-{
-    /*m_settings_wnd.ShowWindow(SW_HIDE);
-    setWorkWindowSize();
-    m_editmode = false;*/
 }
 
 void ClickpadMainWnd::onSetParentFocus()

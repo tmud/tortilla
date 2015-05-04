@@ -29,9 +29,6 @@
     <ClInclude Include="buttonDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="settingsWnd.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clickpad.cpp">
@@ -41,9 +38,6 @@
       <Filter>Main Files</Filter>
     </ClCompile>
     <ClCompile Include="mainwnd.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="settingsWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

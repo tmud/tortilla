@@ -278,6 +278,14 @@ public:
         m_dock.ShowWindow(hwnd);
     }
 
+    bool isVisibleDockPane(PluginsView *v)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        if (!ctx) return false;
+        return (ctx->Side == DOCK_HIDDEN) ? false : true;
+    }
+
     HWND getFloatingWnd(PluginsView* v)
     {
         HWND hwnd = v->m_hWnd;
@@ -294,7 +302,7 @@ public:
         if (!p.IsWindow()) return;
         width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
         height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
-        RECT pos; p.GetWindowRect(&pos);
+        RECT pos = ctx->rcWindow; // p.GetWindowRect(&pos);
         pos.right = pos.left + width - 1;
         pos.bottom = pos.top + height - 1;
         ctx->bBlockFloatingResizeBox = true;

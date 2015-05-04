@@ -107,12 +107,12 @@ class luaT_window
     void *window;
 public:
     luaT_window() : L(NULL), window(NULL) {}
-	bool create(lua_State *pL, const utf8* caption, int width, int height)
+	bool create(lua_State *pL, const utf8* caption, int width, int height, bool visible)
 	{
 		if (!pL)
 			return false;
 		L = pL;
-		luaT_run(L, "createWindow", "sdd", caption, width, height);
+		luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
 		void *wnd = luaT_toobject(L, -1);
 		if (!wnd)
 			return false;

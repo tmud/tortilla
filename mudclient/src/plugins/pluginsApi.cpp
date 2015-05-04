@@ -571,32 +571,40 @@ int createWindow(lua_State *L)
 {
     PluginData &p = find_plugin();
     OutputWindow w;
-    p.initDefaultPos(300, 300, true, &w);
 
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (luaT_check(L, 1, LUA_TSTRING) || luaT_check(L, 2, LUA_TSTRING, LUA_TBOOLEAN))
     {
+        bool visible = (lua_gettop(L) == 2) ? (lua_toboolean(L, 2) ? true : false) : true;
+        w.initVisible(visible);
         tstring name( U2W(lua_tostring(L, 1)) );
         if (!p.findWindow(name, &w))
         {
+            p.initDefaultPos(300, 300, &w);
+            w.initVisible(visible);
             w.name = name;
             p.windows.push_back(w);
         }
+        else { w.initVisible(visible); }
     }
     else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER )|| 
              luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TBOOLEAN))
     {
+        bool visible = (lua_gettop(L) == 4) ? (lua_toboolean(L, 4) ? true : false) : true;        
         tstring name(U2W(lua_tostring(L, 1)));
         if (!p.findWindow(name, &w))
         {
             int height = lua_tointeger(L, 3);
             int width = lua_tointeger(L, 2);
-            bool visible = (lua_gettop(L) == 4) ? (lua_toboolean(L, 4) ? true : false) : true;
-            p.initDefaultPos(width, height, visible, &w);
+            p.initDefaultPos(width, height, &w);
+            w.initVisible(visible);
             w.name = name;
             p.windows.push_back(w);
         }
+        else { w.initVisible(visible); }
     }
-    else { return pluginInvArgs(L, "createWindow"); }
+    else {
+        return pluginInvArgs(L, "createWindow"); 
+    }
 
     PluginsView *window =  _wndMain.m_gameview.createDockPane(w, _cp);
     if (window)

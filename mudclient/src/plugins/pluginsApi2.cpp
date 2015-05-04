@@ -172,7 +172,7 @@ int window_isVisible(lua_State *L)
     if (luaT_check(L, 1, LUAT_WINDOW))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int state = v->IsWindowVisible() ? 1 : 0;
+        int state = _wndMain.m_gameview.isVisibleDockPane(v) ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }

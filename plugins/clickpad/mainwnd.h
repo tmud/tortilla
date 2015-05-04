@@ -11,11 +11,8 @@ public:
 
     void setButtonsNet(int rows, int columns);
 
-    void switchEditMode();
+    void showSettings();
     void showClickPad();
-
-    void beginEditMode();
-    void endEditMode();
 
     void initDefault();
     void save(xml::node& node);
@@ -47,7 +44,7 @@ private:
 private:
     //SettingsDlg m_settings_wnd;
     //ButtonDlg m_button_wnd;
-
+    
     bool m_editmode;
 
     int m_button_width;
