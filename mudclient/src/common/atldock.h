@@ -397,7 +397,7 @@ public:
    LRESULT OnNcHittest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
    {
        LRESULT lresult = DefWindowProc(uMsg, wParam, lParam);
-       if (m_pCtx->bBlockFloatingResizeBox && lresult >= HTLEFT && wParam <= HTBOTTOMRIGHT)
+       if (m_pCtx->bBlockFloatingResizeBox && lresult >= HTLEFT && lresult <= HTBOTTOMRIGHT)
            return HTCAPTION;
        return lresult;
    }

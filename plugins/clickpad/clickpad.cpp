@@ -45,7 +45,7 @@ int init(lua_State *L)
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
 
-    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true) ||
+    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100) ||
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
             return luaT_error(L, "Не удалось создать окно для Clickpad");
     

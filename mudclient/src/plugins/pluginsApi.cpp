@@ -567,6 +567,12 @@ int saveTable(lua_State *L)
     return 0;
 }
 //----------------------------------------------------------------------------
+void initVisible(lua_State *L, int index, OutputWindow *w)
+{
+    if (lua_gettop(L) == index)
+      w->initVisible(lua_toboolean(L, index) ? true : false);
+}
+
 int createWindow(lua_State *L)
 {
     PluginData &p = find_plugin();
@@ -574,33 +580,30 @@ int createWindow(lua_State *L)
 
     if (luaT_check(L, 1, LUA_TSTRING) || luaT_check(L, 2, LUA_TSTRING, LUA_TBOOLEAN))
     {
-        bool visible = (lua_gettop(L) == 2) ? (lua_toboolean(L, 2) ? true : false) : true;
-        w.initVisible(visible);
         tstring name( U2W(lua_tostring(L, 1)) );
         if (!p.findWindow(name, &w))
         {
             p.initDefaultPos(300, 300, &w);
-            w.initVisible(visible);
+            initVisible(L, 2, &w);
             w.name = name;
             p.windows.push_back(w);
         }
-        else { w.initVisible(visible); }
+        else { initVisible(L, 2, &w); }
     }
     else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER )|| 
              luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TBOOLEAN))
     {
-        bool visible = (lua_gettop(L) == 4) ? (lua_toboolean(L, 4) ? true : false) : true;        
         tstring name(U2W(lua_tostring(L, 1)));
         if (!p.findWindow(name, &w))
         {
             int height = lua_tointeger(L, 3);
             int width = lua_tointeger(L, 2);
             p.initDefaultPos(width, height, &w);
-            w.initVisible(visible);
+            initVisible(L, 4, &w);
             w.name = name;
             p.windows.push_back(w);
         }
-        else { w.initVisible(visible); }
+        else { initVisible(L, 4, &w); }
     }
     else {
         return pluginInvArgs(L, "createWindow"); 

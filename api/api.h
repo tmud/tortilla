@@ -110,7 +110,7 @@ public:
 	bool create(lua_State *pL, const utf8* caption, int width, int height, bool visible)
 	{
 		if (!pL)
-			return false;
+            return false;
 		L = pL;
 		luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
 		void *wnd = luaT_toobject(L, -1);
@@ -119,6 +119,18 @@ public:
 		window = wnd;
 		return true;
 	}
+    bool create(lua_State *pL, const utf8* caption, int width, int height)
+    {
+        if (!pL)
+            return false;
+		L = pL;
+		luaT_run(L, "createWindow", "sdd", caption, width, height);
+		void *wnd = luaT_toobject(L, -1);
+		if (!wnd)
+            return false;
+		window = wnd;
+		return true;
+    }
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);

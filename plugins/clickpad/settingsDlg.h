@@ -1,44 +1,24 @@
 #pragma once
+#include "resource.h"
 
-/*
-class WidndowStaticPosition
-{
-public:
-    enum ALIGN { LEFT, RIGHT, CENTER };
-    void attach(HWND wnd, ALIGN align)
-    {
-        w.Attach(wnd); 
-        a = align;
-
-
-        CWindow parent(w.GetParent());
-        
-        RECT rc;
-        parent.GetWindowRect()
-
-        w.GetClientRect(&rc);
-        
-        
-    }
-private:
-    CWindow w;
-    ALIGN a;
-};
-*/
-
+LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
 class SettingsDlg : public CDialogImpl<SettingsDlg>
 {
+    HHOOK m_hHook;
+    //CEdit m_edit_columns;
+    //CEdit m_edit_rows;
+    //CEdit m_edit_bsize;
+
+    CComboBox m_rows, m_columns, m_bsize;    
+
 public:
     enum { IDD = IDD_SETTINGS };
-    //CEdit m_edit_columns;
-    //CUpDownCtrl m_spin_columns;
-    //CEdit m_edit_rows;
-    //CUpDownCtrl m_spin_rows;
-    //CEdit m_edit_bsize;
+    LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
     
 private:
     BEGIN_MSG_MAP(SettingsDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDlg)
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroyDlg)
         //MESSAGE_HANDLER(WM_SIZE, OnSize)
         //COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         //COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
@@ -46,32 +26,34 @@ private:
 
     LRESULT OnInitDlg(UINT, WPARAM, LPARAM, BOOL&)
     {
+        m_hHook = SetWindowsHookEx( WH_GETMESSAGE, GetMsgProc,  NULL, GetCurrentThreadId() );
+        m_rows.Attach(GetDlgItem(IDC_COMBO_ROWS));
+        m_columns.Attach(GetDlgItem(IDC_COMBO_COLUMNS));
+        m_bsize.Attach(GetDlgItem(IDC_COMBO_BUTTON_SIZE));
+
+        wchar_t buffer[16];
+        for (int i=1; i<=5; ++i)
+            m_rows.AddString(_itow(i, buffer, 10));
+        for (int i=1; i<=10; ++i)
+            m_columns.AddString(_itow(i, buffer, 10));
+        m_bsize.AddString(L"32x32");
+        m_bsize.AddString(L"40x40");
+        m_bsize.AddString(L"48x48");
+
         //m_edit_columns.Attach(GetDlgItem(IDC_EDIT_COLUMNS));
-//        m_spin_columns.Attach(GetDlgItem(IDC_SPIN_COLUMNS));
         //m_edit_rows.Attach(GetDlgItem(IDC_EDIT_ROWS));
-//        m_spin_rows.Attach(GetDlgItem(IDC_SPIN_ROWS));
         //m_edit_bsize.Attach(GetDlgItem(IDC_EDIT_BSIZE));
-
-//        m_spin_columns.SetBuddy(m_edit_columns);
-  //      m_spin_rows.SetBuddy(m_edit_rows);
-
-        
-
         return 0;
     }
 
-    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
+    LRESULT OnDestroyDlg(UINT, WPARAM, LPARAM, BOOL&)
     {
-        RECT rc;
-        GetClientRect(&rc);
-
-        
+        UnhookWindowsHookEx(m_hHook);
         return 0;
     }
 
     LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
     {
-        EndDialog(wID);
         return 0;
     }   
 };

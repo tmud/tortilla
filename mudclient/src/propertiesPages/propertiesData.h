@@ -275,6 +275,8 @@ struct OutputWindow
     {
         if (!visible)
             side = DOCK_HIDDEN;
+        else
+            side = DOCK_FLOAT;
     }
 
     tstring name;
