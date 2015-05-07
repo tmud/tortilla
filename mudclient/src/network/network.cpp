@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "network.h"
 #include <winsock2.h>
+ #include <Mstcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
 #ifdef _DEBUG
@@ -62,7 +63,7 @@ Network::~Network()
 
 bool Network::connect(const NetworkConnectData& data)
 {
-    sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+    sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0); //WSA_FLAG_OVERLAPPED);
     if (sock == INVALID_SOCKET)
         return false;
 
@@ -82,6 +83,29 @@ bool Network::connect(const NetworkConnectData& data)
     else
     {
        peer.sin_addr.s_addr = inet_addr( data.address.c_str() );
+    }
+
+    DWORD optval = 1;
+    if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&optval),sizeof(DWORD)))
+    {
+        close();
+        return false;
+    }
+
+    struct tcp_keepalive {
+    u_long  onoff;
+    u_long  keepalivetime;
+    u_long  keepaliveinterval;
+    } alive;
+
+    alive.onoff = 1;
+	alive.keepalivetime = 5000;    // <- время между посылками keep-alive (мс)
+	alive.keepaliveinterval = 500; // <- время между посылками при отсутсвии ответа
+    DWORD nSize = 0;
+    if  (WSAIoctl(sock, SIO_KEEPALIVE_VALS, &alive, sizeof(alive), NULL, 0, &nSize,NULL,NULL) == SOCKET_ERROR)
+    {
+        close();
+        return false;
     }
 
     long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE; //|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
@@ -129,7 +153,7 @@ void Network::close()
 void Network::getMccpRatio(MccpStatus* data)
 {
     data->game_data_len = m_totalDecompressed;
-    data->network_data_len = m_totalReaded;   
+    data->network_data_len = m_totalReaded;
     data->status = m_mccp_on;
 }
 
@@ -176,6 +200,14 @@ NetworkEvents Network::processMsg(DWORD msg_lparam)
     {
         return NE_CONNECT;
     }
+    /*else if (event ==FD_ADDRESS_LIST_CHANGE )
+    {
+        int x = 1;
+    }
+    else if (event ==FD_ROUTING_INTERFACE_CHANGE )
+    {
+        int x = 1;
+    }*/
     return NE_NOEVENT;
 }
 
