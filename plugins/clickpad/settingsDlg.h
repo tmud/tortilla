@@ -1,19 +1,19 @@
 #pragma once
 #include "resource.h"
+#include "padbutton.h"
 
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
 class SettingsDlg : public CDialogImpl<SettingsDlg>
 {
     HHOOK m_hHook;
-    //CEdit m_edit_columns;
-    //CEdit m_edit_rows;
-    //CEdit m_edit_bsize;
-
+    CEdit m_edit_text;
+    CEdit m_edit_command;
     CComboBox m_rows, m_columns, m_bsize;    
 
 public:
     enum { IDD = IDD_SETTINGS };
     LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
+    void editButton(PadButton *button);
     
 private:
     BEGIN_MSG_MAP(SettingsDlg)
@@ -30,6 +30,8 @@ private:
         m_rows.Attach(GetDlgItem(IDC_COMBO_ROWS));
         m_columns.Attach(GetDlgItem(IDC_COMBO_COLUMNS));
         m_bsize.Attach(GetDlgItem(IDC_COMBO_BUTTON_SIZE));
+        m_edit_text.Attach(GetDlgItem(IDC_EDIT_TEXT));
+        m_edit_command.Attach(GetDlgItem(IDC_EDIT_COMMAND));
 
         wchar_t buffer[16];
         for (int i=1; i<=5; ++i)
@@ -39,10 +41,6 @@ private:
         m_bsize.AddString(L"32x32");
         m_bsize.AddString(L"40x40");
         m_bsize.AddString(L"48x48");
-
-        //m_edit_columns.Attach(GetDlgItem(IDC_EDIT_COLUMNS));
-        //m_edit_rows.Attach(GetDlgItem(IDC_EDIT_ROWS));
-        //m_edit_bsize.Attach(GetDlgItem(IDC_EDIT_BSIZE));
         return 0;
     }
 

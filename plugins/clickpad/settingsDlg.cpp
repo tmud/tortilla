@@ -29,3 +29,12 @@ LRESULT SettingsDlg::HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
     }
     return CallNextHookEx(m_hHook, nCode, wParam, lParam);
 }
+
+void SettingsDlg::editButton(PadButton *button)
+{
+    tstring text, command;
+    button->getText(&text);
+    button->getCommand(&command);
+    m_edit_text.SetWindowText(text.c_str());
+    m_edit_command.SetWindowText(command.c_str());
+}

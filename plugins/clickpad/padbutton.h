@@ -3,8 +3,14 @@
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
     tstring m_command;
+    UINT m_click_msg;
+    WPARAM m_click_param;
 
 public:
+    PadButton(UINT msg, WPARAM param) :  m_click_msg(msg), m_click_param(param)
+    {
+    }
+
     void getText(tstring *text)
     {
         int len = GetWindowTextLength() + 1;
@@ -38,13 +44,14 @@ private:
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
+        ::SendMessage(GetParent(), m_click_msg, m_click_param, 0);
         bHandled = FALSE;
         return 0;
     }
 
     LRESULT OnClickUp(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
-        ::SendMessage(GetParent(), WM_USER, 0, 0); // return back focus to parent windows
+        ::SendMessage(GetParent(), m_click_msg, m_click_param, 1);
         bHandled = FALSE;
         return 0;
     }

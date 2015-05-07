@@ -1,14 +1,16 @@
 #include "stdafx.h"
 #include "resource.h"
-#include <vector>
-#include "mainwnd.h"
-#include "settingsDlg.h"
+#include "clickpad.h"
 
-HWND m_hwnd_client = NULL;
+#include "mainwnd.h"
+
+
+HWND m_hwnd_float = NULL;
+HWND m_hwnd_mudclient = NULL;
+
 luaT_window m_parent_window;
 ClickpadMainWnd* m_clickpad = NULL;
 luaT_window m_settings_window;
-SettingsDlg* m_settings = NULL;
 
 int get_name(lua_State *L)
 {
@@ -41,17 +43,15 @@ int init(lua_State *L)
             client_wnd = wnd;
     }
     if (client_wnd)
-        m_hwnd_client = client_wnd;
+        m_hwnd_mudclient = client_wnd;
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
 
-    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100) ||
+    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true) ||
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
             return luaT_error(L, "Не удалось создать окно для Clickpad");
     
-    base::addMenu(L, "Плагины/Окно Clickpad...", 2, 2);
-    base::checkMenu(L, 2);
-    base::addMenu(L, "Плагины/Настройки Clickpad...", 1, 2);
+    base::addMenu(L, "Плагины/Настройка Clickpad...", 1, 2);
 
     HWND parent = m_parent_window.hwnd();
     m_clickpad = new ClickpadMainWnd();
@@ -59,13 +59,11 @@ int init(lua_State *L)
     HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS);
     m_parent_window.attach(res);
     m_parent_window.setBlocked(0,0);
+    m_hwnd_float = m_parent_window.floathwnd();
 
-    parent = m_settings_window.hwnd();
-    m_settings = new SettingsDlg();
-    res = m_settings->Create(parent); 
-    m_settings->GetClientRect(&rc);
-
-    m_settings_window.attach(res);
+    CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
+    sd.GetClientRect(&rc);
+    m_settings_window.attach(sd);
     m_settings_window.setBlocked(rc.right, rc.bottom);
 
     luaT_run(L, "getPath", "s", "buttons.xml");
@@ -92,6 +90,12 @@ int init(lua_State *L)
     {
         m_clickpad->initDefault();
     }
+
+    // todo remove lines
+    base::checkMenu(L, 1);
+    m_settings_window.show();
+    m_clickpad->setEditMode(true);
+
     return 0;
 }
 
@@ -112,8 +116,6 @@ int release(lua_State *L)
     tosave.deletenode();
     m_clickpad->DestroyWindow();
     delete m_clickpad;
-    m_settings->DestroyWindow();
-    delete m_settings;
 
     if (!result)
     {
@@ -135,26 +137,36 @@ int menucmd(lua_State *L)
         if (!m_settings_window.isVisible())
         {
             base::checkMenu(L, 1);
-            m_settings_window.show();        
+            m_settings_window.show();
+            if (!m_parent_window.isVisible())
+                m_parent_window.show();
+            m_clickpad->setEditMode(true);
         }
         else
         {
             base::uncheckMenu(L, 1);
-            m_settings_window.hide();        
+            m_settings_window.hide();
+            m_clickpad->setEditMode(false);
         }
-    }
-    if (id == 2)
+    }  
+    return 0;
+}
+
+int closewnd(lua_State *L)
+{
+    if (!luaT_check(L, 1, LUA_TNUMBER))
+        return 0;
+    HWND hwnd = reinterpret_cast<HWND>(lua_tounsigned(L, 1));
+    if (hwnd == m_parent_window.hwnd())
     {
-        if (!m_parent_window.isVisible())
-        {
-            base::checkMenu(L, 2);
-            m_parent_window.show();
-        }
-        else
-        {
-            base::uncheckMenu(L, 2);
-            m_parent_window.hide();
-        }                        
+        /*m_parent_window.hide();
+        base::uncheckMenu(L, 1);
+        m_settings_window.hide();*/
+    }
+    else if (hwnd == m_settings_window.hwnd())
+    {
+        base::uncheckMenu(L, 1);
+        m_settings_window.hide();       
     }
     return 0;
 }
@@ -167,12 +179,33 @@ static const luaL_Reg clickpad_methods[] =
     { "init", init },
     { "release", release },
     { "menucmd", menucmd },
+    { "closewindow", closewnd },
     { NULL, NULL }
 };
 
+lua_State *pL = NULL;
 int WINAPI plugin_open(lua_State *L)
 {
+    pL = L;
     luaL_newlib(L, clickpad_methods);
     lua_setglobal(L, "clickpad");
     return 0;
+}
+
+
+void runGameCommand(const tstring& cmd)
+{
+    if (!cmd.empty())
+        base::runCommand(pL, TW2U(cmd.c_str()));
+}
+
+void setFocusToMudClient()
+{
+    if (::IsWindow(m_hwnd_mudclient))
+        ::SetFocus(m_hwnd_mudclient);
+}
+
+HWND getFloatWnd()
+{
+    return m_hwnd_float;
 }
