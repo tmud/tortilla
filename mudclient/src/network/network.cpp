@@ -63,7 +63,7 @@ Network::~Network()
 
 bool Network::connect(const NetworkConnectData& data)
 {
-    sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0); //WSA_FLAG_OVERLAPPED);
+    sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (sock == INVALID_SOCKET)
         return false;
 
@@ -86,18 +86,13 @@ bool Network::connect(const NetworkConnectData& data)
     }
 
     DWORD optval = 1;
-    if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, reinterpret_cast<char*>(&optval),sizeof(DWORD)))
+    if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)(&optval), sizeof(DWORD)))
     {
         close();
         return false;
     }
 
-    struct tcp_keepalive {
-    u_long  onoff;
-    u_long  keepalivetime;
-    u_long  keepaliveinterval;
-    } alive;
-
+    tcp_keepalive alive;
     alive.onoff = 1;
 	alive.keepalivetime = 5000;    // <- время между посылками keep-alive (мс)
 	alive.keepaliveinterval = 500; // <- время между посылками при отсутсвии ответа
@@ -108,7 +103,7 @@ bool Network::connect(const NetworkConnectData& data)
         return false;
     }
 
-    long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE; //|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
+    long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
     if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, events) == SOCKET_ERROR)
     {
         close();
@@ -200,14 +195,14 @@ NetworkEvents Network::processMsg(DWORD msg_lparam)
     {
         return NE_CONNECT;
     }
-    /*else if (event ==FD_ADDRESS_LIST_CHANGE )
+    else if (event ==FD_ADDRESS_LIST_CHANGE )
     {
-        int x = 1;
+        MessageBox(NULL, L"Address list change", L"network", MB_OK);
     }
     else if (event ==FD_ROUTING_INTERFACE_CHANGE )
     {
-        int x = 1;
-    }*/
+        MessageBox(NULL, L"Routing interface change", L"network", MB_OK);
+    }
     return NE_NOEVENT;
 }
 
