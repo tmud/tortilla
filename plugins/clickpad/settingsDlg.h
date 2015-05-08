@@ -3,17 +3,20 @@
 #include "padbutton.h"
 
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
+class ClickpadSettings;
 class SettingsDlg : public CDialogImpl<SettingsDlg>
 {
     HHOOK m_hHook;
     CEdit m_edit_text;
     CEdit m_edit_command;
-    CComboBox m_rows, m_columns, m_bsize;    
+    CComboBox m_rows, m_columns, m_bsize;
+    ClickpadSettings *m_settings;
 
 public:
     enum { IDD = IDD_SETTINGS };
     LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
     void editButton(PadButton *button);
+    void setSettings(ClickpadSettings *settings);
     
 private:
     BEGIN_MSG_MAP(SettingsDlg)
@@ -38,9 +41,9 @@ private:
             m_rows.AddString(_itow(i, buffer, 10));
         for (int i=1; i<=10; ++i)
             m_columns.AddString(_itow(i, buffer, 10));
-        m_bsize.AddString(L"32x32");
-        m_bsize.AddString(L"40x40");
         m_bsize.AddString(L"48x48");
+        m_bsize.AddString(L"64x64");
+        m_bsize.AddString(L"80x80");
         return 0;
     }
 
@@ -53,5 +56,8 @@ private:
     LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
     {
         return 0;
-    }   
+    }
+
+private:
+
 };

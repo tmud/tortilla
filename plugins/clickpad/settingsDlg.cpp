@@ -1,10 +1,35 @@
 #include "stdafx.h"
 #include "settingsDlg.h"
+#include "mainwnd.h"
 
 extern SettingsDlg* m_settings;
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     return m_settings->HookGetMsgProc(nCode, wParam, lParam);
+}
+
+void SettingsDlg::setSettings(ClickpadSettings *settings)
+{
+    m_settings = settings;
+    int rows = m_settings->getRows();
+    if (rows <= 0) 
+        { rows = 1; m_settings->setRows(rows); }
+    else if (rows > 5)
+        { rows = 5; m_settings->setRows(rows); }
+    m_rows.SetCurSel(rows-1);
+    int columns = m_settings->getColumns();
+    if (columns <= 0 || columns > 10)
+        { columns = 8; m_settings->setColumns(columns); }
+    m_columns.SetCurSel(columns-1);
+    int bsize = m_settings->getButtonSize();
+    if (bsize != 48 && bsize != 64 && bsize != 80)
+        { bsize =  64; m_settings->setButtonSize(bsize); }
+    if (bsize == 48)
+        m_bsize.SetCurSel(0);
+    else if (bsize == 64)
+        m_bsize.SetCurSel(1);
+    else
+        m_bsize.SetCurSel(2);
 }
 
 LRESULT SettingsDlg::HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)

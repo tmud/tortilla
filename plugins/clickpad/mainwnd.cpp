@@ -16,7 +16,8 @@ HWND ClickpadMainWnd::createSettingsDlg(HWND parent)
 {
     m_settings_dlg = new SettingsDlg();
     m_settings_dlg->Create(parent);
-    m_settings = m_settings_dlg;
+    m_settings_dlg->setSettings(this);
+    m_settings = m_settings_dlg;    
     return m_settings_dlg->m_hWnd;
 }
 
@@ -68,6 +69,14 @@ int ClickpadMainWnd::getColumns() const
 
 void ClickpadMainWnd::setRows(int count)
 {
+    int current = getRows();
+    int add = count - current;
+    if (add > 0) 
+    {
+        createNewRows(add);
+        for (int i=)
+
+    }
 }
 
 void ClickpadMainWnd::setColumns(int count)
@@ -86,9 +95,13 @@ int ClickpadMainWnd::getButtonSize() const
 
 void ClickpadMainWnd::createNewRows(int count)
 {
+    int rows = getRows();
     std::vector<PadButton*> newrow(getColumns(), NULL);
     for (int i=0; i<count; ++i)
+    {
         m_buttons.push_back(newrow);
+    }
+
 }
 
 void ClickpadMainWnd::createNewColumns(int count)
