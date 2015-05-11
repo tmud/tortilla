@@ -34,6 +34,11 @@ void collectGarbage()
     if (L)
         lua_gc(L, LUA_GCSTEP, 1);
 }
+
+void closeLuaState()
+{
+    L.close();
+}
 //--------------------------------------------------------------------
 UINT getId(int code, bool button) { return m_idcontrol.registerPlugin(_cp, code, button); }
 UINT delCode(int code, bool button) { return m_idcontrol.unregisterByCode(_cp, code, button); }
@@ -642,6 +647,57 @@ int terminatePlugin(lua_State *L)
     lua_error(L);
     return 0;
 }
+
+int regUnloadFunction(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TFUNCTION))
+    {
+        lua_getglobal(L, "muloadf");
+        if (!lua_istable(L, -1))
+        {
+            if (!lua_isnil(L, -1)) 
+            {
+                lua_pop(L, 1);
+                lua_pushboolean(L, 0);
+                return 1;
+            }
+            lua_pop(L, 1);
+            lua_newtable(L);
+            lua_pushvalue(L, -1);
+            lua_setglobal(L, "muloadf");
+        }
+        lua_len(L, -1);
+        int index = lua_tointeger(L, -1) + 1;
+        lua_pop(L, 1);
+        lua_insert(L, -2);
+        lua_pushinteger(L, index);
+        lua_insert(L, -2);
+        lua_settable(L, -3);
+        lua_pop(L, 1);        
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
+
+void unloadModules()
+{
+    lua_getglobal(L, "muloadf");
+    if (!lua_istable(L, -1))
+    {
+        lua_pop(L,1);
+        return;
+    }
+    lua_pushnil(L);                     // first key
+    while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+    {
+        if (lua_isfunction(L, -1))
+            lua_pcall(L, 0, 0, 0);
+        else
+            lua_pop(L, 1);
+    }
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -685,7 +741,8 @@ bool initPluginsSystem()
     lua_register(L, "saveTable", saveTable);
     lua_register(L, "createWindow", createWindow);
     lua_register(L, "log", pluginLog);
-    lua_register(L, "terminate", terminatePlugin);
+    lua_register(L, "terminate", terminatePlugin);  
+    lua_register(L, "regUnloadFunction", regUnloadFunction);
 
     reg_props(L);
     reg_activeobjects(L);

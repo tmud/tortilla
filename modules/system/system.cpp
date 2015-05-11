@@ -17,18 +17,13 @@ int system_messagebox(lua_State *L)
         text.assign(lua_tostring(L, 1));
         params_ok = true;
     }
-    else if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING) ||
+        luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
     {
-        caption.assign(lua_tostring(L, 1));
-        text.assign(lua_tostring(L, 2));
-        params_ok = true;
-    }
-    else if (luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
-    {
-        caption.assign(lua_tostring(L, 1));
-        text.assign(lua_tostring(L, 2));
-
-        u8string b(lua_tostring(L, 3));
+        if (lua_gettop(L) == 3)
+            caption.assign(lua_tostring(L, 3));
+        text.assign(lua_tostring(L, 1));
+        u8string b(lua_tostring(L, 2));
         if (b == "ok,cancel") buttons = MB_OKCANCEL;
         else if (b == "cancel,ok") buttons = MB_OKCANCEL|MB_DEFBUTTON2;
         else if (b == "yes,no") buttons = MB_YESNO;
