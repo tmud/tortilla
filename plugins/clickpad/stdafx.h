@@ -19,3 +19,7 @@
 #include <assert.h>
 
 typedef std::wstring tstring;
+
+const int MAX_ROWS = 5;
+const int MAX_COLUMNS = 10;
+

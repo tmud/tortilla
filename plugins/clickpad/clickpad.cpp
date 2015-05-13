@@ -50,7 +50,7 @@ int init(lua_State *L)
     if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true) ||
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
             return luaT_error(L, "Не удалось создать окно для Clickpad");
-    
+
     base::addMenu(L, "Плагины/Настройка Clickpad...", 1, 2);
 
     HWND parent = m_parent_window.hwnd();
@@ -61,35 +61,29 @@ int init(lua_State *L)
     m_parent_window.setBlocked(0,0);
     m_hwnd_float = m_parent_window.floathwnd();
 
-    CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
-    sd.GetClientRect(&rc);
-    m_settings_window.attach(sd);
-    m_settings_window.setBlocked(rc.right, rc.bottom);
-
     luaT_run(L, "getPath", "s", "buttons.xml");
     u8string path(lua_tostring(L, -1));
     lua_pop(L, 1);
 
     DWORD fa = GetFileAttributes(TU2W(path.c_str()));
-    if (fa != INVALID_FILE_ATTRIBUTES && fa&FILE_ATTRIBUTE_NORMAL && !(fa&FILE_ATTRIBUTE_DIRECTORY))
+    if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
     {
         xml::node ld;
-        if (!ld.load(path.c_str())) {
+        bool result = ld.load(path.c_str());
+        if (result)
+            m_clickpad->load(ld);
+        if (!result) {
             u8string error("Ошибка загрузки списка с кнопками: ");
             error.append(path);
             luaT_log(L, error.c_str());
-            m_clickpad->initDefault();
-        }
-        else
-        {
-            m_clickpad->load(ld);
         }
         ld.deletenode();
     }
-    else
-    {
-        m_clickpad->initDefault();
-    }
+
+    CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
+    sd.GetClientRect(&rc);
+    m_settings_window.attach(sd);
+    m_settings_window.setBlocked(rc.right, rc.bottom);
 
     // todo remove lines
     base::checkMenu(L, 1);
@@ -111,7 +105,7 @@ int release(lua_State *L)
     u8string path(lua_tostring(L, -1));
     lua_pop(L, 1);
 
-    bool result = true; //tosave.save(path.c_str());
+    bool result = tosave.save(path.c_str());
 
     tosave.deletenode();
     m_clickpad->DestroyWindow();
@@ -166,7 +160,8 @@ int closewnd(lua_State *L)
     else if (hwnd == m_settings_window.hwnd())
     {
         base::uncheckMenu(L, 1);
-        m_settings_window.hide();       
+        m_settings_window.hide();
+        m_clickpad->setEditMode(false);
     }
     return 0;
 }
@@ -208,4 +203,11 @@ void setFocusToMudClient()
 HWND getFloatWnd()
 {
     return m_hwnd_float;
+}
+
+void exitEditMode()
+{
+    base::uncheckMenu(pL, 1);
+    m_settings_window.hide();
+    m_clickpad->setEditMode(false);
 }

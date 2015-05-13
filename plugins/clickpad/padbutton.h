@@ -2,27 +2,32 @@
 
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
+    tstring m_text;
     tstring m_command;
     UINT m_click_msg;
     WPARAM m_click_param;
+    bool m_pushed;
+    bool m_selected;
+    static WCHAR buffer[64];
 
 public:
-    PadButton(UINT msg, WPARAM param) :  m_click_msg(msg), m_click_param(param)
+    PadButton(UINT msg, WPARAM param) :
+        CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
+        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false)
     {
     }
 
     void getText(tstring *text)
     {
-        int len = GetWindowTextLength() + 1;
-        wchar_t *buffer = new wchar_t[len];
-        GetWindowText(buffer, len);
-        text->assign(buffer);
-        delete []buffer;    
+        text->assign(m_text);
     }
 
     void setText(const tstring& text)
     {
-        SetWindowText(text.c_str());    
+        if (text == m_text)
+            return;
+        m_text.assign(text);
+        Invalidate();
     }
 
     void getCommand(tstring *cmd)
@@ -35,15 +40,28 @@ public:
         m_command = cmd;    
     }
 
+    bool isEmptyButton() const 
+    {
+        return (m_command.empty()) ? true : false;
+    }
+
+    void setSelected(bool selected)
+    {
+        m_selected = selected;
+        Invalidate();
+    }
+
 private:
     BEGIN_MSG_MAP(PadButton)
       MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONUP, OnClickUp)
+      CHAIN_MSG_MAP(CBitmapButtonImpl<PadButton>)
     END_MSG_MAP()
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
+        m_pushed = true;
         ::SendMessage(GetParent(), m_click_msg, m_click_param, 0);
         bHandled = FALSE;
         return 0;
@@ -51,39 +69,11 @@ private:
 
     LRESULT OnClickUp(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
+        m_pushed = false;
         ::SendMessage(GetParent(), m_click_msg, m_click_param, 1);
         bHandled = FALSE;
         return 0;
     }
-};
-
-  /*  CButtons
-   // override of CBitmapButtonImpl DoPaint(). Adds fillrect
-    void DoPaint(CDCHandle dc)
-    {
-        // added by SoftGee to resolve image artifacts
-        RECT rc;
-        GetClientRect(&rc);
-        dc.FillRect(&rc, (HBRUSH)(COLOR_BTNFACE + 1));
-
-        // call ancestor DoPaint() method
-        CBitmapButtonImpl<CBmpBtn>::DoPaint(dc);
-    }*/
-
-/*
-class CBmpBtn : public CBitmapButtonImpl<CBmpBtn>
-{
-public:
-    DECLARE_WND_SUPERCLASS(_T("WTL_BmpBtn"), GetWndClassName())
-
-    // added border style (auto3d_single)
-    CBmpBtn(DWORD dwExtendedStyle = BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, HIMAGELIST hImageList = NULL) :
-        CBitmapButtonImpl<CBmpBtn>(dwExtendedStyle, hImageList)
-    { }
-
-    BEGIN_MSG_MAP(CBmpBtn)
-        CHAIN_MSG_MAP(CBitmapButtonImpl<CBmpBtn>)
-    END_MSG_MAP()
 
     // override of CBitmapButtonImpl DoPaint(). Adds fillrect
     void DoPaint(CDCHandle dc)
@@ -91,10 +81,28 @@ public:
         // added by SoftGee to resolve image artifacts
         RECT rc;
         GetClientRect(&rc);
-        dc.FillRect(&rc, (HBRUSH)(COLOR_BTNFACE + 1));
+        UINT state = DFCS_BUTTONPUSH;
+        if (m_pushed || m_selected) state |= DFCS_PUSHED;
+        dc.DrawFrameControl(&rc,DFC_BUTTON, state);
+
+        if (!m_text.empty())
+        {
+            int len = m_text.length(); 
+            if (len > 63) len = 63;
+            wcsncpy(buffer, m_text.c_str(), len);
+            rc.left+=2; rc.right-=2;
+            dc.SetBkMode(TRANSPARENT);
+            dc.DrawTextEx(buffer, len, &rc, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+        }
+
+        /*if (m_selected)
+        {
+            COLORREF color = RGB(255,0,0);
+            dc.Draw3dRect(&rc, color, color);
+        }*/
+
 
         // call ancestor DoPaint() method
-        CBitmapButtonImpl<CBmpBtn>::DoPaint(dc);
+        //CBitmapButtonImpl<PadButton>::DoPaint(dc);
     }
 };
-*/

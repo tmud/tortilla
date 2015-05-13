@@ -20,8 +20,7 @@ public:
     ClickpadMainWnd();
     ~ClickpadMainWnd();
     HWND createSettingsDlg(HWND parent);
-    void initDefault();
-    void setEditMode(bool mode);        
+    void setEditMode(bool mode);
     void save(xml::node& node);
     void load(xml::node& node);
 
@@ -44,11 +43,8 @@ private:
     void onDestroy();
     void onSize();
     void onClickButton(int x, int y, bool up);
-    
+
 private:
-    void setButtonsNet(int rows, int columns);
-    void createNewRows(int count);
-    void createNewColumns(int count);
     void createButton(int x, int y);
     void setWorkWindowSize();
 
@@ -59,10 +55,12 @@ private:
     int  getRows() const;
     void setButtonSize(int size);
     int  getButtonSize() const;
+    void setRowsInArray(int count);
+    void setColumnsInArray(int count);
 
 private:
     SettingsDlg *m_settings_dlg;
     bool m_editmode;
-    int m_button_size;
+    int m_button_size, m_rows, m_columns;
     std::vector<std::vector<PadButton*>> m_buttons;
 };

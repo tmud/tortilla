@@ -3,3 +3,4 @@
 void setFocusToMudClient();
 void runGameCommand(const tstring& cmd);
 HWND getFloatWnd();
+void exitEditMode();

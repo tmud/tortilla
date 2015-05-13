@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "settingsDlg.h"
 #include "mainwnd.h"
+#include "clickpad.h"
 
 extern SettingsDlg* m_settings;
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -21,15 +22,12 @@ void SettingsDlg::setSettings(ClickpadSettings *settings)
     if (columns <= 0 || columns > 10)
         { columns = 8; m_settings->setColumns(columns); }
     m_columns.SetCurSel(columns-1);
+
+    ButtonSizeTranslator bt;
     int bsize = m_settings->getButtonSize();
-    if (bsize != 48 && bsize != 64 && bsize != 80)
-        { bsize =  64; m_settings->setButtonSize(bsize); }
-    if (bsize == 48)
-        m_bsize.SetCurSel(0);
-    else if (bsize == 64)
-        m_bsize.SetCurSel(1);
-    else
-        m_bsize.SetCurSel(2);
+    if (!bt.checkSize(bsize))
+        { bsize = bt.getDefaultSize(); m_settings->setButtonSize(bsize); }
+    m_bsize.SetCurSel(bt.getIndex(bsize));
 }
 
 LRESULT SettingsDlg::HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -57,9 +55,102 @@ LRESULT SettingsDlg::HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 void SettingsDlg::editButton(PadButton *button)
 {
+    if (m_editable_button)
+        m_editable_button->setSelected(false);
+    m_editable_button = button;
+
+    setEditableState(button ? true : false);
+    if (!button)
+        return;
+
     tstring text, command;
     button->getText(&text);
     button->getCommand(&command);
     m_edit_text.SetWindowText(text.c_str());
     m_edit_command.SetWindowText(command.c_str());
+    button->setSelected(true);
+}
+
+LRESULT SettingsDlg::OnRowsChanged(WORD, WORD, HWND, BOOL&)
+{
+    resetEditable();
+    int rows = m_rows.GetCurSel() + 1;
+    m_settings->setRows(rows);
+    return 0;
+}
+
+LRESULT SettingsDlg::OnColumnsChanged(WORD, WORD, HWND, BOOL&)
+{
+    resetEditable();
+    int columns = m_columns.GetCurSel() + 1;
+    m_settings->setColumns(columns);
+    return 0;
+}
+
+LRESULT SettingsDlg::OnBSizeChanged(WORD, WORD, HWND, BOOL&)
+{
+    resetEditable();
+    ButtonSizeTranslator bt;
+    int pos = m_bsize.GetCurSel();
+    int bsize = bt.getSize(pos);
+    m_settings->setButtonSize(bsize);
+    return 0;
+}
+
+void getWindowText(HWND handle, tstring *string)
+{
+    int text_len = ::GetWindowTextLength(handle);
+    WCHAR *buffer = new WCHAR[text_len+2];
+    ::GetWindowText(handle, buffer, text_len+1);
+    string->assign(buffer);
+    delete []buffer;
+}
+
+LRESULT SettingsDlg::OnTextChanged(WORD, WORD, HWND, BOOL&)
+{
+    if (!m_editable_button)
+        return 0;
+    tstring text;
+    getWindowText(m_edit_text, &text);
+    m_editable_button->setText(text);
+    return 0;
+}
+
+LRESULT SettingsDlg::OnCommandChanged(WORD, WORD, HWND, BOOL&)
+{
+    if (!m_editable_button)
+        return 0;
+    tstring cmd;
+    getWindowText(m_edit_command, &cmd);
+    m_editable_button->setCommand(cmd);
+    return 0;
+}
+
+LRESULT SettingsDlg::OnButtonExit(WORD, WORD, HWND, BOOL&)
+{
+    exitEditMode();
+    return 0;
+}
+
+void SettingsDlg::resetEditable()
+{
+    if (!m_editable_button)
+        return;
+    m_editable_button->setSelected(false);
+    m_editable_button = NULL;
+    setEditableState(false);
+}
+
+void SettingsDlg::setEditableState(bool state)
+{
+    BOOL flag = state ? TRUE : FALSE;
+    m_edit_text.EnableWindow(flag);
+    m_edit_command.EnableWindow(flag);
+    m_load_hotkey.EnableWindow(flag);
+    m_del_button.EnableWindow(flag);
+    if (!state)
+    {
+        m_edit_text.SetWindowText(L"");
+        m_edit_command.SetWindowText(L"");
+    }
 }
