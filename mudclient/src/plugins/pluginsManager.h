@@ -18,6 +18,7 @@ public:
     void unloadPlugins();
     bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
+    Plugin* findPlugin(const tstring& name);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);

@@ -17,7 +17,22 @@ PropertiesManager* _pmanager;
 PluginsManager* _plugins_manager;
 PluginsIdTableControl m_idcontrol(PLUGING_MENUID_START, PLUGING_MENUID_END);
 luaT_State L;
-
+//--------------------------------------------------------------------
+tstring _extra_plugin_name;
+class CurrentPluginExtra
+{  bool m_used;
+public:
+    CurrentPluginExtra() : m_used(false) {
+       if (_cp || _extra_plugin_name.empty()) return;
+       Plugin *p = _plugins_manager->findPlugin(_extra_plugin_name);
+       if (p) { _cp = p; m_used = true; }
+    }
+    ~CurrentPluginExtra() {
+        if (m_used) { _cp = NULL; _extra_plugin_name.clear(); }
+    }
+};
+#define EXTRA_CP CurrentPluginExtra _cpgetextra;
+//--------------------------------------------------------------------
 void initExternPtrs()
 {
     _tbar = &_wndMain.m_toolBar;
@@ -44,6 +59,7 @@ void tmcLog(const tstring& msg) { _lp->tmcLog(msg); }
 void pluginLog(const tstring& msg) { _lp->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
+const wchar_t* unknown_plugin = L"?error:unk?";
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(wchar_t));
 wchar_t* plugin_buffer() { return (wchar_t*)pluginBuffer.getData(); }
@@ -52,7 +68,7 @@ int pluginInvArgs(lua_State *L, const utf8* fname)
     int n = lua_gettop(L);
     Utf8ToWide f(fname);
     swprintf(plugin_buffer(), L"'%s'.%s: Некорректные параметры(%d): ",
-        _cp->get(Plugin::FILE), (const wchar_t*)f, n);
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, n);
     tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
@@ -76,7 +92,7 @@ int pluginError(const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
     Utf8ToWide e(error);
-    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp->get(Plugin::FILE), (const wchar_t*)f, (const wchar_t*)e);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, (const wchar_t*)e);
     pluginLog(plugin_buffer());
     return 0;
 }
@@ -84,7 +100,7 @@ int pluginError(const utf8* fname, const utf8* error)
 int pluginError(const utf8* error)
 {
     Utf8ToWide e(error);
-    swprintf(plugin_buffer(), L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)e);
     pluginLog(plugin_buffer());
     return 0;
 }
@@ -92,7 +108,7 @@ int pluginError(const utf8* error)
 int pluginLog(const utf8* msg)
 {
     Utf8ToWide e(msg);
-    swprintf(plugin_buffer(), L"'%s': %s", _cp->get(Plugin::FILE), (const wchar_t*)e);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)e);
     pluginLog(plugin_buffer());
     return 0;
 }
@@ -106,7 +122,8 @@ void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 int addCommand(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TSTRING))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         bool result = false;
         tstring cmd(luaT_towstring(L, 1));
@@ -122,6 +139,7 @@ int addCommand(lua_State *L)
 
 int runCommand(lua_State *L)
 {
+    EXTRA_CP;
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         tstring cmd(TU2W(lua_tostring(L, 1)));
@@ -131,10 +149,12 @@ int runCommand(lua_State *L)
     return pluginInvArgs(L, "runCommand");
 }
 
-
 int addMenu(lua_State *L)
 {
     CAN_DO;
+    EXTRA_CP;
+    if (!_cp)
+         return pluginInvArgs(L, "addMenu");
     int code = -1;
     bool params_ok = false;
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -170,7 +190,8 @@ int addMenu(lua_State *L)
 int checkMenu(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TNUMBER))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TNUMBER))
     {
         int code = lua_tointeger(L, -1);
         _tbar->checkMenuItem(findId(code, false), TRUE);
@@ -183,7 +204,8 @@ int checkMenu(lua_State *L)
 int uncheckMenu(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TNUMBER))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TNUMBER))
     {
         int code = lua_tointeger(L, -1);
         _tbar->checkMenuItem(findId(code, false), FALSE);
@@ -196,7 +218,8 @@ int uncheckMenu(lua_State *L)
 int enableMenu(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TNUMBER))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TNUMBER))
     {
         int code = lua_tointeger(L, -1);
         _tbar->enableMenuItem(findId(code, false), TRUE);
@@ -209,7 +232,8 @@ int enableMenu(lua_State *L)
 int disableMenu(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TNUMBER))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TNUMBER))
     {
         int code = lua_tointeger(L, -1);
         _tbar->enableMenuItem(findId(code, false), FALSE);
@@ -222,6 +246,9 @@ int disableMenu(lua_State *L)
 int addButton(lua_State *L)
 {
     CAN_DO;
+    EXTRA_CP;
+    if (!_cp) 
+        return pluginInvArgs(L, "addButton");
     int image = -1, code = -1; tstring hover;
     if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
     {
@@ -251,6 +278,9 @@ int addButton(lua_State *L)
 int addToolbar(lua_State *L)
 {
     CAN_DO;
+    EXTRA_CP;
+    if (!_cp)
+        return pluginInvArgs(L, "addToolbar");
     if (luaT_check(L, 1, LUA_TSTRING))
         _tbar->addToolbar(luaT_towstring(L, 1), 15);
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
@@ -264,7 +294,8 @@ int addToolbar(lua_State *L)
 int hideToolbar(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TSTRING))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         _tbar->hideToolbar(luaT_towstring(L, 1));
         return 0;
@@ -275,7 +306,8 @@ int hideToolbar(lua_State *L)
 int showToolbar(lua_State *L)
 {
     CAN_DO;
-    if (luaT_check(L, 1, LUA_TSTRING))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         _tbar->showToolbar(luaT_towstring(L, 1));
         return 0;
