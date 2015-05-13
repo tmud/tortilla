@@ -19,5 +19,6 @@ else
 end
 
 --bass.play('d:\\1.mp3')
---bass.play('d:\\2.mp3')
-bass.play('d:\\sample.wav')
+local m = bass.load('d:\\2.mp3')
+bass.play(m)
+--bass.play('d:\\sample.wav')
