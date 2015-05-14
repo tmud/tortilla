@@ -97,8 +97,10 @@ namespace base {
         luaT_run(L, "loadTable", "s", file);
         return lua_istable(L, -1) ? true : false;
     }
-    // createWindow, createPanel, pcre -> classes below
-    // log -> luaT_log
+    inline void pluginName(lua_State* L, const utf8* name) {
+        luaT_run(L, "pluginName", "s", name);
+    }
+    // createWindow, createPanel, pcre, log -> in classes below
 } // namespace base
 
 class luaT_window

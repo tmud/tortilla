@@ -207,6 +207,7 @@ HWND getFloatWnd()
 
 void exitEditMode()
 {
+    base::pluginName(pL, "clickpad");
     base::uncheckMenu(pL, 1);
     m_settings_window.hide();
     m_clickpad->setEditMode(false);

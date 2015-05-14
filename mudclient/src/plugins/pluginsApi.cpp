@@ -59,7 +59,7 @@ void tmcLog(const tstring& msg) { _lp->tmcLog(msg); }
 void pluginLog(const tstring& msg) { _lp->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
-const wchar_t* unknown_plugin = L"?error:unk?";
+const wchar_t* unknown_plugin = L"?плагин?";
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(wchar_t));
 wchar_t* plugin_buffer() { return (wchar_t*)pluginBuffer.getData(); }
@@ -117,6 +117,16 @@ void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 {
     swprintf(plugin_buffer(), L"'%s': %s", fname, msg);
     pluginLog(plugin_buffer());
+}
+//---------------------------------------------------------------------
+int pluginName(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        _extra_plugin_name.assign(TU2W(lua_tostring(L, 1))); 
+        return 0;
+    }
+    return pluginInvArgs(L, "pluginName");
 }
 //---------------------------------------------------------------------
 int addCommand(lua_State *L)
@@ -317,7 +327,8 @@ int showToolbar(lua_State *L)
 
 int getPath(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         tstring filename(luaT_towstring(L, 1));
         ProfilePluginPath pp(_pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
@@ -334,6 +345,7 @@ int getPath(lua_State *L)
 
 int getProfile(lua_State *L)
 {
+    EXTRA_CP;
     if (luaT_check(L, 0))
     {
         luaT_pushwstring(L, _pmanager->getProfileName().c_str());
@@ -344,9 +356,10 @@ int getProfile(lua_State *L)
 
 int getParent(lua_State *L)
 {
+    EXTRA_CP;
     if (luaT_check(L, 0))
     {
-        HWND hwnd = _wndMain; //.m_gameview;
+        HWND hwnd = _wndMain;
         lua_pushunsigned(L, (DWORD)hwnd);
         return 1;
     }
@@ -355,7 +368,8 @@ int getParent(lua_State *L)
 
 int loadTable(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         tstring filename(luaT_towstring(L, 1));
         ProfilePluginPath pp(_pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
@@ -449,7 +463,8 @@ int loadTable(lua_State *L)
 
 int saveTable(lua_State *L)
 {
-    if (!luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
+    EXTRA_CP;
+    if (!_cp || !luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
         return pluginInvArgs(L, "saveData");
 
     tstring filename(luaT_towstring(L, 2));
@@ -607,6 +622,9 @@ void initVisible(lua_State *L, int index, OutputWindow *w)
 
 int createWindow(lua_State *L)
 {
+    EXTRA_CP;
+    if (!_cp)
+        return pluginInvArgs(L, "createWindow");
     PluginData &p = find_plugin();
     OutputWindow w;
 
@@ -650,6 +668,7 @@ int createWindow(lua_State *L)
 
 int pluginLog(lua_State *L)
 {
+    EXTRA_CP;
     int n = lua_gettop(L);
     if (n == 0)
         return pluginInvArgs(L, "log");
@@ -667,6 +686,7 @@ int pluginLog(lua_State *L)
 
 int terminatePlugin(lua_State *L)
 {
+    EXTRA_CP;
     if (!_cp)
         { assert(false); return 0; }
 
@@ -731,6 +751,7 @@ bool initPluginsSystem()
     lua_register(L, "createWindow", createWindow);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
+    lua_register(L, "pluginName", pluginName);
 
     reg_props(L);
     reg_activeobjects(L);
