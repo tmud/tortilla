@@ -52,13 +52,15 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     ClickpadSettings *m_settings;
     PadButton* m_editable_button;
     CButton m_load_hotkey, m_del_button;
+    bool m_load_hotkey_mode;
 
 public:
-    SettingsDlg() : m_editable_button(NULL) {}
+    SettingsDlg() : m_editable_button(NULL), m_load_hotkey_mode(false) {}
     enum { IDD = IDD_SETTINGS };
     LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
     void editButton(PadButton *button);
     void setSettings(ClickpadSettings *settings);
+    bool canCloseSettingsDlg() const { return !m_load_hotkey_mode; }
     
 private:
     BEGIN_MSG_MAP(SettingsDlg)
@@ -70,10 +72,8 @@ private:
         COMMAND_HANDLER(IDC_EDIT_TEXT, EN_CHANGE, OnTextChanged)
         COMMAND_HANDLER(IDC_EDIT_COMMAND, EN_CHANGE, OnCommandChanged)
         COMMAND_ID_HANDLER(IDC_BUTTON_EXIT, OnButtonExit)
-
-        //MESSAGE_HANDLER(WM_SIZE, OnSize)
-        //COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
-        //COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+        COMMAND_ID_HANDLER(IDC_BUTTON_DELBUTTON, OnDelButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_LOADHOTKEY, OnHotkeyButton)
     END_MSG_MAP()
 
     LRESULT OnInitDlg(UINT, WPARAM, LPARAM, BOOL&)
@@ -108,17 +108,14 @@ private:
         return 0;
     }
 
-    LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
-    {
-        return 0;
-    }
-
     LRESULT OnRowsChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnColumnsChanged(WORD, WORD, HWND, BOOL&);   
     LRESULT OnBSizeChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnTextChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnCommandChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnButtonExit(WORD, WORD, HWND, BOOL&);
+    LRESULT OnDelButton(WORD, WORD, HWND, BOOL&);
+    LRESULT OnHotkeyButton(WORD, WORD, HWND, BOOL&);
 
     void resetEditable();
     void setEditableState(bool state);

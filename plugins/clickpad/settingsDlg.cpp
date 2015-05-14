@@ -2,6 +2,7 @@
 #include "settingsDlg.h"
 #include "mainwnd.h"
 #include "clickpad.h"
+#include "loadHotkeyDlg.h"
 
 extern SettingsDlg* m_settings;
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -69,6 +70,16 @@ void SettingsDlg::editButton(PadButton *button)
     m_edit_text.SetWindowText(text.c_str());
     m_edit_command.SetWindowText(command.c_str());
     button->setSelected(true);
+    if (text.empty())
+    {
+        m_edit_text.SetFocus();
+    }
+    else
+    {
+        int pos = command.length();    
+        m_edit_command.SetFocus();
+        m_edit_command.SetSel(pos, pos);
+    }
 }
 
 LRESULT SettingsDlg::OnRowsChanged(WORD, WORD, HWND, BOOL&)
@@ -128,7 +139,33 @@ LRESULT SettingsDlg::OnCommandChanged(WORD, WORD, HWND, BOOL&)
 
 LRESULT SettingsDlg::OnButtonExit(WORD, WORD, HWND, BOOL&)
 {
+    if (!canCloseSettingsDlg())
+        return 0;
     exitEditMode();
+    return 0;
+}
+
+LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
+{
+    if (!m_editable_button)
+        return 0;
+    m_editable_button->setText(L"");
+    m_editable_button->setCommand(L"");    
+    m_edit_text.SetWindowText(L"");
+    m_edit_command.SetWindowText(L"");
+    m_edit_text.SetFocus();
+    return 0; 
+}
+
+LRESULT SettingsDlg::OnHotkeyButton(WORD, WORD, HWND, BOOL&)
+{
+    if (!m_editable_button)
+        return 0;
+
+    m_load_hotkey_mode = true;
+    LoadHotkeyDlg dlg(getMudclientWnd());
+    UINT result = dlg.DoModal(m_hWnd);
+    m_load_hotkey_mode = false;
     return 0;
 }
 

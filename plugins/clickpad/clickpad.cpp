@@ -205,6 +205,11 @@ HWND getFloatWnd()
     return m_hwnd_float;
 }
 
+HWND getMudclientWnd()
+{
+    return m_hwnd_mudclient;
+}
+
 void exitEditMode()
 {
     base::pluginName(pL, "clickpad");
