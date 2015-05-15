@@ -93,7 +93,7 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
 void LogicProcessor::updateProps()
 {
-    m_helper.updateProps();
+    m_helper.updateProps(LogicHelper::UPDATE_ALL);
     m_logs.updateProps(propData);
     m_prompt_mode = OFF;
     if (propData->recognize_prompt)
@@ -135,6 +135,7 @@ void LogicProcessor::updateProps()
             propData->recognize_prompt = 0;
         }
     }
+    postProcessUpdatePropsEvent(LogicHelper::UPDATE_ALL, L"", false);
 }
 
 void LogicProcessor::processNetworkDisconnect()
@@ -194,9 +195,10 @@ void LogicProcessor::pluginLog(const tstring& cmd)
     }
 }
 
-void LogicProcessor::updateActiveObjects(int type)
+void LogicProcessor::updateActiveObjects(int type, const tstring& pattern)
 {
     m_helper.updateProps(type);
+    postProcessUpdatePropsEvent(type, pattern, false);
 }
 
 bool LogicProcessor::checkActiveObjectsLog(int type)
@@ -257,4 +259,27 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
+}
+
+void LogicProcessor::postProcessUpdatePropsEvent(int type, const tstring& pattern, bool delaction)
+{
+   UpdateEvent e;
+   tstring &t = e.what;
+   e.pattern = pattern;
+   e.delete_action = delaction;
+   switch (type)
+   {
+      case LogicHelper::UPDATE_ACTIONS: t.assign(L"actions"); break;
+      case LogicHelper::UPDATE_ALIASES: t.assign(L"aliases"); break;
+      case LogicHelper::UPDATE_ANTISUBS: t.assign(L"antisubs"); break;
+      case LogicHelper::UPDATE_HIGHLIGHTS: t.assign(L"highlights"); break;
+      case LogicHelper::UPDATE_HOTKEYS: t.assign(L"hotkeys"); break;
+      case LogicHelper::UPDATE_GAGS: t.assign(L"gags"); break;
+      case LogicHelper::UPDATE_GROUPS: t.assign(L"groups"); break;
+      case LogicHelper::UPDATE_SUBS: t.assign(L"subs"); break;
+      case LogicHelper::UPDATE_TABS: t.assign(L"tabs"); break;
+      case LogicHelper::UPDATE_TIMERS: t.assign(L"timers"); break;
+      case LogicHelper::UPDATE_VARS: t.assign(L"vars"); break;   
+   }
+   m_pHost->updatesPropsEvent(e);
 }

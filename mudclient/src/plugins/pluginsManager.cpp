@@ -566,3 +566,24 @@ void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool syste
     }
     cmd->full_command.assign(newcmd);
 }
+
+void PluginsManager::processUpdatesEvents(const UpdateEvent& event)
+{
+    if (event.what.empty())
+    {
+        processPluginsMethod("update", 0);
+        return;
+    }
+    WideToUtf8 w2u;
+    w2u.convert(event.what.c_str(), event.what.length());
+    lua_pushstring(L, w2u);
+    if (event.pattern.empty())
+    {
+        processPluginsMethod("update", 1);
+        return;
+    }
+    w2u.convert(event.pattern.c_str(), event.pattern.length());
+    lua_pushstring(L, w2u);
+    lua_pushboolean(L, event.delete_action ? 1 : 0);
+    processPluginsMethod("update", 3);
+}

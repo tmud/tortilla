@@ -57,7 +57,7 @@ void delId(UINT id) { m_idcontrol.unregisterById(_cp, id); }
 void pluginsMenuCmd(UINT id) { m_idcontrol.runPluginCmd(id); }
 void tmcLog(const tstring& msg) { _lp->tmcLog(msg); }
 void pluginLog(const tstring& msg) { _lp->pluginLog(msg);  }
-void pluginsUpdateActiveObjects(int type) { _lp->updateActiveObjects(type); }
+void pluginsUpdateActiveObjects(int type, const tstring& pattern) { _lp->updateActiveObjects(type, pattern); }
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread",  };
 const wchar_t* unknown_plugin = L"?плагин?";
 //---------------------------------------------------------------------

@@ -6,6 +6,15 @@
 #include "network/network.h"
 
 class InputCommand;
+
+struct UpdateEvent
+{
+    UpdateEvent() : delete_action(false) {}
+    tstring what;
+    tstring pattern;
+    bool delete_action;
+};
+
 class LogicProcessorHost
 {
 public:
@@ -25,6 +34,7 @@ public:
     virtual void preprocessGameCmd(InputCommand* cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
+    virtual void updatesPropsEvent(const UpdateEvent& event) = 0;
 };
 
 class LogicProcessorMethods
@@ -34,7 +44,7 @@ public:
     virtual void simpleLog(const tstring& msg) = 0;
     virtual void pluginLog(const tstring& msg) = 0;
     virtual void updateLog(const tstring& msg) = 0;
-    virtual void updateActiveObjects(int type) = 0;
+    virtual void updateActiveObjects(int type,  const tstring& pattern) = 0;
     virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
@@ -91,7 +101,7 @@ public:
     void tmcLog(const tstring& cmd);
     void simpleLog(const tstring& cmd);
     void pluginLog(const tstring& cmd);
-    void updateActiveObjects(int type);
+    void updateActiveObjects(int type, const tstring& pattern);
     bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
@@ -108,10 +118,11 @@ private:
     enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
            FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);
-    void updateProps(int update, int options);
+    void updateProps(int update, int options, const tstring& pattern, bool delaction);
     void regCommand(const char* name, syscmd_fun f);
     bool sendToNetwork(const tstring& cmd);
     void processNetworkError(const tstring& error);
+    void postProcessUpdatePropsEvent(int type, const tstring& pattern, bool delaction);
 
     // Incoming data methods
     void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0);

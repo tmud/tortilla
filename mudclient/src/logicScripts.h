@@ -54,9 +54,11 @@ public:
 
 class AddParams3 : public ParamsBuffer
 {
+    tstring m_pattern;
 public:
+    const tstring& getPattern() const { return m_pattern; }
     int process(parser *p, PropertiesValues *values, PropertiesValues *groups,
-        const tstring& label1,  const tstring& label2,  const tstring& label3, 
+        const tstring& label1,  const tstring& label2,  const tstring& label3,
         MethodsHelper* helper, TestControl* control = NULL)
     {
         int n = p->size();
@@ -67,7 +69,7 @@ public:
             helper->tmcLog(buffer);
             for (int i=0,e=values->size(); i<e; ++i)
             {
-                const property_value& v = values->get(i);                        
+                const property_value& v = values->get(i);
                 swprintf(buffer, buffer_len, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
                 helper->simpleLog(buffer);
             }
@@ -101,7 +103,7 @@ public:
                         helper->simpleLog(buffer);
                         count++;
                     }
-                }               
+                }
                 if (!count)
                     helper->tmcLog(L"Варианты не найдены.");
             }
@@ -137,6 +139,7 @@ public:
             values->add(index, pattern, text, group);
             swprintf(buffer, buffer_len, L"%s: '%s' '%s' '%s'", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str());
             helper->updateLog(buffer);
+            m_pattern.assign(pattern);
             return 1;
         }
         p->invalidargs();
@@ -146,7 +149,9 @@ public:
 
 class DeleteParams3 : public ParamsBuffer
 {
+     tstring m_pattern;
 public:
+    const tstring& getPattern() const { return m_pattern; }
     int process(parser *p, PropertiesValues *values,
         const tstring& label,
         MethodsHelper* helper, TestControl* control = NULL)
@@ -182,6 +187,7 @@ public:
                 helper->tmcLog(L"Варианты не найдены.");
                 return 0;
             }
+            m_pattern.assign(pattern);
             return 1;
         }
         p->invalidargs();
@@ -191,7 +197,9 @@ public:
 
 class AddParams2 : public ParamsBuffer
 {
+    tstring m_pattern;
 public:
+    const tstring& getPattern() const { return m_pattern; }
     int process(parser *p, PropertiesValues *values, PropertiesValues *groups,
         const tstring& label1, const tstring& label2, MethodsHelper* helper)
     {
@@ -203,7 +211,7 @@ public:
             helper->tmcLog(buffer);
             for (int i=0,e=values->size(); i<e; ++i)
             {
-                const property_value& v = values->get(i);                        
+                const property_value& v = values->get(i);
                 swprintf(buffer, buffer_len, L"'%s' '%s'", v.key.c_str(), v.group.c_str());
                 helper->simpleLog(buffer);
             }
@@ -230,6 +238,7 @@ public:
             values->add(index, pattern, L"", group);
             swprintf(buffer, buffer_len, L"%s: '%s' '%s'", label2.c_str(), pattern.c_str(), group.c_str());
             helper->updateLog(buffer);
+            m_pattern.assign(pattern);
             return 1;  
         }
         p->invalidargs();
@@ -239,7 +248,9 @@ public:
 
 class DeleteParams2 : public ParamsBuffer
 {
+    tstring m_pattern;
 public:
+    const tstring& getPattern() const { return m_pattern; }
     int process(parser *p, PropertiesValues *values, const tstring& label, MethodsHelper* helper)
     {
         if (p->size() == 1)
@@ -247,7 +258,7 @@ public:
             tstring pattern(p->at(0));
             swprintf(buffer, buffer_len, L"%s '%s'", label.c_str(), pattern.c_str());
             helper->tmcLog(buffer);
-          
+
             bool deleted = false;
             for (int i=0,e=values->size(); i<e; ++i)
             {
@@ -267,6 +278,7 @@ public:
                 helper->tmcLog(L"Варианты не найдены.");
                 return 0;
             }
+            m_pattern.assign(pattern);
             return 1;
         }
         p->invalidargs();

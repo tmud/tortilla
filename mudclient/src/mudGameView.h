@@ -1078,4 +1078,5 @@ private:
 
     void setOscColor(int index, COLORREF color);
     void resetOscColors();
+    void updatesPropsEvent(const UpdateEvent& event);
 };

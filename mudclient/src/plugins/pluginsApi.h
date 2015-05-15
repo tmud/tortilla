@@ -16,7 +16,7 @@ int  pluginError(const utf8* fname, const utf8* error);
 int  pluginError(const utf8* error);
 int  pluginLog(const utf8* msg);
 void pluginsMenuCmd(UINT id);
-void pluginsUpdateActiveObjects(int type);
+void pluginsUpdateActiveObjects(int type, const tstring& pattern);
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f);
 void regIndexMt(lua_State *L);

@@ -63,14 +63,14 @@
   <tabwords/>
   <variables/>
   <windows>
-    <window name="Окно 1" left="0" right="1374" top="0" bottom="116" side="5" lastside="1" width="489" height="116"/>
-    <window name="Окно 2" left="210" right="560" top="399" bottom="599" side="5" lastside="4" width="350" height="200"/>
-    <window name="Окно 3" left="0" right="184" top="0" bottom="714" side="5" lastside="0" width="184" height="168"/>
+    <window name="Окно 1" left="70" right="420" top="70" bottom="270" side="5" lastside="4" width="350" height="200"/>
+    <window name="Окно 2" left="140" right="490" top="140" bottom="340" side="5" lastside="4" width="350" height="200"/>
+    <window name="Окно 3" left="210" right="560" top="210" bottom="410" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 4" left="280" right="630" top="280" bottom="480" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
   </windows>
-  <mainwindow left="207" right="1743" top="71" bottom="973" width="3840" height="1080" fullscreen="0"/>
+  <mainwindow left="69" right="1257" top="75" bottom="792" width="1430" height="878" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="1"/>
     <plugin key="jmc3import.dll" value="0"/>
@@ -79,7 +79,12 @@
     <plugin key="reconnect.lua" value="1"/>
     <plugin key="colorgamecmd.lua" value="1"/>
     <plugin key="statusbar.lua" value="1"/>
-    <plugin key="clickpad.dll" value="0"/>
+    <plugin key="clickpad.dll" value="1">
+      <windows>
+        <window name="Игровая панель Clickpad" left="874" right="1395" top="172" bottom="261" side="4" lastside="4" width="521" height="89"/>
+        <window name="Настройки Clickpad" left="176" right="623" top="176" bottom="487" side="5" lastside="4" width="447" height="311"/>
+      </windows>
+    </plugin>
     <plugin key="inveq.lua" value="0"/>
     <plugin key="mapper.dll" value="0"/>
     <plugin key="testmsdp.lua" value="0"/>

@@ -33,8 +33,6 @@ private:
 //-------------------------------------------------------------------
 #include "logicScripts.h"
 ParamsBuffer pb;
-tchar buffer[1024];
-const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
@@ -141,13 +139,14 @@ void LogicProcessor::processGameCommand(InputCommand* cmd)
     sendToNetwork(tmp);
 }
 
-void LogicProcessor::updateProps(int update, int options)
+void LogicProcessor::updateProps(int update, int options, const tstring& pattern, bool delaction)
 {
     if (update)
     {
         m_helper.updateProps(options);
         if (!m_updatelog.empty())
             tmcLog(m_updatelog);
+        postProcessUpdatePropsEvent(options, pattern, delaction);
     }
     m_updatelog.clear();
 }
@@ -181,14 +180,14 @@ IMPL(action)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
     int update = script.process(p, &propData->actions, &propData->groups, 
             L"Триггеры(actions)", L"Триггеры", L"Новый триггер", &ph);
-    updateProps(update, LogicHelper::UPDATE_ACTIONS);
+    updateProps(update, LogicHelper::UPDATE_ACTIONS,script.getPattern(), false);
 }
 
 IMPL(unaction)
 {
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
     int update = script.process(p, &propData->actions, L"Удаление триггера", &ph);
-    updateProps(update, LogicHelper::UPDATE_ACTIONS);
+    updateProps(update, LogicHelper::UPDATE_ACTIONS,script.getPattern(), true);
 }
 
 IMPL(alias)
@@ -196,14 +195,14 @@ IMPL(alias)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
     int update = script.process(p, &propData->aliases, &propData->groups,
         L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph);
-    updateProps(update, LogicHelper::UPDATE_ALIASES);
+    updateProps(update, LogicHelper::UPDATE_ALIASES,script.getPattern(), false);
 }
 
 IMPL(unalias)
 {
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
     int update = script.process(p, &propData->aliases, L"Удаление команды", &ph);
-    updateProps(update, LogicHelper::UPDATE_ALIASES);
+    updateProps(update, LogicHelper::UPDATE_ALIASES,script.getPattern(), true);
 }
 
 IMPL(sub)
@@ -211,14 +210,14 @@ IMPL(sub)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
     int update = script.process(p, &propData->subs, &propData->groups,
         L"Замены(subs)", L"Замены", L"Новая замена", &ph);
-    updateProps(update, LogicHelper::UPDATE_SUBS);
+    updateProps(update, LogicHelper::UPDATE_SUBS,script.getPattern(), false);
 }
 
 IMPL(unsub)
 {
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
     int update = script.process(p, &propData->subs, L"Удаление замены", &ph);
-    updateProps(update, LogicHelper::UPDATE_SUBS);
+    updateProps(update, LogicHelper::UPDATE_SUBS,script.getPattern(), true);
 }
 
 IMPL(hotkey)
@@ -228,14 +227,14 @@ IMPL(hotkey)
     int update = script.process(p, &propData->hotkeys, &propData->groups,
         L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"Новая горячая клавиша", &ph,
         &control);
-    updateProps(update, LogicHelper::UPDATE_HOTKEYS);
+    updateProps(update, LogicHelper::UPDATE_HOTKEYS,script.getPattern(), false);
 }
 
 IMPL(unhotkey)
 {
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
     int update = script.process(p, &propData->hotkeys, L"Удаление горячей клавиши", &ph);
-    updateProps(update, LogicHelper::UPDATE_HOTKEYS);
+    updateProps(update, LogicHelper::UPDATE_HOTKEYS,script.getPattern(), true);
 }
 
 IMPL(highlight)
@@ -245,42 +244,42 @@ IMPL(highlight)
     int update = script.process(p, &propData->highlights, &propData->groups,
         L"Подсветки(highlights)", L"Подсветка", L"Новая подсветка", &ph,
         &control);
-    updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
+    updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS,script.getPattern(), false);
 }
 
 IMPL(unhighlight)
 {
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
     int update = script.process(p, &propData->highlights, L"Удаление подсветки", &ph);
-    updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
+    updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS,script.getPattern(), true);
 }
 
 IMPL(gag)
 {
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
     int update = script.process(p, &propData->gags, &propData->groups, L"Фильтры (gags)", L"Фильтр", &ph);
-    updateProps(update, LogicHelper::UPDATE_GAGS);
+    updateProps(update, LogicHelper::UPDATE_GAGS,script.getPattern(), false);
 }
 
 IMPL(ungag)
 {
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
     int update = script.process(p, &propData->gags, L"Удаление фильтра", &ph);
-    updateProps(update, LogicHelper::UPDATE_GAGS);
+    updateProps(update, LogicHelper::UPDATE_GAGS,script.getPattern(), true);
 }
 
 IMPL(antisub)
 {
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
     int update = script.process(p, &propData->antisubs, &propData->groups, L"Антизамены (antisubs)", L"Антизамена", &ph);
-    updateProps(update, LogicHelper::UPDATE_ANTISUBS);
+    updateProps(update, LogicHelper::UPDATE_ANTISUBS,script.getPattern(), false);
 }
 
 IMPL(unantisub)
 {
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
     int update = script.process(p, &propData->antisubs, L"Удаление антизамены", &ph);
-    updateProps(update, LogicHelper::UPDATE_ANTISUBS);
+    updateProps(update, LogicHelper::UPDATE_ANTISUBS,script.getPattern(), true);
 }
 
 IMPL(math)
@@ -353,7 +352,10 @@ IMPL(var)
         else
         {
             if (m_helper.setVar(p->at(0), p->at(1)))
+            {
+                updateProps(1, LogicHelper::UPDATE_VARS, p->at(0), false);
                 swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
+            }
             else
                 swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         }
@@ -379,7 +381,10 @@ IMPL(unvar)
         if (!m_helper.delVar(p->at(0)))
             swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s не существует.", p->c_str(0));
 		else
-        	swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
+        {
+            updateProps(1, LogicHelper::UPDATE_VARS, p->at(0), true);
+            swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
+        }
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -650,9 +655,8 @@ IMPL(mccp)
         float ratio = 0; 
         if (d > 0)
             ratio = 100 - ((c / d) * 100);
-        tchar buffer[64];
-        swprintf(buffer, buffer_len, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
+        tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -667,10 +671,10 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
          m_logs.closeLog(id);
          m_wlogs[log] = -1;
          if (log == 0)
-            swprintf(buffer, buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
          else
-             swprintf(buffer, buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
-         tmcLog(buffer);
+             swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
+         tmcLog(pb.buffer);
          if (file.empty())
              return;
     }
@@ -679,10 +683,10 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (file.empty())
         {
             if (log == 0)
-                swprintf(buffer, buffer_len, L"Лог не был открыт.");
+                swprintf(pb.buffer, pb.buffer_len, L"Лог не был открыт.");
             else
-                swprintf(buffer, buffer_len, L"Лог в окне %d не был открыт.", log);
-            tmcLog(buffer);
+                swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d не был открыт.", log);
+            tmcLog(pb.buffer);
             return; 
         }
     }
@@ -702,19 +706,19 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id == -1)
     {
         if (log == 0)
-            swprintf(buffer, buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
         else
-            swprintf(buffer, buffer_len, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
     }
     else
     {
         if (log == 0)
-            swprintf(buffer, buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
         else
-            swprintf(buffer, buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
         m_wlogs[log] = id;
     }
-    tmcLog(buffer);    
+    tmcLog(pb.buffer);
 }
 
 void LogicProcessor::logf(parser *p, bool newlog)
@@ -775,8 +779,8 @@ IMPL(wname)
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
-    swprintf(buffer, buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
-    tmcLog(buffer);
+    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
+    tmcLog(pb.buffer);
     p->invalidargs();
 }
 
@@ -792,8 +796,8 @@ IMPL(wshow)
             m_pHost->showWindow(window, true);
             return;
         }
-        swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
+        tmcLog(pb.buffer);
     }
     p->invalidargs();
 }
@@ -810,8 +814,8 @@ IMPL(whide)
             m_pHost->showWindow(window, false);
             return;
         }
-        swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
+        tmcLog(pb.buffer);
     }
     p->invalidargs();
 }
@@ -924,8 +928,9 @@ IMPL(tab)
         int index = propData->tabwords.find(tab);
         if (index == -1)
             propData->tabwords.add(index, tab);
+        postProcessUpdatePropsEvent(LogicHelper::UPDATE_TABS, tab, false);
         swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка '%s' добавлена.", tab.c_str());        
-        helper->tmcLog(buffer);
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -941,13 +946,14 @@ IMPL(untab)
         const tstring &tab = p->at(0);
         int index = propData->tabwords.find(tab);
         if (index == -1)
-            swprintf(buffer, buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
         else
         {
             propData->tabwords.del(index);
-            swprintf(buffer, buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
+            postProcessUpdatePropsEvent(LogicHelper::UPDATE_TABS, tab, true);
+            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
         }
-        helper->tmcLog(buffer);
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -977,7 +983,7 @@ IMPL(timer)
             PropertiesTimer pt; pt.convertFromString(v.value);
             swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
                 pt.cmd.c_str(), v.group.c_str());
-            helper->simpleLog(buffer);
+            helper->simpleLog(pb.buffer);
         }
         return;
     }
@@ -1008,14 +1014,14 @@ IMPL(timer)
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
-        _itow(key, buffer, 10);
-        tstring id(buffer);
+        _itow(key, pb.buffer, 10);
+        tstring id(pb.buffer);
 
         int index = propData->timers.find(id);
         if (index == -1)
         {
             swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
-            helper->tmcLog(buffer);
+            helper->tmcLog(pb.buffer);
             return;
         }
         const PropertiesValues &t  = propData->timers;
@@ -1023,7 +1029,7 @@ IMPL(timer)
         PropertiesTimer pt; pt.convertFromString(v.value);
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
-        helper->simpleLog(buffer);
+        helper->simpleLog(pb.buffer);
         return;
     }
 
@@ -1036,19 +1042,19 @@ IMPL(timer)
         if (delay < 0 || delay > 999)
             return p->invalidargs();
 
-        _itow(key, buffer, 10);
-        tstring id(buffer);
+        _itow(key, pb.buffer, 10);
+        tstring id(pb.buffer);
         int index = propData->timers.find(id);
         if (index == -1 && n == 2)
         {
             swprintf(pb.buffer, pb.buffer_len, L"Ошибка. Таймер #%s не существует.", id.c_str());
-            helper->tmcLog(buffer);
+            helper->tmcLog(pb.buffer);
             return;
         }
 
         PropertiesTimer pt;
-        _itow(delay, buffer, 10);
-        pt.timer.assign(buffer);
+        _itow(delay, pb.buffer, 10);
+        pt.timer.assign(pb.buffer);
         if (n > 2)
            pt.cmd = p->at(2);
 
@@ -1081,8 +1087,9 @@ IMPL(timer)
         propData->timers.add(index, id, value, group);
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
-        helper->simpleLog(buffer);
-        return updateProps(0, LogicHelper::UPDATE_TIMERS);
+        helper->simpleLog(pb.buffer);
+        updateProps(0, LogicHelper::UPDATE_TIMERS, L"", false);
+        return postProcessUpdatePropsEvent(LogicHelper::UPDATE_TIMERS, id.c_str(), false);
     }
     p->invalidargs();
 }
@@ -1132,10 +1139,10 @@ IMPL(message)
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
             if (n == 1)
-                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
+                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
             else
-                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
-            tmcLog(buffer);
+                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
+            tmcLog(pb.buffer);
         }
         else
         {

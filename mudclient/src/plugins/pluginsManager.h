@@ -33,6 +33,7 @@ public:
     void processReceived(Network *network);
     void processToSend(Network* network);
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
+    void processUpdatesEvents(const UpdateEvent& event);
 
 private:
     void concatCommand(const std::vector<tstring>& parts, bool system, InputCommand* cmd);

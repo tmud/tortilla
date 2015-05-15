@@ -141,7 +141,7 @@ void MudGameView::onNewWorld()
         {
             msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
             loadPlugins();
-            loadClientWindowPos();            
+            loadClientWindowPos();
             return;
         }
 
@@ -203,4 +203,9 @@ void MudGameView::resetOscColors()
         return;
     m_propData->resetOSCColors();
     m_propElements.palette.updateProps(m_propData);
+}
+
+void MudGameView::updatesPropsEvent(const UpdateEvent& event)
+{
+    m_plugins.processUpdatesEvents(event);
 }
