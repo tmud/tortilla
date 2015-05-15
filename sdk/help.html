@@ -23,7 +23,6 @@ hr { border: 1px dashed; color: #909090; }
 <body link="#3366cc" alink="#ff0000" vlink="#3366cc">
 <a name="top"></a>
 <center><h1>Tortilla SDK<br></h1></center>
-
 <h2>Содержание</h2>
 <ul>
 <li><a href="#description">Описание, состав SDK</a></li>
@@ -398,6 +397,31 @@ local t = {...} -- правильное написание
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается клиентом, когда соединение по протоколу MSDP закрылось. Тут можно произвести сброс плагина.
 См. <a href="#msdpon" class="cmd">msdpon</a>.
+<hr>
+<a name="update"></a>
+<h4>void update([string type])</h4>
+<div class="m">Параметры: type - строка, необязательный параметр с типом объектов, которые были изменены.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается, когда происходят изменения в объектах клиента, таких как : триггеры, макросы, замены и т.д. В качестве 
+параметра может быть строка с типом тех элементов которые изменились. Возможные варианты параметра: 
+<div class="m">actions</div>, <div class="m">aliases</div>, <div class="m">highlights</div>, <div class="m">hotkeys</div>, <div class="m">subs</div>, <div class="m">groups</div>, 
+<div class="m">antisubs</div>, <div class="m">gags</div>, <div class="m">subs</div>, <div class="m">tabs</div>, <div class="m">timers</div>, <div class="m">vars</div>. 
+Если параметра нет (nil), то изменения могли быть во всех элементах. Например, функция вызвается без параметра, когда закрывается окно настроек клиента.
+<hr>
+<a name="updset"></a>
+<h4>void updset(string type, string name)</h4>
+<div class="m">Параметры: type - строка, тип объекта, который был изменен. name - строка, имя измененного объекта.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается, когда изменяется только один элемент. Параметрами указывается группа элементов и имя изменившегося элемента. Имя группы 
+соотвествует именам из метода <a href="#update" class="cmd">update</a>. Вызывается при использовании команд <div class="cmd">#var</div>, <div class="cmd">#action</div> и т.д., 
+которые изменяют только один элемент.
+<hr>
+<a name="upddel"></a>
+<h4>void upddel(string type, string name)</h4>
+<div class="m">Параметры: type - строка, тип объекта. name - строка, имя удаленного объекта.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается, когда удаляется один элемент из какой-либо группы. Параметрами указывается группа элементов и имя удаленного элемента. Имя группы 
+соотвествует именам из метода <a href="#update" class="cmd">update</a>. Вызывается при использовании команд <div class="cmd">#unvar</div>, <div class="cmd">#unaction</div> и т.д.
 <hr>
 <a name="clientapi"></a>
 <h2>Функции взаимодействия плагина с клиентом, API клиента</h2>

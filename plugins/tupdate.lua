@@ -3,7 +3,7 @@
 
 tupdate = {}
 function tupdate.name() 
-    return 'Тестовый плагин метода update для палагинов'
+    return 'Тестовый плагин метода update для плагинов'
 end
 
 function tupdate.description()
@@ -14,15 +14,18 @@ function tupdate.version()
     return ' '
 end
 
-function tupdate.update(what, pattern, del)
+function tupdate.update(what)
     if not what then
-		log("Полное обновление")
-		return
-	end
-	if not pattern then
-		log("Обновление группы: "..what)
-		return
-	end
-	local s = del and "УДАЛЕНО" or "ЗАДАНО"
-	log("Обновление "..what..": "..pattern.."-"..s)
+        log("Полное обновление")
+    else
+        log("Обновление группы: "..what)
+    end
+end
+
+function tupdate.updset(what, name)
+    log("ЗАДАНО "..what..": "..name)
+end
+
+function tupdate.upddel(what, name)
+    log("УДАЛЕНО "..what..": "..name)
 end

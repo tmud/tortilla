@@ -584,6 +584,8 @@ void PluginsManager::processUpdatesEvents(const UpdateEvent& event)
     }
     w2u.convert(event.pattern.c_str(), event.pattern.length());
     lua_pushstring(L, w2u);
-    lua_pushboolean(L, event.delete_action ? 1 : 0);
-    processPluginsMethod("update", 3);
+    if (!event.delete_action)
+        processPluginsMethod("updset", 2);
+    else
+        processPluginsMethod("upddel", 2);
 }
