@@ -971,6 +971,17 @@ int props_activated(lua_State *L)
     return pluginInvArgs(L, "props.activated");
 }
 
+int props_settingsWnd(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int state = _wndMain.m_gameview.isSettingsMode() ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "props.settingsWnd");
+}
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
@@ -984,5 +995,6 @@ void reg_props(lua_State *L)
     regFunction(L, "serverPort", props_serverPort);
     regFunction(L, "connected", props_connected);
     regFunction(L, "activated", props_activated);
+    regFunction(L, "settingsWnd", props_settingsWnd);
     lua_setglobal(L, "props");
 }

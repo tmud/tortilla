@@ -637,7 +637,12 @@ public:
         luaT_run(L, "activated", "t");
         return boolresult();
     }
-
+    bool settingsWnd()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "settingsWnd", "t");
+        return boolresult();
+    }
 private:
     bool boolresult()
     {

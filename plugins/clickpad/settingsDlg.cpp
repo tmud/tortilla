@@ -155,18 +155,36 @@ LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
 
 LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
 {
+    luaT_Props p(getLuaState());
+    if (p.settingsWnd())
+    {    
+        m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
+        return 0;
+    }
+
     int item_selected = m_list.GetSelectedIndex();
     if (item_selected == -1)
         return 0;
-    tstring key, cmd, group;
-    getListItemText(item_selected, 0, &key);
-    getListItemText(item_selected, 1, &cmd);
-    getListItemText(item_selected, 2, &group);
-
+    tstring key0, cmd0, group0;
+    getListItemText(item_selected, 0, &key0);
+    getListItemText(item_selected, 1, &cmd0);
+    getListItemText(item_selected, 2, &group0);
     m_list.DeleteItem(item_selected);
+
     luaT_ActiveObjects hk(getLuaState(), "hotkeys");
-    hk.select(item_selected);
-    
+    u8string key, value, group;
+    for (int i=1,e=hk.size();i<=e;++i)
+    {
+        hk.select(i);
+        if (hk.get(luaT_ActiveObjects::KEY, &key) && !key0.compare(TU2W(key.c_str())) &&
+            hk.get(luaT_ActiveObjects::VALUE, &value) && !cmd0.compare(TU2W(value.c_str())) &&
+            hk.get(luaT_ActiveObjects::GROUP, &group) && !group0.compare(TU2W(group.c_str()))
+            )
+        {
+            hk.del();
+            break;
+        }    
+    }
         
     return 0;
 }
@@ -184,8 +202,7 @@ void SettingsDlg::setEditableState(bool state)
 {
     BOOL flag = state ? TRUE : FALSE;
     m_edit_text.EnableWindow(flag);
-    m_edit_command.EnableWindow(flag);
-    //m_load_hotkey.EnableWindow(flag);
+    m_edit_command.EnableWindow(flag);    
     m_del_button.EnableWindow(flag);
     if (!state)
     {
@@ -209,14 +226,23 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
             getListItemText(item_selected, 1, &text);            
             m_edit_command.SetWindowText(text.c_str());
         }
-        m_del_hotkey.EnableWindow(TRUE);
+        luaT_Props p(getLuaState());
+        if (!p.settingsWnd())
+        {
+            m_del_hotkey.EnableWindow(TRUE);
+            m_close_settings.ShowWindow(SW_HIDE);
+        }
+        else
+            m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
     }
     return 0;
 }
 
 LRESULT SettingsDlg::OnListKillFocus(int , LPNMHDR , BOOL&)
 {
-    m_del_hotkey.EnableWindow(FALSE);
+    HWND focus = GetFocus();
+    if (focus != m_del_hotkey)
+        m_del_hotkey.EnableWindow(FALSE);
     return 0;
 }
 

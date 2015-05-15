@@ -53,8 +53,9 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     CComboBox m_rows, m_columns, m_bsize;
     CButton m_del_hotkey, m_del_button;
     CListViewCtrl m_list;
+    CStatic m_close_settings;
     ClickpadSettings *m_settings;
-    PadButton* m_editable_button;  
+    PadButton* m_editable_button;
 
 public:
     SettingsDlg() : m_editable_button(NULL)  {}
@@ -91,6 +92,7 @@ private:
         m_del_hotkey.Attach(GetDlgItem(IDC_BUTTON_DELHOTKEY));
         m_del_button.Attach(GetDlgItem(IDC_BUTTON_DELBUTTON));
         m_list.Attach(GetDlgItem(IDC_LIST_HOTKEYS));
+        m_close_settings.Attach(GetDlgItem(IDC_STATIC_CLOSE_SETTING));
         
         RECT rc;
         m_list.GetClientRect(&rc);
@@ -102,7 +104,7 @@ private:
         luaT_ActiveObjects hk(getLuaState(), "hotkeys");
         u8string key, value, group;
         int item = 0;
-        for (int i=0,e=hk.size();i<e;++i)
+        for (int i=1,e=hk.size();i<=e;++i)
         {
             hk.select(i);
             if (hk.get(luaT_ActiveObjects::KEY, &key) &&

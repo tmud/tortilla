@@ -42,6 +42,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     int m_codepage;
 
     bool m_activated;
+    bool m_settings_mode;
 
 private:
     void onStart();
@@ -59,7 +60,7 @@ public:
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN), m_activated(false)
+        m_codepage(CPWIN), m_activated(false), m_settings_mode(false)
     {
     }
 
@@ -136,6 +137,11 @@ public:
     bool activated() const
     {
         return m_activated;
+    }
+
+    bool isSettingsMode() const
+    {
+        return m_settings_mode;
     }
 
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
@@ -692,6 +698,7 @@ private:
 
     LRESULT OnSettings(WORD, WORD, HWND, BOOL&)
     {
+        m_settings_mode = true;
         PropertiesData& data = *m_manager.getConfig();
         PropertiesData tmp(data);
         PropertiesDlg propDlg(&tmp);
@@ -706,6 +713,7 @@ private:
         {
             data.dlg = tmp.dlg;
         }
+        m_settings_mode = false;
         return 0;
     }
 
