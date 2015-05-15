@@ -1,6 +1,8 @@
 #pragma once
 #include "resource.h"
 #include "padbutton.h"
+#include "api/api.h"
+#include "clickpad.h"
 
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
 class ClickpadSettings;
@@ -49,18 +51,17 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     CEdit m_edit_text;
     CEdit m_edit_command;
     CComboBox m_rows, m_columns, m_bsize;
+    CButton m_del_hotkey, m_del_button;
+    CListViewCtrl m_list;
     ClickpadSettings *m_settings;
-    PadButton* m_editable_button;
-    CButton m_load_hotkey, m_del_button;
-    bool m_load_hotkey_mode;
+    PadButton* m_editable_button;  
 
 public:
-    SettingsDlg() : m_editable_button(NULL), m_load_hotkey_mode(false) {}
+    SettingsDlg() : m_editable_button(NULL)  {}
     enum { IDD = IDD_SETTINGS };
     LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
     void editButton(PadButton *button);
     void setSettings(ClickpadSettings *settings);
-    bool canCloseSettingsDlg() const { return !m_load_hotkey_mode; }
     
 private:
     BEGIN_MSG_MAP(SettingsDlg)
@@ -73,7 +74,10 @@ private:
         COMMAND_HANDLER(IDC_EDIT_COMMAND, EN_CHANGE, OnCommandChanged)
         COMMAND_ID_HANDLER(IDC_BUTTON_EXIT, OnButtonExit)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELBUTTON, OnDelButton)
-        COMMAND_ID_HANDLER(IDC_BUTTON_LOADHOTKEY, OnHotkeyButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_DELHOTKEY, OnDelHotkey)
+        NOTIFY_HANDLER(IDC_LIST_HOTKEYS, LVN_ITEMCHANGED, OnListItemChanged)
+        NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_SETFOCUS, OnListItemChanged)
+        NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_KILLFOCUS, OnListKillFocus)
     END_MSG_MAP()
 
     LRESULT OnInitDlg(UINT, WPARAM, LPARAM, BOOL&)
@@ -84,8 +88,33 @@ private:
         m_bsize.Attach(GetDlgItem(IDC_COMBO_BUTTON_SIZE));
         m_edit_text.Attach(GetDlgItem(IDC_EDIT_TEXT));
         m_edit_command.Attach(GetDlgItem(IDC_EDIT_COMMAND));
-        m_load_hotkey.Attach(GetDlgItem(IDC_BUTTON_LOADHOTKEY));
+        m_del_hotkey.Attach(GetDlgItem(IDC_BUTTON_DELHOTKEY));
         m_del_button.Attach(GetDlgItem(IDC_BUTTON_DELBUTTON));
+        m_list.Attach(GetDlgItem(IDC_LIST_HOTKEYS));
+        
+        RECT rc;
+        m_list.GetClientRect(&rc);
+        float width_percent =  static_cast<float>(rc.right) / 100;
+        m_list.InsertColumn(0, L"Hotkey", LVCFMT_LEFT, static_cast<int>(width_percent * 15));
+        m_list.InsertColumn(1, L"Команда", LVCFMT_LEFT, static_cast<int>(width_percent * 60));
+        m_list.InsertColumn(2, L"Группа", LVCFMT_LEFT, static_cast<int>(width_percent * 20));
+        m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+        luaT_ActiveObjects hk(getLuaState(), "hotkeys");
+        u8string key, value, group;
+        int item = 0;
+        for (int i=0,e=hk.size();i<e;++i)
+        {
+            hk.select(i);
+            if (hk.get(luaT_ActiveObjects::KEY, &key) &&
+                hk.get(luaT_ActiveObjects::VALUE, &value) &&
+                hk.get(luaT_ActiveObjects::GROUP, &group))
+            {
+                m_list.AddItem(item, 0, TU2W(key.c_str()));
+                m_list.SetItem(item, 1, LVIF_TEXT, TU2W(value.c_str()), 0, 0, 0, NULL);
+                m_list.SetItem(item, 2, LVIF_TEXT, TU2W(group.c_str()), 0, 0, 0, NULL);
+                item++;
+            }
+        }
 
         wchar_t buffer[16];
         for (int i=1; i<=5; ++i)
@@ -99,6 +128,7 @@ private:
             bt.getLabel(i, &label);
             m_bsize.AddString(label.c_str());            
         }
+        m_del_hotkey.EnableWindow(FALSE);
         return 0;
     }
 
@@ -115,8 +145,12 @@ private:
     LRESULT OnCommandChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnButtonExit(WORD, WORD, HWND, BOOL&);
     LRESULT OnDelButton(WORD, WORD, HWND, BOOL&);
-    LRESULT OnHotkeyButton(WORD, WORD, HWND, BOOL&);
-
+    LRESULT OnDelHotkey(WORD, WORD, HWND, BOOL&);
+    LRESULT OnListItemChanged(int , LPNMHDR , BOOL&);
+    LRESULT OnListKillFocus(int , LPNMHDR , BOOL&);
+    
     void resetEditable();
     void setEditableState(bool state);
+
+    void getListItemText(int item, int subitem, tstring* text);
 };

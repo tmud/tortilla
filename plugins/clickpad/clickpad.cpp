@@ -4,13 +4,12 @@
 
 #include "mainwnd.h"
 
-
 HWND m_hwnd_float = NULL;
 HWND m_hwnd_mudclient = NULL;
-
 luaT_window m_parent_window;
 ClickpadMainWnd* m_clickpad = NULL;
 luaT_window m_settings_window;
+lua_State *m_pL = NULL;
 
 int get_name(lua_State *L)
 {
@@ -79,7 +78,8 @@ int init(lua_State *L)
         }
         ld.deletenode();
     }
-
+    
+    m_pL = L;
     CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
     sd.GetClientRect(&rc);
     m_settings_window.attach(sd);
@@ -88,8 +88,7 @@ int init(lua_State *L)
     // todo remove lines
     base::checkMenu(L, 1);
     m_settings_window.show();
-    m_clickpad->setEditMode(true);
-
+    m_clickpad->setEditMode(true);    
     return 0;
 }
 
@@ -216,4 +215,9 @@ void exitEditMode()
     base::uncheckMenu(pL, 1);
     m_settings_window.hide();
     m_clickpad->setEditMode(false);
+}
+
+lua_State* getLuaState()
+{
+    return m_pL;
 }

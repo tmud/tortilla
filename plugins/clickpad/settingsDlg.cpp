@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "settingsDlg.h"
 #include "mainwnd.h"
-#include "clickpad.h"
-#include "loadHotkeyDlg.h"
 
 extern SettingsDlg* m_settings;
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -139,8 +137,6 @@ LRESULT SettingsDlg::OnCommandChanged(WORD, WORD, HWND, BOOL&)
 
 LRESULT SettingsDlg::OnButtonExit(WORD, WORD, HWND, BOOL&)
 {
-    if (!canCloseSettingsDlg())
-        return 0;
     exitEditMode();
     return 0;
 }
@@ -157,15 +153,21 @@ LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
     return 0; 
 }
 
-LRESULT SettingsDlg::OnHotkeyButton(WORD, WORD, HWND, BOOL&)
+LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
 {
-    if (!m_editable_button)
+    int item_selected = m_list.GetSelectedIndex();
+    if (item_selected == -1)
         return 0;
+    tstring key, cmd, group;
+    getListItemText(item_selected, 0, &key);
+    getListItemText(item_selected, 1, &cmd);
+    getListItemText(item_selected, 2, &group);
 
-    m_load_hotkey_mode = true;
-    LoadHotkeyDlg dlg(getMudclientWnd());
-    UINT result = dlg.DoModal(m_hWnd);
-    m_load_hotkey_mode = false;
+    m_list.DeleteItem(item_selected);
+    luaT_ActiveObjects hk(getLuaState(), "hotkeys");
+    hk.select(item_selected);
+    
+        
     return 0;
 }
 
@@ -183,11 +185,44 @@ void SettingsDlg::setEditableState(bool state)
     BOOL flag = state ? TRUE : FALSE;
     m_edit_text.EnableWindow(flag);
     m_edit_command.EnableWindow(flag);
-    m_load_hotkey.EnableWindow(flag);
+    //m_load_hotkey.EnableWindow(flag);
     m_del_button.EnableWindow(flag);
     if (!state)
     {
         m_edit_text.SetWindowText(L"");
         m_edit_command.SetWindowText(L"");
     }
+}
+
+LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
+{
+    int item_selected = m_list.GetSelectedIndex();
+    if (item_selected == -1)
+    {
+        m_del_hotkey.EnableWindow(FALSE);
+    }
+    else
+    {
+        if (m_edit_command.IsWindowEnabled())
+        {
+            tstring text;
+            getListItemText(item_selected, 1, &text);            
+            m_edit_command.SetWindowText(text.c_str());
+        }
+        m_del_hotkey.EnableWindow(TRUE);
+    }
+    return 0;
+}
+
+LRESULT SettingsDlg::OnListKillFocus(int , LPNMHDR , BOOL&)
+{
+    m_del_hotkey.EnableWindow(FALSE);
+    return 0;
+}
+
+void SettingsDlg::getListItemText(int item, int subitem, tstring* text)
+{
+     wchar_t buffer[256];
+     m_list.GetItemText(item, subitem, buffer, 255);
+     text->assign(buffer);
 }
