@@ -183,9 +183,14 @@ LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
         {
             hk.del();
             break;
-        }    
+        }
     }
-        
+    return 0;
+}
+
+LRESULT SettingsDlg::OnLoadImage(WORD, WORD, HWND, BOOL&)
+{
+
     return 0;
 }
 

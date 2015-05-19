@@ -6,3 +6,5 @@
 #include <windows.h>
 #include "api/api.h"
 
+#include <vector>
+#include <map>
