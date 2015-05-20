@@ -75,16 +75,26 @@ namespace base {
     }
     inline void getPath(lua_State *L, const utf8* file, u8string* path) {
         luaT_run(L, "getPath", "s", file);
+        if (!lua_isstring(L, -1)) return;
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline void getPathAll(lua_State *L, const utf8* file, u8string* path) {
+        luaT_run(L, "getPathAll", "s", file);
+        if (!lua_isstring(L, -1)) return;
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     inline void getProfile(lua_State *L, u8string* profile) {
         luaT_run(L, "getProfile", "");
+        if (!lua_isstring(L, -1)) return;
         profile->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     inline HWND getParent(lua_State *L) {
         luaT_run(L, "getParent", "");
+        if (!lua_isnumber(L,1))
+            return 0;
         HWND parent = (HWND)lua_tounsigned(L, -1);
         lua_pop(L, 1);
         return parent;

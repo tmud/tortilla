@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "settingsDlg.h"
 #include "mainwnd.h"
+#include "libs/common/memoryBuffer.h"
+#include "mudclient/src/common/changeDir.h"
 
 extern SettingsDlg* m_settings;
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -188,12 +190,6 @@ LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
     return 0;
 }
 
-LRESULT SettingsDlg::OnLoadImage(WORD, WORD, HWND, BOOL&)
-{
-
-    return 0;
-}
-
 void SettingsDlg::resetEditable()
 {
     if (!m_editable_button)
@@ -209,6 +205,9 @@ void SettingsDlg::setEditableState(bool state)
     m_edit_text.EnableWindow(flag);
     m_edit_command.EnableWindow(flag);    
     m_del_button.EnableWindow(flag);
+    m_images_list.EnableWindow(flag);
+    if (!flag)
+        m_images_list.SetCurSel(-1);
     if (!state)
     {
         m_edit_text.SetWindowText(L"");
@@ -256,4 +255,61 @@ void SettingsDlg::getListItemText(int item, int subitem, tstring* text)
      wchar_t buffer[256];
      m_list.GetItemText(item, subitem, buffer, 255);
      text->assign(buffer);
+}
+
+LRESULT SettingsDlg::OnIconChanged(WORD, WORD, HWND, BOOL&)
+{
+    int item = m_images_list.GetCurSel();
+    int len = m_images_list.GetTextLen(item);
+    MemoryBuffer mb( (len+1)*sizeof(wchar_t) );
+    wchar_t *p = (wchar_t *)mb.getData();
+    m_images_list.GetText(item, p);
+    tstring fpath(m_images_path);
+    fpath.append(p);
+    m_editable_button->setImage(fpath);
+    return 0;
+}
+
+void SettingsDlg::setIconsFileList()
+{
+    tstring path;
+    std::vector<tstring> files;
+    {
+       u8string tmp;
+       base::getPathAll(getLuaState(), "", &tmp);
+       if (tmp.empty())
+           return;
+       path.assign ( TU2W(tmp.c_str()) );
+
+       ChangeDir cd;
+       if (!cd.changeDir(path))
+           return;
+       m_images_path = path;
+
+       WIN32_FIND_DATA fd;
+       memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+       HANDLE file = FindFirstFile(L"*.*", &fd);
+       if (file != INVALID_HANDLE_VALUE)
+       {
+           do
+           {
+              if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+              {
+                  const wchar_t *e = wcsrchr(fd.cFileName, L'.');
+                  if (e)
+                  {
+                      tstring ext(e+1);
+                      if (ext == L"png" || ext == L"bmp")
+                          files.push_back(fd.cFileName);
+                  }
+              }
+           } while (::FindNextFile(file, &fd));
+           ::FindClose(file);
+         }
+    }
+
+    std::sort(files.begin(), files.end());    
+    m_images_list.AddString(L"Без иконки");
+    for (int j = 0, je = files.size(); j < je; ++j)
+        m_images_list.AddString(files[j].c_str());
 }

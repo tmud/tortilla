@@ -14,12 +14,14 @@
 #include <atlctrls.h>
 #include <atlctrlx.h>
 
+#include <map>
 #include <vector>
 #include <string>
-#include <assert.h>
+#include <algorithm>
 
 typedef std::wstring tstring;
 
 const int MAX_ROWS = 5;
 const int MAX_COLUMNS = 10;
 
+#include <assert.h>

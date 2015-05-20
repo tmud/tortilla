@@ -186,7 +186,7 @@ void ClickpadMainWnd::save(xml::node& node)
     for (int y=0;y<hrows;++y) {
     for (int x=0;x<hcolumns;++x) {
       PadButton *b = m_buttons[y][x];
-      tstring text, cmd;
+      tstring text, cmd, image;
       b->getText(&text);
       b->getCommand(&cmd);
       if (text.empty() && cmd.empty()) continue;
@@ -195,6 +195,8 @@ void ClickpadMainWnd::save(xml::node& node)
       node.set("y", y);
       node.set("text", text);
       node.set("command", cmd);
+      if (!image.empty())
+        node.set("image", image);
       node = base;
     }}
     node.move("/");
@@ -209,7 +211,7 @@ void ClickpadMainWnd::load(xml::node& node)
        size = bt.getDefaultSize();
     m_button_size = size;
 
-    tstring text, cmd;
+    tstring text, cmd, image;
     xml::request buttons(node, "buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
     {
@@ -223,6 +225,8 @@ void ClickpadMainWnd::load(xml::node& node)
             PadButton *b = m_buttons[y][x];
             b->setText(text);
             b->setCommand(cmd);
+            if (n.get("image", &image) && !image.empty())
+                b->setImage(image);
         }
     }        
     int rows = 0; int columns = 0;

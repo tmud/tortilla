@@ -343,6 +343,25 @@ int getPath(lua_State *L)
     return pluginInvArgs(L, "getPath");
 }
 
+int getPathAll(lua_State* L)
+{
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring filename(luaT_towstring(L, 1));
+        ProfilePluginPath pp(L"all", _cp->get(Plugin::FILENAME), filename);
+        ProfileDirHelper dh;
+        if (dh.makeDir(L"all", _cp->get(Plugin::FILENAME)))
+        {
+            luaT_pushwstring(L, pp);
+            return 1;
+        }
+        return pluginError("getPathAll", "Ошибка создания каталога для плагина");
+    }
+    return pluginInvArgs(L, "getPathAll");
+
+}
+
 int getProfile(lua_State *L)
 {
     EXTRA_CP;
@@ -744,8 +763,9 @@ bool initPluginsSystem()
     lua_register(L, "enableMenu", enableMenu);
     lua_register(L, "disableMenu", disableMenu);
     lua_register(L, "getPath", getPath);
+    lua_register(L, "getPathAll", getPathAll);
     lua_register(L, "getProfile", getProfile);
-    lua_register(L, "getParent", getParent);    
+    lua_register(L, "getParent", getParent);
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);
     lua_register(L, "createWindow", createWindow);

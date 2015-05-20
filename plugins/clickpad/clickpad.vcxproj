@@ -86,6 +86,7 @@
   <ItemGroup>
     <ClInclude Include="buttonDlg.h" />
     <ClInclude Include="clickpad.h" />
+    <ClInclude Include="imageObjs.h" />
     <ClInclude Include="padbutton.h" />
     <ClInclude Include="mainwnd.h" />
     <ClInclude Include="resource.h" />

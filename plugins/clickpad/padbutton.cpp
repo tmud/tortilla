@@ -1,4 +1,6 @@
 #include "stdafx.h"
 #include "padbutton.h"
 
-WCHAR PadButton::buffer[64];
+WCHAR PadButton::buffer[bufferlen];
+ImagesCollection PadButton::m_images;
+

@@ -33,12 +33,3 @@ public:
 private:
     tstring m_path;
 };
-
-class GlobalProfilePath
-{
-public:
-    GlobalProfilePath();
-    operator const tchar*() const { return m_path.c_str(); }
-private:
-    tstring m_path;
-};

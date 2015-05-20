@@ -54,6 +54,8 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     CButton m_del_hotkey, m_del_button;
     CListViewCtrl m_list;
     CStatic m_close_settings;
+    CListBox m_images_list;
+    tstring m_images_path;        
     ClickpadSettings *m_settings;
     PadButton* m_editable_button;
 
@@ -76,10 +78,10 @@ private:
         COMMAND_ID_HANDLER(IDC_BUTTON_EXIT, OnButtonExit)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELBUTTON, OnDelButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELHOTKEY, OnDelHotkey)
-        COMMAND_ID_HANDLER(IDC_BUTTON_LOADIMAGE, OnLoadImage)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, LVN_ITEMCHANGED, OnListItemChanged)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_SETFOCUS, OnListItemChanged)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_KILLFOCUS, OnListKillFocus)
+        COMMAND_HANDLER(IDC_LIST_ICON, LBN_SELCHANGE, OnIconChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDlg(UINT, WPARAM, LPARAM, BOOL&)
@@ -94,7 +96,8 @@ private:
         m_del_button.Attach(GetDlgItem(IDC_BUTTON_DELBUTTON));
         m_list.Attach(GetDlgItem(IDC_LIST_HOTKEYS));
         m_close_settings.Attach(GetDlgItem(IDC_STATIC_CLOSE_SETTING));
-        
+        m_images_list.Attach(GetDlgItem(IDC_LIST_ICON));
+
         RECT rc;
         m_list.GetClientRect(&rc);
         float width_percent =  static_cast<float>(rc.right) / 100;
@@ -131,6 +134,9 @@ private:
             bt.getLabel(i, &label);
             m_bsize.AddString(label.c_str());            
         }
+      
+        setIconsFileList();
+
         m_del_hotkey.EnableWindow(FALSE);
         return 0;
     }
@@ -149,12 +155,13 @@ private:
     LRESULT OnButtonExit(WORD, WORD, HWND, BOOL&);
     LRESULT OnDelButton(WORD, WORD, HWND, BOOL&);
     LRESULT OnDelHotkey(WORD, WORD, HWND, BOOL&);    
-    LRESULT OnLoadImage(WORD, WORD, HWND, BOOL&);
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&);
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&);
+    LRESULT OnIconChanged(WORD, WORD, HWND, BOOL&);
     
     void resetEditable();
     void setEditableState(bool state);
+    void setIconsFileList();
 
     void getListItemText(int item, int subitem, tstring* text);
 };

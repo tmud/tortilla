@@ -32,6 +32,9 @@
     <ClInclude Include="clickpad.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="imageObjs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clickpad.cpp">

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "imageObjs.h"
+
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
     tstring m_text;
@@ -8,12 +10,16 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     WPARAM m_click_param;
     bool m_pushed;
     bool m_selected;
-    static WCHAR buffer[64];
+    static const int bufferlen = 32;
+    static WCHAR buffer[bufferlen];    
+    tstring m_image_fpath;
+    static ImagesCollection m_images;
+    Image* m_image;
 
 public:
     PadButton(UINT msg, WPARAM param) :
         CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
-        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false)
+        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_image(NULL)
     {
     }
 
@@ -49,6 +55,17 @@ public:
     {
         m_selected = selected;
         Invalidate();
+    }
+
+    void setImage(const tstring& fpath)
+    {
+        m_image_fpath = fpath;
+        m_image = m_images.loadImage(fpath);
+    }
+
+    void getImage(tstring* fpath)
+    {
+        fpath->assign(m_image_fpath);
     }
 
 private:
@@ -88,7 +105,7 @@ private:
         if (!m_text.empty())
         {
             int len = m_text.length(); 
-            if (len > 63) len = 63;
+            if (len > bufferlen) len = bufferlen;
             wcsncpy(buffer, m_text.c_str(), len);
             rc.left+=2; rc.right-=2;
             dc.SetBkMode(TRANSPARENT);
