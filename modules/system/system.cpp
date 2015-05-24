@@ -1,6 +1,27 @@
 #include "stdafx.h"
 #pragma comment(lib, "lua.lib")
 
+bool paramsok(lua_State *L, int n)
+{
+    if (lua_gettop(L) != n)
+        return false;
+    for (int i=1; i<=n; ++i)
+    {
+        if (!lua_isnumber(L, i) && !lua_isstring(L, i) && !lua_isboolean(L, i) && !lua_isnil(L, i))
+            return false;
+    }
+    return true;
+}
+
+const char* tostring(lua_State *L, int index)
+{
+    if (lua_isnil(L, index))
+        return "nil";
+    if (lua_isboolean(L, index))
+        return lua_toboolean(L, index) ? "true" : "false";
+    return lua_tostring(L, index);
+}
+
 int system_messagebox(lua_State *L)
 {
     HWND parent = base::getParent(L);
@@ -12,29 +33,26 @@ int system_messagebox(lua_State *L)
     u8string text;
     u8string caption("Tortilla Mud Client");
     UINT buttons = MB_OK;
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (paramsok(L, 1))
     {
-        text.assign(lua_tostring(L, 1));
+        text.assign(tostring(L, 1));
         params_ok = true;
     }
-    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING) ||
-        luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
+    if (paramsok(L, 2) || paramsok(L, 3))
     {
         if (lua_gettop(L) == 3)
-            caption.assign(lua_tostring(L, 3));
-        text.assign(lua_tostring(L, 1));
-        u8string b(lua_tostring(L, 2));
+            caption.assign(tostring(L, 3));
+        text.assign(tostring(L, 1));
+        u8string b(tostring(L, 2));
         if (b == "ok,cancel") buttons = MB_OKCANCEL;
         else if (b == "cancel,ok") buttons = MB_OKCANCEL|MB_DEFBUTTON2;
         else if (b == "yes,no") buttons = MB_YESNO;
         else if (b == "no,yes") buttons = MB_YESNO|MB_DEFBUTTON2;
-
         if (strstr(b.c_str(), "error")) buttons |= MB_ICONERROR;
         else if (strstr(b.c_str(), "stop")) buttons |= MB_ICONERROR;
         else if (strstr(b.c_str(), "info")) buttons |= MB_ICONINFORMATION;
         else if (strstr(b.c_str(), "information")) buttons |= MB_ICONINFORMATION;
         else if (strstr(b.c_str(), "warning")) buttons |= MB_ICONWARNING;
-
         params_ok = true;
     }
     UINT result = 0;
