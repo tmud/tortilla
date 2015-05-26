@@ -9,7 +9,8 @@ class luaT_State
 {
 public:
     luaT_State() { L = luaL_newstate(); }
-    ~luaT_State() { if (L) lua_close(L); L = NULL; }
+    ~luaT_State() { close(); }
+    void close() { if (L) lua_close(L); L = NULL; }
     operator lua_State*() { return L; }
 private:
     lua_State *L;

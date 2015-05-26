@@ -51,12 +51,12 @@ int Run(LPTSTR /*lpstrCmdLine*/, int nCmdShow = SW_SHOWDEFAULT)
 //#include "C:/Program Files (x86)\Visual Leak Detector/include/vld.h"
 #endif
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
-{    
+{
 #ifdef _DEBUG
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
 #endif
 
-    HRESULT hRes = ::CoInitialize(NULL);    
+    HRESULT hRes = ::CoInitialize(NULL);
     ATLASSERT(SUCCEEDED(hRes));
 	
     ::DefWindowProc(NULL, 0, 0, 0L);                            // this resolves ATL window thunking problem when Microsoft Layer for Unicode (MSLU) is used

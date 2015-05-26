@@ -459,6 +459,8 @@ private:
         for (int i = 0, e = m_plugins_views.size(); i<e; ++i)
             delete m_plugins_views[i];
         onClose();
+        unloadModules();
+        closeLuaState();
         return 0;
     }
 
