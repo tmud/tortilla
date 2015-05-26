@@ -1,12 +1,9 @@
 #pragma once
 
-#include "cimg/CImg.h"
-using namespace cimg_library;
-
 class Image
 {
 public:
-    bool load(const tstring& file)
+    /*bool load(const tstring& file)
     {
         TW2A fname(file.c_str());
         try {
@@ -17,10 +14,7 @@ public:
             return false;
         }
         return true;
-    }
-
-private:
-    CImg<unsigned char> m_image;
+    }*/
 };
 
 
@@ -38,11 +32,11 @@ public:
         if (it != m_images.end())
             return it->second;
         Image *image = new Image();
-        if (!image->load(fname))
+        /*if (!image->load(fname))
         {
             delete image;
             return NULL;
-        }
+        }*/
         m_images[fname] = image;
         return image;
     }

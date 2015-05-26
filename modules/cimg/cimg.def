@@ -1,3 +1,0 @@
-LIBRARY cimg
-EXPORTS 
-	luaopen_cimg

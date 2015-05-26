@@ -40,11 +40,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clickpad", "plugins\clickpa
 		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cimg", "modules\cimg\cimg.vcxproj", "{CECE494A-4EF4-4E2B-9319-A676089262C9}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -135,16 +130,6 @@ Global
 		{22867224-9F2D-4795-B83F-FF9844150588}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{22867224-9F2D-4795-B83F-FF9844150588}.Release|Win32.ActiveCfg = Release|Win32
 		{22867224-9F2D-4795-B83F-FF9844150588}.Release|Win32.Build.0 = Release|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Debug|Win32.ActiveCfg = Debug|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Debug|Win32.Build.0 = Debug|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Release|Any CPU.ActiveCfg = Release|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Release|Win32.ActiveCfg = Release|Win32
-		{CECE494A-4EF4-4E2B-9319-A676089262C9}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
