@@ -50,7 +50,7 @@ InputProcessor::~InputProcessor()
 }
 
 void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds)
-{   
+{
     // clear data
     clear();
 
@@ -64,10 +64,10 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
 
     // to protect from loops in aliases
     std::vector<tstring> loops_hunter;
-    for (int i=0; i<queue_size;)    
+    for (int i=0; i<queue_size;)
     {
         loops_hunter.push_back(commands[i]->command);
-        
+
         bool alias_found = false;
         tstring cmd(commands[i]->command);
         tstring alias;
@@ -103,10 +103,10 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
                 delete commands[i];
                 commands.erase(commands.begin() + i);
                 queue_size = commands.size();
-                loops_hunter.clear();                
+                loops_hunter.clear();
                 continue;
             }
-            
+
             delete commands[i];
             commands.erase(commands.begin() + i);
             commands.insert(commands.begin() + i, new_cmd_list.begin(), new_cmd_list.end());
@@ -122,42 +122,27 @@ void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vecto
 
 void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommandsList* result)
 {
+    // marker for brackets
+    BracketsMarker bm;
+    tchar marker = bm.getMarker();
+
     // truncate to separate commands
     const WCHAR *p = sep_cmd.c_str();
     const WCHAR *e = p + sep_cmd.length();
-    std::vector<WCHAR> stack;
+    bool inside_brackets = false;
 
     const WCHAR *b = p;
     while (p != e)
     {
-        if (*p == m_separator && stack.empty())
+        if (*p == m_separator && !inside_brackets)
         {
             InputCommand *icmd = new InputCommand( tstring(b, p-b) );
             result->push_back(icmd);
             p++; b = p;
             continue;
         }
-        if (wcschr(L"{}\"'", *p))
-        {
-            //bool skip_push = false;
-            if (!stack.empty())
-            {
-                int last = stack.size()-1;
-                if (((*p == L'\'' || *p == L'"') && stack[last] == *p) ||
-                    (*p == L'}' && stack[last] == L'{'))
-                {
-                    stack.pop_back();
-                    //.skip_push = true;
-                }
-                else
-                {
-                    stack.push_back(*p);
-                }
-            }
-            //if (!skip_push && *p != L'}')
-            else if (*p != L'}')
-                { stack.push_back(*p); }
-        }
+        if (marker == *p)
+            inside_brackets = !inside_brackets;
         p++;
     }
     if (b != e || sep_cmd.empty())
@@ -181,7 +166,7 @@ void InputProcessor::processParameters(const tstring& cmd, InputCommand* params,
 
     result->clear();
     int params_count = params->parameters_list.size();
-   
+
     int ptr = 0;
     int size = ph.getSize();
     for (int i=0; i<size; ++i)

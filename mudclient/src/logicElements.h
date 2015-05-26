@@ -28,6 +28,7 @@ class BracketsMarker
 public:
     void mark(tstring *parameters);
     void unmark(tstring* parameters, std::vector<tstring>* parameters_list);
+    tchar getMarker() const { return MARKER; }
 private:
     bool isbracket(const tchar *p);
 };

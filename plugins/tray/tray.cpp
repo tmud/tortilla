@@ -126,6 +126,8 @@ int release(lua_State *L)
         return luaT_error(L, error.c_str());
     }
     sv.deletenode();
+    if (g_tray.IsWindow())
+        g_tray.DestroyWindow();
     return 0;
 }
 

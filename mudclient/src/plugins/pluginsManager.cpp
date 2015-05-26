@@ -516,7 +516,7 @@ void PluginsManager::processToSend(Network* network)
     m_msdp_network.sendExist(network);
 }
 
-void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool system, InputCommand* cmd)
+void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {
     if (parts.empty())
         return;
@@ -535,20 +535,25 @@ void PluginsManager::concatCommand(const std::vector<tstring>& parts, bool syste
     tstring params;
     for (int i=1,e=parts.size();i<e;++i)
     {
-        const tstring& s = parts[i];        
+        const tstring& s = parts[i];
         cmd->parameters_list.push_back(s);
-        if (i != 1) 
+        if (i != 1)
             params.append(L" ");
-        if (!isExistSymbols(s, symbols))
+        if (!system)
             params.append(s);
         else
         {
-            params.append(L"{");
-            params.append(s);
-            params.append(L"}");
+            if (!isExistSymbols(s, symbols))
+                params.append(s);
+            else
+            {
+                params.append(L"{");
+                params.append(s);
+                params.append(L"}");
+            }
         }
     }
-    cmd->parameters = params;
+    cmd->parameters.assign(params);
     if (!params.empty())
     {
         newcmd.append(L" ");
