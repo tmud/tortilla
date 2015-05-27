@@ -1,24 +1,6 @@
 #pragma once
 
-class Image
-{
-public:
-    /*bool load(const tstring& file)
-    {
-        TW2A fname(file.c_str());
-        try {
-        m_image.load(fname);
-        }
-        catch(CImgArgumentException &)
-        {
-            return false;
-        }
-        return true;
-    }*/
-};
-
-
-class ImagesCollection
+/*class ImagesCollection
 {
 public:
     ~ImagesCollection()
@@ -32,11 +14,11 @@ public:
         if (it != m_images.end())
             return it->second;
         Image *image = new Image();
-        /*if (!image->load(fname))
+        if (!image->load(fname))
         {
             delete image;
             return NULL;
-        }*/
+        }
         m_images[fname] = image;
         return image;
     }
@@ -45,3 +27,4 @@ private:
     std::map<tstring, Image*> m_images;    
     typedef std::map<tstring, Image*>::iterator iterator;
 };
+*/

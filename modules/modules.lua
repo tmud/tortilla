@@ -18,14 +18,16 @@ else
     end
 end
 
+--[[
 local n = bass.load('d:\\1.mp3')
 local m = bass.load('d:\\2.mp3')
 bass.play(m)
 bass.play(n)
+]]
 
 --local x = bass.loadSample('d:\\sample.wav')
 --bass.play(x)
 
 --local v = bass.getVolume()
-system.msgbox(false)
+--system.msgbox(false)
 --bass.setVolume(50)

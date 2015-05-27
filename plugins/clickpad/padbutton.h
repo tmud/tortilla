@@ -13,7 +13,7 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     static const int bufferlen = 32;
     static WCHAR buffer[bufferlen];    
     tstring m_image_fpath;
-    static ImagesCollection m_images;
+//    static ImagesCollection m_images;
     Image* m_image;
 
 public:
@@ -60,7 +60,7 @@ public:
     void setImage(const tstring& fpath)
     {
         m_image_fpath = fpath;
-        m_image = m_images.loadImage(fpath);
+       // m_image = m_images.loadImage(fpath);
     }
 
     void getImage(tstring* fpath)

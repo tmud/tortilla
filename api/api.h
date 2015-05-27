@@ -863,3 +863,32 @@ public:
 private:
     pcre8 regexp;
 };
+
+// images support
+typedef void* image; 
+image image_load(const wchar_t* file, int extra_option);
+void  image_unload(image img);
+int   image_width(image img);
+int   image_height(image img);
+void  image_render(image img, HDC dc, int x, int y);
+void  image_renderex(image img, HDC dc, int x, int y, int w, int h);
+
+class Image
+{
+public:
+    Image() : img(NULL) {}
+    ~Image() { unload(); }
+    bool load(const wchar_t* file, int option) {
+        unload();
+        img = image_load(file, option);
+        return (img) ? true : false;
+    }
+    void unload() { if (img) { image_unload(img); img = NULL; } }
+    int width() const { return image_width(img); }
+    int height() const { return image_height(img); }
+    void render(HDC dc, int x, int y) { image_render(img, dc, x, y); }
+    void render(HDC dc, int x, int y, int w, int h) { image_renderex(img, dc, x, y, w, h); }
+
+private:
+    image img;
+};
