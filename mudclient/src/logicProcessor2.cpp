@@ -89,12 +89,14 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
     tchar prefix[2] = { propData->cmd_prefix, 0 };
     tstring fullcmd(prefix);
     fullcmd.append(main_cmd);
+    bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
     if (error.empty())
     {
         cmd->replace_command(fullcmd);
         fullcmd.assign(cmd->full_command);
-        m_pHost->preprocessGameCmd(cmd);
+        if (!hide_cmd)
+            m_pHost->preprocessGameCmd(cmd);
         if (cmd->empty)
         {
             syscmdLog(fullcmd);
@@ -102,7 +104,11 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             return;
         }
 
-        syscmdLog(cmd->full_command);
+        if (!hide_cmd)
+            syscmdLog(cmd->full_command);
+        else
+            syscmdLog(cmd->command);
+
         it = m_syscmds.find(main_cmd);
         if (it != it_end)
         {

@@ -327,16 +327,17 @@ void Jmc3Import::initLegacy()
 {
     std::map<u8string, u8string>& l = m_legacy;
     l["%%"] = "%";
-    std::map<u8string, u8string>& c = m_commands;    
+    std::map<u8string, u8string>& c = m_commands;
     c["daa"] = "hide";
     c["restorewindow"] = "showwindow";
-    c["showme"] = "output";
+    c["showme"] = "woutput 1";
     c["substitute"] = "sub";
     c["antisubstitute"] = "antisub";
     c["unantisubstitute"] = "unantisub";
     c["tabadd"] = "tab";
     c["tabdel"] = "untab";
-    c["variable"] = "var";    
+    c["variable"] = "var";
+    c["output"] = "woutput 1";
 }
 
 void Jmc3Import::initPcre()
