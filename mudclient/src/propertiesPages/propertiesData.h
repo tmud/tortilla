@@ -82,7 +82,7 @@ struct PropertiesTimer
         if (pos != tstring::npos)
         {
            timer.assign(str.substr(0, pos));
-           if (isOnlyDigits(timer))
+           if (isOnlyNumber(timer))
                cmd.assign(str.substr(pos+1));
            else
                timer.assign(L"0");

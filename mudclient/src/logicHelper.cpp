@@ -174,7 +174,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      if (m_varproc.processVars(&p1, m_propData->variables, true) &&
          m_varproc.processVars(&p2, m_propData->variables, true))
      {
-         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         if (isOnlyNumber(p1) && isOnlyNumber(p2))
          {
              int n1 = _wtoi(p1.c_str());
              int n2 = _wtoi(p2.c_str());
@@ -213,7 +213,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      if (m_varproc.processVars(&p1, m_propData->variables, true) &&
          m_varproc.processVars(&p2, m_propData->variables, true))
      {
-         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         if (isOnlyNumber(p1) && isOnlyNumber(p2))
          {
              int r = 0;
              int n1 = _wtoi(p1.c_str());

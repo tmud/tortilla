@@ -113,7 +113,7 @@ void ClickpadMainWnd::setColumnsInArray(int count)
             for (int j=hcolumns; j<count; ++j)
                 createButton(j, i);
         }
-    }    
+    }
 }
 
 void ClickpadMainWnd::setButtonSize(int size)
@@ -140,9 +140,6 @@ int ClickpadMainWnd::getButtonSize() const
 
 void ClickpadMainWnd::onCreate()
 {
-    //RECT pos = { 100, 100, 400, 400 };
-    //m_settings_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
-    //m_button_wnd.Create(m_hWnd, rcDefault, WS_CLIPSIBLINGS|WS_CLIPCHILDREN);
 }
 
 void ClickpadMainWnd::onDestroy()
@@ -153,12 +150,6 @@ void ClickpadMainWnd::onDestroy()
 
 void ClickpadMainWnd::onSize()
 {
-    /*RECT pos;
-    GetClientRect(&pos);
-    if (!m_editmode)
-        return;
-    pos.top = pos.bottom / 2;
-    m_settings_wnd.MoveWindow(&pos);*/
 }
 
 void ClickpadMainWnd::createButton(int x, int y)
@@ -186,7 +177,7 @@ void ClickpadMainWnd::save(xml::node& node)
     for (int y=0;y<hrows;++y) {
     for (int x=0;x<hcolumns;++x) {
       PadButton *b = m_buttons[y][x];
-      tstring text, cmd, image;
+      tstring text, cmd;
       b->getText(&text);
       b->getCommand(&cmd);
       if (text.empty() && cmd.empty()) continue;
@@ -195,8 +186,12 @@ void ClickpadMainWnd::save(xml::node& node)
       node.set("y", y);
       node.set("text", text);
       node.set("command", cmd);
+      tstring image; int image_index = -1;
+      b->getImage(&image, &image_index);
       if (!image.empty())
         node.set("image", image);
+      if (image_index != -1)
+        node.set("index", image_index);
       node = base;
     }}
     node.move("/");
@@ -211,7 +206,7 @@ void ClickpadMainWnd::load(xml::node& node)
        size = bt.getDefaultSize();
     m_button_size = size;
 
-    tstring text, cmd, image;
+    tstring text, cmd;
     xml::request buttons(node, "buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
     {
@@ -225,10 +220,14 @@ void ClickpadMainWnd::load(xml::node& node)
             PadButton *b = m_buttons[y][x];
             b->setText(text);
             b->setCommand(cmd);
+            tstring image; int image_index = -1;
             if (n.get("image", &image) && !image.empty())
-                b->setImage(image);
+            {
+                n.get("index", &image_index);
+                b->setImage(image, image_index);
+            }
         }
-    }        
+    }
     int rows = 0; int columns = 0;
     if (node.get("params/rows", &rows) && node.get("params/columns", &columns))
     {

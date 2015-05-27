@@ -2,6 +2,7 @@
 #include "memoryBuffer.h"
 #include "wideToAnsi.h"
 #include "wideToUtf8.h"
+#include "fimage.h"
 
 #ifdef _DEBUG
 #pragma comment(lib, "libxml2d.lib")
@@ -16,9 +17,15 @@
 BOOL APIENTRY DllMain(HMODULE, DWORD reason_for_call, LPVOID)
 {
     if (reason_for_call == DLL_PROCESS_ATTACH)
+    {
         xmlInit();
+        fimage_init();
+    }
     else if (reason_for_call == DLL_PROCESS_DETACH)
+    {
+        fimage_release();
         xmlDestroy();
+    }
     return TRUE;
 }
 

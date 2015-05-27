@@ -6,7 +6,7 @@ int msgBox(HWND parent, UINT msg, UINT options);
 void getWindowText(HWND handle, tstring *string);
 bool a2int(const std::string& str, int *value);
 bool isExistSymbols(const tstring& str, const tstring& symbols);
-bool isOnlyDigits(const tstring& str);
+bool isOnlyNumber(const tstring& str);
 bool isOnlySpaces(const tstring& str);
 COLORREF invertColor(COLORREF c);
 bool sendToClipboard(HWND owner, const tstring& text);

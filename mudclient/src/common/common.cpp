@@ -37,7 +37,7 @@ void getWindowText(HWND handle, tstring *string)
     string->assign(buffer);
 }
 
-bool isOnlyDigitsA(const std::string& str)
+bool isOnlyNumberA(const std::string& str)
 {
     if (str.empty()) return false;
     const char* p = str.c_str();
@@ -46,7 +46,7 @@ bool isOnlyDigitsA(const std::string& str)
     return (strspn(p, "0123456789") != len) ? false : true;
 }
 
-bool isOnlyDigits(const tstring& str)
+bool isOnlyNumber(const tstring& str)
 {
    if (str.empty()) return false;
    const tchar* p = str.c_str();
@@ -63,7 +63,7 @@ bool isOnlySpaces(const tstring& str)
 
 bool a2int(const std::string& str, int *value)
 {
-    if (!isOnlyDigitsA(str))
+    if (!isOnlyNumberA(str))
         return false;
     *value = atoi(str.c_str());
     return true;

@@ -27,7 +27,7 @@ void image_render(image img, HDC dc, int x, int y)
     fimage_render(dc, img, x, y);
 }
 
-void  image_renderex(image img, HDC dc, int x, int y, int w, int h)
+void image_renderex(image img, HDC dc, int x, int y, int w, int h)
 {
     fimage_renderex(dc, img, x, y, w, h);
 }

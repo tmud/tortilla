@@ -69,6 +69,13 @@ void SettingsDlg::editButton(PadButton *button)
     button->getCommand(&command);
     m_edit_text.SetWindowText(text.c_str());
     m_edit_command.SetWindowText(command.c_str());
+
+    /*tstring img; int img_index = -1;
+    button->getImage(&img, &img_index);
+    if (!img.empty())
+    {        
+    }*/
+
     button->setSelected(true);
     if (text.empty())
     {
@@ -76,7 +83,7 @@ void SettingsDlg::editButton(PadButton *button)
     }
     else
     {
-        int pos = command.length();    
+        int pos = command.length();
         m_edit_command.SetFocus();
         m_edit_command.SetSel(pos, pos);
     }
@@ -148,7 +155,7 @@ LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
     if (!m_editable_button)
         return 0;
     m_editable_button->setText(L"");
-    m_editable_button->setCommand(L"");    
+    m_editable_button->setCommand(L"");
     m_edit_text.SetWindowText(L"");
     m_edit_command.SetWindowText(L"");
     m_edit_text.SetFocus();
@@ -159,7 +166,7 @@ LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
 {
     luaT_Props p(getLuaState());
     if (p.settingsWnd())
-    {    
+    {
         m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
         return 0;
     }
@@ -203,7 +210,7 @@ void SettingsDlg::setEditableState(bool state)
 {
     BOOL flag = state ? TRUE : FALSE;
     m_edit_text.EnableWindow(flag);
-    m_edit_command.EnableWindow(flag);    
+    m_edit_command.EnableWindow(flag);
     m_del_button.EnableWindow(flag);
     m_images_list.EnableWindow(flag);
     if (!flag)
@@ -227,7 +234,7 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
         if (m_edit_command.IsWindowEnabled())
         {
             tstring text;
-            getListItemText(item_selected, 1, &text);            
+            getListItemText(item_selected, 1, &text);
             m_edit_command.SetWindowText(text.c_str());
         }
         luaT_Props p(getLuaState());
@@ -259,57 +266,91 @@ void SettingsDlg::getListItemText(int item, int subitem, tstring* text)
 
 LRESULT SettingsDlg::OnIconChanged(WORD, WORD, HWND, BOOL&)
 {
-    int item = m_images_list.GetCurSel();
+    /*int item = m_images_list.GetCurSel();
     int len = m_images_list.GetTextLen(item);
     MemoryBuffer mb( (len+1)*sizeof(wchar_t) );
     wchar_t *p = (wchar_t *)mb.getData();
     m_images_list.GetText(item, p);
     tstring fpath(m_images_path);
-    fpath.append(p);
-    m_editable_button->setImage(fpath);
+    fpath.append(p);*/
+   // m_editable_button->setImage(fpath);
     return 0;
 }
 
 void SettingsDlg::setIconsFileList()
 {
-    tstring path;
-    std::vector<tstring> files;
+    u8string tmp;
+    base::getPathAll(getLuaState(), "", &tmp);
+    if (tmp.empty())
+        return;
+    tstring path ( TU2W(tmp.c_str()) );
+
+    ChangeDir cd;
+    if (!cd.changeDir(path))
+       return;
+
+    std::vector<tstring> sets;
+    WIN32_FIND_DATA fd;
+    memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+    HANDLE file = FindFirstFile(L"*.*", &fd);
+    if (file != INVALID_HANDLE_VALUE)
     {
-       u8string tmp;
-       base::getPathAll(getLuaState(), "", &tmp);
-       if (tmp.empty())
-           return;
-       path.assign ( TU2W(tmp.c_str()) );
-
-       ChangeDir cd;
-       if (!cd.changeDir(path))
-           return;
-       m_images_path = path;
-
-       WIN32_FIND_DATA fd;
-       memset(&fd, 0, sizeof(WIN32_FIND_DATA));
-       HANDLE file = FindFirstFile(L"*.*", &fd);
-       if (file != INVALID_HANDLE_VALUE)
-       {
-           do
+        do
+        {
+           if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && isSupportedExt(fd.cFileName))
            {
-              if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-              {
-                  const wchar_t *e = wcsrchr(fd.cFileName, L'.');
-                  if (e)
-                  {
-                      tstring ext(e+1);
-                      if (ext == L"png" || ext == L"bmp")
-                          files.push_back(fd.cFileName);
-                  }
-              }
-           } while (::FindNextFile(file, &fd));
-           ::FindClose(file);
-         }
-    }
+               image_file el; el.path = fd.cFileName;
+               m_image_files.push_back(el);
+           }
+           if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+           {
+               tstring dir(fd.cFileName);
+               bool only_numbers = (wcsspn(dir.c_str(), L"0123456789") != dir.length()) ? false : true;
+               if (only_numbers)
+                  sets.push_back(dir);
+           }
+       } while (::FindNextFile(file, &fd));
+       ::FindClose(file);
+   }
+   for (int s=0,se=sets.size();s<se;++s)
+   {
+       tstring dir(sets[s]);
+       dir.append(L"\\*.*");
+       file = FindFirstFile(dir.c_str(), &fd);
+       do
+       {
+           if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && isSupportedExt(fd.cFileName))
+           {
+              image_file el; el.path = fd.cFileName;
+              el.set_size = _wtoi(sets[s].c_str());
+              m_image_files.push_back(el);
+           }
+       } while (::FindNextFile(file, &fd));
+       ::FindClose(file);
+   }
 
-    std::sort(files.begin(), files.end());    
-    m_images_list.AddString(L"Без иконки");
-    for (int j = 0, je = files.size(); j < je; ++j)
-        m_images_list.AddString(files[j].c_str());
+   m_images_list.AddString(L"Без иконки");
+   for (int i=0,e=m_image_files.size();i<e;++i)
+   {
+       image_file &f = m_image_files[i];
+       if (f.set_size == -1)
+           m_images_list.AddString(f.path.c_str());
+       else
+       {
+           wchar_t buffer[16];
+           swprintf(buffer, L"(%d) ", f.set_size);
+           tstring item(buffer);
+           item.append(f.path);
+           m_images_list.AddString(item.c_str());
+       }
+   }
+}
+
+bool SettingsDlg::isSupportedExt(const wchar_t* file)
+{
+    const wchar_t *e = wcsrchr(file, L'.');
+    if (!e)
+        return false;
+    tstring ext(e + 1);
+    return (ext == L"png" || ext == L"bmp" || ext == L"gif" || ext == L"ico" || ext == L"jpg") ? true : false;
 }

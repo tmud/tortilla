@@ -1,7 +1,5 @@
 #pragma once
 
-#include "imageObjs.h"
-
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
     tstring m_text;
@@ -13,13 +11,13 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     static const int bufferlen = 32;
     static WCHAR buffer[bufferlen];    
     tstring m_image_fpath;
-//    static ImagesCollection m_images;
+    int m_image_index;
     Image* m_image;
 
 public:
     PadButton(UINT msg, WPARAM param) :
         CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
-        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_image(NULL)
+        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_image_index(-1), m_image(NULL)
     {
     }
 
@@ -57,15 +55,17 @@ public:
         Invalidate();
     }
 
-    void setImage(const tstring& fpath)
+    void setImage(const tstring& fpath, int index)
     {
         m_image_fpath = fpath;
+        m_image_index = index;
        // m_image = m_images.loadImage(fpath);
     }
 
-    void getImage(tstring* fpath)
+    void getImage(tstring* fpath, int *index )
     {
         fpath->assign(m_image_fpath);
+        *index = m_image_index;
     }
 
 private:
