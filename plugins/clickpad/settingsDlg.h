@@ -54,8 +54,16 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     CButton m_del_hotkey, m_del_button;
     CListViewCtrl m_list;
     CStatic m_close_settings;
+
+    struct image_file
+    {
+        image_file() : set_size(-1) {}
+        tstring path;
+        int set_size;    
+    };
+    std::vector<image_file> m_image_files;
     CListBox m_images_list;
-    tstring m_images_path;        
+
     ClickpadSettings *m_settings;
     PadButton* m_editable_button;
 
@@ -164,4 +172,6 @@ private:
     void setIconsFileList();
 
     void getListItemText(int item, int subitem, tstring* text);
+
+    bool isSupportedExt(const wchar_t* file);
 };
