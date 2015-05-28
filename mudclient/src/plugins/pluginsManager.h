@@ -23,6 +23,7 @@ public:
     void processGameCmd(InputCommand* cmd);
     void processViewData(const char* method, int view, parseData* data);
     void processBarCmd(tstring *cmd);
+    void processBarCmds(std::vector<tstring>& cmds);
     void processHistoryCmd(tstring *cmd);
     void processConnectEvent();
     void processDisconnectEvent();

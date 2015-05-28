@@ -369,6 +369,9 @@
     <ClCompile Include="src\varProcessor.cpp">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClCompile>
+    <ClCompile Include="src\inputProcessorTests.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">

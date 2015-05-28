@@ -222,6 +222,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
     <ClCompile Include="src\helpManager.cpp" />
+    <ClCompile Include="src\inputProcessorTests.cpp" />
     <ClCompile Include="src\LogicProcessor3.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
     <ClCompile Include="src\msdp\msdpNetwork.cpp" />

@@ -277,6 +277,19 @@ void PluginsManager::processBarCmd(tstring *cmd)
     }
 }
 
+void PluginsManager::processBarCmds(std::vector<tstring>& cmds)
+{
+    if (doPluginsTableMethod("barcmd", &cmds))
+    {
+/*        cmd->clear();
+        for (int i = 0, e = cmds.size(); i < e; ++i)
+        {
+            if (i != 0) cmd->append(separator);
+            cmd->append(cmds[i]);
+        }*/
+    }
+}
+
 void PluginsManager::processHistoryCmd(tstring *cmd)
 {
     if (cmd->empty())

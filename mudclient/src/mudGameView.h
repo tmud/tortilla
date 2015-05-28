@@ -628,6 +628,14 @@ private:
     {
         tstring cmd;
         m_bar.getCommand(&cmd);
+        if (isExistSymbols(cmd, L"\r\n"))
+        {
+            Tokenizer t(cmd.c_str(), L"\r\n");
+            std::vector<tstring> cmds;
+            t.moveto(&cmds);
+            //m_plugins.processBarCmds();
+        }
+
         m_plugins.processBarCmd(&cmd);
         tstring history(cmd);
         m_plugins.processHistoryCmd(&history);

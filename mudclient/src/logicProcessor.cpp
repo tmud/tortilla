@@ -7,8 +7,9 @@ LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
 propData(data), m_pHost(host), m_connecting(false), m_connected(false), m_helper(data),
 m_prompt_mode(OFF), m_prompt_counter(0)
 {
+    RUN_INPUTPROCESSOR_TESTS;
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
-        m_wlogs[i] = -1;
+        m_wlogs[i] = -1;    
 }
 
 LogicProcessor::~LogicProcessor()
