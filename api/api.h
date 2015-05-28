@@ -21,7 +21,8 @@ typedef std::string u8string;
 #define LUAT_BRUSH      106
 #define LUAT_FONT       107
 #define LUAT_PCRE       108
-#define LUAT_LAST       108
+#define LUAT_IMAGE      109
+#define LUAT_LAST       109
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -865,7 +866,7 @@ private:
 };
 
 // images support
-typedef void* image; 
+typedef void* image;
 image image_load(const wchar_t* file, int extra_option);
 void  image_unload(image img);
 int   image_width(image img);

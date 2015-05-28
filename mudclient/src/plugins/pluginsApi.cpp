@@ -93,6 +93,15 @@ int pluginInvArgs(lua_State *L, const utf8* fname)
     return 0;
 }
 
+int pluginLoadFail(lua_State *L, const utf8* fname, const utf8* file)
+{
+    Utf8ToWide f(fname); Utf8ToWide fi(file);
+    swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ",
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, (const wchar_t*)fi);
+    pluginLog(plugin_buffer());
+    return 0;
+}
+
 int pluginError(const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
@@ -793,6 +802,7 @@ void reg_mt_panels(lua_State *L);
 void reg_mt_render(lua_State *L);
 void reg_mt_pcre(lua_State *L);
 void reg_msdp(lua_State *L);
+void reg_mt_image(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -835,6 +845,7 @@ bool initPluginsSystem()
     reg_mt_window(L);
     reg_mt_viewdata(L);
     reg_mt_panels(L);
+    reg_mt_image(L);
     reg_mt_render(L);
     reg_mt_pcre(L);
     reg_msdp(L);

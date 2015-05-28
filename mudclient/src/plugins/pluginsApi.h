@@ -14,6 +14,7 @@ void tmcLog(const tstring& msg);
 void pluginLog(const tstring& msg);
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname);
 int  pluginInvArgs(lua_State *L, const utf8* fname);
+int  pluginLoadFail(lua_State *L, const utf8* fname, const utf8* file);
 int  pluginError(const utf8* fname, const utf8* error);
 int  pluginError(const utf8* error);
 int  pluginLog(const utf8* msg);
