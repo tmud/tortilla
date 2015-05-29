@@ -8,12 +8,8 @@ template <class T>
 class LogicWrapper : public std::vector<T*>
 {
 public:
-    LogicWrapper() {}
     ~LogicWrapper() { clear(); }
-    void clear() 
-    {
-        autodel<T> z(*this);
-    }
+    void clear() { autodel<T> z(*this); }
     void init(PropertiesValues *values, const std::vector<tstring>& active_groups)
     {
         clear();
@@ -24,6 +20,27 @@ public:
             if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
                 continue;
             T *s = new T(v);
+            push_back(s);
+        }
+    }
+};
+
+template <class T, class P>
+class LogicWrapperParams : public std::vector<T*>
+{
+public:
+    ~LogicWrapperParams() { clear(); }
+    void clear() { autodel<T> z(*this); }
+    void init(P &p, PropertiesValues *values, const std::vector<tstring>& active_groups)
+    {
+        clear();
+        int count = values->size();
+        for (int i=0; i<count; ++i)
+        {
+            const property_value &v = values->get(i);
+            if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
+                continue;
+            T *s = new T(v, p);
             push_back(s);
         }
     }
@@ -104,7 +121,9 @@ public:
     void updateProps(int what = UPDATE_ALL);
     bool processAliases(const tstring& key, tstring* newcmd);
     bool processHotkeys(const tstring& key, tstring* newcmd);
+
     void processActions(parseData *parse_data, std::vector<tstring>* new_cmds);
+
     void processSubs(parseData *parse_data);
     void processAntiSubs(parseData *parse_data);
     void processGags(parseData *parse_data);
@@ -116,6 +135,7 @@ public:
     bool setVar(const tstring& var, const tstring& value);
     bool delVar(const tstring& var);
     bool processVars(tstring *cmdline);
+    bool processVarsStrong(tstring *cmdline);
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
     enum MathResult { MATH_SUCCESS = 0, MATH_VARNOTEXIST, MATH_ERROR };
@@ -123,9 +143,9 @@ public:
 
 private:
     // current workable elements
-    LogicWrapper<Alias> m_aliases;
-    LogicWrapper<Hotkey> m_hotkeys;
-    LogicWrapper<Action> m_actions;
+    LogicWrapperParams<Alias, InputCommandParameters> m_aliases;
+    LogicWrapperParams<Hotkey, InputCommandParameters> m_hotkeys;
+    LogicWrapperParams<Action, InputCommandParameters> m_actions;
     LogicWrapper<Sub> m_subs;
     LogicWrapper<AntiSub> m_antisubs;
     LogicWrapper<Gag> m_gags;

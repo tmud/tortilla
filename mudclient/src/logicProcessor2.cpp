@@ -612,8 +612,6 @@ IMPL(ifop)
         if (result == LogicHelper::IF_SUCCESS)
         {
             tstring cmd(p->at(1));
-            BracketsMarker bm;
-            bm.mark(&cmd);
             processCommand(cmd);
         }
         else if (result == LogicHelper::IF_ERROR)

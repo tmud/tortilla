@@ -640,8 +640,6 @@ private:
         tstring history(cmd);
         m_plugins.processHistoryCmd(&history);
         m_bar.addToHistory(history);
-        BracketsMarker bm;
-        bm.mark(&cmd);
         m_processor.processUserCommand(cmd);
         return 0;
     }

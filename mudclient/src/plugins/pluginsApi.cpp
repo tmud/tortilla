@@ -125,12 +125,11 @@ int runCommand(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         tstring cmd(TU2W(lua_tostring(L, 1)));
-        _lp->doGameCommand(cmd);
+        _lp->processPluginCommand(cmd);
         return 0;
     }
     return pluginInvArgs(L, "runCommand");
 }
-
 
 int addMenu(lua_State *L)
 {

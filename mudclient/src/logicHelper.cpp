@@ -125,9 +125,6 @@ void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
         if (m_timers[i]->tick(dt))
         {
             tstring cmd(m_timers[i]->cmd);
-            BracketsMarker bm;
-            bm.mark(&cmd);
-            processVars(&cmd);
             new_cmds->push_back(cmd);
         }
     }
@@ -171,8 +168,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
-     if (m_varproc.processVars(&p1, m_propData->variables, true) &&
-         m_varproc.processVars(&p2, m_propData->variables, true))
+     if (processVarsStrong(&p1) && processVarsStrong(&p2))
      {
          if (isOnlyDigits(p1) && isOnlyDigits(p2))
          {
@@ -210,8 +206,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
 
-     if (m_varproc.processVars(&p1, m_propData->variables, true) &&
-         m_varproc.processVars(&p2, m_propData->variables, true))
+     if (processVarsStrong(&p1) && processVarsStrong(&p2))
      {
          if (isOnlyDigits(p1) && isOnlyDigits(p2))
          {
@@ -240,6 +235,11 @@ bool LogicHelper::processVars(tstring *cmdline)
     return m_varproc.processVars(cmdline, m_propData->variables, false);
 }
 
+bool LogicHelper::processVarsStrong(tstring *cmdline)
+{
+    return m_varproc.processVars(cmdline, m_propData->variables, true);
+}
+
 void LogicHelper::updateProps(int what)
 {
     std::vector<tstring> active_groups;
@@ -250,14 +250,18 @@ void LogicHelper::updateProps(int what)
             active_groups.push_back(v.key);
     }
 
+    InputCommandParameters p;
+    p.separator = m_propData->cmd_separator;
+    p.prefix = m_propData->cmd_prefix;
+
     if (what == UPDATE_ALL || what == UPDATE_ALIASES)
-        m_aliases.init(&m_propData->aliases, active_groups);
+        m_aliases.init(p, &m_propData->aliases, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_ACTIONS)
-        m_actions.init(&m_propData->actions, active_groups);
+        m_actions.init(p, &m_propData->actions, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_SUBS)
         m_subs.init(&m_propData->subs, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_HOTKEYS)
-        m_hotkeys.init(&m_propData->hotkeys, active_groups);
+        m_hotkeys.init(p, &m_propData->hotkeys, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_ANTISUBS)
         m_antisubs.init(&m_propData->antisubs, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_GAGS)

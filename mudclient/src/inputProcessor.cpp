@@ -25,9 +25,9 @@ InputCommand::InputCommand(const tstring& cmd) : empty(true)
     parameters.assign(fcmd.substr(pos+1));
     fcmd.resize(pos+1);
 
-    BracketsMarker bm;
+    /*BracketsMarker bm;
     bm.unmark(&parameters, &parameters_list);
-    fcmd.append(parameters);
+    fcmd.append(parameters);*/
 }
 
 void InputCommand::replace_command(const tstring& cmd)
@@ -74,14 +74,17 @@ void InputCommandsList::parse(const tstring& cmds)
     }*/
 }
 
-InputCommandTemplate::InputCommandTemplate(const tstring& cmd, tchar separator, tchar syscmd, tchar marker)
+InputCommandTemplate::InputCommandTemplate(const tstring& cmd, const InputCommandParameters& params)
 {
+    tchar separator = params.separator;
+    tchar syscmd = params.prefix;
+
     const tchar *p = cmd.c_str();
     const tchar *e = p + cmd.length();
-    /*if (p == e) { 
+    if (p == e) {
        m_subcmds.push_back( subcmd(tstring(), 0) );
        return;
-    }*/
+    }
 
     while (p != e)
     {
@@ -102,14 +105,14 @@ InputCommandTemplate::InputCommandTemplate(const tstring& cmd, tchar separator, 
             {
                 if (stack == 0 && *p == L'}')
                 {
-                    cmd.append(bracket_begin+1, p-bracket_begin-2);                    
+                    cmd.append(bracket_begin+1, p-bracket_begin-1);                    
                     break;
                 }
                 else
                 {
-                     if (*p == '}')
+                     if (*p == L'}')
                          stack--;
-                     else
+                     else if (*p == L'{')
                          stack++;
                 }
                 p++;
@@ -167,7 +170,8 @@ InputCommandTemplate::InputCommandTemplate(const tstring& cmd, tchar separator, 
                tstring cmd(b);
                m_subcmds.push_back( subcmd (cmd, 1) );
             }
-            p++;
+            else 
+                p++;
             continue;
         }
 
@@ -177,6 +181,64 @@ InputCommandTemplate::InputCommandTemplate(const tstring& cmd, tchar separator, 
         m_subcmds.push_back( subcmd (cmd, 0) );
         if (*p == separator) p++;
     }
+    
+    for (int i=0,e=m_subcmds.size(); i<e; ++i)
+    {
+        if (!m_subcmds[i].second)
+            continue;       // пропускаем игровые, маркируем только системные
+        markbrackets(&m_subcmds[i].first);
+    }
+}
+
+void InputCommandTemplate::markbrackets(tstring *cmd)
+{
+    const tchar marker[2] = { MARKER , 0 };
+    const tchar *p = cmd->c_str();
+    const tchar *e = p + cmd->length();
+
+    const tchar* bracket_begin = NULL;
+    std::vector<tchar> stack;
+    tstring newp;
+
+    const tchar* b = p;
+    while (p != e)
+    {
+        if (!isbracket(p))
+            { p++; continue;}
+        if (stack.empty() && *p != L'}')
+        {
+            stack.push_back(*p);
+            bracket_begin = p;
+        }
+        else
+        {
+            if (((*p == L'\'' || *p == L'"') && *bracket_begin == *p) ||
+                (*p == L'}' && *bracket_begin == L'{' && stack.size() == 1))
+            {
+               stack.clear();
+               // mark pair brackets
+               newp.append(b, bracket_begin-b);
+               newp.append(marker);
+               newp.append(bracket_begin, p-bracket_begin);
+               newp.append(marker);
+               newp.append(p, 1);
+               b = p + 1;
+               p = b;
+               continue;
+            }
+            else if (*bracket_begin != L'\'' && *bracket_begin != L'"')
+            {
+               if (*p == L'{')
+                   stack.push_back(*p);
+               else if (*p == L'}')
+                   stack.pop_back();
+            }
+        }
+        p++;
+    }
+    if (b != e)
+        newp.append(b);
+    cmd->swap(newp);
 }
 
 bool InputCommandTemplate::isbracket(const tchar *p)
@@ -184,10 +246,12 @@ bool InputCommandTemplate::isbracket(const tchar *p)
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
 
-void InputCommandTemplate::translate(InputCommandsList *cmd)
+void InputCommandTemplate::translate(InputCommandsList *cmd) const
 {
 }
 
+
+/*
 InputProcessor::InputProcessor(tchar separator, tchar prefix) : m_separator(separator), m_prefix(prefix)
 {
 }
@@ -198,11 +262,14 @@ InputProcessor::~InputProcessor()
 
 void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds)
 {
+    InputCommandTemplate t(cmd, m_separator, m_prefix);
+    t.translate(&commands);
+
+
     // clear data
     //clear();
-
     // process separators
-    processSeparators(cmd, &commands);
+    //processSeparators(cmd, &commands);
 
     // process aliases
     int queue_size = commands.size();
@@ -340,3 +407,4 @@ void InputProcessor::processParameters(const tstring& cmd, InputCommand* params,
     }
     result->append(cmd.substr(ptr));
 }
+*/

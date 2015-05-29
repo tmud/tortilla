@@ -38,7 +38,7 @@ public:
     virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
-    virtual void doGameCommand(const tstring& cmd) = 0;
+    virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
     virtual bool canSetVar(const tstring& var) = 0;
     virtual bool getVar(const tstring& var, tstring* value) = 0;
@@ -84,6 +84,7 @@ public:
     void processNetworkError();
     void processNetworkMccpError();
     void processUserCommand(const tstring& cmd);
+    void processPluginCommand(const tstring& cmd);
     bool processHotkey(const tstring& hotkey);
     void processTick();
     void processStackTick();
@@ -95,7 +96,6 @@ public:
     bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
-    void doGameCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
     bool canSetVar(const tstring& var)  { return m_helper.canSetVar(var); }    
     bool getVar(const tstring& var, tstring* value) { return m_helper.getVar(var, value); }

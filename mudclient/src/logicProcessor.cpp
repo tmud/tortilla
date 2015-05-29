@@ -1,6 +1,6 @@
 // In that file - Code for processing game data
 #include "stdafx.h"
-#include "inputProcessor.h"
+//#include "inputProcessor.h"
 #include "logicProcessor.h"
 
 LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
@@ -55,17 +55,20 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
 
 void LogicProcessor::processUserCommand(const tstring& cmd)
 {
-    tstring cmdline(cmd);
-    m_helper.processVars(&cmdline);
-    processCommand(cmdline);
+    processCommand(cmd);
+}
+
+void LogicProcessor::processPluginCommand(const tstring& cmd)
+{
+    processCommand(cmd);
 }
 
 void LogicProcessor::processCommand(const tstring& cmd)
 {
     std::vector<tstring> loops;
     WCHAR cmd_prefix = propData->cmd_prefix;
-    InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
-    ip.process(cmd, &m_helper, &loops);
+    //InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
+    //ip.process(cmd, &m_helper, &loops);
 
     if (!loops.empty())
     {
@@ -82,14 +85,14 @@ void LogicProcessor::processCommand(const tstring& cmd)
         tmcLog(msg);
     }
 
-    for (int i=0,e=ip.commands.size(); i<e; ++i)
+    /*for (int i=0,e=ip.commands.size(); i<e; ++i)
     {
         InputCommand *cmd = ip.commands[i];
         if (!cmd->empty && cmd->full_command.at(0) == cmd_prefix)
             processSystemCommand(cmd); //it is system command for client (not game command)
         else
             processGameCommand(cmd);   // it is game command
-    }
+    }*/
 }
 
 void LogicProcessor::updateProps()
@@ -227,11 +230,6 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     int index = p.find(cmd);
     p.del(index);
     return true;
-}
-
-void LogicProcessor::doGameCommand(const tstring& cmd)
-{
-    processCommand(cmd);
 }
 
 void LogicProcessor::updateLog(const tstring& msg)

@@ -3,6 +3,7 @@
 #include "compareObject.h"
 #include "propertiesPages/propertiesData.h"
 #include "MudViewString.h"
+#include "inputProcessor.h"
 
 class CompareData
 {
@@ -36,7 +37,7 @@ private:
 class Alias
 {
 public:
-    Alias(const property_value& v);
+    Alias(const property_value& v, const InputCommandParameters& p);
     bool processing(const tstring& key, tstring *newcmd);
 private:
     tstring m_key;
@@ -46,7 +47,7 @@ private:
 class Hotkey
 {
 public:
-    Hotkey(const property_value& v);
+    Hotkey(const property_value& v, const InputCommandParameters& p);
     bool processing(const tstring& key, tstring *newcmd);
 private:
     tstring m_key;
@@ -56,12 +57,13 @@ private:
 class Action
 {
 public:
-    Action(const property_value& v);
+    Action(const property_value& v, const InputCommandParameters& p);
     bool processing(CompareData& data, tstring* newcmd);
+    const InputCommandTemplate& getCommand() const { return m_ct; }
 
 private:
     CompareObject m_compare;
-    tstring m_value;
+    InputCommandTemplate m_ct;
 };
 
 class Sub

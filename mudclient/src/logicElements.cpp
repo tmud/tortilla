@@ -268,10 +268,8 @@ bool BracketsMarker::isbracket(const tchar *p)
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
 
-Alias::Alias(const property_value& v) : m_key(v.key), m_cmd(v.value)
+Alias::Alias(const property_value& v, const InputCommandParameters& p) : m_key(v.key), m_cmd(v.value)
 {
-    BracketsMarker bm;
-    bm.mark(&m_cmd);
 }
 
 bool Alias::processing(const tstring& key, tstring *newcmd)
@@ -282,10 +280,8 @@ bool Alias::processing(const tstring& key, tstring *newcmd)
     return true;
 }
 
-Hotkey::Hotkey(const property_value& v) : m_key(v.key), m_cmd(v.value)
+Hotkey::Hotkey(const property_value& v, const InputCommandParameters& p) : m_key(v.key), m_cmd(v.value)
 {
-    BracketsMarker bm;
-    bm.mark(&m_cmd);
 }
 
 bool Hotkey::processing(const tstring& key, tstring *newcmd)
@@ -296,11 +292,9 @@ bool Hotkey::processing(const tstring& key, tstring *newcmd)
     return true;
 }
 
-Action::Action(const property_value& v) : m_value(v.value)
+Action::Action(const property_value& v, const InputCommandParameters& p) : m_ct(v.value, p)
 {
     m_compare.init(v.key);
-    BracketsMarker bm;
-    bm.mark(&m_value);
 }
 
 bool Action::processing(CompareData& data, tstring* newcmd)
