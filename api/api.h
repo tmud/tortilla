@@ -789,7 +789,6 @@ namespace xml
         bool getattrvalue(int index, u8string* value) { return _getp(xml_get_attr_value(m_Node, index), value); }
         bool move(const utf8* path) { return _nmove(path, false); }
         bool create(const utf8* path) { return _nmove(path, true); }
-
     private:
         bool _getp(xstring str, u8string* value)
         {
@@ -805,6 +804,7 @@ namespace xml
             m_Node = newnode;
             return true;
         }
+    private:
         xnode m_Node;
     };
 
@@ -826,6 +826,9 @@ namespace xml
         int   size() const { return m_ListSize; }
         bool  empty() const { return (m_ListSize==0) ? true : false; }
         xml::node operator[](int node_index) { return xml::node(xml_list_getnode(m_NodeList, node_index)); }
+    private:
+        request(const request& r) {}
+        request& operator=(const request& r) {}
     private:
         xlist m_NodeList;
         int   m_ListSize;
@@ -862,6 +865,9 @@ public:
     int  last(int index) { return pcre_last(regexp, index); }
     void get(int index, u8string *str) { str->assign(pcre_string(regexp, index)); }
 private:
+    Pcre(const Pcre& p) {}
+    Pcre& operator=(const Pcre& p) {}
+private:
     pcre8 regexp;
 };
 
@@ -869,6 +875,7 @@ private:
 typedef void* image;
 image image_load(const wchar_t* file, int extra_option);
 void  image_unload(image img);
+image image_cut(image img, int x, int y, int w, int h);
 int   image_width(image img);
 int   image_height(image img);
 void  image_render(image img, HDC dc, int x, int y);
@@ -884,12 +891,19 @@ public:
         img = image_load(file, option);
         return (img) ? true : false;
     }
+    bool cut(const Image& from, int x, int y, int w, int h) {
+        unload();
+        img = image_cut(from.img, x, y, w, h);
+        return (img) ? true : false;
+    }
     void unload() { if (img) { image_unload(img); img = NULL; } }
     int width() const { return image_width(img); }
     int height() const { return image_height(img); }
     void render(HDC dc, int x, int y) { image_render(img, dc, x, y); }
     void render(HDC dc, int x, int y, int w, int h) { image_renderex(img, dc, x, y, w, h); }
-
+private:
+    Image(const Image& op) {}
+    Image& operator=(const Image& op) {}
 private:
     image img;
 };

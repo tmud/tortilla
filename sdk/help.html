@@ -722,6 +722,22 @@ u8string x( TW2U(L"строка") );
 <div class="cmd">void getstring(int index, u8string *str)</div> - получить строку, которая находится в границах по заданному индексу.
 </pre>
 <hr>
+<a name="imagecpp"></a>
+<h4>Работа с изображениями</h4>
+В <div class="m">API</div> клиента есть возможность работы с изображениями. Это загрузка изображений и их отрисовка на экране клиента или 
+окнах плагинов.<br> Поддерживаются <div class="m">png</div>, <div class="m">jpg</div>, <div class="m">bmp</div>, <div class="m">gif</div> и <div class="m">ico</div> форматы. 
+См. также <a href="#image" class="cmd">image</a>, <a href="#render" class="cmd">render</a>.
+<h4>class Image</h4>
+<pre>
+<div class="cmd">bool load(const wchar_t* file, int option)</div> - загрузка изображения из файла. Параметр option - размер иконки(для *.ico), номер кадра(для *.gif).
+Изображения остальных форматов игнорируют данный параметр (рекомендуется указывать 0).
+<div class="cmd">bool cut(const Image&amp; from, int x, int y, int w, int h)</div> - создание изображения путем вырезания части из другого изображения.
+<div class="cmd">void unload()</div> - удаление(выгрузка из памяти) изображения.
+<div class="cmd">int width()</div> - ширина изображения в пикселях.
+<div class="cmd">int height()</div> - высота изображения в пикселях.
+<div class="cmd">void render(HDC dc, int x, int y)</div> - рисование картинки на контексте, с заданными координатами.
+<div class="cmd">void render(HDC dc, int x, int y, int w, int h)</div> - рисование картинки, с авторастяжкой на заданный прямоугольник.</pre>
+<hr>
 <a name="luaapi"></a>
 <h3>API клиента Lua</h3>
 В данно разделе представлен набор функций, которые встроены в виртуальную машину Lua клиента.<br>
@@ -1012,6 +1028,17 @@ render:rect(r2)
 <div class="cmd">int fontHeight()</div> - возвращает высоту текущего шрифта в пикселях.
 <div class="cmd">int textWidth(string text)</div> - возвращает ширину текста в пикселях (для расчета используется текущий шрифт).
 </pre>
+<hr>
+<a name="image"></a>
+<h4>image</h4>
+Объект представляет собой изображение-картинку, которое загруженно методом <div class="cmd">createImage</div> (см. <a href="#render" class="cmd">render</a>).<br>
+Для объектов доступны следующие методы:
+<pre>
+<div class="cmd">int width()</div> - ширина изображения в пикселях.
+<div class="cmd">int height()</div> - высота изображения в пикселях.
+<div class="cmd">image cut(image, table rect)</div> - создание нового изображения, путем вырезания из другого. (см.  <div class="cmd">render:rect</div>).
+</pre>
+Для рисования предназначен: <div class="cmd">render:drawImage</div>. См. также <a href="#imagecpp" class="cmd">class Image</a>.
 <hr>
 <a name="props"></a>
 <h4>props</h4>

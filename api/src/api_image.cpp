@@ -12,6 +12,11 @@ void image_unload(image img)
     return fimage_unload(img);
 }
 
+image image_cut(image img, int x, int y, int w, int h)
+{
+    return fimage_cut(img, x, y, w, h);
+}
+
 int image_width(image img)
 {
     return fimage_width(img);

@@ -48,6 +48,7 @@ EXPORTS
 	utf8_trim
 	image_load
 	image_unload
+	image_cut
 	image_width
 	image_height
 	image_render
