@@ -116,12 +116,24 @@ int system_dbglog(lua_State *L)
     return 0;
 }
 
+int system_sleep(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TNUMBER))   
+    {
+        int wait = lua_tointeger(L, 1);
+        if (wait > 0)
+            ::Sleep(wait);
+    }
+    return 0;
+}
+
 static const luaL_Reg system_methods[] =
 {
     { "dbgstack", system_debugstack},
     { "dbgtable", system_dbgtable },
     { "dbglog", system_dbglog },
     { "msgbox", system_messagebox },
+    { "sleep", system_sleep },
     { NULL, NULL }
 };
 
