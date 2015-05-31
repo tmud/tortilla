@@ -1,6 +1,7 @@
 #pragma once
 
 #include "zlib.h"
+#include "common/tempThread.h"
 
 #ifdef _DEBUG
 #define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
@@ -71,7 +72,16 @@ struct MccpStatus
     int status;
 };
 
-class Network
+class NetworkTread : protected TempThread
+{
+public:
+    void connect(const NetworkConnectData& data);
+    void disconnect();
+    bool send(const tbyte* data, int len);
+    bool receive(DataQueue* queue);
+};
+
+class Network : protected TempThread
 {
 public:
     Network();

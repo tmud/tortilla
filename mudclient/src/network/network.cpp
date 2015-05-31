@@ -85,7 +85,7 @@ bool Network::connect(const NetworkConnectData& data)
        peer.sin_addr.s_addr = inet_addr( data.address.c_str() );
     }
 
-    DWORD optval = 1;
+    /*DWORD optval = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)(&optval), sizeof(DWORD)))
     {
         close();
@@ -101,7 +101,7 @@ bool Network::connect(const NetworkConnectData& data)
     {
         close();
         return false;
-    }
+    }*/
 
     long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
     if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, events) == SOCKET_ERROR)
@@ -574,7 +574,7 @@ void Network::init_mtts()
 
 void Network::close_mtts()
 {
-     m_mtts_step = -1;
+    m_mtts_step = -1;
 }
 
 // ref: http://tintin.sourceforge.net/mtts/
