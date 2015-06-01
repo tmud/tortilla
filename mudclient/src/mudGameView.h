@@ -524,7 +524,7 @@ private:
 
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
-        NetworkEvents result = m_network.processMsg(lparam);
+        NetworkEvent result = m_network.processMsg(lparam);
         if (result == NE_NEWDATA)
         {
             m_plugins.processReceived(&m_network);

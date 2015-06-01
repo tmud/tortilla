@@ -4,7 +4,7 @@
 #include "propertiesPages/propertiesData.h"
 #include "palette256.h"
 
-class LogsProcessor : protected TempThread
+class LogsProcessor : private TempThread
 {
 public:
     LogsProcessor();

@@ -49,47 +49,94 @@ void OutputTelnetOption(const void *data, const char* label)
 }
 #endif
 
-Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
-m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
+NetworkConnection::NetworkConnection() : sock(INVALID_SOCKET)
 {
-    m_input_buffer.alloc(1024);
-    m_mccp_buffer.alloc(8192);
 }
 
-Network::~Network()
+NetworkConnection::~NetworkConnection()
 {
-    close();
+    waittread();
 }
 
-bool Network::connect(const NetworkConnectData& data)
+void NetworkConnection::connect(const NetworkConnectData& cdata)
 {
-    sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
-    if (sock == INVALID_SOCKET)
+    if (isConnected() || !run())
+        return sendEvent(NE_ERROR_CONNECT);
+}
+
+void NetworkConnection::disconnect()
+{
+    waittread();
+    sendEvent(NE_DISCONNECT);
+}
+
+void NetworkConnection::waittread()
+{
+    if (!isConnected())
+        return;
+    stop();
+    wait();
+}
+
+bool NetworkConnection::isConnected()
+{
+    return (isFinished()) ? false : true;
+}
+
+bool NetworkConnection::send(const tbyte* data, int len)
+{
+    if (!isConnected())
         return false;
+    CSectionLock lock(m_cs);
+    m_send_data.write(data, len);
+    return true;
+}
 
-    sockaddr_in peer; 
+class autoclose 
+{
+    SOCKET &socket;
+public:
+    autoclose(SOCKET &s) : socket(s) {}
+    ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
+};
+
+void NetworkConnection::threadProc()
+{
+    SOCKET sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+    if (sock == INVALID_SOCKET)
+    {
+        sendEvent(NE_ERROR_CONNECT);
+        return;
+    }
+
+    autoclose ac(sock);
+
+    sockaddr_in peer;
     memset(&peer, 0, sizeof(sockaddr_in));
     peer.sin_family = AF_INET;
-    peer.sin_port = htons( data.port );
+    peer.sin_port = htons(m_connection.port);
 
-    const std::string& a = data.address;
-    if ( strspn( a.c_str(), "0123456789." ) != a.length() )
+    const std::string& a = m_connection.address;
+    if (strspn(a.c_str(), "0123456789.") != a.length())
     {
         struct hostent *hp = gethostbyname(a.c_str());
         if (!hp)
-            return false;
+        {
+            sendEvent(NE_ERROR_CONNECT);
+            return;
+        }
         memcpy((char*)&peer.sin_addr, hp->h_addr, sizeof(peer.sin_addr));
     }
     else
     {
-       peer.sin_addr.s_addr = inet_addr( data.address.c_str() );
+        peer.sin_addr.s_addr = inet_addr(m_connection.address.c_str());
     }
 
     /*DWORD optval = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)(&optval), sizeof(DWORD)))
     {
-        close();
-        return false;
+        sendEvent(NE_ERROR_CONNECT);
+        return;
     }
 
     tcp_keepalive alive;
@@ -99,33 +146,59 @@ bool Network::connect(const NetworkConnectData& data)
     DWORD nSize = 0;
     if  (WSAIoctl(sock, SIO_KEEPALIVE_VALS, &alive, sizeof(alive), NULL, 0, &nSize,NULL,NULL) == SOCKET_ERROR)
     {
-        close();
-        return false;
+        sendEvent(NE_ERROR_CONNECT);
+        return;
     }*/
 
-    long events = FD_READ|FD_WRITE|FD_CONNECT|FD_CLOSE|FD_ADDRESS_LIST_CHANGE|FD_ROUTING_INTERFACE_CHANGE;
-    if (WSAAsyncSelect(sock, data.wndToNotify, data.notifyMsg, events) == SOCKET_ERROR)
-    {
-        close();
-        return false;
-    }
-
-    if (WSAConnect( sock, (SOCKADDR*)&peer, sizeof(peer), NULL, NULL, NULL, NULL) == SOCKET_ERROR) 
+    if (WSAConnect(sock, (SOCKADDR*)&peer, sizeof(peer), NULL, NULL, NULL, NULL) == SOCKET_ERROR)
     {
         if (WSAGetLastError() != WSAEWOULDBLOCK)
         {
-            close();
-            return false;
+            sendEvent(NE_ERROR_CONNECT);
+            return;
         }
     }
+    sendEvent(NE_CONNECT);
+}
 
-    init_mccp();
-    return true;
+void NetworkConnection::sendEvent(NetworkEvent e)
+{
+    PostMessage(m_connection.wndToNotify, m_connection.notifyMsg, 0, (LPARAM)e);
+}
+
+
+Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
+m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
+{
+    m_input_buffer.alloc(1024);
+    m_mccp_buffer.alloc(8192);
+}
+
+Network::~Network()
+{
+}
+
+void Network::processMsg(NetworkEvent event)
+{
+    if (event == NE_CONNECT)
+    {
+        init_mccp();
+    }
+    if (event == NE_DISCONNECT)
+    {
+    }
+
+}
+
+
+void Network::connect(const NetworkConnectData& data)
+{   
+    m_connection.connect(data);
 }
 
 void Network::disconnect()
 {
-    close();
+    m_connection.disconnect();
 }
 
 void Network::close()
@@ -162,8 +235,11 @@ void Network::setUtf8Encoding(bool flag)
     m_utf8_encoding = flag;
 }
 
-NetworkEvents Network::processMsg(DWORD msg_lparam)
+void Network::processMsg2(NetworkEvent event)
 {
+
+    
+    
     WORD error = WSAGETSELECTERROR(msg_lparam);
     if (error)
     {   if (error == WSAECONNREFUSED || error == WSAETIMEDOUT)

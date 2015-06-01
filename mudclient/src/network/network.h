@@ -45,7 +45,7 @@ void OutputTelnetOption(const void *data, const char* label);
 #define TELOPT_NAWS      31 // 1f
 #define TELOPT_CHARSET   42 // 2a
 
-enum NetworkEvents
+enum NetworkEvent
 {
     NE_NOEVENT = 0,
     NE_NEWDATA,
@@ -64,6 +64,28 @@ struct NetworkConnectData
     UINT notifyMsg;
 };
 
+class NetworkConnection : private TempThread
+{
+public:
+    NetworkConnection();
+    ~NetworkConnection();
+    void connect(const NetworkConnectData& cdata);
+    void disconnect();
+    bool isConnected();
+    bool send(const tbyte* data, int len);
+
+private:
+    void threadProc();
+    void sendEvent(NetworkEvent e);
+    void waittread();
+    //void close();
+    NetworkConnectData m_connection;    
+    
+    CriticalSection m_cs;
+    DataQueue m_send_data;
+    DataQueue m_receive_data;
+};
+
 struct MccpStatus
 {
     MccpStatus() : network_data_len(0), game_data_len(0), status(0) {}
@@ -72,37 +94,29 @@ struct MccpStatus
     int status;
 };
 
-class NetworkTread : protected TempThread
-{
-public:
-    void connect(const NetworkConnectData& data);
-    void disconnect();
-    bool send(const tbyte* data, int len);
-    bool receive(DataQueue* queue);
-};
-
-class Network : protected TempThread
+class Network
 {
 public:
     Network();
     ~Network();
-    bool connect(const NetworkConnectData& data);
-    NetworkEvents processMsg(DWORD msg_lparam);
+    void processMsg(NetworkEvent event);
+    void connect(const NetworkConnectData& data);
+    void disconnect();
+
     DataQueue* receive();
     DataQueue* receive_msdp();
     bool send(const tbyte* data, int len);
     bool sendplain(const tbyte* data, int len); // send data directly
-    void disconnect();
+    
     void getMccpRatio(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
     void setUtf8Encoding(bool flag);
-
 private:
     bool send_ex(const tbyte* data, int len);
-    int read_socket();
-    int write_socket();
-    void close();
-    int processing_data(const tbyte* buffer, int len, bool *error);
+    int  read_socket();
+    int  write_socket();
+
+    int  processing_data(const tbyte* buffer, int len, bool *error);
     void init_mccp();
     bool process_mccp();
     void close_mccp();
@@ -113,6 +127,8 @@ private:
     void process_msdp(const tbyte* buffer, int len);
     void close_msdp();
 
+    NetworkConnection m_connection;
+
     MemoryBuffer m_input_buffer;            // to receive data from network    
     DataQueue m_mccp_data;                  // accamulated MCCP data from network
     MemoryBuffer m_mccp_buffer;             // to decompress data   
@@ -122,7 +138,7 @@ private:
     DataQueue m_send_data;                  // data for send to server
     DataQueue m_msdp_data;                  // data of msdp protocol
 
-    SOCKET sock;
+    
     z_stream *m_pMccpStream;
     bool m_mccp_on;
 
