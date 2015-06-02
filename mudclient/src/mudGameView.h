@@ -524,7 +524,7 @@ private:
 
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
-        NetworkEvent result = m_network.processMsg(lparam);
+        NetworkEvent result = (NetworkEvent)lparam;
         if (result == NE_NEWDATA)
         {
             m_plugins.processReceived(&m_network);
@@ -784,8 +784,7 @@ private:
         m_networkData.port = port;
         m_networkData.notifyMsg = WM_USER+1;
         m_networkData.wndToNotify = m_hWnd;
-        if (!m_network.connect(m_networkData))
-            m_processor.processNetworkConnectError();
+        m_network.connect(m_networkData);
     }
 
     MudViewString* getLastString(int view)

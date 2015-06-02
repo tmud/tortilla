@@ -69,19 +69,19 @@ class NetworkConnection : private TempThread
 public:
     NetworkConnection();
     ~NetworkConnection();
-    void connect(const NetworkConnectData& cdata);
+    bool connect(const NetworkConnectData& cdata);
     void disconnect();
     bool isConnected();
     bool send(const tbyte* data, int len);
+    bool receive(DataQueue *data);
 
 private:
     void threadProc();
     void sendEvent(NetworkEvent e);
     void waittread();
-    //void close();
     NetworkConnectData m_connection;    
-    
-    CriticalSection m_cs;
+    CriticalSection m_cs_send;
+    CriticalSection m_cs_receive;
     DataQueue m_send_data;
     DataQueue m_receive_data;
 };
@@ -99,7 +99,7 @@ class Network
 public:
     Network();
     ~Network();
-    void processMsg(NetworkEvent event);
+    //void processMsg(NetworkEvent event);
     void connect(const NetworkConnectData& data);
     void disconnect();
 
@@ -112,6 +112,7 @@ public:
     void setSendDoubleIACmode(bool on);
     void setUtf8Encoding(bool flag);
 private:
+    void close();
     bool send_ex(const tbyte* data, int len);
     int  read_socket();
     int  write_socket();
@@ -138,7 +139,6 @@ private:
     DataQueue m_send_data;                  // data for send to server
     DataQueue m_msdp_data;                  // data of msdp protocol
 
-    
     z_stream *m_pMccpStream;
     bool m_mccp_on;
 

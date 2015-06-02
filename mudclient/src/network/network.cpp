@@ -49,7 +49,7 @@ void OutputTelnetOption(const void *data, const char* label)
 }
 #endif
 
-NetworkConnection::NetworkConnection() : sock(INVALID_SOCKET)
+NetworkConnection::NetworkConnection()
 {
 }
 
@@ -58,16 +58,18 @@ NetworkConnection::~NetworkConnection()
     waittread();
 }
 
-void NetworkConnection::connect(const NetworkConnectData& cdata)
+bool NetworkConnection::connect(const NetworkConnectData& cdata)
 {
-    if (isConnected() || !run())
-        return sendEvent(NE_ERROR_CONNECT);
+    if (isConnected())
+        return false;
+    if (!run())
+        return false;
+    return true;
 }
 
 void NetworkConnection::disconnect()
 {
     waittread();
-    sendEvent(NE_DISCONNECT);
 }
 
 void NetworkConnection::waittread()
@@ -87,8 +89,17 @@ bool NetworkConnection::send(const tbyte* data, int len)
 {
     if (!isConnected())
         return false;
-    CSectionLock lock(m_cs);
+    CSectionLock lock(m_cs_send);
     m_send_data.write(data, len);
+    return true;
+}
+
+bool NetworkConnection::receive(DataQueue *data)
+{
+    if (!isConnected())
+        return false;
+    CSectionLock lock(m_cs_receive);
+    data->write(m_receive_data.getData(), m_receive_data.getSize());
     return true;
 }
 
@@ -100,9 +111,14 @@ public:
     ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
 };
 
+void NetworkConnection::sendEvent(NetworkEvent e)
+{
+    PostMessage(m_connection.wndToNotify, m_connection.notifyMsg, 0, (LPARAM)e);
+}
+
 void NetworkConnection::threadProc()
 {
-    SOCKET sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, 0);
+    SOCKET sock = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == INVALID_SOCKET)
     {
         sendEvent(NE_ERROR_CONNECT);
@@ -150,22 +166,42 @@ void NetworkConnection::threadProc()
         return;
     }*/
 
-    if (WSAConnect(sock, (SOCKADDR*)&peer, sizeof(peer), NULL, NULL, NULL, NULL) == SOCKET_ERROR)
+    if (::connect(sock, (sockaddr*)&peer, sizeof(peer)) == SOCKET_ERROR)
     {
-        if (WSAGetLastError() != WSAEWOULDBLOCK)
+        sendEvent(NE_ERROR_CONNECT);
+        return;
+        /*if (WSAGetLastError() != WSAEWOULDBLOCK)
         {
             sendEvent(NE_ERROR_CONNECT);
             return;
-        }
+        }*/
     }
     sendEvent(NE_CONNECT);
-}
 
-void NetworkConnection::sendEvent(NetworkEvent e)
-{
-    PostMessage(m_connection.wndToNotify, m_connection.notifyMsg, 0, (LPARAM)e);
-}
+    while (!needStop())
+    {
+        fd_set set;
+        FD_ZERO(&set);
+        FD_SET(sock, &set);
 
+        timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 100;
+
+        int n = ::select(0, &set, NULL, NULL, &tv);
+        if (n == SOCKET_ERROR)
+        {
+            sendEvent(NE_ERROR);
+            return;        
+        }
+
+    }
+
+    
+
+    
+    
+}
 
 Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
 m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
@@ -178,19 +214,6 @@ Network::~Network()
 {
 }
 
-void Network::processMsg(NetworkEvent event)
-{
-    if (event == NE_CONNECT)
-    {
-        init_mccp();
-    }
-    if (event == NE_DISCONNECT)
-    {
-    }
-
-}
-
-
 void Network::connect(const NetworkConnectData& data)
 {   
     m_connection.connect(data);
@@ -199,12 +222,11 @@ void Network::connect(const NetworkConnectData& data)
 void Network::disconnect()
 {
     m_connection.disconnect();
+    close();
 }
 
 void Network::close()
 {
-    closesocket(sock);
-    sock = NULL;
     close_mccp();
     close_mtts();
     close_msdp();
@@ -235,11 +257,8 @@ void Network::setUtf8Encoding(bool flag)
     m_utf8_encoding = flag;
 }
 
-void Network::processMsg2(NetworkEvent event)
+/*void Network::processMsg2(NetworkEvent event)
 {
-
-    
-    
     WORD error = WSAGETSELECTERROR(msg_lparam);
     if (error)
     {   if (error == WSAECONNREFUSED || error == WSAETIMEDOUT)
@@ -280,7 +299,7 @@ void Network::processMsg2(NetworkEvent event)
         MessageBox(NULL, L"Routing interface change", L"network", MB_OK);
     }
     return NE_NOEVENT;
-}
+}*/
 
 bool Network::send(const tbyte* data, int len)
 {
