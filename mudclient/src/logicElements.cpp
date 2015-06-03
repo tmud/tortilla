@@ -292,28 +292,38 @@ bool Hotkey::processing(const tstring& key, tstring *newcmd)
     return true;
 }
 
-Action::Action(const property_value& v, const InputCommandParameters& p) : m_ct(v.value, p)
+Action::Action(const property_value& v, const InputCommandParameters& p) 
 {
-    m_compare.init(v.key);
+    m_ct.init(v.key, v.value, p);
 }
 
 bool Action::processing(CompareData& data, tstring* newcmd)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_ct.compare(data.fullstr))
         return false;
 
     // parse value and generate result
-    m_compare.translateParameters(m_value, newcmd);
+    InputCommandsList cmdlist;
+    m_ct.translate(&cmdlist);
+
+    for (int i=0,e=cmdlist.size(); i<e; ++i)
+    {
+        if (cmdlist[i]->command == L"drop")
+        {
+            // drop mode -> change source MudViewString
+            //todo
+        }
+    }
 
     // drop mode -> change source MudViewString
-    if (m_value.find(L"drop") != tstring::npos)
+    /*if (m_value.find(L"drop") != tstring::npos)
     {
         CompareRange range;
         m_compare.getRange(&range);
         data.del(range);
         if (data.string->blocks.empty())
             data.string->dropped = true;
-    }
+    }*/
     return true;
 }
 
@@ -324,7 +334,7 @@ Sub::Sub(const property_value& v) : m_value(v.value)
 
 bool Sub::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -344,7 +354,9 @@ bool Sub::processing(CompareData& data)
     int pos = data.fold(range);
     if (pos == -1) return false;
 
-    m_compare.translateParameters(m_value, &data.string->blocks[pos].string);
+    tstring value(m_value);
+    m_compare.translateParameters(&value);
+    data.string->blocks[pos].string = value;
 
     data.start = pos+1;
     return true;
@@ -357,7 +369,7 @@ AntiSub::AntiSub(const property_value& v)
 
 bool AntiSub::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -379,7 +391,7 @@ Gag::Gag(const property_value& v)
 
 bool Gag::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -409,7 +421,7 @@ Highlight::Highlight(const property_value& v)
 
 bool Highlight::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
   
     CompareRange range;

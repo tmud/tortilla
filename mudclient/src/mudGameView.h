@@ -628,19 +628,28 @@ private:
     {
         tstring cmd;
         m_bar.getCommand(&cmd);
-        if (isExistSymbols(cmd, L"\r\n"))
+
+        InputCommandsPlainList cmds(cmd);
+        int last = cmd.size() - 1;
+        if (last > 0)
         {
-            Tokenizer t(cmd.c_str(), L"\r\n");
-            std::vector<tstring> cmds;
-            t.moveto(&cmds);
-            //m_plugins.processBarCmds();
+            tchar last_char = cmd.at(last);
+            if (last_char != L'\r' && last_char != L'\n')
+            {
+                int last_cmd = cmds.size() - 1;
+                m_bar.setText(cmds[last_cmd]);
+                cmds.erase(last_cmd);
+            }
         }
 
-        m_plugins.processBarCmd(&cmd);
-        tstring history(cmd);
-        m_plugins.processHistoryCmd(&history);
-        m_bar.addToHistory(history);
-        m_processor.processUserCommand(cmd);
+        m_plugins.processBarCmds(&cmds);
+
+        InputCommandsPlainList history;
+        m_plugins.processHistoryCmds(cmds, &history);
+        for (int i=0,e=history.size(); i<e; ++i)
+            m_bar.addToHistory(history[i]);
+ 
+        m_processor.processUserCommand(cmds);
         return 0;
     }
 

@@ -59,10 +59,7 @@ class Action
 public:
     Action(const property_value& v, const InputCommandParameters& p);
     bool processing(CompareData& data, tstring* newcmd);
-    const InputCommandTemplate& getCommand() const { return m_ct; }
-
 private:
-    CompareObject m_compare;
     InputCommandTemplate m_ct;
 };
 

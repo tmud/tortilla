@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../common/pcreHelper.h"
+
 struct CompareRange
 {
     CompareRange() : begin(-1), end(-1) {}
@@ -13,9 +15,14 @@ public:
     CompareObject();
     ~CompareObject();
     bool init(const tstring& key);
-    bool checkToCompare(const tstring& str);
+    bool compare(const tstring& str);
     void getRange(CompareRange *range) const;
-    void translateParameters(const tstring& value, tstring* result) const;
+    
+    void translateParameters(tstring* value) const;
+    void translateVars(tstring* value) const;
+
+
+
 
 private:
     void getParameters(std::vector<tstring>* params) const;

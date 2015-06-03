@@ -53,9 +53,9 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
     return false;
 }
 
-void LogicProcessor::processUserCommand(const tstring& cmd)
+void LogicProcessor::processUserCommand(const InputCommandsPlainList& cmds)
 {
-    processCommand(cmd);
+    processCommands(cmds);
 }
 
 void LogicProcessor::processPluginCommand(const tstring& cmd)
@@ -65,8 +65,15 @@ void LogicProcessor::processPluginCommand(const tstring& cmd)
 
 void LogicProcessor::processCommand(const tstring& cmd)
 {
+    InputCommandsPlainList cmds(cmd);
+    processCommands(cmds);
+}
+
+void LogicProcessor::processCommands(const InputCommandsPlainList& cmds)
+{
     std::vector<tstring> loops;
-    WCHAR cmd_prefix = propData->cmd_prefix;
+    //WCHAR cmd_prefix = propData->cmd_prefix;
+
     //InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
     //ip.process(cmd, &m_helper, &loops);
 

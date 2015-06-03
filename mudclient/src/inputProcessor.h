@@ -2,18 +2,34 @@
 
 //#include "propertiesPages/propertiesData.h"
 //#include "logicHelper.h"
+#include "compareObject.h"
 
-struct InputCommandParameters
+class InputCommandsPlainList : private std::vector<tstring> 
 {
-    tchar separator;
-    tchar prefix;
+    typedef std::vector<tstring> base;
+public:
+    InputCommandsPlainList();
+    InputCommandsPlainList(const tstring& cmd);
+    bool empty() const { return base::empty(); }
+    int size() const { return base::size(); }
+    const tstring& operator[] (int index) const { 
+        return base::operator[](index);
+    }
+    void erase(int index) {
+        base::erase(begin()+index);
+    }
+    void push_back(const tstring& cmd){
+        base::push_back(cmd);
+    }
+    std::vector<tstring>* ptr() {
+        return this;
+    }
 };
-
 
 class InputCommand
 {
 public:
-    InputCommand(const tstring& cmd);
+    //InputCommand(const tstring& cmd);
     void replace_command(const tstring& cmd);
     tstring full_command;                   // full command (with parameters)
     tstring command;                        // only command
@@ -52,15 +68,25 @@ public:
     }
 };
 
+struct InputCommandParameters
+{
+    tchar separator;
+    tchar prefix;
+};
+
 class InputCommandTemplate
 {
      const tchar MARKER = L'\t';
 public:
-    InputCommandTemplate(const tstring& cmd, const InputCommandParameters& params);
+    InputCommandTemplate();
+    bool init(const tstring& key, const tstring& value, const InputCommandParameters& params);
+    bool compare(const tstring& str);
     void translate(InputCommandsList *cmd) const;
 private:
     void markbrackets(tstring *cmd);
     bool isbracket(const tchar *p);
+private:
+    CompareObject m_key;
     typedef std::pair<tstring,int> subcmd;
     std::vector<subcmd> m_subcmds;
 #ifdef _DEBUG

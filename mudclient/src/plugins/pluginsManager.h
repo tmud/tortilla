@@ -22,9 +22,8 @@ public:
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);
     void processViewData(const char* method, int view, parseData* data);
-    void processBarCmd(tstring *cmd);
-    void processBarCmds(std::vector<tstring>& cmds);
-    void processHistoryCmd(tstring *cmd);
+    void processBarCmds(InputCommandsPlainList* cmds);
+    void processHistoryCmds(const InputCommandsPlainList& cmds, InputCommandsPlainList* history);
     void processConnectEvent();
     void processDisconnectEvent();
     void processTick();

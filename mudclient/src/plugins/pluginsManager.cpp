@@ -258,70 +258,57 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-void PluginsManager::processBarCmd(tstring *cmd)
+void PluginsManager::processBarCmds(InputCommandsPlainList* cmds)
 {
-    if (cmd->empty())
+    assert(cmds);
+    if (cmds->empty())
         return;
-    tchar separator[2] = { m_propData->cmd_separator, 0 };
-    Tokenizer t(cmd->c_str(), separator);
-    std::vector<tstring> cmds;
-    t.moveto(&cmds);
-    if (doPluginsTableMethod("barcmd", &cmds))
-    {
-        cmd->clear();
-        for (int i = 0, e = cmds.size(); i < e; ++i)
-        {
-            if (i != 0) cmd->append(separator);
-            cmd->append(cmds[i]);
-        }
-    }
+    doPluginsTableMethod("barcmd", cmds->ptr());
 }
 
-void PluginsManager::processBarCmds(std::vector<tstring>& cmds)
+void PluginsManager::processHistoryCmds(const InputCommandsPlainList& cmds, InputCommandsPlainList* history)
 {
-    if (doPluginsTableMethod("barcmd", &cmds))
-    {
-/*        cmd->clear();
-        for (int i = 0, e = cmds.size(); i < e; ++i)
-        {
-            if (i != 0) cmd->append(separator);
-            cmd->append(cmds[i]);
-        }*/
-    }
-}
-
-void PluginsManager::processHistoryCmd(tstring *cmd)
-{
-    if (cmd->empty())
+    assert(history);
+    if (cmds.empty())
         return;
+
     const char* method = "historycmd";
-    WideToUtf8 w2u(cmd->c_str());
-    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    WideToUtf8 w2u;
+    for (int j = 0, je = cmds.size(); j<je; ++j) 
     {
-        Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
-        lua_pushstring(L, w2u);
-        if (!p->runMethod(method, 1, 1))
+        tstring cmd(cmds[j]);
+        if (cmd.empty())
+            continue;
+        for (int i = 0, e = m_plugins.size(); i < e; ++i)
         {
-            // restart plugins
-            turnoffPlugin(NULL, i);
-            lua_settop(L, 0);
-            i = 0;
-        }
-        else
-        {
-            if (lua_isboolean(L, -1))
+            Plugin *p = m_plugins[i];
+            if (!p->state()) continue;
+            w2u.convert(cmd.c_str(), cmd.length());
+            lua_pushstring(L, w2u);
+            if (!p->runMethod(method, 1, 1))
             {
-                int r = lua_toboolean(L, -1);
-                if (!r) 
-                {
-                    cmd->clear();
-                    lua_pop(L, 1);
-                    break; 
-                }
+                // restart plugins
+                turnoffPlugin(NULL, i);
+                lua_settop(L, 0);
+                i = 0;
             }
-            lua_pop(L, 1);
+            else
+            {
+                if (lua_isboolean(L, -1))
+                {
+                    int r = lua_toboolean(L, -1);
+                    if (!r) 
+                    {
+                        cmd.clear();
+                        lua_pop(L, 1);
+                        break; 
+                    }
+                }
+                lua_pop(L, 1);
+            }
         }
+        if (!cmd.empty())
+            history->push_back(cmd);
     }
 }
 
