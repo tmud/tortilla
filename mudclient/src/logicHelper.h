@@ -143,9 +143,9 @@ public:
 
 private:
     // current workable elements
-    LogicWrapperParams<Alias, InputCommandParameters> m_aliases;
-    LogicWrapperParams<Hotkey, InputCommandParameters> m_hotkeys;
-    LogicWrapperParams<Action, InputCommandParameters> m_actions;
+    LogicWrapperParams<Alias, InputTemplateParameters> m_aliases;
+    LogicWrapperParams<Hotkey, InputTemplateParameters> m_hotkeys;
+    LogicWrapperParams<Action, InputTemplateParameters> m_actions;
     LogicWrapper<Sub> m_subs;
     LogicWrapper<AntiSub> m_antisubs;
     LogicWrapper<Gag> m_gags;

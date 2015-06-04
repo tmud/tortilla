@@ -258,7 +258,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-void PluginsManager::processBarCmds(InputCommandsPlainList* cmds)
+void PluginsManager::processBarCmds(InputPlainCommands* cmds)
 {
     assert(cmds);
     if (cmds->empty())
@@ -266,7 +266,7 @@ void PluginsManager::processBarCmds(InputCommandsPlainList* cmds)
     doPluginsTableMethod("barcmd", cmds->ptr());
 }
 
-void PluginsManager::processHistoryCmds(const InputCommandsPlainList& cmds, InputCommandsPlainList* history)
+void PluginsManager::processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history)
 {
     assert(history);
     if (cmds.empty())

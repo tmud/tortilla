@@ -74,11 +74,6 @@ void CompareObject::translateParameters(tstring* value) const
     value->swap(result);
 }
 
-void CompareObject::translateVars(tstring* value) const
-{
-
-}
-
 void CompareObject::getParameters(std::vector<tstring>* params) const
 {
     assert(params);
@@ -237,3 +232,4 @@ void CompareObject::getRange(CompareRange *range) const
     range->begin = m_pcre.getFirst(0);
     range->end = m_pcre.getLast(0);
 }
+

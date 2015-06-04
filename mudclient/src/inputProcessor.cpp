@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "inputProcessor.h"
-InputCommandsPlainList::InputCommandsPlainList() {}
-InputCommandsPlainList::InputCommandsPlainList(const tstring& cmd)
+
+InputPlainCommands::InputPlainCommands() {}
+InputPlainCommands::InputPlainCommands(const tstring& cmd)
 {
     const tchar *separators = L"\r\n";
     if (!isExistSymbols(cmd, separators))
@@ -20,6 +21,188 @@ InputCommandsPlainList::InputCommandsPlainList(const tstring& cmd)
       p = p + len + 1;
    }
 }
+
+void InputTemplateCommands::init(const InputPlainCommands& cmds, const InputTemplateParameters& params)
+{
+    for (int i=0,e=cmds.size();i<e;++i)
+        parsecmd(cmds[i], params);
+}
+
+void InputTemplateCommands::parsecmd(const tstring& cmd, const InputTemplateParameters& params)
+{
+    tchar separator = params.separator;
+    tchar syscmd = params.prefix;
+
+    const tchar *p = cmd.c_str();
+    const tchar *e = p + cmd.length();
+    if (p == e) {
+       push_back( InputSubcmd(tstring(), 0) );
+       return;
+    }
+
+    while (p != e)
+    {
+        const tchar *b = p;
+        while (*p == L' ' && p != e) p++;
+        if (p == e) 
+        {   // финальная строка из пробелов
+            push_back( InputSubcmd (tstring(b), 0) );
+            return;
+        }
+        if (*p == L'{')
+        {
+            // игровая в фигурных скобках (можно исп.;)
+            tstring cmd(b, p-b);
+            const tchar* bracket_begin = p++;
+            int stack = 0;
+            while (p != e)
+            {
+                if (stack == 0 && *p == L'}')
+                {
+                    cmd.append(bracket_begin+1, p-bracket_begin-1);                    
+                    break;
+                }
+                else
+                {
+                     if (*p == L'}')
+                         stack--;
+                     else if (*p == L'{')
+                         stack++;
+                }
+                p++;
+            }
+            if (p == e) {
+                 cmd.append(bracket_begin);
+                 push_back( InputSubcmd (cmd, 0) );
+                 return;
+            }
+            p++;
+            b = p;
+            while (p != e && *p != separator)  p++;
+            cmd.append(b, p-b);
+            push_back( InputSubcmd (cmd, 0) );
+            if (*p == separator) p++;
+            continue;
+        }
+        if (*p == syscmd)
+        {
+            // системная команда - парсинг сепаратора с учетои скобок
+            p++;
+            b = p;
+            
+            std::vector<tchar> stack;
+            while (p != e)
+            {
+                if (*p == separator && stack.empty())
+                {
+                    tstring cmd(b, p-b);
+                    push_back( InputSubcmd (cmd, 1) );
+                    break;
+                }
+                if (isbracket(p))
+                {
+                    if (!stack.empty())
+                    {
+                        int last = stack.size()-1;
+                        if (((*p == L'\'' || *p == L'"') && stack[last] == *p) ||
+                            (*p == L'}' && stack[last] == L'{'))
+                        {
+                            stack.pop_back();
+                        }
+                        else
+                        {
+                            stack.push_back(*p);
+                        }
+                    }
+                    else if (*p != L'}')
+                        { stack.push_back(*p); }
+                }
+                p++;
+            }
+            if (p == e)
+            {
+               tstring cmd(b);
+               push_back( InputSubcmd (cmd, 1) );
+            }
+            else 
+                p++;
+            continue;
+        }
+
+        // игровая, но начинается не со скобок
+        while (p != e && *p != separator)  p++;
+        tstring cmd(b, p-b);
+        push_back( InputSubcmd (cmd, 0) );
+        if (*p == separator) p++;
+    }
+    
+    for (int i=0,e=size(); i<e; ++i)
+    {
+        if (!at(i).second)
+            continue;       // пропускаем игровые, маркируем только системные
+        markbrackets(&at(i).first);
+    }
+}
+
+void InputTemplateCommands::markbrackets(tstring *cmd) const
+{
+    const tchar marker[2] = { MARKER , 0 };
+    const tchar *p = cmd->c_str();
+    const tchar *e = p + cmd->length();
+
+    const tchar* bracket_begin = NULL;
+    std::vector<tchar> stack;
+    tstring newp;
+
+    const tchar* b = p;
+    while (p != e)
+    {
+        if (!isbracket(p))
+            { p++; continue;}
+        if (stack.empty() && *p != L'}')
+        {
+            stack.push_back(*p);
+            bracket_begin = p;
+        }
+        else
+        {
+            if (((*p == L'\'' || *p == L'"') && *bracket_begin == *p) ||
+                (*p == L'}' && *bracket_begin == L'{' && stack.size() == 1))
+            {
+               stack.clear();
+               // mark pair brackets
+               newp.append(b, bracket_begin-b);
+               newp.append(marker);
+               newp.append(bracket_begin, p-bracket_begin);
+               newp.append(marker);
+               newp.append(p, 1);
+               b = p + 1;
+               p = b;
+               continue;
+            }
+            else if (*bracket_begin != L'\'' && *bracket_begin != L'"')
+            {
+               if (*p == L'{')
+                   stack.push_back(*p);
+               else if (*p == L'}')
+                   stack.pop_back();
+            }
+        }
+        p++;
+    }
+    if (b != e)
+        newp.append(b);
+    cmd->swap(newp);
+}
+
+bool InputTemplateCommands::isbracket(const tchar *p) const
+{
+    return (wcschr(L"{}\"'", *p)) ? true : false;
+}
+
+
+
+
 
 /*InputCommand::InputCommand(const tstring& cmd) : empty(true)
 {
@@ -94,6 +277,7 @@ void InputCommandsList::parse(const tstring& cmds)
     }*/
 }
 
+/*
 InputCommandTemplate::InputCommandTemplate()
 {
 }
@@ -103,119 +287,7 @@ bool InputCommandTemplate::init(const tstring& key, const tstring& value, const 
     if (!m_key.init(key))
         return false;
 
-    tchar separator = params.separator;
-    tchar syscmd = params.prefix;
-
-    const tchar *p = value.c_str();
-    const tchar *e = p + value.length();
-    if (p == e) {
-       m_subcmds.push_back( subcmd(tstring(), 0) );
-       return true;
-    }
-
-    while (p != e)
-    {
-        const tchar *b = p;
-        while (*p == L' ' && p != e) p++;
-        if (p == e) 
-        {   // финальная строка из пробелов
-            m_subcmds.push_back( subcmd (tstring(b), 0) );
-            return true;
-        }
-        if (*p == L'{')
-        {
-            // игровая в фигурных скобках (можно исп.;)
-            tstring cmd(b, p-b);
-            const tchar* bracket_begin = p++;
-            int stack = 0;
-            while (p != e)
-            {
-                if (stack == 0 && *p == L'}')
-                {
-                    cmd.append(bracket_begin+1, p-bracket_begin-1);                    
-                    break;
-                }
-                else
-                {
-                     if (*p == L'}')
-                         stack--;
-                     else if (*p == L'{')
-                         stack++;
-                }
-                p++;
-            }
-            if (p == e) {
-                 cmd.append(bracket_begin);
-                 m_subcmds.push_back( subcmd (cmd, 0) );
-                 return true;
-            }
-            p++;
-            b = p;
-            while (p != e && *p != separator)  p++;
-            cmd.append(b, p-b);
-            m_subcmds.push_back( subcmd (cmd, 0) );
-            if (*p == separator) p++;
-            continue;
-        }
-        if (*p == syscmd)
-        {
-            // системная команда - парсинг сепаратора с учетои скобок
-            p++;
-            b = p;
-            
-            std::vector<tchar> stack;
-            while (p != e)
-            {
-                if (*p == separator && stack.empty())
-                {
-                    tstring cmd(b, p-b);
-                    m_subcmds.push_back( subcmd (cmd, 1) );
-                    break;
-                }
-                if (isbracket(p))
-                {
-                    if (!stack.empty())
-                    {
-                        int last = stack.size()-1;
-                        if (((*p == L'\'' || *p == L'"') && stack[last] == *p) ||
-                            (*p == L'}' && stack[last] == L'{'))
-                        {
-                            stack.pop_back();
-                        }
-                        else
-                        {
-                            stack.push_back(*p);
-                        }
-                    }
-                    else if (*p != L'}')
-                        { stack.push_back(*p); }
-                }
-                p++;
-            }
-            if (p == e)
-            {
-               tstring cmd(b);
-               m_subcmds.push_back( subcmd (cmd, 1) );
-            }
-            else 
-                p++;
-            continue;
-        }
-
-        // игровая, но начинается не со скобок
-        while (p != e && *p != separator)  p++;
-        tstring cmd(b, p-b);
-        m_subcmds.push_back( subcmd (cmd, 0) );
-        if (*p == separator) p++;
-    }
-    
-    for (int i=0,e=m_subcmds.size(); i<e; ++i)
-    {
-        if (!m_subcmds[i].second)
-            continue;       // пропускаем игровые, маркируем только системные
-        markbrackets(&m_subcmds[i].first);
-    }
-    return true;
+   
 }
 
 bool InputCommandTemplate::compare(const tstring& str)
@@ -231,7 +303,7 @@ void InputCommandTemplate::translate(InputCommandsList *cmd) const
         // parameters and vars
         tstring value(m_subcmds[i].first);
         m_key.translateParameters(&value);
-        m_key.translateVars(&value);
+//        m_key.translateVars(&value);
         
         if (m_subcmds[i].second)
         {
@@ -249,63 +321,9 @@ void InputCommandTemplate::translate(InputCommandsList *cmd) const
         //InputCommand *cmd = new InputCommand;
         //cmd->    
     }
-}
+}*/
 
-void InputCommandTemplate::markbrackets(tstring *cmd)
-{
-    const tchar marker[2] = { MARKER , 0 };
-    const tchar *p = cmd->c_str();
-    const tchar *e = p + cmd->length();
 
-    const tchar* bracket_begin = NULL;
-    std::vector<tchar> stack;
-    tstring newp;
-
-    const tchar* b = p;
-    while (p != e)
-    {
-        if (!isbracket(p))
-            { p++; continue;}
-        if (stack.empty() && *p != L'}')
-        {
-            stack.push_back(*p);
-            bracket_begin = p;
-        }
-        else
-        {
-            if (((*p == L'\'' || *p == L'"') && *bracket_begin == *p) ||
-                (*p == L'}' && *bracket_begin == L'{' && stack.size() == 1))
-            {
-               stack.clear();
-               // mark pair brackets
-               newp.append(b, bracket_begin-b);
-               newp.append(marker);
-               newp.append(bracket_begin, p-bracket_begin);
-               newp.append(marker);
-               newp.append(p, 1);
-               b = p + 1;
-               p = b;
-               continue;
-            }
-            else if (*bracket_begin != L'\'' && *bracket_begin != L'"')
-            {
-               if (*p == L'{')
-                   stack.push_back(*p);
-               else if (*p == L'}')
-                   stack.pop_back();
-            }
-        }
-        p++;
-    }
-    if (b != e)
-        newp.append(b);
-    cmd->swap(newp);
-}
-
-bool InputCommandTemplate::isbracket(const tchar *p)
-{
-    return (wcschr(L"{}\"'", *p)) ? true : false;
-}
 
 /*
 InputProcessor::InputProcessor(tchar separator, tchar prefix) : m_separator(separator), m_prefix(prefix)

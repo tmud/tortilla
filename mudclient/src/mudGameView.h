@@ -629,7 +629,8 @@ private:
         tstring cmd;
         m_bar.getCommand(&cmd);
 
-        InputCommandsPlainList cmds(cmd);
+        bool multiline_paste = false;
+        InputPlainCommands cmds(cmd);
         int last = cmd.size() - 1;
         if (last > 0)
         {
@@ -639,16 +640,19 @@ private:
                 int last_cmd = cmds.size() - 1;
                 m_bar.setText(cmds[last_cmd]);
                 cmds.erase(last_cmd);
+                multiline_paste = true;
             }
         }
 
         m_plugins.processBarCmds(&cmds);
 
-        InputCommandsPlainList history;
+        if (!multiline_paste) {
+        InputPlainCommands history;
         m_plugins.processHistoryCmds(cmds, &history);
         for (int i=0,e=history.size(); i<e; ++i)
             m_bar.addToHistory(history[i]);
- 
+        }
+
         m_processor.processUserCommand(cmds);
         return 0;
     }

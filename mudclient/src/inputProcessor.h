@@ -4,12 +4,12 @@
 //#include "logicHelper.h"
 #include "compareObject.h"
 
-class InputCommandsPlainList : private std::vector<tstring> 
+class InputPlainCommands : private std::vector<tstring> 
 {
     typedef std::vector<tstring> base;
 public:
-    InputCommandsPlainList();
-    InputCommandsPlainList(const tstring& cmd);
+    InputPlainCommands();
+    InputPlainCommands(const tstring& cmd);
     bool empty() const { return base::empty(); }
     int size() const { return base::size(); }
     const tstring& operator[] (int index) const { 
@@ -25,6 +25,27 @@ public:
         return this;
     }
 };
+
+struct InputTemplateParameters
+{
+    tchar separator;
+    tchar prefix;
+};
+
+typedef std::pair<tstring,int> InputSubcmd;
+class InputTemplateCommands : private std::vector<InputSubcmd>
+{
+public:
+    void init(const InputPlainCommands& cmds, const InputTemplateParameters& params);
+
+private:
+    const tchar MARKER = L'\t';
+    void parsecmd(const tstring& cmd, const InputTemplateParameters& params);
+    void markbrackets(tstring *cmd) const;
+    bool isbracket(const tchar *p) const;
+};
+
+
 
 class InputCommand
 {
@@ -68,15 +89,9 @@ public:
     }
 };
 
-struct InputCommandParameters
-{
-    tchar separator;
-    tchar prefix;
-};
 
-class InputCommandTemplate
+/*class InputCommandTemplate
 {
-     const tchar MARKER = L'\t';
 public:
     InputCommandTemplate();
     bool init(const tstring& key, const tstring& value, const InputCommandParameters& params);
@@ -95,7 +110,7 @@ public:
     int getflag(int index) const { return m_subcmds[index].second; }
     int size() const { return m_subcmds.size(); }
 #endif
-};
+};*/
 
 /*
 class InputProcessor

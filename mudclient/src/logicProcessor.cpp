@@ -1,6 +1,4 @@
-// In that file - Code for processing game data
 #include "stdafx.h"
-//#include "inputProcessor.h"
 #include "logicProcessor.h"
 
 LogicProcessor::LogicProcessor(PropertiesData *data, LogicProcessorHost *host) :
@@ -53,7 +51,7 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
     return false;
 }
 
-void LogicProcessor::processUserCommand(const InputCommandsPlainList& cmds)
+void LogicProcessor::processUserCommand(const InputPlainCommands& cmds)
 {
     processCommands(cmds);
 }
@@ -65,13 +63,103 @@ void LogicProcessor::processPluginCommand(const tstring& cmd)
 
 void LogicProcessor::processCommand(const tstring& cmd)
 {
-    InputCommandsPlainList cmds(cmd);
+    InputPlainCommands cmds(cmd);
     processCommands(cmds);
 }
 
-void LogicProcessor::processCommands(const InputCommandsPlainList& cmds)
+void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 {
-    std::vector<tstring> loops;
+    //if (!processAliases(cmds))
+    //    return;
+
+    InputTemplateParameters p; 
+    p.prefix = propData->cmd_prefix;
+    p.separator = propData->cmd_separator;
+
+    InputTemplateCommands tcmds;
+    tcmds.init(cmds, p);
+
+    processVars(tcmds);
+
+  //  InputVarsProcessor vp;
+//    vp.translateVars(&tcmds);
+
+
+
+    /*for (int i=0,e=ip.commands.size(); i<e; ++i)
+    {
+        InputCommand *cmd = ip.commands[i];
+        if (!cmd->empty && cmd->full_command.at(0) == cmd_prefix)
+            processSystemCommand(cmd); //it is system command for client (not game command)
+        else
+            processGameCommand(cmd);   // it is game command
+    }*/
+}
+
+bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
+{
+    /*
+     // to protect from loops in aliases
+    std::vector<tstring> loops_hunter;
+
+    int queue_size = cmds.size();
+    for (int i=0; i<queue_size;)
+    {
+        loops_hunter.push_back(cmds[i].);
+
+        bool alias_found = false;
+        tstring cmd(commands[i]->command);
+        tstring alias;
+        if (!cmd.empty() && cmd.at(0) != m_prefix // skip empty and system commands
+            && helper->processAliases(cmd, &alias))
+        {
+            if (alias != cmd)
+                alias_found = true;
+        }
+
+        if (alias_found)
+        {
+            tstring result;
+            processParameters(alias, commands[i], &result);
+            InputCommandsList new_cmd_list;
+            processSeparators(result, &new_cmd_list);
+
+            bool loop = false;
+            for (int j=0,je=new_cmd_list.size(); j<je; ++j)
+            {
+                if (std::find(loops_hunter.begin(), loops_hunter.end(), new_cmd_list[j]->command) !=
+                    loops_hunter.end())
+                    {
+                       loop = true;
+                       loop_cmds->push_back(new_cmd_list[j]->command);
+                       break;
+                    }
+            }
+
+            if (loop)
+            {
+                //loop in aliases - skip current command
+                commands.erase(i);
+                queue_size = commands.size();
+                loops_hunter.clear();
+                continue;
+            }
+
+            commands.erase(i);
+            commands.insert(i, new_cmd_list);
+            queue_size = commands.size();
+        }
+        else
+        {
+            i++;
+            loops_hunter.clear();
+        }
+    }
+
+    */
+
+    
+     std::vector<tstring> loops;
     //WCHAR cmd_prefix = propData->cmd_prefix;
 
     //InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
@@ -91,15 +179,16 @@ void LogicProcessor::processCommands(const InputCommandsPlainList& cmds)
         }
         tmcLog(msg);
     }
+    return true;
+}
 
-    /*for (int i=0,e=ip.commands.size(); i<e; ++i)
+void LogicProcessor::processVars(InputTemplateCommands& cmds)
+{
+//    for (int i=0,e=cmds.size();i<e;++i)
     {
-        InputCommand *cmd = ip.commands[i];
-        if (!cmd->empty && cmd->full_command.at(0) == cmd_prefix)
-            processSystemCommand(cmd); //it is system command for client (not game command)
-        else
-            processGameCommand(cmd);   // it is game command
-    }*/
+        //VarsProc
+        //m_varproc.processVars(cmdline, m_propData->variables, false);
+    }
 }
 
 void LogicProcessor::updateProps()

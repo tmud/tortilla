@@ -250,7 +250,7 @@ void LogicHelper::updateProps(int what)
             active_groups.push_back(v.key);
     }
 
-    InputCommandParameters p;
+    InputTemplateParameters p;
     p.separator = m_propData->cmd_separator;
     p.prefix = m_propData->cmd_prefix;
 

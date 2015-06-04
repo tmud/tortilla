@@ -268,7 +268,7 @@ bool BracketsMarker::isbracket(const tchar *p)
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
 
-Alias::Alias(const property_value& v, const InputCommandParameters& p) : m_key(v.key), m_cmd(v.value)
+Alias::Alias(const property_value& v, const InputTemplateParameters& p) : m_key(v.key), m_cmd(v.value)
 {
 }
 
@@ -280,7 +280,7 @@ bool Alias::processing(const tstring& key, tstring *newcmd)
     return true;
 }
 
-Hotkey::Hotkey(const property_value& v, const InputCommandParameters& p) : m_key(v.key), m_cmd(v.value)
+Hotkey::Hotkey(const property_value& v, const InputTemplateParameters& p) : m_key(v.key), m_cmd(v.value)
 {
 }
 
@@ -292,18 +292,20 @@ bool Hotkey::processing(const tstring& key, tstring *newcmd)
     return true;
 }
 
-Action::Action(const property_value& v, const InputCommandParameters& p) 
+Action::Action(const property_value& v, const InputTemplateParameters& p)
 {
-    m_ct.init(v.key, v.value, p);
+    m_compare.init(v.key);
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
 }
 
 bool Action::processing(CompareData& data, tstring* newcmd)
 {
-    if (!m_ct.compare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     // parse value and generate result
-    InputCommandsList cmdlist;
+    /*InputCommandsList cmdlist;
     m_ct.translate(&cmdlist);
 
     for (int i=0,e=cmdlist.size(); i<e; ++i)
@@ -313,7 +315,7 @@ bool Action::processing(CompareData& data, tstring* newcmd)
             // drop mode -> change source MudViewString
             //todo
         }
-    }
+    }*/
 
     // drop mode -> change source MudViewString
     /*if (m_value.find(L"drop") != tstring::npos)

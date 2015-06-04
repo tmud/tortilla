@@ -37,7 +37,7 @@ private:
 class Alias
 {
 public:
-    Alias(const property_value& v, const InputCommandParameters& p);
+    Alias(const property_value& v, const InputTemplateParameters& p);
     bool processing(const tstring& key, tstring *newcmd);
 private:
     tstring m_key;
@@ -47,7 +47,7 @@ private:
 class Hotkey
 {
 public:
-    Hotkey(const property_value& v, const InputCommandParameters& p);
+    Hotkey(const property_value& v, const InputTemplateParameters& p);
     bool processing(const tstring& key, tstring *newcmd);
 private:
     tstring m_key;
@@ -57,10 +57,11 @@ private:
 class Action
 {
 public:
-    Action(const property_value& v, const InputCommandParameters& p);
+    Action(const property_value& v, const InputTemplateParameters& p);
     bool processing(CompareData& data, tstring* newcmd);
 private:
-    InputCommandTemplate m_ct;
+    CompareObject m_compare;
+    InputTemplateCommands m_cmds;
 };
 
 class Sub

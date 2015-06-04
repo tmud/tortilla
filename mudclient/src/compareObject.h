@@ -17,12 +17,7 @@ public:
     bool init(const tstring& key);
     bool compare(const tstring& str);
     void getRange(CompareRange *range) const;
-    
     void translateParameters(tstring* value) const;
-    void translateVars(tstring* value) const;
-
-
-
 
 private:
     void getParameters(std::vector<tstring>* params) const;
@@ -34,4 +29,13 @@ private:
     tstring m_key;
     tstring m_str;
     std::vector<tstring> m_vars_pcre_parts;
+};
+
+class InputVarsProcessor 
+{
+public:
+    //void translateVars(InputTemplateCommands* cmds) const;
+
+
+
 };
