@@ -225,11 +225,12 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    bool syscmd = (!cmd->empty && cmd->command.at(0) == m_propData->cmd_prefix);
+    bool syscmd = (!cmd->dropped && cmd->system); //todo
+    
     std::vector<tstring> p;
-    p.push_back((syscmd) ? cmd->command.substr(1) : cmd->command);
+    p.push_back(cmd->command);
     p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
-    if (syscmd)
+    if (cmd->system)
     {
         if (doPluginsTableMethod("syscmd", &p))
             concatCommand(p, true, cmd);
@@ -521,14 +522,11 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
     if (parts.empty())
         return;
 
-    tstring newcmd;
-    if (system)
-    {
-        tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-        newcmd.append(prefix);
-    }
-    newcmd.append(parts[0]);
+    tstring newcmd(parts[0]);
+    if (newcmd != cmd->command)
+        cmd->changed = true;
     cmd->command.assign(newcmd);
+
     cmd->parameters_list.clear();
 
     tstring symbols(L"{}\"' ");
@@ -554,10 +552,4 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         }
     }
     cmd->parameters.assign(params);
-    if (!params.empty())
-    {
-        newcmd.append(L" ");
-        newcmd.append(params);
-    }
-    cmd->full_command.assign(newcmd);
 }

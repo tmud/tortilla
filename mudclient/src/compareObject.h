@@ -1,7 +1,5 @@
 #pragma once
 
-#include "../common/pcreHelper.h"
-
 struct CompareRange
 {
     CompareRange() : begin(-1), end(-1) {}
@@ -29,13 +27,4 @@ private:
     tstring m_key;
     tstring m_str;
     std::vector<tstring> m_vars_pcre_parts;
-};
-
-class InputVarsProcessor 
-{
-public:
-    //void translateVars(InputTemplateCommands* cmds) const;
-
-
-
 };

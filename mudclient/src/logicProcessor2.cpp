@@ -40,12 +40,11 @@ LogicProcessor* g_lprocessor = NULL;
 //------------------------------------------------------------------
 void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring main_cmd(cmd->command.substr(1));
-
-    typedef std::map<tstring, syscmd_fun>::iterator iterator;
-    typedef std::vector<tstring>::iterator piterator;
+    tstring main_cmd(cmd->srccmd); // not cmd->command! -> block #__xxx commands ( _ - space)
 
     tstring error;
+    typedef std::map<tstring, syscmd_fun>::iterator iterator;
+    typedef std::vector<tstring>::iterator piterator;    
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
     if (it == it_end)
@@ -86,28 +85,28 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         }
     }
 
-    tchar prefix[2] = { propData->cmd_prefix, 0 };
-    tstring fullcmd(prefix);
-    fullcmd.append(main_cmd);
+    tchar prefix[2] = { propData->cmd_prefix, 0 };    
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
     if (error.empty())
     {
-        cmd->replace_command(fullcmd);
-        fullcmd.assign(cmd->full_command);
+        cmd->command.assign(main_cmd);
+
+        tstring fullcmd(prefix);
+        fullcmd.append(main_cmd);
         if (!hide_cmd)
-            m_pHost->preprocessGameCmd(cmd);
-        if (cmd->empty)
+            fullcmd.assign(cmd->parameters);
+
+        if (!hide_cmd)
+            m_pHost->preprocessCommand(cmd);
+        if (cmd->dropped)
         {
             syscmdLog(fullcmd);
             tmcLog(L"Команда заблокирована");
             return;
         }
 
-        if (!hide_cmd)
-            syscmdLog(cmd->full_command);
-        else
-            syscmdLog(cmd->command);
+        syscmdLog(fullcmd);
 
         it = m_syscmds.find(main_cmd);
         if (it != it_end)
@@ -129,7 +128,10 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        msg.append(cmd->full_command);
+        msg.append(prefix);
+        msg.append(cmd->srccmd);
+        if (!hide_cmd)
+            msg.append(cmd->parameters);
         msg.append(L"]");
         tmcLog(msg);
     }
@@ -137,7 +139,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
 void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
-    m_pHost->preprocessGameCmd(cmd);
+    /*m_pHost->preprocessGameCmd(cmd);
     tstring tmp(cmd->full_command);
     if (tmp.empty() && !cmd->empty)
         return;
@@ -145,6 +147,7 @@ void LogicProcessor::processGameCommand(InputCommand* cmd)
     tmp.append(br);
     processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
     sendToNetwork(tmp);
+    */
 }
 
 void LogicProcessor::updateProps(int update, int options)

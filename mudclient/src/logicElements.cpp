@@ -259,7 +259,6 @@ void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameter
               tp.push_back(tmp);
        }
    }
-
    parameters->swap(newp);
 }
 
@@ -305,7 +304,7 @@ bool Action::processing(CompareData& data, tstring* newcmd)
         return false;
 
     // parse value and generate result
-    /*InputCommandsList cmdlist;
+    /*InputCommands cmdlist;
     m_ct.translate(&cmdlist);
 
     for (int i=0,e=cmdlist.size(); i<e; ++i)

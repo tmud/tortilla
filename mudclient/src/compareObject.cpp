@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "compareObject.h"
-#include "logicProcessor.h"
-
-extern LogicProcessorMethods* _lp;
+#include "inputProcessor.h"
 
 CompareObject::CompareObject() {}
 CompareObject::~CompareObject() {}
@@ -35,8 +33,10 @@ bool CompareObject::compare(const tstring& str)
                 regexp.append(v);
             else
             {
+                InputVarsAccessor va;
                 tstring value;
-                if (!_lp->getVar(v.c_str() + 1, &value))
+                tstring varname(v.c_str() + 1);
+                if (!va.get(varname, &value))
                     return false;
                 regexp.append(value);
             }

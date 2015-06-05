@@ -1,8 +1,11 @@
 #pragma once
 
-//#include "propertiesPages/propertiesData.h"
-//#include "logicHelper.h"
-#include "compareObject.h"
+class InputVarsAccessor
+{
+public:
+    bool get(const tstring&name, tstring* value);
+    void tanslateVars(tstring *cmd);
+};
 
 class InputPlainCommands : private std::vector<tstring> 
 {
@@ -12,6 +15,7 @@ public:
     InputPlainCommands(const tstring& cmd);
     bool empty() const { return base::empty(); }
     int size() const { return base::size(); }
+    void clear() { base::clear(); }
     const tstring& operator[] (int index) const { 
         return base::operator[](index);
     }
@@ -32,41 +36,28 @@ struct InputTemplateParameters
     tchar prefix;
 };
 
-typedef std::pair<tstring,int> InputSubcmd;
-class InputTemplateCommands : private std::vector<InputSubcmd>
+struct InputCommand
 {
-public:
-    void init(const InputPlainCommands& cmds, const InputTemplateParameters& params);
+    InputCommand() : dropped(false), system(false), changed(false) {}
 
-private:
-    const tchar MARKER = L'\t';
-    void parsecmd(const tstring& cmd, const InputTemplateParameters& params);
-    void markbrackets(tstring *cmd) const;
-    bool isbracket(const tchar *p) const;
-};
-
-
-
-class InputCommand
-{
-public:
     //InputCommand(const tstring& cmd);
-    void replace_command(const tstring& cmd);
-    tstring full_command;                   // full command (with parameters)
-    tstring command;                        // only command
+    //void replace_command(const tstring& cmd);    
+
+                                            // full command as is = command + parameters
+    tstring srccmd;                         // only command name (may be left spaces)
     tstring parameters;                     // only parameters (without command) as single line (without trimming)
+    tstring command;                        // command without spaces
     std::vector<tstring> parameters_list;   // list of parameters separately
-    bool empty;
+    bool dropped;
+    bool system;
+    bool changed;
 };
 
-class InputCommandsList : private std::vector<InputCommand*>
+class InputCommands : private std::vector<InputCommand*>
 {
     typedef std::vector<InputCommand*> base;
 public:
-    void parse(const tstring& cmds);
-
-    InputCommandsList() {}
-    ~InputCommandsList() { clear(); }    
+    ~InputCommands() { clear(); }
     int size() const { return base::size(); }
     InputCommand* operator[] (int index) const { 
         return base::operator[](index);
@@ -76,19 +67,37 @@ public:
         delete cmd;
         base::erase(begin()+index);
     }
-    void insert(int pos, InputCommandsList& cmds) {
+    void insert(int pos, InputCommands& cmds) {
         base::insert(begin() + pos, cmds.begin(), cmds.end());
         cmds.clear();
     }
     void clear() {
-        struct{ void operator() (InputCommand* cmd) { delete cmd; }} del;
-        std::for_each(begin(), end(), del);
+        std::for_each(begin(), end(), [](InputCommand *c){ delete c; });
     }
     void push_back(InputCommand *cmd) {
         base::push_back(cmd);
     }
 };
 
+typedef std::pair<tstring,int> InputSubcmd;
+class InputTemplateCommands : private std::vector<InputSubcmd>
+{
+public:
+    void init(const InputPlainCommands& cmds, const InputTemplateParameters& params);
+    void extract(InputPlainCommands* cmds);
+    void makeTemplates();
+    void tranlateVars();
+    void makeCommands(InputCommands *cmds);
+private:
+    const tchar MARKER = L'\t';
+    InputTemplateParameters _params;
+    void fillsyscmd(InputCommand *cmd);
+    void fillgamecmd(InputCommand *cmd);
+    void parsecmd(const tstring& cmd);
+    void markbrackets(tstring *cmd) const;
+    void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
+    bool isbracket(const tchar *p) const;
+};
 
 /*class InputCommandTemplate
 {
@@ -96,7 +105,7 @@ public:
     InputCommandTemplate();
     bool init(const tstring& key, const tstring& value, const InputCommandParameters& params);
     bool compare(const tstring& str);
-    void translate(InputCommandsList *cmd) const;
+    void translate(InputCommands *cmd) const;
 private:
     void markbrackets(tstring *cmd);
     bool isbracket(const tchar *p);
@@ -119,10 +128,10 @@ public:
     InputProcessor(tchar separator, tchar prefix);
     ~InputProcessor();
     void process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds);
-    InputCommandsList commands;
+    InputCommands commands;
 
 private:
-    //void processSeparators(const tstring& sep_cmd, InputCommandsList* result);
+    //void processSeparators(const tstring& sep_cmd, InputCommands* result);
     void processParameters(const tstring& cmd, InputCommand* params, tstring* result);
     tchar m_separator, m_prefix;
 };

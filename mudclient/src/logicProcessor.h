@@ -5,7 +5,7 @@
 #include "logsProcessor.h"
 #include "network/network.h"
 
-class InputCommand;
+struct InputCommand;
 class LogicProcessorHost
 {
 public:
@@ -22,7 +22,7 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessGameCmd(InputCommand* cmd) = 0;
+    virtual void preprocessCommand(InputCommand* cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
 };
@@ -42,6 +42,7 @@ public:
     virtual bool getConnectionState() = 0;
     virtual bool canSetVar(const tstring& var) = 0;
     virtual bool getVar(const tstring& var, tstring* value) = 0;
+    virtual void processVars(tstring *cmd) = 0;
 };
 
 class parser;
@@ -99,13 +100,12 @@ public:
     bool getConnectionState() { return m_connected; }
     bool canSetVar(const tstring& var)  { return m_helper.canSetVar(var); }    
     bool getVar(const tstring& var, tstring* value) { return m_helper.getVar(var, value); }
+    void processVars(tstring *cmd) { m_helper.processVars(cmd); }
 
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
     bool processAliases(const InputPlainCommands& cmds);
-    void processVars(InputTemplateCommands& cmds);
-
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);

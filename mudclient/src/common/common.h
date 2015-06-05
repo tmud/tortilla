@@ -40,8 +40,7 @@ struct autodel
 {   
    autodel(std::vector<T*>& v)
    {
-       struct{ void operator() (T* cmd) { delete cmd; }} del;
-       std::for_each(v.begin(), v.end(), del);
+       std::for_each(v.begin(), v.end(), [](T *obj){ delete obj; });
        v.clear();
    }
 };

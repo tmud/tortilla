@@ -7,7 +7,7 @@ m_prompt_mode(OFF), m_prompt_counter(0)
 {
     RUN_INPUTPROCESSOR_TESTS;
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
-        m_wlogs[i] = -1;    
+        m_wlogs[i] = -1;
 }
 
 LogicProcessor::~LogicProcessor()
@@ -72,28 +72,25 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
     //if (!processAliases(cmds))
     //    return;
 
-    InputTemplateParameters p; 
+    InputTemplateParameters p;
     p.prefix = propData->cmd_prefix;
     p.separator = propData->cmd_separator;
 
     InputTemplateCommands tcmds;
     tcmds.init(cmds, p);
+    tcmds.tranlateVars();
 
-    processVars(tcmds);
+    InputCommands result;
+    tcmds.makeCommands(&result);
 
-  //  InputVarsProcessor vp;
-//    vp.translateVars(&tcmds);
-
-
-
-    /*for (int i=0,e=ip.commands.size(); i<e; ++i)
+    for (int i=0,e=result.size(); i<e; ++i)
     {
-        InputCommand *cmd = ip.commands[i];
-        if (!cmd->empty && cmd->full_command.at(0) == cmd_prefix)
-            processSystemCommand(cmd); //it is system command for client (not game command)
+        InputCommand *cmd = result[i];
+        if (cmd->system)
+            processSystemCommand(cmd); //it is system command for client
         else
             processGameCommand(cmd);   // it is game command
-    }*/
+    }
 }
 
 bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
@@ -121,7 +118,7 @@ bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
         {
             tstring result;
             processParameters(alias, commands[i], &result);
-            InputCommandsList new_cmd_list;
+            InputCommands new_cmd_list;
             processSeparators(result, &new_cmd_list);
 
             bool loop = false;
@@ -180,15 +177,6 @@ bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
         tmcLog(msg);
     }
     return true;
-}
-
-void LogicProcessor::processVars(InputTemplateCommands& cmds)
-{
-//    for (int i=0,e=cmds.size();i<e;++i)
-    {
-        //VarsProc
-        //m_varproc.processVars(cmdline, m_propData->variables, false);
-    }
 }
 
 void LogicProcessor::updateProps()
