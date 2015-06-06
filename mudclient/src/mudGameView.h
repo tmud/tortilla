@@ -524,9 +524,13 @@ private:
 
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
-        NetworkEvent result = (NetworkEvent)lparam;
-        if (result == NE_NEWDATA)
+        NetworkEvent event = m_network.processEvent((NetworkEvent)lparam);
+        if (event == NE_NEWDATA)
         {
+            MsdpNetwork *msdp = m_plugins.getMsdp();
+            msdp->processReceived(m_network.receiveMsdp());
+
+
             m_plugins.processReceived(&m_network);
 
             DataQueue* data = m_network.receive();

@@ -18,9 +18,8 @@ MsdpNetwork::~MsdpNetwork()
     releaseReports();
 }
 
-void MsdpNetwork::processReceived(Network *network)
+void MsdpNetwork::processReceived(DataQueue *msdp_data)
 {
-    DataQueue *msdp_data = network->receive_msdp();
     if (msdp_data->getSize() > 0)
         translate(msdp_data);
     sendExist(network);

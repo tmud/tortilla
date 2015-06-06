@@ -49,6 +49,8 @@ enum NetworkEvent
 {
     NE_NOEVENT = 0,
     NE_NEWDATA,
+    NE_ALREADY_CONNECTED,
+    NE_CONNECTING,
     NE_CONNECT,
     NE_DISCONNECT,
     NE_ERROR_CONNECT,
@@ -69,13 +71,12 @@ class NetworkConnection : private TempThread
 public:
     NetworkConnection();
     ~NetworkConnection();
-    bool connect(const NetworkConnectData& cdata);
+    void connect(const NetworkConnectData& cdata);
     void disconnect();
-    bool isConnected();
     bool send(const tbyte* data, int len);
     bool receive(DataQueue *data);
-
 private:
+    bool isConnected();
     void threadProc();
     void sendEvent(NetworkEvent e);
     void waittread();
@@ -98,15 +99,15 @@ class Network
 {
 public:
     Network();
-    ~Network();
-    //void processMsg(NetworkEvent event);
+    ~Network();    
+   // NetworkEvent processEvent(NetworkEvent event);
     void connect(const NetworkConnectData& data);
     void disconnect();
 
-    DataQueue* receive();
-    DataQueue* receive_msdp();
     bool send(const tbyte* data, int len);
     bool sendplain(const tbyte* data, int len); // send data directly
+    bool receive(DataQueue* data);
+    DataQueue* receiveMsdp();
     
     void getMccpRatio(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
@@ -135,7 +136,9 @@ private:
     MemoryBuffer m_mccp_buffer;             // to decompress data   
     DataQueue m_input_data;                 // accamulated data from network
     DataQueue m_receive_data;               // ready to receive by app
-    DataQueue m_output_buffer;              // buffer to compile output data
+    
+    DataQueue m_output_buffer;              // buffer to acc output data
+    
     DataQueue m_send_data;                  // data for send to server
     DataQueue m_msdp_data;                  // data of msdp protocol
 

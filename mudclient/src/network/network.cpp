@@ -55,24 +55,19 @@ NetworkConnection::NetworkConnection()
 
 NetworkConnection::~NetworkConnection()
 {
-    waittread();
+    disconnect();
 }
 
-bool NetworkConnection::connect(const NetworkConnectData& cdata)
+void NetworkConnection::connect(const NetworkConnectData& cdata)
 {
     if (isConnected())
-        return false;
+        return sendEvent(NE_ALREADY_CONNECTED);
     if (!run())
-        return false;
-    return true;
+        return sendEvent(NE_ERROR);
+    sendEvent(NE_CONNECTING);
 }
 
 void NetworkConnection::disconnect()
-{
-    waittread();
-}
-
-void NetworkConnection::waittread()
 {
     if (!isConnected())
         return;
@@ -100,21 +95,22 @@ bool NetworkConnection::receive(DataQueue *data)
         return false;
     CSectionLock lock(m_cs_receive);
     data->write(m_receive_data.getData(), m_receive_data.getSize());
+    m_receive_data.clear();
     return true;
 }
-
-class autoclose 
-{
-    SOCKET &socket;
-public:
-    autoclose(SOCKET &s) : socket(s) {}
-    ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
-};
 
 void NetworkConnection::sendEvent(NetworkEvent e)
 {
     PostMessage(m_connection.wndToNotify, m_connection.notifyMsg, 0, (LPARAM)e);
 }
+
+class autoclose
+{
+    SOCKET socket;
+public:
+    autoclose(SOCKET s) : socket(s) {}
+    ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
+};
 
 void NetworkConnection::threadProc()
 {
@@ -208,6 +204,7 @@ m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(fals
 {
     m_input_buffer.alloc(1024);
     m_mccp_buffer.alloc(8192);
+    m_output_buffer.setBufferSize(1024);
 }
 
 Network::~Network()
@@ -257,9 +254,17 @@ void Network::setUtf8Encoding(bool flag)
     m_utf8_encoding = flag;
 }
 
-/*void Network::processMsg2(NetworkEvent event)
+/*void Network::processEvent(NetworkEvent event)
 {
-    WORD error = WSAGETSELECTERROR(msg_lparam);
+    if (event == NE_NEWDATA)
+    {
+           
+    
+    }
+    return event;
+
+
+    /*WORD error = WSAGETSELECTERROR(msg_lparam);
     if (error)
     {   if (error == WSAECONNREFUSED || error == WSAETIMEDOUT)
             return NE_ERROR_CONNECT;
@@ -305,7 +310,6 @@ bool Network::send(const tbyte* data, int len)
 {
     const tbyte *b = data;
     const tbyte *e = b + len;
-
     for (const tbyte *p=b; p!=e; ++p)
     {
         if (*p == IAC)
@@ -323,22 +327,22 @@ bool Network::send(const tbyte* data, int len)
         m_output_buffer.write(b, e-b);
 
     int data_len = m_output_buffer.getSize();
-    bool result = send_ex((tbyte*)m_output_buffer.getData(), data_len);
+    bool result = m_connection.send((tbyte*)m_output_buffer.getData(), data_len);
     m_output_buffer.truncate(data_len);
     return result;
 }
 
 bool Network::sendplain(const tbyte* data, int len)
 {
-    return send_ex(data, len);
+    return m_connection.send(data, len);
 }
 
-DataQueue* Network::receive()
+bool Network::receive(DataQueue* data)
 {
-    return &m_receive_data;
+    return m_connection.receive(data);
 }
 
-DataQueue* Network::receive_msdp()
+DataQueue* Network::receiveMsdp()
 {
     return &m_msdp_data;
 }
@@ -709,8 +713,11 @@ void Network::init_msdp()
 
 void Network::close_msdp()
 {
-    tbyte turnoff[3] = { IAC, DONT, MSDP };
-    m_msdp_data.write(turnoff, 3);
+    if (m_connection.isConnected()) 
+    {
+        tbyte turnoff[3] = { IAC, DONT, MSDP };
+        m_msdp_data.write(turnoff, 3);
+    }
     m_msdp_on = false;
 }
 

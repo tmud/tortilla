@@ -7,7 +7,7 @@ public:
     MsdpNetwork();
     ~MsdpNetwork();
     bool state() const { return m_state; }
-    void processReceived(Network *network);
+    void processReceived(DataQueue *msdp_data);
     void sendExist(Network *network);
     void send_varval(const utf8* var, const utf8* val);
     void send_varvals(const utf8* var, const std::vector<u8string>& vals);
