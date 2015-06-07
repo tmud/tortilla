@@ -95,7 +95,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         tstring fullcmd(prefix);
         fullcmd.append(main_cmd);
         if (!hide_cmd)
-            fullcmd.assign(cmd->parameters);
+            fullcmd.append(cmd->parameters);
 
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
@@ -104,6 +104,13 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             syscmdLog(fullcmd);
             tmcLog(L"Команда заблокирована");
             return;
+        }
+        
+        if (cmd->changed)
+        {
+            tstring tmp(prefix);
+            tmp.append(cmd->srccmd);
+            tmp.append(cmd->parameters);
         }
 
         syscmdLog(fullcmd);
@@ -139,15 +146,15 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
 void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
-    /*m_pHost->preprocessGameCmd(cmd);
-    tstring tmp(cmd->full_command);
-    if (tmp.empty() && !cmd->empty)
-        return;
+    m_pHost->preprocessCommand(cmd);
+
+    //if (cmd->command.empty() && !cmd->dropped)
+    //    return;
     tchar br[2] = { 10, 0 };
+    tstring tmp(cmd->command);
     tmp.append(br);
     processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
     sendToNetwork(tmp);
-    */
 }
 
 void LogicProcessor::updateProps(int update, int options)

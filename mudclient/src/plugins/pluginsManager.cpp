@@ -225,7 +225,7 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    bool syscmd = (!cmd->dropped && cmd->system); //todo
+    //bool syscmd = (!cmd->dropped && cmd->system); //todo
     
     std::vector<tstring> p;
     p.push_back(cmd->command);
@@ -524,11 +524,21 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
 
     tstring newcmd(parts[0]);
     if (newcmd != cmd->command)
+    {
         cmd->changed = true;
-    cmd->command.assign(newcmd);
+        cmd->command.assign(newcmd);
+    }
+    if (cmd->parameters_list.size() != parts.size())
+        cmd->changed = true;
+    else
+    {
+        for (int i=1,e=parts.size();i<e;++i)
+            if (cmd->parameters_list[i] != parts[i]) { cmd->changed = true; break; }
+    }
+    if (!cmd->changed)
+        return;
 
     cmd->parameters_list.clear();
-
     tstring symbols(L"{}\"' ");
     tstring params;
     for (int i=1,e=parts.size();i<e;++i)

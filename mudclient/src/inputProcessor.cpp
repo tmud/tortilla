@@ -248,7 +248,8 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
 void InputTemplateCommands::markbrackets(tstring *cmd) const
 {
     const tchar marker[2] = { MARKER , 0 };
-    const tchar *p = cmd->c_str();
+    const tchar *b0 = cmd->c_str();
+    const tchar *p = b0;
     const tchar *e = p + cmd->length();
 
     const tchar* bracket_begin = NULL;
@@ -259,9 +260,24 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
     while (p != e)
     {
         if (!isbracket(p))
-            { p++; continue;}
-        if (stack.empty() && *p != L'}')
+            { p++; continue; }
+        // check space before open bracket
+        if (!bracket_begin)
         {
+            if (p != b0 && p[-1] != ' ')
+                { p++; continue; }
+        }
+        // check space after close bracket
+        else
+        {
+            if (p+1 != e && p[1] != ' ')
+                { p++; continue; }
+        }
+
+        if (stack.empty())
+        {
+            if (*p == L'}')
+                { p++; continue; }
             stack.push_back(*p);
             bracket_begin = p;
         }
@@ -279,15 +295,14 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
                newp.append(p, 1);
                b = p + 1;
                p = b;
+               bracket_begin = NULL;
                continue;
             }
-            else if (*bracket_begin != L'\'' && *bracket_begin != L'"')
-            {
-               if (*p == L'{')
-                   stack.push_back(*p);
-               else if (*p == L'}')
-                   stack.pop_back();
-            }
+
+            if (*p == L'{')
+                stack.push_back(*p);
+            else if (*p == L'}')
+                stack.pop_back();
         }
         p++;
     }

@@ -78,6 +78,7 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 
     InputTemplateCommands tcmds;
     tcmds.init(cmds, p);
+    tcmds.makeTemplates();
     tcmds.tranlateVars();
 
     InputCommands result;
