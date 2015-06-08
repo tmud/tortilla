@@ -241,11 +241,16 @@ private:
     BOOL processKeyDown(UINT key)
     {
         if (key == VK_DOWN)
-            onHistoryDown();
+        {
+            if (m_history_index == -1)
+                clear();
+            else
+                onHistoryDown();
+        }
         else if (key == VK_UP)
             onHistoryUp();
         else if (key == VK_ESCAPE)
-            { clear(); }
+            { clear(); m_history_index = -1; }
         else if (key == VK_TAB)
             onTab();
         else
@@ -287,9 +292,7 @@ private:
 
     void onHistoryDown()
     {
-        if (m_history_index == -1)
-            return;
-
+        assert (m_history_index != -1);
         std::vector<tstring> &h = propData->cmd_history;
         int last_history = h.size() -1;
         if (m_history_index != last_history)
@@ -348,7 +351,7 @@ private:
             bool canTabHistory = (cmd.empty() || cmd == cmd_prefix) ? true : false;
             if (!canTabHistory && m_lasthistorytab != 0)
             {
-                tstring &tab = propData->cmd_history[m_lasthistorytab - 1];
+                const tstring &tab = propData->cmd_history[m_lasthistorytab - 1];
                 if (tab == text) { canTabHistory = true; extra = true; }
             }
             if (canTabHistory)
@@ -356,10 +359,11 @@ private:
                 tstring ctab(syscmd ? cmd_prefix : L"");
                 ctab.append(m_tab);
                 int min_len = ctab.length();
-                std::vector<tstring> &h = propData->cmd_history;
+                const std::vector<tstring> &h = propData->cmd_history;
                 for (int i = m_lasthistorytab, e = h.size(); i < e; ++i)
                 {
-                    const tstring& tab = h[i];
+                    int back_index = (e-1)-i;  // reverse tabbing back
+                    const tstring& tab = h[back_index];
                     if (!tab.compare(0, min_len, ctab))
                     {
                         if (!tab.compare(ctab))
@@ -370,7 +374,7 @@ private:
                     }
                 }
                 if (extra) { syscmd = (cmd.at(0) == prefix); cmd.assign(syscmd ? cmd_prefix : L""); }
-            }         
+            }
         }
 
         int min_len = m_tab.length();
@@ -387,7 +391,7 @@ private:
                 break;
             }
         }
-        
+
         if (index == -1)
         {
             cmd.append(m_tab);
