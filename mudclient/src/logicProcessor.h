@@ -105,7 +105,8 @@ public:
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
-    bool processAliases(const InputPlainCommands& cmds);
+    void runCommands(const InputCommands& cmds);
+    void processAliases(const InputTemplateCommands& cmds, InputTemplateCommands *result);
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);

@@ -47,7 +47,7 @@ class Action
 {
 public:
     Action(const property_value& v, const InputTemplateParameters& p);
-    bool processing(CompareData& data, tstring* newcmd);
+    bool processing(CompareData& data, InputCommands* newcmds);
 private:
     CompareObject m_compare;
     InputTemplateCommands m_cmds;

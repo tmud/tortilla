@@ -64,19 +64,14 @@ void InputTemplateCommands::makeTemplates()
     }
 }
 
-void InputTemplateCommands::tranlateVars()
-{
-    InputVarsAccessor va;
-    for (int i=0,e=size();i<e;++i)
-        va.tanslateVars(&at(i).first);
-}
-
 void InputTemplateCommands::makeCommands(InputCommands *cmds)
 {
+    InputVarsAccessor va;
     for (int i=0,e=size(); i<e; ++i)
     {
         const InputSubcmd &subcmd = at(i);
-        const tstring& t = subcmd.first;   //template of cmd
+        tstring t(subcmd.first);    //template of cmd
+        va.tanslateVars(&t);        //translate vars in template
         InputCommand *cmd = new InputCommand();
         cmd->system = (subcmd.second) ? true : false;
         size_t pos = t.find(L" ");
@@ -103,8 +98,9 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds)
             {
                 cmd->command.assign(t.substr(0, pos));
                 cmd->srccmd = cmd->command;
-            }            
-            cmd->parameters.assign(t.substr(pos));
+            }
+            cmd->srcparameters.assign(t.substr(pos));
+            cmd->parameters.assign(cmd->srcparameters);
             if (cmd->system)
                 fillsyscmd(cmd);
             else
@@ -320,8 +316,8 @@ void InputTemplateCommands::unmarkbrackets(tstring* parameters, std::vector<tstr
    std::vector<tstring> &tp = *parameters_list;
 
    // get parameters, delete markers from parameters
-   const WCHAR *p = parameters->c_str();
-   const WCHAR *e = p + parameters->length();
+   const tchar *p = parameters->c_str();
+   const tchar *e = p + parameters->length();
 
    const tchar* bracket_begin = NULL;
    bool combo_bracket = false;
@@ -415,271 +411,3 @@ bool InputTemplateCommands::isbracket(const tchar *p) const
 {
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
-
-
-/*InputCommand::InputCommand(const tstring& cmd) : empty(true)
-{
-    // save command
-    full_command.assign(cmd);
-    tstring& fcmd = full_command;
-
-    // trim command
-    tstring_trimleft(&fcmd);
-    if (fcmd.empty())
-        return;
-
-    empty = false;
-
-    // divide cmd for cmd+parameters
-    int pos = fcmd.find(L' ');
-    if (pos == -1)
-    {
-        command.assign(fcmd);
-        return;
-    }
-    command.assign(fcmd.substr(0,pos));
-    parameters.assign(fcmd.substr(pos+1));
-    fcmd.resize(pos+1);
-
-    /*BracketsMarker bm;
-    bm.unmark(&parameters, &parameters_list);
-    fcmd.append(parameters);
-}*/
-
-/*void InputCommands::parse(const tstring& cmds)
-{
-    tstring tmp(cmds);
-    tstring_trimleft(&tmp);
-    // marker for brackets
-    BracketsMarker bm;
-    tchar marker = bm.getMarker();
-
-    // truncate to separate commands
-    const WCHAR *p = sep_cmd.c_str();
-    const WCHAR *e = p + sep_cmd.length();
-    bool inside_brackets = false;
-
-    const WCHAR *b = p;
-    while (p != e)
-    {
-        if (*p == m_separator && !inside_brackets)
-        {
-            InputCommand *icmd = new InputCommand( tstring(b, p-b) );
-            result->push_back(icmd);
-            p++; b = p;
-            continue;
-        }
-        if (marker == *p)
-            inside_brackets = !inside_brackets;
-        p++;
-    }
-    if (b != e || sep_cmd.empty())
-    {
-        InputCommand *icmd = new InputCommand(b);
-        result->push_back(icmd);
-    }
-}*/
-
-/*
-InputCommandTemplate::InputCommandTemplate()
-{
-}
-
-bool InputCommandTemplate::init(const tstring& key, const tstring& value, const InputCommandParameters& params)
-{
-    if (!m_key.init(key))
-        return false;
-}
-
-bool InputCommandTemplate::compare(const tstring& str)
-{
-    return m_key.compare(str);
-}
-
-void InputCommandTemplate::translate(InputCommands *cmd) const
-{
-    //tstring result;
-    for (int i=0,e=m_subcmds.size(); i<e; ++i)
-    {
-        // parameters and vars
-        tstring value(m_subcmds[i].first);
-        m_key.translateParameters(&value);
-//        m_key.translateVars(&value);
-        
-        if (m_subcmds[i].second)
-        {
-            // brackets unmark operation (only system cmds)
-
-        }
-        else
-        {
-            // separate cmd and parameters by spaces
-
-        
-        
-        }
-
-        //InputCommand *cmd = new InputCommand;
-        //cmd->    
-    }
-}*/
-
-
-
-/*
-InputProcessor::InputProcessor(tchar separator, tchar prefix) : m_separator(separator), m_prefix(prefix)
-{
-}
-
-InputProcessor::~InputProcessor()
-{
-}
-
-void InputProcessor::process(const tstring& cmd, LogicHelper* helper, std::vector<tstring>* loop_cmds)
-{
-    InputCommandTemplate t(cmd, m_separator, m_prefix);
-    t.translate(&commands);
-
-
-    // clear data
-    //clear();
-    // process separators
-    //processSeparators(cmd, &commands);
-
-    // process aliases
-    int queue_size = commands.size();
-    if (queue_size == 0) 
-        return;
-
-    // to protect from loops in aliases
-    std::vector<tstring> loops_hunter;
-    for (int i=0; i<queue_size;)
-    {
-        loops_hunter.push_back(commands[i]->command);
-
-        bool alias_found = false;
-        tstring cmd(commands[i]->command);
-        tstring alias;
-        if (!cmd.empty() && cmd.at(0) != m_prefix // skip empty and system commands
-            && helper->processAliases(cmd, &alias))
-        {
-            if (alias != cmd)
-                alias_found = true;
-        }
-
-        if (alias_found)
-        {
-            tstring result;
-            processParameters(alias, commands[i], &result);
-            InputCommands new_cmd_list;
-            processSeparators(result, &new_cmd_list);
-
-            bool loop = false;
-            for (int j=0,je=new_cmd_list.size(); j<je; ++j)
-            {
-                if (std::find(loops_hunter.begin(), loops_hunter.end(), new_cmd_list[j]->command) !=
-                    loops_hunter.end())
-                    {
-                       loop = true;
-                       loop_cmds->push_back(new_cmd_list[j]->command);
-                       break;
-                    }
-            }
-
-            if (loop)
-            {
-                //loop in aliases - skip current command
-                commands.erase(i);
-                queue_size = commands.size();
-                loops_hunter.clear();
-                continue;
-            }
-
-            commands.erase(i);
-            commands.insert(i, new_cmd_list);
-            queue_size = commands.size();
-        }
-        else
-        {
-            i++;
-            loops_hunter.clear();
-        }
-    }
-}
-
-void InputProcessor::processSeparators(const tstring& sep_cmd, InputCommands* result)
-{
-    // marker for brackets
-    BracketsMarker bm;
-    tchar marker = bm.getMarker();
-
-    // truncate to separate commands
-    const WCHAR *p = sep_cmd.c_str();
-    const WCHAR *e = p + sep_cmd.length();
-    bool inside_brackets = false;
-
-    const WCHAR *b = p;
-    while (p != e)
-    {
-        if (*p == m_separator && !inside_brackets)
-        {
-            InputCommand *icmd = new InputCommand( tstring(b, p-b) );
-            result->push_back(icmd);
-            p++; b = p;
-            continue;
-        }
-        if (marker == *p)
-            inside_brackets = !inside_brackets;
-        p++;
-    }
-    if (b != e || sep_cmd.empty())
-    {
-        InputCommand *icmd = new InputCommand(b);
-        result->push_back(icmd);
-    }
-}
-
-void InputProcessor::processParameters(const tstring& cmd, InputCommand* params, tstring* result)
-{
-    // find parameters
-    ParamsHelper ph(cmd);
-    if (!ph.getSize())
-    {
-        result->assign(cmd);
-        int cmd_size = params->command.length();
-        result->append(params->full_command.substr(cmd_size));
-        return;
-    }
-
-    result->clear();
-    int params_count = params->parameters_list.size();
-
-    int ptr = 0;
-    int size = ph.getSize();
-    for (int i=0; i<size; ++i)
-    {
-        int begin = ph.getFirst(i);
-        int end = ph.getLast(i);
-        result->append(cmd.substr(ptr, begin-ptr));
-
-        int parameter_index = ph.getId(i);
-        if (parameter_index <= params_count)
-        {
-            const tstring& p = (parameter_index == 0) ? params->parameters : 
-                params->parameters_list[parameter_index-1];
-            result->append(p);
-        }
-        else
-        {
-            if (begin > 0 && cmd.at(begin - 1) == L' ')
-            {
-                int size = cmd.size();
-                if (end < size && cmd.at(end) == L' ')
-                    end = end + 1;
-            }
-        }
-        ptr = end;
-    }
-    result->append(cmd.substr(ptr));
-}
-*/

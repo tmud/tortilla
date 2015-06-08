@@ -110,7 +110,9 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         {
             tstring tmp(prefix);
             tmp.append(cmd->srccmd);
-            tmp.append(cmd->parameters);
+            tmp.append(cmd->srcparameters);
+            tmp.append(L"-->");
+            syscmdLog(tmp);
         }
 
         syscmdLog(fullcmd);
@@ -150,8 +152,9 @@ void LogicProcessor::processGameCommand(InputCommand* cmd)
 
     //if (cmd->command.empty() && !cmd->dropped)
     //    return;
-    tchar br[2] = { 10, 0 };
+    tchar br[2] = { 0xa, 0 };
     tstring tmp(cmd->command);
+    tmp.append(cmd->parameters);
     tmp.append(br);
     processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
     sendToNetwork(tmp);

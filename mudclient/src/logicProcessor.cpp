@@ -69,24 +69,27 @@ void LogicProcessor::processCommand(const tstring& cmd)
 
 void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 {
-    //if (!processAliases(cmds))
-    //    return;
-
     InputTemplateParameters p;
     p.prefix = propData->cmd_prefix;
     p.separator = propData->cmd_separator;
 
     InputTemplateCommands tcmds;
     tcmds.init(cmds, p);
-    tcmds.makeTemplates();
-    tcmds.tranlateVars();
+
+    InputTemplateCommands res_cmds;
+    processAliases(tcmds, &res_cmds);
+    res_cmds.makeTemplates();
 
     InputCommands result;
-    tcmds.makeCommands(&result);
+    res_cmds.makeCommands(&result);
+    runCommands(result);
+}
 
-    for (int i=0,e=result.size(); i<e; ++i)
+void LogicProcessor::runCommands(const InputCommands& cmds)
+{
+    for (int i=0,e=cmds.size(); i<e; ++i)
     {
-        InputCommand *cmd = result[i];
+        InputCommand *cmd = cmds[i];
         if (cmd->system)
             processSystemCommand(cmd); //it is system command for client
         else
@@ -94,21 +97,41 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
     }
 }
 
-bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
+void LogicProcessor::processAliases(const InputTemplateCommands& cmds, InputTemplateCommands *result)
 {
-    /*
+ /*    //tchar prefix = propData->cmd_prefix;
+
      // to protect from loops in aliases
-    std::vector<tstring> loops_hunter;
+
+    std::vector<tstring> loops;
+    //std::vector<tstring> loops_hunter;
 
     int queue_size = cmds.size();
     for (int i=0; i<queue_size;)
     {
-        loops_hunter.push_back(cmds[i].);
-
         bool alias_found = false;
-        tstring cmd(commands[i]->command);
+        const InputSubcmd &tmpl = cmds[i];
+        const tstring& cmd = cmd._Getpfirst;
+        if (cmd.empty() || tmpl.second)
+        {
+            // do nothing, skip empty and system commands
+        }
+        else
+        {
+            // find alias
+            tstring alias;
+            if (m_helper.processAliases(cmd, &alias) && alias != cmd )
+            {
+
+                
+            
+            }      
+        }
+
+
+
         tstring alias;
-        if (!cmd.empty() && cmd.at(0) != m_prefix // skip empty and system commands
+        if (!cmd.empty() && cmd.at(0) != prefix // skip empty and system commands
             && helper->processAliases(cmd, &alias))
         {
             if (alias != cmd)
@@ -154,12 +177,8 @@ bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
         }
     }
 
-    */
-
-    
-     std::vector<tstring> loops;
+     //std::vector<tstring> loops;
     //WCHAR cmd_prefix = propData->cmd_prefix;
-
     //InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
     //ip.process(cmd, &m_helper, &loops);
 
@@ -176,7 +195,8 @@ bool LogicProcessor::processAliases(const InputPlainCommands& cmds)
             msg.append(L"' зациклены. Их выполнение невозможно.");
         }
         tmcLog(msg);
-    }
+        return false;
+    }*/
     return true;
 }
 

@@ -10,7 +10,7 @@ void CompareData::reinit()
 {
     fullstr.clear();
     std::vector<MudViewStringBlock> &vb = string->blocks;
-    for (int i=start,e=vb.size(); i<e; ++i)          
+    for (int i=start,e=vb.size(); i<e; ++i)
        fullstr.append(vb[i].string);
 }
 
@@ -30,7 +30,7 @@ int CompareData::fold(CompareRange& range)
     {
         std::vector<MudViewStringBlock> &vb = string->blocks;
         MudViewStringBlock &b = vb[range.begin];
-        for (int i=range.begin+1; i<=range.end; ++i)    
+        for (int i=range.begin+1; i<=range.end; ++i)
             b.string.append(vb[i].string);
         vb.erase(vb.begin()+range.begin+1, vb.begin()+range.end+1);
     }
@@ -43,7 +43,7 @@ bool CompareData::cut(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = cutpos(range.begin, 0);    
+        range.begin = cutpos(range.begin, 0);
         range.end = cutpos(range.end, 1);
         return true;
     }   
@@ -56,7 +56,7 @@ bool CompareData::find(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = findpos(range.begin, 0);    
+        range.begin = findpos(range.begin, 0);
         range.end = findpos(range.end, 1);
         return true;
     }
@@ -141,23 +141,21 @@ Action::Action(const property_value& v, const InputTemplateParameters& p)
     m_cmds.makeTemplates();
 }
 
-bool Action::processing(CompareData& data, tstring* newcmd)
+bool Action::processing(CompareData& data, InputCommands* newcmds)
 {
     if (!m_compare.compare(data.fullstr))
         return false;
+    m_cmds.makeCommands(newcmds);
 
-    // parse value and generate result
-    /*InputCommands cmdlist;
-    m_ct.translate(&cmdlist);
-
-    for (int i=0,e=cmdlist.size(); i<e; ++i)
+    for (int i=0,e=newcmds->size(); i<e; ++i)
     {
-        if (cmdlist[i]->command == L"drop")
+        if (newcmds->operator[](i)->command == L"drop")
         {
             // drop mode -> change source MudViewString
             //todo
+            int x = 1;
         }
-    }*/
+    }
 
     // drop mode -> change source MudViewString
     /*if (m_value.find(L"drop") != tstring::npos)
@@ -252,7 +250,7 @@ bool Gag::processing(CompareData& data)
             return false;
     }
 
-    data.del(range);        
+    data.del(range);
     data.start = range.end+1;
     return true;
 }
@@ -267,7 +265,7 @@ bool Highlight::processing(CompareData& data)
 {
     if (!m_compare.compare(data.fullstr))
         return false;
-  
+
     CompareRange range;
     m_compare.getRange(&range);
     int pos = data.fold(range);
@@ -311,7 +309,7 @@ bool Timer::tick(int dt)
     if (timer < period)
         return false;
 
-    timer -= period;    
+    timer -= period;
     return true;
 }
 

@@ -34,7 +34,7 @@ bool LogicHelper::processHotkeys(const tstring& key, tstring* newcmd)
     return false;
 }
 
-void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* new_cmds)
+void LogicHelper::processActions(parseData *parse_data, InputCommands* new_cmds)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
@@ -43,13 +43,8 @@ void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* ne
         CompareData cd(s);
         for (int i=0,e=m_actions.size(); i<e; ++i)
         {
-            tstring newcmd;
-            if (m_actions[i]->processing(cd, &newcmd))
-            {
-               processVars(&newcmd);
-               new_cmds->push_back(newcmd);
+            if (m_actions[i]->processing(cd, new_cmds))
                break;
-            }
         }
     }
 }

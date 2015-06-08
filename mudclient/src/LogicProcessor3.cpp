@@ -311,7 +311,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_pHost->preprocessText(window, &parse_data);
 
     // array for new cmds from actions
-    std::vector<tstring> new_cmds;
+    InputCommands new_cmds;
     if (!(flags & SKIP_ACTIONS))
         m_helper.processActions(&parse_data, &new_cmds);
 
@@ -340,6 +340,5 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
 
-    for (int i = 0, e = new_cmds.size(); i < e; ++i) // process actions' result
-        processCommand(new_cmds[i]);
+    runCommands(new_cmds);                    // process actions' result
 }

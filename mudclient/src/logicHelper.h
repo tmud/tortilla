@@ -121,9 +121,7 @@ public:
     void updateProps(int what = UPDATE_ALL);
     bool processAliases(const tstring& key, tstring* newcmd);
     bool processHotkeys(const tstring& key, tstring* newcmd);
-
-    void processActions(parseData *parse_data, std::vector<tstring>* new_cmds);
-
+    void processActions(parseData *parse_data, InputCommands* new_cmds);
     void processSubs(parseData *parse_data);
     void processAntiSubs(parseData *parse_data);
     void processGags(parseData *parse_data);
