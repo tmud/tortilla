@@ -5,6 +5,7 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
     PropertiesData* propData;
     MemoryBuffer m_cmdBar;
     CEdit m_edit;
+    tstring m_history_const;
     int m_history_index;
     tstring m_tab_const;
     tstring m_tab;
@@ -135,7 +136,7 @@ public:
         {
             if (h[m_history_index] == cmd)
                 h.erase(h.begin() + m_history_index);
-            m_history_index = -1;
+            clearHistory();
         }
 
         if (!h.empty())
@@ -156,7 +157,7 @@ public:
 
     void reset()
     {
-        m_history_index = -1;
+        clearHistory();
         clear();
         m_undo.clear();
     }
@@ -203,7 +204,7 @@ private:
         m_edit.GetWindowText(buffer, len);
         text->assign(buffer);
     }
-    
+
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
         m_edit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
@@ -235,6 +236,7 @@ private:
             m_edit.GetSel(from, to);
             addUndo(buffer, to);
             clearTab();
+            clearHistory();
             return FALSE;
         }
         return TRUE;   // disable system sound VK_TAB + VK_ESCAPE
@@ -252,7 +254,7 @@ private:
         else if (key == VK_UP)
             onHistoryUp();
         else if (key == VK_ESCAPE)
-            { clear(); m_history_index = -1; }
+            { clear(); clearHistory(); }
         else if (key == VK_TAB)
             onTab();
         else
@@ -274,39 +276,83 @@ private:
         m_cmdBar.alloc((size+1) * sizeof(WCHAR));
     }
 
+    void initHistory()
+    {
+        if (m_history_const.empty() && m_history_index == -1)
+        {
+            getText(&m_history_const);
+        }
+    }
+
     void onHistoryUp()
     {
         std::vector<tstring> &h = propData->cmd_history;
         if (h.empty())
             return;
 
-        if (m_history_index == -1)
-            m_history_index = h.size() - 1;
+        initHistory();
+        const tstring& hc = m_history_const;
+        if (hc.empty())
+        {
+            if (m_history_index == -1)
+                m_history_index = h.size()-1;
+            else if (m_history_index != 0)
+                m_history_index -= 1;
+            setText(h[m_history_index]);
+        }
         else
         {
-            if (m_history_index != 0)
-                m_history_index -= 1;
+            int last = h.size() - 1;
+            int f = m_history_index;
+            if (f == -1) f = last;
+            else f = f - 1;
+            for (;f>=0; f--) {
+            if (!h[f].compare(0, hc.length(), hc))
+            {
+                m_history_index = f;
+                setText(h[f]);
+                clearTab();
+                return;
+            }}
         }
-        const tstring& cmd = h[m_history_index];
-        setText(cmd);
         clearTab();
     }
 
     void onHistoryDown()
     {
-        assert (m_history_index != -1);
+        assert (m_history_index != -1);        
         std::vector<tstring> &h = propData->cmd_history;
-        int last_history = h.size() -1;
-        if (m_history_index != last_history)
-            m_history_index += 1;
+        initHistory();
+        const tstring& hc = m_history_const;
+        if (hc.empty())
+        {
+            int last_history = h.size()-1;
+            if (m_history_index != last_history)
+                m_history_index += 1;
+            else
+            {
+                clear();
+                clearHistory();
+                return;
+            }
+            setText(h[m_history_index]);
+        }
         else
         {
-            clear();
-            m_history_index = -1;
-            return;
+            int f = m_history_index;
+            if (f == -1) f = 0;
+            else f = f + 1;
+            for (int last=h.size()-1; f<=last; f++) {
+            if (!h[f].compare(0, hc.length(), hc))
+            {
+                m_history_index = f;
+                setText(h[f]);
+                clearTab();
+                return;
+            }}
+            setText(hc);
+            clearHistory();
         }
-        const tstring& cmd = h[m_history_index];
-        setText(cmd);
         clearTab();
     }
 
@@ -457,5 +503,11 @@ private:
         resetTabIndexes();
         m_tab_const.clear();
         m_tab.clear();
+    }
+    
+    void clearHistory()
+    {
+        m_history_index = -1;
+        m_history_const.clear();
     }
 };
