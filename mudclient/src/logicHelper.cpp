@@ -1,8 +1,9 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "mudViewParser.h"
 #include "logicHelper.h"
 
-LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
+LogicHelper::LogicHelper()
 {
      m_if_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|!=|<|>|<=|>=) *('.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
      m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
@@ -13,10 +14,7 @@ bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
     for (int i=0,e=m_aliases.size(); i<e; ++i)
     {
         if (m_aliases[i]->processing(key, newcmd))
-        {
-            processVars(newcmd);
-            return true;
-        }
+           return true;
     }
     return false;
 }
@@ -26,10 +24,7 @@ bool LogicHelper::processHotkeys(const tstring& key, tstring* newcmd)
     for (int i=0,e=m_hotkeys.size(); i<e; ++i)
     {
         if (m_hotkeys[i]->processing(key, newcmd))
-        {
-            processVars(newcmd);
             return true;
-        }
     }
     return false;
 }
@@ -61,9 +56,6 @@ void LogicHelper::processSubs(parseData *parse_data)
             while (m_subs[i]->processing(cd))
                 cd.reinit();
         }
-        MudViewString *str = parse_data->strings[j];
-        for (int i = 0, e = str->blocks.size(); i < e; ++i)
-            processVars(&str->blocks[i].string);
     }
 }
 
@@ -132,26 +124,6 @@ void LogicHelper::resetTimers()
     m_ticker.sync();
 }
 
-bool LogicHelper::canSetVar(const tstring& var)
-{
-    return m_varproc.canset(var);
-}
-
-bool LogicHelper::getVar(const tstring& var, tstring *value)
-{
-    return m_varproc.getVar(m_propData->variables, var, value);
-}
-
-bool LogicHelper::setVar(const tstring& var, const tstring &value)
-{
-    return m_varproc.setVar(m_propData->variables, var, value);
-}
-
-bool LogicHelper::delVar(const tstring& var)
-{
-    return m_varproc.delVar(m_propData->variables, var);
-}
-
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 {
      m_if_regexp.find(param);
@@ -163,7 +135,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
-     if (processVarsStrong(&p1) && processVarsStrong(&p2))
+     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
      {
          if (isOnlyDigits(p1) && isOnlyDigits(p2))
          {
@@ -201,7 +173,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
 
-     if (processVarsStrong(&p1) && processVarsStrong(&p2))
+     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
      {
          if (isOnlyDigits(p1) && isOnlyDigits(p2))
          {
@@ -225,44 +197,35 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      return LogicHelper::MATH_VARNOTEXIST;
 }
 
-bool LogicHelper::processVars(tstring *cmdline)
-{
-    return m_varproc.processVars(cmdline, m_propData->variables, false);
-}
-
-bool LogicHelper::processVarsStrong(tstring *cmdline)
-{
-    return m_varproc.processVars(cmdline, m_propData->variables, true);
-}
-
 void LogicHelper::updateProps(int what)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     std::vector<tstring> active_groups;
-    for (int i=0,e=m_propData->groups.size(); i<e; i++)
+    for (int i=0,e=pdata->groups.size(); i<e; i++)
     {
-        const property_value& v = m_propData->groups.get(i);
+        const property_value& v = pdata->groups.get(i);
         if (v.value == L"1")
             active_groups.push_back(v.key);
     }
 
     InputTemplateParameters p;
-    p.separator = m_propData->cmd_separator;
-    p.prefix = m_propData->cmd_prefix;
+    p.separator = pdata->cmd_separator;
+    p.prefix = pdata->cmd_prefix;
 
     if (what == UPDATE_ALL || what == UPDATE_ALIASES)
-        m_aliases.init(p, &m_propData->aliases, active_groups);
+        m_aliases.init(p, &pdata->aliases, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_ACTIONS)
-        m_actions.init(p, &m_propData->actions, active_groups);
+        m_actions.init(p, &pdata->actions, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_SUBS)
-        m_subs.init(&m_propData->subs, active_groups);
+        m_subs.init(&pdata->subs, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_HOTKEYS)
-        m_hotkeys.init(p, &m_propData->hotkeys, active_groups);
+        m_hotkeys.init(p, &pdata->hotkeys, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_ANTISUBS)
-        m_antisubs.init(&m_propData->antisubs, active_groups);
+        m_antisubs.init(&pdata->antisubs, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_GAGS)
-        m_gags.init(&m_propData->gags, active_groups);
+        m_gags.init(&pdata->gags, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_HIGHLIGHTS)
-        m_highlights.init(&m_propData->highlights, active_groups);
+        m_highlights.init(&pdata->highlights, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_TIMERS)
-        m_timers.init(&m_propData->timers, active_groups);
+        m_timers.init(&pdata->timers, active_groups);
 }

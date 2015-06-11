@@ -1,15 +1,16 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "inputProcessor.h"
 #include "logicProcessor.h"
-extern LogicProcessorMethods* _lp;
+
 bool InputVarsAccessor::get(const tstring&name, tstring* value)
 {
-    return _lp->getVar(name.c_str(), value);
+    return tortilla::getVars()->getVar(name.c_str(), value);
 }
 
-void InputVarsAccessor::tanslateVars(tstring *cmd)
+void InputVarsAccessor::translateVars(tstring *cmd)
 {
-    _lp->processVars(cmd);
+    tortilla::getVars()->processVars(cmd);
 }
 
 InputPlainCommands::InputPlainCommands() {}
@@ -48,9 +49,9 @@ void InputTemplateCommands::extract(InputPlainCommands* cmds)
     for (int i=0,e=size(); i<e; ++i)
     {
         tstring cmd;
-        if (at(i).second)
+        if (at(i).system)
             cmd.append(prefix);
-        cmd.append(at(i).first);
+        cmd.append(at(i).srccmd);
         cmds->push_back(cmd);
     }
 }
@@ -59,53 +60,73 @@ void InputTemplateCommands::makeTemplates()
 {
     for (int i=0,e=size(); i<e; ++i)
     {
-        if (at(i).second)   // маркируем только системные
-            markbrackets(&at(i).first);
+        if (at(i).system)   // маркируем только системные
+            markbrackets(&at(i).templ);
     }
 }
 
-void InputTemplateCommands::makeCommands(InputCommands *cmds)
-{
-    InputVarsAccessor va;
+void InputTemplateCommands::makeCommands(InputCommands *cmds, const CompareObject* params)
+{    
     for (int i=0,e=size(); i<e; ++i)
     {
         const InputSubcmd &subcmd = at(i);
-        tstring t(subcmd.first);    //template of cmd
-        va.tanslateVars(&t);        //translate vars in template
+
         InputCommand *cmd = new InputCommand();
-        cmd->system = (subcmd.second) ? true : false;
-        size_t pos = t.find(L" ");
+        cmd->system = subcmd.system;
+
+        // make src parameters
+        const tstring& s = subcmd.srccmd;
+        size_t pos = s.find(L" ");
+        if (pos == -1)
+            cmd->srccmd.assign(s);
+        else if (pos == 0) 
+        {
+             size_t from = wcsspn(s.c_str(), L" ");
+             pos = s.find(L" ", from);
+             if (pos == -1) { 
+                 cmd->srccmd.assign(s); 
+             }
+             else {
+                 cmd->srccmd.assign(s.substr(0, from));
+                 cmd->srcparameters.assign(s.substr(from)); 
+             }
+        }
+        else {
+            cmd->srccmd.assign(s.substr(0, pos));
+            cmd->srcparameters.assign(s.substr(pos));
+        }                
+
+        tstring t(subcmd.templ);    //template of cmd
+        if (params)                 //translate parameters
+            params->translateParameters(&t);
+        InputVarsAccessor va;
+        va.translateVars(&t);       //translate vars in template
+        
+        pos = t.find(L" ");
         if (pos == -1) {
-            cmd->srccmd = t;
             cmd->command = t;
+        }
+        else if (pos == 0)
+        {
+            size_t from = wcsspn(t.c_str(), L" ");
+            pos = t.find(L" ", from);
+            if (pos == -1)
+                 cmd->command = t.substr(from);
+            else {
+                 cmd->command.assign(t.substr(from, pos-from));
+                 cmd->parameters.assign(t.substr(pos));
+            }
         }
         else
         {
-            if (pos == 0)
-            {
-                pos = wcsspn(t.c_str(), L" ");
-                size_t from = pos;
-                pos = t.find(L" ", pos);
-                if (pos == -1) {
-                     cmd->srccmd = t;
-                     cmd->command = t.substr(from);
-                     return;
-                }
-                cmd->srccmd.assign(t.substr(0, pos));
-                cmd->command.assign(t.substr(from, pos-from));
-            }
-            else
-            {
-                cmd->command.assign(t.substr(0, pos));
-                cmd->srccmd = cmd->command;
-            }
-            cmd->srcparameters.assign(t.substr(pos));
-            cmd->parameters.assign(cmd->srcparameters);
-            if (cmd->system)
-                fillsyscmd(cmd);
-            else
-                fillgamecmd(cmd);
+            cmd->command.assign(t.substr(0, pos));
+            cmd->parameters.assign(t.substr(pos));
         }
+
+        if (cmd->system)
+            fillsyscmd(cmd);
+        else
+            fillgamecmd(cmd);
         cmds->push_back(cmd);
     }
 }
@@ -140,7 +161,7 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
     const tchar *p = cmd.c_str();
     const tchar *e = p + cmd.length();
     if (p == e) {
-       push_back( InputSubcmd(tstring(), 0) );
+       push_back( InputSubcmd(L"",  0) );
        return;
     }
 
@@ -411,3 +432,26 @@ bool InputTemplateCommands::isbracket(const tchar *p) const
 {
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
+
+/*void InputTemplateCommands::trimcmd(tstring* cmd)
+{
+   size_t pos = cmd->find(L" ");
+   if (pos == -1)
+       return;
+   if (pos != 0)
+   {
+       tstring tmp(cmd->substr(0, pos));
+       cmd->swap(tmp);
+       return;
+   }
+   size_t from = wcsspn(cmd->c_str(), L" ");
+   pos = cmd->find(L" ", from);
+   if (pos == -1)
+   {
+       tstring tmp(cmd->substr(from));
+       cmd->swap(tmp);
+       return;
+   }
+   tstring tmp(cmd->substr(from, pos-from));
+   cmd->swap(tmp);
+}*/

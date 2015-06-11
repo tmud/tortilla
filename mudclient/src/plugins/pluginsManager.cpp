@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "pluginsManager.h"
 #include "pluginsDlg.h"
 #include "pluginsApi.h"
@@ -8,13 +9,13 @@
 extern luaT_State L;
 extern Plugin* _cp;
 
-PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props), m_plugins_loaded(false)
+PluginsManager::PluginsManager() : m_plugins_loaded(false)
 {
 }
 
 PluginsManager::~PluginsManager() 
 {
-     autodel<Plugin> _z(m_plugins);
+    autodel<Plugin> _z(m_plugins);
 }
 
 void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
@@ -76,7 +77,7 @@ void PluginsManager::initPlugins()
     }
     files.clear();
 
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
     for (int i = 0, e = modules.size(); i < e; ++i)
     {
@@ -168,7 +169,7 @@ bool PluginsManager::pluginsPropsDlg()
        }
     }
 
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
     for (int i=0,e=m_plugins.size(); i<e; ++i)
     {
@@ -366,7 +367,7 @@ void PluginsManager::terminatePlugin(Plugin* p)
     p->setOn(false);
     if (index != -1)
     {
-        PluginsDataValues &modules = m_propData->plugins;
+        PluginsDataValues &modules = tortilla::getProperties()->plugins;
         modules[index].state = 0;
     }
 }
@@ -503,7 +504,7 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     pluginError("Плагин отключен!");
     p->setOn(false);
     _cp = old;
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     modules[plugin_index].state = 0;
 }
 

@@ -149,6 +149,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="..\libs\common\pcreHelper.h" />
     <ClInclude Include="..\libs\common\elapsedTimeCounter.h" />
     <ClInclude Include="src\AboutDlg.h" />
+    <ClInclude Include="src\accessors.h" />
     <ClInclude Include="src\common\criticalSection.h" />
     <ClInclude Include="src\common\replaceColor.h" />
     <ClInclude Include="src\common\tempThread.h" />
@@ -219,6 +220,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
   <ItemGroup>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
     <ClCompile Include="src\AboutDlg.cpp" />
+    <ClCompile Include="src\accessors.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
     <ClCompile Include="src\helpManager.cpp" />

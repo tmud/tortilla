@@ -1,7 +1,6 @@
 #pragma once
-
+#include "accessors.h"
 #include "propertiesPages/propertiesDlg.h"
-#include "propertiesPages/propertiesManager.h"
 #include "profiles/profileDlgs.h"
 
 #include "network/network.h"
@@ -58,8 +57,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN), m_activated(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false)
     {
     }
 

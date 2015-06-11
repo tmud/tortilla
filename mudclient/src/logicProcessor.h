@@ -40,9 +40,6 @@ public:
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
     virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
-    virtual bool canSetVar(const tstring& var) = 0;
-    virtual bool getVar(const tstring& var, tstring* value) = 0;
-    virtual void processVars(tstring *cmd) = 0;
 };
 
 class parser;
@@ -51,7 +48,6 @@ typedef void(*syscmd_fun)(parser*);
 
 class LogicProcessor : public LogicProcessorMethods
 {
-    PropertiesData *propData;
     LogicProcessorHost *m_pHost;
     MudViewParser m_parser;
     LogicHelper m_helper; 
@@ -75,7 +71,7 @@ class LogicProcessor : public LogicProcessorMethods
     Pcre16 m_univ_prompt_pcre;
 
 public:
-    LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
+    LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();
     bool init();
     void processNetworkData(const WCHAR* text, int text_len);
@@ -98,15 +94,12 @@ public:
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
-    bool canSetVar(const tstring& var)  { return m_helper.canSetVar(var); }    
-    bool getVar(const tstring& var, tstring* value) { return m_helper.getVar(var, value); }
-    void processVars(tstring *cmd) { m_helper.processVars(cmd); }
 
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
     void runCommands(const InputCommands& cmds);
-    void processAliases(const InputTemplateCommands& cmds, InputTemplateCommands *result);
+    void processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);

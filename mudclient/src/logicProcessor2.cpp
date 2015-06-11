@@ -1,5 +1,6 @@
 // In that file - Code for scripting
 #include "stdafx.h"
+#include "accessors.h"
 #include "logicProcessor.h"
 #include "inputProcessor.h"
 #include "helpManager.h"
@@ -85,7 +86,8 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         }
     }
 
-    tchar prefix[2] = { propData->cmd_prefix, 0 };    
+    PropertiesData *pdata = tortilla::getProperties();
+    tchar prefix[2] = { pdata->cmd_prefix, 0 };
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
     if (error.empty())
@@ -140,7 +142,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         msg.append(prefix);
         msg.append(cmd->srccmd);
         if (!hide_cmd)
-            msg.append(cmd->parameters);
+            msg.append(cmd->srcparameters);
         msg.append(L"]");
         tmcLog(msg);
     }
@@ -197,54 +199,61 @@ public:
 
 IMPL(action) 
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
-    int update = script.process(p, &propData->actions, &propData->groups, 
+    int update = script.process(p, &pdata->actions, &pdata->groups, 
             L"Триггеры(actions)", L"Триггеры", L"Новый триггер", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
 IMPL(unaction)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
-    int update = script.process(p, &propData->actions, L"Удаление триггера", &ph);
+    int update = script.process(p, &pdata->actions, L"Удаление триггера", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
 IMPL(alias)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
-    int update = script.process(p, &propData->aliases, &propData->groups,
+    int update = script.process(p, &pdata->aliases, &pdata->groups,
         L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
 IMPL(unalias)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
-    int update = script.process(p, &propData->aliases, L"Удаление команды", &ph);
+    int update = script.process(p, &pdata->aliases, L"Удаление команды", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
 IMPL(sub)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
-    int update = script.process(p, &propData->subs, &propData->groups,
+    int update = script.process(p, &pdata->subs, &pdata->groups,
         L"Замены(subs)", L"Замены", L"Новая замена", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
 IMPL(unsub)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
-    int update = script.process(p, &propData->subs, L"Удаление замены", &ph);
+    int update = script.process(p, &pdata->subs, L"Удаление замены", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
 IMPL(hotkey)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
     HotkeyTestControl control;
-    int update = script.process(p, &propData->hotkeys, &propData->groups,
+    int update = script.process(p, &pdata->hotkeys, &pdata->groups,
         L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"Новая горячая клавиша", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
@@ -252,16 +261,18 @@ IMPL(hotkey)
 
 IMPL(unhotkey)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
-    int update = script.process(p, &propData->hotkeys, L"Удаление горячей клавиши", &ph);
+    int update = script.process(p, &pdata->hotkeys, L"Удаление горячей клавиши", &ph);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
 
 IMPL(highlight)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
     HighlightTestControl control;
-    int update = script.process(p, &propData->highlights, &propData->groups,
+    int update = script.process(p, &pdata->highlights, &pdata->groups,
         L"Подсветки(highlights)", L"Подсветка", L"Новая подсветка", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
@@ -269,36 +280,41 @@ IMPL(highlight)
 
 IMPL(unhighlight)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
-    int update = script.process(p, &propData->highlights, L"Удаление подсветки", &ph);
+    int update = script.process(p, &pdata->highlights, L"Удаление подсветки", &ph);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
 
 IMPL(gag)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &propData->gags, &propData->groups, L"Фильтры (gags)", L"Фильтр", &ph);
+    int update = script.process(p, &pdata->gags, &pdata->groups, L"Фильтры (gags)", L"Фильтр", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
 IMPL(ungag)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &propData->gags, L"Удаление фильтра", &ph);
+    int update = script.process(p, &pdata->gags, L"Удаление фильтра", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
 IMPL(antisub)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &propData->antisubs, &propData->groups, L"Антизамены (antisubs)", L"Антизамена", &ph);
+    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"Антизамены (antisubs)", L"Антизамена", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
 IMPL(unantisub)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &propData->antisubs, L"Удаление антизамены", &ph);
+    int update = script.process(p, &pdata->antisubs, L"Удаление антизамены", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -307,9 +323,10 @@ IMPL(math)
     int n = p->size();
     if (p->size() == 2)
     {
+        VarProcessor *vp = tortilla::getVars();
         ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
         MethodsHelper* helper = ph;
-        if (!m_helper.canSetVar(p->at(0)))
+        if (!vp->canSetVar(p->at(0)))
         {
             swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
             helper->tmcLog(pb.buffer);
@@ -323,7 +340,7 @@ IMPL(math)
         else if (r == LogicHelper::MATH_VARNOTEXIST)
             { p->invalidvars(); return; }
 
-        if (m_helper.setVar(p->at(0), result))
+        if (vp->setVar(p->at(0), result))
             swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
         else
             swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
@@ -350,10 +367,11 @@ IMPL(var)
             helper->tmcLog(pb.buffer);
         }
 
-        int size = propData->variables.size();
+        PropertiesData *pdata = tortilla::getProperties();
+        int size = pdata->variables.size();
         for (int i=0; i<size; ++i)
         {
-            const property_value& v = propData->variables.get(i);
+            const property_value& v = pdata->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
             swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", v.key.c_str(), v.value.c_str());
@@ -367,11 +385,12 @@ IMPL(var)
 
     if (n == 2)
     {
-        if (!m_helper.canSetVar(p->at(0)))
+        VarProcessor *vp = tortilla::getVars();
+        if (!vp->canSetVar(p->at(0)))
             swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
         else
         {
-            if (m_helper.setVar(p->at(0), p->at(1)))
+            if (vp->setVar(p->at(0), p->at(1)))
                 swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
             else
                 swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
@@ -389,13 +408,14 @@ IMPL(unvar)
     int n = p->size();
     if (n == 1)
     {
-        if (!m_helper.canSetVar(p->at(0)))
+        VarProcessor *vp = tortilla::getVars();
+        if (!vp->canSetVar(p->at(0)))
         {
             swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s удалить невозможно.", p->c_str(0));
             helper->tmcLog(pb.buffer);
             return;
         }
-        if (!m_helper.delVar(p->at(0)))
+        if (!vp->delVar(p->at(0)))
             swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s не существует.", p->c_str(0));
 		else
         	swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
@@ -427,15 +447,16 @@ IMPL(group)
     if (n > 2)
         return p->invalidargs();
 
+    PropertiesData* pdata = tortilla::getProperties();
     ElementsHelper ph(this, LogicHelper::UPDATE_GROUPS);
     MethodsHelper* helper = ph;
     if (n == 0)
     {
         helper->skipCheckMode();
         helper->tmcLog(L"Группы:");
-        for (int i=0,e=propData->groups.size(); i<e; ++i)
+        for (int i=0,e=pdata->groups.size(); i<e; ++i)
         {
-            const property_value &v = propData->groups.get(i);
+            const property_value &v = pdata->groups.get(i);
             tstring value = (v.value == L"1") ? L"Вкл" : L"";
             swprintf(pb.buffer, pb.buffer_len, L"%s %s", v.key.c_str(), value.c_str());
             helper->simpleLog(pb.buffer);
@@ -445,9 +466,9 @@ IMPL(group)
 
     int index = -1;
     tstring group( (n==1) ? p->at(0) : p->at(1) );
-    for (int i=0,e=propData->groups.size(); i<e; ++i)
+    for (int i=0,e=pdata->groups.size(); i<e; ++i)
     {
-        const property_value &v = propData->groups.get(i);
+        const property_value &v = pdata->groups.get(i);
         if (v.key == group) { index = i; break; }
     }
     if (index == -1)
@@ -465,13 +486,13 @@ IMPL(group)
         swprintf(pb.buffer, pb.buffer_len, L"Группа '%s':", group.c_str());
         helper->tmcLog(pb.buffer);
         GroupCollector gc(group);
-        int aliases = gc.count(propData->aliases);
-        int actions = gc.count(propData->actions);
-        int highlights = gc.count(propData->highlights);
-        int hotkeys = gc.count(propData->hotkeys);
-        int subs = gc.count(propData->subs);
-        int gags = gc.count(propData->gags);
-        int antisubs = gc.count(propData->antisubs);
+        int aliases = gc.count(pdata->aliases);
+        int actions = gc.count(pdata->actions);
+        int highlights = gc.count(pdata->highlights);
+        int hotkeys = gc.count(pdata->hotkeys);
+        int subs = gc.count(pdata->subs);
+        int gags = gc.count(pdata->gags);
+        int antisubs = gc.count(pdata->antisubs);
         swprintf(pb.buffer, pb.buffer_len, L"Макросы(aliases): %d\nТриггеры(actions): %d\nПодсветки(highlights): %d\nГорячие клавиши(hotkeys): %d\nЗамены(subs): %d\nФильтры(gags): %d\nАнтизамены(antisubs): %d",
             aliases, actions, highlights, hotkeys, subs, gags, antisubs);
         helper->simpleLog(pb.buffer);
@@ -480,7 +501,7 @@ IMPL(group)
     
     if (op == L"вкл" || op == L"enable" || op == L"on" || op == L"1")
     {
-        property_value &v = propData->groups.getw(index);
+        property_value &v = pdata->groups.getw(index);
         v.value = L"1";
         updateProps();
         swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' включена.", v.key.c_str());
@@ -490,7 +511,7 @@ IMPL(group)
 
     if (op == L"выкл" || op == L"disable" || op == L"off" || op == L"0")
     {
-        property_value &v = propData->groups.getw(index);
+        property_value &v = pdata->groups.getw(index);
         v.value = L"0";
         updateProps();
         swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' выключена.", v.key.c_str());
@@ -571,8 +592,9 @@ IMPL(help)
     }
     if (n == 1)
     {
+        PropertiesData *pdata = tortilla::getProperties();
         tstring param(p->at(0));
-        if (param.at(0) == propData->cmd_prefix)
+        if (param.at(0) == pdata->cmd_prefix)
             param = param.substr(1);
         openHelp(m_pHost->getMainWindow(), param);
         return;
@@ -917,6 +939,7 @@ IMPL(print)
 
 IMPL(tab)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     ElementsHelper ph(this, LogicHelper::UPDATE_TABS);
     MethodsHelper* helper = ph;
     int n = p->size();
@@ -924,10 +947,10 @@ IMPL(tab)
     {
         helper->skipCheckMode();
         helper->tmcLog(L"Автоподстановки(tabs):");
-        int size = propData->tabwords.size();
+        int size = pdata->tabwords.size();
         for (int i=0; i<size; ++i)
         {
-            const tstring &v = propData->tabwords.get(i);
+            const tstring &v = pdata->tabwords.get(i);
             helper->simpleLog(v.c_str());
         }
         if (size == 0)
@@ -938,9 +961,9 @@ IMPL(tab)
     if (n == 1)
     {
         const tstring &tab = p->at(0);
-        int index = propData->tabwords.find(tab);
+        int index = pdata->tabwords.find(tab);
         if (index == -1)
-            propData->tabwords.add(index, tab);
+            pdata->tabwords.add(index, tab);
         swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка '%s' добавлена.", tab.c_str());        
         helper->tmcLog(buffer);
         return;
@@ -950,18 +973,19 @@ IMPL(tab)
 
 IMPL(untab)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     ElementsHelper ph(this, LogicHelper::UPDATE_TABS);
     MethodsHelper* helper = ph;
     int n = p->size();
     if (n == 1)
     {
         const tstring &tab = p->at(0);
-        int index = propData->tabwords.find(tab);
+        int index = pdata->tabwords.find(tab);
         if (index == -1)
             swprintf(buffer, buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
         else
         {
-            propData->tabwords.del(index);
+            pdata->tabwords.del(index);
             swprintf(buffer, buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
         }
         helper->tmcLog(buffer);
@@ -972,6 +996,7 @@ IMPL(untab)
 
 IMPL(timer)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
     MethodsHelper* helper = ph;
     int n = p->size();
@@ -979,10 +1004,10 @@ IMPL(timer)
     {
         helper->skipCheckMode();
         helper->tmcLog(L"Таймеры:");
-        if (!propData->timers_on)
+        if (!pdata->timers_on)
             helper->simpleLog(L"Таймеры выключены.");
 
-        const PropertiesValues &t  = propData->timers;
+        const PropertiesValues &t  = pdata->timers;
         if (t.size() == 0)
         {
             helper->tmcLog(L"Список пуст.");
@@ -1003,7 +1028,7 @@ IMPL(timer)
     {
         tstring op(p->at(0));
         if (op == L"disable" || op == L"off" || op == L"выкл") {
-            propData->timers_on = 0;
+            pdata->timers_on = 0;
             helper->tmcLog(L"Таймеры выключены.");
             return;
         }
@@ -1014,7 +1039,7 @@ IMPL(timer)
                 return;
             }
             m_helper.resetTimers();
-            propData->timers_on = 1;
+            pdata->timers_on = 1;
             helper->tmcLog(L"Таймеры включены.");
             return;
         }
@@ -1028,14 +1053,14 @@ IMPL(timer)
         _itow(key, buffer, 10);
         tstring id(buffer);
 
-        int index = propData->timers.find(id);
+        int index = pdata->timers.find(id);
         if (index == -1)
         {
             swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
             helper->tmcLog(buffer);
             return;
         }
-        const PropertiesValues &t  = propData->timers;
+        const PropertiesValues &t  = pdata->timers;
         const property_value &v = t.get(index);
         PropertiesTimer pt; pt.convertFromString(v.value);
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
@@ -1055,7 +1080,7 @@ IMPL(timer)
 
         _itow(key, buffer, 10);
         tstring id(buffer);
-        int index = propData->timers.find(id);
+        int index = pdata->timers.find(id);
         if (index == -1 && n == 2)
         {
             swprintf(pb.buffer, pb.buffer_len, L"Ошибка. Таймер #%s не существует.", id.c_str());
@@ -1070,7 +1095,7 @@ IMPL(timer)
            pt.cmd = p->at(2);
 
         tstring group;
-        PropertiesValues* groups = &propData->groups;
+        PropertiesValues* groups = &pdata->groups;
         if (n > 3)
         {
            group.assign(p->at(3));
@@ -1084,7 +1109,7 @@ IMPL(timer)
 
         if (index != -1)
         {
-            property_value& v = propData->timers.getw(index);
+            property_value& v = pdata->timers.getw(index);
             if (n < 4)
                 group = v.group;
             PropertiesTimer tmp;
@@ -1095,7 +1120,7 @@ IMPL(timer)
 
         tstring value;
         pt.convertToString(&value);
-        propData->timers.add(index, id, value, group);
+        pdata->timers.add(index, id, value, group);
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
         helper->simpleLog(buffer);
@@ -1128,10 +1153,11 @@ IMPL(showwindow)
 
 IMPL(message)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     int n = p->size();
     if (n == 0)
     {
-        MessageCmdHelper mh(propData);
+        MessageCmdHelper mh(pdata);
         tstring str;
         mh.getStrings(&str);
         if (!str.empty()) {
@@ -1145,7 +1171,7 @@ IMPL(message)
 
     if (n == 1 || n == 2)
     {
-        MessageCmdHelper mh(propData);
+        MessageCmdHelper mh(pdata);
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
             if (n == 1)
@@ -1167,10 +1193,11 @@ IMPL(message)
 //-------------------------------------------------------------------
 void LogicProcessor::regCommand(const char* name, syscmd_fun f)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     AnsiToWide a2w(name);
     tstring cmd(a2w);
     m_syscmds[cmd] = f;
-    PropertiesList &p = propData->tabwords_commands;    
+    PropertiesList &p = pdata->tabwords_commands;    
     p.add(-1, cmd);
 }
 

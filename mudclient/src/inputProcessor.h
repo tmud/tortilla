@@ -4,7 +4,7 @@ class InputVarsAccessor
 {
 public:
     bool get(const tstring&name, tstring* value);
-    void tanslateVars(tstring *cmd);
+    void translateVars(tstring *cmd);
 };
 
 class InputPlainCommands : private std::vector<tstring> 
@@ -39,7 +39,6 @@ struct InputTemplateParameters
 struct InputCommand
 {
     InputCommand() : dropped(false), system(false), changed(false) {}
-
                                             // full command as is = command + parameters
     tstring srccmd;                         // only command name (may be left spaces)
     tstring srcparameters;                  // original parameters as is without changes
@@ -77,17 +76,24 @@ public:
     }
 };
 
-typedef std::pair<tstring,int> InputSubcmd;
-class InputTemplateCommands : private std::vector<InputSubcmd>
+class CompareObject;
+struct InputSubcmd 
 {
+    InputSubcmd(const tstring& cmd, bool syscmd) : srccmd(cmd), templ(cmd), system(syscmd) {}
+    tstring srccmd;
+    tstring templ;
+    bool system;
+};
+class InputTemplateCommands : private std::vector<InputSubcmd>
+{    
      typedef std::vector<InputSubcmd> base;
 public:
     void init(const InputPlainCommands& cmds, const InputTemplateParameters& params);
     void extract(InputPlainCommands* cmds);
     void makeTemplates();
-    void makeCommands(InputCommands *cmds);
-    const InputSubcmd& operator[](int index) const { return at(index); }
-    int  size() const { return base::size(); }
+    void makeCommands(InputCommands *cmds, const CompareObject* params);
+    //InputSubcmd& operator[](int index) { return base::operator[](index); }
+    //int  size() const { return base::size(); }
 private:
     const tchar MARKER = L'\t';
     InputTemplateParameters _params;
@@ -97,6 +103,7 @@ private:
     void markbrackets(tstring *cmd) const;
     void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
     bool isbracket(const tchar *p) const;
+    //void trimcmd(tstring* cmd);
 };
 
 #ifdef _DEBUG

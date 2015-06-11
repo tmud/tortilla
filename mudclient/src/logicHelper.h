@@ -25,13 +25,13 @@ public:
     }
 };
 
-template <class T, class P>
+template <class T>
 class LogicWrapperParams : public std::vector<T*>
 {
 public:
     ~LogicWrapperParams() { clear(); }
     void clear() { autodel<T> z(*this); }
-    void init(P &p, PropertiesValues *values, const std::vector<tstring>& active_groups)
+    void init(InputTemplateParameters &p, PropertiesValues *values, const std::vector<tstring>& active_groups)
     {
         clear();
         int count = values->size();
@@ -117,7 +117,7 @@ public:
     enum { UPDATE_ALL =0, UPDATE_ALIASES, UPDATE_ACTIONS, UPDATE_HOTKEYS, UPDATE_SUBS, UPDATE_ANTISUBS, 
            UPDATE_GAGS, UPDATE_HIGHLIGHTS, UPDATE_TIMERS, UPDATE_VARS, UPDATE_GROUPS, UPDATE_TABS };
 
-    LogicHelper(PropertiesData *propData);
+    LogicHelper();
     void updateProps(int what = UPDATE_ALL);
     bool processAliases(const tstring& key, tstring* newcmd);
     bool processHotkeys(const tstring& key, tstring* newcmd);
@@ -128,12 +128,7 @@ public:
     void processHighlights(parseData *parse_data);
     void processTimers(std::vector<tstring>* new_cmds);
     void resetTimers();
-    bool canSetVar(const tstring& var);
-    bool getVar(const tstring& var, tstring *value);
-    bool setVar(const tstring& var, const tstring& value);
-    bool delVar(const tstring& var);
-    bool processVars(tstring *cmdline);
-    bool processVarsStrong(tstring *cmdline);
+    
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
     enum MathResult { MATH_SUCCESS = 0, MATH_VARNOTEXIST, MATH_ERROR };
@@ -141,18 +136,16 @@ public:
 
 private:
     // current workable elements
-    LogicWrapperParams<Alias, InputTemplateParameters> m_aliases;
-    LogicWrapperParams<Hotkey, InputTemplateParameters> m_hotkeys;
-    LogicWrapperParams<Action, InputTemplateParameters> m_actions;
+    LogicWrapperParams<Alias> m_aliases;
+    LogicWrapperParams<Hotkey> m_hotkeys;
+    LogicWrapperParams<Action> m_actions;
     LogicWrapper<Sub> m_subs;
     LogicWrapper<AntiSub> m_antisubs;
     LogicWrapper<Gag> m_gags;
     LogicWrapper<Highlight> m_highlights;
     LogicWrapperTimers m_timers;
-    VarProcessor m_varproc;
     Pcre16 m_if_regexp;
-    Pcre16 m_math_regexp;
-    PropertiesData *m_propData;
+    Pcre16 m_math_regexp;    
     Ticker m_ticker;
 };
 

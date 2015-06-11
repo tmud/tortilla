@@ -1,9 +1,7 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "pluginsApi.h"
 #include "api/api.h"
-#include "../MainFrm.h"
-extern CMainFrame _wndMain;
-extern PropertiesData* _pdata;
 extern Plugin* _cp;
 
 void pluginFormatByType(lua_State* L, int index, u8string *buf)
@@ -41,11 +39,12 @@ void pluginFormatByType(lua_State* L, int index, u8string *buf)
 
 PluginData& find_plugin()
 {
+    PropertiesData *pdata = tortilla::getProperties();
     tstring plugin_name(_cp->get(Plugin::FILE));
     int index = -1;
-    for (int i = 0, e = _pdata->plugins.size(); i < e; ++i)
+    for (int i = 0, e = pdata->plugins.size(); i < e; ++i)
     {
-        const PluginData &p = _pdata->plugins[i];
+        const PluginData &p = pdata->plugins[i];
         if (p.name == plugin_name)
         {
             index = i; break;
@@ -56,8 +55,8 @@ PluginData& find_plugin()
         PluginData pd;
         pd.name = plugin_name;
         pd.state = _cp->state() ? 1 : 0;
-        _pdata->plugins.push_back(pd);
-        index = _pdata->plugins.size() - 1;
+        pdata->plugins.push_back(pd);
+        index = pdata->plugins.size() - 1;
     }
-    return _pdata->plugins[index];
+    return pdata->plugins[index];
 }

@@ -118,6 +118,8 @@ bool Alias::processing(const tstring& key, tstring *newcmd)
     if (key != m_key)
         return false;
     newcmd->assign(m_cmd);
+    InputVarsAccessor va;
+    va.translateVars(newcmd);
     return true;
 }
 
@@ -130,6 +132,8 @@ bool Hotkey::processing(const tstring& key, tstring *newcmd)
     if (key != m_key)
         return false;
     newcmd->assign(m_cmd);
+    InputVarsAccessor va;
+    va.translateVars(newcmd);
     return true;
 }
 
@@ -144,28 +148,14 @@ Action::Action(const property_value& v, const InputTemplateParameters& p)
 bool Action::processing(CompareData& data, InputCommands* newcmds)
 {
     if (!m_compare.compare(data.fullstr))
-        return false;
-    m_cmds.makeCommands(newcmds);
+        return false;    
+    m_cmds.makeCommands(newcmds, &m_compare);
 
     for (int i=0,e=newcmds->size(); i<e; ++i)
     {
         if (newcmds->operator[](i)->command == L"drop")
-        {
-            // drop mode -> change source MudViewString
-            //todo
-            int x = 1;
-        }
+                data.string->dropped = true;
     }
-
-    // drop mode -> change source MudViewString
-    /*if (m_value.find(L"drop") != tstring::npos)
-    {
-        CompareRange range;
-        m_compare.getRange(&range);
-        data.del(range);
-        if (data.string->blocks.empty())
-            data.string->dropped = true;
-    }*/
     return true;
 }
 
@@ -198,9 +188,11 @@ bool Sub::processing(CompareData& data)
 
     tstring value(m_value);
     m_compare.translateParameters(&value);
+    InputVarsAccessor va;
+    va.translateVars(&value);
     data.string->blocks[pos].string = value;
-
     data.start = pos+1;
+
     return true;
 }
 
