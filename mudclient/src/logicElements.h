@@ -27,20 +27,20 @@ class Alias
 {
 public:
     Alias(const property_value& v, const InputTemplateParameters& p);
-    bool processing(const tstring& key, tstring *newcmd);
+    bool processing(const InputCommand *cmd, InputCommands *newcmds);
 private:
     tstring m_key;
-    tstring m_cmd;
+    InputTemplateCommands m_cmds;
 };
 
 class Hotkey
 {
 public:
     Hotkey(const property_value& v, const InputTemplateParameters& p);
-    bool processing(const tstring& key, tstring *newcmd);
+    bool processing(const tstring& key, InputCommands *newcmds);
 private:
     tstring m_key;
-    tstring m_cmd;
+    InputTemplateCommands m_cmds;
 };
 
 class Action
@@ -58,7 +58,6 @@ class Sub
 public:
     Sub(const property_value& v);
     bool processing(CompareData& data);
-
 private:
     CompareObject m_compare;
     tstring m_value;
@@ -78,7 +77,6 @@ class Gag
 public:
     Gag(const property_value& v);
     bool processing(CompareData& data);
-
 private:
     CompareObject m_compare;
 };
@@ -88,7 +86,6 @@ class Highlight
 public:
     Highlight(const property_value& v);
     bool processing(CompareData& data);
-
 private:
     CompareObject m_compare;
     PropertiesHighlight m_hl;
@@ -98,13 +95,14 @@ class Timer
 {
 public:
     Timer();
-    void init(const property_value& v);
+    void init(const property_value& v, const InputTemplateParameters& p);
+    void makeCommands(InputCommands *cmds);
     bool tick(int dt);
     void reset();
     tstring id;
-    tstring cmd;
 
 private:
     int timer;
-    int period;    
+    int period;
+    InputTemplateCommands m_cmds;
 };

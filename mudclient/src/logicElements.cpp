@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "logicElements.h"
 
 CompareData::CompareData(MudViewString *s) : string(s), start(0)
@@ -109,33 +110,67 @@ int CompareData::findpos(int pos, int d)
     return bi;
 }
 
-Alias::Alias(const property_value& v, const InputTemplateParameters& p) : m_key(v.key), m_cmd(v.value)
+class AliasParameters : public InputParameters
 {
+    const InputCommand *m_pCmd;
+public:
+    AliasParameters(const InputCommand *cmd) : m_pCmd(cmd) {}
+    void getParameters(std::vector<tstring>* params) const
+    {
+        params->push_back(L"");
+        const std::vector<tstring>&p = m_pCmd->parameters_list;
+        params->insert(params->end(), p.begin(), p.end());
+    }
+};
+
+Alias::Alias(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
+{
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 }
 
-bool Alias::processing(const tstring& key, tstring *newcmd)
+bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
 {
-    if (key != m_key)
+    if (cmd->system) {
+        if (cmd->srccmd.compare(m_key))
+            return false;
+    }
+    else if (cmd->command.compare(m_key))
         return false;
-    newcmd->assign(m_cmd);
-    InputVarsAccessor va;
-    va.translateVars(newcmd);
+    AliasParameters ap(cmd);
+    m_cmds.makeCommands(newcmds, &ap);
+    
+    const tstring& alias = cmd->alias.empty() ? cmd->srccmd : cmd->alias;
+    for (int i=0,e=newcmds->size();i<e;++i)
+        newcmds->operator[](i)->alias.assign(alias);
     return true;
 }
 
-Hotkey::Hotkey(const property_value& v, const InputTemplateParameters& p) : m_key(v.key), m_cmd(v.value)
+Hotkey::Hotkey(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
 {
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 }
 
-bool Hotkey::processing(const tstring& key, tstring *newcmd)
+bool Hotkey::processing(const tstring& key, InputCommands *newcmds)
 {
     if (key != m_key)
         return false;
-    newcmd->assign(m_cmd);
-    InputVarsAccessor va;
-    va.translateVars(newcmd);
+    m_cmds.makeCommands(newcmds, NULL);
     return true;
 }
+
+class ActionParameters : public InputParameters
+{
+    const CompareObject *m_pCompareObject;
+public:
+    ActionParameters(const CompareObject* co) : m_pCompareObject(co) { assert(m_pCompareObject); }
+    void getParameters(std::vector<tstring>* params) const {
+        m_pCompareObject->getParameters(params);
+    }
+};
 
 Action::Action(const property_value& v, const InputTemplateParameters& p)
 {
@@ -148,9 +183,9 @@ Action::Action(const property_value& v, const InputTemplateParameters& p)
 bool Action::processing(CompareData& data, InputCommands* newcmds)
 {
     if (!m_compare.compare(data.fullstr))
-        return false;    
-    m_cmds.makeCommands(newcmds, &m_compare);
-
+        return false;
+    ActionParameters ap(&m_compare);
+    m_cmds.makeCommands(newcmds, &ap);
     for (int i=0,e=newcmds->size(); i<e; ++i)
     {
         if (newcmds->operator[](i)->command == L"drop")
@@ -186,13 +221,15 @@ bool Sub::processing(CompareData& data)
     int pos = data.fold(range);
     if (pos == -1) return false;
 
+    ActionParameters ap(&m_compare); //same adapter for subs
+    InputTranslateParameters tp;
     tstring value(m_value);
-    m_compare.translateParameters(&value);
+    tp.doit(&ap, &value);
+
     InputVarsAccessor va;
     va.translateVars(&value);
     data.string->blocks[pos].string = value;
     data.start = pos+1;
-
     return true;
 }
 
@@ -277,12 +314,15 @@ Timer::Timer() : timer(0), period(0)
 {
 }
 
-void Timer::init(const property_value& v)
+void Timer::init(const property_value& v, const InputTemplateParameters& p)
 {
     id.assign(v.key);
     PropertiesTimer pt;
     pt.convertFromString(v.value);
-    cmd.assign(pt.cmd);
+    
+    InputPlainCommands plain(pt.cmd);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 
     int t = _wtoi(pt.timer.c_str());
     if (t < 0)
@@ -290,6 +330,11 @@ void Timer::init(const property_value& v)
 
     timer = 0;
     period = t * 1000;
+}
+
+void Timer::makeCommands(InputCommands *cmds)
+{
+    m_cmds.makeCommands(cmds, NULL);
 }
 
 bool Timer::tick(int dt)

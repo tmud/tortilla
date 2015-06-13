@@ -529,12 +529,12 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         cmd->changed = true;
         cmd->command.assign(newcmd);
     }
-    if (cmd->parameters_list.size() != parts.size())
+    if (cmd->parameters_list.size() != parts.size()-1)
         cmd->changed = true;
     else
     {
         for (int i=1,e=parts.size();i<e;++i)
-            if (cmd->parameters_list[i] != parts[i]) { cmd->changed = true; break; }
+            if (cmd->parameters_list[i-1] != parts[i]) { cmd->changed = true; break; }
     }
     if (!cmd->changed)
         return;

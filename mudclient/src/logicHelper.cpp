@@ -9,27 +9,27 @@ LogicHelper::LogicHelper()
      m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
 }
 
-bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
+bool LogicHelper::processAliases(const InputCommand* cmd, InputCommands* newcmds)
 {
     for (int i=0,e=m_aliases.size(); i<e; ++i)
     {
-        if (m_aliases[i]->processing(key, newcmd))
+        if (m_aliases[i]->processing(cmd, newcmds))
            return true;
     }
     return false;
 }
 
-bool LogicHelper::processHotkeys(const tstring& key, tstring* newcmd)
+bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
 {
     for (int i=0,e=m_hotkeys.size(); i<e; ++i)
     {
-        if (m_hotkeys[i]->processing(key, newcmd))
+        if (m_hotkeys[i]->processing(key, newcmds))
             return true;
     }
     return false;
 }
 
-void LogicHelper::processActions(parseData *parse_data, InputCommands* new_cmds)
+void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
@@ -38,7 +38,7 @@ void LogicHelper::processActions(parseData *parse_data, InputCommands* new_cmds)
         CompareData cd(s);
         for (int i=0,e=m_actions.size(); i<e; ++i)
         {
-            if (m_actions[i]->processing(cd, new_cmds))
+            if (m_actions[i]->processing(cd, newcmds))
                break;
         }
     }
@@ -102,18 +102,14 @@ void LogicHelper::processHighlights(parseData *parse_data)
     }
 }
 
-void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
+void LogicHelper::processTimers(InputCommands* newcmds)
 {
     int dt = m_ticker.getDiff();
     m_ticker.sync();
-
     for (int i=0,e=m_timers.size(); i<e; ++i)
     {
         if (m_timers[i]->tick(dt))
-        {
-            tstring cmd(m_timers[i]->cmd);
-            new_cmds->push_back(cmd);
-        }
+            m_timers[i]->makeCommands(newcmds);
     }
 }
 
@@ -227,5 +223,5 @@ void LogicHelper::updateProps(int what)
     if (what == UPDATE_ALL || what == UPDATE_HIGHLIGHTS)
         m_highlights.init(&pdata->highlights, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_TIMERS)
-        m_timers.init(&pdata->timers, active_groups);
+        m_timers.init(&pdata->timers, active_groups, p);
 }

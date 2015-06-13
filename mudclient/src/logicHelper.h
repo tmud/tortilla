@@ -54,7 +54,7 @@ public:
     {
         autodel<Timer> z(*this);
     }
-    void init(PropertiesValues *values, const std::vector<tstring>& active_groups)
+    void init(PropertiesValues *values, const std::vector<tstring>& active_groups, const InputTemplateParameters& p)
     {
         std::vector<int> timers;
         for (int i=0,e=values->size(); i<e; ++i)
@@ -82,7 +82,7 @@ public:
             Timer *t = (index == -1) ? new Timer() : at(index);
             if (index == -1)
                 push_back(t);
-            t->init(v);
+            t->init(v, p);
         }
 
         std::vector<int> todelete;
@@ -119,14 +119,14 @@ public:
 
     LogicHelper();
     void updateProps(int what = UPDATE_ALL);
-    bool processAliases(const tstring& key, tstring* newcmd);
-    bool processHotkeys(const tstring& key, tstring* newcmd);
-    void processActions(parseData *parse_data, InputCommands* new_cmds);
+    bool processAliases(const InputCommand* cmd, InputCommands* newcmds);
+    bool processHotkeys(const tstring& key, InputCommands* newcmds);
+    void processActions(parseData *parse_data, InputCommands* newcmds);
     void processSubs(parseData *parse_data);
     void processAntiSubs(parseData *parse_data);
     void processGags(parseData *parse_data);
     void processHighlights(parseData *parse_data);
-    void processTimers(std::vector<tstring>* new_cmds);
+    void processTimers(InputCommands* newcmds);
     void resetTimers();
     
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };

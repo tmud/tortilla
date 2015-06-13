@@ -53,27 +53,6 @@ bool CompareObject::compare(const tstring& str)
     return true;
 }
 
-void CompareObject::translateParameters(tstring* value) const
-{
-    std::vector<tstring> params;            // values of params in key
-    getParameters(&params);
-    int params_count = params.size();
-
-    tstring result;
-    int pos = 0;
-    ParamsHelper values(*value);
-    for (int i = 0, e = values.getSize(); i < e; ++i)
-    {
-        result.append(value->substr(pos, values.getFirst(i) - pos));
-        int id = values.getId(i);
-        if (id < params_count)
-            result.append(params[id]);
-        pos = values.getLast(i);
-    }
-    result.append(value->substr(pos));
-    value->swap(result);
-}
-
 void CompareObject::getParameters(std::vector<tstring>* params) const
 {
     assert(params);

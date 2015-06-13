@@ -19,10 +19,9 @@ void LogicProcessor::processTick()
 {
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
-    std::vector<tstring> timers_cmds;
+    InputCommands timers_cmds;
     m_helper.processTimers(&timers_cmds);
-    for (int i=0,e=timers_cmds.size(); i<e; ++i)
-        processCommand(timers_cmds[i]);
+    runCommands(timers_cmds);
 }
 
 void LogicProcessor::processNetworkData(const WCHAR* text, int text_len)
@@ -42,11 +41,10 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
 {
     if (hotkey.empty())
         return false;
-
-    tstring newcmd;
-    if (m_helper.processHotkeys(hotkey, &newcmd))
+    InputCommands newcmds;
+    if (m_helper.processHotkeys(hotkey, &newcmds))
     {
-        processCommand(newcmd);
+        runCommands(newcmds);
         return true;
     }
     return false;
@@ -82,13 +80,13 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 
     InputCommands result;
     tcmds.makeCommands(&result, NULL);
-
-    processAliases(result);
     runCommands(result);
 }
 
-void LogicProcessor::runCommands(const InputCommands& cmds)
+void LogicProcessor::runCommands(InputCommands& cmds)
 {
+    if (!processAliases(cmds))
+        return;
     for (int i=0,e=cmds.size(); i<e; ++i)
     {
         InputCommand *cmd = cmds[i];
@@ -99,93 +97,43 @@ void LogicProcessor::runCommands(const InputCommands& cmds)
     }
 }
 
-void LogicProcessor::processAliases(InputCommands& cmds)
+bool LogicProcessor::processAliases(InputCommands& cmds)
 {
     // to protect from loops in aliases
-    std::vector<tstring> loops;    
-
+    bool loop = false;
+    std::vector<tstring> loops;
     int queue_size = cmds.size();
     for (int i=0; i<queue_size;)
     {
+        InputCommand* cmd = cmds[i];
+        if (cmd->command.empty()) 
+            { i++; continue; }
 
+        InputCommands newcmds;
+        if (!m_helper.processAliases(cmd, &newcmds))
+            { i++; continue; }
 
-        /*bool alias_found = false;
-        InputSubcmd &tmpl = cmds[i];
-        const tstring& cmd = tmpl.srccmd;
+        loops.push_back( (cmd->system) ? cmd->srccmd : cmd->command);
         
-
-        //if (cmd.empty() || tmpl.second)
+        for (int j = 0, je = newcmds.size(); j < je; ++j)
         {
-            // do nothing, skip empty and system commands
-        }
-        else
-        {
-            // find alias
-            tstring alias;
-            if (m_helper.processAliases(cmd, &alias) && alias != cmd )
+            InputCommand *cmd2 = newcmds[j];
+            const tstring& compare_cmd = (cmd2->system) ? cmd2->srccmd : cmd2->command;
+            if (std::find(loops.begin(), loops.end(), compare_cmd) != loops.end())
             {
-
-                
-            
-            }      
-        }*/
+                loop = true;
+                loops.push_back(compare_cmd);
+                break;
+            }
+        }
+        if (loop)
+            break;
+        cmds.erase(i);
+        cmds.insert(i, newcmds);
+        queue_size = cmds.size();
     }
 
-
-/*
-        tstring alias;
-        if (!cmd.empty() && cmd.at(0) != prefix // skip empty and system commands
-            && helper->processAliases(cmd, &alias))
-        {
-            if (alias != cmd)
-                alias_found = true;
-        }
-
-        if (alias_found)
-        {
-            tstring result;
-            processParameters(alias, commands[i], &result);
-            InputCommands new_cmd_list;
-            processSeparators(result, &new_cmd_list);
-
-            bool loop = false;
-            for (int j=0,je=new_cmd_list.size(); j<je; ++j)
-            {
-                if (std::find(loops_hunter.begin(), loops_hunter.end(), new_cmd_list[j]->command) !=
-                    loops_hunter.end())
-                    {
-                       loop = true;
-                       loop_cmds->push_back(new_cmd_list[j]->command);
-                       break;
-                    }
-            }
-
-            if (loop)
-            {
-                //loop in aliases - skip current command
-                commands.erase(i);
-                queue_size = commands.size();
-                loops_hunter.clear();
-                continue;
-            }
-
-            commands.erase(i);
-            commands.insert(i, new_cmd_list);
-            queue_size = commands.size();
-        }
-        else
-        {
-            i++;
-            loops_hunter.clear();
-        }
-    }
-
-     //std::vector<tstring> loops;
-    //WCHAR cmd_prefix = propData->cmd_prefix;
-    //InputProcessor ip(propData->cmd_separator, propData->cmd_prefix);
-    //ip.process(cmd, &m_helper, &loops);
-
-    if (!loops.empty())
+    if (loop)
     {
         tstring msg;
         int size = loops.size();
@@ -200,7 +148,7 @@ void LogicProcessor::processAliases(InputCommands& cmds)
         tmcLog(msg);
         return false;
     }
-    return true;*/
+    return true;
 }
 
 void LogicProcessor::updateProps()

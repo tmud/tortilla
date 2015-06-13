@@ -34,14 +34,12 @@ private:
 //-------------------------------------------------------------------
 #include "logicScripts.h"
 ParamsBuffer pb;
-tchar buffer[1024];
-const int buffer_len = 1024;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
 void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring main_cmd(cmd->srccmd); // not cmd->command! -> block #__xxx commands ( _ - space)
+    tstring main_cmd(cmd->srccmd.substr(1)); // not cmd->command! -> block #__xxx commands ( _ - space)
 
     tstring error;
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
@@ -103,20 +101,21 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             m_pHost->preprocessCommand(cmd);
         if (cmd->dropped)
         {
-            syscmdLog(fullcmd);
-            tmcLog(L"Команда заблокирована");
+            fullcmd.append(L" (Команда блокирована)");
+            tmcLog(fullcmd);
             return;
         }
-        
+
+        //if (!cmd->changed && cmd->srccmd != cmd->command)
+        //    cmd->changed = true;
         if (cmd->changed)
         {
-            tstring tmp(prefix);
+            tstring tmp(L" (");
             tmp.append(cmd->srccmd);
             tmp.append(cmd->srcparameters);
-            tmp.append(L"-->");
-            syscmdLog(tmp);
+            tmp.append(L")");
+            fullcmd.append(tmp);
         }
-
         syscmdLog(fullcmd);
 
         it = m_syscmds.find(main_cmd);
@@ -139,11 +138,15 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        msg.append(prefix);
-        msg.append(cmd->srccmd);
+        msg.append(cmd->command);
         if (!hide_cmd)
-            msg.append(cmd->srcparameters);
+            msg.append(cmd->parameters);
         msg.append(L"]");
+        if (!cmd->alias.empty())
+        {
+            msg.append(L", макрос: ");
+            msg.append(cmd->alias);        
+        }
         tmcLog(msg);
     }
 }
@@ -151,9 +154,8 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
     m_pHost->preprocessCommand(cmd);
-
-    //if (cmd->command.empty() && !cmd->dropped)
-    //    return;
+    if (cmd->dropped)
+        return;
     tchar br[2] = { 0xa, 0 };
     tstring tmp(cmd->command);
     tmp.append(cmd->parameters);
@@ -689,9 +691,8 @@ IMPL(mccp)
         float ratio = 0; 
         if (d > 0)
             ratio = 100 - ((c / d) * 100);
-        tchar buffer[64];
-        swprintf(buffer, buffer_len, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
+        tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -706,10 +707,10 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
          m_logs.closeLog(id);
          m_wlogs[log] = -1;
          if (log == 0)
-            swprintf(buffer, buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
          else
-             swprintf(buffer, buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
-         tmcLog(buffer);
+             swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
+         tmcLog(pb.buffer);
          if (file.empty())
              return;
     }
@@ -718,10 +719,10 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (file.empty())
         {
             if (log == 0)
-                swprintf(buffer, buffer_len, L"Лог не был открыт.");
+                swprintf(pb.buffer, pb.buffer_len, L"Лог не был открыт.");
             else
-                swprintf(buffer, buffer_len, L"Лог в окне %d не был открыт.", log);
-            tmcLog(buffer);
+                swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d не был открыт.", log);
+            tmcLog(pb.buffer);
             return; 
         }
     }
@@ -741,19 +742,19 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id == -1)
     {
         if (log == 0)
-            swprintf(buffer, buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
         else
-            swprintf(buffer, buffer_len, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
     }
     else
     {
         if (log == 0)
-            swprintf(buffer, buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
         else
-            swprintf(buffer, buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
         m_wlogs[log] = id;
     }
-    tmcLog(buffer);    
+    tmcLog(pb.buffer);    
 }
 
 void LogicProcessor::logf(parser *p, bool newlog)
@@ -814,8 +815,8 @@ IMPL(wname)
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
-    swprintf(buffer, buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
-    tmcLog(buffer);
+    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
+    tmcLog(pb.buffer);
     p->invalidargs();
 }
 
@@ -831,8 +832,8 @@ IMPL(wshow)
             m_pHost->showWindow(window, true);
             return;
         }
-        swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
+        tmcLog(pb.buffer);
     }
     p->invalidargs();
 }
@@ -849,8 +850,8 @@ IMPL(whide)
             m_pHost->showWindow(window, false);
             return;
         }
-        swprintf(buffer, buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
-        tmcLog(buffer);
+        swprintf(pb.buffer, pb.buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
+        tmcLog(pb.buffer);
     }
     p->invalidargs();
 }
@@ -965,7 +966,7 @@ IMPL(tab)
         if (index == -1)
             pdata->tabwords.add(index, tab);
         swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка '%s' добавлена.", tab.c_str());        
-        helper->tmcLog(buffer);
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -982,13 +983,13 @@ IMPL(untab)
         const tstring &tab = p->at(0);
         int index = pdata->tabwords.find(tab);
         if (index == -1)
-            swprintf(buffer, buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
         else
         {
             pdata->tabwords.del(index);
-            swprintf(buffer, buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
         }
-        helper->tmcLog(buffer);
+        helper->tmcLog(pb.buffer);
         return;
     }
     p->invalidargs();
@@ -1003,23 +1004,22 @@ IMPL(timer)
     if (n == 0)
     {
         helper->skipCheckMode();
-        helper->tmcLog(L"Таймеры:");
         if (!pdata->timers_on)
-            helper->simpleLog(L"Таймеры выключены.");
-
+            helper->tmcLog(L"Таймеры выключены.");
         const PropertiesValues &t  = pdata->timers;
         if (t.size() == 0)
         {
-            helper->tmcLog(L"Список пуст.");
+            helper->tmcLog(L"Таймеры не созданы.");
             return;
         }
+        helper->tmcLog(L"Таймеры:");
         for (int i=0,e=t.size(); i<e; ++i)
         {
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
             swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
                 pt.cmd.c_str(), v.group.c_str());
-            helper->simpleLog(buffer);
+            helper->simpleLog(pb.buffer);
         }
         return;
     }
@@ -1050,14 +1050,15 @@ IMPL(timer)
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
-        _itow(key, buffer, 10);
-        tstring id(buffer);
+        tchar tmp[16];
+        _itow(key, tmp, 10);
+        tstring id(tmp);
 
         int index = pdata->timers.find(id);
         if (index == -1)
         {
             swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
-            helper->tmcLog(buffer);
+            helper->tmcLog(pb.buffer);
             return;
         }
         const PropertiesValues &t  = pdata->timers;
@@ -1065,7 +1066,7 @@ IMPL(timer)
         PropertiesTimer pt; pt.convertFromString(v.value);
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
-        helper->simpleLog(buffer);
+        helper->simpleLog(pb.buffer);
         return;
     }
 
@@ -1078,19 +1079,20 @@ IMPL(timer)
         if (delay < 0 || delay > 999)
             return p->invalidargs();
 
-        _itow(key, buffer, 10);
-        tstring id(buffer);
+         tchar tmp[16];
+        _itow(key, tmp, 10);
+        tstring id(tmp);
         int index = pdata->timers.find(id);
         if (index == -1 && n == 2)
         {
             swprintf(pb.buffer, pb.buffer_len, L"Ошибка. Таймер #%s не существует.", id.c_str());
-            helper->tmcLog(buffer);
+            helper->tmcLog(pb.buffer);
             return;
         }
 
         PropertiesTimer pt;
-        _itow(delay, buffer, 10);
-        pt.timer.assign(buffer);
+        _itow(delay, tmp, 10);
+        pt.timer.assign(tmp);
         if (n > 2)
            pt.cmd = p->at(2);
 
@@ -1123,8 +1125,39 @@ IMPL(timer)
         pdata->timers.add(index, id, value, group);
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
-        helper->simpleLog(buffer);
-        return updateProps(0, LogicHelper::UPDATE_TIMERS);
+        helper->simpleLog(pb.buffer);
+        return updateProps(1, LogicHelper::UPDATE_TIMERS);
+    }
+    p->invalidargs();
+}
+
+IMPL(untimer)
+{
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        int key = p->toInteger(0);
+        if (key < 1 || key > TIMERS_COUNT)
+            return p->invalidargs();
+        tchar tmp[16];
+        _itow(key, tmp, 10);
+        tstring id(tmp);
+
+        PropertiesData *pdata = tortilla::getProperties();
+        ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
+        MethodsHelper* helper = ph;
+
+        int index = pdata->timers.find(id);
+        if (index == -1)
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
+            helper->tmcLog(pb.buffer);
+            return;
+        }
+        pdata->timers.del(index);
+        swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s удален.", id.c_str());
+        helper->tmcLog(pb.buffer);
+        return updateProps(1, LogicHelper::UPDATE_TIMERS);
     }
     p->invalidargs();
 }
@@ -1175,10 +1208,10 @@ IMPL(message)
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
             if (n == 1)
-                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
+                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
             else
-                swprintf(buffer, buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
-            tmcLog(buffer);
+                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
+            tmcLog(pb.buffer);
         }
         else
         {
@@ -1251,6 +1284,7 @@ bool LogicProcessor::init()
     regCommand("tab", tab);
     regCommand("untab", untab);
     regCommand("timer", timer);
+    regCommand("untimer", untimer);
 
     regCommand("hidewindow", hidewindow);
     regCommand("showwindow", showwindow);

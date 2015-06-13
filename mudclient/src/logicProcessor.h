@@ -98,8 +98,8 @@ public:
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
-    void runCommands(const InputCommands& cmds);
-    void processAliases(InputCommands& cmds);
+    void runCommands(InputCommands& cmds);
+    bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);
@@ -155,6 +155,7 @@ public: // system commands
     DEF(tab);
     DEF(untab);
     DEF(timer);
+    DEF(untimer);
     DEF(hidewindow);
     DEF(showwindow);
     void wlogf_main(int log, const tstring& file, bool newlog);

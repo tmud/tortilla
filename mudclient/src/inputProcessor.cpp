@@ -13,6 +13,28 @@ void InputVarsAccessor::translateVars(tstring *cmd)
     tortilla::getVars()->processVars(cmd);
 }
 
+void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
+{
+    assert(params && cmd);
+    std::vector<tstring> params_list;
+    params->getParameters(&params_list);
+    int params_count = params_list.size();
+
+    tstring result;
+    int pos = 0;
+    ParamsHelper values(*cmd);
+    for (int i = 0, e = values.getSize(); i < e; ++i)
+    {
+        result.append(cmd->substr(pos, values.getFirst(i) - pos));
+        int id = values.getId(i);
+        if (id < params_count)
+            result.append(params_list[id]);
+        pos = values.getLast(i);
+    }
+    result.append(cmd->substr(pos));
+    cmd->swap(result);
+}
+
 InputPlainCommands::InputPlainCommands() {}
 InputPlainCommands::InputPlainCommands(const tstring& cmd)
 {
@@ -65,43 +87,49 @@ void InputTemplateCommands::makeTemplates()
     }
 }
 
-void InputTemplateCommands::makeCommands(InputCommands *cmds, const CompareObject* params)
-{    
+void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParameters* params)
+{
+    tchar prefix[] = { _params.prefix, 0 };
     for (int i=0,e=size(); i<e; ++i)
     {
         const InputSubcmd &subcmd = at(i);
 
         InputCommand *cmd = new InputCommand();
         cmd->system = subcmd.system;
+        if (cmd->system)
+            cmd->srccmd.append(prefix);
 
         // make src parameters
         const tstring& s = subcmd.srccmd;
         size_t pos = s.find(L" ");
         if (pos == -1)
-            cmd->srccmd.assign(s);
+            cmd->srccmd.append(s);
         else if (pos == 0) 
         {
              size_t from = wcsspn(s.c_str(), L" ");
              pos = s.find(L" ", from);
              if (pos == -1) { 
-                 cmd->srccmd.assign(s); 
+                 cmd->srccmd.append(s); 
              }
              else {
-                 cmd->srccmd.assign(s.substr(0, from));
-                 cmd->srcparameters.assign(s.substr(from)); 
+                 cmd->srccmd.append(s.substr(0, from));
+                 cmd->srcparameters.append(s.substr(from)); 
              }
         }
         else {
-            cmd->srccmd.assign(s.substr(0, pos));
-            cmd->srcparameters.assign(s.substr(pos));
-        }                
+            cmd->srccmd.append(s.substr(0, pos));
+            cmd->srcparameters.append(s.substr(pos));
+        }
 
         tstring t(subcmd.templ);    //template of cmd
         if (params)                 //translate parameters
-            params->translateParameters(&t);
+        {
+            InputTranslateParameters tp;
+            tp.doit(params, &t);
+        }
         InputVarsAccessor va;
         va.translateVars(&t);       //translate vars in template
-        
+
         pos = t.find(L" ");
         if (pos == -1) {
             cmd->command = t;
@@ -113,14 +141,14 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const CompareObjec
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
-                 cmd->command.assign(t.substr(from, pos-from));
-                 cmd->parameters.assign(t.substr(pos));
+                 cmd->command.append(t.substr(from, pos-from));
+                 cmd->parameters.append(t.substr(pos));
             }
         }
         else
         {
-            cmd->command.assign(t.substr(0, pos));
-            cmd->parameters.assign(t.substr(pos));
+            cmd->command.append(t.substr(0, pos));
+            cmd->parameters.append(t.substr(pos));
         }
 
         if (cmd->system)
@@ -433,25 +461,3 @@ bool InputTemplateCommands::isbracket(const tchar *p) const
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
 
-/*void InputTemplateCommands::trimcmd(tstring* cmd)
-{
-   size_t pos = cmd->find(L" ");
-   if (pos == -1)
-       return;
-   if (pos != 0)
-   {
-       tstring tmp(cmd->substr(0, pos));
-       cmd->swap(tmp);
-       return;
-   }
-   size_t from = wcsspn(cmd->c_str(), L" ");
-   pos = cmd->find(L" ", from);
-   if (pos == -1)
-   {
-       tstring tmp(cmd->substr(from));
-       cmd->swap(tmp);
-       return;
-   }
-   tstring tmp(cmd->substr(from, pos-from));
-   cmd->swap(tmp);
-}*/

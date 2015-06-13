@@ -15,10 +15,8 @@ public:
     bool init(const tstring& key);
     bool compare(const tstring& str);
     void getRange(CompareRange *range) const;
-    void translateParameters(tstring* value) const;
-
-private:
     void getParameters(std::vector<tstring>* params) const;
+private:
     void createCheckPcre(const tstring& key, tstring *prce_template);
     void checkVars(tstring *pcre_template);
 
