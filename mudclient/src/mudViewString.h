@@ -62,7 +62,7 @@ struct MudViewStringBlock
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false), system(false), prompt(0) {}
+   MudViewString() : dropped(false), gamecmd(false), system(false), part(false), prompt(0) {}
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
@@ -153,5 +153,6 @@ struct MudViewString
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd
    bool system;                             // flag - system cmd / log
-   int  prompt;                             // prompt-string, index of last symbol of prompt   
+   bool part;                               // flag - next string in MudView is part of that string
+   int  prompt;                             // prompt-string, index of last symbol of prompt
 };

@@ -750,6 +750,25 @@ int string_substr(lua_State *L)
     return 1;
 }
 
+int string_strstr(lua_State *L)
+{
+     if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+     {
+         const utf8* s1 = lua_tostring(L, 1);
+         const utf8* s2 = lua_tostring(L, 2);
+         const utf8* pos = strstr(s1, s2);
+         if (pos)
+         {  
+            u8string tmp(s1, pos-s1);
+            int find_pos = u8string_len(tmp) + 1;
+            lua_pushinteger(L, find_pos);
+            return 1;
+         }
+     }
+     lua_pushnil(L);
+     return 1;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -757,6 +776,7 @@ void reg_string(lua_State *L)
     lua_newtable(L);
     regFunction(L, "len", string_len);
     regFunction(L, "substr", string_substr);
+    regFunction(L, "strstr", string_strstr);
     regIndexMt(L);
 
     // set metatable for lua string type

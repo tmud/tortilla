@@ -2,7 +2,7 @@
 -- Плагин для Tortilla mud client
 
 -- Максимальная допустимая длина строк для главного окна, 0 - выключено
-local autowrap_maxlen_main = 100
+local autowrap_maxlen_main = 70
 -- Максимальная допустимая длина строк для дополнительных output-окон, 0 - выключено
 local autowrap_maxlen_out = 100
 
@@ -24,12 +24,18 @@ end
 
 function autowrap.div(v, maxlen)
   local len,index = 0, 0
+  local s
   for i=1,v:blocks() do
-    local s = v:getBlockText(i)
+    s = v:getBlockText(i)
     local newlen = len + s:len()
     if newlen > maxlen then index=i; break; end
     len = newlen
   end
+  --log(index)
+  local pos = s:strstr(" ")
+  log(pos)
+  
+  --[[
   if index == 0 then return end
   v:createString(v:isSystem(), v:isGameCmd())
   local new_string = v:getIndex() + 1
@@ -41,6 +47,7 @@ function autowrap.div(v, maxlen)
   v:setBlockText(index, ds:substr(1, p1len))
   v:select(new_string)
   v:setBlockText(1, ds:substr(p1len+1, ds:len()-p1len))
+  ]]
 end
 
 function autowrap.after(window, v)
