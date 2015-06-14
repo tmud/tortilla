@@ -137,13 +137,16 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
         else if (pos == 0)
         {
             size_t from = wcsspn(t.c_str(), L" ");
+            if (cmd->system)
+                cmd->parameters.append(t.substr(from));
+            else {
             pos = t.find(L" ", from);
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
                  cmd->command.append(t.substr(from, pos-from));
                  cmd->parameters.append(t.substr(pos));
-            }
+            }}
         }
         else
         {

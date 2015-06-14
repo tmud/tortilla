@@ -138,14 +138,15 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        msg.append(cmd->command);
+        bool usesrc = (cmd->alias.empty()) ? true : false;
+        msg.append(usesrc ? cmd->srccmd : cmd->command);
         if (!hide_cmd)
-            msg.append(cmd->parameters);
+            msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
         msg.append(L"]");
         if (!cmd->alias.empty())
         {
             msg.append(L", макрос: ");
-            msg.append(cmd->alias);        
+            msg.append(cmd->alias);
         }
         tmcLog(msg);
     }
@@ -863,11 +864,11 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
     MudViewStringBlock block;
     HighlightTestControl tc;
 
-    bool last_color_teg = true;
+    bool last_color_teg = false;
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
-        if (tc.checkText(&p))       // it color teg
+        if (!last_color_teg && tc.checkText(&p))    // it color teg
         {
             last_color_teg = true;
             PropertiesHighlight hl;
@@ -879,22 +880,20 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
             p.italic_status = hl.italic;
             p.underline_status = hl.underlined;
             p.use_ext_colors = 1;
+            continue;
+        }
+        if (last_color_teg)
+        {
+            last_color_teg = false;
+            block.string.assign(p);
+            new_string->blocks.push_back(block);
         }
         else
         {
-            if (last_color_teg)
-            {
-                last_color_teg = false;
-                block.string.assign(p);
-                new_string->blocks.push_back(block);
-            }
-            else
-            {
-                int last = new_string->blocks.size() - 1;
-                tstring &s = new_string->blocks[last].string;
-                s.append(L" ");
-                s.append(p);
-            }
+            int last = new_string->blocks.size() - 1;
+            tstring &s = new_string->blocks[last].string;
+            s.append(L" ");
+            s.append(p);
         }
     }
 

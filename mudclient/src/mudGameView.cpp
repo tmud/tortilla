@@ -9,6 +9,7 @@ bool MudGameView::initialize()
         return false;
     }
 
+    RUN_INPUTPROCESSOR_TESTS;
     if (!m_processor.init())
     {
         msgBox(m_hWnd, IDS_ERROR_SCRIPTENGINE_FAILED, MB_OK|MB_ICONSTOP);

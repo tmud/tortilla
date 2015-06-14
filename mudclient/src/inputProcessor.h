@@ -119,9 +119,13 @@ private:
 #ifdef _DEBUG
 class InputCommandTemplateUnitTest
 {
-    static bool test(const tstring& str, int n, ...);
+    static bool test1(const tstring& str, int n, ...);
+    static bool test2(const tstring& str, int params, InputCommands *ref);
+    static InputCommand* makecmd(bool system, const tstring& srccmd, const tstring& srcparams, 
+        const tstring& cmd, int n, ...);
 public:
     static void run();
+    
 };
 #define RUN_INPUTPROCESSOR_TESTS InputCommandTemplateUnitTest::run();
 #else
