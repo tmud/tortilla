@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "compareObject.h"
-#include "logicProcessor.h"
-extern LogicProcessorMethods* _lp;
+#include "inputProcessor.h"
 
 CompareObject::CompareObject() {}
 CompareObject::~CompareObject() {}
@@ -21,7 +20,7 @@ bool CompareObject::init(const tstring& key)
     return result;
 }
 
-bool CompareObject::checkToCompare(const tstring& str)
+bool CompareObject::compare(const tstring& str)
 {
     if (!m_vars_pcre_parts.empty())
     {
@@ -34,8 +33,10 @@ bool CompareObject::checkToCompare(const tstring& str)
                 regexp.append(v);
             else
             {
+                InputVarsAccessor va;
                 tstring value;
-                if (!_lp->getVar(v.c_str() + 1, &value))
+                tstring varname(v.c_str() + 1);
+                if (!va.get(varname, &value))
                     return false;
                 regexp.append(value);
             }
@@ -50,26 +51,6 @@ bool CompareObject::checkToCompare(const tstring& str)
         return false;
     m_str = str;
     return true;
-}
-
-void CompareObject::translateParameters(const tstring& value, tstring* result) const
-{
-    std::vector<tstring> params;            // values of params in key
-    getParameters(&params);
-    int params_count = params.size();
-
-    int pos = 0;
-    ParamsHelper values(value);
-    result->clear();
-    for (int i = 0, e = values.getSize(); i < e; ++i)
-    {
-        result->append(value.substr(pos, values.getFirst(i) - pos));
-        int id = values.getId(i);
-        if (id < params_count)
-            result->append(params[id]);
-        pos = values.getLast(i);
-    }
-    result->append(value.substr(pos));
 }
 
 void CompareObject::getParameters(std::vector<tstring>* params) const
@@ -103,9 +84,9 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
 {
     //mask regexp special symbols
     tstring tmp;
-    const WCHAR *symbols = L"*+/?|^$.[]()\\";
-    const WCHAR *b = key.c_str();
-    const WCHAR *e = b + key.length();
+    const tchar *symbols = L"*+/?|^$.[]()\\";
+    const tchar *b = key.c_str();
+    const tchar *e = b + key.length();
 
     // skip first ^ - it a part of regexp
     if (*b == '^')
@@ -114,7 +95,7 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
         b++;
     }
 
-    const WCHAR* p = b + wcscspn(b, symbols);
+    const tchar* p = b + wcscspn(b, symbols);
     while (p != e)
     {
         bool skip_slash = false;
@@ -126,7 +107,7 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
         }
         if (!skip_slash)
             tmp.append(L"\\");
-        WCHAR x[2] = { *p, 0 };
+        tchar x[2] = { *p, 0 };
         tmp.append(x);
         b = p + 1;
         p = b + wcscspn(b, symbols);
@@ -141,7 +122,7 @@ void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
         prce_template->append(tmp.substr(pos, ph.getFirst(i) - pos));
         pos = ph.getLast(i);
         int id = ph.getId(i);
-        
+
         /*tstring flag(tmp.substr(pos,1));
         if (flag == L"%") // %x% variant
         {
@@ -181,7 +162,7 @@ void CompareObject::checkVars(tstring *pcre_template)
     {
         int dp = vars.getFirst(i);
         if (dp > 1 && tmp.at(dp - 1) == L'\\' && tmp.at(dp - 2) != L'\\')
-            continue;            
+            continue;
 
         pcre_template->append(tmp.substr(pos, vars.getFirst(i) - pos));
         int first = vars.getFirst(i);
@@ -220,13 +201,14 @@ void CompareObject::checkVars(tstring *pcre_template)
         }
         m_vars_pcre_parts.push_back(vars_list[index++]);
         b = p + 6; // len (?var)
-    }  
+    }
 }
 
 void CompareObject::getRange(CompareRange *range) const
-{ 
+{
     if (m_pcre.getSize() == 0)
         return;
     range->begin = m_pcre.getFirst(0);
-    range->end = m_pcre.getLast(0); 
+    range->end = m_pcre.getLast(0);
 }
+

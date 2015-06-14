@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "logicElements.h"
 
 CompareData::CompareData(MudViewString *s) : string(s), start(0)
@@ -10,7 +11,7 @@ void CompareData::reinit()
 {
     fullstr.clear();
     std::vector<MudViewStringBlock> &vb = string->blocks;
-    for (int i=start,e=vb.size(); i<e; ++i)          
+    for (int i=start,e=vb.size(); i<e; ++i)
        fullstr.append(vb[i].string);
 }
 
@@ -30,7 +31,7 @@ int CompareData::fold(CompareRange& range)
     {
         std::vector<MudViewStringBlock> &vb = string->blocks;
         MudViewStringBlock &b = vb[range.begin];
-        for (int i=range.begin+1; i<=range.end; ++i)    
+        for (int i=range.begin+1; i<=range.end; ++i)
             b.string.append(vb[i].string);
         vb.erase(vb.begin()+range.begin+1, vb.begin()+range.end+1);
     }
@@ -43,7 +44,7 @@ bool CompareData::cut(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = cutpos(range.begin, 0);    
+        range.begin = cutpos(range.begin, 0);
         range.end = cutpos(range.end, 1);
         return true;
     }   
@@ -56,7 +57,7 @@ bool CompareData::find(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = findpos(range.begin, 0);    
+        range.begin = findpos(range.begin, 0);
         range.end = findpos(range.end, 1);
         return true;
     }
@@ -109,216 +110,86 @@ int CompareData::findpos(int pos, int d)
     return bi;
 }
 
-void BracketsMarker::mark(tstring *parameters)
+class AliasParameters : public InputParameters
 {
-    assert(parameters);
-
-    const tchar marker[2] = { MARKER , 0 };
-    const tchar *p = parameters->c_str();
-    const tchar *e = p + parameters->length();
-
-    const tchar* bracket_begin = NULL;
-    std::vector<tchar> stack;
-    tstring newp;
-
-    const tchar* b = p;
-    while (p != e)
+    const InputCommand *m_pCmd;
+public:
+    AliasParameters(const InputCommand *cmd) : m_pCmd(cmd) {}
+    void getParameters(std::vector<tstring>* params) const
     {
-        if (!isbracket(p))
-            { p++; continue;}
-        if (stack.empty() && *p != L'}')
-        {
-            stack.push_back(*p);
-            bracket_begin = p;
-        }
-        else
-        {
-            if (((*p == L'\'' || *p == L'"') && *bracket_begin == *p) ||
-                (*p == L'}' && *bracket_begin == L'{' && stack.size() == 1))
-            {
-               stack.clear();
-               // mark pair brackets
-               newp.append(b, bracket_begin-b);
-               newp.append(marker);
-               newp.append(bracket_begin, p-bracket_begin);
-               newp.append(marker);
-               newp.append(p, 1);
-               b = p + 1;
-               p = b;
-               continue;
-            }
-            else if (*bracket_begin != L'\'' && *bracket_begin != L'"')
-            {
-               if (*p == L'{')
-                   stack.push_back(*p);
-               else if (*p == L'}')
-                   stack.pop_back();
-            }
-        }
-        p++;
+        params->push_back(L"");
+        const std::vector<tstring>&p = m_pCmd->parameters_list;
+        params->insert(params->end(), p.begin(), p.end());
     }
-    if (b != e)
-        newp.append(b);
-    parameters->swap(newp);
+};
+
+Alias::Alias(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
+{
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 }
 
-void BracketsMarker::unmark(tstring* parameters, std::vector<tstring>* parameters_list)
+bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
 {
-   assert(parameters && parameters_list);
-   if (parameters->empty())
-       return;
-
-   std::vector<tstring> &tp = *parameters_list;
-
-   // get parameters, delete markers from parameters
-   const WCHAR *p = parameters->c_str();
-   const WCHAR *e = p + parameters->length();
-
-   const tchar* bracket_begin = NULL;
-   bool combo_bracket = false;
-   tstring newp;
-
-   const WCHAR *b = p;
-   while (p != e)
-   {
-       if (*p == MARKER /*&& (p+1)!=e*/ && isbracket(&p[1]))
-       {
-           if (!bracket_begin)
-               bracket_begin = p;
-           else if (*bracket_begin != MARKER)
-           {
-               newp.append(b, p-b);
-               // get parameter without left spaces
-               tstring cp(bracket_begin, p-bracket_begin);
-               tp.push_back(cp);
-
-               bracket_begin = p;
-               b = p;
-               p++;
-               combo_bracket = true;
-               continue;
-           }
-           else
-           {
-               newp.append(b, bracket_begin-b);
-               bracket_begin++;
-               newp.append(bracket_begin, p-bracket_begin);
-
-               // get parameter without brackets
-               tstring cp(bracket_begin+1, p-bracket_begin-1);
-               if (combo_bracket)
-               {
-                   int last = tp.size()-1;
-                   tp[last].append(cp);
-                   combo_bracket = false;
-               }
-               else {
-                   tp.push_back(cp); 
-               }
-
-               p++;
-               newp.append(p, 1);
-               p++;
-               b = p;
-               bracket_begin = NULL;
-               continue;
-           }
-       }
-       else if (*p != L' ' && !bracket_begin)
-       {
-           bracket_begin = p;
-       }
-       else if (*p == L' ' && bracket_begin && *bracket_begin != MARKER)
-       {
-           newp.append(b, p-b);
-
-           // get parameter without left spaces
-           tstring cp(bracket_begin, p-bracket_begin);
-           tp.push_back(cp);
-           bracket_begin = NULL;
-           b = p;
-           continue;
-       }
-       p++;
-   }
-   if (b != e)
-   {
-       if (bracket_begin && *bracket_begin == MARKER)
-       {
-           b++;
-           newp.append(b);
-           b++;
-           tp.push_back(b);
-       }
-       else
-       {
-           newp.append(b);
-           tstring tmp(b);
-           tstring_trimleft(&tmp);
-           if (!tmp.empty())
-              tp.push_back(tmp);
-       }
-   }
-
-   parameters->swap(newp);
-}
-
-bool BracketsMarker::isbracket(const tchar *p)
-{
-    return (wcschr(L"{}\"'", *p)) ? true : false;
-}
-
-Alias::Alias(const property_value& v) : m_key(v.key), m_cmd(v.value)
-{
-    BracketsMarker bm;
-    bm.mark(&m_cmd);
-}
-
-bool Alias::processing(const tstring& key, tstring *newcmd)
-{
-    if (key != m_key)
+    if (cmd->system) {
+        if (cmd->srccmd.compare(m_key))
+            return false;
+    }
+    else if (cmd->command.compare(m_key))
         return false;
-    newcmd->assign(m_cmd);
+    AliasParameters ap(cmd);
+    m_cmds.makeCommands(newcmds, &ap);
+    
+    const tstring& alias = cmd->alias.empty() ? cmd->srccmd : cmd->alias;
+    for (int i=0,e=newcmds->size();i<e;++i)
+        newcmds->operator[](i)->alias.assign(alias);
     return true;
 }
 
-Hotkey::Hotkey(const property_value& v) : m_key(v.key), m_cmd(v.value)
+Hotkey::Hotkey(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
 {
-    BracketsMarker bm;
-    bm.mark(&m_cmd);
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 }
 
-bool Hotkey::processing(const tstring& key, tstring *newcmd)
+bool Hotkey::processing(const tstring& key, InputCommands *newcmds)
 {
     if (key != m_key)
         return false;
-    newcmd->assign(m_cmd);
+    m_cmds.makeCommands(newcmds, NULL);
     return true;
 }
 
-Action::Action(const property_value& v) : m_value(v.value)
+class ActionParameters : public InputParameters
+{
+    const CompareObject *m_pCompareObject;
+public:
+    ActionParameters(const CompareObject* co) : m_pCompareObject(co) { assert(m_pCompareObject); }
+    void getParameters(std::vector<tstring>* params) const {
+        m_pCompareObject->getParameters(params);
+    }
+};
+
+Action::Action(const property_value& v, const InputTemplateParameters& p)
 {
     m_compare.init(v.key);
-    BracketsMarker bm;
-    bm.mark(&m_value);
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 }
 
-bool Action::processing(CompareData& data, tstring* newcmd)
+bool Action::processing(CompareData& data, InputCommands* newcmds)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
-
-    // parse value and generate result
-    m_compare.translateParameters(m_value, newcmd);
-
-    // drop mode -> change source MudViewString
-    if (m_value.find(L"drop") != tstring::npos)
+    ActionParameters ap(&m_compare);
+    m_cmds.makeCommands(newcmds, &ap);
+    for (int i=0,e=newcmds->size(); i<e; ++i)
     {
-        CompareRange range;
-        m_compare.getRange(&range);
-        data.del(range);
-        if (data.string->blocks.empty())
-            data.string->dropped = true;
+        if (newcmds->operator[](i)->command == L"drop")
+                data.string->dropped = true;
     }
     return true;
 }
@@ -330,7 +201,7 @@ Sub::Sub(const property_value& v) : m_value(v.value)
 
 bool Sub::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -350,8 +221,14 @@ bool Sub::processing(CompareData& data)
     int pos = data.fold(range);
     if (pos == -1) return false;
 
-    m_compare.translateParameters(m_value, &data.string->blocks[pos].string);
+    ActionParameters ap(&m_compare); //same adapter for subs
+    InputTranslateParameters tp;
+    tstring value(m_value);
+    tp.doit(&ap, &value);
 
+    InputVarsAccessor va;
+    va.translateVars(&value);
+    data.string->blocks[pos].string = value;
     data.start = pos+1;
     return true;
 }
@@ -363,7 +240,7 @@ AntiSub::AntiSub(const property_value& v)
 
 bool AntiSub::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -385,7 +262,7 @@ Gag::Gag(const property_value& v)
 
 bool Gag::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -402,7 +279,7 @@ bool Gag::processing(CompareData& data)
             return false;
     }
 
-    data.del(range);        
+    data.del(range);
     data.start = range.end+1;
     return true;
 }
@@ -415,9 +292,9 @@ Highlight::Highlight(const property_value& v)
 
 bool Highlight::processing(CompareData& data)
 {
-    if (!m_compare.checkToCompare(data.fullstr))
+    if (!m_compare.compare(data.fullstr))
         return false;
-  
+
     CompareRange range;
     m_compare.getRange(&range);
     int pos = data.fold(range);
@@ -437,12 +314,15 @@ Timer::Timer() : timer(0), period(0)
 {
 }
 
-void Timer::init(const property_value& v)
+void Timer::init(const property_value& v, const InputTemplateParameters& p)
 {
     id.assign(v.key);
     PropertiesTimer pt;
     pt.convertFromString(v.value);
-    cmd.assign(pt.cmd);
+    
+    InputPlainCommands plain(pt.cmd);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
 
     int t = _wtoi(pt.timer.c_str());
     if (t < 0)
@@ -450,6 +330,11 @@ void Timer::init(const property_value& v)
 
     timer = 0;
     period = t * 1000;
+}
+
+void Timer::makeCommands(InputCommands *cmds)
+{
+    m_cmds.makeCommands(cmds, NULL);
 }
 
 bool Timer::tick(int dt)
@@ -461,7 +346,7 @@ bool Timer::tick(int dt)
     if (timer < period)
         return false;
 
-    timer -= period;    
+    timer -= period;
     return true;
 }
 

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "logicProcessor.h"
 
 void LogicProcessor::processStackTick()
@@ -135,7 +136,8 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     const int max_lines_without_prompt = 20;
     bool p_exist = false;
     int last_game_cmd = -1;
-    bool use_template = propData->recognize_prompt ? true : false;
+    PropertiesData *pdata = tortilla::getProperties();
+    bool use_template = pdata->recognize_prompt ? true : false;
     for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
     {
         MudViewString *s = parse_data.strings[i];
@@ -311,7 +313,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_pHost->preprocessText(window, &parse_data);
 
     // array for new cmds from actions
-    std::vector<tstring> new_cmds;
+    InputCommands new_cmds;
     if (!(flags & SKIP_ACTIONS))
         m_helper.processActions(&parse_data, &new_cmds);
 
@@ -340,6 +342,6 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
 
-    for (int i = 0, e = new_cmds.size(); i < e; ++i) // process actions' result
-        processCommand(new_cmds[i]);
+    if (!(flags & SKIP_ACTIONS))
+        runCommands(new_cmds);                // process actions' result
 }

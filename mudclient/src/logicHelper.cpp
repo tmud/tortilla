@@ -1,40 +1,35 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "mudViewParser.h"
 #include "logicHelper.h"
 
-LogicHelper::LogicHelper(PropertiesData *propData) : m_propData(propData)
+LogicHelper::LogicHelper()
 {
      m_if_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|!=|<|>|<=|>=) *('.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
      m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
 }
 
-bool LogicHelper::processAliases(const tstring& key, tstring* newcmd)
+bool LogicHelper::processAliases(const InputCommand* cmd, InputCommands* newcmds)
 {
     for (int i=0,e=m_aliases.size(); i<e; ++i)
     {
-        if (m_aliases[i]->processing(key, newcmd))
-        {
-            processVars(newcmd);
-            return true;
-        }
+        if (m_aliases[i]->processing(cmd, newcmds))
+           return true;
     }
     return false;
 }
 
-bool LogicHelper::processHotkeys(const tstring& key, tstring* newcmd)
+bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
 {
     for (int i=0,e=m_hotkeys.size(); i<e; ++i)
     {
-        if (m_hotkeys[i]->processing(key, newcmd))
-        {
-            processVars(newcmd);
+        if (m_hotkeys[i]->processing(key, newcmds))
             return true;
-        }
     }
     return false;
 }
 
-void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* new_cmds)
+void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
 {
     for (int j=0,je=parse_data->strings.size(); j<je; ++j)
     {
@@ -43,13 +38,8 @@ void LogicHelper::processActions(parseData *parse_data, std::vector<tstring>* ne
         CompareData cd(s);
         for (int i=0,e=m_actions.size(); i<e; ++i)
         {
-            tstring newcmd;
-            if (m_actions[i]->processing(cd, &newcmd))
-            {
-               processVars(&newcmd);
-               new_cmds->push_back(newcmd);
+            if (m_actions[i]->processing(cd, newcmds))
                break;
-            }
         }
     }
 }
@@ -66,9 +56,6 @@ void LogicHelper::processSubs(parseData *parse_data)
             while (m_subs[i]->processing(cd))
                 cd.reinit();
         }
-        MudViewString *str = parse_data->strings[j];
-        for (int i = 0, e = str->blocks.size(); i < e; ++i)
-            processVars(&str->blocks[i].string);
     }
 }
 
@@ -115,21 +102,14 @@ void LogicHelper::processHighlights(parseData *parse_data)
     }
 }
 
-void LogicHelper::processTimers(std::vector<tstring>* new_cmds)
+void LogicHelper::processTimers(InputCommands* newcmds)
 {
     int dt = m_ticker.getDiff();
     m_ticker.sync();
-
     for (int i=0,e=m_timers.size(); i<e; ++i)
     {
         if (m_timers[i]->tick(dt))
-        {
-            tstring cmd(m_timers[i]->cmd);
-            BracketsMarker bm;
-            bm.mark(&cmd);
-            processVars(&cmd);
-            new_cmds->push_back(cmd);
-        }
+            m_timers[i]->makeCommands(newcmds);
     }
 }
 
@@ -138,26 +118,6 @@ void LogicHelper::resetTimers()
     for (int i=0,e=m_timers.size(); i<e; ++i)
         m_timers[i]->reset();
     m_ticker.sync();
-}
-
-bool LogicHelper::canSetVar(const tstring& var)
-{
-    return m_varproc.canset(var);
-}
-
-bool LogicHelper::getVar(const tstring& var, tstring *value)
-{
-    return m_varproc.getVar(m_propData->variables, var, value);
-}
-
-bool LogicHelper::setVar(const tstring& var, const tstring &value)
-{
-    return m_varproc.setVar(m_propData->variables, var, value);
-}
-
-bool LogicHelper::delVar(const tstring& var)
-{
-    return m_varproc.delVar(m_propData->variables, var);
 }
 
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
@@ -171,8 +131,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
-     if (m_varproc.processVars(&p1, m_propData->variables, true) &&
-         m_varproc.processVars(&p2, m_propData->variables, true))
+     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
      {
          if (isOnlyDigits(p1) && isOnlyDigits(p2))
          {
@@ -210,8 +169,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
 
-     if (m_varproc.processVars(&p1, m_propData->variables, true) &&
-         m_varproc.processVars(&p2, m_propData->variables, true))
+     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
      {
          if (isOnlyDigits(p1) && isOnlyDigits(p2))
          {
@@ -235,35 +193,35 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      return LogicHelper::MATH_VARNOTEXIST;
 }
 
-bool LogicHelper::processVars(tstring *cmdline)
-{
-    return m_varproc.processVars(cmdline, m_propData->variables, false);
-}
-
 void LogicHelper::updateProps(int what)
 {
+    PropertiesData *pdata = tortilla::getProperties();
     std::vector<tstring> active_groups;
-    for (int i=0,e=m_propData->groups.size(); i<e; i++)
+    for (int i=0,e=pdata->groups.size(); i<e; i++)
     {
-        const property_value& v = m_propData->groups.get(i);
+        const property_value& v = pdata->groups.get(i);
         if (v.value == L"1")
             active_groups.push_back(v.key);
     }
 
+    InputTemplateParameters p;
+    p.separator = pdata->cmd_separator;
+    p.prefix = pdata->cmd_prefix;
+
     if (what == UPDATE_ALL || what == UPDATE_ALIASES)
-        m_aliases.init(&m_propData->aliases, active_groups);
+        m_aliases.init(p, &pdata->aliases, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_ACTIONS)
-        m_actions.init(&m_propData->actions, active_groups);
+        m_actions.init(p, &pdata->actions, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_SUBS)
-        m_subs.init(&m_propData->subs, active_groups);
+        m_subs.init(&pdata->subs, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_HOTKEYS)
-        m_hotkeys.init(&m_propData->hotkeys, active_groups);
+        m_hotkeys.init(p, &pdata->hotkeys, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_ANTISUBS)
-        m_antisubs.init(&m_propData->antisubs, active_groups);
+        m_antisubs.init(&pdata->antisubs, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_GAGS)
-        m_gags.init(&m_propData->gags, active_groups);
+        m_gags.init(&pdata->gags, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_HIGHLIGHTS)
-        m_highlights.init(&m_propData->highlights, active_groups);
+        m_highlights.init(&pdata->highlights, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_TIMERS)
-        m_timers.init(&m_propData->timers, active_groups);
+        m_timers.init(&pdata->timers, active_groups, p);
 }

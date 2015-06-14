@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "api/api.h"
 #include "pluginsApi.h"
 #include "pluginsView.h"
@@ -8,9 +9,6 @@
 
 #include "../MainFrm.h"
 extern CMainFrame _wndMain;
-extern Palette256* _palette;
-extern PropertiesData* _pdata;
-extern LogicProcessorMethods* _lp;
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f)
 {
@@ -566,13 +564,13 @@ int vd_set(lua_State *L)
                     break;
                 case luaT_ViewData::EXTTEXTCOLOR:
                     if (!p.use_ext_colors)
-                        p.ext_bkg_color = _palette->getColor(p.bkg_color);
+                        p.ext_bkg_color = tortilla::getPalette()->getColor(p.bkg_color);
                     p.use_ext_colors = 1;
                     p.ext_text_color = v;
                     break;
                 case luaT_ViewData::EXTBKGCOLOR:
                     if (!p.use_ext_colors)
-                        p.ext_text_color = _palette->getColor(p.text_color);
+                        p.ext_text_color = tortilla::getPalette()->getColor(p.text_color);
                     p.use_ext_colors = 1;
                     p.ext_bkg_color = v;
                     break;
@@ -1042,14 +1040,15 @@ public:
     bool canset(const u8string& var) 
     {
         TU2W v(var.c_str());
-        return _lp->canSetVar(tstring(v));
+        VarProcessor *vp = tortilla::getVars();
+        return vp->canSetVar(tstring(v));
     }
 } _vars_filter;
 
 void reg_activeobjects(lua_State *L)
 {
     reg_mt_activeobject(L);
-    PropertiesData *p = _pdata;
+    PropertiesData *p = tortilla::getProperties();
     reg_activeobject(L, "aliases", new AO_Aliases(p));
     reg_activeobject(L, "actions", new AO_Actions(p));
     reg_activeobject(L, "subs", new AO_Subs(p));

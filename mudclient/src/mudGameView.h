@@ -1,7 +1,6 @@
 #pragma once
-
+#include "accessors.h"
 #include "propertiesPages/propertiesDlg.h"
-#include "propertiesPages/propertiesManager.h"
 #include "profiles/profileDlgs.h"
 
 #include "network/network.h"
@@ -58,8 +57,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN), m_activated(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false)
     {
     }
 
@@ -628,13 +626,46 @@ private:
     {
         tstring cmd;
         m_bar.getCommand(&cmd);
-        m_plugins.processBarCmd(&cmd);
-        tstring history(cmd);
-        m_plugins.processHistoryCmd(&history);
-        m_bar.addToHistory(history);
-        BracketsMarker bm;
-        bm.mark(&cmd);
-        m_processor.processUserCommand(cmd);
+
+        InputPlainCommands cmds(cmd);
+        int count = cmds.size();
+        if (count > 1)
+        {
+            int last = cmd.size() - 1;
+            if (last > 0)
+            {
+                tchar last_char = cmd.at(last);
+                if (last_char != L'\r' && last_char != L'\n')
+                {
+                    int last_cmd = cmds.size() - 1;
+                    m_bar.setText(cmds[last_cmd]);
+                    cmds.erase(last_cmd);                    
+                }
+            }
+        }
+        else if (count == 1)
+        {
+            InputPlainCommands history;
+            m_plugins.processHistoryCmds(cmds, &history);
+            for (int i=0,e=history.size(); i<e; ++i)
+                m_bar.addToHistory(history[i]);
+        }
+        else
+        {
+            assert(false);
+            return 0;
+        }
+
+        InputTemplateParameters p;
+        p.prefix = m_propData->cmd_prefix;
+        p.separator = m_propData->cmd_separator;
+
+        // разбиваем команду на подкомманды для обработки в barcmd
+        InputTemplateCommands tcmds;
+        tcmds.init(cmds, p);
+        tcmds.extract(&cmds);
+        m_plugins.processBarCmds(&cmds);
+        m_processor.processUserCommand(cmds);
         return 0;
     }
 
@@ -926,7 +957,7 @@ private:
         return m_parent;
     }
 
-    void preprocessGameCmd(InputCommand* cmd);
+    void preprocessCommand(InputCommand* cmd);
 
     void checkHistorySize()
     {

@@ -5,7 +5,7 @@
 #include "logsProcessor.h"
 #include "network/network.h"
 
-class InputCommand;
+struct InputCommand;
 class LogicProcessorHost
 {
 public:
@@ -22,7 +22,7 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessGameCmd(InputCommand* cmd) = 0;
+    virtual void preprocessCommand(InputCommand* cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
 };
@@ -38,10 +38,8 @@ public:
     virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
-    virtual void doGameCommand(const tstring& cmd) = 0;
+    virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
-    virtual bool canSetVar(const tstring& var) = 0;
-    virtual bool getVar(const tstring& var, tstring* value) = 0;
 };
 
 class parser;
@@ -50,7 +48,6 @@ typedef void(*syscmd_fun)(parser*);
 
 class LogicProcessor : public LogicProcessorMethods
 {
-    PropertiesData *propData;
     LogicProcessorHost *m_pHost;
     MudViewParser m_parser;
     LogicHelper m_helper; 
@@ -74,7 +71,7 @@ class LogicProcessor : public LogicProcessorMethods
     Pcre16 m_univ_prompt_pcre;
 
 public:
-    LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
+    LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();
     bool init();
     void processNetworkData(const WCHAR* text, int text_len);
@@ -83,7 +80,8 @@ public:
     void processNetworkConnectError();
     void processNetworkError();
     void processNetworkMccpError();
-    void processUserCommand(const tstring& cmd);
+    void processUserCommand(const InputPlainCommands& cmds);
+    void processPluginCommand(const tstring& cmd);
     bool processHotkey(const tstring& hotkey);
     void processTick();
     void processStackTick();
@@ -95,13 +93,13 @@ public:
     bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
-    void doGameCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
-    bool canSetVar(const tstring& var)  { return m_helper.canSetVar(var); }    
-    bool getVar(const tstring& var, tstring* value) { return m_helper.getVar(var, value); }
 
 private:
     void processCommand(const tstring& cmd);
+    void processCommands(const InputPlainCommands& cmds);
+    void runCommands(InputCommands& cmds);
+    bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);
@@ -157,6 +155,7 @@ public: // system commands
     DEF(tab);
     DEF(untab);
     DEF(timer);
+    DEF(untimer);
     DEF(hidewindow);
     DEF(showwindow);
     void wlogf_main(int log, const tstring& file, bool newlog);

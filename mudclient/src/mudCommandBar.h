@@ -257,18 +257,35 @@ private:
             { clear(); clearHistory(); }
         else if (key == VK_TAB)
             onTab();
-        else
+        else if (key == 'V' && ::GetKeyState(VK_CONTROL) < 0 )
+        {
+            // on paste from clipboard
+            tstring text;
+            if (getFromClipboard(m_hWnd, &text) && isExistSymbols(text, L"\r\n"))
+            {
+                // multiline paste
+                putTextToBuffer(text);
+                SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
+                return TRUE;
+            }
             return FALSE;
+        }
+        else { return FALSE; }
         return TRUE;
     }
 
     void putTextToBuffer()
     {
         int len = m_edit.GetWindowTextLength();
-        int buffer_len = m_cmdBar.getSize() - 1;
-        if (buffer_len < len)
-            initCmdBar(len);
-        m_edit.GetWindowText((LPTSTR)m_cmdBar.getData(), m_cmdBar.getSize());
+        initCmdBar(len);
+        m_edit.GetWindowText((WCHAR*)m_cmdBar.getData(), m_cmdBar.getSize());
+    }
+
+    void putTextToBuffer(const tstring& text)
+    {
+        int len = text.length();
+        initCmdBar(len);
+        wcscpy((WCHAR*)m_cmdBar.getData(), text.c_str());
     }
 
     void initCmdBar(int size)

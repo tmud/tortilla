@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "pluginsManager.h"
 #include "pluginsDlg.h"
 #include "pluginsApi.h"
@@ -8,13 +9,13 @@
 extern luaT_State L;
 extern Plugin* _cp;
 
-PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props), m_plugins_loaded(false)
+PluginsManager::PluginsManager() : m_plugins_loaded(false)
 {
 }
 
 PluginsManager::~PluginsManager() 
 {
-     autodel<Plugin> _z(m_plugins);
+    autodel<Plugin> _z(m_plugins);
 }
 
 void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
@@ -76,7 +77,7 @@ void PluginsManager::initPlugins()
     }
     files.clear();
 
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
     for (int i = 0, e = modules.size(); i < e; ++i)
     {
@@ -168,7 +169,7 @@ bool PluginsManager::pluginsPropsDlg()
        }
     }
 
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
     for (int i=0,e=m_plugins.size(); i<e; ++i)
     {
@@ -225,11 +226,12 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    bool syscmd = (!cmd->empty && cmd->command.at(0) == m_propData->cmd_prefix);
+    //bool syscmd = (!cmd->dropped && cmd->system); //todo
+    
     std::vector<tstring> p;
-    p.push_back((syscmd) ? cmd->command.substr(1) : cmd->command);
+    p.push_back(cmd->command);
     p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
-    if (syscmd)
+    if (cmd->system)
     {
         if (doPluginsTableMethod("syscmd", &p))
             concatCommand(p, true, cmd);
@@ -258,57 +260,57 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-void PluginsManager::processBarCmd(tstring *cmd)
+void PluginsManager::processBarCmds(InputPlainCommands* cmds)
 {
-    if (cmd->empty())
+    assert(cmds);
+    if (cmds->empty())
         return;
-    tchar separator[2] = { m_propData->cmd_separator, 0 };
-    Tokenizer t(cmd->c_str(), separator);
-    std::vector<tstring> cmds;
-    t.moveto(&cmds);
-    if (doPluginsTableMethod("barcmd", &cmds))
-    {
-        cmd->clear();
-        for (int i = 0, e = cmds.size(); i < e; ++i)
-        {
-            if (i != 0) cmd->append(separator);
-            cmd->append(cmds[i]);
-        }
-    }
+    doPluginsTableMethod("barcmd", cmds->ptr());
 }
 
-void PluginsManager::processHistoryCmd(tstring *cmd)
+void PluginsManager::processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history)
 {
-    if (cmd->empty())
+    assert(history);
+    if (cmds.empty())
         return;
+
     const char* method = "historycmd";
-    WideToUtf8 w2u(cmd->c_str());
-    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    WideToUtf8 w2u;
+    for (int j = 0, je = cmds.size(); j<je; ++j) 
     {
-        Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
-        lua_pushstring(L, w2u);
-        if (!p->runMethod(method, 1, 1))
+        tstring cmd(cmds[j]);
+        if (cmd.empty())
+            continue;
+        for (int i = 0, e = m_plugins.size(); i < e; ++i)
         {
-            // restart plugins
-            turnoffPlugin(NULL, i);
-            lua_settop(L, 0);
-            i = 0;
-        }
-        else
-        {
-            if (lua_isboolean(L, -1))
+            Plugin *p = m_plugins[i];
+            if (!p->state()) continue;
+            w2u.convert(cmd.c_str(), cmd.length());
+            lua_pushstring(L, w2u);
+            if (!p->runMethod(method, 1, 1))
             {
-                int r = lua_toboolean(L, -1);
-                if (!r) 
-                {
-                    cmd->clear();
-                    lua_pop(L, 1);
-                    break; 
-                }
+                // restart plugins
+                turnoffPlugin(NULL, i);
+                lua_settop(L, 0);
+                i = 0;
             }
-            lua_pop(L, 1);
+            else
+            {
+                if (lua_isboolean(L, -1))
+                {
+                    int r = lua_toboolean(L, -1);
+                    if (!r) 
+                    {
+                        cmd.clear();
+                        lua_pop(L, 1);
+                        break; 
+                    }
+                }
+                lua_pop(L, 1);
+            }
         }
+        if (!cmd.empty())
+            history->push_back(cmd);
     }
 }
 
@@ -365,7 +367,7 @@ void PluginsManager::terminatePlugin(Plugin* p)
     p->setOn(false);
     if (index != -1)
     {
-        PluginsDataValues &modules = m_propData->plugins;
+        PluginsDataValues &modules = tortilla::getProperties()->plugins;
         modules[index].state = 0;
     }
 }
@@ -502,7 +504,7 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     pluginError("Плагин отключен!");
     p->setOn(false);
     _cp = old;
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     modules[plugin_index].state = 0;
 }
 
@@ -521,16 +523,23 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
     if (parts.empty())
         return;
 
-    tstring newcmd;
-    if (system)
+    tstring newcmd(parts[0]);
+    if (newcmd != cmd->command)
     {
-        tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-        newcmd.append(prefix);
+        cmd->changed = true;
+        cmd->command.assign(newcmd);
     }
-    newcmd.append(parts[0]);
-    cmd->command.assign(newcmd);
-    cmd->parameters_list.clear();
+    if (cmd->parameters_list.size() != parts.size()-1)
+        cmd->changed = true;
+    else
+    {
+        for (int i=1,e=parts.size();i<e;++i)
+            if (cmd->parameters_list[i-1] != parts[i]) { cmd->changed = true; break; }
+    }
+    if (!cmd->changed)
+        return;
 
+    cmd->parameters_list.clear();
     tstring symbols(L"{}\"' ");
     tstring params;
     for (int i=1,e=parts.size();i<e;++i)
@@ -554,10 +563,4 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         }
     }
     cmd->parameters.assign(params);
-    if (!params.empty())
-    {
-        newcmd.append(L" ");
-        newcmd.append(params);
-    }
-    cmd->full_command.assign(newcmd);
 }
