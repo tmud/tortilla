@@ -32,8 +32,8 @@ function autowrap.div(v, maxlen)
     len = newlen
   end
   --log(index)
-  local pos = s:strstr(" ")
-  log(pos)
+  local t = s:strall(" ")
+  log(t)
   
   --[[
   if index == 0 then return end
