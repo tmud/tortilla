@@ -882,7 +882,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
             p.use_ext_colors = 1;
             continue;
         }
-        if (last_color_teg)
+        if (last_color_teg || new_string->blocks.empty())
         {
             last_color_teg = false;
             block.string.assign(p);
