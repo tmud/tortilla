@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "traymain.h"
 #include "traySettings.h"
+#include "sharingData.h"
 
 TrayMainObject g_tray;
+SharingManager g_sharing;
 
 int get_name(lua_State *L)
 {
@@ -56,6 +58,8 @@ void parse_color(const u8string& text, COLORREF *color)
 
 int init(lua_State *L)
 {
+    g_sharing.init();
+
     base::addCommand(L, "tray");
     base::addMenu(L, "Плагины/Оповещения (tray)...", 2, 1);
 

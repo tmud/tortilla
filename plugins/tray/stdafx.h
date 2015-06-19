@@ -21,6 +21,7 @@
 #include <deque>
 #include <assert.h>
 
+typedef wchar_t tchar;
 typedef std::wstring tstring;
 
 #define MAX_TIMEOUT 3600
