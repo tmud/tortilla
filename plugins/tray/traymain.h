@@ -12,7 +12,7 @@ public:
     void create();
     void setFont(HFONT font);
     void setAlarmWnd(HWND wnd);
-    bool showMessage(const u8string& msg);
+    bool showMessage(const u8string& msg, bool from_cache);
     void setActivated(bool activated);
     TraySettings& traySettings();
 
@@ -29,6 +29,8 @@ private:
             onFinishedAnimation(w);
         if (lparam == PopupWindow::MOVEANIMATION_FINISHED)
             onFinishedMoveAnimation(w);
+        if (lparam == PopupWindow::STARTANIMATION_FINISHED)
+            onFinishedStartAnimation(w);
         return 0; 
     }
     void startTimer();
@@ -36,12 +38,15 @@ private:
     void onTimer();
     void onFinishedAnimation(PopupWindow *w);
     void onFinishedMoveAnimation(PopupWindow *w);
+    void onFinishedStartAnimation(PopupWindow *w);
     PopupWindow* getFreeWindow();
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
     bool isHeightLimited() const;
     int  getHeightLimit() const;
 private:
+    void tryRunMoveAnimation();
+    void tryShowStack();
     CFont m_font;
     std::vector<PopupWindow*> m_windows;
     std::vector<PopupWindow*> m_free_windows;

@@ -56,7 +56,7 @@ class PopupWindow : public CWindowImpl<PopupWindow>
 
 public:
     enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
-    enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED };
+    enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED, STARTANIMATION_FINISHED };
     DECLARE_WND_CLASS(NULL)
     PopupWindow(CFont *font) : m_font(font),
         m_animation_state(ANIMATION_NONE),
@@ -76,7 +76,7 @@ public:
     }
 
     bool isAnimated() const {  return (m_animation_state==ANIMATION_NONE) ? false : true; }
-    int  getAnimationType() const { return m_animation_state; }
+    int  getAnimationState() const { return m_animation_state; }
     const Animation& getAnimation() const { return m_animation; }
     const MoveAnimation& getMoveAnimation() const { return m_move_animation; }
     void startAnimation(const Animation& a);

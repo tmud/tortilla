@@ -26,7 +26,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0");
+    lua_pushstring(L, "1.01");
     return 1;
 }
 
@@ -165,7 +165,7 @@ int syscmd(lua_State *L)
                 lua_pop(L, 1);
             }
             if (!text.empty())
-                 g_tray.showMessage(text);
+                 g_tray.showMessage(text, false);
             lua_pop(L, 1);
             lua_pushnil(L);
             return 1;

@@ -44,21 +44,23 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg)
+bool TrayMainObject::showMessage(const u8string& msg, bool from_cache)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
        return true;
 #endif
 
-    if (isHeightLimited())
+    if (!from_cache)
     {
-        m_cache.push_back(msg);
-        return true;
+        if (isHeightLimited()) {
+            m_cache.push_back(msg);
+            return true;
+        }
     }
 
     PopupWindow *w = getFreeWindow();
-    if (!w) 
+    if (!w)
         return false;
 
     POINT rb = { -1, -1 };
@@ -104,21 +106,37 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
     for (int i=0,e=m_windows.size(); i<e; ++i) {
         if (m_windows[i] == w) { index = i; break; }
     }
-    if (index == -1) {  assert(false); return; }
-
-    PopupWindow* window = m_windows[index];
-    m_windows.erase(m_windows.begin() + index);
-    freeWindow(window);
+    if (index == -1) { assert(false); }
+    else { m_windows.erase(m_windows.begin() + index); }
+    freeWindow(w);
     if (m_windows.empty())
-        return;
+        tryShowStack();
+    else
+        tryRunMoveAnimation();
+}
 
+void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
+{
+    assert(!m_windows.empty());
+    int last = m_windows.size() - 1;
+    if (m_windows[last] != w)
+        return;
+    tryShowStack();
+}
+
+void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
+{
+    tryRunMoveAnimation();
+}
+
+void TrayMainObject::tryRunMoveAnimation()
+{
     for (int i=0,e=m_windows.size(); i<e; ++i)
     {
-        int at = m_windows[i]->getAnimationType();
+        int at = m_windows[i]->getAnimationState();
         if (at == PopupWindow::ANIMATION_TOSTART || at == PopupWindow::ANIMATION_TOEND)
              return;
     }
-
     POINT p = m_point0;
     for (int i=0,e=m_windows.size(); i<e; ++i)
     {
@@ -137,26 +155,13 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
     }
 }
 
-void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
+void TrayMainObject::tryShowStack()
 {
-    if (m_windows.empty())
-        return;
-    int last = m_windows.size() - 1;
-    if (m_windows[last] != w)
-        return;
-    if (m_cache.empty() || isHeightLimited())
-        return;
-
-    int h = m_windows[last]->getSize().cy;
-    int y = m_windows[last]->getAnimation().pos.y;
-    int count = (y - getHeightLimit()) / h;
-    int maxcount = m_cache.size();
-    count = min(count, maxcount);
-    for (;count>0;count--)
+    while (!isHeightLimited() && !m_cache.empty())
     {
         u8string msg(m_cache[0]);
         m_cache.pop_front();
-        showMessage(msg);    
+        showMessage(msg, true);
     }
 }
 
