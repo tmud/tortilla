@@ -738,6 +738,44 @@ int vd_find(lua_State *L)
     }
     return pluginInvArgs(L, "viewdata:find");
 }
+
+int vd_getBlockPos(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int abspos = lua_tointeger(L, 2);
+        PluginViewString *str = pdata->getselected_pvs();
+        int block = 0; int pos = 0;
+        if (str && abspos > 0) 
+        {
+            abspos-=1;
+            for (int i=0,e=str->blocks.size();i<e;++i)
+            {
+                int size = u8string_len(str->blocks[i]);
+                if (size > abspos)
+                {
+                    block = i+1;
+                    pos = abspos+1;
+                    break;
+                }
+                abspos -= size;
+            }
+        }
+        if (block > 0)
+        {
+            lua_pushinteger(L, block);
+            lua_pushinteger(L, pos);
+        }
+        else
+        {         
+            lua_pushnil(L);
+            lua_pushnil(L);
+        }                
+        return 2;
+    }
+    return pluginInvArgs(L, "viewdata:find");
+}
 //--------------------------------------------------------------------
 std::map<u8string, int> vdtypes;
 void init_vdtypes()
@@ -785,6 +823,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteString", vd_deleteString);
     regFunction(L, "createString", vd_createString);
     regFunction(L, "find", vd_find);
+    regFunction(L, "getBlockPos", vd_getBlockPos);
     regIndexMt(L);
     lua_pop(L, 1);
 }

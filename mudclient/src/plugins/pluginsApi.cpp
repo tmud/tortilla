@@ -798,22 +798,19 @@ int string_strall(lua_State *L)
          while (pos)
          {
              u8string tmp(b, pos - b);
-             int find_pos = utf8_symlen(tmp.c_str())+1;
+             int find_pos = utf8_strlen(tmp.c_str())+1;
              result.push_back(find_pos);
              s1 = pos + len;
              pos = strstr(s1, s2);
          }
-         if (!result.empty())
+         lua_newtable(L);
+         for (int i=1,e=result.size();i<=e;++i)
          {
-            lua_newtable(L);
-            for (int i=1,e=result.size();i<=e;++i)
-            {
-                lua_pushinteger(L, i);
-                lua_pushinteger(L, result[i-1]);
-                lua_settable(L, -3);
-            }
-            return 1;
+             lua_pushinteger(L, i);
+             lua_pushinteger(L, result[i-1]);
+             lua_settable(L, -3);
          }
+         return 1;
      }
      lua_pushnil(L);
      return 1;

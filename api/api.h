@@ -348,6 +348,29 @@ public:
         luaT_run(L, "find", "ot");
         return boolresult();
     }
+    bool find(Pcre *p, int from)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_pushobject(L, p, LUAT_PCRE);
+        lua_pushinteger(L, from);
+        luaT_run(L, "find", "otd");
+        return boolresult();
+    }
+    bool getBlockPos(int abspos, int *res_block, int *res_pos)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        lua_pushinteger(L, abspos);
+        luaT_run(L, "find", "od");
+        bool result = false;
+        if (lua_isnumber(L, 1) && lua_isnumber(L, 2))
+        {
+            *res_block = lua_tointeger(L, 1);
+            *res_pos = lua_tointeger(L, 2);
+            result = true;
+        }
+        lua_pop(L, 2);
+        return result;
+    }
 
 private:
     void runcmd(const utf8* cmd)

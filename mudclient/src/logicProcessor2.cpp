@@ -100,9 +100,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
         if (cmd->dropped)
-        {
-            fullcmd.append(L" (Команда блокирована)");
-            tmcLog(fullcmd);
+        {          
             return;
         }
 
@@ -882,7 +880,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
             p.use_ext_colors = 1;
             continue;
         }
-        if (last_color_teg)
+        if (last_color_teg || new_string->blocks.empty())
         {
             last_color_teg = false;
             block.string.assign(p);
@@ -1237,7 +1235,7 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
-    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+.*(?:Вых)?:[СЮЗВПОv^]*>", true);
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+.*(?:Вых)?:[СЮЗВПОv^()]*>", true);
 
     if (!m_logs.init())
         return false;
