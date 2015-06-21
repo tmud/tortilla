@@ -6,10 +6,11 @@
 
 class MudView : public CWindowImpl<MudView>
 {
+    friend class MudViewHandler;
     PropertiesElements *propElements;
     int m_lines_count;
     int m_last_visible_line;
-    std::vector<MudViewString*> m_strings;
+    mudViewStrings m_strings;
     bool m_last_string_updated;
 
     POINT m_dragpt;
@@ -83,7 +84,7 @@ private:
     void setScrollbar(DWORD position);
     void mouseWheel(WORD position);
     void checkLimit();
-    void deleteStrings(int count_from_begin);
+    void deleteBeginStrings(int count_from_begin);
 
     void startDraging();
     void stopDraging();
@@ -95,4 +96,95 @@ private:
     int   getCursorSym(int x) const;
     void  calcDragLine(int line);
     void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
+};
+
+class MudViewHandler
+{
+    MudView* m_pView;
+    MudView* m_pMirror;
+    int m_orig_size;
+    mudViewStrings *m_view_tmp;
+    mudViewStrings *m_mirror_tmp;
+public:
+    MudViewHandler(MudView *view, MudView* mirror = NULL) : m_pView(view), m_pMirror(mirror), m_orig_size(0), 
+        m_view_tmp(NULL), m_mirror_tmp(NULL)
+    {
+        assert(m_pView);
+        m_view_tmp = new mudViewStrings;
+        if (m_pMirror)
+            m_mirror_tmp = new mudViewStrings;
+    }
+    ~MudViewHandler()
+    {
+        delete m_mirror_tmp;
+        delete m_view_tmp;
+    }
+    mudViewStrings& get() {
+        m_orig_size = m_pView->m_strings.size();
+        m_view_tmp->swap(m_pView->m_strings);
+        m_pView->m_last_visible_line = -1;
+        if (m_pMirror)
+        {
+            m_mirror_tmp->swap(m_pMirror->m_strings);
+            m_pMirror->m_last_visible_line = -1;
+        }
+        return *m_view_tmp;
+    }
+    void update()
+    {
+        mudViewStrings &vs = *m_view_tmp;
+        if (m_pMirror)
+        {            
+            mudViewStrings &ms = *m_mirror_tmp;
+            int size = vs.size();
+            if (m_orig_size > size)
+            {   
+                int todel = m_orig_size - size;
+                int i = ms.size() - todel; 
+                for (int e=ms.size(); i<e; ++i)
+                    delete ms[i];
+                ms.erase(ms.begin()+i, ms.end());
+            }
+            if (m_orig_size < size)
+            {
+                int count = size - m_orig_size;
+                mudViewStrings newstr(count);
+                for (int i = 0; count > 0; --count, ++i)
+                    newstr[i] = new MudViewString;
+                ms.insert(ms.end(), newstr.begin(), newstr.end());
+            }
+
+            // копируем строки
+            int delta = ms.size() - size;
+            for (int i = 0; i < size; ++i)
+            {
+                MudViewString *src = vs[i];
+                MudViewString *dst = ms[i + delta];
+                dst->copy(src);
+            }
+
+            // добавляем новые строки, если есть
+            mudViewStrings &new_ms = m_pMirror->m_strings;
+            if (!new_ms.empty()) {
+                ms.insert(ms.end(), new_ms.begin(), new_ms.end());
+                new_ms.clear();
+            }
+            new_ms.swap(ms);
+        }
+        // добавляем новые строки, если есть
+        mudViewStrings &new_vs = m_pView->m_strings;
+        if (!new_vs.empty()) {
+            vs.insert(vs.end(), new_vs.begin(), new_vs.end());
+            new_vs.clear();
+        }        
+        new_vs.swap(vs);
+
+        if (m_pMirror)
+        {            
+            int last = m_pMirror->getStringsCount();
+            m_pMirror->setViewString(last);
+        }
+        int last = m_pView->getStringsCount();
+        m_pView->setViewString(last);
+    }
 };

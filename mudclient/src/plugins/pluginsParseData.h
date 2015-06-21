@@ -81,7 +81,13 @@ public:
             delete plugins_strings[selected];
             plugins_strings.erase(plugins_strings.begin() + selected);
             parseDataStrings &ss = pdata->strings;
-            delete ss[selected];
+            MudViewString *s = ss[selected];
+            int last = ss.size() - 1;
+            if (selected != last)
+                ss[selected+1]->prev = s->prev;
+            if (selected != 0)
+                ss[selected-1]->next = s->next;
+            delete s;
             ss.erase(ss.begin() + selected);
             if (selected == 0)
                 pdata->update_prev_string = false;

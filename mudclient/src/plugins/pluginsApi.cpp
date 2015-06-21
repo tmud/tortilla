@@ -5,6 +5,7 @@
 #include "../MainFrm.h"
 #include "pluginSupport.h"
 #include "../profiles/profilesPath.h"
+#include "plugins/pluginsParseData.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
 extern CMainFrame _wndMain;
@@ -78,7 +79,7 @@ int pluginLog(const utf8* msg)
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", fname, msg);
+    swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", fname, msg);
     pluginLog(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -624,6 +625,34 @@ int terminatePlugin(lua_State *L)
     lua_error(L);
     return 0;
 }
+
+int updateView(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TFUNCTION))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 0 && view <=OUTPUT_WINDOWS)
+        {
+            MudViewHandler *h = _wndMain.m_gameview.getHandler(view);
+            parseData pd;
+            mudViewStrings& src = h->get();
+            pd.strings.swap(src);
+            {
+                PluginsParseData ppd(&pd);
+                lua_insert(L, -2);
+                lua_pop(L, 1);
+                luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
+                if (lua_pcall(L, 1, 0, 0))
+                { //error
+                }
+            }
+            pd.strings.swap(src);
+            h->update();
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, "updateView");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -669,6 +698,7 @@ bool initPluginsSystem()
     lua_register(L, "createWindow", createWindow);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
+    lua_register(L, "updateView", updateView);
 
     reg_props(L);
     reg_activeobjects(L);

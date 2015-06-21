@@ -22,6 +22,39 @@ function autowrap.version()
   return '-'
 end
 
+local function update_view(v, newlen)
+    log("new len:" .. newlen)
+    local size = v:size()
+    for i=1,size do
+      v:select(i)
+      if v:isNext() then
+        v:setNext(false)
+        local from,to = i,i
+        for j=i+1,size do
+          to=j
+          v:select(j)
+          if not v:isNext() then break; end
+        end
+        if from ~= to then
+          v:select(from)
+          local blocks = v:blocks()
+          for j=from+1,to do
+            v:select(j)
+            for k=1,v:blocks() do
+              blocks=blocks+1
+              v:copyBlock(k, from, blocks)
+            end
+          end
+          for j=to,from+1,-1 do
+            v:select(j)
+            v:deleteString()
+          end
+          size = v:size()
+        end
+      end
+    end
+end
+
 function autowrap.syscmd(t)
     if t[1] ~= 'linewidth' then
         return t
@@ -39,24 +72,21 @@ function autowrap.syscmd(t)
         return false
     end
     local window = tonumber(t[2])
-    local maxlen = tonumber(t[3])
+    local newlen = tonumber(t[3])
     if window < 0 or window > 6 then
         log("Указан неверный номер окна: "..window..", "..cmdstr(t))
         return false
     end
-    if maxlen < 60 then
-        log("Указан неверный размер строки: "..maxlen..", "..cmdstr(t))
+    if newlen < 60 then
+        log("Указан неверный размер строки: "..newlen..", "..cmdstr(t))
         return false
     end
-    
-    
+    updateView(window, function(v) update_view(v,newlen) end)
     return nil
 end
 
-
 local function div(v, maxlen)
   local s= v:getText()
-  log(s)
   local t = s:strall(" ")
   local minlen = maxlen - 15
   if minlen < 0 then minlen = 0 end
@@ -64,7 +94,7 @@ local function div(v, maxlen)
   for k,v in ipairs(t) do
     if v >= minlen and v <= maxlen then
       sym = v
-	end
+    end
   end
   local block,pos = v:getBlockPos(sym) 
   v:createString(v:isSystem(), v:isGameCmd())
@@ -74,8 +104,10 @@ local function div(v, maxlen)
   end
   local ds = v:getBlockText(block)
   v:setBlockText(block, ds:substr(1, pos))
+  v:setNext(true)
   v:select(new_string)
   v:setBlockText(1, ds:substr(pos+1, ds:len()-pos))
+  v:setPrev(true)
 end
 
 function autowrap.after(window, v)

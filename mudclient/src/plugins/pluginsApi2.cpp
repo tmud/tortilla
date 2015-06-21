@@ -774,7 +774,7 @@ int vd_getBlockPos(lua_State *L)
         }                
         return 2;
     }
-    return pluginInvArgs(L, "viewdata:find");
+    return pluginInvArgs(L, "viewdata:getBlockPos");
 }
 //--------------------------------------------------------------------
 std::map<u8string, int> vdtypes;
@@ -794,6 +794,54 @@ int vd_gettype(const utf8* type)
 {
     std::map<u8string, int>::iterator it = vdtypes.find(type);
     return (it == vdtypes.end()) ? -1 : it->second;
+}
+
+int vd_setNext(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
+    {
+         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+         MudViewString *str = pdata->getselected();
+         str->next = lua_toboolean(L, 2) ? true : false;
+         return 0;
+    }
+    return pluginInvArgs(L, "viewdata:setNext");
+}
+
+int vd_setPrev(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        str->prev = lua_toboolean(L, 2) ? true : false;
+        return 0;
+    }
+    return pluginInvArgs(L, "viewdata:setPrev");
+}
+
+int vd_isNext(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        lua_pushboolean(L, str->next ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isNext");
+}
+
+int vd_isPrev(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        lua_pushboolean(L, str->prev ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isPrev");
 }
 
 void reg_mt_viewdata(lua_State *L)
@@ -824,6 +872,10 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "createString", vd_createString);
     regFunction(L, "find", vd_find);
     regFunction(L, "getBlockPos", vd_getBlockPos);
+    regFunction(L, "setNext", vd_setNext);
+    regFunction(L, "setPrev", vd_setPrev);
+    regFunction(L, "isNext", vd_isNext);
+    regFunction(L, "isPrev", vd_isPrev);
     regIndexMt(L);
     lua_pop(L, 1);
 }
