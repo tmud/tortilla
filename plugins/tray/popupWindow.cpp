@@ -71,7 +71,10 @@ void PopupWindow::onTimer()
         alpha = min(alpha+da, 255);
         setAlpha(alpha);
         if (alpha == 255)
+        {
             setState(ANIMATION_WAIT);
+            sendNotify(STARTANIMATION_FINISHED);
+        }
     }
     if (m_animation_state == ANIMATION_TOSTART)
     {

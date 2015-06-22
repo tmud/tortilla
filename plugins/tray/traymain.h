@@ -2,17 +2,20 @@
 
 #include "popupWindow.h"
 #include "traySettings.h"
+#include "sharedMemory.h"
 
-class TrayMainObject : public CWindowImpl < TrayMainObject >
+class TrayMainObject : public CWindowImpl < TrayMainObject >, public SharedMemoryHandler
 {
 public:
     DECLARE_WND_CLASS(NULL)
     TrayMainObject() :  m_activated(false), m_timerStarted(false), m_alarmWnd(NULL) {}
     ~TrayMainObject();
-    void create();
+    bool create();
+
+
     void setFont(HFONT font);
     void setAlarmWnd(HWND wnd);
-    bool showMessage(const u8string& msg);
+    bool showMessage(const u8string& msg, bool from_cache);
     void setActivated(bool activated);
     TraySettings& traySettings();
 
@@ -29,6 +32,8 @@ private:
             onFinishedAnimation(w);
         if (lparam == PopupWindow::MOVEANIMATION_FINISHED)
             onFinishedMoveAnimation(w);
+        if (lparam == PopupWindow::STARTANIMATION_FINISHED)
+            onFinishedStartAnimation(w);
         return 0; 
     }
     void startTimer();
@@ -36,12 +41,18 @@ private:
     void onTimer();
     void onFinishedAnimation(PopupWindow *w);
     void onFinishedMoveAnimation(PopupWindow *w);
+    void onFinishedStartAnimation(PopupWindow *w);
     PopupWindow* getFreeWindow();
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
     bool isHeightLimited() const;
     int  getHeightLimit() const;
 private:
+    void tryRunMoveAnimation();
+    void tryShowStack();
+    
+    void onInitSharedMemory();
+    
     CFont m_font;
     std::vector<PopupWindow*> m_windows;
     std::vector<PopupWindow*> m_free_windows;
@@ -51,4 +62,5 @@ private:
     HWND m_alarmWnd;
     POINT m_point0;
     std::deque<u8string> m_cache;
+    SharedMemory m_shared_memory;
 };

@@ -19,6 +19,7 @@
 #include <vector>
 #include <string>
 #include <deque>
+#include <algorithm>
 #include <assert.h>
 
 typedef wchar_t tchar;

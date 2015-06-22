@@ -91,6 +91,7 @@
     <ClInclude Include="popupWindow.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sharingData.h" />
+    <ClInclude Include="sharedMemory.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="traymain.h" />
     <ClInclude Include="traySettings.h" />
