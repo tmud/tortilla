@@ -132,17 +132,23 @@ public:
     }
     void update()
     {
+        ColorsCollector pc;
+        pc.process(m_view_tmp);
+
         mudViewStrings &vs = *m_view_tmp;
+        for (int i = 0, e = vs.size(); i < e; ++i)
+            m_pView->calcStringSizes(vs[i]);
+
         if (m_pMirror)
-        {            
+        {
             mudViewStrings &ms = *m_mirror_tmp;
             int size = vs.size();
             if (m_orig_size > size)
-            {   
+            {
                 int todel = m_orig_size - size;
                 int i = ms.size() - todel; 
-                for (int e=ms.size(); i<e; ++i)
-                    delete ms[i];
+                for (int j=i, e=ms.size(); j<e; ++j)
+                    delete ms[j];
                 ms.erase(ms.begin()+i, ms.end());
             }
             if (m_orig_size < size)
@@ -153,7 +159,6 @@ public:
                     newstr[i] = new MudViewString;
                 ms.insert(ms.end(), newstr.begin(), newstr.end());
             }
-
             // копируем строки
             int delta = ms.size() - size;
             for (int i = 0; i < size; ++i)
@@ -162,8 +167,7 @@ public:
                 MudViewString *dst = ms[i + delta];
                 dst->copy(src);
             }
-
-            // добавляем новые строки, если есть
+            // добавляем новые строки, если появились, при обработке массива строк
             mudViewStrings &new_ms = m_pMirror->m_strings;
             if (!new_ms.empty()) {
                 ms.insert(ms.end(), new_ms.begin(), new_ms.end());
@@ -171,16 +175,15 @@ public:
             }
             new_ms.swap(ms);
         }
-        // добавляем новые строки, если есть
+        // добавляем новые строки
         mudViewStrings &new_vs = m_pView->m_strings;
         if (!new_vs.empty()) {
             vs.insert(vs.end(), new_vs.begin(), new_vs.end());
             new_vs.clear();
-        }        
+        }
         new_vs.swap(vs);
-
         if (m_pMirror)
-        {            
+        {
             int last = m_pMirror->getStringsCount();
             m_pMirror->setViewString(last);
         }

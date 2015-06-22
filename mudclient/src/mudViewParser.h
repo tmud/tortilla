@@ -85,7 +85,7 @@ private:
 class ColorsCollector
 {
 public:
-    void process(parseData *data);
+    void process(parseDataStrings* pds);
 };
 
 class StringsWrapper

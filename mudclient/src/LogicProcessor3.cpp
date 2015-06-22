@@ -125,7 +125,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (!(flags & GAME_CMD))
     {
         ColorsCollector pc;
-        pc.process(&parse_data);
+        pc.process(&parse_data.strings);
     }
     printIncoming(parse_data, flags, window);
 }

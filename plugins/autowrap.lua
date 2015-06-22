@@ -4,7 +4,7 @@
 -- Максимально допустимая длина строк для главного окна, 0 - выключено, минимум 60
 local autowrap_maxlen_main = 70
 -- Максимально допустимая длина строк для output-окон, 0 - выключено, минимум 60
-local autowrap_maxlen_out = 100
+local autowrap_maxlen_out = 0
 
 autowrap = {}
 function autowrap.name()
@@ -22,11 +22,74 @@ function autowrap.version()
   return '-'
 end
 
+local function div(v, maxlen)
+  local s= v:getText()
+  local t = s:strall(" ")
+  local minlen = maxlen - 15
+  if minlen < 0 then minlen = 0 end
+  local sym = maxlen
+  for _,j in ipairs(t) do
+    if j >= minlen and j <= maxlen then
+      sym = j
+    end
+  end  
+  local block,pos = v:getBlockPos(sym)
+  v:createString(v:isSystem(), v:isGameCmd())
+  log(sym..":"..block..":"..pos..":"..v:blocks())
+  local new_string = v:getIndex() + 1
+  for i=block,v:blocks() do
+    v:copyBlock(i, new_string, i-block+1)
+  end
+  for i=v:blocks(),block+1,-1 do
+    v:deleteBlock(i)
+  end
+  local ds = v:getBlockText(block)
+  if pos == 1 then
+    v:deleteBlock(block)
+  else
+    v:setBlockText(block, ds:substr(1, pos))
+  end
+  v:setNext(true)
+  v:select(new_string)
+  if pos == ds:len() then
+    v:deleteBlock(1)
+  else
+    v:setBlockText(1, ds:substr(pos+1, ds:len()-pos))  
+  end  
+  v:setPrev(true)
+end
+
+local function divall(v, maxlen)
+  local i,size = 1,v:size()
+  while i <= size do
+    v:select(i)
+    if v:getTextLen() > maxlen then
+      div(v, maxlen)
+      size = v:size()
+    end
+    i = i + 1
+  end
+end
+
+function autowrap.after(window, v)
+  local maxlen
+  if window == 0 then
+    if not autowrap_maxlen_main or autowrap_maxlen_main == 0 then return; end
+    maxlen = autowrap_maxlen_main  
+  else
+    if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then return; end
+    maxlen = autowrap_maxlen_out
+  end
+  if maxlen < 60 then maxlen = 60 end
+  divall(v, maxlen)
+end
+
 local function update_view(v, newlen)
-    log("new len:" .. newlen)
-    local size = v:size()
-    for i=1,size do
+    -- собираем сначала все разбитые строки
+    local i,size = 1,v:size()
+    while i <= size do
       v:select(i)
+      v:setPrev(false)
       if v:isNext() then
         v:setNext(false)
         local from,to = i,i
@@ -52,7 +115,10 @@ local function update_view(v, newlen)
           size = v:size()
         end
       end
+      i = i + 1
     end
+    -- разбиваем по новой длине
+    divall(v, newlen)
 end
 
 function autowrap.syscmd(t)
@@ -83,51 +149,4 @@ function autowrap.syscmd(t)
     end
     updateView(window, function(v) update_view(v,newlen) end)
     return nil
-end
-
-local function div(v, maxlen)
-  local s= v:getText()
-  local t = s:strall(" ")
-  local minlen = maxlen - 15
-  if minlen < 0 then minlen = 0 end
-  local sym = maxlen
-  for k,v in ipairs(t) do
-    if v >= minlen and v <= maxlen then
-      sym = v
-    end
-  end
-  local block,pos = v:getBlockPos(sym) 
-  v:createString(v:isSystem(), v:isGameCmd())
-  local new_string = v:getIndex() + 1
-  for i=block,v:blocks() do
-    v:copyBlock(i, new_string, i-block+1)
-  end
-  local ds = v:getBlockText(block)
-  v:setBlockText(block, ds:substr(1, pos))
-  v:setNext(true)
-  v:select(new_string)
-  v:setBlockText(1, ds:substr(pos+1, ds:len()-pos))
-  v:setPrev(true)
-end
-
-function autowrap.after(window, v)
-local maxlen
-if window == 0 then
-  if not autowrap_maxlen_main or autowrap_maxlen_main == 0 then return; end
-  maxlen = autowrap_maxlen_main  
-else
-  if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then return; end
-  maxlen = autowrap_maxlen_out
-end
-if maxlen < 60 then maxlen = 60 end
-local count = v:size()
-  local i = 1
-  while i <= count do
-    v:select(i)
-    if v:getTextLen() > maxlen then
-      div(v, maxlen)
-      count = v:size()
-    end
-    i = i + 1
-  end
 end
