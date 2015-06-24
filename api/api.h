@@ -97,6 +97,9 @@ namespace base {
         luaT_run(L, "loadTable", "s", file);
         return lua_istable(L, -1) ? true : false;
     }
+    inline void updateView(lua_State* L, int view, lua_CFunction f) {
+        luaT_run(L, "updateView", "dF", view, f);
+    }
     // createWindow, createPanel, pcre -> classes below
     // log -> luaT_log
 } // namespace base
@@ -352,15 +355,13 @@ public:
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_pushobject(L, p, LUAT_PCRE);
-        lua_pushinteger(L, from);
-        luaT_run(L, "find", "otd");
+        luaT_run(L, "find", "otd", from);
         return boolresult();
     }
     bool getBlockPos(int abspos, int *res_block, int *res_pos)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        lua_pushinteger(L, abspos);
-        luaT_run(L, "find", "od");
+        luaT_run(L, "find", "od", abspos);
         bool result = false;
         if (lua_isnumber(L, 1) && lua_isnumber(L, 2))
         {
@@ -370,6 +371,28 @@ public:
         }
         lua_pop(L, 2);
         return result;
+    }
+    void setNext(bool next)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setNext", "ob", next);
+    }
+    void setPrev(bool prev)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setPrev", "ob", prev);
+    }
+    bool isNext()
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "isNext", "o");
+        return boolresult();
+    }
+    bool isPrev()
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "isPrev", "o");
+        return boolresult();
     }
 
 private:

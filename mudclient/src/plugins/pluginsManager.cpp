@@ -240,8 +240,8 @@ void PluginsManager::processGameCmd(InputCommand* cmd)
         if (!plugin_name.empty())
         {
             tstring src(cmd->srccmd);
-            src.append(cmd->srcparameters);
-            swprintf(plugin_buffer(), L"'%s': Команда отброшена '%s'", plugin_name.c_str(), src.c_str());            
+            src.append(cmd->parameters);
+            swprintf(plugin_buffer(), L"'%s': Команда обработана '%s'", plugin_name.c_str(), src.c_str());
             pluginLog(plugin_buffer());
         }
     }
