@@ -5,6 +5,7 @@
 #include "../MainFrm.h"
 #include "pluginSupport.h"
 #include "../profiles/profilesPath.h"
+#include "plugins/pluginsParseData.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
 extern CMainFrame _wndMain;
@@ -78,7 +79,7 @@ int pluginLog(const utf8* msg)
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", fname, msg);
+    swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", fname, msg);
     pluginLog(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -624,6 +625,34 @@ int terminatePlugin(lua_State *L)
     lua_error(L);
     return 0;
 }
+
+int updateView(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TFUNCTION))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 0 && view <=OUTPUT_WINDOWS)
+        {
+            MudViewHandler *h = _wndMain.m_gameview.getHandler(view);
+            parseData pd;
+            mudViewStrings& src = h->get();
+            pd.strings.swap(src);
+            {
+                PluginsParseData ppd(&pd);
+                lua_insert(L, -2);
+                lua_pop(L, 1);
+                luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
+                if (lua_pcall(L, 1, 0, 0))
+                { //error
+                }
+            }
+            pd.strings.swap(src);
+            h->update();
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, "updateView");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -669,6 +698,7 @@ bool initPluginsSystem()
     lua_register(L, "createWindow", createWindow);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
+    lua_register(L, "updateView", updateView);
 
     reg_props(L);
     reg_activeobjects(L);
@@ -750,6 +780,72 @@ int string_substr(lua_State *L)
     return 1;
 }
 
+int string_strstr(lua_State *L)
+{
+     if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING) ||
+         luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TNUMBER))
+     {
+         const utf8* s1 = lua_tostring(L, 1);
+         if (lua_gettop(L) == 3)
+         {
+             int index = lua_tointeger(L, 3);
+             int pos = utf8_sympos(s1, index);
+             if (pos == -1) {
+                 lua_pushnil(L);
+                 return 1;
+             }
+             s1 = s1 + pos;
+         }
+         const utf8* s2 = lua_tostring(L, 2);
+         const utf8* pos = strstr(s1, s2);
+         if (pos)
+         {  
+            u8string tmp(s1, pos-s1);
+            int find_pos = u8string_len(tmp) + 1;
+            lua_pushinteger(L, find_pos);
+            return 1;
+         }
+     }
+     lua_pushnil(L);
+     return 1;
+}
+
+int string_strall(lua_State *L)
+{
+     if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+     {
+         const utf8* s1 = lua_tostring(L, 1);
+         const utf8* s2 = lua_tostring(L, 2);
+         int len = utf8_strlen(s2);
+         if (len == -1) {
+             lua_pushnil(L);
+             return 1;
+         }
+
+         const utf8* b = s1;
+         std::vector<int> result;
+         const utf8* pos = strstr(s1, s2);
+         while (pos)
+         {
+             u8string tmp(b, pos - b);
+             int find_pos = utf8_strlen(tmp.c_str())+1;
+             result.push_back(find_pos);
+             s1 = pos + len;
+             pos = strstr(s1, s2);
+         }
+         lua_newtable(L);
+         for (int i=1,e=result.size();i<=e;++i)
+         {
+             lua_pushinteger(L, i);
+             lua_pushinteger(L, result[i-1]);
+             lua_settable(L, -3);
+         }
+         return 1;
+     }
+     lua_pushnil(L);
+     return 1;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -757,6 +853,8 @@ void reg_string(lua_State *L)
     lua_newtable(L);
     regFunction(L, "len", string_len);
     regFunction(L, "substr", string_substr);
+    regFunction(L, "strstr", string_strstr);
+    regFunction(L, "strall", string_strall);
     regIndexMt(L);
 
     // set metatable for lua string type

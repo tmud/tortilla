@@ -2,9 +2,26 @@
 
 class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
 {
+    class CEditEx : public CWindowImpl<CEditEx, CEdit>
+    {
+    public:
+        DECLARE_WND_SUPERCLASS(NULL, CEdit::GetWndClassName())
+    private:
+        BEGIN_MSG_MAP(CEditEx)
+          MESSAGE_HANDLER(WM_PASTE, OnPaste)    
+        END_MSG_MAP()    
+        LRESULT OnPaste(UINT, WPARAM, LPARAM, BOOL& bHandled)
+        {
+            LRESULT result = ::SendMessage(GetParent(), WM_USER, 0, 0);
+            if (!result)
+                bHandled = FALSE;
+            return 0;
+        }
+    };
+
     PropertiesData* propData;
     MemoryBuffer m_cmdBar;
-    CEdit m_edit;
+    CEditEx m_edit;
     tstring m_history_const;
     int m_history_index;
     tstring m_tab_const;
@@ -166,6 +183,7 @@ private:
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_USER, OnPaste)
     END_MSG_MAP()
 
     void setText(const tstring& text, int cursor = -1)
@@ -212,11 +230,25 @@ private:
         return 0;
     }
 
-    LRESULT OnSize(UINT, WPARAM wparam, LPARAM lparam, BOOL& bHandled)
+    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
     {
         RECT rc; GetClientRect(&rc);
         rc.right -= 48;
         m_edit.MoveWindow(&rc);
+        return 0;
+    }
+
+    LRESULT OnPaste(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        // on paste from clipboard
+        tstring text;
+        if (getFromClipboard(m_hWnd, &text) && isExistSymbols(text, L"\r\n"))
+        {
+            // multiline paste
+            putTextToBuffer(text);
+            SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
+            return 1;
+        }
         return 0;
     }
 
@@ -257,19 +289,6 @@ private:
             { clear(); clearHistory(); }
         else if (key == VK_TAB)
             onTab();
-        else if (key == 'V' && ::GetKeyState(VK_CONTROL) < 0 )
-        {
-            // on paste from clipboard
-            tstring text;
-            if (getFromClipboard(m_hWnd, &text) && isExistSymbols(text, L"\r\n"))
-            {
-                // multiline paste
-                putTextToBuffer(text);
-                SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
-                return TRUE;
-            }
-            return FALSE;
-        }
         else { return FALSE; }
         return TRUE;
     }
@@ -521,7 +540,7 @@ private:
         m_tab_const.clear();
         m_tab.clear();
     }
-    
+
     void clearHistory()
     {
         m_history_index = -1;

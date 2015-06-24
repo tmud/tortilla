@@ -205,3 +205,10 @@ void MudGameView::resetOscColors()
     m_propData->resetOSCColors();
     m_propElements.palette.updateProps(m_propData);
 }
+
+MudViewHandler* MudGameView::getHandler(int view)
+{
+    if (view >= 0 && view <= OUTPUT_WINDOWS)
+        return m_handlers[view];
+    return NULL;
+}

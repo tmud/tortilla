@@ -8,6 +8,7 @@
 #include "inputProcessor.h"
 extern luaT_State L;
 extern Plugin* _cp;
+extern wchar_t* plugin_buffer();
 
 PluginsManager::PluginsManager() : m_plugins_loaded(false)
 {
@@ -226,19 +227,24 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
 
 void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    //bool syscmd = (!cmd->dropped && cmd->system); //todo
-    
     std::vector<tstring> p;
     p.push_back(cmd->command);
     p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
-    if (cmd->system)
+    tstring plugin_name;
+    PluginsManager::TableMethodResult result = (cmd->system) ? doPluginsTableMethod("syscmd", &p, &plugin_name) : doPluginsTableMethod("gamecmd", &p, &plugin_name);
+    if (result == TM_PROCESSED)
+        concatCommand(p, cmd->system, cmd);
+    if (result == TM_DROPPED)
     {
-        if (doPluginsTableMethod("syscmd", &p))
-            concatCommand(p, true, cmd);
-        return;
+        cmd->dropped = true;
+        if (!plugin_name.empty())
+        {
+            tstring src(cmd->srccmd);
+            src.append(cmd->parameters);
+            swprintf(plugin_buffer(), L"'%s': Команда обработана: %s", plugin_name.c_str(), src.c_str());
+            pluginLog(plugin_buffer());
+        }
     }
-    if (doPluginsTableMethod("gamecmd", &p))
-        concatCommand(p, false, cmd);
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
@@ -265,7 +271,7 @@ void PluginsManager::processBarCmds(InputPlainCommands* cmds)
     assert(cmds);
     if (cmds->empty())
         return;
-    doPluginsTableMethod("barcmd", cmds->ptr());
+    doPluginsTableMethod("barcmd", cmds->ptr(), NULL);
 }
 
 void PluginsManager::processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history)
@@ -427,7 +433,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     return true;
 }
 
-bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table)
+PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* plugin_name)
 {
     WideToUtf8 w2u;
     lua_newtable(L);
@@ -439,16 +445,16 @@ bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstrin
         lua_pushstring(L, w2u);
         lua_settable(L, -3);
     }
-    bool processed = false;
+    TableMethodResult result = TM_NOTPROCESSED;
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
         bool not_supported = false;
-        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1)) )
+        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil", i);
+            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil|boolean", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -460,37 +466,42 @@ bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstrin
                 lua_settable(L, -3);
             }
             i = 0;
-            processed = false;
+            result = TM_NOTPROCESSED;
         }
         if (!not_supported)
-            processed = true;
-        if (lua_isnil(L, -1))
-            break;
-    }
-    if (lua_istable(L, -1))
-    {
-        if (processed)
+            result = TM_PROCESSED;
+        if (lua_isnil(L, -1)) 
         {
-            lua_len(L, -1);
-            int len = lua_tointeger(L, -1);
-            lua_pop(L, 1);
-            Utf8ToWide u2w;
-            table->clear();
-            for (int i = 0; i < len; ++i)
-            {
-                lua_pushinteger(L, i + 1);
-                lua_gettable(L, -2);
-                u2w.convert(lua_tostring(L, -1));
-                lua_pop(L, 1);
-                table->push_back(tstring(u2w));
-            }
+            if (plugin_name)
+                plugin_name->assign(p->get(Plugin::FILE));
+            result = TM_DROPPED;
+            break;
         }
+        if (lua_isboolean(L, -1))
+        {
+            int res = lua_toboolean(L, -1);
+            result = (!res) ? TM_DROPPED : TM_NOTPROCESSED;
+            break;
+        }
+    }
+    if (lua_istable(L, -1) && result == TM_PROCESSED)
+    {
+        lua_len(L, -1);
+        int len = lua_tointeger(L, -1);
         lua_pop(L, 1);
-        return processed;
+        Utf8ToWide u2w;
+        table->clear();
+        for (int i = 0; i < len; ++i)
+        {
+            lua_pushinteger(L, i + 1);
+            lua_gettable(L, -2);
+            u2w.convert(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            table->push_back(tstring(u2w));
+        }
     }
     lua_pop(L, 1);
-    table->clear();
-    return false;
+    return result;
 }
 
 void PluginsManager::turnoffPlugin(const char* error, int plugin_index)

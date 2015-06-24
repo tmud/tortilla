@@ -69,7 +69,7 @@ void MudView::addText(parseData* parse_data, MudView* mirror)
         m_strings.push_back(string);
         if (mirror)
         {
-            std::vector<MudViewString*> &ms = mirror->m_strings;
+            mudViewStrings &ms = mirror->m_strings;
             if (lsu)
             {
                 lsu = false;
@@ -92,7 +92,7 @@ void MudView::addText(parseData* parse_data, MudView* mirror)
 
 void MudView::clearText()
 {
-    std::vector<MudViewString*>::iterator it = m_strings.begin(), it_end = m_strings.end();
+    mudViewStrings::iterator it = m_strings.begin(), it_end = m_strings.end();
     for (; it != it_end; ++it)
         delete (*it);
     m_strings.clear();
@@ -105,7 +105,7 @@ void MudView::truncateStrings(int maxcount)
     if (size <= maxcount)
         return;
     int count = size - maxcount;
-    deleteStrings(count);
+    deleteBeginStrings(count);
 }
 
 void MudView::setViewString(int index)
@@ -435,13 +435,13 @@ void MudView::checkLimit()
     if (size > propElements->propData->view_history_size)
     {
         size = size - propElements->propData->view_history_size;
-        deleteStrings(size);
+        deleteBeginStrings(size);
     }
 }
 
-void MudView::deleteStrings(int count_from_begin)
+void MudView::deleteBeginStrings(int count_from_begin)
 {
-    std::vector<MudViewString*>::iterator it = m_strings.begin(), it_end = m_strings.begin()+count_from_begin;
+    mudViewStrings::iterator it = m_strings.begin(), it_end = m_strings.begin()+count_from_begin;
     for (; it != it_end; ++it)
         delete (*it);
     m_strings.erase(m_strings.begin(), m_strings.begin()+count_from_begin);

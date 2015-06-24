@@ -100,9 +100,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
         if (cmd->dropped)
-        {
-            fullcmd.append(L" (Команда блокирована)");
-            tmcLog(fullcmd);
+        {          
             return;
         }
 

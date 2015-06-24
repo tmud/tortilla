@@ -1,7 +1,6 @@
 ﻿-- colorgamecmd
 -- Плагин для Tortilla mud client
-
--- цвет из палитры 256 цветов
+-- Цвет из палитры клиента (0-255)
 local color = 3
 
 colorgamecmd = {}
@@ -22,8 +21,8 @@ if window ~= 0 then return end
   for i=1,v:size() do
     v:select(i)
     if v:isGameCmd() then
-    local last=v:blocks()
-    v:set(last,"textcolor",color)
+      local last=v:blocks()
+      v:set(last,"textcolor",color)
     end
   end
 end

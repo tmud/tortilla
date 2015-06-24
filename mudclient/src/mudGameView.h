@@ -39,8 +39,8 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     std::vector<PluginsView*> m_plugins_views;
     PluginsManager m_plugins;
     int m_codepage;
-
     bool m_activated;
+    std::vector<MudViewHandler*> m_handlers;
 
 private:
     void onStart();
@@ -291,6 +291,7 @@ public:
     PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
+    MudViewHandler* getHandler(int view);
 
 private:
     BEGIN_MSG_MAP(MudGameView)
@@ -362,11 +363,10 @@ private:
                 m_dock.SetPaneSize(w.side, size);
             }
             else if (w.side == DOCK_FLOAT)
-            {
                 m_dock.FloatWindow(*v, w.pos);
-            }
         }
 
+        m_handlers.push_back( new MudViewHandler(&m_view, &m_history) );
         for (int i=0; i<OUTPUT_WINDOWS; ++i)
         {
             MudView *v = m_views[i];
@@ -375,6 +375,7 @@ private:
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
             ctx->LastSide = w.lastside;
+            m_handlers.push_back(new MudViewHandler(v, NULL));
         }
 
         m_dock.SortPanes();
@@ -421,6 +422,7 @@ private:
 
         KillTimer(2);
         KillTimer(1);
+        std::for_each(m_handlers.begin(), m_handlers.end(), [](MudViewHandler *obj){ delete obj; });        
         for (int i=0,e=m_views.size(); i<e; ++i)
             delete m_views[i];
         for (int i = 0, e = m_plugins_views.size(); i<e; ++i)
