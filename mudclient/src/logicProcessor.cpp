@@ -228,7 +228,7 @@ void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/);
 }
 
 void LogicProcessor::syscmdLog(const tstring& cmd)
@@ -252,7 +252,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
+        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
     }
 }
 

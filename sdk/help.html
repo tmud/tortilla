@@ -538,7 +538,7 @@ local t = {...} -- правильное написание
 <div class="cmd">bool isFirst()</div> - первая строка является продолжением последней строки (завершение предыдущей строки).
 <div class="cmd">bool isLast()</div> - последняя строка является завершенной, ее продолжения в следующей коллекции не будет.
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
-<div class="cmd">bool isSystem()</div> - это строка с логом клиента.
+<div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
 <div class="cmd">void getPrompt(u8string *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(u8string* str)</div> - полный текст строки (без учета расцветки).
@@ -1044,7 +1044,7 @@ render:rect(r2)
 <div class="cmd">bool isFirst()</div> - возвращает признак, что первая строка - это продолжение последней строки прошлой коллекции.
 <div class="cmd">bool isLast()</div> - последняя строка является завершенной, ее продолжения в следующей коллекции не будет.
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
-<div class="cmd">bool isSystem()</div> - это строка с логом клиента.
+<div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt-строка.
 <div class="cmd">string getPrompt()</div> - содежимое prompt-строки (без игровых команд).
 <div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных частей).
