@@ -81,6 +81,7 @@ public:
     const MoveAnimation& getMoveAnimation() const { return m_move_animation; }
     void startAnimation(const Animation& a);
     void startMoveAnimation(const MoveAnimation& a);
+    void onTick();
 
 private:
     void onCreate();
@@ -94,7 +95,6 @@ private:
 private:
     BEGIN_MSG_MAP(PopupWindow)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
@@ -102,7 +102,6 @@ private:
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
-    LRESULT OnTimer(UINT, WPARAM, LPARAM, BOOL&) { onTimer(); return 0; }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&) { return 1;  }
     LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&) 
     {

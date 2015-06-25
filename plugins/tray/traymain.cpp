@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "traymain.h"
+void sendLog(const utf8* msg);
 
 TrayMainObject::~TrayMainObject()
 {
@@ -44,24 +45,41 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg, bool from_cache)
+ char buffer[1024]; //debug
+
+bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
        return true;
 #endif
 
-    if (!from_cache)
+    u8string log("step1: ");   //debug
+    log.append(msg);
+    sendLog(log.c_str());
+
+    if (!from_queue)
     {
         if (isHeightLimited()) {
-            m_cache.push_back(msg);
+            sendLog("push1");  //debug
+            m_queue.push_back(msg);
+            return true;
+        }
+        if (!m_queue.empty())
+        {
+            sendLog("push2");  //debug
+            m_queue.push_back(msg);
+            tryShowQueue();
             return true;
         }
     }
 
     PopupWindow *w = getFreeWindow();
     if (!w)
+    {
+        sendLog("out of windows"); //debug
         return false;
+    }
 
     POINT rb = { -1, -1 };
     Animation a; 
@@ -97,6 +115,10 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_cache)
     w->startAnimation(a);
     if (!m_activated)
       startTimer();
+
+    sprintf(buffer, "show: %d, %d, %d, %d", rb.x, rb.y, sz.cx, sz.cy);
+    sendLog(buffer); //debug
+
    return true;
 }
 
@@ -110,7 +132,7 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
     else { m_windows.erase(m_windows.begin() + index); }
     freeWindow(w);
     if (m_windows.empty())
-        tryShowStack();
+        tryShowQueue();
     else
         tryRunMoveAnimation();
 }
@@ -121,7 +143,7 @@ void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
     int last = m_windows.size() - 1;
     if (m_windows[last] != w)
         return;
-    tryShowStack();
+    tryShowQueue();
 }
 
 void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
@@ -155,12 +177,12 @@ void TrayMainObject::tryRunMoveAnimation()
     }
 }
 
-void TrayMainObject::tryShowStack()
+void TrayMainObject::tryShowQueue()
 {
-    while (!isHeightLimited() && !m_cache.empty())
+    while (!isHeightLimited() && !m_queue.empty())
     {
-        u8string msg(m_cache[0]);
-        m_cache.pop_front();
+        u8string msg(*m_queue.begin());
+        m_queue.pop_front();
         showMessage(msg, true);
     }
 }
@@ -230,14 +252,14 @@ void TrayMainObject::startTimer()
 {
     if (m_timerStarted) return;
     const DWORD one_min = 60000;
-    SetTimer(1, m_settings.interval*one_min);
+    SetTimer(2, m_settings.interval*one_min);
     m_timerStarted = true;
 }
 
 void TrayMainObject::stopTimer()
 {
     if (!m_timerStarted) return;
-    KillTimer(1);
+    KillTimer(2);
     m_timerStarted = false;
 }
 
@@ -252,4 +274,10 @@ void TrayMainObject::onTimer()
     fw.dwFlags = FLASHW_ALL;
     fw.dwTimeout = 0;
     ::FlashWindowEx(&fw);
+}
+
+void TrayMainObject::onTickPopups()
+{
+    for (int i=0,e=m_windows.size();i<e;++i)
+        m_windows[i]->onTick();
 }

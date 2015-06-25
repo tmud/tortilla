@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "popupWindow.h"
+void sendLog(const utf8* msg); //debug
 
 void PopupWindow::onCreate()
 {
@@ -9,7 +10,7 @@ void PopupWindow::onCreate()
     setAlpha(0);
 }
 
-void PopupWindow::onTimer()
+void PopupWindow::onTick()
 {
     DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
@@ -23,7 +24,9 @@ void PopupWindow::onTimer()
 
         float dx = m_move_dx * m_move_animation.speed * dt;
         float dy = m_move_dy * m_move_animation.speed * dt;
-        if (abs(dx) > 6 || abs(dy) > 6)
+
+        float ax = abs(dx); float ay = abs(dy);
+        if (ax > 6 || ay > 6) // || (ax > 0 && ax < 1) || (ay > 0 && ay < 1))
         {
             p.x = target.x;
             p.y = target.y;
@@ -69,6 +72,10 @@ void PopupWindow::onTimer()
     if (m_animation_state == ANIMATION_TOEND)
     {
         alpha = min(alpha+da, 255);
+        if (alpha > 255)
+        {
+            sendLog("error: a > 255");
+        }
         setAlpha(alpha);
         if (alpha == 255)
         {
@@ -79,6 +86,10 @@ void PopupWindow::onTimer()
     if (m_animation_state == ANIMATION_TOSTART)
     {
         alpha = max(alpha-da, 0);
+        if (alpha < 0)
+        {
+            sendLog("error: a < 0");
+        }
         setAlpha(alpha);
         if (alpha == 0)
             setState(ANIMATION_NONE);
@@ -112,13 +123,11 @@ void PopupWindow::setState(int newstate)
         RECT pos = { a.pos.x, a.pos.y, a.pos.x + sz.cx, a.pos.y + sz.cy };
         MoveWindow(&pos);
         ShowWindow(SW_SHOWNOACTIVATE);
-        SetTimer(1, 10);
     }
     break;
     case ANIMATION_NONE:
         setAlpha(0);
         ShowWindow(SW_HIDE);
-        KillTimer(1);
         wait_timer = 0;
         alpha = 0;
         sendNotify(ANIMATION_FINISHED);
@@ -160,7 +169,13 @@ void PopupWindow::onPaint(HDC dc)
 void PopupWindow::setAlpha(float a)
 {
     int va = static_cast<int>(a);
-    SetLayeredWindowAttributes(m_hWnd, 0, va, LWA_ALPHA);
+    if (!SetLayeredWindowAttributes(m_hWnd, 0, va, LWA_ALPHA))
+    {
+        DWORD error = GetLastError(); //debug
+        char buffer[128];
+        sprintf(buffer, "SLWA error %d,%f", error, a);
+        sendLog(buffer);
+    }
 }
 
 void PopupWindow::onClickButton()

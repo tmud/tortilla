@@ -3,6 +3,13 @@
 #include "traySettings.h"
 
 TrayMainObject g_tray;
+lua_State *pL = NULL; //debug
+void sendLog(const utf8* msg) //debug
+{
+    u8string cmd("#wout 6 ");
+    cmd.append(msg);
+    base::runCommand(pL, cmd.c_str());
+}
 
 int get_name(lua_State *L)
 {
@@ -26,7 +33,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.01");
+    lua_pushstring(L, "1.03d");
     return 1;
 }
 
@@ -56,6 +63,8 @@ void parse_color(const u8string& text, COLORREF *color)
 
 int init(lua_State *L)
 {
+    pL = L; //debug
+
     base::addCommand(L, "tray");
     base::addMenu(L, "Плагины/Оповещения (tray)...", 2, 1);
 
