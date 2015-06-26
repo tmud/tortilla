@@ -227,9 +227,9 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         dc->FillSolidRect(&pos, bkg);
         return;
     }
-
-    std::vector<MudViewStringBlock> &b = s->blocks;
+    
     int start_sym = 0;
+    std::vector<MudViewStringBlock> &b = s->blocks;
     dc->SelectFont(propElements->standard_font);
     for (int i = 0, e = b.size(); i < e; ++i)
     {
@@ -272,13 +272,23 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
 
         bool dragging = false;
         const tstring &s = b[i].string;
-        if (checkDraggingSym(index))
+
+        if (checkDragging(index, false))
+        {
+            COLORREF bkg =  propElements->propData->bkgnd;
+            bkg_color = invertColor(bkg);
+            text_color = bkg;
+            dragging = true;
+        }
+        else if (index == drag_begin || index == drag_end)
         {
             dragging = true;
+            const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;
+            
             int end_sym = start_sym + s.length();
             int left = drag_left; int right = drag_right;
             if (left == -1) { left = drag_right; right = drag_left; }
-            if (right == -1) right = m_drag_line_len.size()-1;
+            if (right == -1) right = ld.size()-1;
             if (left > right) { left = drag_right; right = drag_left; }
             if ((left >= start_sym && left < end_sym) ||        
                 (right >= start_sym && right < end_sym) ||
@@ -292,33 +302,25 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
 
                 if (left != 0)
                 {
-                    RECT side = pos; side.right = m_drag_line_len[start_sym + left - 1];
+                    RECT side = pos; side.right = ld[start_sym + left - 1];
                     renderDragSym(dc, s.substr(0, left), side, text_color, bkg_color);
                 }
                 // selected
                 {
-                    RECT side = pos; if (left != 0) side.left = m_drag_line_len[start_sym + left - 1];
-                    if (right != (end_sym - 1)) side.right = m_drag_line_len[start_sym + right];
+                    RECT side = pos; if (left != 0) side.left = ld[start_sym + left - 1];
+                    if (right != (end_sym - 1)) side.right = ld[start_sym + right];
                     COLORREF txt0 = propElements->propData->bkgnd;
                     COLORREF bkg0 = invertColor(txt0);
                     renderDragSym(dc, s.substr(left, right-left+1), side, txt0, bkg0);                    
                 }
                 if (right != (end_sym - 1))
                 {
-                    RECT side = pos; side.left = m_drag_line_len[start_sym + right];                    
+                    RECT side = pos; side.left = ld[start_sym + right];                    
                     renderDragSym(dc, s.substr(right+1), side, text_color, bkg_color);
                 }
                 start_sym = end_sym;
                 continue;
             }
-        }
-
-        if (checkDragging(index, false))
-        {
-            COLORREF bkg =  propElements->propData->bkgnd;
-            bkg_color = invertColor(bkg);
-            text_color = bkg;
-            dragging = true;
         }
 
         dc->FillSolidRect(&pos, bkg_color);
@@ -331,15 +333,15 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
 
         if (p.blink_status && !dragging)
         {
-                CPen pen;
-                pen.CreatePen(PS_SOLID, 1, text_color);
-                HPEN oldpen = dc->SelectPen(pen);
-                dc->MoveTo(pos.left, pos.top, NULL); 
-                dc->LineTo(pos.right-1, pos.top);
-                dc->LineTo(pos.right-1, pos.bottom-1);
-                dc->LineTo(pos.left, pos.bottom-1);
-                dc->LineTo(pos.left, pos.top);
-                dc->SelectPen(oldpen);
+            CPen pen;
+            pen.CreatePen(PS_SOLID, 1, text_color);
+            HPEN oldpen = dc->SelectPen(pen);
+            dc->MoveTo(pos.left, pos.top, NULL); 
+            dc->LineTo(pos.right-1, pos.top);
+            dc->LineTo(pos.right-1, pos.bottom-1);
+            dc->LineTo(pos.left, pos.bottom-1);
+            dc->LineTo(pos.left, pos.top);
+            dc->SelectPen(oldpen);
         }
         start_sym += s.length();
     }
@@ -455,8 +457,8 @@ void MudView::startDraging()
     SetCapture();
     drag_begin = line;
     drag_end = line;
-    calcDragLine(line);
-    drag_left = getCursorSym(m_dragpt.x);
+    calcDragLine(line, BEGINLINE);
+    drag_left = getCursorSym(m_dragpt.x, BEGINLINE);
     drag_right = drag_left;
     Invalidate(FALSE);
 }
@@ -467,7 +469,8 @@ void MudView::stopDraging()
         return;
     ReleaseCapture();
 
-    if (drag_begin == drag_end)
+    //todo
+   /* if (drag_begin == drag_end)
     {
         tstring text;
         m_strings[drag_begin]->getText(&text);
@@ -500,7 +503,7 @@ void MudView::stopDraging()
             data.append(L"\r\n");
         }
         sendToClipboard(m_hWnd, data);
-    }
+    }*/
     drag_begin = -1;
     Invalidate(FALSE);
 }
@@ -510,42 +513,61 @@ void MudView::doDraging()
     if (drag_begin < 0)
         return;
     POINT pt = getCursor();
-    drag_end = getCursorLine(pt.y);
-    if (drag_begin != drag_end)
+    int new_drag_end = getCursorLine(pt.y);
+    if (drag_begin != new_drag_end)
     {
-        if (drag_end > m_last_visible_line)
-            drag_end = m_last_visible_line;
+        if (new_drag_end > m_last_visible_line)
+            new_drag_end = m_last_visible_line;
         int min_line = m_last_visible_line - m_lines_count;
-        if (drag_end < min_line)
-            drag_end = min_line;
+        if (new_drag_end < min_line)
+            new_drag_end = min_line;
+        if (new_drag_end != drag_end)
+        {
+            drag_end = new_drag_end;
+            calcDragLine(drag_end, ENDLINE);
+        }
     }
-    if (drag_begin == drag_end)
+    else
     {
-        drag_right = getCursorSym(pt.x);
+        drag_end = new_drag_end;
+        drag_right = getCursorSym(pt.x, BEGINLINE);
     }
     Invalidate(FALSE);
 }
 
-bool MudView::checkDragging(int line, bool accept_emptyline)
+bool MudView::checkDragging(int line, bool incborder)
 {
     if (drag_begin < 0)
         return false;
-    if (!accept_emptyline && drag_begin == drag_end)
-        return false;
     if (drag_end < drag_begin)
     {
+        if (incborder) {
         if (line >= drag_end && line <= drag_begin)
             return true;
+        }
+        else {
+        if (line > drag_end && line < drag_begin)
+            return true;
+        }
     }
     else
     {
+        if (incborder) {
         if (line >= drag_begin && line <= drag_end)
             return true;
+        }
+        else {
+        if (line > drag_begin && line < drag_end)
+            return true;
+        }
     }
     return false;
 }
-bool MudView::checkDraggingSym(int line)
+
+/*bool MudView::checkDraggingSym(int line)
 {
+    return false; //todo
+
     if (drag_begin < 0)
         return false;
     if (drag_begin != drag_end)
@@ -553,7 +575,7 @@ bool MudView::checkDraggingSym(int line)
     if (drag_begin != line)
         return false;
     return true;
-}
+}*/
 
 POINT MudView::getCursor() const
 {
@@ -573,23 +595,25 @@ int MudView::getCursorLine(int y) const
     return m_last_visible_line - line;
 }
 
-int MudView::getCursorSym(int x) const
+int MudView::getCursorSym(int x, dragline type) const
 {
+    const std::vector<int> &ld = (type == BEGINLINE) ? m_drag_beginline_len : m_drag_endline_len;
     int left = 0;
-    for (int i = 0, e = m_drag_line_len.size(); i < e; ++i)
+    for (int i = 0, e = ld.size(); i < e; ++i)
     {
-        int right = m_drag_line_len[i];
+        int right = ld[i];
         if (x >= left && x < right) { return i; }
         left = right;
     }
     return -1;
 }
 
-void MudView::calcDragLine(int line)
+void MudView::calcDragLine(int line, dragline type)
 {
+    std::vector<int> &ld = (type == BEGINLINE) ? m_drag_beginline_len : m_drag_endline_len;
     MudViewString *s = m_strings[line];
     int blocks = s->blocks.size();
-    if (!blocks) { m_drag_line_len.clear(); return; }
+    if (!blocks) { ld.clear(); return; }
     int dc_size = 0;
     for (int i = 0; i <blocks; ++i)
     {
@@ -601,9 +625,9 @@ void MudView::calcDragLine(int line)
     CDC dc(GetDC());
     HFONT current_font = dc.SelectFont(propElements->standard_font);
     int maxchars = text.size();
-    m_drag_line_len.resize(maxchars);
+    ld.resize(maxchars);
     SIZE sz = { 0 };
     if (maxchars > 0)
-        GetTextExtentExPoint(dc, text.c_str(), text.length(), dc_size, &maxchars, &m_drag_line_len[0], &sz);
+        GetTextExtentExPoint(dc, text.c_str(), text.length(), dc_size, &maxchars, &ld[0], &sz);
     dc.SelectFont(current_font);
 }
