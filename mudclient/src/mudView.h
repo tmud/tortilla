@@ -13,7 +13,7 @@ class MudView : public CWindowImpl<MudView>
     mudViewStrings m_strings;
     bool m_last_string_updated;
 
-    POINT m_dragpt;
+    POINT m_dragpt, m_dragpos;
     int  drag_begin, drag_end;
     int  drag_left, drag_right;
     std::vector<int> m_drag_beginline_len;
@@ -96,6 +96,9 @@ private:
     int   getCursorLine(int y) const;
     enum dragline { BEGINLINE = 0, ENDLINE };
     int   getCursorSym(int x, dragline type) const;
+    bool  isDragCursorLeft() const;
+    bool  isDragCursorRight() const;
+    bool  isDragCursorInside() const;
     void  calcDragLine(int line, dragline type);
     void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
 };

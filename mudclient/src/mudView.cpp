@@ -275,31 +275,128 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
 
         if (checkDragging(index, false))
         {
+            dragging = true;
             COLORREF bkg =  propElements->propData->bkgnd;
             bkg_color = invertColor(bkg);
             text_color = bkg;
-            dragging = true;
         }
-        else if (index == drag_begin || index == drag_end)
+        else if (checkDragging(index, true))
         {
             dragging = true;
-            const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;
-            
-            int end_sym = start_sym + s.length();
-            int left = drag_left; int right = drag_right;
-            if (left == -1) { left = drag_right; right = drag_left; }
-            if (right == -1) right = ld.size()-1;
-            if (left > right) { left = drag_right; right = drag_left; }
-            if ((left >= start_sym && left < end_sym) ||        
-                (right >= start_sym && right < end_sym) ||
-                (left < start_sym && right >= end_sym)
-               )
-            {
-                if (left >= start_sym && left < end_sym) left -= start_sym;
-                else left = 0;
-                if (right >= start_sym  && right < end_sym) right -= start_sym;
-                else right = end_sym - 1;
+            const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;           
+            //int ssize = s.size();
+            int end_sym = start_sym + s.size();
+            int last = ld.size() - 1;
+            int left = drag_left;
+            int right = drag_right;
 
+            tchar buffer[256];
+            wsprintf(buffer, L"b i=%d,l=%d,r=%d,dl=%d,dr=%d\r\n", index, left, right, drag_left, drag_right);
+            //OutputDebugString(buffer);
+
+            //вычисляем диапозон в строке, который выделен
+            if (left == -1) 
+            {
+                if (right != -1) { left = right; right = last; }
+                else if (isDragCursorLeft() && !isDragCursorInside()) { left = 0; right = last; }
+            }
+            else if (right == -1) 
+            {
+                if (isDragCursorLeft())
+                    { right = left; left = 0; }
+                else
+                    right = last;
+            }
+            if (left > right) { int t = left; left = right; right = t; }          
+
+            wsprintf(buffer, L"s i=%d,l=%d,r=%d,ss=%d,es=%d,dl=%d,dr=%d\r\n", index, left, right, start_sym, end_sym, drag_left, drag_right);
+            //OutputDebugString(buffer);
+
+            if (drag_begin < drag_end)
+            {
+                if (index == drag_begin)
+                {
+                    if (isDragCursorLeft())
+                        left = right;
+                    right = last;
+                }
+                if (index == drag_end)
+                {
+                    if (isDragCursorLeft() && drag_right != -1)
+                        right = left;
+                    left = 0;
+                }
+            }
+            else if (drag_begin > drag_end)
+            {
+                if (index  == drag_begin)
+                {
+                    if (isDragCursorRight())
+                        right = left;
+                    left = 0;
+                }
+                if (index == drag_end)
+                {
+                    if (isDragCursorRight())
+                        left = right;
+                    right = last;
+              
+                }            
+            }
+
+            wsprintf(buffer, L"d i=%d,l=%d,r=%d,ss=%d,es=%d,dl=%d,dr=%d\r\n", index, left, right, start_sym, end_sym, drag_left, drag_right);
+           // OutputDebugString(buffer);
+
+            // проверка что блок попадает в вычисленный диапазон (частью или целиком)
+            if ((left >= start_sym && left < end_sym) ||
+                (right >= start_sym && right < end_sym) ||
+                (left < start_sym && right >= end_sym))
+            {
+               
+
+                //if (drag_begin == drag_end)
+                {
+                    //вычисляем в left right - что выделено, но в символьных координатах блока
+                    if (left >= start_sym && left < end_sym) left -= start_sym;
+                    else left = 0;
+                    if (right >= start_sym  && right < end_sym) right -= start_sym;
+                    else right = end_sym - 1;                
+                }
+                //else 
+               /* if (drag_begin < drag_end)
+                {
+                    if (index == drag_begin)
+                    {
+                        if (isDragCursorLeft())
+                            left = right;
+                        right = end_sym -1;
+                    }
+                    else if (index == drag_end)
+                    {
+                        if (isDragCursorLeft())
+                            right = left;
+                        left = 0;
+                    }                   
+                }
+                else if (drag_begin > drag_end)
+                {
+                    if (index == drag_begin)
+                    {
+                        if (isDragCursorRight())
+                            right = left;
+                        left = 0;
+                    }
+                    else if (index == drag_end)
+                    {
+                        if (isDragCursorRight())
+                            left = right;
+                        right = end_sym - 1;
+                    }
+               }*/
+
+                wsprintf(buffer, L"i=%d,l=%d,r=%d,ss=%d,es=%d\r\n", index, left, right, start_sym, end_sym);
+                OutputDebugString(buffer);
+                
                 if (left != 0)
                 {
                     RECT side = pos; side.right = ld[start_sym + left - 1];
@@ -513,6 +610,7 @@ void MudView::doDraging()
     if (drag_begin < 0)
         return;
     POINT pt = getCursor();
+    m_dragpos = pt;
     int new_drag_end = getCursorLine(pt.y);
     if (drag_begin != new_drag_end)
     {
@@ -526,6 +624,7 @@ void MudView::doDraging()
             drag_end = new_drag_end;
             calcDragLine(drag_end, ENDLINE);
         }
+        drag_right = getCursorSym(pt.x, ENDLINE);
     }
     else
     {
@@ -606,6 +705,22 @@ int MudView::getCursorSym(int x, dragline type) const
         left = right;
     }
     return -1;
+}
+
+bool MudView::isDragCursorLeft() const
+{
+    int dx = m_dragpos.x - m_dragpt.x;
+    return (dx < 0) ? true : false;
+}
+
+bool MudView::isDragCursorRight() const
+{
+    return (!isDragCursorLeft());
+}
+
+bool MudView::isDragCursorInside() const
+{
+    return (m_dragpos.x < 0) ? false : true;
 }
 
 void MudView::calcDragLine(int line, dragline type)
