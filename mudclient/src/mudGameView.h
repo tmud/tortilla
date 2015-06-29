@@ -359,7 +359,7 @@ private:
             if (IsDocked(w.side))
             {
                 m_dock.DockWindow(*v, w.side);
-                int size = IsDockedVertically(w.side) ? w.pos.right : w.pos.bottom;
+                int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
                 m_dock.SetPaneSize(w.side, size);
             }
             else if (w.side == DOCK_FLOAT)
@@ -1039,29 +1039,67 @@ private:
                 m_dock._UnFloatWindow(ctx);
             else if (IsDocked(ctx->Side))
                 m_dock._UnDockWindow(ctx);
+        }
 
-            const OutputWindow& w = m_propData->windows[i];
-            if (IsDocked(w.side))
+        // order for creating windows
+        std::vector<int> sides = { DOCK_TOP, DOCK_BOTTOM, DOCK_LEFT, DOCK_RIGHT, DOCK_FLOAT, DOCK_HIDDEN };
+
+        // recreate docking output windows
+        for (int j=0,je=sides.size(); j<je; ++j)
+        {
+            typedef std::pair<int,int> wd;
+            std::vector<wd> wds;
+            for (int i=0; i < OUTPUT_WINDOWS; ++i)
             {
-                m_dock.DockWindow(*v, w.side);
-                int size = IsDockedVertically(w.side) ? w.pos.right : w.pos.bottom;
-                m_dock.SetPaneSize(w.side, size);
-                m_parent.SendMessage(WM_USER, menu_id, 1);
+                const OutputWindow& w =  m_propData->windows[i];
+                if (w.side == sides[j]) {
+                  wd d; d.first = i; d.second = 0;
+                  if (IsDockedVertically(w.side)) d.second = w.pos.top;
+                  if (IsDockedHorizontally(w.side)) d.second = w.pos.left;
+                  wds.push_back(d);
+                }
             }
-            else if (w.side == DOCK_FLOAT)
+            struct { bool operator() (const wd& i,const wd& j) { return (i.second<j.second);}} comparator;
+            std::sort(wds.begin(), wds.end(), comparator);
+
+            for (int i=0,e=wds.size(); i<e; ++i)
             {
-                m_dock.FloatWindow(*v, w.pos);
-                m_parent.SendMessage(WM_USER, menu_id, 1);
+                int index = wds[i].first;
+                MudView *v = m_views[index];
+                const OutputWindow& w = m_propData->windows[index];
+
+                int menu_id = index + ID_WINDOW_1;
+                if (IsDocked(w.side))
+                {
+                    m_dock.DockWindow(*v, w.side);
+                    int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
+                    int border = IsDockedVertically(w.side) ? m_dock.m_sizeBorder.cx : m_dock.m_sizeBorder.cy;
+                    m_dock.SetPaneSize(w.side, size+border*2);
+                    m_parent.SendMessage(WM_USER, menu_id, 1);
+                }
+                else if (w.side == DOCK_FLOAT)
+                {
+                    m_dock.FloatWindow(*v, w.pos);
+                    m_parent.SendMessage(WM_USER, menu_id, 1);
+                }
+                else
+                {
+                    m_parent.SendMessage(WM_USER, menu_id, 0);
+                }
             }
-            else
-            {
-                m_parent.SendMessage(WM_USER, menu_id, 0);
-            }
+        }
+        for (int i = 0; i<OUTPUT_WINDOWS; ++i)
+        {
+            MudView *v = m_views[i];
+            DOCKCONTEXT *ctx = m_dock._GetContext(*v);
+            const OutputWindow& w =  m_propData->windows[i];
+            ctx->Side = w.side;
+            ctx->LastSide = w.lastside;
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
-            ctx->LastSide = w.lastside;
+            ctx->bKeepSize = false;
         }
-        m_dock.SortPanes();
+        m_dock.UpdatePanes();
     }
 
     void savePluginWindowPos(HWND wnd = NULL)
