@@ -159,7 +159,7 @@ void LogicProcessor::processGameCommand(InputCommand* cmd)
     tstring tmp(cmd->command);
     tmp.append(cmd->parameters);
     tmp.append(br);
-    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
+    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
     sendToNetwork(tmp);
 }
 
@@ -574,7 +574,7 @@ IMPL(cr)
     if (n == 0)
     {
         tstring msg(L"\r\n");
-        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS);
+        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
         WCHAR br[2] = { 10, 0 };
         tstring cmd(br);
         sendToNetwork(cmd);
@@ -615,7 +615,7 @@ IMPL(password)
         if (!pass.empty())
         {
             tstring msg(L"*****\r\n");
-            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS);
+            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
             WCHAR br[2] = { 10, 0 };
             pass.append(br);
             sendToNetwork(pass);
@@ -630,7 +630,7 @@ IMPL(hide)
     if (p->size() != 0)
     {
         tstring msg(L"*****\r\n");
-        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS);
+        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
         WCHAR br[2] = { 10, 0 };
         tstring cmd(p->params());
         cmd.append(br);
@@ -898,11 +898,12 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
     new_string->system = true;
     data.strings.push_back(new_string);
 
+    m_pHost->postprocessText(view, &data);
+
     int log = m_wlogs[view];
     if (log != -1)
         m_logs.writeLog(log, data);
 
-    m_pHost->postprocessText(view, &data);
     m_pHost->addText(view, &data);
 }
 

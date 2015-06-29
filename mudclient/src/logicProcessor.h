@@ -106,7 +106,7 @@ private:
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
+    enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
            FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
@@ -115,7 +115,7 @@ private:
     void processNetworkError(const tstring& error);
 
     // Incoming data methods
-    void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0);
+    void processIncoming(const WCHAR* text, int text_len, int flags, int window);
     void printIncoming(parseData& parse_data, int flags, int window);
     void printParseData(parseData& parse_data, int flags, int window);
     void printStack(int flags = 0);

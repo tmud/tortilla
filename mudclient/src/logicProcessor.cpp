@@ -27,7 +27,7 @@ void LogicProcessor::processTick()
 
 void LogicProcessor::processNetworkData(const WCHAR* text, int text_len)
 {
-    processIncoming(text, text_len);
+    processIncoming(text, text_len, SKIP_NONE, 0);
 }
 
 void LogicProcessor::processNetworkConnect()
@@ -230,7 +230,7 @@ void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, 0);
 }
 
 void LogicProcessor::syscmdLog(const tstring& cmd)
@@ -240,7 +240,7 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
         return;
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD, 0);
 }
 
 void LogicProcessor::pluginLog(const tstring& cmd)
@@ -254,7 +254,7 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|SKIP_PLUGINS, window);
     }
 }
 

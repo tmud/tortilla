@@ -281,7 +281,7 @@ void LogicProcessor::printStack(int flags)
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
-        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags);
+        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags, 0);
     }
     m_incoming_stack.clear();
 }
@@ -364,11 +364,11 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!(flags & SKIP_PLUGINS))
         m_pHost->postprocessText(window, &parse_data);
 
-    /*if (flags & SKIP_PLUGINS)
+    if (flags & SKIP_PLUGINS)
     {
         StringsWrapper wrapper(130);
         wrapper.process(&parse_data);
-    }*/
+    }
 
     int log = m_wlogs[window];
     if (log != -1)
