@@ -897,14 +897,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
 
     new_string->system = true;
     data.strings.push_back(new_string);
-
-    m_pHost->postprocessText(view, &data);
-
-    int log = m_wlogs[view];
-    if (log != -1)
-        m_logs.writeLog(log, data);
-
-    m_pHost->addText(view, &data);
+    printParseData(data, SKIP_NONE, view);
 }
 
 IMPL(wprint)

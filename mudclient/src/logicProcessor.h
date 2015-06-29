@@ -73,6 +73,9 @@ class LogicProcessor : public LogicProcessorMethods
     Ticker m_incompleted_timeout;
     int m_incompleted_flags;
 
+    std::vector<tstring> m_plugins_log_cache;
+    bool m_plugins_log_tocache;
+    
 public:
     LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();

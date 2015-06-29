@@ -17,6 +17,24 @@ void LogicProcessor::processStackTick()
         }
     }
 
+    if (!m_plugins_log_cache.empty())
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        if (!pdata->plugins_logs)
+        {
+            m_plugins_log_cache.clear();
+            return;
+        }
+        int window = pdata->plugins_logs_window;
+        std::vector<tstring> tmp;
+        tmp.swap(m_plugins_log_cache);
+        for (int i=0,e=tmp.size(); i<e; ++i){
+            tstring &t = tmp[i];
+            processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+        }
+        tmp.clear();
+    }
+
     if (m_prompt_mode == OFF)
         return;
     MudViewString *last = m_pHost->getLastString(0);
@@ -340,9 +358,13 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window)
 {
+    // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
+    m_plugins_log_tocache = true;
+
     // final step for data
     // preprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    
+    if (!(flags & SKIP_PLUGINS))           
         m_pHost->preprocessText(window, &parse_data);
 
     // array for new cmds from actions
@@ -363,12 +385,13 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     // postprocess data via plugins
     if (!(flags & SKIP_PLUGINS))
         m_pHost->postprocessText(window, &parse_data);
+    m_plugins_log_tocache = false;
 
-    if (flags & SKIP_PLUGINS)
+    /*if (flags & SKIP_PLUGINS)
     {
         StringsWrapper wrapper(130);
         wrapper.process(&parse_data);
-    }
+    }*/
 
     int log = m_wlogs[window];
     if (log != -1)

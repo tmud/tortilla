@@ -5,7 +5,8 @@
 LogicProcessor::LogicProcessor(LogicProcessorHost *host) :
 m_pHost(host), m_connecting(false), m_connected(false),
 m_prompt_mode(OFF), m_prompt_counter(0),
-m_incompleted_string(NULL), m_incompleted_flags(0)
+m_incompleted_string(NULL), m_incompleted_flags(0),
+m_plugins_log_tocache(false)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -240,7 +241,7 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
         return;
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD, 0);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_LOG|GAME_CMD, 0);
 }
 
 void LogicProcessor::pluginLog(const tstring& cmd)
@@ -254,7 +255,10 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|SKIP_PLUGINS, window);
+        if (m_plugins_log_tocache)
+            m_plugins_log_cache.push_back(log);
+        else
+            processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
     }
 }
 
