@@ -4,7 +4,8 @@
 
 LogicProcessor::LogicProcessor(LogicProcessorHost *host) :
 m_pHost(host), m_connecting(false), m_connected(false),
-m_prompt_mode(OFF), m_prompt_counter(0)
+m_prompt_mode(OFF), m_prompt_counter(0),
+m_incompleted_string(NULL), m_incompleted_flags(0)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -12,6 +13,7 @@ m_prompt_mode(OFF), m_prompt_counter(0)
 
 LogicProcessor::~LogicProcessor()
 {
+    delete m_incompleted_string;
 }
 
 void LogicProcessor::processTick()
