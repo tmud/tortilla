@@ -12,7 +12,7 @@ public:
     {
         colors.assign(L"(black|red|green|brown|blue|magenta|cyan|gray|coal|light red|light green|yellow|light blue|purple|light cyan|white|light magenta|light brown|grey)");
         pcre_colors.setRegExp(colors);
-        pcre_rgb.setRegExp(L"[0-9]+,[0-9]+,[0-9]+");
+        pcre_rgb.setRegExp(L"rgb([0-9]+,[0-9]+,[0-9]+)");
         pcre_prefix.setRegExp(L"border|line|italic|b");
     }
 
@@ -30,8 +30,9 @@ public:
         std::vector<tstring> parts(size);
         for (int i=0; i<size; ++i)
         {
-            if (checkPrefix(s[i]) || checkColors(s[i]))
-                parts[i] = s[i];
+            tstring tmp(s[i]);
+            if (checkPrefix(tmp) || checkColors(&tmp))
+                parts[i] = tmp;
             else
                 return false;
         }
@@ -117,10 +118,13 @@ private:
         }
      }
 
-     bool checkColors(const tstring& str)
+     bool checkColors(tstring* str)
      {
-        pcre_rgb.find(str);
-        return (pcre_rgb.getSize() != 0) ? true : false;
+        pcre_rgb.find(*str);
+        if (pcre_rgb.getSize() == 0)
+            return false;
+        pcre_rgb.getString(1, str);
+        return true;
      }
 
      bool checkPrefix(const tstring& str)
