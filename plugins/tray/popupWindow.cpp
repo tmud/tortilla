@@ -26,7 +26,7 @@ void PopupWindow::onTick()
         float dy = m_move_dy * m_move_animation.speed * dt;
 
         float ax = abs(dx); float ay = abs(dy);
-        if (ax > 6 || ay > 6) // || (ax > 0 && ax < 1) || (ay > 0 && ay < 1))
+        if (ax > 6 || ay > 6  || (ax > 0 && ax < 1) || (ay > 0 && ay < 1))
         {
             p.x = target.x;
             p.y = target.y;

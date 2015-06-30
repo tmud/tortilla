@@ -1,0 +1,3 @@
+LIBRARY rnd
+EXPORTS 
+	luaopen_rnd

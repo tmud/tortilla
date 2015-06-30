@@ -33,7 +33,6 @@ void LogicProcessor::processNetworkData(const WCHAR* text, int text_len)
 
 void LogicProcessor::processNetworkConnect()
 {
-    tortilla::getProperties()->timers_on = 0;
     m_helper.resetTimers();
     m_connected = true;
     m_connecting = false;
@@ -317,6 +316,7 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
 
 void LogicProcessor::processNetworkError(const tstring& error)
 {
+    tortilla::getProperties()->timers_on = 0;
     m_prompt_mode = OFF;
     m_prompt_counter = 0;
     if (m_connected || m_connecting)

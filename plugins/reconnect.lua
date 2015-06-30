@@ -35,9 +35,9 @@ function reconnect.disconnect()
     local p = props.cmdPrefix()
     local cmd = p..'output Переподключение...'
     runCommand(cmd)
-	if system and system.sleep then
-		system.sleep(500)
-	end
+    if system and system.sleep then
+        system.sleep(500)
+    end
     cmd = p..'connect '..address..' '..port
     runCommand(cmd)
   end
