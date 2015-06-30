@@ -1,10 +1,13 @@
 ﻿-- autowrap
 -- Плагин для Tortilla mud client
+-- Минимальная длина 60 символов
+-- Максимальная длина задается в параметрах ( 0 - автоперенос выключен, -1 - авторасчет максимальной длины по ширине окна ).
+-- Авторасчет ширины окна приблизительный
 
--- Максимально допустимая длина строк для главного окна, 0 - выключено, минимум 60
-local autowrap_maxlen_main = 100
--- Максимально допустимая длина строк для output-окон, 0 - выключено, минимум 60
-local autowrap_maxlen_out = 100
+-- Максимально допустимая длина строк для главного окна
+local autowrap_maxlen_main = -1
+-- Максимально допустимая длина строк для output-окон
+local autowrap_maxlen_out = -1
 
 autowrap = {}
 function autowrap.name()
@@ -12,13 +15,27 @@ function autowrap.name()
 end
 
 function autowrap.description()
-return 'Плагин автопереноса длинных строк. Строки длиннее, чем заданное число символов, будут\r\n\z
-разбиты на две строки или более. Строки разбиваются по словам, если это возможно.\r\n\z
-Для главного окна максимальная длина '..autowrap_maxlen_main..' символов, для дополнительных '..autowrap_maxlen_out..' символов.\r\n\z
-Нулевое значение для длины - автоперенос выключен. Настройки максимальной длины\r\n\z
-задаются прямо в файле плагина plugins/autowrap.lua, плагин позволяет изменять ширину текста\r\n\z
-в символах в окнах клиента командой '..props.cmdPrefix()..'linewidth окно ширина. Команда не включена\r\n\z
-в автоподстановку. Она не предназначена для использования в триггерах.'
+local s = 'Плагин автопереноса длинных строк. Строки длиннее, чем заданное число символов, будут\r\nразбиты на две строки или более. Строки разбиваются по словам, если это возможно.\r\n'
+s = s..'Для главного окна сейчас '
+if not autowrap_maxlen_main or autowrap_maxlen_main == 0 then
+  s = s..'автоперенос выключен'
+elseif autowrap_maxlen_main == -1 then
+  s = s..'включен режим авторасчета максимальной длины строки'
+else
+  s = s..'задана максимальная длина '..autowrap_maxlen_main..' символов'
+end
+s = s ..'.\r\nДля дополнительных окон сейчас '
+if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then
+  s = s..'автоперенос выключен'
+elseif autowrap_maxlen_out == -1 then
+  s = s..'включен режим авторасчета максимальной длины строки'
+else
+  s = s..'задана максимальная длина '..autowrap_maxlen_out..' символов'
+end
+s = s..'.\r\n'
+s = s..'Настройки максимальной длины задаются прямо в файле плагина plugins/autowrap.lua.\r\nПлагин позволяет изменять ширину текста в символах в окнах клиента командой:\r\n'
+s = s..props.cmdPrefix()..'linewidth окно ширина. Команда не включена в автоподстановку, так как не предназначена\r\nдля использования в триггерах.'
+return s
 end
 
 function autowrap.version()
@@ -77,10 +94,19 @@ function autowrap.after(window, v)
   local maxlen
   if window == 0 then
     if not autowrap_maxlen_main or autowrap_maxlen_main == 0 then return; end
-    maxlen = autowrap_maxlen_main  
+    if autowrap_maxlen_main == -1 then
+        maxlen = getViewSize(window)
+    else
+        maxlen = autowrap_maxlen_main 
+    end
+      
   else
     if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then return; end
-    maxlen = autowrap_maxlen_out
+    if autowrap_maxlen_out == -1 then
+        maxlen = getViewSize(window)
+    else
+        maxlen = autowrap_maxlen_out
+    end
   end
   if maxlen < 60 then maxlen = 60 end
   divall(v, maxlen)

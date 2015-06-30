@@ -7,7 +7,7 @@ void LogicProcessor::processStackTick()
     if (m_incompleted_string)
     {
         DWORD timeout = m_incompleted_timeout.getDiff();
-        if (timeout >= 250)
+        if (timeout >= 150)
         {
             // печать незаершенной строки по таймауту
             parseData pd;

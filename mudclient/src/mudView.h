@@ -32,6 +32,7 @@ public:
     bool isLastString() const;
     int  getStringsCount() const;
     int  getStringsOnDisplay() const;
+    int  getSymbolsOnDisplay() const;
     MudViewString* getString(int idx) const;
     void updateProps();
 
@@ -119,6 +120,15 @@ public:
         delete m_mirror_tmp;
         delete m_view_tmp;
     }
+
+    SIZE getSizeInSymbols()
+    {
+        SIZE sz; 
+        sz.cx = m_pView->getSymbolsOnDisplay();
+        sz.cy =  m_pView->getStringsOnDisplay();
+        return sz;
+    }
+
     mudViewStrings& get() {
         m_orig_size = m_pView->m_strings.size();
         m_view_tmp->swap(m_pView->m_strings);

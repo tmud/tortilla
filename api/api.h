@@ -100,6 +100,16 @@ namespace base {
     inline void updateView(lua_State* L, int view, lua_CFunction f) {
         luaT_run(L, "updateView", "dF", view, f);
     }
+    inline bool getViewSize(lua_State* L, int view, int *width, int *height) {
+        luaT_run(L, "getViewSize", "d", view);
+        if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+        {
+            if (width) *width = lua_tointeger(L, 1);
+            if (height) *height = lua_tointeger(L, 2);
+            return true;
+        }
+        return false;
+    }
     // createWindow, createPanel, pcre -> classes below
     // log -> luaT_log
 } // namespace base

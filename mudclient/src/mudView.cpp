@@ -135,6 +135,18 @@ int MudView::getStringsOnDisplay() const
     return m_lines_count;
 }
 
+int MudView::getSymbolsOnDisplay() const
+{
+    int font_width = propElements->font_width;
+    if (font_width < 1)
+        return 0;
+    RECT rc;
+    GetClientRect(&rc);
+    int count = rc.right / font_width;
+    int dc = count / 20 + 4; // погрешность
+    return count - dc;
+}
+
 MudViewString* MudView::getString(int idx) const
 {
     return m_strings[idx];

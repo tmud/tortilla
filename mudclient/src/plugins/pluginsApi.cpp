@@ -653,6 +653,23 @@ int updateView(lua_State *L)
     }
     return pluginInvArgs(L, "updateView");
 }
+
+int getViewSize(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 0 && view <=OUTPUT_WINDOWS)
+        {
+            MudViewHandler *h = _wndMain.m_gameview.getHandler(view);
+            SIZE sz = h->getSizeInSymbols();
+            lua_pushinteger(L, sz.cx);
+            lua_pushinteger(L, sz.cy);
+            return 2;
+        }
+    }
+    return pluginInvArgs(L, "getViewSize");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -699,6 +716,7 @@ bool initPluginsSystem()
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);
+    lua_register(L, "getViewSize", getViewSize);
 
     reg_props(L);
     reg_activeobjects(L);
