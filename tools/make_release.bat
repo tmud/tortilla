@@ -1,6 +1,6 @@
 @echo off
 
-set modules=modules\system.dll modules\modules.lua
+set modules=modules\system.dll modules\modules.lua modules\rnd.dll
 set plugins=plugins\prompt.dll plugins\jmc3import.dll plugins\historyfilter.lua plugins\autowrap.lua plugins\statusbar.lua plugins\reconnect.lua plugins\colorgamecmd.lua
 set plugins2=plugins\tray.dll
 

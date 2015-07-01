@@ -94,7 +94,6 @@ bool PropertiesManager::loadProfileData()
     loadValue(sd, "disableya", 0, 1, &m_propData.disable_ya);
     loadValue(sd, "disableosc", 0, 1, &m_propData.disable_osc);
     loadValue(sd, "historytab", 0, 1, &m_propData.history_tab);
-    loadValue(sd, "timersf", 0, 1, &m_propData.timers_on);
     loadValue(sd, "plogs", 0, 1, &m_propData.plugins_logs);
     loadValue(sd, "plogswnd", 0, OUTPUT_WINDOWS, &m_propData.plugins_logs_window);
     tstring cp;
@@ -251,7 +250,6 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, "disableya", m_propData.disable_ya);
     saveValue(sd, "disableosc", m_propData.disable_osc);
     saveValue(sd, "historytab", m_propData.history_tab);
-    saveValue(sd, "timersf", m_propData.timers_on);
     saveValue(sd, "plogs", m_propData.plugins_logs);
     saveValue(sd, "plogswnd", m_propData.plugins_logs_window);
     saveString(sd, "codepage", m_propData.codepage);
