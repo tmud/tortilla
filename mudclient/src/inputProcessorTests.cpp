@@ -133,7 +133,7 @@ void InputCommandTemplateUnitTest::run()
     assert( test1(L"#bbb '{};fff;\"aaa\"'", 1, L"#bbb '{};fff;\"aaa\"'") );
 
     InputCommands t0;
-    t0.push_back(makecmd(false, L" ", L"", L"", 0));
+    t0.push_back(makecmd(false, L" ", L"", L" ", 0));
     assert(test2(L" ", 0, &t0));
 
     InputCommands t1;

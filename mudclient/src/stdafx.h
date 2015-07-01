@@ -39,6 +39,7 @@
 #include <string>
 #include <algorithm>
 #include <set>
+#include <deque>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;

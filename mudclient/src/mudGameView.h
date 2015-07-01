@@ -640,8 +640,8 @@ private:
                 if (last_char != L'\r' && last_char != L'\n')
                 {
                     int last_cmd = cmds.size() - 1;
-                    m_bar.setText(cmds[last_cmd]);
-                    cmds.erase(last_cmd);                    
+                    m_bar.setText(cmds[last_cmd], -1, false);
+                    cmds.erase(last_cmd);
                 }
             }
         }

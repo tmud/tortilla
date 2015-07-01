@@ -141,6 +141,7 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
                 cmd->parameters.append(t.substr(from));
             else {
             pos = t.find(L" ", from);
+            from = 0; //не обрезаем ведущие пробелы для игровых команд
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
