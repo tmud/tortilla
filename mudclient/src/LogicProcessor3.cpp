@@ -106,6 +106,9 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
             ps[i]->system = true;
     }
 
+    if (flags & GAME_LOG)
+        parse_data.update_prev_string = false;
+
 #ifdef MARKERS_IN_VIEW       // для отладки
     parseDataStrings &p = parse_data.strings;
     MARKPROMPTUNDERLINE(p);  // метка на prompt
@@ -144,19 +147,24 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     }
 #endif
 
-    if (flags & GAME_LOG)
-        parse_data.update_prev_string = false;
-
     // accumulate last string in one
     if (window == 0 && m_incompleted_string)
     {
         MudViewString *s = m_incompleted_string;
         m_incompleted_string = NULL;
-        MudViewString *string = parse_data.strings[0];
-        s->moveBlocks(string);
-        delete string;
-        parse_data.strings[0] = s;
-        parse_data.update_prev_string = false;
+        if (flags & (GAME_LOG | GAME_CMD))
+        {
+            parseDataStrings &pds = parse_data.strings;
+            pds.insert(pds.begin(), s);
+        }
+        else
+        {
+            MudViewString *string = parse_data.strings[0];
+            s->moveBlocks(string);
+            delete string;
+            parse_data.strings[0] = s;
+            parse_data.update_prev_string = false;
+        }
     }
     else
         m_pHost->accLastString(window, &parse_data);

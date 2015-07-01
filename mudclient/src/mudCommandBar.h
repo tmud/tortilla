@@ -272,13 +272,16 @@ private:
             onTab();
         else if (key == 'Z')
         {
-            if (GetKeyState(VK_CONTROL) < 0 && !m_undo.empty())
+            if (checkKeysState(false, true, false))
             {
+                if (!m_undo.empty()) {
                 int last = m_undo.size() - 1;
                 undo_data u = m_undo[last];
                 m_undo.pop_back();
                 setText(u.text, u.cursor, false);
+                }
             }
+            else { return FALSE; }
         }
         else  { return FALSE; }
         return TRUE;
