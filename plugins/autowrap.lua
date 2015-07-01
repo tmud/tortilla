@@ -2,7 +2,7 @@
 -- Плагин для Tortilla mud client
 -- Минимальная длина 60 символов
 -- Максимальная длина задается в параметрах ( 0 - автоперенос выключен, -1 - авторасчет максимальной длины по ширине окна ).
--- Авторасчет ширины окна приблизительный
+-- Авторасчет ширины окна приблизительный (различная ширина букв).
 
 -- Максимально допустимая длина строк для главного окна
 local autowrap_maxlen_main = -1
@@ -12,6 +12,10 @@ local autowrap_maxlen_out = -1
 autowrap = {}
 function autowrap.name()
   return 'Автоперенос строк'
+end
+
+function autowrap.version()
+  return '1.02'
 end
 
 function autowrap.description()
@@ -36,10 +40,6 @@ s = s..'.\r\n'
 s = s..'Настройки максимальной длины задаются прямо в файле плагина plugins/autowrap.lua.\r\nПлагин позволяет изменять ширину текста в символах в окнах клиента командой:\r\n'
 s = s..props.cmdPrefix()..'linewidth окно ширина. Команда не включена в автоподстановку, так как не предназначена\r\nдля использования в триггерах.'
 return s
-end
-
-function autowrap.version()
-  return '-'
 end
 
 local function div(v, maxlen)

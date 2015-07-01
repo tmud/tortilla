@@ -670,6 +670,26 @@ int getViewSize(lua_State *L)
     }
     return pluginInvArgs(L, "getViewSize");
 }
+
+int flashParent(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        HWND alarmWnd = _wndMain;
+        if (::IsWindow(alarmWnd))
+        {
+            FLASHWINFO fw;
+            fw.cbSize = sizeof(FLASHWINFO);
+            fw.hwnd = alarmWnd;
+            fw.uCount = 5;
+            fw.dwFlags = FLASHW_ALL;
+            fw.dwTimeout = 0;
+            ::FlashWindowEx(&fw);
+        }
+        return 0;
+    }
+    return pluginInvArgs(L, "flashParent");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -717,6 +737,7 @@ bool initPluginsSystem()
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);
     lua_register(L, "getViewSize", getViewSize);
+    lua_register(L, "flashParent", flashParent);
 
     reg_props(L);
     reg_activeobjects(L);

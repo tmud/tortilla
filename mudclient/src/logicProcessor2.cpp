@@ -666,8 +666,8 @@ IMPL(disconnect)
             tmcLog(L"Нет подключения.");
             return;
         }
-        m_pHost->disconnectFromNetwork();
         processNetworkError(L"Соединение завершено.");
+        m_pHost->disconnectFromNetwork();
         return;
     }
     p->invalidargs();

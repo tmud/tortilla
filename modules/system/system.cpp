@@ -112,13 +112,13 @@ int system_dbglog(lua_State *L)
     {
         formatByType(L, i, &msg);
     }
-    OutputDebugString(TU2W(msg.c_str()));    
+    OutputDebugString(TU2W(msg.c_str()));
     return 0;
 }
 
 int system_sleep(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TNUMBER))   
+    if (luaT_check(L, 1, LUA_TNUMBER))
     {
         int wait = lua_tointeger(L, 1);
         if (wait > 0)
