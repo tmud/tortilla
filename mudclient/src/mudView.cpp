@@ -502,6 +502,10 @@ void MudView::stopDraging()
         return;
     ReleaseCapture();
 
+    if (drag_end == -1 && drag_begin >= 0) { drag_end = 0; drag_right = 0; }
+    if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t;
+    t = drag_left; drag_left = drag_right; drag_right = t; }
+
     tstring text, tmp;
     if (drag_begin == drag_end)
     {
@@ -519,7 +523,7 @@ void MudView::stopDraging()
         {
             if (drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
             text.assign ( tmp.substr(drag_left, drag_right - drag_left + 1) );
-        }        
+        }
     }
     else
     {
@@ -528,7 +532,7 @@ void MudView::stopDraging()
         // begin line
         m_strings[drag_begin]->getText(&tmp);
         if (drag_begin < drag_end)
-        {            
+        {
             int left = drag_left;
             if (left == -1) { text.append(tmp); }
             else { 
@@ -544,7 +548,7 @@ void MudView::stopDraging()
             else { text.append(tmp.substr(left)); }
         }
         text.append(eol);
-            
+
         // middle lines
         for (int i = drag_begin+1; i < drag_end; ++i)
         {
@@ -556,7 +560,7 @@ void MudView::stopDraging()
         // endline
         m_strings[drag_end]->getText(&tmp);
         if (drag_begin < drag_end)
-        {            
+        {
             int right = drag_right;
             if (right == -1) { text.append(tmp); }
             else { text.append(tmp.substr(0, right+1)); }
@@ -567,28 +571,6 @@ void MudView::stopDraging()
             if (right == -1) { text.append(tmp); }
             else { text.append(tmp.substr(right+1)); }
         }
-
-/*
-         if (index == drag_begin) {
-                    if (left == -1) left = 0;
-                    right = last;
-                } else {
-                    if (right == -1) right = last;
-                    left = 0;
-                }
-            }
-            else // drag_begin > drag_end  снизу вверх
-            {
-                if (index == drag_begin) {
-                    if (left == -1) { right = last; }
-                    else { right = left; }
-                    left = 0;
-                } else {
-                    if (right == -1) { left = 0; }
-                    else { left = right; }
-                    right = last;
-                }
-                */
     }
 
     sendToClipboard(m_hWnd, text);
@@ -654,19 +636,6 @@ bool MudView::checkDragging(int line, bool incborder)
     return false;
 }
 
-/*bool MudView::checkDraggingSym(int line)
-{
-    return false; //todo
-
-    if (drag_begin < 0)
-        return false;
-    if (drag_begin != drag_end)
-        return false;
-    if (drag_begin != line)
-        return false;
-    return true;
-}*/
-
 POINT MudView::getCursor() const
 {
     POINT pt; GetCursorPos(&pt);
@@ -690,16 +659,6 @@ bool MudView::isDragCursorLeft() const
     int dx = m_dragpos.x - m_dragpt.x;
     return (dx < 0) ? true : false;
 }
-
-/*bool MudView::isDragCursorRight() const
-{
-    return (!isDragCursorLeft());
-}
-
-bool MudView::isDragCursorInside() const
-{
-    return (m_dragpos.x < 0) ? false : true;
-}*/
 
 int MudView::calcDragSym(int x, dragline type) const
 {

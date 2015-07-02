@@ -61,7 +61,7 @@ private:
     LRESULT OnLButtonDown(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         bool shift = (GetKeyState(VK_SHIFT) < 0) ? true : false;
-       //todo if (shift)
+        if (shift)
             startDraging();
         return 0;
     }
@@ -86,17 +86,13 @@ private:
     void mouseWheel(WORD position);
     void checkLimit();
     void deleteBeginStrings(int count_from_begin);
-
     void startDraging();
     void stopDraging();
     void doDraging();
     bool checkDragging(int line, bool incborder);
-    //bool checkDraggingSym(int line);
     POINT getCursor() const;
     int   getCursorLine(int y) const;
     bool  isDragCursorLeft() const;
-    //bool  isDragCursorRight() const;
-    //bool  isDragCursorInside() const;
     enum dragline { BEGINLINE = 0, ENDLINE };
     int   calcDragSym(int x, dragline type) const;
     void  calcDragLine(int line, dragline type);
