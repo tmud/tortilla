@@ -36,6 +36,7 @@ v0.98
 - Теперь параметры команды #hide не попадут в логи и на экран клиента даже через показ выполняемых системных команд.
 - В api клиента добавлены функции updateView, flashWindow, getViewSize; viewdata.getBlockPos, viewdata.setNext(setPrev,isNext,isPrev), 
 string.strall, string.strstr.
+- Добавлен модуль rnd для генерации случайных целых чисел, вещественных чисел и строк.
 
 v0.97
 Исправлены ошибки:

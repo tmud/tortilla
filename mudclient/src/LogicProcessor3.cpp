@@ -11,12 +11,12 @@ void LogicProcessor::processStackTick()
         {
             // печать незаершенной строки по таймауту
             parseData pd;
-
+#ifdef _DEBUG
             //todo debug
             std::vector<MudViewStringBlock> &b = m_incompleted_string->blocks;
             for (int i=0,e=b.size(); i<e; ++i)
                 b[i].params.blink_status = 1;
-
+#endif
             pd.strings.push_back(m_incompleted_string);
             m_incompleted_string = NULL;
             printParseData(pd, m_incompleted_flags|SKIP_SUBS, 0);

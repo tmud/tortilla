@@ -54,20 +54,14 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
        return true;
 #endif
 
-    u8string log("step1: ");   //debug
-    log.append(msg);
-    sendLog(log.c_str());
-
     if (!from_queue)
     {
         if (isHeightLimited()) {
-            sendLog("push1");  //debug
             m_queue.push_back(msg);
             return true;
         }
         if (!m_queue.empty())
         {
-            sendLog("push2");  //debug
             m_queue.push_back(msg);
             tryShowQueue();
             return true;
@@ -116,7 +110,7 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
     if (!m_activated)
       startTimer();
 
-    sprintf(buffer, "show: %d, %d, %d, %d", rb.x, rb.y, sz.cx, sz.cy);
+    sprintf(buffer, "show: %d, %d, %d, %d", rb.x, rb.y, sz.cx, sz.cy);    
     sendLog(buffer); //debug
 
    return true;

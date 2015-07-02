@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "popupWindow.h"
 void sendLog(const utf8* msg); //debug
+extern char buffer[]; //debug
 
 void PopupWindow::onCreate()
 {
@@ -71,13 +72,9 @@ void PopupWindow::onTick()
     float da = static_cast<float>(dt) * m_animation.speed;
     if (m_animation_state == ANIMATION_TOEND)
     {
-        alpha = min(alpha+da, 255);
-        if (alpha > 255)
-        {
-            sendLog("error: a > 255");
-        }
+        alpha = min(alpha+da, 255.0f);
         setAlpha(alpha);
-        if (alpha == 255)
+        if (alpha == 255.0f)
         {
             setState(ANIMATION_WAIT);
             sendNotify(STARTANIMATION_FINISHED);
@@ -85,13 +82,9 @@ void PopupWindow::onTick()
     }
     if (m_animation_state == ANIMATION_TOSTART)
     {
-        alpha = max(alpha-da, 0);
-        if (alpha < 0)
-        {
-            sendLog("error: a < 0");
-        }
+        alpha = max(alpha-da, 0.0f);
         setAlpha(alpha);
-        if (alpha == 0)
+        if (alpha == 0.0f)
             setState(ANIMATION_NONE);
     }
 }
@@ -121,7 +114,10 @@ void PopupWindow::setState(int newstate)
     {
         const SIZE &sz = getSize();
         RECT pos = { a.pos.x, a.pos.y, a.pos.x + sz.cx, a.pos.y + sz.cy };
-        MoveWindow(&pos);
+        if (!MoveWindow(&pos)) { //debug
+            sprintf(buffer, "error: MoveWindow, code: %d", GetLastError());
+            sendLog(buffer);
+        }
         ShowWindow(SW_SHOWNOACTIVATE);
     }
     break;

@@ -39,6 +39,7 @@ int system_messagebox(lua_State *L)
         else if (strstr(b.c_str(), "info")) buttons |= MB_ICONINFORMATION;
         else if (strstr(b.c_str(), "information")) buttons |= MB_ICONINFORMATION;
         else if (strstr(b.c_str(), "warning")) buttons |= MB_ICONWARNING;
+        else if (strstr(b.c_str(), "question")) buttons |= MB_ICONQUESTION;
 
         params_ok = true;
     }
