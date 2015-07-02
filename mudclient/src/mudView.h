@@ -94,11 +94,11 @@ private:
     //bool checkDraggingSym(int line);
     POINT getCursor() const;
     int   getCursorLine(int y) const;
-    enum dragline { BEGINLINE = 0, ENDLINE };
-    int   getCursorSym(int x, dragline type) const;
     bool  isDragCursorLeft() const;
-    bool  isDragCursorRight() const;
-    bool  isDragCursorInside() const;
+    //bool  isDragCursorRight() const;
+    //bool  isDragCursorInside() const;
+    enum dragline { BEGINLINE = 0, ENDLINE };
+    int   calcDragSym(int x, dragline type) const;
     void  calcDragLine(int line, dragline type);
     void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
 };
