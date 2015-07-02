@@ -146,13 +146,14 @@ class CStartupWorldDlg : public CDialogImpl<CStartupWorldDlg>
 {
     CListBox m_list;
     CButton  m_show_about;
-    CButton  m_ok;
+    CButton  m_ok, m_cancel;
     std::vector<tstring> m_data;
     int  m_selected_item;
     bool m_show_about_state;
+    bool m_default_button;
 
 public:
-    CStartupWorldDlg() : m_selected_item(-1), m_show_about_state(true) {}
+    CStartupWorldDlg() : m_selected_item(-1), m_show_about_state(true), m_default_button(false) {}
     enum { IDD = IDD_STARTUP_WORLD };
     void setList(const std::vector<tstring>& list)
     {
@@ -177,6 +178,7 @@ private:
         m_list.Attach(GetDlgItem(IDC_LIST_STARTUP_WORLD));
         m_show_about.Attach(GetDlgItem(IDC_CHECK_OPEN_ABOUT));
         m_ok.Attach(GetDlgItem(IDOK));
+        m_cancel.Attach(GetDlgItem(IDCANCEL));
         for (int i=0,e=m_data.size();i<e;++i)
             m_list.AddString(m_data[i].c_str());
         m_show_about.SetCheck(BST_CHECKED);
@@ -203,6 +205,14 @@ private:
     {
         int item = m_list.GetCurSel();
         m_ok.EnableWindow(item == -1 ? FALSE : TRUE);
+        if (item != -1 && !m_default_button)
+        {
+            m_default_button = true;
+            UINT style = m_cancel.GetButtonStyle();
+            style &= BS_DEFPUSHBUTTON ^ 0xFFFFFFFF;
+            m_cancel.SetButtonStyle(style);
+            m_ok.SetButtonStyle(BS_DEFPUSHBUTTON);
+        }
         return 0;
     }
 };
