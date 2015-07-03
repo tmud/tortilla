@@ -192,9 +192,10 @@ PopupWindow* TrayMainObject::getFreeWindow()
     }
 
    PopupWindow *wnd = new PopupWindow(&m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
+   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOPARENTNOTIFY);
    if (!wnd->IsWindow())
    {
+       sendLog("error: window not created"); // debug
        delete wnd;
        return NULL;
    }

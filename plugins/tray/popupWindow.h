@@ -56,7 +56,7 @@ class PopupWindow : public CWindowImpl<PopupWindow>
 
 public:
     enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
-    enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED, STARTANIMATION_FINISHED };
+    enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED, STARTANIMATION_FINISHED, CLICK_EVENT };
     DECLARE_WND_CLASS(NULL)
     PopupWindow(CFont *font) : m_font(font),
         m_animation_state(ANIMATION_NONE),
@@ -84,7 +84,6 @@ public:
     void onTick();
 
 private:
-    void onCreate();
     void onTimer();
     void onPaint(HDC dc);
     void setState(int newstate);
@@ -94,14 +93,12 @@ private:
     void sendNotify(int state);
 private:
     BEGIN_MSG_MAP(PopupWindow)
-        MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
     END_MSG_MAP()
 
-    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&) { return 1;  }
     LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&) 
     {

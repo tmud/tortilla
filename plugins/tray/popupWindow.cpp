@@ -3,14 +3,6 @@
 void sendLog(const utf8* msg); //debug
 extern char buffer[]; //debug
 
-void PopupWindow::onCreate()
-{
-    long l = GetWindowLong(GWL_EXSTYLE);
-    l |= WS_EX_LAYERED;
-    SetWindowLong(GWL_EXSTYLE, l);
-    setAlpha(0);
-}
-
 void PopupWindow::onTick()
 {
     DWORD dt = m_ticker.getDiff();
@@ -118,11 +110,12 @@ void PopupWindow::setState(int newstate)
             sprintf(buffer, "error: MoveWindow, code: %d", GetLastError());
             sendLog(buffer);
         }
+        setAlpha(0);
         ShowWindow(SW_SHOWNOACTIVATE);
     }
     break;
     case ANIMATION_NONE:
-        setAlpha(0);
+
         ShowWindow(SW_HIDE);
         wait_timer = 0;
         alpha = 0;
@@ -160,11 +153,12 @@ void PopupWindow::onPaint(HDC dc)
     pdc.LineTo(rc.right-1, rc.bottom-1);
     pdc.LineTo(rc.left+1, rc.bottom-1);
     pdc.LineTo(rc.left+1, rc.top);
+    pdc.SelectPen(old);
 }
 
 void PopupWindow::setAlpha(float a)
 {
-    int va = static_cast<int>(a);
+    BYTE va = static_cast<BYTE>(a);
     if (!SetLayeredWindowAttributes(m_hWnd, 0, va, LWA_ALPHA))
     {
         DWORD error = GetLastError(); //debug
@@ -177,6 +171,7 @@ void PopupWindow::setAlpha(float a)
 void PopupWindow::onClickButton()
 {
     setState(ANIMATION_TOSTART);
+    sendNotify(CLICK_EVENT);
 }
 
 void PopupWindow::sendNotify(int state)

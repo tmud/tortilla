@@ -47,6 +47,11 @@ private:
             onFinishedMoveAnimation(w);
         if (lparam == PopupWindow::STARTANIMATION_FINISHED)
             onFinishedStartAnimation(w);
+        if (lparam == PopupWindow::CLICK_EVENT)
+        {
+            if (::IsWindow(m_alarmWnd))
+                ::SetFocus(m_alarmWnd);
+        }
         return 0; 
     }
     void startTimer();
