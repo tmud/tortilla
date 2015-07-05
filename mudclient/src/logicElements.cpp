@@ -47,7 +47,7 @@ bool CompareData::cut(CompareRange& range)
         range.begin = cutpos(range.begin, 0);
         range.end = cutpos(range.end, 1);
         return true;
-    }   
+    }
     return false;
 }
 
@@ -140,7 +140,7 @@ bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
         return false;
     AliasParameters ap(cmd);
     m_cmds.makeCommands(newcmds, &ap);
-    
+
     const tstring& alias = cmd->alias.empty() ? cmd->srccmd : cmd->alias;
     for (int i=0,e=newcmds->size();i<e;++i)
         newcmds->operator[](i)->alias.assign(alias);
@@ -174,7 +174,7 @@ public:
 
 Action::Action(const property_value& v, const InputTemplateParameters& p)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, true);
     InputPlainCommands plain(v.value);
     m_cmds.init(plain, p);
     m_cmds.makeTemplates();
@@ -196,7 +196,7 @@ bool Action::processing(CompareData& data, InputCommands* newcmds)
 
 Sub::Sub(const property_value& v) : m_value(v.value)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
 }
 
 bool Sub::processing(CompareData& data)
@@ -235,7 +235,7 @@ bool Sub::processing(CompareData& data)
 
 AntiSub::AntiSub(const property_value& v)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
 }
 
 bool AntiSub::processing(CompareData& data)
@@ -257,7 +257,7 @@ bool AntiSub::processing(CompareData& data)
 
 Gag::Gag(const property_value& v)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
 }
 
 bool Gag::processing(CompareData& data)
@@ -286,7 +286,7 @@ bool Gag::processing(CompareData& data)
 
 Highlight::Highlight(const property_value& v)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
     m_hl.convertFromString(v.value);
 }
 
@@ -319,7 +319,7 @@ void Timer::init(const property_value& v, const InputTemplateParameters& p)
     id.assign(v.key);
     PropertiesTimer pt;
     pt.convertFromString(v.value);
-    
+
     InputPlainCommands plain(pt.cmd);
     m_cmds.init(plain, p);
     m_cmds.makeTemplates();

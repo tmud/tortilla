@@ -7,19 +7,21 @@ void LogicProcessor::processStackTick()
     if (m_incompleted_string)
     {
         DWORD timeout = m_incompleted_timeout.getDiff();
-        if (timeout >= 250)
+        if (timeout >= 150)
         {
-            // печать незаершенной строки по таймауту
-            parseData pd;
+            if (m_helper.processIncomplStr(m_incompleted_string))
+            {
 #ifdef _DEBUG
-            //todo debug
-            std::vector<MudViewStringBlock> &b = m_incompleted_string->blocks;
-            for (int i=0,e=b.size(); i<e; ++i)
-                b[i].params.blink_status = 1;
+                //todo debug
+                std::vector<MudViewStringBlock> &b = m_incompleted_string->blocks;
+                for (int i = 0, e = b.size(); i < e; ++i)
+                    b[i].params.blink_status = 1;
 #endif
-            pd.strings.push_back(m_incompleted_string);
-            m_incompleted_string = NULL;
-            printParseData(pd, m_incompleted_flags|SKIP_SUBS, 0);
+                parseData pd;
+                pd.strings.push_back(m_incompleted_string);
+                m_incompleted_string = NULL;
+                printParseData(pd, m_incompleted_flags|INCOMPLETED_STRING, 0);
+            }
         }
     }
 

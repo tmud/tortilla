@@ -18,7 +18,7 @@ public:
     MudViewString *string;
     tstring fullstr;
     int  start;
-private:    
+private:
     int  cutpos(int pos, int d);
     int  findpos(int pos, int d);
 };
@@ -48,6 +48,12 @@ class Action
 public:
     Action(const property_value& v, const InputTemplateParameters& p);
     bool processing(CompareData& data, InputCommands* newcmds);
+    bool checkNotCompleted(CompareData &data)
+    {
+        if (m_compare.isFullstrNotReq())
+            return m_compare.compare(data.fullstr);
+        return false;        
+    }
 private:
     CompareObject m_compare;
     InputTemplateCommands m_cmds;

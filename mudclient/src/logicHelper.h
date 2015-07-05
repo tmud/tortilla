@@ -128,6 +128,7 @@ public:
     void processHighlights(parseData *parse_data);
     void processTimers(InputCommands* newcmds);
     void resetTimers();
+    bool processIncomplStr(MudViewString *s);
     
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
@@ -230,7 +231,7 @@ public:
         {
             propData->messages.initDefault(newstate);
             return true;
-        }        
+        }
         setState(stateid, newstate);
         return true;
     }

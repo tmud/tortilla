@@ -120,6 +120,16 @@ void LogicHelper::resetTimers()
     m_ticker.sync();
 }
 
+bool LogicHelper::processIncomplStr(MudViewString *s)
+{
+    CompareData cd(s);
+    for (int i=0, e=m_actions.size(); i<e; ++i) {
+      if (m_actions[i]->checkNotCompleted(cd))
+          return true;
+    }
+    return false;
+}
+
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 {
      m_if_regexp.find(param);
