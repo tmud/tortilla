@@ -71,7 +71,7 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
     PopupWindow *w = getFreeWindow();
     if (!w)
     {
-        sendLog("out of windows"); //debug
+        sendLog("window not created"); //debug
         return false;
     }
 
@@ -183,19 +183,16 @@ void TrayMainObject::tryShowQueue()
 
 PopupWindow* TrayMainObject::getFreeWindow()
 {
-    if (!m_free_windows.empty())
-    {
-        int last = m_free_windows.size() - 1;
-        PopupWindow *wnd = m_free_windows[last];
-        m_free_windows.pop_back();
-        return wnd;
-    }
-
-   PopupWindow *wnd = new PopupWindow(&m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOPARENTNOTIFY);
-   if (!wnd->IsWindow())
+   if (!m_free_windows.empty())
    {
-       sendLog("error: window not created"); // debug
+       int last = m_free_windows.size() - 1;
+       PopupWindow *wnd = m_free_windows[last];
+       m_free_windows.pop_back();
+       return wnd;
+   }
+   PopupWindow *wnd = new PopupWindow();
+   if (!wnd->create(&m_font))
+   {
        delete wnd;
        return NULL;
    }

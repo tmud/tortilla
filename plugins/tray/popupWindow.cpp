@@ -104,19 +104,27 @@ void PopupWindow::setState(int newstate)
     {
     case ANIMATION_TOEND:
     {
-        const SIZE &sz = getSize();
-        RECT pos = { a.pos.x, a.pos.y, a.pos.x + sz.cx, a.pos.y + sz.cy };
-        if (!MoveWindow(&pos)) { //debug
-            sprintf(buffer, "error: MoveWindow, code: %d", GetLastError());
-            sendLog(buffer);
-        }
-        setAlpha(0);
+        fillDC();
+
+        BLENDFUNCTION blend;
+        blend.BlendOp = AC_SRC_OVER;
+        blend.BlendFlags = 0;
+        blend.AlphaFormat = 0;
+        blend.SourceConstantAlpha = 0;
+
+        CWindow dw(GetDesktopWindow());
+        CDC dstdc(dw.GetDC());
+        POINT dstpt = {a.pos.x, a.pos.y};        
+        SIZE sz = getSize();
+        POINT srcpt = {0,0};
+        UpdateLayeredWindow(m_hWnd, (HDC)dstdc, &dstpt, &sz, m_src_dc, &srcpt, 0, &blend, ULW_ALPHA);
         ShowWindow(SW_SHOWNOACTIVATE);
     }
     break;
     case ANIMATION_NONE:
 
         ShowWindow(SW_HIDE);
+        m_src_dc.destroy();
         wait_timer = 0;
         alpha = 0;
         sendNotify(ANIMATION_FINISHED);
@@ -127,17 +135,21 @@ void PopupWindow::setState(int newstate)
 
 void PopupWindow::calcDCSize()
 {
+    assert(m_font);
     CDC dc(GetDC());
     HFONT oldfont = dc.SelectFont(*m_font);
     GetTextExtentPoint32(dc, m_text.c_str(), m_text.length(), &m_dc_size);
     dc.SelectFont(oldfont);
 }
 
-void PopupWindow::onPaint(HDC dc)
+void PopupWindow::fillDC()
 {
-    CDCHandle pdc(dc);
-    RECT rc;
-    GetClientRect(&rc);
+    assert(m_font);
+    SIZE sz = getSize();
+    CDC m_wnd_dc(GetDC());
+    m_src_dc.create(m_wnd_dc, sz);
+    CDCHandle pdc(m_src_dc);
+    RECT rc = { 0, 0, sz.cx, sz.cy};
     pdc.FillSolidRect(&rc, m_animation.bkgnd_color);
     HFONT old_font = pdc.SelectFont(*m_font);
     pdc.SetBkColor(m_animation.bkgnd_color);
@@ -159,13 +171,12 @@ void PopupWindow::onPaint(HDC dc)
 void PopupWindow::setAlpha(float a)
 {
     BYTE va = static_cast<BYTE>(a);
-    if (!SetLayeredWindowAttributes(m_hWnd, 0, va, LWA_ALPHA))
-    {
-        DWORD error = GetLastError(); //debug
-        char buffer[128];
-        sprintf(buffer, "SLWA error %d,%f", error, a);
-        sendLog(buffer);
-    }
+    BLENDFUNCTION blend;
+    blend.BlendOp = AC_SRC_OVER;
+    blend.BlendFlags = 0;
+    blend.AlphaFormat = 0;
+    blend.SourceConstantAlpha = va;
+    UpdateLayeredWindow(m_hWnd, NULL, NULL, NULL, NULL, NULL,  NULL, &blend, ULW_ALPHA);
 }
 
 void PopupWindow::onClickButton()

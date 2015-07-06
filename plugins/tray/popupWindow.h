@@ -39,11 +39,41 @@ struct MoveAnimation
      float speed;
 };
 
+class TempDC 
+{
+public:
+    TempDC() : m_old_bitmap(NULL) {}
+    ~TempDC() { clear(); }
+    void create(HDC dc, SIZE sz)
+    {
+        clear();
+        m_temp_dc.CreateCompatibleDC(dc);
+        m_temp_bitmap.CreateCompatibleBitmap(dc, sz.cx, sz.cy);
+        m_old_bitmap = m_temp_dc.SelectBitmap(m_temp_bitmap);
+    }
+    void destroy() { clear(); }
+    operator HDC() const { return m_temp_dc; }
+
+private:
+    void clear() {
+        if (m_temp_bitmap != NULL) {
+        m_temp_dc.SelectBitmap(m_old_bitmap);
+        m_temp_bitmap.DeleteObject();
+        m_temp_dc.DeleteDC();
+        }
+        m_temp_bitmap= NULL;
+    }
+    CDC m_temp_dc;
+    CBitmap m_temp_bitmap;
+    HBITMAP m_old_bitmap;
+};
+
 class PopupWindow : public CWindowImpl<PopupWindow>
 {
     CFont *m_font;
     std::wstring m_text;
     CSize m_dc_size;
+    TempDC m_src_dc;
 
     Animation m_animation;
     MoveAnimation m_move_animation;
@@ -58,11 +88,22 @@ public:
     enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
     enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED, STARTANIMATION_FINISHED, CLICK_EVENT };
     DECLARE_WND_CLASS(NULL)
-    PopupWindow(CFont *font) : m_font(font),
+    PopupWindow() : m_font(NULL),
         m_animation_state(ANIMATION_NONE),
         wait_timer(0), alpha(0), m_move_dx(0), m_move_dy(0)
     {
     }
+    ~PopupWindow() {
+        if (IsWindow()) DestroyWindow(); 
+    }
+
+    bool create(CFont *font)
+    {
+        m_font = font;
+        Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED/*|WS_EX_NOPARENTNOTIFY*/);
+        return (IsWindow()) ? true : false;    
+    }
+
     void setText(const u8string& text)
     {
         m_text.assign( TU2W(text.c_str()) );
@@ -85,7 +126,7 @@ public:
 
 private:
     void onTimer();
-    void onPaint(HDC dc);
+    void fillDC();
     void setState(int newstate);
     void calcDCSize();
     void setAlpha(float a);
@@ -93,18 +134,8 @@ private:
     void sendNotify(int state);
 private:
     BEGIN_MSG_MAP(PopupWindow)
-        MESSAGE_HANDLER(WM_PAINT, OnPaint)
-        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
     END_MSG_MAP()
-
-    LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&) { return 1;  }
-    LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&) 
-    {
-        CPaintDC dc(m_hWnd);
-        onPaint(dc);
-        return 0;
-    }
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&) { onClickButton(); return 0;  }
 };
