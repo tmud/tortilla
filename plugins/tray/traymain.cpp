@@ -45,8 +45,6 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
- char buffer[1024]; //debug
-
 bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 {
 #ifndef _DEBUG
@@ -109,10 +107,6 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
     w->startAnimation(a);
     if (!m_activated)
       startTimer();
-
-    sprintf(buffer, "show: %d, %d, %d, %d", rb.x, rb.y, sz.cx, sz.cy);    
-    sendLog(buffer); //debug
-
    return true;
 }
 
