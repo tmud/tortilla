@@ -126,7 +126,7 @@ public:
 
 private:
     void onTimer();
-    void fillDC();
+    void fillSrcDC();
     void setState(int newstate);
     void calcDCSize();
     void setAlpha(float a);

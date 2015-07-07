@@ -83,9 +83,6 @@ void PopupWindow::onTick()
 
 void PopupWindow::startAnimation(const Animation& a)
 {
-    m_animation = a;
-    setState(ANIMATION_TOEND);
-
     const POINT &rb = a.pos;
     SIZE sz = getSize();
 
@@ -93,6 +90,8 @@ void PopupWindow::startAnimation(const Animation& a)
     sprintf(buffer, "show: %d, %d, %d, %d, %p", rb.x, rb.y, sz.cx, sz.cy, this);
     sendLog(buffer); //debug
 
+    m_animation = a;
+    setState(ANIMATION_TOEND);
 }
 
 void PopupWindow::startMoveAnimation(const MoveAnimation& a)
@@ -134,7 +133,7 @@ void PopupWindow::setState(int newstate)
     {
     case ANIMATION_TOEND:
     {
-        fillDC();
+        fillSrcDC();
 
         BLENDFUNCTION blend;
         blend.BlendOp = AC_SRC_OVER;
@@ -177,7 +176,7 @@ void PopupWindow::calcDCSize()
     dc.SelectFont(oldfont);
 }
 
-void PopupWindow::fillDC()
+void PopupWindow::fillSrcDC()
 {
     assert(m_font);
     SIZE sz = getSize();
@@ -223,12 +222,16 @@ void PopupWindow::setAlpha(float a)
     blend.BlendFlags = 0;
     blend.AlphaFormat = 0;
     blend.SourceConstantAlpha = va;
-    if (!UpdateLayeredWindow(m_hWnd, NULL, NULL, NULL, NULL, NULL,  NULL, &blend, ULW_ALPHA))
+    if (!UpdateLayeredWindow(m_hWnd, NULL, NULL, NULL, NULL, NULL, 0, &blend, ULW_ALPHA))
     {
         DWORD lasterr = GetLastError();
         char buffer[128];
         sprintf(buffer, "ULW2 error: %d, %p", lasterr, this);
         sendLog(buffer);
+    }
+    else
+    {
+        UpdateWindow();
     }
 }
 

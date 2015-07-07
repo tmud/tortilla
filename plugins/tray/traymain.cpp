@@ -20,7 +20,7 @@ TrayMainObject::~TrayMainObject()
 
 void TrayMainObject::create()
 {
-    Create(NULL, NULL, NULL, WS_POPUP);
+    Create(HWND_MESSAGE);
 }
 
 void TrayMainObject::setFont(HFONT font)
