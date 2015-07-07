@@ -100,7 +100,7 @@ public:
     bool create(CFont *font)
     {
         m_font = font;
-        Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED/*|WS_EX_NOPARENTNOTIFY*/);
+        Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE);
         return (IsWindow()) ? true : false;    
     }
 

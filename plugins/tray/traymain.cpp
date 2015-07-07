@@ -69,7 +69,7 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
     PopupWindow *w = getFreeWindow();
     if (!w)
     {
-        sendLog("window not created"); //debug
+        //sendLog("window not created"); //debug
         return false;
     }
 

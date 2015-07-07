@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "popupWindow.h"
 void sendLog(const utf8* msg); //debug
-extern char buffer[]; //debug
 
 void PopupWindow::onTick()
 {
@@ -86,9 +85,10 @@ void PopupWindow::startAnimation(const Animation& a)
     const POINT &rb = a.pos;
     SIZE sz = getSize();
 
-    char buffer[128];
+    /*char buffer[128];
     sprintf(buffer, "show: %d, %d, %d, %d, %p", rb.x, rb.y, sz.cx, sz.cy, this);
     sendLog(buffer); //debug
+    */
 
     m_animation = a;
     setState(ANIMATION_TOEND);
@@ -108,7 +108,7 @@ void PopupWindow::setState(int newstate)
     const Animation &a = m_animation;
     m_animation_state = newstate;
 
-    char buffer[128];
+    /*char buffer[128];
     switch(m_animation_state)
     {
     case ANIMATION_TOEND:
@@ -127,7 +127,7 @@ void PopupWindow::setState(int newstate)
         sprintf(buffer, "none %p", this);
         break;
       }
-    sendLog(buffer);
+    sendLog(buffer);*/
 
     switch(m_animation_state)
     {
@@ -146,13 +146,8 @@ void PopupWindow::setState(int newstate)
         POINT dstpt = {a.pos.x, a.pos.y};
         SIZE sz = getSize();
         POINT srcpt = {0,0};
-        if (!UpdateLayeredWindow(m_hWnd, (HDC)dstdc, &dstpt, &sz, m_src_dc, &srcpt, 0, &blend, ULW_ALPHA))
-        {
-            DWORD lasterr = GetLastError();
-            sprintf(buffer, "ULW error: %d, %p", lasterr, this);
-            sendLog(buffer);
-        }
-        ShowWindow(SW_SHOWNOACTIVATE);
+        UpdateLayeredWindow(m_hWnd, (HDC)dstdc, &dstpt, &sz, m_src_dc, &srcpt, 0, &blend, ULW_ALPHA);
+        ShowWindow(SW_SHOWNA);
     }
     break;
     case ANIMATION_NONE:
@@ -205,7 +200,7 @@ void PopupWindow::fillSrcDC()
 void PopupWindow::setAlpha(float a)
 {
     BYTE va = static_cast<BYTE>(a);
-    if (va == 0)
+    /*if (va == 0)
     {
         char buffer[32];
         sprintf(buffer, "fully transparent %p", this);
@@ -216,23 +211,14 @@ void PopupWindow::setAlpha(float a)
         char buffer[32];
         sprintf(buffer, "fully opaque %p", this);
         sendLog(buffer);
-    }
+    }*/
     BLENDFUNCTION blend;
     blend.BlendOp = AC_SRC_OVER;
     blend.BlendFlags = 0;
     blend.AlphaFormat = 0;
     blend.SourceConstantAlpha = va;
-    if (!UpdateLayeredWindow(m_hWnd, NULL, NULL, NULL, NULL, NULL, 0, &blend, ULW_ALPHA))
-    {
-        DWORD lasterr = GetLastError();
-        char buffer[128];
-        sprintf(buffer, "ULW2 error: %d, %p", lasterr, this);
-        sendLog(buffer);
-    }
-    else
-    {
-        UpdateWindow();
-    }
+    UpdateLayeredWindow(m_hWnd, NULL, NULL, NULL, NULL, NULL, 0, &blend, ULW_ALPHA);
+    UpdateWindow();
 }
 
 void PopupWindow::onClickButton()
