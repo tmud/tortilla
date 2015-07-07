@@ -69,9 +69,10 @@ class LogicProcessor : public LogicProcessorMethods
     PromptMode m_prompt_mode;
     int  m_prompt_counter;
     Pcre16 m_univ_prompt_pcre;
-    MudViewString* m_incompleted_string;
+
+    /*MudViewString* m_incompleted_string; todo
     Ticker m_incompleted_timeout;
-    int m_incompleted_flags;
+    int m_incompleted_flags;*/
 
     std::vector<tstring> m_plugins_log_cache;
     bool m_plugins_log_tocache;
@@ -110,7 +111,7 @@ private:
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);
     enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
-           FROM_STACK = 64, FROM_TIMER = 128, INCOMPLETED_STRING = 256 };
+           FROM_STACK = 64, FROM_TIMER = 128 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);

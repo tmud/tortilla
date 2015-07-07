@@ -4,26 +4,26 @@
 
 void LogicProcessor::processStackTick()
 {
-    if (m_incompleted_string)
+    /*if (m_incompleted_string)
     {
         DWORD timeout = m_incompleted_timeout.getDiff();
         if (timeout >= 150)
         {
+#ifdef _DEBUG
+            //todo debug
+            std::vector<MudViewStringBlock> &b = m_incompleted_string->blocks;
+            for (int i = 0, e = b.size(); i < e; ++i)
+                b[i].params.blink_status = 1;
+#endif
             if (m_helper.processIncomplStr(m_incompleted_string))
             {
-#ifdef _DEBUG
-                //todo debug
-                std::vector<MudViewStringBlock> &b = m_incompleted_string->blocks;
-                for (int i = 0, e = b.size(); i < e; ++i)
-                    b[i].params.blink_status = 1;
-#endif
                 parseData pd;
                 pd.strings.push_back(m_incompleted_string);
                 m_incompleted_string = NULL;
                 printParseData(pd, m_incompleted_flags|INCOMPLETED_STRING, 0);
             }
         }
-    }
+    }*/
 
     if (!m_plugins_log_cache.empty())
     {
@@ -55,7 +55,9 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 {
     if (window == 0 && m_prompt_mode != OFF && flags & (GAME_LOG | GAME_CMD) && !(flags & FROM_STACK))
     {
-       if (m_incompleted_string)
+       //if (m_incompleted_string)
+       MudViewString *last = m_pHost->getLastString(0);
+       if (last && !last->prompt && !last->gamecmd && !last->system)
        {
            // в стек, если нельзя сразу добавить команды в окно (нет prompt/gamecmd, возможно это разрыв текста).
            stack_el e;
@@ -150,7 +152,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 #endif
 
     // accumulate last string in one
-    if (window == 0 && m_incompleted_string)
+    /*if (window == 0 && m_incompleted_string)
     {
         MudViewString *s = m_incompleted_string;
         m_incompleted_string = NULL;
@@ -168,7 +170,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
             parse_data.update_prev_string = false;
         }
     }
-    else
+    else*/
         m_pHost->accLastString(window, &parse_data);
 
     // попытка вставки стека по ходу данных, если это обычные данные
@@ -351,12 +353,23 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
     MudViewString *s = pds[last];
     if (!s->prompt && !s->gamecmd && !s->system)
     {
-        pds.pop_back();
-        printParseData(parse_data, flags, window);
-
         // last string not finished (игровой текст, не промпт, не команда и не лог)
-        // wait timeout to complete them (ждем завершения, нельзя запустить триггеры без таймаута)
-        if (m_incompleted_string)
+
+        //pds.pop_back(); //todo
+        parse_data.last_finished = false;
+        //printParseData(parse_data, flags, window);
+
+        //todo debug
+        std::vector<MudViewStringBlock> &b = s->blocks;
+        for (int i = 0, e = b.size(); i < e; ++i)
+            b[i].params.blink_status = 1;
+
+        //m_helper.processIncomplStr(s);
+        /*parseData pd;
+        pd.strings.push_back(s);
+        printParseData(pd, flags, window);*/
+
+        /*if (m_incompleted_string)
         {
             m_incompleted_string->moveBlocks(s);
             delete s;
@@ -365,8 +378,9 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
             m_incompleted_string = s;
         }
         m_incompleted_flags = flags;
-        m_incompleted_timeout.sync();
-        return;
+        m_incompleted_timeout.sync();*/
+
+        //return;
     }}
 
     printParseData(parse_data, flags, window);
@@ -379,7 +393,6 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     // final step for data
     // preprocess data via plugins
-    
     if (!(flags & SKIP_PLUGINS))           
         m_pHost->preprocessText(window, &parse_data);
 
@@ -402,12 +415,6 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!(flags & SKIP_PLUGINS))
         m_pHost->postprocessText(window, &parse_data);
     m_plugins_log_tocache = false;
-
-    /*if (flags & SKIP_PLUGINS)
-    {
-        StringsWrapper wrapper(130);
-        wrapper.process(&parse_data);
-    }*/
 
     int log = m_wlogs[window];
     if (log != -1)

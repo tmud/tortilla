@@ -2,7 +2,7 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
-CompareObject::CompareObject() : m_fullstr_not_req(false) {}
+CompareObject::CompareObject() : m_fullstr_req(true) {}
 CompareObject::~CompareObject() {}
 
 bool CompareObject::init(const tstring& key, bool endline_mode)
@@ -92,7 +92,7 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
         if (last != 0 && k.at(last) == L'$')
         {
             if (k.at(last-1) != L'$')
-                m_fullstr_not_req = true;
+                m_fullstr_req = false;
             k = k.substr(0, last);
         }
     }
@@ -227,7 +227,7 @@ void CompareObject::getRange(CompareRange *range) const
     range->end = m_pcre.getLast(0);
 }
 
-bool CompareObject::isFullstrNotReq() const
+bool CompareObject::isFullstrReq() const
 {
-    return m_fullstr_not_req;
+    return m_fullstr_req;
 }

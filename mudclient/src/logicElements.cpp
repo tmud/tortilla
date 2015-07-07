@@ -180,8 +180,10 @@ Action::Action(const property_value& v, const InputTemplateParameters& p)
     m_cmds.makeTemplates();
 }
 
-bool Action::processing(CompareData& data, InputCommands* newcmds)
+bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newcmds)
 {
+    if (incompl_flag && m_compare.isFullstrReq())
+        return false;
     if (!m_compare.compare(data.fullstr))
         return false;
     ActionParameters ap(&m_compare);

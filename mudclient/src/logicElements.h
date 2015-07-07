@@ -47,13 +47,7 @@ class Action
 {
 public:
     Action(const property_value& v, const InputTemplateParameters& p);
-    bool processing(CompareData& data, InputCommands* newcmds);
-    bool checkNotCompleted(CompareData &data)
-    {
-        if (m_compare.isFullstrNotReq())
-            return m_compare.compare(data.fullstr);
-        return false;        
-    }
+    bool processing(CompareData& data, bool incompl_flag, InputCommands* newcmds);   
 private:
     CompareObject m_compare;
     InputTemplateCommands m_cmds;

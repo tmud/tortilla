@@ -31,14 +31,15 @@ bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
 
 void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
 {
-    for (int j=0,je=parse_data->strings.size(); j<je; ++j)
+    for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->gamecmd || s->system) continue;
+        bool incomplstr = (j==je && !parse_data->last_finished);
         CompareData cd(s);
         for (int i=0,e=m_actions.size(); i<e; ++i)
         {
-            if (m_actions[i]->processing(cd, newcmds))
+            if (m_actions[i]->processing(cd, incomplstr, newcmds))
                break;
         }
     }
@@ -46,10 +47,12 @@ void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
 
 void LogicHelper::processSubs(parseData *parse_data)
 {
-    for (int j=0,je=parse_data->strings.size(); j<je; ++j)
+    for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->gamecmd || s->system) continue;
+        bool incomplstr = (j==je && !parse_data->last_finished);
+        if (incomplstr) continue;
         CompareData cd(s);
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
@@ -61,10 +64,12 @@ void LogicHelper::processSubs(parseData *parse_data)
 
 void LogicHelper::processAntiSubs(parseData *parse_data)
 {
-    for (int j=0,je=parse_data->strings.size(); j<je; ++j)
+    for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->gamecmd || s->system) continue;
+        bool incomplstr = (j == je && !parse_data->last_finished);
+        if (incomplstr) continue;
         CompareData cd(s);
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
         {
@@ -76,10 +81,12 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
 
 void LogicHelper::processGags(parseData *parse_data)
 {
-    for (int j=0,je=parse_data->strings.size(); j<je; ++j)
+    for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->gamecmd || s->system) continue;
+        bool incomplstr = (j == je && !parse_data->last_finished);
+        if (incomplstr) continue;
         CompareData cd(s);
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
@@ -91,7 +98,7 @@ void LogicHelper::processGags(parseData *parse_data)
 
 void LogicHelper::processHighlights(parseData *parse_data)
 {
-    for (int j=0,je=parse_data->strings.size(); j<je; ++j)
+    for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         CompareData cd(parse_data->strings[j]);
         for (int i=0,e=m_highlights.size(); i<e; ++i)
@@ -118,16 +125,6 @@ void LogicHelper::resetTimers()
     for (int i=0,e=m_timers.size(); i<e; ++i)
         m_timers[i]->reset();
     m_ticker.sync();
-}
-
-bool LogicHelper::processIncomplStr(MudViewString *s)
-{
-    CompareData cd(s);
-    for (int i=0, e=m_actions.size(); i<e; ++i) {
-      if (m_actions[i]->checkNotCompleted(cd))
-          return true;
-    }
-    return false;
 }
 
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
