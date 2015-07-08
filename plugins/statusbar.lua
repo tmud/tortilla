@@ -1,6 +1,10 @@
 ﻿-- statusbar
 -- Плагин для Tortilla mud client
 
+-- Местоположение в окне клиента "top" или "bottom"
+local position = "bottom"
+
+-- Цвета баров hp(здоровья),mv(энергия),mn(мана),exp(опыт)
 local colors = {
 hp1 = {r=240},
 hp2 = {r=128},
@@ -24,7 +28,7 @@ return 'Плагин отображает информацию о здоровь
 end
 
 function statusbar.version()
-    return '1.0'
+    return '1.01'
 end
 
 local objs = {}
@@ -234,7 +238,7 @@ function statusbar.init()
 
   regnum = createPcre("[0-9]+")
 
-  local p = createPanel("bottom", 28)
+  local p = createPanel(position, 28)
   r = p:setRender(statusbar.render)
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(7))

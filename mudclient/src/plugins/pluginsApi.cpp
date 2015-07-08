@@ -671,7 +671,7 @@ int getViewSize(lua_State *L)
     return pluginInvArgs(L, "getViewSize");
 }
 
-int flashParent(lua_State *L)
+int flashWindow(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -688,7 +688,7 @@ int flashParent(lua_State *L)
         }
         return 0;
     }
-    return pluginInvArgs(L, "flashParent");
+    return pluginInvArgs(L, "flashWindow");
 }
 //---------------------------------------------------------------------
 // Metatables for all types
@@ -737,7 +737,7 @@ bool initPluginsSystem()
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);
     lua_register(L, "getViewSize", getViewSize);
-    lua_register(L, "flashParent", flashParent);
+    lua_register(L, "flashWindow", flashWindow);
 
     reg_props(L);
     reg_activeobjects(L);

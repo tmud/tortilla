@@ -89,8 +89,8 @@ namespace base {
         lua_pop(L, 1);
         return parent;
     }
-    inline void flashParent(lua_State *L) {
-        luaT_run(L, "flashParent", "");
+    inline void flashWindow(lua_State *L) {
+        luaT_run(L, "flashWindow", "");
     }
     inline void saveTable(lua_State* L, const utf8* file) {
         if (lua_istable(L, -1))

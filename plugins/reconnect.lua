@@ -1,7 +1,7 @@
 ﻿-- reconnect
 -- Плагин для Tortilla mud client
 
--- количество попыток переподключения (0 - бесконечное количество)
+-- Количество попыток переподключения (0 - бесконечное количество)
 local max_count = 10
 
 reconnect = {}
@@ -20,7 +20,7 @@ function reconnect.description()
 end
 
 function reconnect.version()
-    return '1.01'
+    return '1.02'
 end
 
 local connected = false
@@ -42,24 +42,28 @@ function reconnect.connect()
 end
 
 function reconnect.disconnect()
-  if connected then
-    if max_count and max_count ~= 0 then
-        if attempts == max_count then
-            connected = false
-            flashParent()
-            return
-        end
-        attempts = attempts + 1
-    end
-    local p = props.cmdPrefix()
-    local cmd = p..'output Переподключение...'
-    runCommand(cmd)
-    if system and system.sleep then
-        system.sleep(1000)
-    end
-    cmd = p..'connect '..address..' '..port
-    runCommand(cmd)
+  if not connected then 
+    return
   end
+  if attempts == 0 then
+    flashWindow()
+  end
+  attempts = attempts + 1
+  if max_count and max_count ~= 0 then
+    if attempts == max_count+1 then
+       connected = false
+       flashWindow()
+       return
+    end
+  end
+  local p = props.cmdPrefix()
+  local cmd = p..'output Переподключение('..attempts..')...'
+  runCommand(cmd)
+  if system and system.sleep then
+    system.sleep(1500)
+  end
+  cmd = p..'connect '..address..' '..port
+  runCommand(cmd)
 end
 
 function reconnect.init()
