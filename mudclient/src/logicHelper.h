@@ -128,12 +128,11 @@ public:
     void processHighlights(parseData *parse_data);
     void processTimers(InputCommands* newcmds);
     void resetTimers();
-    
+
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
     enum MathResult { MATH_SUCCESS = 0, MATH_VARNOTEXIST, MATH_ERROR };
     MathResult mathOp(const tstring& expr, tstring* result);
-
 private:
     // current workable elements
     LogicWrapperParams<Alias> m_aliases;
@@ -145,7 +144,7 @@ private:
     LogicWrapper<Highlight> m_highlights;
     LogicWrapperTimers m_timers;
     Pcre16 m_if_regexp;
-    Pcre16 m_math_regexp;    
+    Pcre16 m_math_regexp;
     Ticker m_ticker;
 };
 
@@ -214,7 +213,7 @@ public:
 
     bool setMode(const tstring& state, const tstring& mode_value)
     {      
-        int stateid = recognizeState(state);        
+        int stateid = recognizeState(state);
         if (stateid == -1)
             return false;
 

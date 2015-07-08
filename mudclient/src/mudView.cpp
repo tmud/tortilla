@@ -143,7 +143,8 @@ int MudView::getSymbolsOnDisplay() const
     RECT rc;
     GetClientRect(&rc);
     int count = rc.right / font_width;
-    int dc = count / 20 + 4; // погрешность
+    int dc = count / 40; // погрешность
+    if (dc < 3) dc = 3;
     return count - dc;
 }
 
@@ -156,7 +157,7 @@ void MudView::updateProps()
 {
     if (m_strings.empty())
         return;    
-    for (int i=0,e=m_strings.size(); i<e; ++i)    
+    for (int i=0,e=m_strings.size(); i<e; ++i)
         calcStringSizes(m_strings[i]);
     initRenderParams();
     Invalidate();

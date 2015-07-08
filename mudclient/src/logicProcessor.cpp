@@ -5,7 +5,6 @@
 LogicProcessor::LogicProcessor(LogicProcessorHost *host) :
 m_pHost(host), m_connecting(false), m_connected(false),
 m_prompt_mode(OFF), m_prompt_counter(0),
-//m_incompleted_string(NULL), m_incompleted_flags(0), //todo
 m_plugins_log_tocache(false)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
@@ -14,7 +13,6 @@ m_plugins_log_tocache(false)
 
 LogicProcessor::~LogicProcessor()
 {
-    //delete m_incompleted_string;
 }
 
 void LogicProcessor::processTick()
@@ -115,7 +113,7 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
             { i++; continue; }
 
         loops.push_back( (cmd->system) ? cmd->srccmd : cmd->command);
-        
+ 
         for (int j = 0, je = newcmds.size(); j < je; ++j)
         {
             InputCommand *cmd2 = newcmds[j];
@@ -323,4 +321,5 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
+    m_incoming_stack.clear();
 }

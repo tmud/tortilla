@@ -43,7 +43,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
     tstring error;
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
-    typedef std::vector<tstring>::iterator piterator;    
+    typedef std::vector<tstring>::iterator piterator;
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
     if (it == it_end)
@@ -99,10 +99,6 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
-        if (cmd->dropped)
-        {          
-            return;
-        }
 
         //if (!cmd->changed && cmd->srccmd != cmd->command)
         //    cmd->changed = true;
@@ -115,6 +111,10 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             fullcmd.append(tmp);
         }
         syscmdLog(fullcmd);
+        if (cmd->dropped)
+        {
+            return;
+        }
 
         it = m_syscmds.find(main_cmd);
         if (it != it_end)
@@ -1221,7 +1221,7 @@ void LogicProcessor::regCommand(const char* name, syscmd_fun f)
     AnsiToWide a2w(name);
     tstring cmd(a2w);
     m_syscmds[cmd] = f;
-    PropertiesList &p = pdata->tabwords_commands;    
+    PropertiesList &p = pdata->tabwords_commands;
     p.add(-1, cmd);
 }
 
