@@ -527,6 +527,8 @@ void MudView::stopDraging()
         {
             if (drag_right != -1)
                 text.assign ( tmp.substr(drag_right) );
+            else
+                text.assign(tmp);
         }
         else if (drag_right == -1)
         {
