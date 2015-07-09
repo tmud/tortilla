@@ -315,10 +315,12 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
             // last string not finished (игровой текст, не промпт, не команда и не лог)        
             parse_data.last_finished = false;
 
+#ifdef _DEBUG
             //todo debug
             std::vector<MudViewStringBlock> &b = s->blocks;
             for (int i = 0, e = b.size(); i < e; ++i)
                 b[i].params.blink_status = 1;
+#endif
         }
     }
     printParseData(parse_data, flags, window);
