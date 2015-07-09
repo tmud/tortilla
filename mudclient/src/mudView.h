@@ -12,6 +12,8 @@ class MudView : public CWindowImpl<MudView>
     int m_last_visible_line;
     mudViewStrings m_strings;
     bool m_last_string_updated;
+    mudViewStrings m_softscrolling_cache;
+    bool m_use_softscrolling;
 
     POINT m_dragpt, m_dragpos;
     int  drag_begin, drag_end;
@@ -24,13 +26,16 @@ public:
     MudView(PropertiesElements *elements);
     ~MudView();
     void accLastString(parseData *parse_data);
-    void addText(parseData* parse_data, MudView* mirror = NULL);
+    void addText(parseData* parse_data);
+    void pushText(parseData* parse_data);
     void clearText();
     void truncateStrings(int maxcount);
     void setViewString(int index);
     int  getViewString() const;
     int  getLastString() const;
     bool isLastString() const;
+    bool isLastStringUpdated() const;
+    void deleteLastString();
     int  getStringsCount() const;
     int  getStringsOnDisplay() const;
     int  getSymbolsOnDisplay() const;
@@ -78,7 +83,7 @@ private:
     }
 private:
     void removeDropped(parseData* parse_data);
-    void calcStringSizes(MudViewString *string);
+    void calcStringsSizes(parseDataStrings& pds);
     void renderView();
     void renderString(CDC* dc, MudViewString *s, int left_x, int bottom_y, int index);
     void initRenderParams();
@@ -147,8 +152,7 @@ public:
         pc.process(m_view_tmp);
 
         mudViewStrings &vs = *m_view_tmp;
-        for (int i = 0, e = vs.size(); i < e; ++i)
-            m_pView->calcStringSizes(vs[i]);
+        m_pView->calcStringsSizes(vs);
 
         if (m_pMirror)
         {

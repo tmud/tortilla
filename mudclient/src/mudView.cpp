@@ -8,6 +8,7 @@ propElements(elements),
 m_lines_count(0),
 m_last_visible_line(-1),
 m_last_string_updated(false),
+m_use_softscrolling(false),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1)
 {
@@ -52,42 +53,34 @@ int MudView::getStringsCount() const
     return m_strings.size();
 }
 
-void MudView::addText(parseData* parse_data, MudView* mirror)
+void MudView::addText(parseData* parse_data)
 {
     if (parse_data->strings.empty())
         return;
 
-    bool lsu = m_last_string_updated;
     m_last_string_updated = false;
 
     removeDropped(parse_data);
+    calcStringsSizes(parse_data->strings);
+    pushText(parse_data);
+    checkLimit();
+    int new_visible_line = m_strings.size() - 1;
+    updateScrollbar(new_visible_line);
+    Invalidate(FALSE);
+}
+
+void MudView::pushText(parseData* parse_data)
+{
     parseDataStrings &pds = parse_data->strings;
     for (int i=0,e=pds.size(); i<e; ++i)
     {
         MudViewString *string = pds[i];
-        calcStringSizes(string);
-        m_strings.push_back(string);
-        if (mirror)
-        {
-            mudViewStrings &ms = mirror->m_strings;
-            if (lsu)
-            {
-                lsu = false;
-                int last_mirror = ms.size() - 1;
-                delete ms[last_mirror];
-                ms.pop_back();
-            }
-            MudViewString *ns = new MudViewString();
-            ns->copy(string);
-            ms.push_back(ns);
-        }
+        if (m_use_softscrolling)
+            m_softscrolling_cache.push_back(string);
+        else
+            m_strings.push_back(string);
     }
     pds.clear();
-    checkLimit();
-
-    int new_visible_line = m_strings.size() - 1;
-    updateScrollbar(new_visible_line);
-    Invalidate(FALSE);
 }
 
 void MudView::clearText()
@@ -130,6 +123,20 @@ bool MudView::isLastString() const
     return (getLastString() == getViewString()) ? true : false;
 }
 
+bool MudView::isLastStringUpdated() const
+{
+    return m_last_string_updated;
+}
+
+void MudView::deleteLastString()
+{
+    if (m_strings.empty())
+        return;
+    int last = m_strings.size() - 1;
+    delete m_strings[last];
+    m_strings.pop_back();
+}
+
 int MudView::getStringsOnDisplay() const
 {
     return m_lines_count;
@@ -155,10 +162,11 @@ MudViewString* MudView::getString(int idx) const
 
 void MudView::updateProps()
 {
+    m_use_softscrolling = false; //todo tortilla::getProperties()
+
     if (m_strings.empty())
-        return;    
-    for (int i=0,e=m_strings.size(); i<e; ++i)
-        calcStringSizes(m_strings[i]);
+        return;
+    calcStringsSizes(m_strings);
     initRenderParams();
     Invalidate();
 }
@@ -177,10 +185,14 @@ void MudView::removeDropped(parseData* parse_data)
     }
 }
 
-void MudView::calcStringSizes(MudViewString *string)
+void MudView::calcStringsSizes(parseDataStrings& pds)
 {
+    if (pds.empty())
+        return;
     CDC dc(GetDC());
-    dc.SelectFont(propElements->standard_font);
+    HFONT oldfont = dc.SelectFont(propElements->standard_font);
+    for (int i=0,e=pds.size(); i<e; ++i) {
+    MudViewString *string = pds[i];
     std::vector<MudViewStringBlock> &b = string->blocks;
     for (int j=0,je=b.size(); j<je; ++j)
     {
@@ -202,7 +214,8 @@ void MudView::calcStringSizes(MudViewString *string)
         b[j].size = sz;
         if (p.underline_status || p.italic_status)
             dc.SelectFont(propElements->standard_font);
-    }
+    }}
+    dc.SelectFont(oldfont);
 }
 
 void MudView::renderView()

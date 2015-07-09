@@ -864,10 +864,25 @@ private:
         if (view == 0)
         {
             int vs = m_view.getViewString();
-            bool last = m_view.isLastString();            
-            m_view.addText(parse_data, &m_history);
-            checkHistorySize();
+            bool last = m_view.isLastString();
+            bool last_updated = m_view.isLastStringUpdated();
+            int count = parse_data->strings.size();
+            m_view.addText(parse_data);
 
+            parseData history;
+            int from = m_view.getStringsCount() - count;
+            for (int i=0;i<count;++i)
+            {
+               MudViewString *s = m_view.getString(from+i);
+               MudViewString *hs = new MudViewString;
+               hs->copy(s);
+               history.strings.push_back(hs);
+            }
+            if (last_updated)
+                m_history.deleteLastString();
+            m_history.pushText(&history);
+
+            checkHistorySize();
             if (!m_history.IsWindowVisible() && !last)
             {
                 showHistory(vs, 1);
