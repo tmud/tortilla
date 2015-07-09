@@ -150,7 +150,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 20;
+    const int max_lines_without_prompt = 25;
     bool p_exist = false;
     int last_game_cmd = -1;
     PropertiesData *pdata = tortilla::getProperties();
@@ -189,7 +189,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        }
 
        // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
-       // параллельно делим строку по promt если находим
+       // параллельно делим строку по prompt если находим
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
            last_game_cmd = -1;

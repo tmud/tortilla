@@ -112,6 +112,7 @@ private:
             if (colorid == 18) colorid = 7;  // grey -> gray
 
             tstring tmp(str.substr(0,p.getFirst(i)));
+            tmp.append(L"rgb");
             tmp.append(table[colorid]);
             tmp.append(str.substr(p.getLast(i)));
             str = tmp;
