@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "popupWindow.h"
-void sendLog(const utf8* msg); //debug
 
 void PopupWindow::onTick()
 {
@@ -82,14 +81,6 @@ void PopupWindow::onTick()
 
 void PopupWindow::startAnimation(const Animation& a)
 {
-    const POINT &rb = a.pos;
-    SIZE sz = getSize();
-
-    /*char buffer[128];
-    sprintf(buffer, "show: %d, %d, %d, %d, %p", rb.x, rb.y, sz.cx, sz.cy, this);
-    sendLog(buffer); //debug
-    */
-
     m_animation = a;
     setState(ANIMATION_TOEND);
 }
@@ -107,27 +98,6 @@ void PopupWindow::setState(int newstate)
 {
     const Animation &a = m_animation;
     m_animation_state = newstate;
-
-    /*char buffer[128];
-    switch(m_animation_state)
-    {
-    case ANIMATION_TOEND:
-        sprintf(buffer, "alpha+ %p", this);
-        break;
-    case ANIMATION_TOSTART:
-        sprintf(buffer, "alpha- %p", this);
-        break;
-    case ANIMATION_MOVE:
-        sprintf(buffer, "move %p", this);
-        break;
-    case ANIMATION_WAIT:
-        sprintf(buffer, "wait %p", this);
-        break;
-    case ANIMATION_NONE:
-        sprintf(buffer, "none %p", this);
-        break;
-      }
-    sendLog(buffer);*/
 
     switch(m_animation_state)
     {
@@ -200,18 +170,6 @@ void PopupWindow::fillSrcDC()
 void PopupWindow::setAlpha(float a)
 {
     BYTE va = static_cast<BYTE>(a);
-    /*if (va == 0)
-    {
-        char buffer[32];
-        sprintf(buffer, "fully transparent %p", this);
-        sendLog(buffer);
-    }
-    else if (va == 255)
-    {
-        char buffer[32];
-        sprintf(buffer, "fully opaque %p", this);
-        sendLog(buffer);
-    }*/
     BLENDFUNCTION blend;
     blend.BlendOp = AC_SRC_OVER;
     blend.BlendFlags = 0;

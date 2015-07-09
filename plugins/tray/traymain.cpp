@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "traymain.h"
-void sendLog(const utf8* msg);
 
 TrayMainObject::~TrayMainObject()
 {
@@ -68,10 +67,7 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 
     PopupWindow *w = getFreeWindow();
     if (!w)
-    {
-        //sendLog("window not created"); //debug
         return false;
-    }
 
     POINT rb = { -1, -1 };
     Animation a; 
