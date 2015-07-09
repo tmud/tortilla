@@ -4,6 +4,7 @@
 #include "logicHelper.h"
 #include "logsProcessor.h"
 #include "network/network.h"
+#include "waitCmds.h"
 
 struct InputCommand;
 class LogicProcessorHost
@@ -72,10 +73,9 @@ class LogicProcessor : public LogicProcessorMethods
     MudViewString* m_incompleted_string;
     Ticker m_incompleted_timeout;
     int m_incompleted_flags;
-
     std::vector<tstring> m_plugins_log_cache;
     bool m_plugins_log_tocache;
-    
+    WaitCommands m_wait_cmds;
 public:
     LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();
@@ -175,4 +175,5 @@ public: // system commands
     DEF(wname);
     DEF(var);
     DEF(unvar);
+    DEF(wait);
 };

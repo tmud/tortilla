@@ -19,10 +19,8 @@ public:
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
     const tstring& params() const { return cmd->parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return _wtoi(p.c_str()); }
+    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isOnlyDigits(p); }
+    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return _wtoi(p.c_str()); }
     void invalidargs() { error(L"Некорректный набор параметров."); }
     void invalidoperation() { error(L"Некорректная операция."); }
     void invalidvars() { error(L"Используются неизвестные переменные"); }
@@ -1215,6 +1213,22 @@ IMPL(message)
     p->invalidargs();
 }
 //-------------------------------------------------------------------
+IMPL(wait)
+{
+     if (p->size() == 2 && isOnlySymbols(p->at(0), L"0123456789."))
+     {
+         double delay = _wtof(p->c_str(0));
+         if (delay > 0)
+         {
+             delay = delay * 1000;
+             int delay_ms = static_cast<int>(delay);             
+             m_wait_cmds.add(delay_ms, p->at(1));
+             return;
+         }
+     }
+     p->invalidargs();
+}
+//-------------------------------------------------------------------
 void LogicProcessor::regCommand(const char* name, syscmd_fun f)
 {
     PropertiesData *pdata = tortilla::getProperties();
@@ -1259,6 +1273,7 @@ bool LogicProcessor::init()
     regCommand("math", math);
     regCommand("var", var);
     regCommand("unvar", unvar);
+    regCommand("wait", wait);
 
     regCommand("password", password);
     regCommand("hide", hide);

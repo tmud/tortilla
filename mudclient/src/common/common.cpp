@@ -57,8 +57,13 @@ bool isOnlyDigits(const tstring& str)
 
 bool isOnlySpaces(const tstring& str)
 {
-   int pos = wcsspn(str.c_str(), L" ");
-   return (pos != str.length()) ? false : true;
+   return isOnlySymbols(str, L" ");
+}
+
+bool isOnlySymbols(const tstring& str, const tstring& symbols)
+{
+    int pos = wcsspn(str.c_str(), symbols.c_str());
+    return (pos != str.length()) ? false : true;
 }
 
 bool a2int(const std::string& str, int *value)
@@ -67,6 +72,15 @@ bool a2int(const std::string& str, int *value)
         return false;
     *value = atoi(str.c_str());
     return true;
+}
+
+bool w2double(const tstring& str, double *value)
+{
+ /*   if (!isOnlySymbols(str, L"-e0123456789.,"))
+        return false;
+        */
+    return false;
+
 }
 
 bool isExistSymbols(const tstring& str, const tstring& symbols)
