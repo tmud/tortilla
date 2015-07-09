@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "traymain.h"
-void sendLog(const utf8* msg);
 
 TrayMainObject::~TrayMainObject()
 {
@@ -20,7 +19,7 @@ TrayMainObject::~TrayMainObject()
 
 void TrayMainObject::create()
 {
-    Create(NULL, NULL, NULL, WS_POPUP);
+    Create(HWND_MESSAGE);
 }
 
 void TrayMainObject::setFont(HFONT font)
@@ -45,8 +44,6 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
- char buffer[1024]; //debug
-
 bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 {
 #ifndef _DEBUG
@@ -70,10 +67,7 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 
     PopupWindow *w = getFreeWindow();
     if (!w)
-    {
-        sendLog("out of windows"); //debug
         return false;
-    }
 
     POINT rb = { -1, -1 };
     Animation a; 
@@ -109,10 +103,6 @@ bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
     w->startAnimation(a);
     if (!m_activated)
       startTimer();
-
-    sprintf(buffer, "show: %d, %d, %d, %d", rb.x, rb.y, sz.cx, sz.cy);    
-    sendLog(buffer); //debug
-
    return true;
 }
 
@@ -183,19 +173,16 @@ void TrayMainObject::tryShowQueue()
 
 PopupWindow* TrayMainObject::getFreeWindow()
 {
-    if (!m_free_windows.empty())
-    {
-        int last = m_free_windows.size() - 1;
-        PopupWindow *wnd = m_free_windows[last];
-        m_free_windows.pop_back();
-        return wnd;
-    }
-
-   PopupWindow *wnd = new PopupWindow(&m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOPARENTNOTIFY);
-   if (!wnd->IsWindow())
+   if (!m_free_windows.empty())
    {
-       sendLog("error: window not created"); // debug
+       int last = m_free_windows.size() - 1;
+       PopupWindow *wnd = m_free_windows[last];
+       m_free_windows.pop_back();
+       return wnd;
+   }
+   PopupWindow *wnd = new PopupWindow();
+   if (!wnd->create(&m_font))
+   {
        delete wnd;
        return NULL;
    }
