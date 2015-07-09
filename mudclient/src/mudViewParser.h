@@ -87,10 +87,3 @@ class ColorsCollector
 public:
     void process(parseDataStrings* pds);
 };
-
-class StringsWrapper
-{  int m_maxlen;
-public:
-    StringsWrapper(int maxlen) : m_maxlen(maxlen) {}
-    void process(parseData *data);
-};

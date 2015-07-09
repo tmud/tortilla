@@ -69,13 +69,9 @@ class LogicProcessor : public LogicProcessorMethods
     PromptMode m_prompt_mode;
     int  m_prompt_counter;
     Pcre16 m_univ_prompt_pcre;
-    MudViewString* m_incompleted_string;
-    Ticker m_incompleted_timeout;
-    int m_incompleted_flags;
-
     std::vector<tstring> m_plugins_log_cache;
     bool m_plugins_log_tocache;
-    
+
 public:
     LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();

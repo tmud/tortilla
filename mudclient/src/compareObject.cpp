@@ -2,18 +2,21 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
-CompareObject::CompareObject() {}
+CompareObject::CompareObject() : m_fullstr_req(true) {}
 CompareObject::~CompareObject() {}
 
-bool CompareObject::init(const tstring& key)
+bool CompareObject::init(const tstring& key, bool endline_mode)
 {
+    if (key.empty())
+        return false;
+
     ParamsHelper ph(key);
     if (ph.checkDoubles())
         return false;
     m_key = key;
 
     tstring regexp;
-    createCheckPcre(key, &regexp);
+    createCheckPcre(key, endline_mode, &regexp);
     checkVars(&regexp);
     bool result = m_pcre.setRegExp(regexp, true);
     assert(result);
@@ -80,13 +83,25 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     }
 }
 
-void CompareObject::createCheckPcre(const tstring& key, tstring *prce_template)
+void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template)
 {
+    tstring k(key);
+    if (endline_mode)
+    {
+        int last = k.size() - 1;
+        if (last != 0 && k.at(last) == L'$')
+        {
+            if (k.at(last-1) != L'$')
+                m_fullstr_req = false;
+            k = k.substr(0, last);
+        }
+    }
+
     //mask regexp special symbols
     tstring tmp;
     const tchar *symbols = L"*+/?|^$.[]()\\";
-    const tchar *b = key.c_str();
-    const tchar *e = b + key.length();
+    const tchar *b = k.c_str();
+    const tchar *e = b + k.length();
 
     // skip first ^ - it a part of regexp
     if (*b == '^')
@@ -212,3 +227,7 @@ void CompareObject::getRange(CompareRange *range) const
     range->end = m_pcre.getLast(0);
 }
 
+bool CompareObject::isFullstrReq() const
+{
+    return m_fullstr_req;
+}

@@ -326,20 +326,6 @@ void ColorsCollector::process(parseDataStrings* pds)
    }
 }
 
-void StringsWrapper::process(parseData *data)
-{
-    parseDataStrings &s = data->strings;
-    int strings = s.size();
-    for (int i=0; i<strings; ++i)
-    {
-        if (s[i]->getTextLen() <= m_maxlen)
-            continue;
-        MudViewString *newstr = s[i]->divideString(m_maxlen);
-        s.insert(s.begin()+i+1, newstr);
-        strings++;
-    }
-}
-
 #ifdef _DEBUG
 void markBlink(parseDataStrings& strings)
 {
