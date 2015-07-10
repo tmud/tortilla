@@ -12,8 +12,8 @@ class MudView : public CWindowImpl<MudView>
     int m_last_visible_line;
     mudViewStrings m_strings;
     bool m_last_string_updated;
-    mudViewStrings m_softscrolling_cache;
     bool m_use_softscrolling;
+    int  m_start_softscroll;
 
     POINT m_dragpt, m_dragpos;
     int  drag_begin, drag_end;
@@ -41,6 +41,7 @@ public:
     int  getSymbolsOnDisplay() const;
     MudViewString* getString(int idx) const;
     void updateProps();
+    void processTick();
 
 private:
 	BEGIN_MSG_MAP(MudView)
@@ -83,7 +84,7 @@ private:
     }
 private:
     void removeDropped(parseData* parse_data);
-    void calcStringsSizes(parseDataStrings& pds);
+    void calcStringsSizes(mudViewStrings& pds);
     void renderView();
     void renderString(CDC* dc, MudViewString *s, int left_x, int bottom_y, int index);
     void initRenderParams();

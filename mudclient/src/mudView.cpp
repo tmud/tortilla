@@ -9,6 +9,7 @@ m_lines_count(0),
 m_last_visible_line(-1),
 m_last_string_updated(false),
 m_use_softscrolling(false),
+m_start_softscroll(0),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1)
 {
@@ -62,8 +63,15 @@ void MudView::addText(parseData* parse_data)
 
     removeDropped(parse_data);
     calcStringsSizes(parse_data->strings);
+    int count = parse_data->strings.size();
     pushText(parse_data);
     checkLimit();
+
+    if (m_use_softscrolling) {
+        m_start_softscroll = m_last_visible_line;
+        return;
+    }
+
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
@@ -72,15 +80,22 @@ void MudView::addText(parseData* parse_data)
 void MudView::pushText(parseData* parse_data)
 {
     parseDataStrings &pds = parse_data->strings;
-    for (int i=0,e=pds.size(); i<e; ++i)
-    {
-        MudViewString *string = pds[i];
-        if (m_use_softscrolling)
-            m_softscrolling_cache.push_back(string);
-        else
-            m_strings.push_back(string);
-    }
+    m_strings.insert(m_strings.end(), pds.begin(), pds.end());
     pds.clear();
+}
+
+void MudView::processTick()
+{
+    if (!m_use_softscrolling)
+        return;    
+    int lines = m_strings.size() - 1;
+    if (m_last_visible_line != lines)
+    {    
+        int new_visible_line = m_last_visible_line + 2;
+        if (new_visible_line > lines) new_visible_line = lines;
+        updateScrollbar(new_visible_line);
+        Invalidate(FALSE);
+    }
 }
 
 void MudView::clearText()
@@ -162,7 +177,7 @@ MudViewString* MudView::getString(int idx) const
 
 void MudView::updateProps()
 {
-    m_use_softscrolling = false; //todo tortilla::getProperties()
+    m_use_softscrolling = true; //todo tortilla::getProperties()
 
     if (m_strings.empty())
         return;
@@ -185,7 +200,7 @@ void MudView::removeDropped(parseData* parse_data)
     }
 }
 
-void MudView::calcStringsSizes(parseDataStrings& pds)
+void MudView::calcStringsSizes(mudViewStrings& pds)
 {
     if (pds.empty())
         return;
