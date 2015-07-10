@@ -1221,8 +1221,8 @@ IMPL(wait)
          if (delay > 0)
          {
              delay = delay * 1000;
-             int delay_ms = static_cast<int>(delay);             
-             m_wait_cmds.add(delay_ms, p->at(1));
+             int delay_ms = static_cast<int>(delay);
+             m_waitcmds.add(delay_ms, p->at(1));
              return;
          }
      }

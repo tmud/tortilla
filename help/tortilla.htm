@@ -971,7 +971,7 @@ off<br>
 Выключает все таймеры.<br>
 <br><div class="t">#timer on/enable/вкл</div><br>
 Включает все таймеры. Для включения требуется наличие подключение к мад-серверу.<br>
-<br>См.также: <a href="#untimer" class="cmd">#untimer</a>
+<br>См.также: <a href="#untimer" class="cmd">#untimer</a>, <a href="#wait" class="cmd">#wait</a>
 <p align="right"><a href="#top">В начало</a></p>
 <hr>
 <a name="unaction"></a>
@@ -1055,7 +1055,7 @@ off<br>
 Команда удаляет таймер.
 <br>Синтаксис команды:<br>
 <div class="t">#untimer 'номер таймера'</div><br>
-<br>См.также: <a href="#timer" class="cmd">#timer</a>
+<br>См.также: <a href="#timer" class="cmd">#timer</a>, <a href="#wait" class="cmd">#wait</a>
 <hr>
 <a name="unvar"></a>
 <h4>#unvar</h4>
@@ -1086,6 +1086,17 @@ off<br>
 <div class="t">#var 'строка'</div><br>
 Команда выводит все переменные, которые в своем имени содержат заданную строку.<br>
 <br>См.также: <a href="#unvar" class="cmd">#unvar</a>, <a href="#if" class="cmd">#if</a>, <a href="#math" class="cmd">#math</a>.<br><br>
+<hr>
+<a name="wait"></a>
+<h4>#wait</h4>
+Команда позволяет выполнять другие команды с задержкой.
+<br>Синтаксис команды:<br>
+<div class="t">#wait 'время задержки в секундах' 'команда'</div><br>
+- 'время задержки' - длительность задержки в секундах. Можно задавать дробные доли секунды.<br>
+- 'команда' - команда, которую необходимо выполнить.<br><br>
+Например:<br>
+<div class="e">#wait 1.2 {#out {light red} {Время идти!};встать}</div><br>
+<br>См.также: <a href="#timer" class="cmd">#timer</a>
 <hr>
 <a name="whide"></a>
 <h4>#whide</h4>

@@ -75,7 +75,8 @@ class LogicProcessor : public LogicProcessorMethods
     int m_incompleted_flags;
     std::vector<tstring> m_plugins_log_cache;
     bool m_plugins_log_tocache;
-    WaitCommands m_wait_cmds;
+    WaitCommands m_waitcmds;
+
 public:
     LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();
