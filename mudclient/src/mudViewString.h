@@ -68,8 +68,8 @@ struct MudViewString
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
        gamecmd |= src->gamecmd;
        system |= src->system;
-       if (!prompt)
-            prompt = src->prompt;
+       if (prompt || src->prompt)
+            prompt = getTextLen();
        src->clear();
    }
 

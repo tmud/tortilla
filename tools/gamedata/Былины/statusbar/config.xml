@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
-  <baseparams hp="1" mv="2" dsu="3"/>
+  <baseparams hp="H" mv="M" dsu="о"/>
   <maxparams hp="1" hpid="r1" mv="2" mvid="r1" xp="1" xpid="r2" dsu="1" dsuid="r3"/>
   <regexp r1="^Вы можете выдержать [0-9]+\(([0-9]+)\).*, и пройти [0-9]+\(([0-9]+)\)" 
   r2="^Ваш опыт - ([0-9]+)" 

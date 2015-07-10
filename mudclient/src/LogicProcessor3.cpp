@@ -13,13 +13,19 @@ void LogicProcessor::processStackTick()
             return;
         }
         int window = pdata->plugins_logs_window;
-        std::vector<tstring> tmp;
-        tmp.swap(m_plugins_log_cache);
-        for (int i=0,e=tmp.size(); i<e; ++i){
-            tstring &t = tmp[i];
-            processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+        MudViewString *last = m_pHost->getLastString(window);
+        if (last && !last->prompt && !last->gamecmd && !last->system)
+            { /*skip*/ }
+        else
+        {
+            std::vector<tstring> tmp;
+            tmp.swap(m_plugins_log_cache);
+            for (int i=0,e=tmp.size(); i<e; ++i){
+                tstring &t = tmp[i];
+                processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+            }
+            tmp.clear();         
         }
-        tmp.clear();
     }
 
     if (m_prompt_mode == OFF)
