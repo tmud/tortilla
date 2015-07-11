@@ -17,7 +17,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.03");
+    lua_pushstring(L, "1.04");
     return 1;
 }
 
@@ -42,7 +42,7 @@ int menucmd(lua_State *L)
         {
             if (!errors.empty())
             {
-                luaT_log(L, "Ошибки импорта из JMC3 (неверный синтаксис | такой элемент уже есть):");
+                luaT_log(L, "Ошибки импорта из JMC3 (неверный синтаксис или такой элемент уже есть):");
                 for (int i = 0, e = errors.size(); i < e; ++i)
                 {
                     u8string msg("Ошибка: ");

@@ -319,17 +319,18 @@ void Timer::init(const property_value& v, const InputTemplateParameters& p)
     id.assign(v.key);
     PropertiesTimer pt;
     pt.convertFromString(v.value);
-    
+
     InputPlainCommands plain(pt.cmd);
     m_cmds.init(plain, p);
     m_cmds.makeTemplates();
 
-    int t = _wtoi(pt.timer.c_str());
+    double t = 0;
+    w2double(pt.timer, &t);
     if (t < 0)
         t = 0;
-
     timer = 0;
-    period = t * 1000;
+    t = t * 1000;
+    period = static_cast<int>(t);
 }
 
 void Timer::makeCommands(InputCommands *cmds)

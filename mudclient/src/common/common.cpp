@@ -55,6 +55,15 @@ bool isOnlyDigits(const tstring& str)
    return (wcsspn(p, L"0123456789") != len) ? false : true;
 }
 
+bool isItNumber(const tstring& str)
+{
+     if (str.empty()) return false;
+     const tchar* p = str.c_str();
+     int len = str.length();
+     if (*p == L'-') { p++; len--;}
+     return (wcsspn(p, L"e0123456789.,") != len) ? false : true;
+}
+
 bool isOnlySpaces(const tstring& str)
 {
    return isOnlySymbols(str, L" ");
@@ -76,11 +85,24 @@ bool a2int(const std::string& str, int *value)
 
 bool w2double(const tstring& str, double *value)
 {
- /*   if (!isOnlySymbols(str, L"-e0123456789.,"))
+    if (!isItNumber(str))
         return false;
-        */
+    *value = _wtof(str.c_str());
     return false;
+}
 
+void double2w(double value, int precision, tstring* str)
+{
+    wchar_t buffer1[16], buffer2[16];
+    swprintf(buffer1, L"%%.%df", precision);
+    swprintf(buffer2, buffer1, value);
+    str->assign(buffer2);
+}
+
+double getMod(double value)
+{
+    double ord = 0;
+    return modf(value, &ord);
 }
 
 bool isExistSymbols(const tstring& str, const tstring& symbols)
