@@ -72,6 +72,7 @@ class LogicProcessor : public LogicProcessorMethods
     Pcre16 m_univ_prompt_pcre;
     std::vector<tstring> m_plugins_log_cache;
     bool m_plugins_log_tocache;
+    bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
 
 public:

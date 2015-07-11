@@ -18,13 +18,15 @@ void LogicProcessor::processStackTick()
             { /*skip*/ }
         else
         {
+            m_plugins_log_blocked = true;
             std::vector<tstring> tmp;
             tmp.swap(m_plugins_log_cache);
             for (int i=0,e=tmp.size(); i<e; ++i){
                 tstring &t = tmp[i];
                 processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
             }
-            tmp.clear();         
+            tmp.clear();
+            m_plugins_log_blocked = false;
         }
     }
 
