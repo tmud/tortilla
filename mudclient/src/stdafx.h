@@ -70,6 +70,7 @@ typedef unsigned int uint;
 // only for debug (debuging text formatting)
 #ifdef _DEBUG
 //#define MARKERS_IN_VIEW
+//#define _WINDBG
 #endif
 
 extern CAppModule _Module;

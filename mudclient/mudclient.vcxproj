@@ -217,6 +217,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\common\wideToUtf8.h" />
     <ClInclude Include="src\varProcessor.h" />
     <ClInclude Include="src\waitCmds.h" />
+    <ClInclude Include="src\windbg.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
