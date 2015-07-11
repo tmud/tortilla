@@ -19,10 +19,10 @@ public:
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
     const tstring& params() const { return cmd->parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return _wtoi(p.c_str()); }
+    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isOnlyDigits(p); }
+    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return _wtoi(p.c_str()); }
+    bool isNumber(int index) const { const tstring& p = cmd->parameters_list[index]; return isItNumber(p); }
+    double toNumber(int index) const { const tstring& p = cmd->parameters_list[index]; double v = 0; w2double(p, &v); return v; }
     void invalidargs() { error(L"Некорректный набор параметров."); }
     void invalidoperation() { error(L"Некорректная операция."); }
     void invalidvars() { error(L"Используются неизвестные переменные"); }
@@ -1060,13 +1060,13 @@ IMPL(timer)
         return;
     }
 
-    if (n >= 2  && n <= 4 && p->isInteger(0) && p->isInteger(1))
+    if (n >= 2  && n <= 4 && p->isInteger(0) && p->isNumber(1))
     {
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
-        int delay = p->toInteger(1);
-        if (delay < 0 || delay > 999)
+        double delay = p->toNumber(1);
+        if (delay < 0 || delay > 999.9f)
             return p->invalidargs();
 
          tchar tmp[16];
@@ -1081,8 +1081,7 @@ IMPL(timer)
         }
 
         PropertiesTimer pt;
-        _itow(delay, tmp, 10);
-        pt.timer.assign(tmp);
+        pt.setTimer(delay);
         if (n > 2)
            pt.cmd = p->at(2);
 
@@ -1214,6 +1213,23 @@ IMPL(message)
     p->invalidargs();
 }
 //-------------------------------------------------------------------
+IMPL(wait)
+{
+     if (p->size() == 2 && isOnlySymbols(p->at(0), L"0123456789."))
+     {
+         double delay = 0;
+         w2double(p->at(0), &delay);
+         if (delay > 0)
+         {
+             delay = delay * 1000;
+             int delay_ms = static_cast<int>(delay);
+             m_waitcmds.add(delay_ms, p->at(1));
+             return;
+         }
+     }
+     p->invalidargs();
+}
+//-------------------------------------------------------------------
 void LogicProcessor::regCommand(const char* name, syscmd_fun f)
 {
     PropertiesData *pdata = tortilla::getProperties();
@@ -1258,6 +1274,7 @@ bool LogicProcessor::init()
     regCommand("math", math);
     regCommand("var", var);
     regCommand("unvar", unvar);
+    regCommand("wait", wait);
 
     regCommand("password", password);
     regCommand("hide", hide);

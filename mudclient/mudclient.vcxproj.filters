@@ -256,6 +256,9 @@
     <ClInclude Include="src\accessors.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\waitCmds.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">

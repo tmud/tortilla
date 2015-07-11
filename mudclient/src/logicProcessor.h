@@ -4,6 +4,7 @@
 #include "logicHelper.h"
 #include "logsProcessor.h"
 #include "network/network.h"
+#include "waitCmds.h"
 
 struct InputCommand;
 class LogicProcessorHost
@@ -71,6 +72,7 @@ class LogicProcessor : public LogicProcessorMethods
     Pcre16 m_univ_prompt_pcre;
     std::vector<tstring> m_plugins_log_cache;
     bool m_plugins_log_tocache;
+    WaitCommands m_waitcmds;
 
 public:
     LogicProcessor(LogicProcessorHost *host);
@@ -171,4 +173,5 @@ public: // system commands
     DEF(wname);
     DEF(var);
     DEF(unvar);
+    DEF(wait);
 };

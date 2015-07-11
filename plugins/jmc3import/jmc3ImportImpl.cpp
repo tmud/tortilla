@@ -239,6 +239,24 @@ bool Jmc3Import::convert(u8string *str)
 
     str->clear();
     u8string default_cmdsymbol("#");
+
+    // support import #wait command
+    u8string waitcmd(jmc_cmdsymbol);
+    waitcmd.append("wait");
+    int last = cmds.size()-1;
+    for (int i=last; i>=0; --i)
+    {
+        u8string &cmd = cmds[i];
+        if (cmd.find(waitcmd) != -1 && i != last)
+        {
+            cmd.append(" {");
+            cmd.append(cmds[i+1]);
+            cmd.append("}");
+            cmds.erase(cmds.begin()+(i+1));
+            last = cmds.size()-1;
+        }
+    }
+
     for (int i=0, e=cmds.size(); i<e; ++i)
     {
         if (i != 0)

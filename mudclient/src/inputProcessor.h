@@ -37,6 +37,10 @@ public:
     void push_back(const tstring& cmd){
         base::push_back(cmd);
     }
+    void move(InputPlainCommands& cmds){
+        for (int i=0,e=cmds.size();i<e;++i)
+            base::push_back(cmds[i]);
+    }
     std::vector<tstring>* ptr() {
         return this;
     }

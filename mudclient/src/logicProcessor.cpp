@@ -17,6 +17,18 @@ LogicProcessor::~LogicProcessor()
 
 void LogicProcessor::processTick()
 {
+    std::vector<tstring> cmds;
+    m_waitcmds.tick(&cmds);
+    if (!cmds.empty()) 
+    {
+        InputPlainCommands wait_cmds;
+        for (int i=0,e=cmds.size();i<e;++i)
+        {
+            InputPlainCommands tmp(cmds[i]);
+            wait_cmds.move(tmp);
+        }
+        processCommands(wait_cmds);
+    }
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
