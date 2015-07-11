@@ -17,6 +17,9 @@ LONG WINAPI CustomUnhandledExceptionFilter( PEXCEPTION_POINTERS pExInfo )
     eInfo.ClientPointers = FALSE;
     MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &eInfo, NULL, NULL);
     CloseHandle(hFile);
+    MessageBox(NULL, 
+        L"Фатальная ошибка!!! Отправьте файл crash.dmp(в папке программы) автору, чтобы исправить проблему. Он содержит только системную информацию о падении программы.", 
+        L"Tortilla mud client", MB_OK|MB_ICONERROR);
     return EXCEPTION_EXECUTE_HANDLER;
 }
 
