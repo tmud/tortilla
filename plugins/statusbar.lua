@@ -3,7 +3,7 @@
 
 -- Включите режим га/автозавершения в клиенте, либо настройте распознавание prompt-строки!
 -- подробнее #help plugin_statusbar
--- FAQ: Если необновляются бары, например в бою, включите режим га/автозавершения!
+-- FAQ: Если необновляются бары, например в бою, проверьте режим га/автозавершения!
 
 -- Местоположение в окне клиента "top" или "bottom"
 local position = "bottom"
@@ -26,13 +26,14 @@ function statusbar.name()
 end
 
 function statusbar.description()
-return 'Плагин отображает информацию о здоровье, мане, энергии и опыте\r\n\z
-в виде полосок на отдельной панели клиента. Требует для работы режима га/автозавершения.\r\n\z
-Требует также настройки. Про настройку читайте в справке к клиенту (#help plugin_statusbar).'
+return 'Плагин отображает информацию о здоровье, мане, энергии и опыте в виде полосок\r\n\z
+на отдельной панели клиента. Требует для работы режим га/автозавершения в маде.\r\n\z
+Требует также настройки. Про настройку читайте в справке к клиенту (#help plugin_statusbar).\r\n\z
+В пакете с клиентом уже есть конфигурационные файлы для основных существующих мадов.'
 end
 
 function statusbar.version()
-    return '1.03d'
+    return '1.03'
 end
 
 local objs = {}
@@ -144,19 +145,10 @@ end
 
 function statusbar.before(window, v)
 if window ~= 0 or not cfg then return end
-  local update = false
-  
-  local prompt = false --DEBUG
-  
+  local update = false 
   for i=1,v:size() do
     v:select(i)
     if v:isPrompt() then
-
-      --DEBUG
-      prompt = true
-      log(v:getPrompt())
-      --DEBUG END
-
       local tmp,count  = {}, 0
       for _,teg in pairs(tegs) do
          local c = cfg[teg]
@@ -169,19 +161,10 @@ if window ~= 0 or not cfg then return end
         update = true
         for k,v in pairs(tmp) do
           values[k] = v
-          log(k.."="..v) --DEBUG
         end
       end
     end
   end
-  
-  --DEBUG
-  if not prompt then
-    log("prompt not found!")
-  end
-  log("------------------")
-  --DEBUG END
-  
   for id,regexp in pairs(regs) do
     if v:find(regexp) then
       for _,teg in pairs(tegs) do

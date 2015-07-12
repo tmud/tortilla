@@ -493,6 +493,17 @@ void MudView::deleteBeginStrings(int count_from_begin)
     for (; it != it_end; ++it)
         delete (*it);
     m_strings.erase(m_strings.begin(), m_strings.begin()+count_from_begin);
+    if (drag_begin < 0)
+        return;
+    drag_begin -= count_from_begin;
+    drag_end -= count_from_begin;
+    if (drag_begin < 0) drag_begin = 0;
+    if (drag_end < 0) drag_end = 0;
+    if (drag_begin == drag_end && drag_begin == 0)
+    {
+        ReleaseCapture();
+        drag_begin = -1;
+    }
 }
 
 void MudView::startDraging()
@@ -532,7 +543,10 @@ void MudView::stopDraging()
         }
         else if (drag_right == -1)
         {
-            text.assign ( tmp.substr(drag_left) );
+            if (isDragCursorLeft())
+                text.assign( tmp.substr(0, drag_left+1) );
+            else
+                text.assign( tmp.substr(drag_left) );
         }
         else
         {
