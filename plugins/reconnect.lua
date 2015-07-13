@@ -20,13 +20,14 @@ function reconnect.description()
 end
 
 function reconnect.version()
-    return '1.02'
+    return '1.03'
 end
 
 local connected = false
 local address = nil
 local port = nil
 local attempts = 0
+local activated = false
 
 function reconnect.syscmd(t)
   if #t == 1 and (t[1] == 'zap' or t[1] == 'disconnect') then
@@ -35,10 +36,22 @@ function reconnect.syscmd(t)
   return t
 end
 
+function reconnect.activated()
+  activated = true
+end
+
+function reconnect.deactivated()
+  activated = false
+end
+
 function reconnect.connect()
   connected = true
   reconnect.getaddress()
   attempts = 0
+end
+
+local function flash()
+  if not activated then flashWindow() end
 end
 
 function reconnect.disconnect()
@@ -46,13 +59,13 @@ function reconnect.disconnect()
     return
   end
   if attempts == 0 then
-    flashWindow()
+    flash()
   end
   attempts = attempts + 1
   if max_count and max_count ~= 0 then
     if attempts == max_count+1 then
        connected = false
-       flashWindow()
+       flash()
        return
     end
   end

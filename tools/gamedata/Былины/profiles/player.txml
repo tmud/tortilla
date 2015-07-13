@@ -31,7 +31,7 @@
   </colors>
   <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
-    <action key="^Select one :" value="2" group="base"/>
+    <action key="^Select one :$" value="2" group="base"/>
   </actions>
   <aliases/>
   <hotkeys>

@@ -31,7 +31,7 @@
   </colors>
   <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
-    <action key="Please choose a MUD client from the list below:" value="3" group="base"/>
+    <action key="Please choose a MUD client from the list below:$" value="3" group="base"/>
   </actions>
   <aliases/>
   <hotkeys>
