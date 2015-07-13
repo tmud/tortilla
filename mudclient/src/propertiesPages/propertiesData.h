@@ -82,11 +82,23 @@ struct PropertiesTimer
         if (pos != tstring::npos)
         {
            timer.assign(str.substr(0, pos));
-           if (isOnlyDigits(timer))
+           if (isItNumber(timer))
+           {
+               double delay = 0;
+               w2double(timer, &delay);
+               setTimer(delay);
                cmd.assign(str.substr(pos+1));
+           }
            else
                timer.assign(L"0");
         }
+    }
+    void setTimer(double timer_delay)
+    {
+        if (timer_delay <= 0) timer_delay = 0;
+        if (timer_delay >= 1000.0f) timer_delay = 999.9f;
+        bool mod = (getMod(timer_delay) >= 0.09f) ? true : false;
+        double2w(timer_delay, (mod) ? 1 : 0, &timer);
     }
 
     tstring timer;

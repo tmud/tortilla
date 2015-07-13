@@ -621,10 +621,9 @@ private:
             m_processor.processStackTick();
             m_plugins.processToSend(&m_network);
 
-            m_view.processTick();
-            for (int i=0,e=m_views.size();i<e;++i)
-                m_views[i]->processTick();
-
+            m_view.updateSoftScrolling();
+            /*for (int i=0,e=m_views.size();i<e;++i)
+                m_views[i]->processTick();*/
         }
         return 0;
     }

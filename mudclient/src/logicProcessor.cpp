@@ -5,7 +5,7 @@
 LogicProcessor::LogicProcessor(LogicProcessorHost *host) :
 m_pHost(host), m_connecting(false), m_connected(false),
 m_prompt_mode(OFF), m_prompt_counter(0),
-m_plugins_log_tocache(false)
+m_plugins_log_tocache(false), m_plugins_log_blocked(false)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -17,6 +17,18 @@ LogicProcessor::~LogicProcessor()
 
 void LogicProcessor::processTick()
 {
+    std::vector<tstring> cmds;
+    m_waitcmds.tick(&cmds);
+    if (!cmds.empty()) 
+    {
+        InputPlainCommands wait_cmds;
+        for (int i=0,e=cmds.size();i<e;++i)
+        {
+            InputPlainCommands tmp(cmds[i]);
+            wait_cmds.move(tmp);
+        }
+        processCommands(wait_cmds);
+    }
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -243,6 +255,8 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
 
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
+    if (m_plugins_log_blocked)
+        return;
     PropertiesData *pdata = tortilla::getProperties();
     if (!pdata->plugins_logs)
         return;

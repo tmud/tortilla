@@ -13,13 +13,21 @@ void LogicProcessor::processStackTick()
             return;
         }
         int window = pdata->plugins_logs_window;
-        std::vector<tstring> tmp;
-        tmp.swap(m_plugins_log_cache);
-        for (int i=0,e=tmp.size(); i<e; ++i){
-            tstring &t = tmp[i];
-            processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+        MudViewString *last = m_pHost->getLastString(window);
+        if (last && !last->prompt && !last->gamecmd && !last->system)
+            { /*skip*/ }
+        else
+        {
+            m_plugins_log_blocked = true;
+            std::vector<tstring> tmp;
+            tmp.swap(m_plugins_log_cache);
+            for (int i=0,e=tmp.size(); i<e; ++i){
+                tstring &t = tmp[i];
+                processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+            }
+            tmp.clear();
+            m_plugins_log_blocked = false;
         }
-        tmp.clear();
     }
 
     if (m_prompt_mode == OFF)
@@ -150,7 +158,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 20;
+    const int max_lines_without_prompt = 25;
     bool p_exist = false;
     int last_game_cmd = -1;
     PropertiesData *pdata = tortilla::getProperties();
@@ -189,7 +197,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        }
 
        // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
-       // параллельно делим строку по promt если находим
+       // параллельно делим строку по prompt если находим
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
            last_game_cmd = -1;

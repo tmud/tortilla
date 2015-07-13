@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
-  <baseparams hp="1" mv="2" dsu="3"/>
+  <baseparams hp="ж" mv="б" dsu="о"/>
   <maxparams hp="1" hpid="r1" mv="2" mvid="r1" xp="1" xpid="r2" dsu="2" dsuid="r2"/>
   <regexp r1="^У Вас сейчас [0-9]+ из ([0-9]+) очков жизни и [0-9]+ из ([0-9]+) очков бодрости." 
   r2="^Вы набрали ([0-9]+) очков опыта. До следующего уровня осталось ([0-9]+)."/>

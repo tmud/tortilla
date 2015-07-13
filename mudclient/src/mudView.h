@@ -41,7 +41,7 @@ public:
     int  getSymbolsOnDisplay() const;
     MudViewString* getString(int idx) const;
     void updateProps();
-    void processTick();
+    void updateSoftScrolling();
 
 private:
 	BEGIN_MSG_MAP(MudView)

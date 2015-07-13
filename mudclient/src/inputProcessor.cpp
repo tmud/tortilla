@@ -319,7 +319,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
         // check space after close bracket
         else
         {
-            if (p+1 != e && p[1] != ' ')
+            if (*p != '{' && p+1 != e && p[1] != ' ' && p[1] != _params.separator)
                 { p++; continue; }
         }
 
