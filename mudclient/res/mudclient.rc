@@ -175,9 +175,9 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,88,175,8
     CONTROL         "Запретить серверу изменять цветовую палитру",IDC_CHECK_DISABLE_OSC,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,99,182,9
-    CONTROL         "Показывать ошибки работы плагинов в окне:",IDC_CHECK_PLUGINSLOGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,111,168,9
-    EDITTEXT        IDC_EDIT_PLUGINSLOGS,175,110,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Показывать логи работы плагинов в окне:",IDC_CHECK_PLUGINSLOGS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,111,159,9
+    EDITTEXT        IDC_EDIT_PLUGINSLOGS,168,110,21,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Использовать IAC GA (нужна поддержка сервера)",IDC_RADIO_PROMT_GA,
                     "Button",BS_AUTORADIOBUTTON,8,146,184,8
     CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,155,90,10
