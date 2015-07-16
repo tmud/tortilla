@@ -230,6 +230,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\LogicProcessor3.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
     <ClCompile Include="src\msdp\msdpNetwork.cpp" />
+    <ClCompile Include="src\mudCommandBar.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
     <ClCompile Include="src\mudView.cpp" />
     <ClCompile Include="src\mudViewParser.cpp" />
