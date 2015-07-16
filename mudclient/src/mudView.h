@@ -42,6 +42,7 @@ public:
     MudViewString* getString(int idx) const;
     void updateProps();
     void updateSoftScrolling();
+    void setSoftScrollingMode(bool mode);
 
 private:
 	BEGIN_MSG_MAP(MudView)

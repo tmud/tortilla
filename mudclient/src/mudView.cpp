@@ -98,6 +98,11 @@ void MudView::updateSoftScrolling()
     }
 }
 
+void MudView::setSoftScrollingMode(bool mode)
+{
+    m_use_softscrolling = mode;
+}
+
 void MudView::clearText()
 {
     mudViewStrings::iterator it = m_strings.begin(), it_end = m_strings.end();
@@ -177,8 +182,6 @@ MudViewString* MudView::getString(int idx) const
 
 void MudView::updateProps()
 {
-    m_use_softscrolling = true; //todo tortilla::getProperties()
-
     if (m_strings.empty())
         return;
     calcStringsSizes(m_strings);
