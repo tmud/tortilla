@@ -114,7 +114,7 @@ private:
         RECT pos;
         ::GetWindowRect(GetDlgItem(IDC_STATIC_RICHBOXPLACE), &pos);
         ScreenToClient(&pos);             
-        m_rich.Create(m_hWnd, pos, WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY, WS_EX_STATICEDGE);
+        m_rich.Create(m_hWnd, pos, WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY, WS_EX_CLIENTEDGE);
 
         HRSRC res = FindResource(NULL, MAKEINTRESOURCE(IDR_BINARY_WELCOME), L"BINARY");
         int size = SizeofResource(NULL, res);
