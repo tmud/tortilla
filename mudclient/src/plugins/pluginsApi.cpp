@@ -409,9 +409,11 @@ int saveTable(lua_State *L)
     struct saveDataNode
     {
         typedef std::pair<std::string, std::string> value;
+        typedef std::map<int, std::string> tarray;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
         std::string name;
+        tarray array;
     };
 
     saveDataNode *current = new saveDataNode();
@@ -439,7 +441,14 @@ int saveTable(lua_State *L)
             }
             if (key_type == LUA_TNUMBER)
             {
-                if (value_type != LUA_TTABLE) {
+                if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING)
+                {
+                    int index = lua_tointeger(L, -2);
+                    current->array[index] = lua_tostring(L, -1);
+                    lua_pop(L, 1);
+                    continue;
+                }
+                else if (value_type != LUA_TTABLE) {
                     lua_pop(L, 1);
                     incorrect_data = true;
                     continue;
@@ -510,6 +519,18 @@ int saveTable(lua_State *L)
         std::vector<saveDataNode::value>&a = v.first->attributes;
         for (int i = 0, e = a.size(); i < e; ++i)
             node.set(a[i].first.c_str(), a[i].second.c_str());
+        saveDataNode::tarray &ta = v.first->array;
+        if (!ta.empty())
+        {
+            xml::node new_node = node.createsubnode("array");
+            saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
+            for(; it!=it_end; ++it)
+            {
+                xml::node tmp = new_node.createsubnode("node");
+                tmp.set("key", it->first);
+                tmp.set("value", it->second.c_str());                
+            }
+        }
         std::vector<saveDataNode*>&n = v.first->childnodes;
         for (int i = 0, e = n.size(); i < e; ++i)
         {
