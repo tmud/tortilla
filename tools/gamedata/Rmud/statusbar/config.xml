@@ -1,7 +1,22 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
-  <baseparams hp="ж" mv="б" dsu="о"/>
-  <maxparams hp="1" hpid="r1" mv="2" mvid="r1" xp="1" xpid="r2" dsu="2" dsuid="r2"/>
-  <regexp r1="^У Вас сейчас [0-9]+ из ([0-9]+) очков жизни и [0-9]+ из ([0-9]+) очков бодрости." 
-  r2="^Вы набрали ([0-9]+) очков опыта. До следующего уровня осталось ([0-9]+)."/>
+  <baseparams>
+    <hp value="ж"/>
+    <mv value="б"/>
+    <dsu value="о"/>
+  </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mv value="2"/>
+    <mvid value="r1"/>
+    <xp value="1"/>
+    <xpid value="r2"/>
+    <dsu value="2"/>
+    <dsuid value="r2"/>
+  </maxparams>
+  <regexp>
+    <r1 value="^У Вас сейчас [0-9]+ из ([0-9]+) очков жизни и [0-9]+ из ([0-9]+) очков бодрости."/>
+    <r2 value="^Вы набрали ([0-9]+) очков опыта. До следующего уровня осталось ([0-9]+)."/>
+  </regexp>
 </plugindata>

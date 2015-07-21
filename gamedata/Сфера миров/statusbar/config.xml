@@ -1,8 +1,26 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
-  <baseparams hp="H" mn="M" mv="V" dsu="X"/>
-  <maxparams hp="1" hpid="r1" mn="2" mnid="r1" mv="3" mvid="r1" xp="1" xpid="r2" dsu="1" dsuid="r3"/>
-  <regexp r1="^Вы имеете [0-9]+\(([0-9]+)\) здоровья, [0-9]+\(([0-9]+)\) маны, [0-9]+\(([0-9]+)\) энергии." 
-  r2="^Вы набрали ([0-9]+) опыта.*" 
-  r3="^Вам надо набрать ([0-9]+) опыта.*"/>
+  <baseparams> 
+    <hp value="H"/>
+    <mn value="M"/>
+    <mv value="V"/>
+    <dsu value="X"/>
+ </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mn value="2"/>
+    <mnid value="r1"/>
+    <mv value="3"/>
+    <mvid value="r1"/>
+    <xp value="1"/>
+    <xpid value="r2"/>
+    <dsu value="1"/>
+    <dsuid value="r3"/>
+  </maxparams>
+  <regexp>
+    <r1 value="^Вы имеете [0-9]+\(([0-9]+)\) здоровья, [0-9]+\(([0-9]+)\) маны, [0-9]+\(([0-9]+)\) энергии."/>
+    <r2 value="^Вы набрали ([0-9]+) опыта.*"/>
+    <r3 value="^Вам надо набрать ([0-9]+) опыта.*"/>
+  </regexp>
 </plugindata>

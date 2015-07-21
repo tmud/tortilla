@@ -1,7 +1,22 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
-  <baseparams hp="ж" mv="э" xp="о"/>
-  <maxparams hp="1" hpid="r1" mv="1" mvid="r2" xp="2" xpid="r1" dsu="2" dsuid="r2"/>
-  <regexp r1="^\*\).*Жизни.*?/([0-9]+).*?([0-9]+)" 
-  r2="^\(\(.*Энергии.*?/([0-9]+).*?([0-9]+)"/>
+  <baseparams>
+    <hp value="ж"/>
+    <mv value="э"/>
+    <xp value="о"/>
+  </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mv value="1"/>
+    <mvid value="r2"/>
+    <xp value="2"/>
+    <xpid value="r1"/>
+    <dsu value="2"/>
+    <dsuid value="r2"/>
+  </maxparams>
+  <regexp>
+    <r1 value="^\*\).*Жизни.*?/([0-9]+).*?([0-9]+)"/>
+    <r2 value="^\(\(.*Энергии.*?/([0-9]+).*?([0-9]+)"/>
+  </regexp>
 </plugindata>

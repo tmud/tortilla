@@ -518,18 +518,17 @@ int saveTable(lua_State *L)
         xml::node node = v.second;
         std::vector<saveDataNode::value>&a = v.first->attributes;
         for (int i = 0, e = a.size(); i < e; ++i)
-            node.set(a[i].first.c_str(), a[i].second.c_str());
-        saveDataNode::tarray &ta = v.first->array;
-        if (!ta.empty())
         {
-            xml::node new_node = node.createsubnode("array");
-            saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
-            for(; it!=it_end; ++it)
-            {
-                xml::node tmp = new_node.createsubnode("node");
-                tmp.set("key", it->first);
-                tmp.set("value", it->second.c_str());                
-            }
+            xml::node attr = node.createsubnode(a[i].first.c_str());
+            attr.set("value", a[i].second.c_str());
+        }
+        saveDataNode::tarray &ta = v.first->array;
+        saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
+        for(; it!=it_end; ++it)
+        {
+            xml::node arr = node.createsubnode("array");
+            arr.set("index", it->first);
+            arr.set("value", it->second.c_str());
         }
         std::vector<saveDataNode*>&n = v.first->childnodes;
         for (int i = 0, e = n.size(); i < e; ++i)

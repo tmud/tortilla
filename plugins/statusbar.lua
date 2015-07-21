@@ -248,8 +248,8 @@ local function initmax(teg)
 end
 
 function statusbar.init()
-  local x = { 1, 2, 3, 4, 5 }
-  saveTable(x, "test.xml")
+  --local x = { 1, 2, 3, 4, 5, a={f="123", a4="dddd" }, d = 6 }
+  --saveTable(x, "test.xml")
 
   local file = loadTable('config.xml')
   if not file then
