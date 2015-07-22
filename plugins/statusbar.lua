@@ -248,14 +248,12 @@ local function initmax(teg)
 end
 
 function statusbar.init()
-  --local x = { 1, 2, 3, 4, 5, a={f="123", a4="dddd" }, d = 6 }
-  --saveTable(x, "test.xml")
-
   local file = loadTable('config.xml')
   if not file then
     cfg = nil
     return terminate("Нет файла с настройками: "..getPath('config.xml'))
   end
+
   cfg = file
   bars = 0
   regs = {}
@@ -278,7 +276,7 @@ function statusbar.init()
       bars = bars + 1
     end
   end
- 
+
   if #msgs ~= 0 then
     log('Ошибки в файле настрек: '..getPath('config.xml'))
     for _,v in ipairs(msgs) do
