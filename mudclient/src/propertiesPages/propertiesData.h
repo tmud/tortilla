@@ -397,6 +397,7 @@ struct PropertiesData
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
+       , soft_scroll(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();
@@ -463,6 +464,8 @@ struct PropertiesData
     int      recognize_prompt;
     tstring  recognize_prompt_template;
 
+    int      soft_scroll;
+
     RECT main_window;
     int  main_window_fullscreen;
     int  display_width;
@@ -493,16 +496,8 @@ struct PropertiesData
         resetOSCColors();
         font_heigth = 10;
         font_italic = 0;
-        /*if (isVistaOrHigher())
-        {
-            font_name.assign(L"Consolas");   // Consolas more pretty font (exist only Vista+)
-            font_bold = FW_BOLD;
-        }
-        else*/
-        {
-            font_name.assign(L"Fixedsys");
-            font_bold = FW_NORMAL;
-        }
+        font_name.assign(L"Fixedsys");
+        font_bold = FW_NORMAL;
     }
 
     void resetOSCColors()
