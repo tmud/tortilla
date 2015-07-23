@@ -114,20 +114,43 @@ void ProfilesGroupList::initEmptyGroupList(const std::vector<tstring>& dirs)
   f.deletenode();
 
   m_empty_group_list = true;
-  m_first_startup = true;
+  m_first_startup = false;
   m_last_accessed = -1;
   if (m_groups_list.empty())
       return;
 
   CStartupWorldDlg dlg;
   dlg.setList(m_groups_list);
-
   if (dlg.DoModal() != IDOK)
       return;
 
   m_last_accessed = dlg.getItem();
-  if (!dlg.getAboutState())
-      m_first_startup = false;
+  m_first_startup = dlg.getHelpState();
+  tstring profile_name;
+  dlg.getProfileName(&profile_name);
+  tstring_trim(&profile_name);
+  if (!profile_name.empty() && isOnlyFilnameSymbols(profile_name) && profile_name != L"player" && m_last_accessed >= 0)
+  {
+      tstring group(m_groups_list[m_last_accessed]);
+      ProfilePath ph1(group, L"profiles\\player.xml");
+      DWORD a = GetFileAttributes(ph1);
+      if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY))
+      {
+          tstring fname(L"profiles\\");
+          fname.append(profile_name);
+          fname.append(L".xml");
+          ProfilePath ph2(group, fname);
+          if (CopyFile(ph1, ph2, FALSE))
+          {
+              ProfilePath ph(group, L"settings.xml");
+              xml::node f("settings");
+              xml::node n(f.createsubnode("profile"));
+              n.settext(TW2U(profile_name.c_str()));
+              f.save(TW2U(ph));
+              f.deletenode();
+          }
+      }
+  }
 }
 //---------------------------------------------------------------------------
 void ProfilesList::init(const tstring& group)

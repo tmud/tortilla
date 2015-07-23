@@ -13,6 +13,7 @@ bool isOnlyDigits(const tstring& str);
 bool isItNumber(const tstring& str);
 bool isOnlySpaces(const tstring& str);
 bool isOnlySymbols(const tstring& str, const tstring& symbols);
+bool isOnlyFilnameSymbols(const tstring& str);
 COLORREF invertColor(COLORREF c);
 bool sendToClipboard(HWND owner, const tstring& text);
 bool getFromClipboard(HWND owner, tstring* text);

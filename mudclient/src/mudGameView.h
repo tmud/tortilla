@@ -402,8 +402,9 @@ private:
 
     LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
     {
-        CWelcomeDlg dlg;
-        dlg.DoModal();
+        // show help
+        
+
         return 0;
     }
 
