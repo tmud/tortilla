@@ -131,8 +131,12 @@ int addMenu(lua_State *L)
     else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
     {
         HBITMAP bmp = NULL;
-        HMODULE module = _cp->getModule();
-        if (module) bmp = LoadBitmap( module, MAKEINTRESOURCE(lua_tointeger(L, 4)) );
+        int bmp_id = lua_tointeger(L, 4);
+        if (bmp_id > 0) {
+            HMODULE module = _cp->getModule();
+            if (module)
+                bmp = LoadBitmap( module, MAKEINTRESOURCE(bmp_id) );
+        }
         code = lua_tointeger(L, 2);
         params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
     }

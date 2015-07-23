@@ -26,7 +26,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.08");
+    lua_pushstring(L, "1.09");
     return 1;
 }
 
@@ -57,7 +57,7 @@ void parse_color(const u8string& text, COLORREF *color)
 int init(lua_State *L)
 {
     base::addCommand(L, "tray");
-    base::addMenu(L, "Плагины/Оповещения (tray)...", 2, 1);
+    base::addMenu(L, "Плагины/Оповещения (tray)...", 1);
 
     g_tray.create();
     luaT_Props p(L);

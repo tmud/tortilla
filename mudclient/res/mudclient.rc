@@ -474,7 +474,6 @@ BEGIN
         MENUITEM "Новый мир...",                ID_NEWWORLD
         MENUITEM SEPARATOR
         MENUITEM "Н&астройки...\tShift+F12",    ID_SETTINGS
-        MENUITEM "&Плагины...",                 ID_PLUGINS
         MENUITEM SEPARATOR
         MENUITEM "&Выход",                      ID_MUDCLIENT_EXIT
     END
@@ -488,6 +487,11 @@ BEGIN
         MENUITEM "Окно &4",                     ID_WINDOW_4
         MENUITEM "Окно &5",                     ID_WINDOW_5
         MENUITEM "Окно &6",                     ID_WINDOW_6
+    END
+    POPUP "Плагины"
+    BEGIN
+        MENUITEM "&Менеджер плагинов...",       ID_PLUGINS
+        MENUITEM SEPARATOR
     END
     POPUP "?"
     BEGIN

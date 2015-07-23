@@ -37,8 +37,8 @@ void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
 namespace base {
-    inline void addMenu(lua_State* L, const utf8* path, int pos, int id) {
-        luaT_run(L, "addMenu", "sdd", path, pos, id); 
+    inline void addMenu(lua_State* L, const utf8* path, int id, int pos = -1, int bitmap = -1) {
+        luaT_run(L, "addMenu", "sddd", path, id, pos, bitmap);
     }
     inline void addCommand(lua_State* L, const utf8* cmd) {
         luaT_run(L, "addCommand", "s", cmd);
