@@ -388,7 +388,7 @@ private:
             PostMessage(WM_USER+3);
 
         SetTimer(1, 200);
-        SetTimer(2, 50);
+        SetTimer(2, 40);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -620,10 +620,9 @@ private:
         {
             m_processor.processStackTick();
             m_plugins.processToSend(&m_network);
-
             m_view.updateSoftScrolling();
-            /*for (int i=0,e=m_views.size();i<e;++i)
-                m_views[i]->processTick();*/
+            for (int i=0,e=m_views.size();i<e;++i)
+              m_views[i]->updateSoftScrolling();
         }
         return 0;
     }
@@ -785,7 +784,7 @@ private:
        m_propElements.updateProps(m_hWnd);
        initCommandBar();
        m_view.updateProps();
-       //m_view.setSoftScrollingMode(true); //todo
+       m_view.setSoftScrollingMode(m_propData->soft_scroll ? true : false);
        m_history.updateProps();
        for (int i=0,e=m_views.size(); i<e; ++i)
            m_views[i]->updateProps();
@@ -872,6 +871,7 @@ private:
             bool last = m_view.isLastString();
             bool last_updated = m_view.isLastStringUpdated();
             int count = parse_data->strings.size();
+            bool in_soft_scrolling = m_view.inSoftScrolling();
             m_view.addText(parse_data);
 
             parseData history;
@@ -888,11 +888,20 @@ private:
             m_history.pushText(&history);
 
             checkHistorySize();
-            if (!m_history.IsWindowVisible() && !last)
+            bool history_visible = m_history.IsWindowVisible() ? true : false;
+            bool soft_scroll = m_propData->soft_scroll ? true : false;
+            if (!history_visible && !last)
             {
-                showHistory(vs, 1);
+                if (!soft_scroll || !in_soft_scrolling)
+                {
+                    showHistory(vs, 1);
+                    if (soft_scroll) {
+                      int last = m_view.getLastString();
+                      m_view.setViewString(last);
+                    }
+                }
             }
-            else
+            else if (history_visible)
             {
                 int vs = m_history.getViewString();
                 m_history.setViewString(vs);

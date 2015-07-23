@@ -9,7 +9,7 @@ m_lines_count(0),
 m_last_visible_line(-1),
 m_last_string_updated(false),
 m_use_softscrolling(false),
-m_start_softscroll(0),
+m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1)
 {
@@ -68,7 +68,8 @@ void MudView::addText(parseData* parse_data)
     checkLimit();
 
     if (m_use_softscrolling) {
-        m_start_softscroll = m_last_visible_line;
+        if (m_start_softscroll == -1)
+            m_start_softscroll = (m_last_visible_line == -1) ? 0 : m_last_visible_line;
         return;
     }
 
@@ -86,13 +87,24 @@ void MudView::pushText(parseData* parse_data)
 
 void MudView::updateSoftScrolling()
 {
-    if (!m_use_softscrolling)
-        return;    
-    int lines = m_strings.size() - 1;
-    if (m_last_visible_line != lines)
-    {    
-        int new_visible_line = m_last_visible_line + 2;
-        if (new_visible_line > lines) new_visible_line = lines;
+    if (!m_use_softscrolling || m_start_softscroll == -1)
+        return;
+
+    int last_string = getLastString();
+    if (m_last_visible_line != last_string)
+    {        
+        int new_visible_line = last_string;
+        int count = last_string - m_last_visible_line;
+        if (count > 8)
+            new_visible_line = m_last_visible_line + 8;
+        else if (count > 5)
+            new_visible_line = m_last_visible_line + 5;
+        else if (count > 3)
+            new_visible_line = m_last_visible_line + 3;
+
+        if (new_visible_line == last_string) 
+            stopSoftScroll();
+
         updateScrollbar(new_visible_line);
         Invalidate(FALSE);
     }
@@ -123,6 +135,7 @@ void MudView::truncateStrings(int maxcount)
 
 void MudView::setViewString(int index)
 {
+    stopSoftScroll();
     updateScrollbar(index);
     Invalidate(FALSE);
 }
@@ -496,6 +509,7 @@ void MudView::setScrollbar(DWORD position)
         visible_line = (thumbpos + m_lines_count) - 1;
     break;
     }
+    stopSoftScroll();
     updateScrollbar(visible_line);
     Invalidate();
 }
@@ -504,6 +518,7 @@ void MudView::mouseWheel(WORD position)
 {
     int direction = (position & 0x8000) ? 3 : -3;
     int visible_line = m_last_visible_line + direction;
+    stopSoftScroll();
     updateScrollbar(visible_line);
     Invalidate();
 }
@@ -756,4 +771,14 @@ void MudView::calcDragLine(int line, dragline type)
     if (maxchars > 0)
         GetTextExtentExPoint(dc, text.c_str(), text.length(), dc_size, &maxchars, &ld[0], &sz);
     dc.SelectFont(current_font);
+}
+
+void MudView::stopSoftScroll()
+{
+    m_start_softscroll = -1;
+}
+
+bool MudView::inSoftScrolling() const
+{
+    return (m_start_softscroll == -1) ? false : true;
 }

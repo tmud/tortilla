@@ -43,6 +43,7 @@ public:
     void updateProps();
     void updateSoftScrolling();
     void setSoftScrollingMode(bool mode);
+    bool inSoftScrolling() const;
 
 private:
 	BEGIN_MSG_MAP(MudView)
@@ -105,6 +106,7 @@ private:
     int   calcDragSym(int x, dragline type) const;
     void  calcDragLine(int line, dragline type);
     void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
+    void  stopSoftScroll();    
 };
 
 class MudViewHandler
