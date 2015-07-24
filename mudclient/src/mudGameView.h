@@ -13,6 +13,7 @@
 #include "plugins/pluginsManager.h"
 
 #include "AboutDlg.h"
+#include "helpManager.h"
 
 #define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
 
@@ -403,8 +404,7 @@ private:
     LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
     {
         // show help
-        
-
+        openHelp(m_parent, L"");
         return 0;
     }
 
