@@ -128,7 +128,13 @@ bool ProfilesGroupList::copyProfileFile(const tstring& group, const tstring &src
     {
         tstring dst(L"profiles\\"); dst.append(profile); dst.append(L".xml");
         ProfilePath ph2(group, dst);
-        if (CopyFile(ph1, ph2, FALSE))
+        DWORD b = GetFileAttributes(ph2);
+        if (b != INVALID_FILE_ATTRIBUTES && !(b&FILE_ATTRIBUTE_DIRECTORY)) {
+            result = true;
+        } else {
+            result = CopyFile(ph1, ph2, FALSE) ? true : false;
+        }
+        if (result)
             result = createSettingsFile(group, profile);
     }
     return result;
