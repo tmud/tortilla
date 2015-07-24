@@ -17,7 +17,6 @@ bool PropertiesManager::init()
     if (!groups.init())
         return false;
     m_first_startup = groups.isFirstStartUp();
-    m_default_profile = groups.isEmptyGroupList();
     int last = groups.getLast();
     groups.getName(last, &m_configName);
     return true;

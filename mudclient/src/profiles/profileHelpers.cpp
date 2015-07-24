@@ -3,14 +3,16 @@
 #include "profilesPath.h"
 #include "AboutDlg.h"
 
-ProfilesGroupList::ProfilesGroupList() : m_last_accessed(-1), m_empty_group_list(false), m_first_startup(false)
+ProfilesGroupList::ProfilesGroupList() : m_last_accessed(-1), m_first_startup(false)
 {
 }
 
 bool ProfilesGroupList::init()
 {
+    std::vector<tstring> empty_dirs;
+
+    // find last changed settings.xml
     ProfilesDirsListHelper ph;
-    // find last changed config
     {
         FILETIME ft0; memset(&ft0, 0, sizeof(FILETIME));
         int index = -1;
@@ -27,26 +29,24 @@ bool ProfilesGroupList::init()
                     index = m_groups_list.size()-1;
                 }
             }
+            else
+            {
+                empty_dirs.push_back(ph.dirs[i]);
+            }
         }
         m_last_accessed = index;
     }
 
-    if (m_groups_list.empty())
-        initEmptyGroupList(ph.dirs);
-
-    tstring config(L"mudworld");
-    if (m_last_accessed != -1 && !m_groups_list.empty())
-        config.assign(m_groups_list[m_last_accessed]);
-    else
+    for (int i = 0, e = empty_dirs.size(); i < e; ++i)
     {
-        m_groups_list.clear();
-        m_groups_list.push_back(config);
-        m_last_accessed = 0;
+       const tstring& group = empty_dirs[i];
+       if (copyProfileFile(group, L"player.txml", L"player"))
+           m_groups_list.push_back(group);
     }
 
-    ProfileDirHelper dh;
-    if (!dh.makeDir(config, L"profiles"))
-        return false;
+    if (m_last_accessed == -1)
+        return initDefaultProfile();
+
     return true;
 }
 
@@ -55,14 +55,14 @@ int ProfilesGroupList::getCount() const
     return m_groups_list.size();
 }
 
-void ProfilesGroupList::getName(int index, tstring* name) const
-{
-    name->assign(m_groups_list[index]);
-}
-
 int ProfilesGroupList::getLast() const
 {
     return m_last_accessed;
+}
+
+void ProfilesGroupList::getName(int index, tstring* name) const
+{
+    name->assign(m_groups_list[index]);
 }
 
 bool ProfilesGroupList::getFileTime(const tstring& file, FILETIME *ft)
@@ -77,80 +77,87 @@ bool ProfilesGroupList::getFileTime(const tstring& file, FILETIME *ft)
     return result;
 }
 
-void ProfilesGroupList::initEmptyGroupList(const std::vector<tstring>& dirs)
+bool ProfilesGroupList::initDefaultProfile()
 {
-   xml::node f("settings");
-   xml::node n(f.createsubnode("profile"));
-   for (int i = 0, e = dirs.size(); i < e; ++i)
-   {
-      const tstring& group = dirs[i];
-      ProfilePath ph(group, L"settings.xml");
-      ProfilesList pl;
-      pl.init(group);
-      if (pl.getCount())
-      {
-          tstring name;
-          pl.getName(0, &name);
-          n.settext(TW2U(name.c_str()));
-          f.save(TW2U(ph));
-          m_groups_list.push_back(group);
-      }
-      else
-      {
-          ProfilePath ph1(group, L"profiles\\player.txml");
-          DWORD a = GetFileAttributes(ph1);
-          if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY))
-          {
-              ProfilePath ph2(group, L"profiles\\player.xml");
-              if (CopyFile(ph1, ph2, FALSE))
-              {
-                  n.settext("player");
-                  f.save(TW2U(ph));
-                  m_groups_list.push_back(group);
-              }
-          }
-      }
-  }
-  f.deletenode();
+    tstring profile(L"player");
+    if (!m_groups_list.empty())
+    {
+        CStartupWorldDlg dlg;
+        dlg.setList(m_groups_list);
+        if (dlg.DoModal() == IDOK)      
+        {
+            m_last_accessed = dlg.getItem();
+            m_first_startup = dlg.getHelpState();            
+            dlg.getProfileName(&profile);
+            if (m_last_accessed != -1) 
+            {
+                const tstring& group = m_groups_list[m_last_accessed];
+                if (copyProfileFile(group, L"player.txml", profile))
+                    return true;
+                return createEmptyProfileFile(group, profile);
+            }
+        }
+    }
 
-  m_empty_group_list = true;
-  m_first_startup = false;
-  m_last_accessed = -1;
-  if (m_groups_list.empty())
-      return;
+    tstring group(L"mudworld");
+    for (int i=0,e=m_groups_list.size(); i<e; ++i)
+    {
+         if (m_groups_list[i] == group)
+            { m_last_accessed = i; break; }
+    }
 
-  CStartupWorldDlg dlg;
-  dlg.setList(m_groups_list);
-  if (dlg.DoModal() != IDOK)
-      return;
+    if (m_last_accessed == -1)
+    {
+         m_groups_list.push_back(group);
+         m_last_accessed = m_groups_list.size()-1;
+    }
+    ProfileDirHelper dh;
+    if (!dh.makeDir(group, L"profiles"))
+         return false;
+    createEmptyProfileFile(group, profile);
+    return true;
+}
 
-  m_last_accessed = dlg.getItem();
-  m_first_startup = dlg.getHelpState();
-  tstring profile_name;
-  dlg.getProfileName(&profile_name);
-  tstring_trim(&profile_name);
-  if (!profile_name.empty() && isOnlyFilnameSymbols(profile_name) && profile_name != L"player" && m_last_accessed >= 0)
-  {
-      tstring group(m_groups_list[m_last_accessed]);
-      ProfilePath ph1(group, L"profiles\\player.xml");
-      DWORD a = GetFileAttributes(ph1);
-      if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY))
-      {
-          tstring fname(L"profiles\\");
-          fname.append(profile_name);
-          fname.append(L".xml");
-          ProfilePath ph2(group, fname);
-          if (CopyFile(ph1, ph2, FALSE))
-          {
-              ProfilePath ph(group, L"settings.xml");
-              xml::node f("settings");
-              xml::node n(f.createsubnode("profile"));
-              n.settext(TW2U(profile_name.c_str()));
-              f.save(TW2U(ph));
-              f.deletenode();
-          }
-      }
-  }
+bool ProfilesGroupList::copyProfileFile(const tstring& group, const tstring &srcfile, const tstring& profile)
+{
+    bool result = false;
+    tstring src(L"profiles\\"); src.append(srcfile);
+    ProfilePath ph1(group, src);
+    DWORD a = GetFileAttributes(ph1);
+    if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY))
+    {
+        tstring dst(L"profiles\\"); dst.append(profile); dst.append(L".xml");
+        ProfilePath ph2(group, dst);
+        if (CopyFile(ph1, ph2, FALSE))
+            result = createSettingsFile(group, profile);
+    }
+    return result;
+}
+
+bool ProfilesGroupList::createEmptyProfileFile(const tstring& group, const tstring& profile)
+{
+    xml::node p("profile");
+    tstring dst(L"profiles\\"); dst.append(profile); dst.append(L".xml");
+    ProfilePath ph(group, dst);
+    DWORD a = GetFileAttributes(ph);
+    bool result = true;
+    if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY)) {}
+    else { result = p.save(TW2U(ph)); }
+    p.deletenode();
+    if (result)
+        result = createSettingsFile(group, profile);
+    return result;
+}
+
+bool ProfilesGroupList::createSettingsFile(const tstring& group, const tstring& profile)
+{
+    xml::node f("settings");
+    xml::node n(f.createsubnode("profile"));
+    ProfilePath ph(group, L"settings.xml");
+    n.settext(TW2U(profile.c_str()));
+    bool result = f.save(TW2U(ph));
+    f.deletenode();
+    return result;
 }
 //---------------------------------------------------------------------------
 void ProfilesList::init(const tstring& group)
@@ -181,9 +188,4 @@ int ProfilesList::getCount() const
 void ProfilesList::getName(int index, tstring* name) const
 {
     name->assign(m_profiles_list[index]);
-}
-
-bool IsExistIncorrectSymbols(const tstring& s)
-{
-    return (isExistSymbols(s, L"*?:/<>|\"\\")) ? true : false;
 }

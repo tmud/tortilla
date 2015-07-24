@@ -141,7 +141,6 @@ private:
     }
 };
 
-
 class CStartupWorldDlg : public CDialogImpl<CStartupWorldDlg>
 {
     CListBox m_list;
@@ -162,9 +161,7 @@ public:
     }
     int getItem() const { return m_selected_item; }
     bool getHelpState() const { return m_show_help; }
-    void getProfileName(tstring *name) const {
-       name->assign(m_profile_name);
-    }
+    void getProfileName(tstring *name) const {  name->assign(m_profile_name); }
 
 private:
     BEGIN_MSG_MAP(CStartupWorldDlg)
@@ -172,6 +169,7 @@ private:
         MESSAGE_HANDLER(WM_USER+1, OnFocus)
         COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+        COMMAND_HANDLER(IDC_EDIT_STARTUP_PROFILE, EN_CHANGE, OnNameChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -197,11 +195,7 @@ private:
             m_selected_item = m_selected_item -1;
         m_show_help = (m_show_about.GetCheck() == BST_CHECKED) ? true : false;
 
-        int len = m_edit_profile_name.GetWindowTextLength();
-        tchar *buffer = new tchar[len+1];
-        m_edit_profile_name.GetWindowText(buffer, len+1);
-        m_profile_name.assign(buffer);
-        delete []buffer;
+        getWindowText(m_edit_profile_name, &m_profile_name);
 
         EndDialog(IDOK);
         return 0;
@@ -215,8 +209,18 @@ private:
 
     LRESULT OnFocus(UINT, WPARAM, LPARAM, BOOL&)
     {
-        m_list.SetCurSel(0);    
+        m_list.SetCurSel(0);
         m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
+    {
+        tstring text;
+        getWindowText(m_edit_profile_name, &text);
+        tstring_trim(&text);
+        BOOL ok = (!text.empty() && isOnlyFilnameSymbols(text)) ? TRUE : FALSE;
+        m_ok.EnableWindow(ok);
         return 0;
     }
 };

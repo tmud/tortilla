@@ -332,11 +332,11 @@ CAPTION "Tortilla Mud Client"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LISTBOX         IDC_LIST_STARTUP_WORLD,7,16,286,94,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_EDIT_STARTUP_PROFILE,66,115,107,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_STARTUP_PROFILE,68,115,107,12,ES_AUTOHSCROLL
     CONTROL         "Открыть cправку к клиенту",IDC_CHECK_OPEN_ABOUT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,136,107,11
     DEFPUSHBUTTON   "OK",IDOK,243,133,50,14
     LTEXT           "Выберите профиль мада, в котором вы начнете игру:",IDC_STATIC,7,7,185,8
-    LTEXT           "Имя персонажа:",IDC_STATIC,8,117,59,8
+    LTEXT           "Имя персонажа:",IDC_STATIC,8,117,56,8
 END
 
 

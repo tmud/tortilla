@@ -31,8 +31,7 @@
   </colors>
   <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
-    <action key="^Enter Charset:$" value="1" group="base"/>
-    <action key="*** НАЖМИТЕ ВВОД:$" value="#cr" group="base"/>
+    <action key="^Select one :$" value="2" group="base"/>
   </actions>
   <aliases/>
   <hotkeys>
@@ -43,7 +42,7 @@
     <hotkey key="NUM7" value="вв" group="base"/>
     <hotkey key="NUM1" value="вн" group="base"/>
     <hotkey key="NUM0" value="см" group="base"/>
-    <hotkey key="F12" value="#connect game.mudlast.ru 2700" group="base"/>
+    <hotkey key="F12" value="#connect bylins.su 4000" group="base"/>
     <hotkey key="NUMDEL" value="сч" group="base"/>
     <hotkey key="NUM5" value="огл" group="base"/>
   </hotkeys>
