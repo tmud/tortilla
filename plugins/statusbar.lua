@@ -42,7 +42,6 @@ local bars = 0
 local connect = false
 local reinit = false
 local tegs = { 'hp','mn','mv','xp','dsu'}
-local tegs1 = { 'hp','mn','mv'}
 
 local r, values, cfg
 local round = math.floor
@@ -120,7 +119,7 @@ function statusbar.drawbars()
     pos.x = pos.x + pos.width + delta_bars
   end
 
-  local val, maxval
+  --[[ local val, maxval
   if values.xp and values.dsu then
     val = values.xp
     maxval = values.xp + values.dsu
@@ -133,11 +132,14 @@ function statusbar.drawbars()
   elseif values.maxdsu and values.maxxp then
     val = values.maxxp
     maxval = values.summ
-  end
-  local expbar = {val=val,maxval=maxval,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
+  end]]
+
+--[[
+  local expbar = {val=values.vxp,maxval=values.vmaxxp,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
   if statusbar.drawbar(expbar, pos) then
     pos.x = pos.x + pos.width + delta_bars
   end
+]]
 
 -- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
   if reinit then
@@ -168,25 +170,36 @@ function statusbar.before(window, v)
       end
       if count > 1 then
         update = true
-        for k,v in pairs(tmp) do values[k] = v end
+        for k,v in pairs(tmp) do 
+          values[k] = v
+          log(k.."="..v)
+        end
       end
     end
   end
   for id,regexp in pairs(regs) do
     if v:find(regexp) then
-      for _,teg in pairs(tegs1) do
+      for _,teg in pairs(tegs) do
         local c = cfg[teg]
         if c and c.regid == id then
           values['max'..teg] = tonumber(regexp:get(c.regindex))
+          if teg == 'xp' and cfg.levels then
+		    local lsize = #cfg.levels
+			local v = values.maxxp
+            for i in 1,lsize-1 do
+			  if v >= v[i] and v <= v[i+1] then
+			  end
+            end
+          end
+          log("max"..teg.."="..values['max'..teg])
           update = true
         end
       end
     end
   end
+  log('----')
+  
 
-  if values.xp or values.dsu then
-
-  end
   --[[local mxp = tonumber(values.maxxp)
   local mdsu = tonumber(values.maxdsu)
   if mxp and mdsu then
@@ -263,14 +276,9 @@ function statusbar.init()
     if not res and msg then
       msgs[#msgs+1] = msg
     end
-    for _,v2 in pairs(tegs1) do
-      if v == v2 then
-         res, msg = initmax(v)
-         if not res and msg then
-           msgs[#msgs+1] = msg
-         end
-         break
-      end
+    res, msg = initmax(v)
+    if not res and msg then
+      msgs[#msgs+1] = msg
     end
     if res then
       bars = bars + 1
