@@ -21,7 +21,7 @@ exp2 = {r=128,g=128,b=128}
 }
 
 statusbar = {}
-function statusbar.name() 
+function statusbar.name()
     return 'Гистограммы здоровья, маны, энергии, опыта'
 end
 
@@ -119,31 +119,16 @@ function statusbar.drawbars()
     pos.x = pos.x + pos.width + delta_bars
   end
 
-  --[[ local val, maxval
-  if values.xp and values.dsu then
-    val = values.xp
-    maxval = values.xp + values.dsu
-  elseif values.xp and values.summ then
-    val = values.xp
-    maxval = values.summ
-  elseif values.dsu and values.summ then
-    val = values.summ - values.dsu
-    maxval = values.summ
-  elseif values.maxdsu and values.maxxp then
-    val = values.maxxp
-    maxval = values.summ
-  end]]
-
---[[
-  local expbar = {val=values.vxp,maxval=values.vmaxxp,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
+  if values.xpv then
+  local expbar = {val=values.xpv,maxval=values.maxxp-values.minxp,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
   if statusbar.drawbar(expbar, pos) then
     pos.x = pos.x + pos.width + delta_bars
   end
-]]
+  end
 
 -- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
   if reinit then
-    statusbar.print(pos.x, "(сч)")
+    statusbar.print(pos.x, "(!)")
   end
 end
 
@@ -151,6 +136,26 @@ function statusbar.print(x, msg)
   r:textColor(props.paletteColor(7))
   local y = (r:height()-r:fontHeight()) / 2
   r:print(x, y, msg)
+end
+
+function statusbar.xplimits()
+  local lsize = #cfg.levels
+  local m = values.maxxp
+  local found = false
+  for i=1,lsize-1 do
+    local min = tonumber(cfg.levels[i])
+    local max = tonumber(cfg.levels[i+1])
+    if m >= min and m <= max then
+      found = true
+      values.minxp = min
+      values.maxxp = max
+      break
+    end
+  end
+  if not found then
+    values.minxp = nil
+    values.maxxp = nil
+  end 
 end
 
 function statusbar.before(window, v)
@@ -172,7 +177,6 @@ function statusbar.before(window, v)
         update = true
         for k,v in pairs(tmp) do 
           values[k] = v
-          log(k.."="..v)
         end
       end
     end
@@ -182,29 +186,24 @@ function statusbar.before(window, v)
       for _,teg in pairs(tegs) do
         local c = cfg[teg]
         if c and c.regid == id then
+          update = true
           values['max'..teg] = tonumber(regexp:get(c.regindex))
           if teg == 'xp' and cfg.levels then
-		    local lsize = #cfg.levels
-			local v = values.maxxp
-            for i in 1,lsize-1 do
-			  if v >= v[i] and v <= v[i+1] then
-			  end
-            end
+            statusbar.xplimits()
           end
-          log("max"..teg.."="..values['max'..teg])
-          update = true
         end
       end
     end
   end
-  log('----')
-  
 
-  --[[local mxp = tonumber(values.maxxp)
-  local mdsu = tonumber(values.maxdsu)
-  if mxp and mdsu then
-    values.summ = mxp + mdsu
-  end]]
+  values.xpv = nil
+  if values.minxp and values.maxxp then
+    if values.xp then
+      values.xpv = values.xp-values.minxp
+    elseif values.dsu then
+      values.xpv = values.maxxp - values.minxp - values.dsu 
+    end
+  end
 
   if update then
     r:update()
