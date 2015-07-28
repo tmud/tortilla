@@ -4,7 +4,8 @@
 
 LogicProcessor::LogicProcessor(LogicProcessorHost *host) :
 m_pHost(host), m_connecting(false), m_connected(false),
-m_prompt_mode(OFF), m_prompt_counter(0)
+m_prompt_mode(OFF), m_prompt_counter(0),
+m_plugins_log_tocache(false), m_plugins_log_blocked(false)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
@@ -16,6 +17,18 @@ LogicProcessor::~LogicProcessor()
 
 void LogicProcessor::processTick()
 {
+    std::vector<tstring> cmds;
+    m_waitcmds.tick(&cmds);
+    if (!cmds.empty()) 
+    {
+        InputPlainCommands wait_cmds;
+        for (int i=0,e=cmds.size();i<e;++i)
+        {
+            InputPlainCommands tmp(cmds[i]);
+            wait_cmds.move(tmp);
+        }
+        processCommands(wait_cmds);
+    }
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -25,12 +38,11 @@ void LogicProcessor::processTick()
 
 void LogicProcessor::processNetworkData(const WCHAR* text, int text_len)
 {
-    processIncoming(text, text_len);
+    processIncoming(text, text_len, SKIP_NONE, 0);
 }
 
 void LogicProcessor::processNetworkConnect()
 {
-    tortilla::getProperties()->timers_on = 0;
     m_helper.resetTimers();
     m_connected = true;
     m_connecting = false;
@@ -113,7 +125,7 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
             { i++; continue; }
 
         loops.push_back( (cmd->system) ? cmd->srccmd : cmd->command);
-        
+ 
         for (int j = 0, je = newcmds.size(); j < je; ++j)
         {
             InputCommand *cmd2 = newcmds[j];
@@ -228,7 +240,7 @@ void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, 0);
 }
 
 void LogicProcessor::syscmdLog(const tstring& cmd)
@@ -238,11 +250,13 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
         return;
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|GAME_CMD);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_LOG|GAME_CMD, 0);
 }
 
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
+    if (m_plugins_log_blocked)
+        return;
     PropertiesData *pdata = tortilla::getProperties();
     if (!pdata->plugins_logs)
         return;
@@ -252,7 +266,10 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS|GAME_LOG, window);
+        if (m_plugins_log_tocache)
+            m_plugins_log_cache.push_back(log);
+        else
+            processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
     }
 }
 
@@ -311,10 +328,12 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
 
 void LogicProcessor::processNetworkError(const tstring& error)
 {
+    tortilla::getProperties()->timers_on = 0;
     m_prompt_mode = OFF;
     m_prompt_counter = 0;
     if (m_connected || m_connecting)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
+    m_incoming_stack.clear();
 }

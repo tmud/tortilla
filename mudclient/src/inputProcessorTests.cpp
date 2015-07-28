@@ -133,7 +133,7 @@ void InputCommandTemplateUnitTest::run()
     assert( test1(L"#bbb '{};fff;\"aaa\"'", 1, L"#bbb '{};fff;\"aaa\"'") );
 
     InputCommands t0;
-    t0.push_back(makecmd(false, L" ", L"", L"", 0));
+    t0.push_back(makecmd(false, L" ", L"", L" ", 0));
     assert(test2(L" ", 0, &t0));
 
     InputCommands t1;
@@ -158,6 +158,10 @@ void InputCommandTemplateUnitTest::run()
     p1p2.append(param2);
     t5.push_back(makecmd(true, L"#test", L" '%1%2' %3 %4 %0", L"test", 4, p1p2.c_str(), param3, param4, param0));
     assert(test2(L"#test '%1%2' %3 %4 %0", 4, &t5));
+
+    InputCommands t6;
+    t6.push_back(makecmd(true, L"#wait", L" 1.2 {#out {light red} {Время идти!};встать}", L"wait", 2, L"1.2", L"#out {light red} {Время идти!};встать"));
+    assert(test2(L"#wait 1.2 {#out {light red} {Время идти!};встать}", 2, &t6));
 }
 
 #endif

@@ -111,7 +111,6 @@ private:
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_USER+2, OnTextColor)
         MESSAGE_HANDLER(WM_USER+1, OnBkgndColor)
-        //MESSAGE_HANDLER(WM_USER, OnTest)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
         COMMAND_HANDLER(IDC_EDIT_TIMEOUT, EN_KILLFOCUS, OnTimeout)
@@ -230,12 +229,6 @@ private:
     LRESULT OnShowActive(WORD, WORD, HWND, BOOL&)
     {
         settings.showactive = (m_showactive.GetCheck()==BST_CHECKED) ? true : false;
-        return 0;
-    }
-
-    LRESULT OnTest(UINT, WPARAM, LPARAM, BOOL&)
-    {
-        OutputDebugString(L"WM_USER ???\r\n");
         return 0;
     }
 };

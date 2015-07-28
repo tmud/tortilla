@@ -141,6 +141,7 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
                 cmd->parameters.append(t.substr(from));
             else {
             pos = t.find(L" ", from);
+            from = 0; //не обрезаем ведущие пробелы для игровых команд
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
@@ -318,7 +319,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
         // check space after close bracket
         else
         {
-            if (p+1 != e && p[1] != ' ')
+            if (*p != '{' && p+1 != e && p[1] != ' ' && p[1] != _params.separator)
                 { p++; continue; }
         }
 

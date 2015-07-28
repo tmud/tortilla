@@ -1,6 +1,14 @@
 ﻿-- statusbar
 -- Плагин для Tortilla mud client
 
+-- Включите режим га/автозавершения в клиенте, либо настройте распознавание prompt-строки!
+-- подробнее #help plugin_statusbar
+-- FAQ: Если необновляются бары, например в бою, проверьте режим га/автозавершения!
+
+-- Местоположение в окне клиента "top" или "bottom"
+local position = "bottom"
+
+-- Цвета баров hp(здоровья),mv(энергия),mn(мана),exp(опыт)
 local colors = {
 hp1 = {r=240},
 hp2 = {r=128},
@@ -18,13 +26,14 @@ function statusbar.name()
 end
 
 function statusbar.description()
-return 'Плагин отображает информацию о здоровье, мане, энергии и опыте\r\n\z
-в виде полосок на отдельной панели клиента. Требует настройки. Про настройку\r\n\z
-читайте в справке к клиенту (#help plugin_statusbar).'
+return 'Плагин отображает информацию о здоровье, мане, энергии и опыте в виде полосок\r\n\z
+на отдельной панели клиента. Требует для работы режим га/автозавершения в маде.\r\n\z
+Требует также настройки. Про настройку читайте в справке к клиенту (#help plugin_statusbar).\r\n\z
+В пакете с клиентом уже есть конфигурационные файлы для основных существующих мадов.'
 end
 
 function statusbar.version()
-    return '1.0'
+    return '1.03'
 end
 
 local objs = {}
@@ -33,7 +42,7 @@ local bars = 0
 local connect = false
 local tegs = { 'hp','mn','mv','xp','dsu' }
 
-local r, regnum, values, cfg
+local r, values, cfg
 local round = math.floor
 
 function statusbar.render()
@@ -45,6 +54,12 @@ function statusbar.render()
   if values.hp and values.mv then
     if not values.maxhp or not values.maxmv then
         showmsg = true
+    else
+      if values.hp > values.maxhp or values.mv > values.maxmv then
+        showmsg = true
+        values.maxhp = nil
+        values.maxmv = nil
+      end
     end
   end
 
@@ -130,17 +145,24 @@ end
 
 function statusbar.before(window, v)
 if window ~= 0 or not cfg then return end
-  local update = false
+  local update = false 
   for i=1,v:size() do
     v:select(i)
-    if v:isPrompt() and regnum:findall(v:getPrompt()) and regnum:size()-1 > 2 then
+    if v:isPrompt() then
+      local tmp,count  = {}, 0
       for _,teg in pairs(tegs) do
          local c = cfg[teg]
-         if c and c.prompt then
-           values[teg] = tonumber(regnum:get(c.prompt))
+         if c and c.prompt and c.prompt:find(v:getPrompt()) then
+           tmp[teg] = tonumber(c.prompt:get(1))
+           count = count + 1
          end
       end
-      update = true
+      if count > 1 then
+        update = true
+        for k,v in pairs(tmp) do
+          values[k] = v
+        end
+      end
     end
   end
   for id,regexp in pairs(regs) do
@@ -175,8 +197,8 @@ function statusbar.disconnect()
 end
 
 local function readcfg(teg)
+  local prompt_index= cfg.baseparams[teg]
   local score_index = tonumber(cfg.maxparams[teg])
-  local prompt_index= tonumber(cfg.baseparams[teg])
   if score_index or prompt_index then
     local id = nil
     if score_index then
@@ -195,8 +217,13 @@ local function readcfg(teg)
       end
     end
     local c = {}
+    if prompt_index then
+      c.prompt = createPcre("([0-9]+)"..prompt_index)
+      if not c.prompt then
+        return false, 'Ошибка в параметре baseparams/'..teg
+      end
+    end
     c.regindex = score_index
-    c.prompt = prompt_index
     c.regid = id
     cfg[teg] = c
     return true
@@ -232,9 +259,7 @@ function statusbar.init()
     end
   end
 
-  regnum = createPcre("[0-9]+")
-
-  local p = createPanel("bottom", 28)
+  local p = createPanel(position, 28)
   r = p:setRender(statusbar.render)
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(7))

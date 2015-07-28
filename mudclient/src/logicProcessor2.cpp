@@ -19,10 +19,10 @@ public:
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
     const tstring& params() const { return cmd->parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return (wcsspn(p.c_str(), L"0123456789-") == p.length()) ? true : false; }
-    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index];
-        return _wtoi(p.c_str()); }
+    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isOnlyDigits(p); }
+    int toInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return _wtoi(p.c_str()); }
+    bool isNumber(int index) const { const tstring& p = cmd->parameters_list[index]; return isItNumber(p); }
+    double toNumber(int index) const { const tstring& p = cmd->parameters_list[index]; double v = 0; w2double(p, &v); return v; }
     void invalidargs() { error(L"Некорректный набор параметров."); }
     void invalidoperation() { error(L"Некорректная операция."); }
     void invalidvars() { error(L"Используются неизвестные переменные"); }
@@ -43,7 +43,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
     tstring error;
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
-    typedef std::vector<tstring>::iterator piterator;    
+    typedef std::vector<tstring>::iterator piterator;
     iterator it = m_syscmds.find(main_cmd);
     iterator it_end = m_syscmds.end();
     if (it == it_end)
@@ -99,12 +99,6 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
-        if (cmd->dropped)
-        {
-            fullcmd.append(L" (Команда блокирована)");
-            tmcLog(fullcmd);
-            return;
-        }
 
         //if (!cmd->changed && cmd->srccmd != cmd->command)
         //    cmd->changed = true;
@@ -117,6 +111,9 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             fullcmd.append(tmp);
         }
         syscmdLog(fullcmd);
+
+        if (cmd->dropped)
+            return;
 
         it = m_syscmds.find(main_cmd);
         if (it != it_end)
@@ -161,7 +158,7 @@ void LogicProcessor::processGameCommand(InputCommand* cmd)
     tstring tmp(cmd->command);
     tmp.append(cmd->parameters);
     tmp.append(br);
-    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD);
+    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
     sendToNetwork(tmp);
 }
 
@@ -576,7 +573,7 @@ IMPL(cr)
     if (n == 0)
     {
         tstring msg(L"\r\n");
-        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS);
+        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
         WCHAR br[2] = { 10, 0 };
         tstring cmd(br);
         sendToNetwork(cmd);
@@ -617,7 +614,7 @@ IMPL(password)
         if (!pass.empty())
         {
             tstring msg(L"*****\r\n");
-            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS | SKIP_SUBS | SKIP_HIGHLIGHTS);
+            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
             WCHAR br[2] = { 10, 0 };
             pass.append(br);
             sendToNetwork(pass);
@@ -632,7 +629,7 @@ IMPL(hide)
     if (p->size() != 0)
     {
         tstring msg(L"*****\r\n");
-        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS);
+        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
         WCHAR br[2] = { 10, 0 };
         tstring cmd(p->params());
         cmd.append(br);
@@ -668,8 +665,8 @@ IMPL(disconnect)
             tmcLog(L"Нет подключения.");
             return;
         }
-        m_pHost->disconnectFromNetwork();
         processNetworkError(L"Соединение завершено.");
+        m_pHost->disconnectFromNetwork();
         return;
     }
     p->invalidargs();
@@ -899,13 +896,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
 
     new_string->system = true;
     data.strings.push_back(new_string);
-
-    int log = m_wlogs[view];
-    if (log != -1)
-        m_logs.writeLog(log, data);
-
-    m_pHost->postprocessText(view, &data);
-    m_pHost->addText(view, &data);
+    printParseData(data, SKIP_NONE, view);
 }
 
 IMPL(wprint)
@@ -1069,13 +1060,13 @@ IMPL(timer)
         return;
     }
 
-    if (n >= 2  && n <= 4 && p->isInteger(0) && p->isInteger(1))
+    if (n >= 2  && n <= 4 && p->isInteger(0) && p->isNumber(1))
     {
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
-        int delay = p->toInteger(1);
-        if (delay < 0 || delay > 999)
+        double delay = p->toNumber(1);
+        if (delay < 0 || delay > 999.9f)
             return p->invalidargs();
 
          tchar tmp[16];
@@ -1090,8 +1081,7 @@ IMPL(timer)
         }
 
         PropertiesTimer pt;
-        _itow(delay, tmp, 10);
-        pt.timer.assign(tmp);
+        pt.setTimer(delay);
         if (n > 2)
            pt.cmd = p->at(2);
 
@@ -1223,13 +1213,30 @@ IMPL(message)
     p->invalidargs();
 }
 //-------------------------------------------------------------------
+IMPL(wait)
+{
+     if (p->size() == 2 && isOnlySymbols(p->at(0), L"0123456789."))
+     {
+         double delay = 0;
+         w2double(p->at(0), &delay);
+         if (delay > 0)
+         {
+             delay = delay * 1000;
+             int delay_ms = static_cast<int>(delay);
+             m_waitcmds.add(delay_ms, p->at(1));
+             return;
+         }
+     }
+     p->invalidargs();
+}
+//-------------------------------------------------------------------
 void LogicProcessor::regCommand(const char* name, syscmd_fun f)
 {
     PropertiesData *pdata = tortilla::getProperties();
     AnsiToWide a2w(name);
     tstring cmd(a2w);
     m_syscmds[cmd] = f;
-    PropertiesList &p = pdata->tabwords_commands;    
+    PropertiesList &p = pdata->tabwords_commands;
     p.add(-1, cmd);
 }
 
@@ -1237,7 +1244,7 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
-    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXC] +)+.*(?:Вых)?:[СЮЗВПОv^()]*>", true);
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXCжэбом] +){2,}.*[СЮЗВПОv^()]*>", true);
 
     if (!m_logs.init())
         return false;
@@ -1267,6 +1274,7 @@ bool LogicProcessor::init()
     regCommand("math", math);
     regCommand("var", var);
     regCommand("unvar", unvar);
+    regCommand("wait", wait);
 
     regCommand("password", password);
     regCommand("hide", hide);

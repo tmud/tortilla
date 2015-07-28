@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.01");
+    lua_pushstring(L, "1.09");
     return 1;
 }
 
@@ -61,7 +61,7 @@ int init(lua_State *L)
         return luaT_error(L, "Системная ошибка, при инициализации.");
 
     base::addCommand(L, "tray");
-    base::addMenu(L, "Плагины/Оповещения (tray)...", 2, 1);
+    base::addMenu(L, "Плагины/Оповещения (tray)...", 1);
 
     luaT_Props p(L);
     g_tray.setFont(p.currentFont());

@@ -24,11 +24,9 @@ bool MudGameView::initialize()
 
     if (!m_manager.loadProfile())
     {
-        if (!m_manager.isDefaultProfile())
-        {
-            if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
-                return false;
-        }
+        if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
+            return false;
+
         if (!m_manager.loadNewProfile(m_manager.getProfileGroup(), L"player"))
         {
             if (!m_manager.createNewProfile(L"player"))
@@ -204,4 +202,11 @@ void MudGameView::resetOscColors()
         return;
     m_propData->resetOSCColors();
     m_propElements.palette.updateProps(m_propData);
+}
+
+MudViewHandler* MudGameView::getHandler(int view)
+{
+    if (view >= 0 && view <= OUTPUT_WINDOWS)
+        return m_handlers[view];
+    return NULL;
 }

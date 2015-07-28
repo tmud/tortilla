@@ -4,6 +4,32 @@
 
 void LogicProcessor::processStackTick()
 {
+    if (!m_plugins_log_cache.empty())
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        if (!pdata->plugins_logs)
+        {
+            m_plugins_log_cache.clear();
+            return;
+        }
+        int window = pdata->plugins_logs_window;
+        MudViewString *last = m_pHost->getLastString(window);
+        if (last && !last->prompt && !last->gamecmd && !last->system)
+            { /*skip*/ }
+        else
+        {
+            m_plugins_log_blocked = true;
+            std::vector<tstring> tmp;
+            tmp.swap(m_plugins_log_cache);
+            for (int i=0,e=tmp.size(); i<e; ++i){
+                tstring &t = tmp[i];
+                processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+            }
+            tmp.clear();
+            m_plugins_log_blocked = false;
+        }
+    }
+
     if (m_prompt_mode == OFF)
         return;
     MudViewString *last = m_pHost->getLastString(0);
@@ -70,6 +96,9 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
             ps[i]->system = true;
     }
 
+    if (flags & GAME_LOG)
+        parse_data.update_prev_string = false;
+
 #ifdef MARKERS_IN_VIEW       // для отладки
     parseDataStrings &p = parse_data.strings;
     MARKPROMPTUNDERLINE(p);  // метка на prompt
@@ -108,10 +137,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     }
 #endif
 
-    if (flags & GAME_LOG)
-        parse_data.update_prev_string = false;
-
-    // accumulate last string in one
     m_pHost->accLastString(window, &parse_data);
 
     // попытка вставки стека по ходу данных, если это обычные данные
@@ -125,7 +150,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (!(flags & GAME_CMD))
     {
         ColorsCollector pc;
-        pc.process(&parse_data);
+        pc.process(&parse_data.strings);
     }
     printIncoming(parse_data, flags, window);
 }
@@ -133,7 +158,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 20;
+    const int max_lines_without_prompt = 25;
     bool p_exist = false;
     int last_game_cmd = -1;
     PropertiesData *pdata = tortilla::getProperties();
@@ -172,7 +197,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        }
 
        // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
-       // параллельно делим строку по promt если находим
+       // параллельно делим строку по prompt если находим
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
            last_game_cmd = -1;
@@ -258,7 +283,7 @@ void LogicProcessor::printStack(int flags)
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
-        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags);
+        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags, 0);
     }
     m_incoming_stack.clear();
 }
@@ -289,24 +314,30 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
     if (pds.empty())
         return;
 
-    int last = pds.size() - 1;
-    MudViewString *s = pds[last];
-    if (!s->prompt && !s->gamecmd && !s->system)
+    if (window == 0)
     {
-        pds.pop_back();
-        printParseData(parse_data, flags, window);
+        int last = pds.size() - 1;
+        MudViewString *s = pds[last];
+        if (!s->prompt && !s->gamecmd && !s->system)
+        {
+            // last string not finished (игровой текст, не промпт, не команда и не лог)        
+            parse_data.last_finished = false;
 
-        // last string not finished
-        parseData pd;
-        pd.strings.push_back(s);
-        printParseData(pd, flags | SKIP_SUBS, window);
-        return;
-    }    
+/*#ifdef _DEBUG
+            std::vector<MudViewStringBlock> &b = s->blocks;
+            for (int i = 0, e = b.size(); i < e; ++i)
+                b[i].params.blink_status = 1;
+#endif*/
+        }
+    }
     printParseData(parse_data, flags, window);
 }
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window)
 {
+    // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
+    m_plugins_log_tocache = true;
+
     // final step for data
     // preprocess data via plugins
     if (!(flags & SKIP_PLUGINS))
@@ -330,12 +361,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     // postprocess data via plugins
     if (!(flags & SKIP_PLUGINS))
         m_pHost->postprocessText(window, &parse_data);
-    
-    if (flags & SKIP_PLUGINS)
-    {
-        StringsWrapper wrapper(130);
-        wrapper.process(&parse_data);
-    }
+    m_plugins_log_tocache = false;
 
     int log = m_wlogs[window];
     if (log != -1)

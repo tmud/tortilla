@@ -5,6 +5,7 @@
 #include "../MainFrm.h"
 #include "pluginSupport.h"
 #include "../profiles/profilesPath.h"
+#include "plugins/pluginsParseData.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
 extern CMainFrame _wndMain;
@@ -78,7 +79,7 @@ int pluginLog(const utf8* msg)
 
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", fname, msg);
+    swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", fname, msg);
     pluginLog(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -130,8 +131,12 @@ int addMenu(lua_State *L)
     else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
     {
         HBITMAP bmp = NULL;
-        HMODULE module = _cp->getModule();
-        if (module) bmp = LoadBitmap( module, MAKEINTRESOURCE(lua_tointeger(L, 4)) );
+        int bmp_id = lua_tointeger(L, 4);
+        if (bmp_id > 0) {
+            HMODULE module = _cp->getModule();
+            if (module)
+                bmp = LoadBitmap( module, MAKEINTRESOURCE(bmp_id) );
+        }
         code = lua_tointeger(L, 2);
         params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
     }
@@ -408,9 +413,11 @@ int saveTable(lua_State *L)
     struct saveDataNode
     {
         typedef std::pair<std::string, std::string> value;
+        typedef std::map<int, std::string> tarray;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
         std::string name;
+        tarray array;
     };
 
     saveDataNode *current = new saveDataNode();
@@ -438,7 +445,14 @@ int saveTable(lua_State *L)
             }
             if (key_type == LUA_TNUMBER)
             {
-                if (value_type != LUA_TTABLE) {
+                if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING)
+                {
+                    int index = lua_tointeger(L, -2);
+                    current->array[index] = lua_tostring(L, -1);
+                    lua_pop(L, 1);
+                    continue;
+                }
+                else if (value_type != LUA_TTABLE) {
                     lua_pop(L, 1);
                     incorrect_data = true;
                     continue;
@@ -509,6 +523,18 @@ int saveTable(lua_State *L)
         std::vector<saveDataNode::value>&a = v.first->attributes;
         for (int i = 0, e = a.size(); i < e; ++i)
             node.set(a[i].first.c_str(), a[i].second.c_str());
+        saveDataNode::tarray &ta = v.first->array;
+        if (!ta.empty())
+        {
+            xml::node new_node = node.createsubnode("array");
+            saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
+            for(; it!=it_end; ++it)
+            {
+                xml::node tmp = new_node.createsubnode("node");
+                tmp.set("key", it->first);
+                tmp.set("value", it->second.c_str());                
+            }
+        }
         std::vector<saveDataNode*>&n = v.first->childnodes;
         for (int i = 0, e = n.size(); i < e; ++i)
         {
@@ -624,6 +650,71 @@ int terminatePlugin(lua_State *L)
     lua_error(L);
     return 0;
 }
+
+int updateView(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TFUNCTION))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 0 && view <=OUTPUT_WINDOWS)
+        {
+            MudViewHandler *h = _wndMain.m_gameview.getHandler(view);
+            parseData pd;
+            mudViewStrings& src = h->get();
+            pd.strings.swap(src);
+            {
+                PluginsParseData ppd(&pd);
+                lua_insert(L, -2);
+                lua_pop(L, 1);
+                luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
+                if (lua_pcall(L, 1, 0, 0))
+                { //error
+                }
+            }
+            pd.strings.swap(src);
+            h->update();
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, "updateView");
+}
+
+int getViewSize(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 0 && view <=OUTPUT_WINDOWS)
+        {
+            MudViewHandler *h = _wndMain.m_gameview.getHandler(view);
+            SIZE sz = h->getSizeInSymbols();
+            lua_pushinteger(L, sz.cx);
+            lua_pushinteger(L, sz.cy);
+            return 2;
+        }
+    }
+    return pluginInvArgs(L, "getViewSize");
+}
+
+int flashWindow(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        HWND alarmWnd = _wndMain;
+        if (::IsWindow(alarmWnd))
+        {
+            FLASHWINFO fw;
+            fw.cbSize = sizeof(FLASHWINFO);
+            fw.hwnd = alarmWnd;
+            fw.uCount = 5;
+            fw.dwFlags = FLASHW_ALL;
+            fw.dwTimeout = 0;
+            ::FlashWindowEx(&fw);
+        }
+        return 0;
+    }
+    return pluginInvArgs(L, "flashWindow");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -669,6 +760,9 @@ bool initPluginsSystem()
     lua_register(L, "createWindow", createWindow);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
+    lua_register(L, "updateView", updateView);
+    lua_register(L, "getViewSize", getViewSize);
+    lua_register(L, "flashWindow", flashWindow);
 
     reg_props(L);
     reg_activeobjects(L);
@@ -750,6 +844,72 @@ int string_substr(lua_State *L)
     return 1;
 }
 
+int string_strstr(lua_State *L)
+{
+     if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING) ||
+         luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TNUMBER))
+     {
+         const utf8* s1 = lua_tostring(L, 1);
+         if (lua_gettop(L) == 3)
+         {
+             int index = lua_tointeger(L, 3);
+             int pos = utf8_sympos(s1, index);
+             if (pos == -1) {
+                 lua_pushnil(L);
+                 return 1;
+             }
+             s1 = s1 + pos;
+         }
+         const utf8* s2 = lua_tostring(L, 2);
+         const utf8* pos = strstr(s1, s2);
+         if (pos)
+         {  
+            u8string tmp(s1, pos-s1);
+            int find_pos = u8string_len(tmp) + 1;
+            lua_pushinteger(L, find_pos);
+            return 1;
+         }
+     }
+     lua_pushnil(L);
+     return 1;
+}
+
+int string_strall(lua_State *L)
+{
+     if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+     {
+         const utf8* s1 = lua_tostring(L, 1);
+         const utf8* s2 = lua_tostring(L, 2);
+         int len = utf8_strlen(s2);
+         if (len == -1) {
+             lua_pushnil(L);
+             return 1;
+         }
+
+         const utf8* b = s1;
+         std::vector<int> result;
+         const utf8* pos = strstr(s1, s2);
+         while (pos)
+         {
+             u8string tmp(b, pos - b);
+             int find_pos = utf8_strlen(tmp.c_str())+1;
+             result.push_back(find_pos);
+             s1 = pos + len;
+             pos = strstr(s1, s2);
+         }
+         lua_newtable(L);
+         for (int i=1,e=result.size();i<=e;++i)
+         {
+             lua_pushinteger(L, i);
+             lua_pushinteger(L, result[i-1]);
+             lua_settable(L, -3);
+         }
+         return 1;
+     }
+     lua_pushnil(L);
+     return 1;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -757,6 +917,8 @@ void reg_string(lua_State *L)
     lua_newtable(L);
     regFunction(L, "len", string_len);
     regFunction(L, "substr", string_substr);
+    regFunction(L, "strstr", string_strstr);
+    regFunction(L, "strall", string_strall);
     regIndexMt(L);
 
     // set metatable for lua string type

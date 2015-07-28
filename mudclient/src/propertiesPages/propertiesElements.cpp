@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "propertiesElements.h"
 
-PropertiesElements::PropertiesElements(PropertiesData *data) : propData(data), palette(data), font_height(1)
+PropertiesElements::PropertiesElements(PropertiesData *data) : propData(data), palette(data),
+font_height(1), font_width(1)
 {
 }
 
@@ -24,8 +25,9 @@ void PropertiesElements::updateProps(HWND parentWnd)
     CDC dc(GetDC(parentWnd));
     HFONT oldfont = dc.SelectFont(standard_font);
     SIZE sz = {0,0};
-    GetTextExtentPoint32(dc, L"W", 1, &sz);
+    GetTextExtentPoint32(dc, L"a", 1, &sz);
     font_height = sz.cy;
+    font_width = sz.cx;
     dc.SelectFont(oldfont);
 
     if (!underlined_font.IsNull())

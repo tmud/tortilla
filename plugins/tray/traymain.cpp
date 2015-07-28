@@ -28,12 +28,12 @@ TrayMainObject::~TrayMainObject()
         DestroyWindow();
 }
 
-bool TrayMainObject::create()
+void TrayMainObject::create()
 {
     if (!m_shared_memory.open(this, global_share_name, global_share_size))
         return false;
-    Create(NULL, NULL, NULL, WS_POPUP);
-    return true;
+    Create(HWND_MESSAGE);
+	return true;
 }
 
 void TrayMainObject::setFont(HFONT font)
@@ -58,17 +58,23 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg, bool from_cache)
+bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
        return true;
 #endif
 
-    if (!from_cache)
+    if (!from_queue)
     {
         if (isHeightLimited()) {
-            m_cache.push_back(msg);
+            m_queue.push_back(msg);
+            return true;
+        }
+        if (!m_queue.empty())
+        {
+            m_queue.push_back(msg);
+            tryShowQueue();
             return true;
         }
     }
@@ -124,7 +130,7 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
     else { m_windows.erase(m_windows.begin() + index); }
     freeWindow(w);
     if (m_windows.empty())
-        tryShowStack();
+        tryShowQueue();
     else
         tryRunMoveAnimation();
 }
@@ -135,7 +141,7 @@ void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
     int last = m_windows.size() - 1;
     if (m_windows[last] != w)
         return;
-    tryShowStack();
+    tryShowQueue();
 }
 
 void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
@@ -169,29 +175,27 @@ void TrayMainObject::tryRunMoveAnimation()
     }
 }
 
-void TrayMainObject::tryShowStack()
+void TrayMainObject::tryShowQueue()
 {
-    while (!isHeightLimited() && !m_cache.empty())
+    while (!isHeightLimited() && !m_queue.empty())
     {
-        u8string msg(m_cache[0]);
-        m_cache.pop_front();
+        u8string msg(*m_queue.begin());
+        m_queue.pop_front();
         showMessage(msg, true);
     }
 }
 
 PopupWindow* TrayMainObject::getFreeWindow()
 {
-    if (!m_free_windows.empty())
-    {
-        int last = m_free_windows.size() - 1;
-        PopupWindow *wnd = m_free_windows[last];
-        m_free_windows.pop_back();
-        return wnd;
-    }
-
-   PopupWindow *wnd = new PopupWindow(&m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
-   if (!wnd->IsWindow())
+   if (!m_free_windows.empty())
+   {
+       int last = m_free_windows.size() - 1;
+       PopupWindow *wnd = m_free_windows[last];
+       m_free_windows.pop_back();
+       return wnd;
+   }
+   PopupWindow *wnd = new PopupWindow();
+   if (!wnd->create(&m_font))
    {
        delete wnd;
        return NULL;
@@ -244,14 +248,14 @@ void TrayMainObject::startTimer()
 {
     if (m_timerStarted) return;
     const DWORD one_min = 60000;
-    SetTimer(1, m_settings.interval*one_min);
+    SetTimer(2, m_settings.interval*one_min);
     m_timerStarted = true;
 }
 
 void TrayMainObject::stopTimer()
 {
     if (!m_timerStarted) return;
-    KillTimer(1);
+    KillTimer(2);
     m_timerStarted = false;
 }
 
@@ -266,4 +270,10 @@ void TrayMainObject::onTimer()
     fw.dwFlags = FLASHW_ALL;
     fw.dwTimeout = 0;
     ::FlashWindowEx(&fw);
+}
+
+void TrayMainObject::onTickPopups()
+{
+    for (int i=0,e=m_windows.size();i<e;++i)
+        m_windows[i]->onTick();
 }

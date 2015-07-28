@@ -66,6 +66,7 @@
 
 // Docking position helpers
 inline bool IsDockedVertically(short Side) { return (Side == DOCK_LEFT) || (Side == DOCK_RIGHT); };
+inline bool IsDockedHorizontally(short Side) { return (Side == DOCK_TOP) || (Side == DOCK_BOTTOM); };
 inline bool IsDocked(short Side) { return (Side == DOCK_TOP) || (Side == DOCK_BOTTOM) || (Side == DOCK_LEFT) || (Side == DOCK_RIGHT); };
 inline bool IsFloating(short Side) { return Side == DOCK_FLOAT; };
 #define DOCK_INFO_CHILD 0x1000
@@ -2003,10 +2004,10 @@ public:
       ATLASSERT(IsDocked(ctx->Side));
       if( !IsDocked(ctx->Side) ) return FALSE;
 
-      /*int Side = ctx->Side;
+      int Side = ctx->Side;
       int size = m_panes[Side].m_cy;
       bool bVertical = IsDockedVertically(Side);
-      (bVertical ? ctx->sizeFloat.cx : ctx->sizeFloat.cy) = size;*/
+      (bVertical ? ctx->sizeFloat.cx : ctx->sizeFloat.cy) = size;
 
       m_panes[ctx->Side].UnDockWindow(ctx);
       ctx->Side = DOCK_HIDDEN;
@@ -2047,6 +2048,14 @@ public:
       m_panes[DOCK_BOTTOM].SortWindows();
       m_panes[DOCK_LEFT].SortWindows();
       m_panes[DOCK_RIGHT].SortWindows();
+   }
+
+   void UpdatePanes()
+   {
+      m_panes[DOCK_TOP].SendMessage(WM_DOCK_UPDATELAYOUT);
+      m_panes[DOCK_BOTTOM].SendMessage(WM_DOCK_UPDATELAYOUT);
+      m_panes[DOCK_LEFT].SendMessage(WM_DOCK_UPDATELAYOUT);
+      m_panes[DOCK_RIGHT].SendMessage(WM_DOCK_UPDATELAYOUT);
    }
 
    void GetLimitRect(RECT *rc)
