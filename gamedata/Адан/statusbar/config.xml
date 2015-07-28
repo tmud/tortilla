@@ -1,8 +1,52 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
-  <baseparams hp="H" mv="V" dsu="X"/>
-  <maxparams hp="1" hpid="r1" mv="2" mvid="r1" xp="1" xpid="r2" dsu="1" dsuid="r3"/>
-  <regexp r1="^Вы имеете [0-9]+\(([0-9]+)\) единиц здоровья, [0-9]+\(([0-9]+)\) энергетических единиц." 
-  r2="^Вы набрали ([0-9]+) опыта.*" 
-  r3="^Вам надо набрать ([0-9]+) опыта"/>
+  <baseparams>
+    <hp value="H"/>
+    <mv value="V"/>
+    <dsu value="X"/>
+  </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mv value="2"/>
+    <mvid value="r1"/>
+    <xp value="1"/>
+    <xpid value="r2"/>
+  </maxparams>
+  <regexp>
+    <r1 value="^Вы имеете [0-9]+\(([0-9]+)\) единиц здоровья, [0-9]+\(([0-9]+)\) энергетических единиц."/>
+    <r2 value="^Вы набрали ([0-9]+) опыта.*"/>
+  </regexp>
+  <levels>
+    <array index="1" value="0"/>
+    <array index="2" value="1000"/>
+    <array index="3" value="4000"/>
+    <array index="4" value="8000"/>
+    <array index="5" value="16000"/>
+    <array index="6" value="32000"/>
+    <array index="7" value="64000"/>
+    <array index="8" value="140000"/>
+    <array index="9" value="220000"/>
+    <array index="10" value="320000"/>
+    <array index="11" value="440000"/>
+    <array index="12" value="580000"/>
+    <array index="13" value="740000"/>
+    <array index="14" value="950000"/>
+    <array index="15" value="1150000"/>
+    <array index="16" value="1400000"/>
+    <array index="17" value="1700000"/>
+    <array index="18" value="2050000"/>
+    <array index="19" value="2450000"/>
+    <array index="20" value="2950000"/>
+    <array index="21" value="3950000"/>
+    <array index="22" value="5250000"/>
+    <array index="23" value="6750000"/>
+    <array index="24" value="8450000"/>
+    <array index="25" value="10350000"/>
+    <array index="26" value="14000000"/>
+    <array index="27" value="21000000"/>
+    <array index="28" value="31000000"/>
+    <array index="29" value="44000000"/>
+    <array index="30" value="60000000"/>
+  </levels>
 </plugindata>
