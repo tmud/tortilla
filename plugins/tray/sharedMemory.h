@@ -29,41 +29,32 @@ public:
          {
              m_map_file = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, global_name); 
              if (!m_map_file)
-                return false;
+                return close();
              first_open = true;
          }
          m_pbuf = MapViewOfFile(m_map_file, FILE_MAP_ALL_ACCESS, 0, 0, size);
          if (!m_pbuf)
-         {
-             CloseHandle(m_map_file);
-             return false;
-         }
+             return close();
+
          std::wstring mutex_name(global_name);
          mutex_name.append(L"_mutex");
          m_mutex = CreateMutex(NULL, FALSE, mutex_name.c_str());
          if (!m_mutex)
-         {
-             close();
-             return false;
-         }
+             return close();
+
          std::wstring initevent_name(global_name);
          initevent_name.append(L"_initevent");
          m_init_event = CreateEvent(NULL, TRUE, FALSE, initevent_name.c_str() );
          if (!m_init_event)
-         {
-             close();
-             return false;
-         }
+             return close();
 
          std::wstring changeevent_name(global_name);
          changeevent_name.append(L"_changeevent");
          m_change_event = CreateEvent(NULL, FALSE, FALSE, changeevent_name.c_str() );
          if (!m_change_event)
-         {
-             close();
-             return false;
-         }
+             return close();
 
+         m_size = size;
          if (first_open)
          {
              m_pHandler->onInitSharedMemory();
@@ -101,7 +92,7 @@ public:
    }
 
 private:   
-    void close() 
+    bool close()
     {
         if (m_change_event)
             CloseHandle(m_change_event);
@@ -118,5 +109,6 @@ private:
         if (m_map_file)
             CloseHandle(m_map_file);
         m_map_file = NULL;
+        return false;
     }
 };

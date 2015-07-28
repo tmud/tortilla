@@ -2,16 +2,6 @@
 #include "traymain.h"
 #include "sharingData.h"
 
-const tchar *global_share_name = L"TortillaTray";
-const int global_share_size = 65536;
-
-void TrayMainObject::onInitSharedMemory()
-{
-    void *memory = m_shared_memory.lock();
-    memset(memory, 0, m_shared_memory.size());
-    m_shared_memory.unlock();
-}
-
 TrayMainObject::~TrayMainObject()
 {
     stopTimer();
@@ -28,9 +18,9 @@ TrayMainObject::~TrayMainObject()
         DestroyWindow();
 }
 
-void TrayMainObject::create()
+bool TrayMainObject::create()
 {
-    if (!m_shared_memory.open(this, global_share_name, global_share_size))
+    if (!m_shared.init())
         return false;
     Create(HWND_MESSAGE);
 	return true;

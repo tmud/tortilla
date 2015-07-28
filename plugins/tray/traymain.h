@@ -2,15 +2,15 @@
 
 #include "popupWindow.h"
 #include "traySettings.h"
-#include "sharedMemory.h"
+#include "sharingController.h"
 
-class TrayMainObject : public CWindowImpl < TrayMainObject >, public SharedMemoryHandler
+class TrayMainObject : public CWindowImpl < TrayMainObject >
 {
 public:
     DECLARE_WND_CLASS(NULL)
     TrayMainObject() :  m_activated(false), m_timerStarted(false), m_alarmWnd(NULL) {}
     ~TrayMainObject();
-    void create();
+    bool create();
     void setFont(HFONT font);
     void setAlarmWnd(HWND wnd);
     bool showMessage(const u8string& msg, bool from_queue);
@@ -81,5 +81,5 @@ private:
     HWND m_alarmWnd;
     POINT m_point0;
     std::deque<u8string> m_queue;
-    SharedMemory m_shared_memory;
+    SharingController m_shared;
 };

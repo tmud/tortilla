@@ -31,8 +31,8 @@ public:
         }
         return true;
     }
-    void write(int v)  {  d.write(&v, sizeof(int));  }
-    bool read(int &v)  {  return d.read(&v, sizeof(int));  }
+    void write(int v) { d.write(&v, sizeof(int));  }
+    bool read(int &v) { return d.read(&v, sizeof(int));  }
     void write(COLORREF c) { d.write(&c, sizeof(COLORREF)); }
     bool read(COLORREF &c) { return d.read(&c, sizeof(COLORREF)); }
     void write(const RECT& r) { d.write(&r, sizeof(RECT)); }
@@ -137,13 +137,12 @@ struct AddMessageCommand : public SharingCommand
 
 struct RegTrayCommand : public SharingCommand
 {
-    void create(tstring& trayid)
+    void create(const tstring& trayid)
     {
         command = SC_REGTRAY;
         DataQueue d;
-        int size = trayid.size();
-        d.write(&size, sizeof(size));
-        d.write(trayid.c_str(), size*sizeof(tchar));
+        Serialize s(d);
+        s.write(trayid);
         command_data.alloc(d.getSize());
         memcpy(command_data.getData(), d.getData(), d.getSize());
     }
@@ -151,13 +150,12 @@ struct RegTrayCommand : public SharingCommand
 
 struct UnregTrayCommand : public SharingCommand
 {
-    void create(tstring& trayid)
+    void create(const tstring& trayid)
     {
         command = SC_UNREGTRAY;
         DataQueue d;
-        int size = trayid.size();
-        d.write(&size, sizeof(size));
-        d.write(trayid.c_str(), size*sizeof(tchar));
+        Serialize s(d);
+        s.write(trayid);
         command_data.alloc(d.getSize());
         memcpy(command_data.getData(), d.getData(), d.getSize());
     }
@@ -191,16 +189,9 @@ struct SharingData
             commands[i]->serialize(s);
     }
 
-    bool deserializeIds(Serialize &s)
-    {
-        if (!s.read(main_tray_id) ||
-            !s.read(new_tray_id)) return false;
-        return true;
-    }
-
     bool deserialize(Serialize &s)
     {
-        if (!deserializeIds(s))
+        if (!s.read(main_tray_id) || !s.read(new_tray_id)) 
             return false;
         int wc = 0;
         if (!s.read(wc) || wc < 0)

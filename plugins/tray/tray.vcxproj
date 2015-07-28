@@ -90,6 +90,7 @@
   <ItemGroup>
     <ClInclude Include="popupWindow.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="sharingController.h" />
     <ClInclude Include="sharingData.h" />
     <ClInclude Include="sharedMemory.h" />
     <ClInclude Include="stdafx.h" />
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="popupWindow.cpp" />
+    <ClCompile Include="sharingController.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
