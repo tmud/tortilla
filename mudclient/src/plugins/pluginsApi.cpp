@@ -131,8 +131,12 @@ int addMenu(lua_State *L)
     else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
     {
         HBITMAP bmp = NULL;
-        HMODULE module = _cp->getModule();
-        if (module) bmp = LoadBitmap( module, MAKEINTRESOURCE(lua_tointeger(L, 4)) );
+        int bmp_id = lua_tointeger(L, 4);
+        if (bmp_id > 0) {
+            HMODULE module = _cp->getModule();
+            if (module)
+                bmp = LoadBitmap( module, MAKEINTRESOURCE(bmp_id) );
+        }
         code = lua_tointeger(L, 2);
         params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
     }
@@ -263,7 +267,7 @@ int showToolbar(lua_State *L)
 }
 
 int getPath(lua_State *L)
-{    
+{
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         PropertiesManager *pmanager = tortilla::getPropertiesManager();
@@ -304,97 +308,96 @@ int getParent(lua_State *L)
 
 int loadTable(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (!luaT_check(L, 1, LUA_TSTRING))
+        return pluginInvArgs(L, "loadData");
+
+    PropertiesManager *pmanager = tortilla::getPropertiesManager();
+    tstring filename(luaT_towstring(L, 1));
+    ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
+    filename.assign(pp);
+
+    DWORD fa = GetFileAttributes(filename.c_str());
+    if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)
+        return 0;
+    xml::node doc;
+    if (!doc.load(WideToUtf8(pp)) )
     {
-        PropertiesManager *pmanager = tortilla::getPropertiesManager();
-        tstring filename(luaT_towstring(L, 1));
-        ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
-        filename.assign(pp);
-
-        DWORD fa = GetFileAttributes(filename.c_str());
-        if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)
-            return 0;
-        xml::node doc;
-        if (!doc.load(WideToUtf8(pp)) )
-        {
-            W2U f(filename);
-            utf8 buffer[128];
-            sprintf(buffer, "Ошибка чтения: %s", (const utf8*)f);
-            pluginError("loadData", buffer);
-            return 0;
-        }
-        lua_pop(L, 1);
-
-        struct el { el(xml::node n, int l) : node(n), level(l) {} xml::node node; int level; };
-        std::vector<el> stack;
-        xml::request req(doc, "*");
-        for (int i = 0, e = req.size(); i < e; ++i)
-            { stack.push_back( el(req[i], 0) ); }
-
-        lua_newtable(L);            // root (main) table 
-        bool pop_stack_flag = false;
-        int p = 0;
-        int size = stack.size();
-        while (p != size)
-        {
-            if (!pop_stack_flag)
-                lua_newtable(L);
-            pop_stack_flag = false;
-
-            el s_el = stack[p++];
-            xml::node n = s_el.node;
-            std::string aname, avalue;
-            for (int j = 0, atts = n.size(); j < atts; ++j)
-            {
-                n.getattrname(j, &aname);
-                n.getattrvalue(j, &avalue);
-                lua_pushstring(L, aname.c_str());
-                lua_pushstring(L, avalue.c_str());
-                lua_settable(L, -3);
-            }
-
-            lua_pushvalue(L, -1);
-            std::string name;
-            n.getname(&name);
-            lua_pushstring(L, name.c_str());
-            lua_insert(L, -2);
-            lua_settable(L, -4);
-
-            // insert subnodes
-            {
-                int new_level = s_el.level + 1;
-                xml::request req(n, "*");
-                std::vector<el> tmp;
-                for (int i = 0, e = req.size(); i < e; ++i)
-                    tmp.push_back(el(req[i], new_level));
-                if (!tmp.empty())
-                {
-                    stack.insert(stack.begin() + p, tmp.begin(), tmp.end());
-                    size = stack.size();
-                }
-            }
-
-            // goto next node
-            if (p == size)
-            {
-                lua_settop(L, 1);
-                break;
-            }
-            el s_el2 = stack[p];
-            if (s_el2.level < s_el.level)  // pop from stack
-            {
-                lua_pop(L, 1);
-                pop_stack_flag = true;
-            }
-            else if (s_el2.level == s_el.level)
-            {
-                lua_pop(L, 1);
-            }
-        }
-        doc.deletenode();
-        return 1;
+       W2U f(filename);
+       utf8 buffer[128];
+       sprintf(buffer, "Ошибка чтения: %s", (const utf8*)f);
+       pluginError("loadData", buffer);
+       return 0;
     }
-    return pluginInvArgs(L, "loadData");
+    lua_pop(L, 1);
+
+    struct el { el(xml::node n, int l) : node(n), level(l) {} xml::node node; int level; };
+    std::vector<el> stack;
+    xml::request req(doc, "*");
+    for (int i = 0, e = req.size(); i < e; ++i)
+       { stack.push_back( el(req[i], 0) ); }
+
+    lua_newtable(L);            // root (main) table 
+    int p = 0; int size = stack.size();
+    while (p != size)
+    {
+       el s_el = stack[p++];
+       xml::node n = s_el.node;
+       int array_index = 0;
+       bool it_array = false;
+
+       u8string name, val;
+       n.getname(&name);
+       if (name == "array") 
+       { //can be number index
+         if (n.get("index", &array_index))
+             it_array = true;
+       }
+       if (n.get("value", &val))
+       {   // it is simple value
+           if (it_array)
+             lua_pushinteger(L, array_index);
+           else
+             lua_pushstring(L, name.c_str());
+           lua_pushstring(L, val.c_str());
+           lua_settable(L, -3);
+       }
+       else
+       {   // it is table
+           lua_newtable(L);
+           if (it_array)
+               lua_pushinteger(L, array_index);
+           else
+               lua_pushstring(L, name.c_str());
+           lua_pushvalue(L, -2);
+           lua_settable(L, -4);
+
+           // insert subnodes
+           int new_level = s_el.level + 1;
+           xml::request req(n, "*");
+           std::vector<el> tmp;
+           for (int i = 0, e = req.size(); i < e; ++i)
+               tmp.push_back(el(req[i], new_level));
+           if (!tmp.empty())
+           {
+               stack.insert(stack.begin() + p, tmp.begin(), tmp.end());
+               size = stack.size();
+           }
+           else
+               lua_pop(L, 1);
+       }
+
+       // goto next node
+       if (p == size)
+       {
+           lua_settop(L, 1);
+           break;
+       }
+       el s_el2 = stack[p];
+       if (s_el2.level < s_el.level)  // pop from stack
+           lua_pop(L, 1);
+   }
+   doc.deletenode();
+   return 1;
 }
 
 int saveTable(lua_State *L)
@@ -409,9 +412,11 @@ int saveTable(lua_State *L)
     struct saveDataNode
     {
         typedef std::pair<std::string, std::string> value;
+        typedef std::map<int, std::string> tarray;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
         std::string name;
+        tarray array;
     };
 
     saveDataNode *current = new saveDataNode();
@@ -439,7 +444,14 @@ int saveTable(lua_State *L)
             }
             if (key_type == LUA_TNUMBER)
             {
-                if (value_type != LUA_TTABLE) {
+                if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING)
+                {
+                    int index = lua_tointeger(L, -2);
+                    current->array[index] = lua_tostring(L, -1);
+                    lua_pop(L, 1);
+                    continue;
+                }
+                else if (value_type != LUA_TTABLE) {
                     lua_pop(L, 1);
                     incorrect_data = true;
                     continue;
@@ -509,7 +521,18 @@ int saveTable(lua_State *L)
         xml::node node = v.second;
         std::vector<saveDataNode::value>&a = v.first->attributes;
         for (int i = 0, e = a.size(); i < e; ++i)
-            node.set(a[i].first.c_str(), a[i].second.c_str());
+        {
+            xml::node attr = node.createsubnode(a[i].first.c_str());
+            attr.set("value", a[i].second.c_str());
+        }
+        saveDataNode::tarray &ta = v.first->array;
+        saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
+        for(; it!=it_end; ++it)
+        {
+            xml::node arr = node.createsubnode("array");
+            arr.set("index", it->first);
+            arr.set("value", it->second.c_str());
+        }
         std::vector<saveDataNode*>&n = v.first->childnodes;
         for (int i = 0, e = n.size(); i < e; ++i)
         {

@@ -8,6 +8,8 @@ propElements(elements),
 m_lines_count(0),
 m_last_visible_line(-1),
 m_last_string_updated(false),
+m_use_softscrolling(false),
+m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1)
 {
@@ -52,42 +54,65 @@ int MudView::getStringsCount() const
     return m_strings.size();
 }
 
-void MudView::addText(parseData* parse_data, MudView* mirror)
+void MudView::addText(parseData* parse_data)
 {
     if (parse_data->strings.empty())
         return;
 
-    bool lsu = m_last_string_updated;
     m_last_string_updated = false;
 
     removeDropped(parse_data);
-    parseDataStrings &pds = parse_data->strings;
-    for (int i=0,e=pds.size(); i<e; ++i)
-    {
-        MudViewString *string = pds[i];
-        calcStringSizes(string);
-        m_strings.push_back(string);
-        if (mirror)
-        {
-            mudViewStrings &ms = mirror->m_strings;
-            if (lsu)
-            {
-                lsu = false;
-                int last_mirror = ms.size() - 1;
-                delete ms[last_mirror];
-                ms.pop_back();
-            }
-            MudViewString *ns = new MudViewString();
-            ns->copy(string);
-            ms.push_back(ns);
-        }
-    }
-    pds.clear();
+    calcStringsSizes(parse_data->strings);
+    int count = parse_data->strings.size();
+    pushText(parse_data);
     checkLimit();
+
+    if (m_use_softscrolling) {
+        if (m_start_softscroll == -1)
+            m_start_softscroll = (m_last_visible_line == -1) ? 0 : m_last_visible_line;
+        return;
+    }
 
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
+}
+
+void MudView::pushText(parseData* parse_data)
+{
+    parseDataStrings &pds = parse_data->strings;
+    m_strings.insert(m_strings.end(), pds.begin(), pds.end());
+    pds.clear();
+}
+
+void MudView::updateSoftScrolling()
+{
+    if (!m_use_softscrolling || m_start_softscroll == -1)
+        return;
+
+    int last_string = getLastString();
+    if (m_last_visible_line != last_string)
+    {        
+        int new_visible_line = last_string;
+        int count = last_string - m_last_visible_line;
+        if (count > 8)
+            new_visible_line = m_last_visible_line + 8;
+        else if (count > 5)
+            new_visible_line = m_last_visible_line + 5;
+        else if (count > 3)
+            new_visible_line = m_last_visible_line + 3;
+
+        if (new_visible_line == last_string) 
+            stopSoftScroll();
+
+        updateScrollbar(new_visible_line);
+        Invalidate(FALSE);
+    }
+}
+
+void MudView::setSoftScrollingMode(bool mode)
+{
+    m_use_softscrolling = mode;
 }
 
 void MudView::clearText()
@@ -110,6 +135,7 @@ void MudView::truncateStrings(int maxcount)
 
 void MudView::setViewString(int index)
 {
+    stopSoftScroll();
     updateScrollbar(index);
     Invalidate(FALSE);
 }
@@ -128,6 +154,20 @@ int MudView::getLastString() const
 bool MudView::isLastString() const
 {
     return (getLastString() == getViewString()) ? true : false;
+}
+
+bool MudView::isLastStringUpdated() const
+{
+    return m_last_string_updated;
+}
+
+void MudView::deleteLastString()
+{
+    if (m_strings.empty())
+        return;
+    int last = m_strings.size() - 1;
+    delete m_strings[last];
+    m_strings.pop_back();
 }
 
 int MudView::getStringsOnDisplay() const
@@ -156,9 +196,8 @@ MudViewString* MudView::getString(int idx) const
 void MudView::updateProps()
 {
     if (m_strings.empty())
-        return;    
-    for (int i=0,e=m_strings.size(); i<e; ++i)
-        calcStringSizes(m_strings[i]);
+        return;
+    calcStringsSizes(m_strings);
     initRenderParams();
     Invalidate();
 }
@@ -177,10 +216,14 @@ void MudView::removeDropped(parseData* parse_data)
     }
 }
 
-void MudView::calcStringSizes(MudViewString *string)
+void MudView::calcStringsSizes(mudViewStrings& pds)
 {
+    if (pds.empty())
+        return;
     CDC dc(GetDC());
-    dc.SelectFont(propElements->standard_font);
+    HFONT oldfont = dc.SelectFont(propElements->standard_font);
+    for (int i=0,e=pds.size(); i<e; ++i) {
+    MudViewString *string = pds[i];
     std::vector<MudViewStringBlock> &b = string->blocks;
     for (int j=0,je=b.size(); j<je; ++j)
     {
@@ -202,7 +245,8 @@ void MudView::calcStringSizes(MudViewString *string)
         b[j].size = sz;
         if (p.underline_status || p.italic_status)
             dc.SelectFont(propElements->standard_font);
-    }
+    }}
+    dc.SelectFont(oldfont);
 }
 
 void MudView::renderView()
@@ -465,6 +509,7 @@ void MudView::setScrollbar(DWORD position)
         visible_line = (thumbpos + m_lines_count) - 1;
     break;
     }
+    stopSoftScroll();
     updateScrollbar(visible_line);
     Invalidate();
 }
@@ -473,6 +518,7 @@ void MudView::mouseWheel(WORD position)
 {
     int direction = (position & 0x8000) ? 3 : -3;
     int visible_line = m_last_visible_line + direction;
+    stopSoftScroll();
     updateScrollbar(visible_line);
     Invalidate();
 }
@@ -725,4 +771,14 @@ void MudView::calcDragLine(int line, dragline type)
     if (maxchars > 0)
         GetTextExtentExPoint(dc, text.c_str(), text.length(), dc_size, &maxchars, &ld[0], &sz);
     dc.SelectFont(current_font);
+}
+
+void MudView::stopSoftScroll()
+{
+    m_start_softscroll = -1;
+}
+
+bool MudView::inSoftScrolling() const
+{
+    return (m_start_softscroll == -1) ? false : true;
 }

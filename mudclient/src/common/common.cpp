@@ -75,6 +75,12 @@ bool isOnlySymbols(const tstring& str, const tstring& symbols)
     return (pos != str.length()) ? false : true;
 }
 
+bool isOnlyFilnameSymbols(const tstring& str)
+{
+    int pos = wcscspn(str.c_str(), L"?*/\\|:\"<>");
+    return (pos != str.length()) ? false : true;
+}
+
 bool a2int(const std::string& str, int *value)
 {
     if (!isOnlyDigitsA(str))

@@ -14,14 +14,14 @@ hp1 = {r=240},
 hp2 = {r=128},
 mv1 = {r=240,g=240},
 mv2 = {r=128,g=128},
-mn1 = {g=128,b=255},
+mn1 = {g=128,b=240},
 mn2 = {g=64,b=128},
 exp1 = {r=240,g=240,b=240},
 exp2 = {r=128,g=128,b=128}
 }
 
 statusbar = {}
-function statusbar.name() 
+function statusbar.name()
     return 'Гистограммы здоровья, маны, энергии, опыта'
 end
 
@@ -33,14 +33,15 @@ return 'Плагин отображает информацию о здоровь
 end
 
 function statusbar.version()
-    return '1.03'
+    return '1.04'
 end
 
 local objs = {}
 local regs = {}
 local bars = 0
 local connect = false
-local tegs = { 'hp','mn','mv','xp','dsu' }
+local reinit = false
+local tegs = { 'hp','mn','mv','xp','dsu'}
 
 local r, values, cfg
 local round = math.floor
@@ -49,22 +50,22 @@ function statusbar.render()
   if not cfg or not connect or bars == 0 then
     return
   end
-
   local showmsg = false
   if values.hp and values.mv then
     if not values.maxhp or not values.maxmv then
-        showmsg = true
+      showmsg = true
     else
+      reinit = false
       if values.hp > values.maxhp or values.mv > values.maxmv then
-        showmsg = true
-        values.maxhp = nil
-        values.maxmv = nil
+        reinit = true
+      end
+      if values.mn and values.maxmn and values.mn > values.maxmn then
+        reinit = true
       end
     end
   end
-
   if showmsg then
-    statusbar.print("Выполните команду 'счет' для настройки плагина.")
+    statusbar.print(4, "Выполните команду 'счет' для настройки плагина.")
     return
   end
   statusbar.drawbars()
@@ -83,7 +84,6 @@ function statusbar.drawbar(t, pos)
       percents = 100
     end
   end
-
   local textlen = 0
   if t.text then
     r:textColor(t.color)
@@ -119,47 +119,63 @@ function statusbar.drawbars()
     pos.x = pos.x + pos.width + delta_bars
   end
 
-  local val, maxval
-  if values.xp and values.dsu then
-    val = values.xp
-    maxval = values.xp + values.dsu
-  elseif values.xp and values.summ then
-    val = values.xp
-    maxval = values.summ
-  elseif values.dsu and values.summ then
-    val = values.summ - values.dsu
-    maxval = values.summ
-  elseif values.maxdsu and values.maxxp then
-    val = values.maxxp
-    maxval = values.summ
+  if values.xpv then
+  local expbar = {val=values.xpv,maxval=values.maxxp-values.minxp,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
+  if statusbar.drawbar(expbar, pos) then
+    pos.x = pos.x + pos.width + delta_bars
   end
-  local expbar = {val=val,maxval=maxval,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
-  statusbar.drawbar(expbar, pos)
+  end
+
+-- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
+  if reinit then
+    statusbar.print(pos.x, "(сч)")
+  end
 end
 
-function statusbar.print(msg)
+function statusbar.print(x, msg)
   r:textColor(props.paletteColor(7))
   local y = (r:height()-r:fontHeight()) / 2
-  r:print(4, y, msg)
+  r:print(x, y, msg)
+end
+
+function statusbar.xplimits()
+  local lsize = #cfg.levels
+  local m = values.maxxp
+  local found = false
+  for i=1,lsize-1 do
+    local min = tonumber(cfg.levels[i])
+    local max = tonumber(cfg.levels[i+1])
+    if m >= min and m <= max then
+      found = true
+      values.minxp = min
+      values.maxxp = max
+      break
+    end
+  end
+  if not found then
+    values.minxp = nil
+    values.maxxp = nil
+  end 
 end
 
 function statusbar.before(window, v)
-if window ~= 0 or not cfg then return end
+  if window ~= 0 or not cfg then return end
   local update = false 
   for i=1,v:size() do
     v:select(i)
     if v:isPrompt() then
-      local tmp,count  = {}, 0
+      local tmp,count = {},0
+      local prompt = v:getPrompt()
       for _,teg in pairs(tegs) do
          local c = cfg[teg]
-         if c and c.prompt and c.prompt:find(v:getPrompt()) then
+         if c and c.prompt and c.prompt:find(prompt) then
            tmp[teg] = tonumber(c.prompt:get(1))
            count = count + 1
          end
       end
       if count > 1 then
         update = true
-        for k,v in pairs(tmp) do
+        for k,v in pairs(tmp) do 
           values[k] = v
         end
       end
@@ -170,17 +186,25 @@ if window ~= 0 or not cfg then return end
       for _,teg in pairs(tegs) do
         local c = cfg[teg]
         if c and c.regid == id then
-          values['max'..teg] = tonumber(regexp:get(c.regindex))
           update = true
+          values['max'..teg] = tonumber(regexp:get(c.regindex))
+          if teg == 'xp' and cfg.levels then
+            statusbar.xplimits()
+          end
         end
       end
     end
   end
-  local mxp = tonumber(values.maxxp)
-  local mdsu = tonumber(values.maxdsu)
-  if mxp and mdsu then
-    values.summ = mxp + mdsu
+
+  values.xpv = nil
+  if values.minxp and values.maxxp then
+    if values.xp then
+      values.xpv = values.xp-values.minxp
+    elseif values.dsu then
+      values.xpv = values.maxxp - values.minxp - values.dsu 
+    end
   end
+
   if update then
     r:update()
   end
@@ -196,33 +220,37 @@ function statusbar.disconnect()
   r:update()
 end
 
-local function readcfg(teg)
-  local prompt_index= cfg.baseparams[teg]
+local function initprompt(teg)
+  local prompt_letter = cfg.baseparams[teg]
+  if prompt_letter then
+    local c = cfg[teg] or {}
+    c.prompt = createPcre("([0-9]+)"..prompt_letter)
+    if not c.prompt then
+      return false, 'Ошибка в параметре baseparams/'..teg
+    end
+    cfg[teg] = c
+    return true
+  end
+  return false
+end
+
+local function initmax(teg)
   local score_index = tonumber(cfg.maxparams[teg])
-  if score_index or prompt_index then
-    local id = nil
-    if score_index then
-      id = cfg.maxparams[teg..'id']
-      if not id then
-        return false, 'Не указан индекс регулярного выражения '..teg..'id'
-      end
-      if not cfg.regexp[id] then
-        return false, 'Нет регулярного выражения для '..id
-      end
-      if not regs[id] then
-         regs[id] = createPcre(cfg.regexp[id])
-         if not regs[id] then
-           return false, 'Ошибка в регулярном выражении '..id
-         end
-      end
+  if score_index then
+    local id = cfg.maxparams[teg..'id']
+    if not id then
+      return false, 'Не указан индекс регулярного выражения maxparams/'..teg..'id'
     end
-    local c = {}
-    if prompt_index then
-      c.prompt = createPcre("([0-9]+)"..prompt_index)
-      if not c.prompt then
-        return false, 'Ошибка в параметре baseparams/'..teg
-      end
+    if not cfg.regexp[id] then
+      return false, 'Нет регулярного выражения regexp/'..id
     end
+    if not regs[id] then
+       regs[id] = createPcre(cfg.regexp[id])
+       if not regs[id] then
+         return false, 'Ошибка в регулярном выражении regexp/'..id
+       end
+    end
+    local c = cfg[teg] or {}
     c.regindex = score_index
     c.regid = id
     cfg[teg] = c
@@ -237,26 +265,31 @@ function statusbar.init()
     cfg = nil
     return terminate("Нет файла с настройками: "..getPath('config.xml'))
   end
+
   cfg = file
   bars = 0
   regs = {}
   local msgs = {}
   for _,v in pairs(tegs) do
-    local res,msg = readcfg(v)
+    local res,msg = initprompt(v)
     if not res and msg then
-      msgs[msg] = true
-      msgs.notempty = true
+      msgs[#msgs+1] = msg
+    end
+    res, msg = initmax(v)
+    if not res and msg then
+      msgs[#msgs+1] = msg
     end
     if res then
       bars = bars + 1
     end
   end
-  if msgs.notempty then
-    msgs.notempty = nil
+
+  if #msgs ~= 0 then
     log('Ошибки в файле настрек: '..getPath('config.xml'))
-    for k,_ in pairs(msgs) do
-      log(k)
+    for _,v in ipairs(msgs) do
+      log(v)
     end
+    return terminate("Продолжение работы невозможно")
   end
 
   local p = createPanel(position, 28)

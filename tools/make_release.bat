@@ -23,8 +23,8 @@ copy ..\%prod%\lua.dll .\ > nul
 copy ..\%prod%\api.dll .\ > nul
 copy ..\mudclient\changelog.txt .\ > nul
 
-7za.exe a -tzip %filename% tortilla.exe lua.dll api.dll changelog.txt %dbg% gamedata\* -xr!.gitignore
-del tortilla.exe lua.dll api.dll changelog.txt %dbg% > nul
+7za.exe a -tzip %filename% tortilla.exe lua.dll api.dll changelog.txt readme.txt %dbg% gamedata\* -xr!.gitignore
+del tortilla.exe lua.dll api.dll changelog.txt readme.txt %dbg% > nul
 cd ..
 tools\7za.exe a -r -tzip tools\%filename% help\* %plugins% %plugins2% %modules% -xr!.gitignore
 tools\7za.exe a -tzip tools\%sdk% sdk\* -xr!.gitignore
