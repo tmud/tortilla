@@ -128,7 +128,7 @@ function statusbar.drawbars()
 
 -- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
   if reinit then
-    statusbar.print(pos.x, "(!)")
+    statusbar.print(pos.x, "(сч)")
   end
 end
 
