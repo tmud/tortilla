@@ -7,24 +7,28 @@ class SharingController : public SharedMemoryHandler
 {
 public:
     SharingController();
+    ~SharingController();
     bool init();
-    void regTray(const tstring& trayid);
-    void unregTray(const tstring& trayid);
-    void addMessage(const SharingDataMessage& msg);
+    void release();
+    bool pushCommand(SharingCommand* cmd);
+    //bool addMessage(const SharingDataMessage& msg);
 
 private:
+    bool lock();
+    bool unlock();
     bool write();
-    bool read();
-    bool reread(void *p, unsigned int size);
+    bool read(void *p, unsigned int size);
 
 private:
     void onInitSharedMemory()
     {
-        void *memory = m_shared_memory.lock();
-        memset(memory, 0, m_shared_memory.size());
+        m_shared_memory.lock();
+        memset(m_shared_memory.ptr(), 0, m_shared_memory.size());
         m_shared_memory.unlock();
     }
+    tstring m_id;
     int m_shared_revision;
     SharedMemory m_shared_memory;
     SharingData m_shared_data;
+    bool m_locked;
 };

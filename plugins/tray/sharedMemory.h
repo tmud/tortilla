@@ -71,13 +71,16 @@ public:
        return m_size;
    }
  
-   void* lock() {
+   void lock() {
         WaitForSingleObject(m_mutex, INFINITE); 
-        return m_pbuf;
    }
 
    void unlock() {
         ReleaseMutex(m_mutex);
+   }
+
+   void* ptr() {
+       return m_pbuf;
    }
 
    void sendChangeEvent()

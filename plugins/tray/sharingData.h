@@ -37,7 +37,7 @@ public:
     bool read(COLORREF &c) { return d.read(&c, sizeof(COLORREF)); }
     void write(const RECT& r) { d.write(&r, sizeof(RECT)); }
     bool read(RECT &r) { return d.read(&r, sizeof(RECT)); }
-    void write(MemoryBuffer &m) {
+    void write(const MemoryBuffer &m) {
         int size = m.getSize();
         write(size);
         if (size > 0)
@@ -67,10 +67,10 @@ struct SharingDataMessage
     int showtime;
     RECT windowpos;
 
-    void serialize(Serialize &s)
+    void serialize(Serialize &s) const
     {
         int strings = textlines.size();
-        s.write(strings);        
+        s.write(strings);
         for (int i=0; i<strings; ++i)
             s.write(textlines[i]);
         s.write(background);
@@ -89,7 +89,7 @@ struct SharingDataMessage
             tstring t;
             if (!s.read(t)) 
                 return false;
-            textlines.push_back(t);        
+            textlines.push_back(t);
         }
         if (!s.read(background) || !s.read(text) || !s.read(showtime) || !s.read(windowpos))
             return false;
@@ -107,7 +107,7 @@ struct SharingCommand
     int command;
     MemoryBuffer command_data;
     
-    void serialize(Serialize &s)
+    void serialize(Serialize &s) const
     {
         s.write(command);
         s.write(command_data);
@@ -123,7 +123,7 @@ struct SharingCommand
 
 struct AddMessageCommand : public SharingCommand
 {
-    void create(SharingDataMessage& msg)
+    AddMessageCommand(const SharingDataMessage& msg)
     {
         command = SC_ADDMESSAGE;
         DataQueue d;
@@ -137,7 +137,7 @@ struct AddMessageCommand : public SharingCommand
 
 struct RegTrayCommand : public SharingCommand
 {
-    void create(const tstring& trayid)
+    RegTrayCommand(const tstring& trayid)
     {
         command = SC_REGTRAY;
         DataQueue d;
@@ -150,7 +150,7 @@ struct RegTrayCommand : public SharingCommand
 
 struct UnregTrayCommand : public SharingCommand
 {
-    void create(const tstring& trayid)
+    UnregTrayCommand(const tstring& trayid)
     {
         command = SC_UNREGTRAY;
         DataQueue d;
@@ -169,11 +169,7 @@ struct SharingData
     std::vector<SharingCommand*> commands;
 
     SharingData() {}
-    ~SharingData()
-    {
-        std::for_each(windows.begin(), windows.end(), [](SharingDataMessage* obj) { delete obj; });
-        std::for_each(commands.begin(), commands.end(), [](SharingCommand* obj) { delete obj; });
-    }
+    ~SharingData() { clear(); }
 
     void serialize(Serialize &s)
     {
@@ -191,6 +187,7 @@ struct SharingData
 
     bool deserialize(Serialize &s)
     {
+        clear();
         if (!s.read(main_tray_id) || !s.read(new_tray_id)) 
             return false;
         int wc = 0;
@@ -201,7 +198,7 @@ struct SharingData
             SharingDataMessage* wnd = new SharingDataMessage;
             if (!wnd->deserialize(s))
                 { delete wnd; return false; }
-            windows.push_back(wnd);       
+            windows.push_back(wnd);
         }
         int cc = 0;
         if (!s.read(cc) || wc < 0)
@@ -214,5 +211,14 @@ struct SharingData
             commands.push_back(cmd);
         }
         return true;
+    }
+
+private:
+    void clear()
+    {
+        main_tray_id.clear();
+        new_tray_id.clear();
+        std::for_each(windows.begin(), windows.end(), [](SharingDataMessage* obj) { delete obj; });
+        std::for_each(commands.begin(), commands.end(), [](SharingCommand* obj) { delete obj; });
     }
 };
