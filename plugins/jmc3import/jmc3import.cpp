@@ -9,21 +9,19 @@ int get_name(lua_State *L)
 
 int get_description(lua_State *L)
 {
-    lua_pushstring(L, "Позволяет импортировать триггеры, алиасы и другие игровые настройки\r\nиз конфигурационных файлов Jaba Mud Client 3.x\r\n"
-        "При импорте необходимо проверить, что символ команды и разделитель команд указаны верно!"
-        );
+    lua_pushstring(L, "Позволяет импортировать триггеры, алиасы и другие игровые настройки\r\nиз игровых сетов мад-клиента Jaba Mud Client 3.x");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.03");
+    lua_pushstring(L, "1.05");
     return 1;
 }
 
 int init(lua_State *L)
 {
-    base::addMenu(L, "Плагины/Импорт из JMC3...", 1, 2);
+    base::addMenu(L, "Плагины/Импорт из JMC3...", 1);
     return 0;
 }
 
@@ -42,7 +40,7 @@ int menucmd(lua_State *L)
         {
             if (!errors.empty())
             {
-                luaT_log(L, "Ошибки импорта из JMC3 (неверный синтаксис | такой элемент уже есть):");
+                luaT_log(L, "Ошибки импорта из JMC3 (неверный синтаксис или такой элемент уже есть):");
                 for (int i = 0, e = errors.size(); i < e; ++i)
                 {
                     u8string msg("Ошибка: ");

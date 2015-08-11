@@ -1,7 +1,6 @@
 #pragma once
-
+#include "accessors.h"
 #include "propertiesPages/propertiesDlg.h"
-#include "propertiesPages/propertiesManager.h"
 #include "profiles/profileDlgs.h"
 
 #include "network/network.h"
@@ -14,6 +13,7 @@
 #include "plugins/pluginsManager.h"
 
 #include "AboutDlg.h"
+#include "helpManager.h"
 
 #define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
 
@@ -40,8 +40,8 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     std::vector<PluginsView*> m_plugins_views;
     PluginsManager m_plugins;
     int m_codepage;
-
     bool m_activated;
+    std::vector<MudViewHandler*> m_handlers;
 
 private:
     void onStart();
@@ -58,8 +58,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN), m_activated(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false)
     {
     }
 
@@ -293,6 +292,7 @@ public:
     PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
+    MudViewHandler* getHandler(int view);
 
 private:
     BEGIN_MSG_MAP(MudGameView)
@@ -360,15 +360,14 @@ private:
             if (IsDocked(w.side))
             {
                 m_dock.DockWindow(*v, w.side);
-                int size = IsDockedVertically(w.side) ? w.pos.right : w.pos.bottom;
+                int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
                 m_dock.SetPaneSize(w.side, size);
             }
             else if (w.side == DOCK_FLOAT)
-            {
                 m_dock.FloatWindow(*v, w.pos);
-            }
         }
 
+        m_handlers.push_back( new MudViewHandler(&m_view, &m_history) );
         for (int i=0; i<OUTPUT_WINDOWS; ++i)
         {
             MudView *v = m_views[i];
@@ -377,6 +376,7 @@ private:
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
             ctx->LastSide = w.lastside;
+            m_handlers.push_back(new MudViewHandler(v, NULL));
         }
 
         m_dock.SortPanes();
@@ -389,7 +389,7 @@ private:
             PostMessage(WM_USER+3);
 
         SetTimer(1, 200);
-        SetTimer(2, 50);
+        SetTimer(2, 40);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -403,8 +403,8 @@ private:
 
     LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
     {
-        CWelcomeDlg dlg;
-        dlg.DoModal();
+        // show help
+        openHelp(m_parent, L"");
         return 0;
     }
 
@@ -423,6 +423,7 @@ private:
 
         KillTimer(2);
         KillTimer(1);
+        std::for_each(m_handlers.begin(), m_handlers.end(), [](MudViewHandler *obj){ delete obj; });        
         for (int i=0,e=m_views.size(); i<e; ++i)
             delete m_views[i];
         for (int i = 0, e = m_plugins_views.size(); i<e; ++i)
@@ -524,8 +525,8 @@ private:
 
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
-        NetworkEvent event = m_network.processEvent((NetworkEvent)lparam);
-        if (event == NE_NEWDATA)
+        NetworkEvent event = m_network.translateEvent(lparam);
+        /*if (event == NE_NEWDATA)
         {
             MsdpNetwork *msdp = m_plugins.getMsdp();
             msdp->processReceived(m_network.receiveMsdp());
@@ -585,7 +586,7 @@ private:
             m_network.disconnect();
             m_processor.processNetworkMccpError();
             m_plugins.processDisconnectEvent();
-        }
+        }*/
         return 0;
     }
 
@@ -624,6 +625,9 @@ private:
         {
             m_processor.processStackTick();
             m_plugins.processToSend(&m_network);
+            m_view.updateSoftScrolling();
+            for (int i=0,e=m_views.size();i<e;++i)
+              m_views[i]->updateSoftScrolling();
         }
         return 0;
     }
@@ -632,13 +636,46 @@ private:
     {
         tstring cmd;
         m_bar.getCommand(&cmd);
-        m_plugins.processBarCmd(&cmd);
-        tstring history(cmd);
-        m_plugins.processHistoryCmd(&history);
-        m_bar.addToHistory(history);
-        BracketsMarker bm;
-        bm.mark(&cmd);
-        m_processor.processUserCommand(cmd);
+
+        InputPlainCommands cmds(cmd);
+        int count = cmds.size();
+        if (count > 1)
+        {
+            int last = cmd.size() - 1;
+            if (last > 0)
+            {
+                tchar last_char = cmd.at(last);
+                if (last_char != L'\r' && last_char != L'\n')
+                {
+                    int last_cmd = cmds.size() - 1;
+                    m_bar.setText(cmds[last_cmd], -1, false);
+                    cmds.erase(last_cmd);
+                }
+            }
+        }
+        else if (count == 1)
+        {
+            InputPlainCommands history;
+            m_plugins.processHistoryCmds(cmds, &history);
+            for (int i=0,e=history.size(); i<e; ++i)
+                m_bar.addToHistory(history[i]);
+        }
+        else
+        {
+            assert(false);
+            return 0;
+        }
+
+        InputTemplateParameters p;
+        p.prefix = m_propData->cmd_prefix;
+        p.separator = m_propData->cmd_separator;
+
+        // разбиваем команду на подкомманды для обработки в barcmd
+        InputTemplateCommands tcmds;
+        tcmds.init(cmds, p);
+        tcmds.extract(&cmds);
+        m_plugins.processBarCmds(&cmds);
+        m_processor.processUserCommand(cmds);
         return 0;
     }
 
@@ -752,6 +789,7 @@ private:
        m_propElements.updateProps(m_hWnd);
        initCommandBar();
        m_view.updateProps();
+       m_view.setSoftScrollingMode(m_propData->soft_scroll ? true : false);
        m_history.updateProps();
        for (int i=0,e=m_views.size(); i<e; ++i)
            m_views[i]->updateProps();
@@ -834,15 +872,40 @@ private:
         if (view == 0)
         {
             int vs = m_view.getViewString();
-            bool last = m_view.isLastString();            
-            m_view.addText(parse_data, &m_history);
-            checkHistorySize();
+            bool last = m_view.isLastString();
+            bool last_updated = m_view.isLastStringUpdated();
+            int count = parse_data->strings.size();
+            bool in_soft_scrolling = m_view.inSoftScrolling();
+            m_view.addText(parse_data);
 
-            if (!m_history.IsWindowVisible() && !last)
+            parseData history;
+            int from = m_view.getStringsCount() - count;
+            for (int i=0;i<count;++i)
             {
-                showHistory(vs, 1);
+               MudViewString *s = m_view.getString(from+i);
+               MudViewString *hs = new MudViewString;
+               hs->copy(s);
+               history.strings.push_back(hs);
             }
-            else
+            if (last_updated)
+                m_history.deleteLastString();
+            m_history.pushText(&history);
+
+            checkHistorySize();
+            bool history_visible = m_history.IsWindowVisible() ? true : false;
+            bool soft_scroll = m_propData->soft_scroll ? true : false;
+            if (!history_visible && !last)
+            {
+                if (!soft_scroll || !in_soft_scrolling)
+                {
+                    showHistory(vs, 1);
+                    if (soft_scroll) {
+                      int last = m_view.getLastString();
+                      m_view.setViewString(last);
+                    }
+                }
+            }
+            else if (history_visible)
             {
                 int vs = m_history.getViewString();
                 m_history.setViewString(vs);
@@ -921,7 +984,7 @@ private:
 
     void getMccpStatus(MccpStatus *status)
     {
-        m_network.getMccpRatio(status);
+        m_network.getMccpStatus(status);
     }
 
     HWND getMainWindow()
@@ -929,7 +992,7 @@ private:
         return m_parent;
     }
 
-    void preprocessGameCmd(InputCommand* cmd);
+    void preprocessCommand(InputCommand* cmd);
 
     void checkHistorySize()
     {
@@ -1009,29 +1072,67 @@ private:
                 m_dock._UnFloatWindow(ctx);
             else if (IsDocked(ctx->Side))
                 m_dock._UnDockWindow(ctx);
+        }
 
-            const OutputWindow& w = m_propData->windows[i];
-            if (IsDocked(w.side))
+        // order for creating windows
+        std::vector<int> sides = { DOCK_TOP, DOCK_BOTTOM, DOCK_LEFT, DOCK_RIGHT, DOCK_FLOAT, DOCK_HIDDEN };
+
+        // recreate docking output windows
+        for (int j=0,je=sides.size(); j<je; ++j)
+        {
+            typedef std::pair<int,int> wd;
+            std::vector<wd> wds;
+            for (int i=0; i < OUTPUT_WINDOWS; ++i)
             {
-                m_dock.DockWindow(*v, w.side);
-                int size = IsDockedVertically(w.side) ? w.pos.right : w.pos.bottom;
-                m_dock.SetPaneSize(w.side, size);
-                m_parent.SendMessage(WM_USER, menu_id, 1);
+                const OutputWindow& w =  m_propData->windows[i];
+                if (w.side == sides[j]) {
+                  wd d; d.first = i; d.second = 0;
+                  if (IsDockedVertically(w.side)) d.second = w.pos.top;
+                  if (IsDockedHorizontally(w.side)) d.second = w.pos.left;
+                  wds.push_back(d);
+                }
             }
-            else if (w.side == DOCK_FLOAT)
+            struct { bool operator() (const wd& i,const wd& j) { return (i.second<j.second);}} comparator;
+            std::sort(wds.begin(), wds.end(), comparator);
+
+            for (int i=0,e=wds.size(); i<e; ++i)
             {
-                m_dock.FloatWindow(*v, w.pos);
-                m_parent.SendMessage(WM_USER, menu_id, 1);
+                int index = wds[i].first;
+                MudView *v = m_views[index];
+                const OutputWindow& w = m_propData->windows[index];
+
+                int menu_id = index + ID_WINDOW_1;
+                if (IsDocked(w.side))
+                {
+                    m_dock.DockWindow(*v, w.side);
+                    int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
+                    int border = IsDockedVertically(w.side) ? m_dock.m_sizeBorder.cx : m_dock.m_sizeBorder.cy;
+                    m_dock.SetPaneSize(w.side, size+border*2);
+                    m_parent.SendMessage(WM_USER, menu_id, 1);
+                }
+                else if (w.side == DOCK_FLOAT)
+                {
+                    m_dock.FloatWindow(*v, w.pos);
+                    m_parent.SendMessage(WM_USER, menu_id, 1);
+                }
+                else
+                {
+                    m_parent.SendMessage(WM_USER, menu_id, 0);
+                }
             }
-            else
-            {
-                m_parent.SendMessage(WM_USER, menu_id, 0);
-            }
+        }
+        for (int i = 0; i<OUTPUT_WINDOWS; ++i)
+        {
+            MudView *v = m_views[i];
+            DOCKCONTEXT *ctx = m_dock._GetContext(*v);
+            const OutputWindow& w =  m_propData->windows[i];
+            ctx->Side = w.side;
+            ctx->LastSide = w.lastside;
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
-            ctx->LastSide = w.lastside;
+            ctx->bKeepSize = false;
         }
-        m_dock.SortPanes();
+        m_dock.UpdatePanes();
     }
 
     void savePluginWindowPos(HWND wnd = NULL)

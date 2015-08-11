@@ -1,7 +1,7 @@
 #pragma once 
 #include "mudViewString.h"
 
-typedef std::vector<MudViewString*> parseDataStrings;
+typedef mudViewStrings parseDataStrings;
 struct parseData
 {
     parseData() : update_prev_string(false), last_finished(true) {}
@@ -85,12 +85,5 @@ private:
 class ColorsCollector
 {
 public:
-    void process(parseData *data);
-};
-
-class StringsWrapper
-{  int m_maxlen;
-public:
-    StringsWrapper(int maxlen) : m_maxlen(maxlen) {}
-    void process(parseData *data);
+    void process(parseDataStrings* pds);
 };

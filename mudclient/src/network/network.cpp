@@ -49,8 +49,9 @@ void OutputTelnetOption(const void *data, const char* label)
 }
 #endif
 
-NetworkConnection::NetworkConnection()
+NetworkConnection::NetworkConnection() : m_connected(false)
 {
+    m_recive_buffer.alloc(1024);
 }
 
 NetworkConnection::~NetworkConnection()
@@ -60,41 +61,45 @@ NetworkConnection::~NetworkConnection()
 
 void NetworkConnection::connect(const NetworkConnectData& cdata)
 {
-    if (isConnected())
+    if (connected())
         return sendEvent(NE_ALREADY_CONNECTED);
+    m_connection = cdata;
     if (!run())
         return sendEvent(NE_ERROR);
-    sendEvent(NE_CONNECTING);
+}
+
+bool NetworkConnection::connected() const
+{
+    return m_connected;
 }
 
 void NetworkConnection::disconnect()
 {
-    if (!isConnected())
+    if (!connected())
         return;
     stop();
     wait();
-}
-
-bool NetworkConnection::isConnected()
-{
-    return (isFinished()) ? false : true;
+    m_send_data.clear();
+    m_receive_data.clear();    
+    m_connected = false;
 }
 
 bool NetworkConnection::send(const tbyte* data, int len)
 {
-    if (!isConnected())
+    if (!connected())
         return false;
     CSectionLock lock(m_cs_send);
     m_send_data.write(data, len);
     return true;
 }
 
-bool NetworkConnection::receive(DataQueue *data)
+bool NetworkConnection::receive(MemoryBuffer *data)
 {
-    if (!isConnected())
+    if (!connected())
         return false;
     CSectionLock lock(m_cs_receive);
-    data->write(m_receive_data.getData(), m_receive_data.getSize());
+    data->alloc(m_receive_data.getSize());
+    memcpy(data->getData(), m_receive_data.getData(), m_receive_data.getSize());
     m_receive_data.clear();
     return true;
 }
@@ -103,14 +108,6 @@ void NetworkConnection::sendEvent(NetworkEvent e)
 {
     PostMessage(m_connection.wndToNotify, m_connection.notifyMsg, 0, (LPARAM)e);
 }
-
-class autoclose
-{
-    SOCKET socket;
-public:
-    autoclose(SOCKET s) : socket(s) {}
-    ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
-};
 
 void NetworkConnection::threadProc()
 {
@@ -121,8 +118,14 @@ void NetworkConnection::threadProc()
         return;
     }
 
-    autoclose ac(sock);
+    class autoclose {
+        SOCKET socket;
+    public:
+        autoclose(SOCKET s) : socket(s) {}
+        ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
+    } ac(sock);
 
+    // connecting
     sockaddr_in peer;
     memset(&peer, 0, sizeof(sockaddr_in));
     peer.sin_family = AF_INET;
@@ -144,13 +147,13 @@ void NetworkConnection::threadProc()
         peer.sin_addr.s_addr = inet_addr(m_connection.address.c_str());
     }
 
-    /*DWORD optval = 1;
+    /* keep alive option
+    DWORD optval = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)(&optval), sizeof(DWORD)))
     {
         sendEvent(NE_ERROR_CONNECT);
         return;
     }
-
     tcp_keepalive alive;
     alive.onoff = 1;
 	alive.keepalivetime = 5000;    // <- время между посылками keep-alive (мс)
@@ -162,6 +165,7 @@ void NetworkConnection::threadProc()
         return;
     }*/
 
+    sendEvent(NE_CONNECTING);
     if (::connect(sock, (sockaddr*)&peer, sizeof(peer)) == SOCKET_ERROR)
     {
         sendEvent(NE_ERROR_CONNECT);
@@ -172,37 +176,72 @@ void NetworkConnection::threadProc()
             return;
         }*/
     }
-    sendEvent(NE_CONNECT);
+    m_connected = true;
+    sendEvent(NE_CONNECT);    
+
+    fd_set set;
+    FD_ZERO(&set);
+    FD_SET(sock, &set);
+
+    timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 100;
 
     while (!needStop())
     {
-        fd_set set;
-        FD_ZERO(&set);
-        FD_SET(sock, &set);
-
-        timeval tv;
-        tv.tv_sec = 0;
-        tv.tv_usec = 100;
-
         int n = ::select(0, &set, NULL, NULL, &tv);
         if (n == SOCKET_ERROR)
         {
             sendEvent(NE_ERROR);
-            return;        
+            m_connected = false;
+            break;
         }
 
+        if (FD_ISSET(sock, &set))
+        {
+             // receive new data
+             int received = ::recv(sock, m_recive_buffer.getData(), m_recive_buffer.getSize(), 0);
+             if (received == SOCKET_ERROR)
+             {
+                 if (WSAGetLastError() == WSAEWOULDBLOCK) {}    // нет данных
+                 else
+                 {
+                    sendEvent(NE_DISCONNECT);
+                    break;
+                 }
+             }
+             if (received > 0)
+             {
+                 CSectionLock lock(m_cs_receive);
+                 //OUTPUT_BYTES(m_recive_buffer.getData(), received, received, "received from net");
+                 m_receive_data.write(m_recive_buffer.getData(), received);
+             }
+             if (received > 0)
+                 sendEvent(NE_NEWDATA);
+        }
+
+        // send exist data
+        if (m_send_data.getSize() > 0)
+        {
+            CSectionLock lock(m_cs_send);
+            //OUTPUT_BYTES(m_send_data.getData(), sended, 32, "sended to net");
+            int sended = ::send(sock, (const char*)m_send_data.getData(), m_send_data.getSize(), 0);
+            if (sended == SOCKET_ERROR)
+            {
+                sendEvent(NE_DISCONNECT);
+                break;
+            }            
+            m_send_data.truncate(sended);
+        }
     }
-
-    
-
-    
-    
+    FD_CLR(sock, &set);
+    shutdown(sock, 2);
 }
 
 Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
 m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
 {
-    m_input_buffer.alloc(1024);
+    //m_input_buffer.alloc(1024);
     m_mccp_buffer.alloc(8192);
     m_output_buffer.setBufferSize(1024);
 }
@@ -212,18 +251,14 @@ Network::~Network()
 }
 
 void Network::connect(const NetworkConnectData& data)
-{   
+{
     m_connection.connect(data);
 }
 
 void Network::disconnect()
 {
     m_connection.disconnect();
-    close();
-}
 
-void Network::close()
-{
     close_mccp();
     close_mtts();
     close_msdp();
@@ -237,34 +272,17 @@ void Network::close()
     m_totalDecompressed = 0;
 }
 
-void Network::getMccpRatio(MccpStatus* data)
+NetworkEvent Network::translateEvent(LPARAM event)
 {
-    data->game_data_len = m_totalDecompressed;
-    data->network_data_len = m_totalReaded;
-    data->status = m_mccp_on;
-}
-
-void Network::setSendDoubleIACmode(bool on)
-{
-    m_double_iac_mode = on;
-}
-
-void Network::setUtf8Encoding(bool flag)
-{
-    m_utf8_encoding = flag;
-}
-
-/*void Network::processEvent(NetworkEvent event)
-{
-    if (event == NE_NEWDATA)
+    NetworkEvent e = (NetworkEvent)event;
+   /* if (e == NE_NEWDATA)
     {
-           
-    
-    }
-    return event;
+        read_data();        
+    }*/
+    return e;
 
-
-    /*WORD error = WSAGETSELECTERROR(msg_lparam);
+    /*
+    WORD error = WSAGETSELECTERROR(msg_lparam);
     if (error)
     {   if (error == WSAECONNREFUSED || error == WSAETIMEDOUT)
             return NE_ERROR_CONNECT;
@@ -276,12 +294,7 @@ void Network::setUtf8Encoding(bool flag)
     WORD event = WSAGETSELECTEVENT(msg_lparam);
     if (event == FD_READ)
     {
-        int result = read_socket();
-        if (result == -1)
-            return NE_ERROR;
-        if (result == -2)
-            return NE_ERROR_MCCP;
-        return (result != 0) ? NE_NEWDATA : NE_NOEVENT;
+       
     }
     else if (event == FD_WRITE)
     {
@@ -302,9 +315,9 @@ void Network::setUtf8Encoding(bool flag)
     else if (event ==FD_ROUTING_INTERFACE_CHANGE )
     {
         MessageBox(NULL, L"Routing interface change", L"network", MB_OK);
-    }
+    }*/
     return NE_NOEVENT;
-}*/
+}
 
 bool Network::send(const tbyte* data, int len)
 {
@@ -326,9 +339,8 @@ bool Network::send(const tbyte* data, int len)
     if (b != e)
         m_output_buffer.write(b, e-b);
 
-    int data_len = m_output_buffer.getSize();
-    bool result = m_connection.send((tbyte*)m_output_buffer.getData(), data_len);
-    m_output_buffer.truncate(data_len);
+    bool result = m_connection.send((tbyte*)m_output_buffer.getData(), m_output_buffer.getSize());
+    m_output_buffer.clear();
     return result;
 }
 
@@ -339,6 +351,14 @@ bool Network::sendplain(const tbyte* data, int len)
 
 bool Network::receive(DataQueue* data)
 {
+    int result = read_data();
+    if (result == -1)
+        return NE_ERROR;
+    if (result == -2)
+        return NE_ERROR_MCCP;
+    return (result != 0) ? NE_NEWDATA : NE_NOEVENT;
+
+
     return m_connection.receive(data);
 }
 
@@ -347,41 +367,42 @@ DataQueue* Network::receiveMsdp()
     return &m_msdp_data;
 }
 
-int Network::read_socket()
+int Network::read_data()
 {
-    while (true)
-    {
-        WSABUF buffer;
+    if (!m_connection.receive(&m_input_buffer))
+        return -1;
+    int readed = m_input_buffer.getSize();
+
+/*        WSABUF buffer;
         buffer.buf = m_input_buffer.getData();
         buffer.len = m_input_buffer.getSize();
 
         DWORD flags = 0;
         DWORD readed = 0;
+
         if (WSARecv(sock, &buffer, 1, &readed, &flags, NULL, NULL) == SOCKET_ERROR)
         {
             if (WSAGetLastError() != WSAEWOULDBLOCK)
                 return -1;
         }
         if (readed == 0)
-            break;
-        //OUTPUT_BYTES(buffer.buf, readed, readed, "read socket");
+            break;*/
 
-        m_totalReaded += readed;
-        if (!m_mccp_on)
-        {
-            if (readed == 0)
-                return 0;
-            m_input_data.write(m_input_buffer.getData(), readed);
-            m_totalDecompressed += readed;
-        }
-        else
-        {
-            m_mccp_data.write(m_input_buffer.getData(), readed);
-            if (m_mccp_data.getSize() == 0)
-                return 0;
-            if (!process_mccp())
-                return -2;
-        }
+    m_totalReaded += readed;
+    if (!m_mccp_on)
+    {
+        if (readed == 0)
+            return 0;
+        m_input_data.write(m_input_buffer.getData(), readed);
+        m_totalDecompressed += readed;
+    }
+    else
+    {
+        m_mccp_data.write(m_input_buffer.getData(), readed);
+        if (m_mccp_data.getSize() == 0)
+            return 0;
+        if (!process_mccp())
+            return -2;
     }
 
     while(m_input_data.getSize() > 0)
@@ -432,7 +453,7 @@ int Network::write_socket()
     DWORD sent = 0;
     if (WSASend(sock, &buffer, 1, &sent, flags, NULL, NULL) == SOCKET_ERROR)
         return -1;
-    //OUTPUT_BYTES(buffer.buf, sent, 32, "send socket");
+
     m_send_data.truncate(sent);
     return sent;
 }
@@ -713,7 +734,7 @@ void Network::init_msdp()
 
 void Network::close_msdp()
 {
-    if (m_connection.isConnected()) 
+    if (m_connection.) 
     {
         tbyte turnoff[3] = { IAC, DONT, MSDP };
         m_msdp_data.write(turnoff, 3);
@@ -725,4 +746,21 @@ void Network::process_msdp(const tbyte* buffer, int len)
 {
     if (m_msdp_on)
         m_msdp_data.write(buffer, len);
+}
+
+void Network::getMccpStatus(MccpStatus* data)
+{
+    data->game_data_len = m_totalDecompressed;
+    data->network_data_len = m_totalReaded;
+    data->status = m_mccp_on;
+}
+
+void Network::setSendDoubleIACmode(bool on)
+{
+    m_double_iac_mode = on;
+}
+
+void Network::setUtf8Encoding(bool flag)
+{
+    m_utf8_encoding = flag;
 }

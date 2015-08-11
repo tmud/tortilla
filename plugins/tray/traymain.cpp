@@ -19,7 +19,7 @@ TrayMainObject::~TrayMainObject()
 
 void TrayMainObject::create()
 {
-    Create(NULL, NULL, NULL, WS_POPUP);
+    Create(HWND_MESSAGE);
 }
 
 void TrayMainObject::setFont(HFONT font)
@@ -44,21 +44,29 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg)
+bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
        return true;
 #endif
 
-    if (isHeightLimited())
+    if (!from_queue)
     {
-        m_cache.push_back(msg);
-        return true;
+        if (isHeightLimited()) {
+            m_queue.push_back(msg);
+            return true;
+        }
+        if (!m_queue.empty())
+        {
+            m_queue.push_back(msg);
+            tryShowQueue();
+            return true;
+        }
     }
 
     PopupWindow *w = getFreeWindow();
-    if (!w) 
+    if (!w)
         return false;
 
     POINT rb = { -1, -1 };
@@ -104,21 +112,37 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
     for (int i=0,e=m_windows.size(); i<e; ++i) {
         if (m_windows[i] == w) { index = i; break; }
     }
-    if (index == -1) {  assert(false); return; }
-
-    PopupWindow* window = m_windows[index];
-    m_windows.erase(m_windows.begin() + index);
-    freeWindow(window);
+    if (index == -1) { assert(false); }
+    else { m_windows.erase(m_windows.begin() + index); }
+    freeWindow(w);
     if (m_windows.empty())
-        return;
+        tryShowQueue();
+    else
+        tryRunMoveAnimation();
+}
 
+void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
+{
+    assert(!m_windows.empty());
+    int last = m_windows.size() - 1;
+    if (m_windows[last] != w)
+        return;
+    tryShowQueue();
+}
+
+void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
+{
+    tryRunMoveAnimation();
+}
+
+void TrayMainObject::tryRunMoveAnimation()
+{
     for (int i=0,e=m_windows.size(); i<e; ++i)
     {
-        int at = m_windows[i]->getAnimationType();
+        int at = m_windows[i]->getAnimationState();
         if (at == PopupWindow::ANIMATION_TOSTART || at == PopupWindow::ANIMATION_TOEND)
              return;
     }
-
     POINT p = m_point0;
     for (int i=0,e=m_windows.size(); i<e; ++i)
     {
@@ -137,42 +161,27 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
     }
 }
 
-void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
+void TrayMainObject::tryShowQueue()
 {
-    if (m_windows.empty())
-        return;
-    int last = m_windows.size() - 1;
-    if (m_windows[last] != w)
-        return;
-    if (m_cache.empty() || isHeightLimited())
-        return;
-
-    int h = m_windows[last]->getSize().cy;
-    int y = m_windows[last]->getAnimation().pos.y;
-    int count = (y - getHeightLimit()) / h;
-    int maxcount = m_cache.size();
-    count = min(count, maxcount);
-    for (;count>0;count--)
+    while (!isHeightLimited() && !m_queue.empty())
     {
-        u8string msg(m_cache[0]);
-        m_cache.pop_front();
-        showMessage(msg);    
+        u8string msg(*m_queue.begin());
+        m_queue.pop_front();
+        showMessage(msg, true);
     }
 }
 
 PopupWindow* TrayMainObject::getFreeWindow()
 {
-    if (!m_free_windows.empty())
-    {
-        int last = m_free_windows.size() - 1;
-        PopupWindow *wnd = m_free_windows[last];
-        m_free_windows.pop_back();
-        return wnd;
-    }
-
-   PopupWindow *wnd = new PopupWindow(&m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
-   if (!wnd->IsWindow())
+   if (!m_free_windows.empty())
+   {
+       int last = m_free_windows.size() - 1;
+       PopupWindow *wnd = m_free_windows[last];
+       m_free_windows.pop_back();
+       return wnd;
+   }
+   PopupWindow *wnd = new PopupWindow();
+   if (!wnd->create(&m_font))
    {
        delete wnd;
        return NULL;
@@ -225,14 +234,14 @@ void TrayMainObject::startTimer()
 {
     if (m_timerStarted) return;
     const DWORD one_min = 60000;
-    SetTimer(1, m_settings.interval*one_min);
+    SetTimer(2, m_settings.interval*one_min);
     m_timerStarted = true;
 }
 
 void TrayMainObject::stopTimer()
 {
     if (!m_timerStarted) return;
-    KillTimer(1);
+    KillTimer(2);
     m_timerStarted = false;
 }
 
@@ -247,4 +256,10 @@ void TrayMainObject::onTimer()
     fw.dwFlags = FLASHW_ALL;
     fw.dwTimeout = 0;
     ::FlashWindowEx(&fw);
+}
+
+void TrayMainObject::onTickPopups()
+{
+    for (int i=0,e=m_windows.size();i<e;++i)
+        m_windows[i]->onTick();
 }

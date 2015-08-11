@@ -8,12 +8,8 @@ template <class T>
 class LogicWrapper : public std::vector<T*>
 {
 public:
-    LogicWrapper() {}
     ~LogicWrapper() { clear(); }
-    void clear() 
-    {
-        autodel<T> z(*this);
-    }
+    void clear() { autodel<T> z(*this); }
     void init(PropertiesValues *values, const std::vector<tstring>& active_groups)
     {
         clear();
@@ -29,6 +25,27 @@ public:
     }
 };
 
+template <class T>
+class LogicWrapperParams : public std::vector<T*>
+{
+public:
+    ~LogicWrapperParams() { clear(); }
+    void clear() { autodel<T> z(*this); }
+    void init(InputTemplateParameters &p, PropertiesValues *values, const std::vector<tstring>& active_groups)
+    {
+        clear();
+        int count = values->size();
+        for (int i=0; i<count; ++i)
+        {
+            const property_value &v = values->get(i);
+            if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
+                continue;
+            T *s = new T(v, p);
+            push_back(s);
+        }
+    }
+};
+
 class LogicWrapperTimers : public std::vector<Timer*>
 {
 public:
@@ -37,7 +54,7 @@ public:
     {
         autodel<Timer> z(*this);
     }
-    void init(PropertiesValues *values, const std::vector<tstring>& active_groups)
+    void init(PropertiesValues *values, const std::vector<tstring>& active_groups, const InputTemplateParameters& p)
     {
         std::vector<int> timers;
         for (int i=0,e=values->size(); i<e; ++i)
@@ -65,7 +82,7 @@ public:
             Timer *t = (index == -1) ? new Timer() : at(index);
             if (index == -1)
                 push_back(t);
-            t->init(v);
+            t->init(v, p);
         }
 
         std::vector<int> todelete;
@@ -100,41 +117,34 @@ public:
     enum { UPDATE_ALL =0, UPDATE_ALIASES, UPDATE_ACTIONS, UPDATE_HOTKEYS, UPDATE_SUBS, UPDATE_ANTISUBS, 
            UPDATE_GAGS, UPDATE_HIGHLIGHTS, UPDATE_TIMERS, UPDATE_VARS, UPDATE_GROUPS, UPDATE_TABS };
 
-    LogicHelper(PropertiesData *propData);
+    LogicHelper();
     void updateProps(int what = UPDATE_ALL);
-    bool processAliases(const tstring& key, tstring* newcmd);
-    bool processHotkeys(const tstring& key, tstring* newcmd);
-    void processActions(parseData *parse_data, std::vector<tstring>* new_cmds);
+    bool processAliases(const InputCommand* cmd, InputCommands* newcmds);
+    bool processHotkeys(const tstring& key, InputCommands* newcmds);
+    void processActions(parseData *parse_data, InputCommands* newcmds);
     void processSubs(parseData *parse_data);
     void processAntiSubs(parseData *parse_data);
     void processGags(parseData *parse_data);
     void processHighlights(parseData *parse_data);
-    void processTimers(std::vector<tstring>* new_cmds);
+    void processTimers(InputCommands* newcmds);
     void resetTimers();
-    bool canSetVar(const tstring& var);
-    bool getVar(const tstring& var, tstring *value);
-    bool setVar(const tstring& var, const tstring& value);
-    bool delVar(const tstring& var);
-    bool processVars(tstring *cmdline);
+
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
     enum MathResult { MATH_SUCCESS = 0, MATH_VARNOTEXIST, MATH_ERROR };
     MathResult mathOp(const tstring& expr, tstring* result);
-
 private:
     // current workable elements
-    LogicWrapper<Alias> m_aliases;
-    LogicWrapper<Hotkey> m_hotkeys;
-    LogicWrapper<Action> m_actions;
+    LogicWrapperParams<Alias> m_aliases;
+    LogicWrapperParams<Hotkey> m_hotkeys;
+    LogicWrapperParams<Action> m_actions;
     LogicWrapper<Sub> m_subs;
     LogicWrapper<AntiSub> m_antisubs;
     LogicWrapper<Gag> m_gags;
     LogicWrapper<Highlight> m_highlights;
     LogicWrapperTimers m_timers;
-    VarProcessor m_varproc;
     Pcre16 m_if_regexp;
     Pcre16 m_math_regexp;
-    PropertiesData *m_propData;
     Ticker m_ticker;
 };
 
@@ -202,8 +212,8 @@ public:
     }
 
     bool setMode(const tstring& state, const tstring& mode_value)
-    {      
-        int stateid = recognizeState(state);        
+    {
+        int stateid = recognizeState(state);
         if (stateid == -1)
             return false;
 
@@ -219,7 +229,7 @@ public:
         {
             propData->messages.initDefault(newstate);
             return true;
-        }        
+        }
         setState(stateid, newstate);
         return true;
     }

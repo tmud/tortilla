@@ -19,4 +19,5 @@ public:
    CFont italic_underlined_font;
    Palette256 palette;
    int font_height;
+   int font_width;
 };

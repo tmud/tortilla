@@ -55,7 +55,7 @@ enum NetworkEvent
     NE_DISCONNECT,
     NE_ERROR_CONNECT,
     NE_ERROR,
-    NE_ERROR_MCCP
+   // NE_ERROR_MCCP
 };
 
 struct NetworkConnectData
@@ -72,19 +72,20 @@ public:
     NetworkConnection();
     ~NetworkConnection();
     void connect(const NetworkConnectData& cdata);
+    bool connected() const;
     void disconnect();
     bool send(const tbyte* data, int len);
-    bool receive(DataQueue *data);
+    bool receive(MemoryBuffer *data);
 private:
-    bool isConnected();
     void threadProc();
     void sendEvent(NetworkEvent e);
-    void waittread();
     NetworkConnectData m_connection;    
     CriticalSection m_cs_send;
     CriticalSection m_cs_receive;
     DataQueue m_send_data;
     DataQueue m_receive_data;
+    MemoryBuffer m_recive_buffer;
+    bool m_connected;
 };
 
 struct MccpStatus
@@ -100,7 +101,8 @@ class Network
 public:
     Network();
     ~Network();    
-   // NetworkEvent processEvent(NetworkEvent event);
+  
+    NetworkEvent translateEvent(LPARAM event);
     void connect(const NetworkConnectData& data);
     void disconnect();
 
@@ -109,13 +111,13 @@ public:
     bool receive(DataQueue* data);
     DataQueue* receiveMsdp();
     
-    void getMccpRatio(MccpStatus* data);
+    void getMccpStatus(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
     void setUtf8Encoding(bool flag);
+
 private:
-    void close();
     bool send_ex(const tbyte* data, int len);
-    int  read_socket();
+    int  read_data();
     int  write_socket();
 
     int  processing_data(const tbyte* buffer, int len, bool *error);
@@ -133,7 +135,7 @@ private:
 
     MemoryBuffer m_input_buffer;            // to receive data from network    
     DataQueue m_mccp_data;                  // accamulated MCCP data from network
-    MemoryBuffer m_mccp_buffer;             // to decompress data   
+    MemoryBuffer m_mccp_buffer;             // to decompress MCCP data   
     DataQueue m_input_data;                 // accamulated data from network
     DataQueue m_receive_data;               // ready to receive by app
     
@@ -151,6 +153,5 @@ private:
     bool m_utf8_encoding;
 
     int  m_mtts_step;
-
     bool m_msdp_on;
 };

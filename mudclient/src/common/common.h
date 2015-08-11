@@ -5,9 +5,15 @@ void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, UINT msg, UINT options);
 void getWindowText(HWND handle, tstring *string);
 bool a2int(const std::string& str, int *value);
+bool w2double(const tstring& str, double *value);
+void double2w(double value, int precision, tstring* str);
+double getMod(double value);
 bool isExistSymbols(const tstring& str, const tstring& symbols);
 bool isOnlyDigits(const tstring& str);
+bool isItNumber(const tstring& str);
 bool isOnlySpaces(const tstring& str);
+bool isOnlySymbols(const tstring& str, const tstring& symbols);
+bool isOnlyFilnameSymbols(const tstring& str);
 COLORREF invertColor(COLORREF c);
 bool sendToClipboard(HWND owner, const tstring& text);
 bool getFromClipboard(HWND owner, tstring* text);
@@ -23,6 +29,8 @@ bool tstring_cmpl(const tstring& str, const WCHAR* lstr);
 
 int  u8string_len(const u8string& str);
 void u8string_substr(u8string *str, int from, int len);
+
+bool checkKeysState(bool shift, bool ctrl, bool alt);
 
 class Separator
 {
@@ -40,8 +48,7 @@ struct autodel
 {   
    autodel(std::vector<T*>& v)
    {
-       struct{ void operator() (T* cmd) { delete cmd; }} del;
-       std::for_each(v.begin(), v.end(), del);
+       std::for_each(v.begin(), v.end(), [](T *obj){ delete obj; });
        v.clear();
    }
 };

@@ -1,7 +1,65 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "varProcessor.h"
+#include "propertiesPages/propertiesData.h"
 
-VarProcessor::VarProcessor()
+class VarProcessorImpl
+{
+    std::map<tstring, int> m_specvars;
+    typedef std::map<tstring, int>::const_iterator citerator;
+    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP };
+    Pcre16 m_vars_regexp;
+public:
+    VarProcessorImpl();
+    bool canset(const tstring& var) const
+    {
+        citerator it = m_specvars.find(var);
+        return (it == m_specvars.end()) ? true : false;
+    }
+    bool processVars(tstring *p, const PropertiesValues &vars, bool strong_mode);
+    bool getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const;
+    bool setVar(PropertiesValues &vars, const tstring& var, const tstring& value);
+    bool delVar(PropertiesValues &vars, const tstring& var);
+private:
+    void getSpecVar(int id, tstring *value) const;
+} vars_processor;
+
+PropertiesValues& getVars()
+{
+    return tortilla::getProperties()->variables;
+}
+
+bool VarProcessor::canSetVar(const tstring& var)
+{
+    return vars_processor.canset(var);
+}
+
+bool VarProcessor::processVars(tstring *p)
+{
+    return vars_processor.processVars(p, getVars(), false);
+}
+
+bool VarProcessor::processVarsStrong(tstring *p)
+{
+    return vars_processor.processVars(p, getVars(), true);
+}
+
+bool VarProcessor::getVar(const tstring& var, tstring *value)
+{
+    return vars_processor.getVar(getVars(), var, value);
+}
+
+bool VarProcessor::setVar(const tstring& var, const tstring& value)
+{
+    return vars_processor.setVar(getVars(), var, value);
+}
+
+bool VarProcessor::delVar(const tstring& var)
+{
+    return vars_processor.delVar(getVars(), var);
+}
+
+VarProcessorImpl::VarProcessorImpl()
 {
     std::map<tstring, int> &v = m_specvars;
     v[L"DATE"] = DATE;
@@ -17,7 +75,7 @@ VarProcessor::VarProcessor()
     m_vars_regexp.setRegExp(L"\\$[0-9a-zA-Z_]+", true);
 }
 
-bool VarProcessor::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode)
+bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode)
 {
     m_vars_regexp.findAllMatches(*p);
     if (m_vars_regexp.getSize() == 0)
@@ -69,7 +127,7 @@ bool VarProcessor::processVars(tstring *p, const PropertiesValues &vars, bool st
      return true;
 }
 
-bool VarProcessor::setVar(PropertiesValues &vars, const tstring& var, const tstring& value)
+bool VarProcessorImpl::setVar(PropertiesValues &vars, const tstring& var, const tstring& value)
 {
     if (var.empty())
         return false;
@@ -83,7 +141,7 @@ bool VarProcessor::setVar(PropertiesValues &vars, const tstring& var, const tstr
     return false;
 }
 
-bool VarProcessor::delVar(PropertiesValues &vars, const tstring& var)
+bool VarProcessorImpl::delVar(PropertiesValues &vars, const tstring& var)
 {
     int index = vars.find(var);
     if (index == -1)
@@ -92,7 +150,7 @@ bool VarProcessor::delVar(PropertiesValues &vars, const tstring& var)
     return true;
 }
 
-bool VarProcessor::getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const
+bool VarProcessorImpl::getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const
 {
      citerator it = m_specvars.find(var);
      if (it == m_specvars.end())
@@ -107,7 +165,7 @@ bool VarProcessor::getVar(const PropertiesValues &vars, const tstring& var, tstr
      return true;
 }
 
-void VarProcessor::getSpecVar(int id, tstring *value) const
+void VarProcessorImpl::getSpecVar(int id, tstring *value) const
 {
     wchar_t buffer[24];
     if (id == TIMESTAMP)

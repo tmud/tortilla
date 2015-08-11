@@ -14,7 +14,6 @@ public:
     const tstring& getProfileGroup() const { return m_configName; }
     const tstring& getProfileName() const { return m_profileName; }
     bool isFirstStartup() const { return m_first_startup; }
-    bool isDefaultProfile() const { return m_default_profile; }
     bool createNewProfile(const tstring& name);
     bool createCopyProfile(const tstring& from, const tstring& name);
     bool loadNewProfile(const tstring& group, const tstring& name);
@@ -52,5 +51,4 @@ private:
     tstring m_profileName;
     PropertiesData m_propData;
     bool m_first_startup;
-    bool m_default_profile;
 };

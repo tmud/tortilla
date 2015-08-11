@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98d1"
+#define TORTILLA_VERSION L"0.98 beta1"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -39,6 +39,7 @@
 #include <string>
 #include <algorithm>
 #include <set>
+#include <deque>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;
@@ -69,6 +70,7 @@ typedef unsigned int uint;
 // only for debug (debuging text formatting)
 #ifdef _DEBUG
 //#define MARKERS_IN_VIEW
+//#define _WINDBG
 #endif
 
 extern CAppModule _Module;

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Main Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Lib Files">
+      <UniqueIdentifier>{34626db6-61d5-47b6-a3b5-d1332348e42d}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rnd.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tinymt32.c">
+      <Filter>Lib Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inttypes.h">
+      <Filter>Lib Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\stdint.h">
+      <Filter>Lib Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tinymt32.h">
+      <Filter>Lib Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="rnd.def">
+      <Filter>Main Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

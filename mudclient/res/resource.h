@@ -114,6 +114,8 @@
 #define IDC_BUTTON_REPLACE              1132
 #define IDC_LIST_STARTUP_WORLD          1133
 #define IDC_CHECK_OPEN_ABOUT            1134
+#define IDC_CHECK_SOFTSCROLL            1135
+#define IDC_EDIT_STARTUP_PROFILE        1136
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -136,7 +138,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        223
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1135
+#define _APS_NEXT_CONTROL_VALUE         1137
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

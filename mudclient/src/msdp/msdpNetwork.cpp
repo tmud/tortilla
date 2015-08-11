@@ -1,11 +1,11 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "network/network.h"
-#include "plugins/pluginsManager.h"
 #include "plugins/pluginsApi.h"
 #include "msdpNetwork.h"
 
 extern luaT_State L;
-extern PluginsManager* _plugins_manager;
+//extern PluginsManager* _plugins_manager;
 extern Plugin* _cp;
 
 MsdpNetwork::MsdpNetwork() : m_state(false)
@@ -70,13 +70,13 @@ void MsdpNetwork::translate(DataQueue *msdp)
             msdp->truncate(3);
             send_varval("CLIENT_NAME", "TORTILLA");
             send_varval("CLIENT_VERSION", W2U(TORTILLA_VERSION));
-            _plugins_manager->processPluginsMethod("msdpon", 0);
+            tortilla::getPluginsManager()->processPluginsMethod("msdpon", 0);
         }
         else if (cmd == DONT)
         {
             m_state = false;
             msdp->truncate(3);
-            _plugins_manager->processPluginsMethod("msdpoff", 0);
+            tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
             releaseReports();
         }
         else
@@ -139,7 +139,7 @@ bool MsdpNetwork::run_plugins_msdp(const tbyte* data, int len)
             { lua_pop(L, 1); return false; }
     }
     // run plugins
-    _plugins_manager->processPluginsMethod("msdp", 1);
+    tortilla::getPluginsManager()->processPluginsMethod("msdp", 1);
     return true;
 }
 
@@ -294,14 +294,14 @@ void MsdpNetwork::loadPlugin(Plugin *p)
 {
     if (!m_state)
         return;
-    _plugins_manager->processPluginMethod(p, "msdpon", 0);
+    tortilla::getPluginsManager()->processPluginMethod(p, "msdpon", 0);
 }
 
 void MsdpNetwork::unloadPlugin(Plugin *p)
 {
     if (!m_state)
         return;
-    _plugins_manager->processPluginMethod(p, "msdpoff", 0);
+    tortilla::getPluginsManager()->processPluginMethod(p, "msdpoff", 0);
     std::vector<u8string> unreport;
     PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
     for (;it!=it_end;++it)
@@ -326,14 +326,14 @@ void MsdpNetwork::loadPlugins()
 {
     if (!m_state)
         return;
-    _plugins_manager->processPluginsMethod("msdpon", 0);
+    tortilla::getPluginsManager()->processPluginsMethod("msdpon", 0);
 }
 
 void MsdpNetwork::unloadPlugins()
 {
     if (!m_state)
         return;
-    _plugins_manager->processPluginsMethod("msdpoff", 0);
+    tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
     std::vector<u8string> unreport;
     PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
     for (;it!=it_end;++it)
@@ -356,7 +356,7 @@ void MsdpNetwork::releaseReports()
 
 MsdpNetwork* getMsdp()
 {
-    return _plugins_manager->getMsdp();
+    return tortilla::getPluginsManager()->getMsdp();
 }
 
 bool msdp_isoff()
