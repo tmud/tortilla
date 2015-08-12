@@ -22,6 +22,7 @@ copy ..\%prod%\tortilla.exe .\ > nul
 copy ..\%prod%\lua.dll .\ > nul
 copy ..\%prod%\api.dll .\ > nul
 copy ..\mudclient\changelog.txt .\ > nul
+copy ..\mudclient\readme.txt .\ > nul
 
 7za.exe a -tzip %filename% tortilla.exe lua.dll api.dll changelog.txt readme.txt %dbg% gamedata\* -xr!.gitignore
 del tortilla.exe lua.dll api.dll changelog.txt readme.txt %dbg% > nul
