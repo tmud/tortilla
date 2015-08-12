@@ -2,29 +2,81 @@
 
 #include "propertiesPages/propertiesData.h"
 
-class MudCommandBar : public CWindowImpl < MudCommandBar, CStatusBarCtrl >
+class CEditEx : public CWindowImpl < CEditEx, CEdit >
 {
-    class CEditEx : public CWindowImpl < CEditEx, CEdit >
-    {
-    public:
-        DECLARE_WND_SUPERCLASS(NULL, CEdit::GetWndClassName())
-    private:
-        BEGIN_MSG_MAP(CEditEx)
-            MESSAGE_HANDLER(WM_PASTE, OnPaste)
-        END_MSG_MAP()
-        LRESULT OnPaste(UINT, WPARAM, LPARAM, BOOL& bHandled)
-        {
-            LRESULT result = ::SendMessage(GetParent(), WM_USER, 0, 0);
-            if (!result)
-                bHandled = FALSE;
-            return 0;
-        }
-    };
-
-    PropertiesData* propData;
-    tstring m_cmdBarBuffer;
     MemoryBuffer m_getTextBuffer;
+public:
+    DECLARE_WND_SUPERCLASS(NULL, CEdit::GetWndClassName())
+    void setText(const tstring& text, int cursor_position = -1)
+    {
+        SetWindowText(text.c_str());
+        setCursor(cursor_position);
+    }
+    void getText(tstring* text)
+    {
+        int count = GetWindowTextLength() + 1;
+        int memlen = count*sizeof(tchar);
+        m_getTextBuffer.alloc(memlen);
+        tchar* buffer = (tchar*)m_getTextBuffer.getData();
+        GetWindowText(buffer, count);
+        text->assign(buffer);
+    }
+    void selectText()
+    {
+        int len = GetWindowTextLength();
+        if (len > 0)
+            SetSel(0, len);
+    }
+    void clearText()
+    {
+        SetWindowText(L"");
+    }
+    void setCursor(int cursor_position = -1)
+    {
+        // move cursor to end, as default
+        int pos = (cursor_position == -1) ? GetWindowTextLength() : cursor_position;
+        SetSel(pos, pos);
+    }
+private:
+    BEGIN_MSG_MAP(CEditEx)
+       MESSAGE_HANDLER(WM_CREATE, OnCreate)
+       MESSAGE_HANDLER(WM_PASTE, OnPaste)
+    END_MSG_MAP()
+    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_getTextBuffer.alloc(256);
+        return 0;
+    }
+    LRESULT OnPaste(UINT, WPARAM, LPARAM, BOOL& bHandled)
+    {
+        LRESULT result = ::SendMessage(GetParent(), WM_USER, 0, 0);
+        if (!result)
+            bHandled = FALSE;
+        return 0;
+    }
+};
+
+typedef std::vector<tstring> MudCommandBarCommands;
+
+class MudCommandBarModeHandler
+{
+public:
+    virtual BOOL create(HWND parent) = 0;
+    virtual void resize(int width, int height) = 0;
+    virtual BOOL translateMessage(MSG* pMsg, BOOL *enter) = 0;
+    virtual void setFont(HFONT font) = 0;
+    virtual void setFocus() = 0;
+    virtual void paste(const tstring& paste_text, BOOL *enter) = 0;
+    virtual void reset() = 0;
+    virtual void getCommands(MudCommandBarCommands* cmds) = 0;
+    virtual void historyCommands(MudCommandBarCommands* cmds) = 0;
+};
+
+class MudCommandBarGameMode : public MudCommandBarModeHandler
+{
+    PropertiesData* propData;
     CEditEx m_edit;
+    tstring m_cmdBarBuffer;
     tstring m_history_const;
     int m_history_index;
     tstring m_tab_const;
@@ -37,81 +89,76 @@ class MudCommandBar : public CWindowImpl < MudCommandBar, CStatusBarCtrl >
         int cursor;
     };
     std::deque<undo_data> m_undo;
-    HWND m_callback_hwnd;
-    UINT m_callback_msg;
 
 public:
-    BOOL PreTranslateMessage(MSG* pMsg)
+    MudCommandBarGameMode(PropertiesData* pd) : propData(pd), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0), m_lastsystemtab(0) {}
+
+private:
+    BOOL create(HWND parent) 
     {
-        if (pMsg->hwnd == m_edit)
-        {
-            if (pMsg->message == WM_CHAR)
-                return processChar(pMsg->wParam);
-            else if (pMsg->message == WM_KEYDOWN)
-                return processKeyDown(pMsg->wParam);
-        }
-        return FALSE;
+       RECT pos = {0};
+       m_edit.Create(parent, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);       
+       return m_edit.IsWindow();
     }
 
-    MudCommandBar(PropertiesData *data) : propData(data), m_history_index(-1), m_lasttab(0), m_lasthistorytab(0), m_lastsystemtab(0),
-        m_callback_hwnd(NULL), m_callback_msg(0)
+    void resize(int width, int height)
     {
-        m_getTextBuffer.alloc(256);
+        RECT rc = { 0, 0, width, height };
+        m_edit.MoveWindow(&rc);
     }
 
-    void setParams(int size, HFONT font)
+    void setFont(HFONT font)
     {
-        SetMinHeight(size);
         m_edit.SetFont(font);
     }
-
-    void setCommandEventCallback(HWND hwnd, UINT msg)
-    {
-        m_callback_hwnd = hwnd;
-        m_callback_msg = msg;
-    }
-
+    
     void setFocus()
     {
         m_edit.SetFocus();
     }
 
-    void getCommand(tstring *cmd)
+    BOOL translateMessage(MSG* pMsg, BOOL *enter)
     {
-        cmd->assign(m_cmdBarBuffer);
-        m_cmdBarBuffer.clear();
-        if (propData->clear_bar)
-            clear();
-        else
-            selectText();
+       if (pMsg->hwnd == m_edit)
+       {
+           if (pMsg->message == WM_CHAR)
+           {
+               if (pMsg->wParam == VK_RETURN)
+                   *enter = TRUE;
+               return processChar(pMsg->wParam);
+           }
+           else if (pMsg->message == WM_KEYDOWN)
+                return processKeyDown(pMsg->wParam);
+       }
+       return FALSE; 
     }
 
-    void addToHistory(const tstring& cmd)
+    void paste(const tstring& paste_text, BOOL *enter)
     {
-        if (cmd.empty())
-            return;
-
-        std::vector<tstring> &h = propData->cmd_history;
-        if (m_history_index != -1)
+        tstring text(paste_text);
+        tstring_replace(&text, L"\t", L"    ");
+        if (isExistSymbols(text, L"\r\n"))
         {
-            if (h[m_history_index] == cmd)
-                h.erase(h.begin() + m_history_index);
-            clearHistory();
+            // multiline paste
+            addUndo();
+            putTextToBuffer(text);
+            *enter = TRUE;
         }
-
-        if (!h.empty())
+        else
         {
-            int last = h.size() - 1;
-            if (h[last] == cmd)
-                return;
-        }
-        h.push_back(cmd);
+            tstring bartext;
+            m_edit.getText(&bartext);
+            int from = 0, to = 0;
+            m_edit.GetSel(from, to);
 
-        int size = h.size();
-        if (size > propData->cmd_history_size)
-        {
-            size = size - propData->cmd_history_size;
-            h.erase(h.begin(), h.begin() + size);
+            int curpos = to;
+            if (from != to)
+               bartext.replace(from, to, L"");
+            else
+               curpos = from + text.length();
+            bartext.insert(from, text);
+            m_edit.setText(bartext);
+            m_edit.SetSel(curpos, curpos);
         }
     }
 
@@ -122,128 +169,39 @@ public:
         m_undo.clear();
     }
 
+    void getCommands(MudCommandBarCommands* cmds)
+    {
+        const tchar *separators = L"\r\n";
+        if (!isExistSymbols(m_cmdBarBuffer, separators))
+        {
+            cmds->push_back(m_cmdBarBuffer);
+            m_cmdBarBuffer.clear();
+            return;
+        }
+
+       const tchar *p = m_cmdBarBuffer.c_str();
+       const tchar *e = p + m_cmdBarBuffer.length();
+       while (p < e)
+       {
+          size_t len = wcscspn(p, separators);
+          if (len > 0)
+            cmds->push_back(tstring(p, len));
+          p = p + len + 1;
+       }
+       m_cmdBarBuffer.clear();
+    }
+
+    void historyCommands(MudCommandBarCommands* cmds)
+    {
+    }
+
 private:
-    BEGIN_MSG_MAP(MudCommandBar)
-        MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_SIZE, OnSize)
-        MESSAGE_HANDLER(WM_USER, OnPaste)
-    END_MSG_MAP()
-
-    void setText(const tstring& text, int cursor = -1, bool add_undo = true)
-    {
-        tstring curtext;
-        getText(&curtext);
-        if (text != curtext)
-        {
-            if (add_undo)
-                addUndo();
-            m_edit.SetWindowText(text.c_str());
-        }
-        int cursorpos = (cursor == -1) ? text.length() : cursor;   // move cursor to end, as default
-        m_edit.SetSel(cursorpos, cursorpos);
-    }
-
-    void clear()
-    {
-        m_edit.SetWindowText(L"");
-        clearTab();
-    }
-
-    void addUndo()
-    {
-        undo_data u;
-        getText(&u.text);
-        if (!m_undo.empty())
-        {
-            int last = m_undo.size() - 1;
-            if (m_undo[last].text == u.text)
-                return;
-        }
-        int from = 0, to = 0;
-        m_edit.GetSel(from, to);
-        u.cursor = to;
-        m_undo.push_back(u);
-        if (m_undo.size() == 30)
-            m_undo.pop_front();
-    }
-
-    void selectText()
-    {
-        int len = m_edit.GetWindowTextLength();
-        if (len > 0)
-            m_edit.SetSel(0, len);
-        clearTab();
-    }
-
-    void getText(tstring *text)
-    {
-        int count = m_edit.GetWindowTextLength() + 1;
-        int memlen = count*sizeof(WCHAR);
-        m_getTextBuffer.alloc(memlen);
-        WCHAR* buffer = (WCHAR*)m_getTextBuffer.getData();
-        m_edit.GetWindowText(buffer, count);
-        text->assign(buffer);
-    }
-
-    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
-    {
-        m_edit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
-        bHandled = FALSE;
-        return 0;
-    }
-
-    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
-    {
-        RECT rc; GetClientRect(&rc);
-        rc.right -= 48;
-        m_edit.MoveWindow(&rc);
-        return 0;
-    }
-
-    LRESULT OnPaste(UINT, WPARAM, LPARAM, BOOL&)
-    {
-        // on paste from clipboard
-        tstring text;
-        if (getFromClipboard(m_hWnd, &text))
-        {
-            tstring_replace(&text, L"\t", L"    ");
-            if (isExistSymbols(text, L"\r\n"))
-            {
-                // multiline paste
-                addUndo();
-                putTextToBuffer(text);
-                m_cmdBarBuffer = text;
-                SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
-                return 1;
-            }
-            else
-            {
-                tstring bartext;
-                getText(&bartext);
-                int from = 0, to = 0;
-                m_edit.GetSel(from, to);
-
-                int curpos = to;
-                if (from != to)
-                    bartext.replace(from, to, L"");
-                else
-                    curpos = from + text.length();
-                bartext.insert(from, text);
-                setText(bartext);
-                m_edit.SetSel(curpos, curpos);
-                return 1;
-            }
-        }
-        return 0;
-    }
-
     BOOL processChar(UINT key)
     {
         if (key == VK_RETURN)
         {
             addUndo();
             putTextToBuffer();
-            SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
             return TRUE;
         }
         if (key != VK_TAB && key != VK_ESCAPE)
@@ -270,7 +228,8 @@ private:
             onHistoryUp();
         else if (key == VK_ESCAPE)
         {
-            clear(); clearHistory();
+            clear();
+            clearHistory();
         }
         else if (key == VK_TAB)
             onTab();
@@ -282,7 +241,17 @@ private:
                     int last = m_undo.size() - 1;
                     undo_data u = m_undo[last];
                     m_undo.pop_back();
-                    setText(u.text, u.cursor, false);
+
+                    //tstring curtext;
+                    //m_edit.getText(&curtext);
+                    //if (u.text != curtext)
+                    {
+                        //if (add_undo)
+                        //    addUndo();
+                        m_edit.setText(u.text);
+                    }
+                    
+                    m_edit.setCursor(u.cursor);
                 }
             }
             else { return FALSE; }
@@ -293,19 +262,19 @@ private:
 
     void putTextToBuffer()
     {
-        getText(&m_cmdBarBuffer);
+        m_edit.getText(&m_cmdBarBuffer);
     }
 
     void putTextToBuffer(const tstring& text)
     {
-        m_cmdBarBuffer = text;
+        m_cmdBarBuffer.assign(text);
     }
 
     void initHistory()
     {
         if (m_history_const.empty() && m_history_index == -1)
         {
-            getText(&m_history_const);
+            m_edit.getText(&m_history_const);
         }
     }
 
@@ -323,7 +292,7 @@ private:
                 m_history_index = h.size() - 1;
             else if (m_history_index != 0)
                 m_history_index -= 1;
-            setText(h[m_history_index]);
+            m_edit.setText(h[m_history_index]);
         }
         else
         {
@@ -335,7 +304,7 @@ private:
                 if (!h[f].compare(0, hc.length(), hc))
                 {
                     m_history_index = f;
-                    setText(h[f]);
+                    m_edit.setText(h[f]);
                     clearTab();
                     return;
                 }
@@ -361,7 +330,7 @@ private:
                 clearHistory();
                 return;
             }
-            setText(h[m_history_index]);
+            m_edit.setText(h[m_history_index]);
         }
         else
         {
@@ -372,27 +341,51 @@ private:
                 if (!h[f].compare(0, hc.length(), hc))
                 {
                     m_history_index = f;
-                    setText(h[f]);
+                    m_edit.setText(h[f]);
                     clearTab();
                     return;
                 }
             }
-            setText(hc);
+            m_edit.setText(hc);
             clearHistory();
         }
         clearTab();
     }
 
+    void addUndo()
+    {
+        undo_data u;
+        m_edit.getText(&u.text);
+        if (!m_undo.empty())
+        {
+            int last = m_undo.size() - 1;
+            if (m_undo[last].text == u.text)
+                return;
+        }
+        int from = 0, to = 0;
+        m_edit.GetSel(from, to);
+        u.cursor = to;
+        m_undo.push_back(u);
+        if (m_undo.size() == 30)
+            m_undo.pop_front();
+    }
+
+    /*void selectText()
+    {
+        m_edit.selectText();
+        clearTab();
+    }*/
+
     void onTab()
     {
-        WCHAR prefix = propData->cmd_prefix;
-        WCHAR separator = propData->cmd_separator;
-        WCHAR cmd_prefix[2] = { prefix, 0 };
+        tchar prefix = propData->cmd_prefix;
+        tchar separator = propData->cmd_separator;
+        tchar cmd_prefix[2] = { prefix, 0 };
 
         tstring text;
-        getText(&text);
+        m_edit.getText(&text);
         if (text.empty()) {
-            setText(cmd_prefix);
+            m_edit.setText(cmd_prefix);
             return;
         }
 
@@ -454,7 +447,7 @@ private:
                     if (!tab.compare(htab))
                         continue;
                     m_lasthistorytab = i + 1;
-                    setText(tab);
+                    m_edit.setText(tab);
                     return;
                 }
             }
@@ -465,7 +458,7 @@ private:
             int last = m_tab_const.size() - 1;
             if (m_tab_const[last] != prefix)
                 m_tab_const.append(cmd_prefix);
-            setText(m_tab_const);
+            m_edit.setText(m_tab_const);
             resetTabIndexes();
             return;
         }
@@ -488,7 +481,7 @@ private:
                     cmd.append(tab.substr(1));
                 else
                     cmd.append(tab);
-                setText(cmd);
+                m_edit.setText(cmd);
                 return;
             }
         }
@@ -508,7 +501,7 @@ private:
                     m_lastsystemtab = i + 1;
                     tstring cmd(m_tab_const);
                     cmd.append(tab);
-                    setText(cmd);
+                    m_edit.setText(cmd);
                     return;
                 }
             }
@@ -517,7 +510,7 @@ private:
         resetTabIndexes();
         tstring cmd(m_tab_const);
         cmd.append(m_tab);
-        setText(cmd);
+        m_edit.setText(cmd);
     }
 
     void resetTabIndexes()
@@ -538,5 +531,187 @@ private:
     {
         m_history_index = -1;
         m_history_const.clear();
+    }
+
+    void clear()
+    {
+        m_edit.clearText();
+        clearTab();
+    }
+};
+
+/*class MudCommandBarSearchMode : public MudCommandBarModeHandler
+{
+private:
+};*/
+
+class MudCommandBar : public CWindowImpl < MudCommandBar, CStatusBarCtrl >
+{    
+    enum BARMODE { DEFAULT = 0, SEARCH };
+    std::map<BARMODE, MudCommandBarModeHandler*> m_mode_handlers;
+    typedef std::map<BARMODE, MudCommandBarModeHandler*>::iterator mode_handlers_iterator;
+    BARMODE m_current_mode;
+
+    PropertiesData* propData;
+
+    HWND m_callback_hwnd;
+    UINT m_callback_msg;
+
+public:
+    void setMode(BARMODE mode)
+    {
+    }
+
+    BOOL PreTranslateMessage(MSG* pMsg)
+    {
+       MudCommandBarModeHandler *h = getHandler();
+       if (!h) return FALSE;
+       BOOL enter = FALSE;
+       BOOL result = h->translateMessage(pMsg, &enter);
+       if (enter)
+           OnEnter();
+       return result;
+    }
+
+    MudCommandBar(PropertiesData *data) : m_current_mode(DEFAULT),
+        propData(data), m_callback_hwnd(NULL), m_callback_msg(0)
+    {
+    }
+
+    ~MudCommandBar()
+    {
+        mode_handlers_iterator it = m_mode_handlers.begin(), it_end = m_mode_handlers.end();
+        for (; it != it_end; ++it)
+            delete it->second;
+    }
+    
+    void setParams(int size, HFONT font)
+    {
+        SetMinHeight(size);
+        mode_handlers_iterator it = m_mode_handlers.begin(), it_end = m_mode_handlers.end();
+        for (; it != it_end; ++it)
+            it->second->setFont(font);
+    }
+
+    void setCommandEventCallback(HWND hwnd, UINT msg)
+    {
+        m_callback_hwnd = hwnd;
+        m_callback_msg = msg;
+    }
+
+    void setFocus()
+    {
+        MudCommandBarModeHandler *h = getHandler();
+        if (h) h->setFocus();
+    }
+
+    void getCommands(std::vector<tstring>& cmds)
+    {
+        MudCommandBarModeHandler *h = getHandler();
+        if (!h) return;
+            
+    }
+
+    /*void getCommand(tstring *cmd)
+    {
+        cmd->assign(m_cmdBarBuffer);
+        m_cmdBarBuffer.clear();
+        if (propData->clear_bar)
+            clear();
+        else
+            selectText();
+    }*/
+
+   /* void addToHistory(const tstring& cmd)
+    {
+        if (cmd.empty())
+            return;
+
+        std::vector<tstring> &h = propData->cmd_history;
+        if (m_history_index != -1)
+        {
+            if (h[m_history_index] == cmd)
+                h.erase(h.begin() + m_history_index);
+            clearHistory();
+        }
+
+        if (!h.empty())
+        {
+            int last = h.size() - 1;
+            if (h[last] == cmd)
+                return;
+        }
+        h.push_back(cmd);
+
+        int size = h.size();
+        if (size > propData->cmd_history_size)
+        {
+            size = size - propData->cmd_history_size;
+            h.erase(h.begin(), h.begin() + size);
+        }
+    }*/
+
+    void reset()
+    {
+        mode_handlers_iterator it = m_mode_handlers.begin(), it_end = m_mode_handlers.end();
+        for (; it != it_end; ++it)
+            it->second->reset();
+        setMode(DEFAULT);
+    }
+
+private:
+    MudCommandBarModeHandler* getHandler() {
+        mode_handlers_iterator it = m_mode_handlers.find(m_current_mode);
+        return (it != m_mode_handlers.end()) ? it->second : NULL;    
+    } 
+
+    BEGIN_MSG_MAP(MudCommandBar)
+        MESSAGE_HANDLER(WM_CREATE, OnCreate)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_USER, OnPaste)
+    END_MSG_MAP()
+
+    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
+    {
+        MudCommandBarModeHandler *default_ = new MudCommandBarGameMode(propData);
+        if (default_ && default_->create(m_hWnd))
+           m_mode_handlers[DEFAULT] = default_;
+        //m_mode_handlers[SEARCH] = new MudCommandBarSearchMode();
+        bHandled = FALSE;
+        return 0;
+    }
+
+    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        MudCommandBarModeHandler *h = getHandler();
+        if (h) {
+            RECT rc; GetClientRect(&rc);
+            h->resize(rc.right-48, rc.bottom);
+        }
+        return 0;
+    }
+
+    LRESULT OnPaste(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        // on paste from clipboard
+        tstring text;
+        if (getFromClipboard(m_hWnd, &text))
+        {           
+            MudCommandBarModeHandler *h = getHandler();
+            if (h) 
+            {
+                BOOL enter = FALSE;
+                h->paste(text, &enter);
+                if (enter)
+                    OnEnter();
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    void OnEnter()
+    {
+        SendMessage(m_callback_hwnd, m_callback_msg, 0, 0);
     }
 };
