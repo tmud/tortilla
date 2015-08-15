@@ -630,36 +630,25 @@ private:
 
     LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        tstring cmd;
-        m_bar.getCommand(&cmd);
+        MudCommandBarCommands cmds;
+        m_bar.getCommands(&cmds);
 
-        InputPlainCommands cmds(cmd);
-        int count = cmds.size();
-        if (count > 1)
+        if (m_bar.getMode() == MudCommandBar::SEARCH)
         {
-            int last = cmd.size() - 1;
-            if (last > 0)
-            {
-                tchar last_char = cmd.at(last);
-                if (last_char != L'\r' && last_char != L'\n')
-                {
-                    int last_cmd = cmds.size() - 1;
-                    m_bar.setText(cmds[last_cmd], -1, false);
-                    cmds.erase(last_cmd);
-                }
-            }
+            // todo 
+            return 0;
         }
-        else if (count == 1)
+
+        // DEFAULT mode
+        InputPlainCommands pcmds;
+        pcmds.ptr()->swap(cmds);
+
+        if (pcmds.size() == 1)
         {
             InputPlainCommands history;
-            m_plugins.processHistoryCmds(cmds, &history);
-            for (int i=0,e=history.size(); i<e; ++i)
-                m_bar.addToHistory(history[i]);
-        }
-        else
-        {
-            assert(false);
-            return 0;
+            m_plugins.processHistoryCmds(pcmds, &history);
+            history.ptr()->swap(cmds);
+            m_bar.addToHistory(cmds);
         }
 
         InputTemplateParameters p;
@@ -668,10 +657,10 @@ private:
 
         // разбиваем команду на подкомманды для обработки в barcmd
         InputTemplateCommands tcmds;
-        tcmds.init(cmds, p);
-        tcmds.extract(&cmds);
-        m_plugins.processBarCmds(&cmds);
-        m_processor.processUserCommand(cmds);
+        tcmds.init(pcmds, p);
+        tcmds.extract(&pcmds);
+        m_plugins.processBarCmds(&pcmds);
+        m_processor.processUserCommand(pcmds);
         return 0;
     }
 

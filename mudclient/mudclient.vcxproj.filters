@@ -262,6 +262,12 @@
     <ClInclude Include="src\windbg.h">
       <Filter>Source Files\Main</Filter>
     </ClInclude>
+    <ClInclude Include="src\mudGameCmdBar.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudSearchCmdBar.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -382,9 +388,6 @@
       <Filter>Source Files\LogicProcessor</Filter>
     </ClCompile>
     <ClCompile Include="src\accessors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mudCommandBar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
