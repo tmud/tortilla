@@ -5,6 +5,7 @@
 class CEditEx : public CWindowImpl < CEditEx, CEdit >
 {
     MemoryBuffer m_getTextBuffer;
+    CBrush m_bgnd_brush;
 public:
     DECLARE_WND_SUPERCLASS(NULL, CEdit::GetWndClassName())
     void setText(const tstring& text, int cursor_position = -1)
@@ -37,10 +38,17 @@ public:
         int pos = (cursor_position == -1) ? GetWindowTextLength() : cursor_position;
         SetSel(pos, pos);
     }
+    void setBackroundColor(COLORREF color)
+    {
+        if (!m_bgnd_brush.IsNull())
+            m_bgnd_brush.DeleteObject();
+        m_bgnd_brush.CreateSolidBrush(color);
+    }
 private:
     BEGIN_MSG_MAP(CEditEx)
        MESSAGE_HANDLER(WM_CREATE, OnCreate)
        MESSAGE_HANDLER(WM_PASTE, OnPaste)
+       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
@@ -53,6 +61,20 @@ private:
         LRESULT result = ::SendMessage(GetParent(), WM_USER, 0, 0);
         if (!result)
             bHandled = FALSE;
+        return 0;
+    }
+    LRESULT OnEraseBkgnd(UINT, WPARAM wparam, LPARAM lparam, BOOL&bHandled)
+    {
+        if (!m_bgnd_brush.IsNull())
+        {
+            RECT rc; GetClientRect(&rc);
+            CDCHandle dc ( (HDC)wparam );
+            dc.FillRect(&rc, m_bgnd_brush);
+            bHandled = FALSE;
+            return 1;
+        }
+
+        bHandled = FALSE;
         return 0;
     }
 };
@@ -72,6 +94,7 @@ public:
     virtual void reset() = 0;
     virtual void getCommands(MudCommandBarCommands* cmds) = 0;
     virtual void historyCommands(const MudCommandBarCommands& cmds) = 0;
+    virtual void setVisible(bool visible) = 0;
 };
 
 #include "mudGameCmdBar.h"
@@ -92,6 +115,20 @@ private:
 public:
     void setMode(BARMODE mode)
     {
+        if (mode == m_current_mode)
+            return;
+        MudCommandBarModeHandler* h = getHandler();
+        if (h)
+            h->setVisible(false);
+        m_current_mode = mode;
+        h = getHandler();
+        if (h)
+        {
+            h->setVisible(true);
+            BOOL b = FALSE;
+            OnSize(0, 0, 0, b);
+            h->setFocus();
+        }
     }
 
     BARMODE getMode()
@@ -179,9 +216,13 @@ private:
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
         MudCommandBarModeHandler *default_ = new MudGameCmdBar(propData);
-        if (default_ && default_->create(m_hWnd))
+        if (default_->create(m_hWnd))
            m_mode_handlers[DEFAULT] = default_;
-        //m_mode_handlers[SEARCH] = new MudCommandBarSearchMode();
+        else { delete default_; }
+        MudCommandBarModeHandler *search = new MudSearchCmdBar();
+        if (search->create(m_hWnd))
+           m_mode_handlers[SEARCH] = search;
+        else { delete search; delete default_; }
         bHandled = FALSE;
         return 0;
     }

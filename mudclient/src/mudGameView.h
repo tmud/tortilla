@@ -93,11 +93,17 @@ public:
                 return TRUE;
             }
         }
-        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && (GetKeyState(VK_SHIFT) < 0))
+        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && checkKeysState(true, false, false))
         {
             // Shift+F12 - hot key for settings
             BOOL b = FALSE;
             OnSettings(0,0,0,b);
+            return TRUE;
+        }
+        if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
+        {
+            // Ctrl+F - search mode
+            OnSearchMode();
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
@@ -1143,4 +1149,6 @@ private:
 
     void setOscColor(int index, COLORREF color);
     void resetOscColors();
+    void OnSearchMode();
+    void OnSearchEnter(const MudCommandBarCommands& lines);
 };

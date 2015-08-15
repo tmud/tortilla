@@ -37,6 +37,11 @@ private:
         m_edit.MoveWindow(&rc);
     }
 
+    void setVisible(bool visible)
+    {
+        m_edit.ShowWindow(visible ? SW_SHOW : SW_HIDE);
+    }
+
     void setFont(HFONT font)
     {
         m_edit.SetFont(font);

@@ -246,10 +246,10 @@ void u8string_substr(u8string *str, int from, int len)
 
 bool checkKeysState(bool shift, bool ctrl, bool alt)
 {
-    bool ctrl_key = (GetKeyState(VK_CONTROL) < 0) ? true : false;
-    bool alt_key = (GetKeyState(VK_MENU) < 0) ? true : false;
-    bool shift_key = (GetKeyState(VK_SHIFT) < 0) ? true : false;
-    return (ctrl == ctrl_key && alt_key == alt && shift_key == shift) ? true : false;
+    if ((GetKeyState(VK_SHIFT) < 0) != shift) return false;
+    if ((GetKeyState(VK_CONTROL) < 0) != ctrl) return false;
+    if ((GetKeyState(VK_MENU) < 0) != alt) return false;
+    return true;
 }
 
 Separator::Separator(const tstring& str)
