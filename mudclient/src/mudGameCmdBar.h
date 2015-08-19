@@ -27,7 +27,7 @@ private:
     BOOL create(HWND parent)
     {
         RECT pos = { 0 };
-        m_edit.Create(parent, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+        m_edit.Create(parent, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL | ES_MULTILINE, WS_EX_CLIENTEDGE);
         return m_edit.IsWindow();
     }
 

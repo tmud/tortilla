@@ -6,8 +6,11 @@ class CEditEx : public CWindowImpl < CEditEx, CEdit >
 {
     MemoryBuffer m_getTextBuffer;
     CBrush m_bgnd_brush;
+    COLORREF m_bgnd_color;
 public:
+    CEditEx() : m_bgnd_color(0) {}
     DECLARE_WND_SUPERCLASS(NULL, CEdit::GetWndClassName())
+
     void setText(const tstring& text, int cursor_position = -1)
     {
         SetWindowText(text.c_str());
@@ -40,6 +43,7 @@ public:
     }
     void setBackroundColor(COLORREF color)
     {
+        m_bgnd_color = color;
         if (!m_bgnd_brush.IsNull())
             m_bgnd_brush.DeleteObject();
         m_bgnd_brush.CreateSolidBrush(color);
@@ -48,11 +52,16 @@ private:
     BEGIN_MSG_MAP(CEditEx)
        MESSAGE_HANDLER(WM_CREATE, OnCreate)
        MESSAGE_HANDLER(WM_PASTE, OnPaste)
-       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+       MSG_OCM_CTLCOLOREDIT(OnCtlColor)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
     {
         m_getTextBuffer.alloc(256);
+        RECT rc = {0};
+        GetClientRect(&rc);
+        rc.top = 8;
+        //rc.bottom = rc.bottom - 8;
+        //SetRect(&rc);
         bHandled = FALSE;
         return 0;
     }
@@ -63,19 +72,30 @@ private:
             bHandled = FALSE;
         return 0;
     }
-    LRESULT OnEraseBkgnd(UINT, WPARAM wparam, LPARAM lparam, BOOL&bHandled)
+    HBRUSH OnCtlColor(CDCHandle dc, CEdit edit)
     {
         if (!m_bgnd_brush.IsNull())
         {
-            RECT rc; GetClientRect(&rc);
-            CDCHandle dc ( (HDC)wparam );
-            dc.FillRect(&rc, m_bgnd_brush);
-            bHandled = FALSE;
-            return 1;
+            dc.SetBkColor(m_bgnd_color);
+            return m_bgnd_brush;
         }
+        dc.SetBkColor(::GetSysColor(COLOR_WINDOW));
+        return ::GetSysColorBrush(COLOR_WINDOW);
+    }
+};
 
-        bHandled = FALSE;
-        return 0;
+class CStaticEx : public CWindowImpl < CStaticEx, CStatic >
+{
+public:
+    DECLARE_WND_SUPERCLASS(NULL, CStatic::GetWndClassName())
+private:
+    BEGIN_MSG_MAP(CEditEx)
+        MSG_OCM_CTLCOLORSTATIC(OnCtlColor)
+    END_MSG_MAP()
+    HBRUSH OnCtlColor(CDCHandle dc, CStatic _static)
+    {        
+        dc.SetBkColor(::GetSysColor(COLOR_3DFACE));
+        return ::GetSysColorBrush(COLOR_3DFACE);
     }
 };
 
@@ -205,12 +225,12 @@ private:
     MudCommandBarModeHandler* getHandler() {
         mode_handlers_iterator it = m_mode_handlers.find(m_current_mode);
         return (it != m_mode_handlers.end()) ? it->second : NULL;    
-    } 
-
+    }
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER, OnPaste)
+        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)

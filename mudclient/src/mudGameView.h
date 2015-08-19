@@ -103,7 +103,7 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-            OnSearchMode();
+            m_bar.setMode(MudCommandBar::SEARCH);
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
@@ -641,7 +641,10 @@ private:
 
         if (m_bar.getMode() == MudCommandBar::SEARCH)
         {
-            // todo 
+            if (cmds.empty())
+                 m_bar.setMode(MudCommandBar::DEFAULT);
+            else
+                 OnSearchEnter(cmds);
             return 0;
         }
 
@@ -1149,6 +1152,5 @@ private:
 
     void setOscColor(int index, COLORREF color);
     void resetOscColors();
-    void OnSearchMode();
     void OnSearchEnter(const MudCommandBarCommands& lines);
 };
