@@ -19,6 +19,7 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     PropertiesValues *propValues;
     PropertiesValues *propGroups;
     PropertiesValues m_list_values;
+    std::vector<int> m_list_positions;
     PropertyListCtrl m_list;
     CBevelLine m_bl1;
     CBevelLine m_bl2;
@@ -121,6 +122,8 @@ private:
             int index = selected[i];
             m_list.DeleteItem(index);
             m_list_values.del(index);
+            if (m_filterMode)
+                m_list_positions.erase(m_list_positions.begin()+index);
         }
         m_deleted = false;
         m_list.SetFocus();
@@ -174,17 +177,19 @@ private:
         m_up.EnableWindow(FALSE);
         m_down.EnableWindow(FALSE);
         update();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 
     LRESULT OnGroupChanged(WORD, WORD, HWND, BOOL&)
-    {
+    {        
         tstring group;
         getCurrentGroup(&group);
         if (!m_filterMode)
         {
             m_currentGroup = group;
             updateCurrentItem(false);
+            m_state_helper.setCanSaveState();
             return 0;
         }
         tstring old = m_currentGroup;
@@ -197,6 +202,7 @@ private:
         m_up.EnableWindow(FALSE);
         m_down.EnableWindow(FALSE);
         update();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 
@@ -452,12 +458,14 @@ private:
         }
 
         m_list_values.clear();
+        m_list_positions.clear();
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
             if (v.group != m_currentGroup)
                 continue;
             m_list_values.add(-1, v.key, v.value, v.group);
+            m_list_positions.push_back(i);
         }
     }
 
@@ -472,28 +480,34 @@ private:
             return;
         }
 
-        std::vector<int> positions;
+        std::vector<int> todelete;
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
             if (v.group == m_currentGroup)
-                positions.push_back(i);
+            {
+                bool exist = std::find(m_list_positions.begin(), m_list_positions.end(), i) != m_list_positions.end();
+                if (!exist)
+                    todelete.push_back(i);
+            }
+        }
+        for (int i=todelete.size()-1; i>=0; --i)
+        {
+            int pos = todelete[i];
+            propValues->del(pos);
+            for (int j=0,je=m_list_positions.size();j<je;++j) {
+                if (m_list_positions[j] > pos)
+                    m_list_positions[j]--;
+            }
         }
 
-        int pos_count = positions.size();
+        int pos_count = m_list_positions.size();
         int elem_count = m_list_values.size();
         for (int i=0; i<elem_count; ++i)
         {
             const property_value& v = m_list_values.get(i);
-            int index = (i < pos_count) ? positions[i] : -1;
+            int index = (i < pos_count) ? m_list_positions[i] : -1;
             propValues->add(index, v.key, v.value, v.group);
-        }
-
-        int todelete = pos_count - elem_count;
-        for (int i=0; i<todelete; ++i)
-        {
-            int pos = pos_count-(i+1);
-            propValues->del(pos);
         }
     }
 
