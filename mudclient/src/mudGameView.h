@@ -103,7 +103,10 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-            m_bar.setMode(MudCommandBar::SEARCH);
+            if (m_bar.getMode() == MudCommandBar::SEARCH)
+                m_bar.setMode(MudCommandBar::DEFAULT);
+            else
+                m_bar.setMode(MudCommandBar::SEARCH);
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))

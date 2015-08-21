@@ -85,11 +85,11 @@ private:
                 {
                     if (m_edit.GetWindowTextLength() != 0)
                         m_edit.clearText();
+                    else
+                        *enter = TRUE;
                 }
 
-               
-               
-
+           
                 //BOOL result = processChar(pMsg->wParam);
                 /*if (pMsg->wParam == VK_RETURN)
                 {
@@ -108,11 +108,6 @@ private:
                 if (target_window >= 0 && target_window <= OUTPUT_WINDOWS && checkKeysState(false, true, false))
                 {
                     setTargetWindow(target_window);
-                    return TRUE;
-                }
-                if (key == 'F' && checkKeysState(false, true, false))
-                {
-                    *enter = TRUE;
                     return TRUE;
                 }
             }
