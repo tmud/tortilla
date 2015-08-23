@@ -69,8 +69,7 @@ private:
     LRESULT OnMouseWheel(UINT, WPARAM wparam, LPARAM, BOOL&) { mouseWheel(HIWORD(wparam)); return 0; }
     LRESULT OnLButtonDown(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        bool shift = (GetKeyState(VK_SHIFT) < 0) ? true : false;
-        if (shift)
+        if (checkKeysState(true, false, false) || (GetKeyState(VK_RBUTTON) & 0x100)!=0 )
             startDraging();
         return 0;
     }

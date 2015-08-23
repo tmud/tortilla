@@ -93,7 +93,7 @@ public:
                 return TRUE;
             }
         }
-        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && (GetKeyState(VK_SHIFT) < 0))
+        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && checkKeysState(true, false, false))
         {
             // Shift+F12 - hot key for settings
             BOOL b = FALSE;
