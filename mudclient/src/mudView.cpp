@@ -92,19 +92,21 @@ void MudView::updateSoftScrolling()
 
     int last_string = getLastString();
     if (m_last_visible_line != last_string)
-    {        
+    {
         int new_visible_line = last_string;
         int count = last_string - m_last_visible_line;
-        if (count > 8)
-            new_visible_line = m_last_visible_line + 8;
-        else if (count > 5)
-            new_visible_line = m_last_visible_line + 5;
-        else if (count > 3)
-            new_visible_line = m_last_visible_line + 3;
+        int p = min((count / 10)+1 , 3);
+        if (count >= (m_lines_count * 2))
+            new_visible_line = last_string - m_lines_count;
+        else if (count > p*3)
+            new_visible_line = m_last_visible_line + p*3;
+        else if (count > p*2)
+            new_visible_line = m_last_visible_line + p*2;
+        else if (count > p)
+            new_visible_line = m_last_visible_line + p;
 
         if (new_visible_line == last_string) 
             stopSoftScroll();
-
         updateScrollbar(new_visible_line);
         Invalidate(FALSE);
     }
