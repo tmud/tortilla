@@ -158,17 +158,16 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 25;
+    const int max_lines_without_prompt = 30;
     bool p_exist = false;
     int last_game_cmd = -1;
     PropertiesData *pdata = tortilla::getProperties();
-    bool use_template = pdata->recognize_prompt ? true : false;
     for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
     {
         MudViewString *s = parse_data.strings[i];
         if (s->prompt) { p_exist = true; }
         if (s->gamecmd || s->prompt || s->system) { last_game_cmd = i; continue; }
-        if (use_template)
+        if (pdata->recognize_prompt)
         {
             // recognize prompt string via template
             tstring text;  s->getText(&text);
@@ -177,17 +176,14 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
             {
                 s->setPrompt(m_prompt_pcre.getLast(0));
                 last_game_cmd = i;
+                m_prompt_counter = 0;
+                m_prompt_mode = USER;
                 p_exist = true;
             }
         }
     }
 
-    if (p_exist)
-    {
-       m_prompt_counter = 0;
-       m_prompt_mode = USER;
-    }
-    else
+    if (!p_exist)
     {
        if (m_prompt_mode == USER)
        {
@@ -201,7 +197,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
            last_game_cmd = -1;
-           parseDataStrings tmp;       // временный буфер           
+           parseDataStrings tmp;       // временный буфер
            for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
            {
                int last = tmp.size();

@@ -31,6 +31,16 @@ void MudView::accLastString(parseData *parse_data)
     int last = m_strings.size() - 1;
     MudViewString *last_string = m_strings[last];
     MudViewString *string = parse_data->strings[0];
+
+    bool space_in_prompt = false;
+    if (last_string->prompt && string->blocks.size() == 1)
+    {
+        const tstring &tmp = string->blocks[0].string;
+        if (tmp.empty() || tmp.find_first_not_of(L' ') == -1)
+            space_in_prompt = true;
+    }
+
+    if (!space_in_prompt) {
     if (last_string->prompt && last_string->gamecmd)
         return;
     if (string->gamecmd && !last_string->prompt)
@@ -41,7 +51,8 @@ void MudView::accLastString(parseData *parse_data)
     {
         MudViewStringBlock empty;
         last_string->blocks.push_back(empty);
-    }
+    }}
+
     last_string->moveBlocks(string);
     delete string;
     parse_data->strings[0] = last_string;
