@@ -20,12 +20,18 @@ void loadString(UINT id, tstring* string)
     string->assign(buffer);
 }
 
+int msgBox(HWND parent, const tstring& msg, UINT options)
+{
+    tstring title_text;
+    loadString(IDR_MAINFRAME, &title_text);
+    return MessageBox(parent, msg.c_str(), title_text.c_str(), options);
+}
+
 int msgBox(HWND parent, UINT msg, UINT options)
 {
-    tstring msg_text, title_text;
+    tstring msg_text;
     loadString(msg, &msg_text);
-    loadString(IDR_MAINFRAME, &title_text);
-    return MessageBox(parent, msg_text.c_str(), title_text.c_str(), options);
+    return msgBox(parent, msg_text, options);
 }
 
 void getWindowText(HWND handle, tstring *string)

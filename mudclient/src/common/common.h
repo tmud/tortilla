@@ -2,6 +2,7 @@
 
 bool isVistaOrHigher();
 void loadString(UINT id, tstring* string);
+int msgBox(HWND parent, const tstring& msg, UINT options);
 int msgBox(HWND parent, UINT msg, UINT options);
 void getWindowText(HWND handle, tstring *string);
 bool a2int(const std::string& str, int *value);

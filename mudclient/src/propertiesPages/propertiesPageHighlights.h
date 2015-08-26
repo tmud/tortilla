@@ -47,6 +47,24 @@ public:
           dlg_state = state;
      }
 
+     bool updateChangedTemplate(bool check)
+     {
+         int item = m_list.getOnlySingleSelection();
+         if (item != -1)
+         {
+             tstring pattern;
+             getWindowText(m_pattern, &pattern);
+             const highlight_value& v = m_list_values.get(item);
+             if (v.key != pattern && !pattern.empty())
+             {
+                 if (!check)
+                    updateCurrentItem(true);
+                 return true;
+             }
+         }
+         return false;
+     }
+
 private:
     BEGIN_MSG_MAP(PropertyHighlights)
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -158,6 +176,7 @@ private:
 
     LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
     {
+        m_pattern.SetWindowText(L"");
         m_list.SelectItem(-1);
         m_pattern.SetFocus();
         return 0;

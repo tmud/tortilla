@@ -48,6 +48,7 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
     CEdit m_text;
     CButton m_add;
     CButton m_del;
+    CButton m_replace;
     CButton m_reset;
     CButton m_filter;
     CComboBox m_cbox;
@@ -69,7 +70,26 @@ public:
     {
         dlg_state = state;
     }
-
+    bool updateChangedTemplate(bool check)
+    {
+        int item = m_list.getOnlySingleSelection();
+        if (item != -1)
+        {
+            tstring pattern;
+            getWindowText(m_hotkey, &pattern);
+            property_value& v = m_list_values.getw(item);
+            if (v.key != pattern && !pattern.empty())
+            { 
+                if (!check) {
+                tstring text;
+                getWindowText(m_text, &text);
+                v.key = pattern; v.value = text; v.group = m_currentGroup;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 private:
     BEGIN_MSG_MAP(PropertyHotkeys)
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -79,6 +99,7 @@ private:
        MESSAGE_HANDLER(WM_USER, OnHotkeyEditChanged)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
@@ -142,6 +163,22 @@ private:
                 m_list_positions.erase(m_list_positions.begin()+index);
         }
         m_deleted = false;
+        m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnReplaceElement(WORD, WORD, HWND, BOOL&)
+    {
+        tstring hotkey, text;
+        getWindowText(m_hotkey, &hotkey);
+        getWindowText(m_text, &text);
+
+        int index = m_list.getOnlySingleSelection();
+        m_list_values.add(index, hotkey, text, m_currentGroup);
+        m_list.setItem(index, 0, hotkey);
+        m_list.setItem(index, 1, text);
+        m_list.setItem(index, 2, m_currentGroup);
+        m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;
     }
@@ -210,6 +247,9 @@ private:
                 {
                     m_list.SelectItem(index);
                     m_hotkey.SetSel(len, len);
+                }
+                else {
+                     m_replace.EnableWindow(TRUE);
                 }
               }
         }
@@ -280,6 +320,7 @@ private:
             m_hotkey.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
+        m_replace.EnableWindow(FALSE);
         m_update_mode = false;
         return 0;
     }
@@ -324,6 +365,7 @@ private:
         m_text.Attach(GetDlgItem(IDC_EDIT_HOTKEY_TEXT));
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_list.Attach(GetDlgItem(IDC_LIST));
@@ -336,6 +378,7 @@ private:
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
+        m_replace.EnableWindow(FALSE);
         m_reset.EnableWindow(FALSE);
         m_state_helper.init(dlg_state, &m_list);
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);

@@ -109,7 +109,7 @@ private:
     LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
     {
         m_list.SelectItem(-1);
-        m_group.SetWindowTextW(L"");
+        m_group.SetWindowText(L"");
         m_group.SetFocus();
         return 0;
     }
