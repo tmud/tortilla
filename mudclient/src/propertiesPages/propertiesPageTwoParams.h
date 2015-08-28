@@ -97,10 +97,10 @@ private:
         getWindowText(m_pattern, &pattern);
         getWindowText(m_text, &text);
 
-        int index = m_list_values.find(pattern);
+        int index = m_list_values.find(pattern, m_currentGroup);
         if (index == -1 && m_filterMode)
         {
-            int index2 = propValues->find(pattern);
+            int index2 = propValues->find(pattern, m_currentGroup);
             if (index2 != -1)
                 propValues->del(index2);
         }
@@ -193,21 +193,32 @@ private:
         saveValues();
         m_filterMode = m_filter.GetCheck() ? true : false;
         loadValues();
-        m_up.EnableWindow(FALSE);
-        m_down.EnableWindow(FALSE);
         update();
+        updateButtons();
         m_state_helper.setCanSaveState();
         return 0;
     }
 
     LRESULT OnGroupChanged(WORD, WORD, HWND, BOOL&)
-    {        
+    {
         tstring group;
         getCurrentGroup(&group);
         if (!m_filterMode)
         {
             m_currentGroup = group;
-            updateCurrentItem(false);
+            tstring pattern;
+            getWindowText(m_pattern, &pattern);
+            int index = m_list_values.find(pattern, m_currentGroup);
+            if (index != -1)
+            {
+                m_update_mode = true;
+                m_list.SelectItem(index);
+                m_update_mode = false;
+            }
+            else
+            {
+                updateCurrentItem(false);
+            }
             m_state_helper.setCanSaveState();
             return 0;
         }
@@ -218,9 +229,8 @@ private:
         saveValues();
         m_currentGroup = group;
         loadValues();
-        m_up.EnableWindow(FALSE);
-        m_down.EnableWindow(FALSE);
         update();
+        updateButtons();
         m_state_helper.setCanSaveState();
         return 0;
     }
@@ -236,29 +246,39 @@ private:
             {
                 tstring pattern;
                 getWindowText(m_pattern, &pattern);
-                int index = m_list_values.find(pattern);
+                int index = m_list_values.find(pattern, m_currentGroup);
                 currelement = (index != -1 && index == selected) ? TRUE : FALSE;
-                if (index != -1 && !currelement)
+                if (index != -1 && !currelement )
                 {
+                    m_update_mode = true;
                     m_list.SelectItem(index);
-                    m_pattern.SetSel(len, len);
-                    return 0;
+                    m_update_mode = false;
+                    selected = index;
+                    currelement = TRUE;
                 }
             }
-            m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
-            m_add.EnableWindow(len == 0 ? FALSE : !currelement);
-            m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
-            if (currelement)
-                updateCurrentItem(false);
+
+            updateButtons();
+            if (!currelement)
+            {
+                m_add.EnableWindow(len > 0);
+                m_replace.EnableWindow(len > 0 && selected >= 0);
+            }
+            else
+            {
+                m_add.EnableWindow(FALSE);
+                tstring text;
+                getWindowText(m_text, &text);
+                const property_value& v = m_list_values.get(selected);
+                m_replace.EnableWindow( (v.value != text) );
+            }
         }
         return 0;
     }
 
     LRESULT OnPatternTextChanged(WORD, WORD, HWND, BOOL&)
 	{
-     	tstring text;
-        getWindowText(m_text, &text);
-        m_reset.EnableWindow(text.empty() ? FALSE : TRUE);
+        updateButtons();
         if (!m_update_mode)
             updateCurrentItem(false);
         return 0;
@@ -272,7 +292,7 @@ private:
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         property_value& v = m_list_values.getw(item);
-        if (v.key != pattern) 
+        if (v.key != pattern)
         {
             if (!update_key) { m_update_mode = false; return; }
             v.key = pattern;
@@ -301,23 +321,14 @@ private:
         int items_selected = m_list.GetSelectedCount();
         if (items_selected == 0)
         {
-            m_del.EnableWindow(FALSE);
-            m_up.EnableWindow(FALSE);
-            m_down.EnableWindow(FALSE);
             if (!m_deleted)
             {
                 m_pattern.SetWindowText(L"");
                 m_text.SetWindowText(L"");
             }
-            m_reset.EnableWindow(FALSE);
         }
         else if (items_selected == 1)
         {
-            m_add.EnableWindow(FALSE);
-            m_del.EnableWindow(TRUE);
-            m_up.EnableWindow(TRUE);
-            m_down.EnableWindow(TRUE);
-            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const property_value& v = m_list_values.get(item);
             m_pattern.SetWindowText( v.key.c_str() );
@@ -328,15 +339,10 @@ private:
         }
         else
         {
-            m_del.EnableWindow(TRUE);
-            m_add.EnableWindow(FALSE);
-            m_up.EnableWindow(FALSE);
-            m_down.EnableWindow(FALSE);
-            m_reset.EnableWindow(FALSE);
             m_pattern.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
-        m_replace.EnableWindow(FALSE);
+        updateButtons();
         m_update_mode = false;
         return 0;
     }
@@ -363,7 +369,6 @@ private:
         }
         else
         {
-            m_del.EnableWindow(FALSE);
             saveValues();
         }
         return 0;
@@ -398,12 +403,6 @@ private:
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
-        m_add.EnableWindow(FALSE);
-        m_del.EnableWindow(FALSE);
-        m_replace.EnableWindow(FALSE);
-        m_reset.EnableWindow(FALSE);
-        m_up.EnableWindow(FALSE);
-        m_down.EnableWindow(FALSE);
         if (!m_config.use_priority)
         {
             m_up.ShowWindow(SW_HIDE);
@@ -414,6 +413,7 @@ private:
         if (m_filterMode)
             m_filter.SetCheck(BST_CHECKED);
         loadValues();
+        updateButtons();
         return 0;
     }
 
@@ -451,8 +451,38 @@ private:
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         if (!pattern.empty())
-            index = m_list_values.find(pattern);
+            index = m_list_values.find(pattern, m_currentGroup);
         m_state_helper.loadCursorAndTopPos(index);
+    }
+
+    void updateButtons()
+    {
+        bool pattern_empty = m_pattern.GetWindowTextLength() == 0;
+        bool text_empty = m_text.GetWindowTextLength() == 0;
+        int items_selected = m_list.GetSelectedCount();
+        if (items_selected == 0)
+        {
+            m_add.EnableWindow(pattern_empty ? FALSE : TRUE);
+            m_del.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
+        }
+        else if(items_selected == 1)
+        {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(TRUE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
+        }
+        else
+        {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(TRUE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
+        }
+        m_replace.EnableWindow(FALSE);
+        m_reset.EnableWindow(pattern_empty && text_empty ? FALSE : TRUE);    
     }
 
     void swapItems(int index1, int index2)

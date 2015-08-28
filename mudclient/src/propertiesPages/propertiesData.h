@@ -122,6 +122,13 @@ public:
         return -1;
     }
 
+    int find(const tstring& key, const tstring& group)
+    {
+        for (int i = 0, e = m_values.size(); i < e; ++i)
+            if (m_values[i].key == key && m_values[i].group == group ) { return i; } 
+        return -1;
+    }
+
     void add(int index, const tstring& key, const T& value, const tstring& group)
     {
         el data; data.key = key; data.value = value; data.group = group;
