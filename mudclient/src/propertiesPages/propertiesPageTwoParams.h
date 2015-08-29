@@ -203,25 +203,41 @@ private:
     {
         tstring group;
         getCurrentGroup(&group);
+        if (m_currentGroup == group) return 0;
+        tstring pattern;
+        getWindowText(m_pattern, &pattern);
         if (!m_filterMode)
         {
             m_currentGroup = group;
-            tstring pattern;
-            getWindowText(m_pattern, &pattern);
-            int index = m_list_values.find(pattern, m_currentGroup);
+            int index = m_list_values.find(pattern, group);
             if (index != -1)
             {
                 m_update_mode = true;
                 m_list.SelectItem(index);
                 m_update_mode = false;
+
+
             }
             else
             {
                 updateCurrentItem(false);
             }
+            updateButtons();
             m_state_helper.setCanSaveState();
             return 0;
         }
+        if (propValues->find(pattern, group) != -1)
+        {
+            m_currentGroup = group;
+            loadValues();
+            m_update_mode = true;
+            update();
+            m_update_mode = false;
+            updateButtons();
+            m_state_helper.setCanSaveState();
+            return 0;
+        }
+
         tstring old = m_currentGroup;
         m_currentGroup = group;
         updateCurrentItem(false);
@@ -237,51 +253,52 @@ private:
 
     LRESULT OnPatternEditChanged(WORD, WORD, HWND, BOOL&)
     {
-        if (!m_update_mode)
+        if (m_update_mode)
+            return 0;
+        
+        BOOL currelement = FALSE;
+        int len = m_pattern.GetWindowTextLength();
+        int selected = m_list.getOnlySingleSelection();
+        if (len > 0)
         {
-            BOOL currelement = FALSE;
-            int len = m_pattern.GetWindowTextLength();
-            int selected = m_list.getOnlySingleSelection();
-            if (len > 0)
+            tstring pattern;
+            getWindowText(m_pattern, &pattern);
+            int index = m_list_values.find(pattern, m_currentGroup);
+            currelement = (index != -1 && index == selected) ? TRUE : FALSE;
+            if (index != -1 && !currelement )
             {
-                tstring pattern;
-                getWindowText(m_pattern, &pattern);
-                int index = m_list_values.find(pattern, m_currentGroup);
-                currelement = (index != -1 && index == selected) ? TRUE : FALSE;
-                if (index != -1 && !currelement )
-                {
-                    m_update_mode = true;
-                    m_list.SelectItem(index);
-                    m_update_mode = false;
-                    selected = index;
-                    currelement = TRUE;
-                }
-            }
-
-            updateButtons();
-            if (!currelement)
-            {
-                m_add.EnableWindow(len > 0);
-                m_replace.EnableWindow(len > 0 && selected >= 0);
-            }
-            else
-            {
-                m_add.EnableWindow(FALSE);
-                tstring text;
-                getWindowText(m_text, &text);
-                const property_value& v = m_list_values.get(selected);
-                m_replace.EnableWindow( (v.value != text) );
+                m_update_mode = true;
+                m_list.SelectItem(index);
+                m_update_mode = false;
+                //selected = index;
+                //currelement = TRUE;
             }
         }
-        return 0;
+
+         updateButtons();
+        /* if (!currelement)
+         {
+             m_add.EnableWindow(len > 0);
+             m_replace.EnableWindow(len > 0 && selected >= 0);
+         }
+         else
+         {
+             m_add.EnableWindow(FALSE);
+             tstring text;
+             getWindowText(m_text, &text);
+             const property_value& v = m_list_values.get(selected);
+             m_replace.EnableWindow( (v.value != text) );
+         }*/
+         return 0;
     }
 
     LRESULT OnPatternTextChanged(WORD, WORD, HWND, BOOL&)
 	{
-        updateButtons();
-        if (!m_update_mode)
-            updateCurrentItem(false);
-        return 0;
+       if (m_update_mode)
+           return 0;
+       updateCurrentItem(false);
+       //updateButtons();
+       return 0;
     }
 
     void updateCurrentItem(bool update_key)
@@ -466,13 +483,24 @@ private:
             m_del.EnableWindow(FALSE);
             m_up.EnableWindow(FALSE);
             m_down.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
         }
         else if(items_selected == 1)
         {
-            m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
             m_up.EnableWindow(TRUE);
             m_down.EnableWindow(TRUE);
+            bool mode = FALSE;
+            if (!pattern_empty)
+            {
+                tstring pattern;
+                getWindowText(m_pattern, &pattern);
+                int selected = m_list.getOnlySingleSelection();
+                const property_value& v = m_list_values.get(selected);
+                mode = (pattern == v.key) ? FALSE : TRUE;
+            }
+            m_replace.EnableWindow(mode);
+            m_add.EnableWindow(mode);
         }
         else
         {
@@ -480,8 +508,8 @@ private:
             m_del.EnableWindow(TRUE);
             m_up.EnableWindow(FALSE);
             m_down.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
         }
-        m_replace.EnableWindow(FALSE);
         m_reset.EnableWindow(pattern_empty && text_empty ? FALSE : TRUE);    
     }
 
