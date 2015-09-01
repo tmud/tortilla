@@ -210,38 +210,22 @@ private:
         {
             m_currentGroup = group;
             int index = m_list_values.find(pattern, group);
+            int selected = m_list.getOnlySingleSelection();
             if (index != -1)
-            {
-                m_update_mode = true;
                 m_list.SelectItem(index);
-                m_update_mode = false;
-
-
-            }
             else
-            {
                 updateCurrentItem(false);
-            }
             updateButtons();
             m_state_helper.setCanSaveState();
             return 0;
         }
-        if (propValues->find(pattern, group) != -1)
+        if (propValues->find(pattern, group) == -1)
         {
+            tstring old = m_currentGroup;
             m_currentGroup = group;
-            loadValues();
-            m_update_mode = true;
-            update();
-            m_update_mode = false;
-            updateButtons();
-            m_state_helper.setCanSaveState();
-            return 0;
+            updateCurrentItem(false);
+            m_currentGroup = old;
         }
-
-        tstring old = m_currentGroup;
-        m_currentGroup = group;
-        updateCurrentItem(false);
-        m_currentGroup = old;
         saveValues();
         m_currentGroup = group;
         loadValues();
@@ -255,7 +239,7 @@ private:
     {
         if (m_update_mode)
             return 0;
-        
+
         BOOL currelement = FALSE;
         int len = m_pattern.GetWindowTextLength();
         int selected = m_list.getOnlySingleSelection();
@@ -267,37 +251,19 @@ private:
             currelement = (index != -1 && index == selected) ? TRUE : FALSE;
             if (index != -1 && !currelement )
             {
-                m_update_mode = true;
                 m_list.SelectItem(index);
-                m_update_mode = false;
-                //selected = index;
-                //currelement = TRUE;
+                m_pattern.SetSel(len, len);
             }
         }
-
-         updateButtons();
-        /* if (!currelement)
-         {
-             m_add.EnableWindow(len > 0);
-             m_replace.EnableWindow(len > 0 && selected >= 0);
-         }
-         else
-         {
-             m_add.EnableWindow(FALSE);
-             tstring text;
-             getWindowText(m_text, &text);
-             const property_value& v = m_list_values.get(selected);
-             m_replace.EnableWindow( (v.value != text) );
-         }*/
-         return 0;
+        updateButtons();
+        return 0;
     }
 
     LRESULT OnPatternTextChanged(WORD, WORD, HWND, BOOL&)
-	{
+    {
        if (m_update_mode)
            return 0;
        updateCurrentItem(false);
-       //updateButtons();
        return 0;
     }
 
@@ -431,6 +397,7 @@ private:
             m_filter.SetCheck(BST_CHECKED);
         loadValues();
         updateButtons();
+        m_reset.EnableWindow(TRUE);
         return 0;
     }
 
@@ -510,7 +477,6 @@ private:
             m_down.EnableWindow(FALSE);
             m_replace.EnableWindow(FALSE);
         }
-        m_reset.EnableWindow(pattern_empty && text_empty ? FALSE : TRUE);    
     }
 
     void swapItems(int index1, int index2)

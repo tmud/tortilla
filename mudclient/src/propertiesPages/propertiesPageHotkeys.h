@@ -116,10 +116,10 @@ private:
         getWindowText(m_hotkey, &hotkey);
         getWindowText(m_text, &text);
 
-        int index = m_list_values.find(hotkey);
+        int index = m_list_values.find(hotkey, m_currentGroup);
         if (index == -1 && m_filterMode)
         {
-            int index2 = propValues->find(hotkey);
+            int index2 = propValues->find(hotkey, m_currentGroup);
             if (index2 != -1)
                 propValues->del(index2);
         }
@@ -185,15 +185,9 @@ private:
 
     LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
     {
-        int sel = m_list.getOnlySingleSelection();
-        m_list.SelectItem(-1);
         m_text.SetWindowText(L"");
         m_hotkey.SetWindowText(L"");
-        if (sel == -1)
-        {
-            m_add.EnableWindow(FALSE);
-            m_reset.EnableWindow(FALSE);
-        }
+        m_list.SelectItem(-1);
         m_hotkey.SetFocus();
         return 0;
     }
@@ -204,6 +198,7 @@ private:
         m_filterMode = m_filter.GetCheck() ? true : false;
         loadValues();
         update();
+        updateButtons();
         m_state_helper.setCanSaveState();
         return 0;
     }
@@ -212,47 +207,58 @@ private:
     {
         tstring group;
         getCurrentGroup(&group);
+        if (m_currentGroup == group) return 0;
+        tstring pattern;
+        getWindowText(m_hotkey, &pattern);
         if (!m_filterMode)
         {
             m_currentGroup = group;
-            updateCurrentItem();
+            int index = m_list_values.find(pattern, group);
+            int selected = m_list.getOnlySingleSelection();
+            if (index != -1)
+                m_list.SelectItem(index);
+            else
+               updateCurrentItem();
+            updateButtons();
             m_state_helper.setCanSaveState();
             return 0;
         }
-        tstring old = m_currentGroup;
-        m_currentGroup = group;
-        updateCurrentItem();
-        m_currentGroup = old;
+        if (propValues->find(pattern, group) == -1)
+        {
+            tstring old = m_currentGroup;
+            m_currentGroup = group;
+            updateCurrentItem();
+            m_currentGroup = old;
+        }
         saveValues();
         m_currentGroup = group;
         loadValues();
         update();
+        updateButtons();
         m_state_helper.setCanSaveState();
         return 0;
     }
 
     LRESULT OnHotkeyEditChanged(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (!m_update_mode)
+        if (m_update_mode)
+            return 0;
+ 
+        BOOL currelement = FALSE;
+        int len = m_hotkey.GetWindowTextLength();
+        int selected = m_list.getOnlySingleSelection();
+        if (len > 0)
         {
-             int len = m_hotkey.GetWindowTextLength();
-             m_add.EnableWindow(len == 0 ? FALSE : TRUE);
-             m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
-             if (len > 0)
-             {
-                tstring hotkey;
-                getWindowText(m_hotkey, &hotkey);
-                int index = m_list_values.find(hotkey);
-                if (index != -1)
-                {
-                    m_list.SelectItem(index);
-                    m_hotkey.SetSel(len, len);
-                }
-                else {
-                     m_replace.EnableWindow(TRUE);
-                }
-              }
+            tstring hotkey;
+            getWindowText(m_hotkey, &hotkey);
+            int index = m_list_values.find(hotkey, m_currentGroup);
+            if (index != -1 && !currelement)
+            {
+                m_list.SelectItem(index);
+                m_hotkey.SetSel(len, len);
+            }
         }
+        updateButtons();
         return 0;
     }
 
@@ -260,6 +266,7 @@ private:
     {
         int item = m_list.getOnlySingleSelection();
         if (item == -1) return;
+        m_update_mode = true;
         tstring hotkey;
         getWindowText(m_hotkey, &hotkey);
         property_value& v = m_list_values.getw(item);
@@ -276,6 +283,7 @@ private:
             v.group = m_currentGroup;
             m_list.setItem(item, 2, m_currentGroup);
         }
+        m_update_mode = false;
     }
 
     LRESULT OnHotkeyTextChanged(WORD, WORD, HWND, BOOL&)
@@ -287,13 +295,12 @@ private:
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
+        if (m_update_mode)
+            return 0;
         m_update_mode = true;
         int items_selected = m_list.GetSelectedCount();
         if (items_selected == 0)
         {
-            m_del.EnableWindow(FALSE);
-            m_add.EnableWindow(FALSE);
-            m_reset.EnableWindow(FALSE);
             if (!m_deleted) 
             {
               m_hotkey.SetWindowText(L"");
@@ -302,8 +309,6 @@ private:
         }
         else if (items_selected == 1)
         {
-            m_del.EnableWindow(TRUE);
-            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const property_value& v = m_list_values.get(item);
             m_hotkey.SetWindowText( v.key.c_str() );
@@ -314,13 +319,10 @@ private:
         }
         else
         {
-            m_del.EnableWindow(TRUE);
-            m_add.EnableWindow(FALSE);
-            m_reset.EnableWindow(FALSE);
             m_hotkey.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
-        m_replace.EnableWindow(FALSE);
+        updateButtons();
         m_update_mode = false;
         return 0;
     }
@@ -347,7 +349,6 @@ private:
         }
         else
         {
-            m_del.EnableWindow(FALSE);
             saveValues();
         }
         return 0;
@@ -376,15 +377,13 @@ private:
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
-        m_add.EnableWindow(FALSE);
-        m_del.EnableWindow(FALSE);
-        m_replace.EnableWindow(FALSE);
-        m_reset.EnableWindow(FALSE);
         m_state_helper.init(dlg_state, &m_list);
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
         if (m_filterMode)
             m_filter.SetCheck(BST_CHECKED);
         loadValues();
+        updateButtons();
+        m_reset.EnableWindow(TRUE);
         return 0;
     }
 
@@ -422,8 +421,55 @@ private:
         tstring hotkey;
         getWindowText(m_hotkey, &hotkey);
         if (!hotkey.empty())
-            index = m_list_values.find(hotkey);
+            index = m_list_values.find(hotkey, m_currentGroup);
         m_state_helper.loadCursorAndTopPos(index);
+    }
+
+    void updateButtons()
+    {
+        bool pattern_empty = m_hotkey.GetWindowTextLength() == 0;
+        bool text_empty = m_text.GetWindowTextLength() == 0;
+        int items_selected = m_list.GetSelectedCount();
+        if (items_selected == 0)
+        {
+            m_add.EnableWindow(pattern_empty ? FALSE : TRUE);
+            m_del.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
+        }
+        else if(items_selected == 1)
+        {
+            m_del.EnableWindow(TRUE);
+            bool mode = FALSE;
+            if (!pattern_empty)
+            {
+                tstring pattern;
+                getWindowText(m_hotkey, &pattern);
+                int selected = m_list.getOnlySingleSelection();
+                const property_value& v = m_list_values.get(selected);
+                mode = (pattern == v.key) ? FALSE : TRUE;
+            }
+            m_replace.EnableWindow(mode);
+            m_add.EnableWindow(mode);
+        }
+        else
+        {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(TRUE);
+            m_replace.EnableWindow(FALSE);
+        }         
+    }
+
+    void swapItems(int index1, int index2)
+    {
+        const property_value& i1 = m_list_values.get(index1);
+        const property_value& i2 = m_list_values.get(index2);
+        m_list.setItem(index1, 0, i2.key);
+        m_list.setItem(index1, 1, i2.value);
+        m_list.setItem(index1, 2, i2.group);
+        m_list.setItem(index2, 0, i1.key);
+        m_list.setItem(index2, 1, i1.value);
+        m_list.setItem(index2, 2, i1.group);
+        m_list_values.swap(index1, index2);
     }
 
     void loadValues()

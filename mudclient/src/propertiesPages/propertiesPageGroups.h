@@ -14,12 +14,13 @@ class PropertyGroups :  public CDialogImpl<PropertyGroups>
     CButton m_rename;
     tstring m_OnStatus;
     bool m_deleted;
+    bool m_update_mode;
     PropertiesDlgPageState *dlg_state;
     PropertiesSaveHelper m_state_helper;
 
 public:
      enum { IDD = IDD_PROPERTY_GROUPS };
-     PropertyGroups(PropertiesData *data) : propData(data), m_OnStatus(L"Вкл"), m_deleted(false),dlg_state(NULL) {}
+     PropertyGroups(PropertiesData *data) : propData(data), m_OnStatus(L"Вкл"), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
      void setParams(PropertiesDlgPageState *state)
      {
          dlg_state = state;
@@ -65,8 +66,7 @@ private:
         if (index == -1)
             index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
-        m_onoff.SetCheck(BST_CHECKED);
-        m_rename.EnableWindow(FALSE);
+        m_list.SetFocus();
         return 0;
     }
 
@@ -79,7 +79,7 @@ private:
             MessageBox(L"Последнюю группу удалить нельзя!", title.c_str(), MB_OK|MB_ICONSTOP);
             return 0;
         }
-        if (MessageBox(L"Вы уверены, что хотите удалить группу со всеми ее триггерами, заменами и другими элементами?", 
+        if (MessageBox(L"Вы уверены, что хотите удалить группу со всеми ее триггерами, макросами и другими элементами?", 
             title.c_str(), MB_YESNO|MB_ICONQUESTION) == IDYES)
         {
             m_deleted = true;
@@ -88,21 +88,24 @@ private:
             const property_value& g = propData->groups.get(index);
             propData->deleteGroup(g.key);
             m_deleted = false;
+            m_list.SetFocus();
         }
         return 0;
     }
 
     LRESULT OnRenameElement(WORD, WORD, HWND, BOOL&)
     {
-        tstring group;
-        getWindowText(m_group, &group);
-
-        int index = m_list.GetSelectedIndex();
-        const property_value& g = propData->groups.get(index);
-        tstring oldname(g.key);
-        propData->renameGroup(oldname, group);
-
-        m_list.setItem(index, 0, group);
+        int index = m_list.getOnlySingleSelection();
+        if (index != -1)
+        {
+            tstring group;
+            getWindowText(m_group, &group);
+            const property_value& g = propData->groups.get(index);
+            tstring oldname(g.key);
+            propData->renameGroup(oldname, group);
+            m_list.setItem(index, 0, group);
+            m_list.SetFocus();
+        }
         return 0;
     }
 
@@ -117,72 +120,62 @@ private:
     LRESULT OnGroupChecked(WORD, WORD, HWND, BOOL&)
     {
         tstring state = (m_onoff.GetCheck() == BST_CHECKED) ? L"1" : L"0";
-        int index = m_list.GetSelectedIndex();
-        const property_value& g = propData->groups.get(index);
-        tstring key(g.key);
-        propData->groups.add(index, key, state, L"");
-        setListEnableItem(index);
+        std::vector<int> selected;
+        m_list.getSelected(&selected);        
+        for (int i=0,e=selected.size();i<e; ++i)
+        {
+            int index = selected[i];
+            const property_value& g = propData->groups.get(index);
+            tstring key(g.key);
+            propData->groups.add(index, key, state, L"");
+            setListEnableItem(index);
+        }
         return 0;
     }
 
     LRESULT OnEditChanged(WORD, WORD, HWND, BOOL&)
     {
-        int string_len = m_group.GetWindowTextLength();
-        BOOL flag = string_len == 0 ? FALSE : TRUE;
-        m_add.EnableWindow(flag);
-        m_reset.EnableWindow(flag);
-        if (flag)
+        if (m_update_mode)
+            return 0;
+        tstring group;
+        getWindowText(m_group, &group);
+        int index = propData->groups.find(group);
+        if (index != -1)
         {
-            int index = m_list.GetSelectedIndex();
-            if (index == -1)
-                flag = FALSE;
-            else
-            {
-                tstring group;
-                getWindowText(m_group, &group);
-                for (int i=0,e=propData->groups.size(); i<e; ++i)
-                {
-                    //if ( i == index) continue;
-                    const property_value& g = propData->groups.get(i);
-                    if (g.key == group)
-                        { flag = FALSE; break; }
-                }
-            }
-            m_rename.EnableWindow(flag);
+            m_list.SelectItem(index);
+            int len = group.size();
+            m_group.SetSel(len, len);
         }
+        updateButtons();
         return 0;
     }
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
-        int item_selected = m_list.GetSelectedIndex();
+        if (m_update_mode)
+            return 0;
+        m_update_mode = true;
+        int item_selected = m_list.getOnlySingleSelection();
         if (item_selected == -1)
         {
-            m_del.EnableWindow(FALSE);
-            m_onoff.SetCheck(BST_UNCHECKED);
-            m_onoff.EnableWindow(FALSE);
             if (!m_deleted)
                 m_group.SetWindowText(L"");
-            m_reset.EnableWindow(FALSE);
         }
         else
         {
-            m_del.EnableWindow(TRUE);
-            m_onoff.EnableWindow(TRUE);
-            m_onoff.SetCheck(checkEnableItem(item_selected) ? BST_CHECKED : BST_UNCHECKED);
             const property_value& g = propData->groups.get(item_selected);
             m_group.SetWindowText(g.key.c_str());
-            m_reset.EnableWindow(TRUE);
         }
-        m_rename.EnableWindow(FALSE);
+        updateButtons();
+        m_update_mode = false;
         return 0;
     }
 
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         HWND focus = GetFocus();
-        if (focus != m_del && focus != m_onoff)
-            m_del.EnableWindow(FALSE);
+        if (focus != m_del && focus != m_onoff && m_list.GetSelectedCount() > 1)
+            m_list.SelectItem(-1);
         return 0;
     }
 
@@ -227,7 +220,7 @@ private:
         m_del.EnableWindow(FALSE);
         m_onoff.EnableWindow(FALSE);
         m_rename.EnableWindow(FALSE);
-        m_reset.EnableWindow(FALSE);
+        m_reset.EnableWindow(TRUE);
         m_state_helper.init(dlg_state, &m_list);
         for (int i=0,e=propData->groups.size(); i<e; ++i)
         {
@@ -236,6 +229,45 @@ private:
             setListEnableItem(i);
         }
         return 0;
+    }
+
+    void updateButtons()
+    {
+        bool group_empty = m_group.GetWindowTextLength() == 0;
+        int items_selected = m_list.GetSelectedCount();
+        if (items_selected == 0)
+        {
+            m_add.EnableWindow(group_empty ? FALSE : TRUE);
+            m_del.EnableWindow(FALSE);
+            m_rename.EnableWindow(FALSE);
+            m_onoff.SetCheck(BST_UNCHECKED);
+            m_onoff.EnableWindow(FALSE);
+        }
+        else if (items_selected == 1)
+        {
+            int selected = m_list.getOnlySingleSelection();
+            bool mode = FALSE;
+            if (!group_empty)
+            {
+                tstring group;
+                getWindowText(m_group, &group);
+                const property_value& g = propData->groups.get(selected);
+                mode = (group == g.key) ? FALSE : TRUE;
+            }
+            m_del.EnableWindow(TRUE);
+            m_rename.EnableWindow(mode);
+            m_add.EnableWindow(mode);
+            m_onoff.SetCheck(checkEnableItem(selected) ? BST_CHECKED : BST_UNCHECKED);
+            m_onoff.EnableWindow(TRUE);
+        }        
+        else
+        {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(FALSE);
+            m_rename.EnableWindow(FALSE);
+            m_onoff.EnableWindow(TRUE);
+            m_onoff.SetCheck(BST_UNCHECKED);
+        }
     }
 
     bool checkEnableItem(int index)

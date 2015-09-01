@@ -15,10 +15,11 @@ class PropertyTabwords :  public CDialogImpl<PropertyTabwords>
     bool m_update_mode;
     PropertiesDlgPageState *dlg_state;
     PropertiesSaveHelper m_state_helper;
+    bool m_deleted;
 
 public:
      enum { IDD = IDD_PROPERTY_TABWORDS };
-     PropertyTabwords() : m_update_mode(false) {}
+     PropertyTabwords() : m_update_mode(false), m_deleted(false) {}
      void setParams(PropertiesList *values, PropertiesDlgPageState *state)
      {
          propValues = values;
@@ -90,12 +91,16 @@ private:
         std::vector<int> selected;
         m_list.getSelected(&selected);
         int items = selected.size();
+        if (items == 1)
+            m_deleted = true;
         for (int i = 0; i < items; ++i)
         {
             int index = selected[i];
             m_list.DeleteItem(index);
             m_list_values.del(index);
         }
+        m_deleted = false;
+        m_list.SetFocus();
         return 0;
     }
 
@@ -116,60 +121,69 @@ private:
 
     LRESULT OnPatternEditChanged(WORD, WORD, HWND, BOOL&)
     {
-        if (!m_update_mode)
+        if (m_update_mode)
+            return 0;
+
+        BOOL currelement = FALSE;
+        int len = m_pattern.GetWindowTextLength();
+        int selected = m_list.getOnlySingleSelection();
+        if (len > 0)
         {
-            BOOL currelement = FALSE;
-            int len = m_pattern.GetWindowTextLength();
-            int selected = m_list.getOnlySingleSelection();
-            if (len > 0)
+            tstring pattern;
+            getWindowText(m_pattern, &pattern);
+            int index = m_list_values.find(pattern);
+            currelement = (index != -1 && index == selected) ? TRUE : FALSE;
+            if (index != -1 && !currelement)
             {
-                tstring pattern;
-                getWindowText(m_pattern, &pattern);
-                int index = m_list_values.find(pattern);
-                currelement = (index != -1 && index == selected) ? TRUE : FALSE;
-                if (index != -1 && !currelement)
-                {
-                    m_list.SelectItem(index);
-                    m_pattern.SetSel(len, len);
-                    return 0;
-                }
-                m_replace.EnableWindow(len > 0 && selected >= 0 && !currelement);
-                m_add.EnableWindow(len == 0 ? FALSE : !currelement);
-                m_reset.EnableWindow(len == 0 ? FALSE : TRUE);
-                if (currelement)
-                    updateCurrentItem(false);
+                m_list.SelectItem(index);
+                m_pattern.SetSel(len, len);
             }
         }
+        updateButtons();
         return 0;
+    }
+
+    void updateCurrentItem(bool update_key)
+    {
+        int item = m_list.getOnlySingleSelection();
+        if (item == -1) return;
+        m_update_mode = true;
+        tstring pattern;
+        getWindowText(m_pattern, &pattern);
+        tstring& v = m_list_values.getw(item);
+        if (v != pattern) 
+        {
+            if (!update_key) { m_update_mode = false; return; }
+            v = pattern;
+            m_list.setItem(item, 0, pattern);
+        }
+        m_update_mode = false;
     }
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
+        if (m_update_mode)
+            return 0;
         m_update_mode = true;
         int items_selected = m_list.GetSelectedCount();
         if (items_selected == 0)
         {
-            m_del.EnableWindow(FALSE);
-            m_pattern.SetWindowText(L"");
-            m_reset.EnableWindow(FALSE);
+            if (!m_deleted)
+            {
+              m_pattern.SetWindowText(L"");
+            }
         }
         else if (items_selected == 1)
         {
-            m_add.EnableWindow(FALSE);
-            m_del.EnableWindow(TRUE);
-            m_reset.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const tstring &v = m_list_values.get(item);
             m_pattern.SetWindowText( v.c_str() );
         }
         else
         {
-            m_del.EnableWindow(TRUE);
-            m_add.EnableWindow(FALSE);
-            m_reset.EnableWindow(FALSE);
             m_pattern.SetWindowText( L"" );
         }
-        m_replace.EnableWindow(FALSE);
+        updateButtons();
         m_update_mode = false;
         return 0;
     }
@@ -195,7 +209,6 @@ private:
         }
         else
         {
-            m_del.EnableWindow(FALSE);
             saveValues();
         }
         return 0;
@@ -219,12 +232,10 @@ private:
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
-        m_add.EnableWindow(FALSE);
-        m_del.EnableWindow(FALSE);
-        m_reset.EnableWindow(FALSE);
-        m_replace.EnableWindow(FALSE);
         m_state_helper.init(dlg_state, &m_list);
         loadValues();
+        updateButtons();
+        m_reset.EnableWindow(TRUE);
         return 0;
     }
 
@@ -251,21 +262,37 @@ private:
         m_state_helper.loadCursorAndTopPos(index);
     }
 
-    void updateCurrentItem(bool update_key)
+    void updateButtons()
     {
-        int item = m_list.getOnlySingleSelection();
-        if (item == -1) return;
-        m_update_mode = true;
-        tstring pattern;
-        getWindowText(m_pattern, &pattern);
-        tstring& v = m_list_values.getw(item);
-        if (v != pattern) 
+        bool pattern_empty = m_pattern.GetWindowTextLength() == 0;
+        int items_selected = m_list.GetSelectedCount();
+        if (items_selected == 0)
         {
-            if (!update_key) { m_update_mode = false; return; }
-            v = pattern;
-            m_list.setItem(item, 0, pattern);
+            m_add.EnableWindow(pattern_empty ? FALSE : TRUE);
+            m_del.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
         }
-        m_update_mode = false;
+        else if(items_selected == 1)
+        {
+            m_del.EnableWindow(TRUE);
+            bool mode = FALSE;
+            if (!pattern_empty)
+            {
+                tstring pattern;
+                getWindowText(m_pattern, &pattern);
+                int selected = m_list.getOnlySingleSelection();
+                const tstring& v = m_list_values.get(selected);
+                mode = (pattern == v) ? FALSE : TRUE;
+            }
+            m_replace.EnableWindow(mode);
+            m_add.EnableWindow(mode);
+        }
+        else
+        {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(TRUE);
+            m_replace.EnableWindow(FALSE);
+        }
     }
 
     void loadValues()
