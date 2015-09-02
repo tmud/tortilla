@@ -227,7 +227,7 @@ IMPL(unalias)
 {
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
-    int update = script.process(p, &pdata->aliases, L"Удаление команды", &ph);
+    int update = script.process(p, &pdata->aliases, L"Удаление макроса", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -363,7 +363,7 @@ IMPL(var)
             helper->tmcLog(L"Переменные(vars):");
         else
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменные с {%s}:", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
 
@@ -374,7 +374,7 @@ IMPL(var)
             const property_value& v = pdata->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", v.key.c_str(), v.value.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", v.key.c_str(), v.value.c_str());
             helper->simpleLog(pb.buffer);
             found = true;
         }
@@ -391,7 +391,7 @@ IMPL(var)
         else
         {
             if (vp->setVar(p->at(0), p->at(1)))
-                swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), p->c_str(1));
+                swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", p->c_str(0), p->c_str(1));
             else
                 swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         }
@@ -473,7 +473,7 @@ IMPL(group)
     }
     if (index == -1)
     {
-        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' не существует.", group.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} не существует.", group.c_str());
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -483,7 +483,7 @@ IMPL(group)
     if (n == 1 || (op == L"info" || op == L"инф" || op == L"list" || op == L"список"))
     {
         helper->skipCheckMode();
-        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s':", group.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s}:", group.c_str());
         helper->tmcLog(pb.buffer);
         GroupCollector gc(group);
         int aliases = gc.count(pdata->aliases);
@@ -504,7 +504,7 @@ IMPL(group)
         property_value &v = pdata->groups.getw(index);
         v.value = L"1";
         updateProps();
-        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' включена.", v.key.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} включена.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -514,12 +514,12 @@ IMPL(group)
         property_value &v = pdata->groups.getw(index);
         v.value = L"0";
         updateProps();
-        swprintf(pb.buffer, pb.buffer_len, L"Группа '%s' выключена.", v.key.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} выключена.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
     }   
 
-    swprintf(pb.buffer, pb.buffer_len, L"Неизвестная операция '%s'.", op.c_str());
+    swprintf(pb.buffer, pb.buffer_len, L"Неизвестная операция %s.", op.c_str());
     helper->tmcLog(pb.buffer);
     return;
 }
@@ -955,7 +955,7 @@ IMPL(tab)
         int index = pdata->tabwords.find(tab);
         if (index == -1)
             pdata->tabwords.add(index, tab);
-        swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка '%s' добавлена.", tab.c_str());        
+        swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка {%s} добавлена.", tab.c_str());        
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -973,11 +973,11 @@ IMPL(untab)
         const tstring &tab = p->at(0);
         int index = pdata->tabwords.find(tab);
         if (index == -1)
-            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановки '%s' не существует.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановки {%s} не существует.", tab.c_str());
         else
         {
             pdata->tabwords.del(index);
-            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановкa '%s' удалена.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановкa {%s} удалена.", tab.c_str());
         }
         helper->tmcLog(pb.buffer);
         return;
@@ -1007,7 +1007,7 @@ IMPL(timer)
         {
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
-            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
                 pt.cmd.c_str(), v.group.c_str());
             helper->simpleLog(pb.buffer);
         }
@@ -1054,7 +1054,7 @@ IMPL(timer)
         const PropertiesValues &t  = pdata->timers;
         const property_value &v = t.get(index);
         PropertiesTimer pt; pt.convertFromString(v.value);
-        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", v.key.c_str(), pt.timer.c_str(), 
+        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
         helper->simpleLog(pb.buffer);
         return;
@@ -1112,7 +1112,7 @@ IMPL(timer)
         tstring value;
         pt.convertToString(&value);
         pdata->timers.add(index, id, value, group);
-        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: '%s' '%s'", id.c_str(), pt.timer.c_str(), 
+        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
         helper->simpleLog(pb.buffer);
         return updateProps(1, LogicHelper::UPDATE_TIMERS);
