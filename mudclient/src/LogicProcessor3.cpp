@@ -336,13 +336,11 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     // final step for data
     // preprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    if (!(flags & SKIP_PLUGINS_BEFORE))
         m_pHost->preprocessText(window, &parse_data);
 
-    // array for new cmds from actions
-    InputCommands new_cmds;
     if (!(flags & SKIP_ACTIONS))
-        m_helper.processActions(&parse_data, &new_cmds);
+        m_helper.processActions(&parse_data, &m_not_processed, &m_actions_commands);
 
     if (!(flags & SKIP_SUBS))
     {
@@ -355,8 +353,9 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_helper.processHighlights(&parse_data);
 
     // postprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    if (!(flags & SKIP_PLUGINS_AFTER))
         m_pHost->postprocessText(window, &parse_data);
+
     m_plugins_log_tocache = false;
 
     int log = m_wlogs[window];
@@ -364,6 +363,6 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
 
-    if (!(flags & SKIP_ACTIONS))
-        runCommands(new_cmds);                // process actions' result
+    //if (!(flags & SKIP_ACTIONS))
+    //    runCommands(new_cmds);                // process actions' result
 }

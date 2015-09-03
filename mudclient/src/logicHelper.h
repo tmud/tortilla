@@ -121,7 +121,7 @@ public:
     void updateProps(int what = UPDATE_ALL);
     bool processAliases(const InputCommand* cmd, InputCommands* newcmds);
     bool processHotkeys(const tstring& key, InputCommands* newcmds);
-    void processActions(parseData *parse_data, InputCommands* newcmds);
+    void processActions(parseData *parse_data, parseData *not_processed, InputCommands* newcmds);
     void processSubs(parseData *parse_data);
     void processAntiSubs(parseData *parse_data);
     void processGags(parseData *parse_data);

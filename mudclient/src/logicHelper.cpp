@@ -29,7 +29,7 @@ bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
     return false;
 }
 
-void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
+void LogicHelper::processActions(parseData *parse_data, parseData *not_processed, InputCommands* newcmds)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
@@ -37,7 +37,8 @@ void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
         if (s->gamecmd || s->system) continue;
         bool incomplstr = (j==je && !parse_data->last_finished);
         CompareData cd(s);
-        for (int i=0,e=m_actions.size(); i<e; ++i)
+        int i=0, e=m_actions.size();
+        for (; i<e; ++i)
         {
             if (m_actions[i]->processing(cd, incomplstr, newcmds))
                break;

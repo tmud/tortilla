@@ -9,10 +9,7 @@ CompareData::CompareData(MudViewString *s) : string(s), start(0)
 
 void CompareData::reinit()
 {
-    fullstr.clear();
-    std::vector<MudViewStringBlock> &vb = string->blocks;
-    for (int i=start,e=vb.size(); i<e; ++i)
-       fullstr.append(vb[i].string);
+    string->getText(&fullstr);
 }
 
 void CompareData::del(CompareRange& range)
