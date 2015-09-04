@@ -159,6 +159,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\helpManager.h" />
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />
+    <ClInclude Include="src\logicPipeline.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />

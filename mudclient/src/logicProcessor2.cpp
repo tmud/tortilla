@@ -896,7 +896,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    printParseData(data, SKIP_NONE, view);
+    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, view);
 }
 
 IMPL(wprint)

@@ -73,6 +73,7 @@ class InputCommands : private std::vector<InputCommand*>
 public:
     ~InputCommands() { clear(); }
     int size() const { return base::size(); }
+    bool empty() const { return base::empty(); }
     InputCommand* operator[] (int index) const { 
         return base::operator[](index);
     }
@@ -87,6 +88,7 @@ public:
     }
     void clear() {
         std::for_each(begin(), end(), [](InputCommand *c){ delete c; });
+        base::clear();
     }
     void push_back(InputCommand *cmd) {
         base::push_back(cmd);

@@ -2,6 +2,7 @@
 
 #include "mudViewParser.h"
 #include "logicHelper.h"
+#include "logicPipeline.h"
 #include "logsProcessor.h"
 #include "network/network.h"
 #include "waitCmds.h"
@@ -74,9 +75,7 @@ class LogicProcessor : public LogicProcessorMethods
     bool m_plugins_log_tocache;
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
-
-    InputCommands m_actions_commands;
-    parseData m_not_processed;
+    LogicPipeline m_pipeline;
 
 public:
     LogicProcessor(LogicProcessorHost *host);
@@ -123,7 +122,8 @@ private:
     // Incoming data methods
     void processIncoming(const WCHAR* text, int text_len, int flags, int window);
     void printIncoming(parseData& parse_data, int flags, int window);
-    void printParseData(parseData& parse_data, int flags, int window);
+    void pipelineParseData(parseData& parse_data, int flags, int window);
+    void printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
 
