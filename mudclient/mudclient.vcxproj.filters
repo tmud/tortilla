@@ -262,6 +262,9 @@
     <ClInclude Include="src\windbg.h">
       <Filter>Source Files\Main</Filter>
     </ClInclude>
+    <ClInclude Include="src\logicPipeline.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">

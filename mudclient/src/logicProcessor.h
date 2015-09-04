@@ -2,6 +2,7 @@
 
 #include "mudViewParser.h"
 #include "logicHelper.h"
+#include "logicPipeline.h"
 #include "logsProcessor.h"
 #include "network/network.h"
 #include "waitCmds.h"
@@ -74,6 +75,7 @@ class LogicProcessor : public LogicProcessorMethods
     bool m_plugins_log_tocache;
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
+    LogicPipeline m_pipeline;
 
 public:
     LogicProcessor(LogicProcessorHost *host);
@@ -108,8 +110,9 @@ private:
     void syscmdLog(const tstring& cmd);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);
-    enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
-           FROM_STACK = 64, FROM_TIMER = 128 };
+    enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
+           SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24,
+           GAME_LOG = 32, GAME_CMD = 64, FROM_STACK = 128, FROM_TIMER = 256 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
@@ -119,7 +122,8 @@ private:
     // Incoming data methods
     void processIncoming(const WCHAR* text, int text_len, int flags, int window);
     void printIncoming(parseData& parse_data, int flags, int window);
-    void printParseData(parseData& parse_data, int flags, int window);
+    void pipelineParseData(parseData& parse_data, int flags, int window);
+    void printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
 

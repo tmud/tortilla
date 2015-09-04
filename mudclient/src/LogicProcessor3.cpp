@@ -94,10 +94,8 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parseDataStrings& ps = parse_data.strings;
         for (int i = 0, e = ps.size(); i < e; ++i)
             ps[i]->system = true;
-    }
-
-    if (flags & GAME_LOG)
         parse_data.update_prev_string = false;
+    }
 
 #ifdef MARKERS_IN_VIEW       // для отладки
     parseDataStrings &p = parse_data.strings;
@@ -302,7 +300,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
             pd.update_prev_string = true;
             pd.last_finished = true;
             pd.strings.push_back(s);
-            printParseData(pd, flags | SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_SUBS, window);
+            pipelineParseData(pd, flags | SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_SUBS, window);
             pd.strings.clear();
         }
     }
@@ -318,31 +316,43 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
         {
             // last string not finished (игровой текст, не промпт, не команда и не лог)        
             parse_data.last_finished = false;
-
-/*#ifdef _DEBUG
+#ifdef MARKERS_IN_VIEW
             std::vector<MudViewStringBlock> &b = s->blocks;
             for (int i = 0, e = b.size(); i < e; ++i)
                 b[i].params.blink_status = 1;
-#endif*/
+#endif
         }
     }
-    printParseData(parse_data, flags, window);
+    pipelineParseData(parse_data, flags, window);
 }
 
-void LogicProcessor::printParseData(parseData& parse_data, int flags, int window)
+void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int window)
+{
+    LogicPipelineElement *e = m_pipeline.createElement();
+    printParseData(parse_data, flags, window, e);
+    while (!e->commands.empty())
+    {
+        runCommands(e->commands);
+        LogicPipelineElement *e2 = m_pipeline.createElement();
+        printParseData(e->data, flags|SKIP_PLUGINS_BEFORE, window, e2);
+        m_pipeline.freeElement(e);
+        e = e2;
+    }
+    m_pipeline.freeElement(e);
+}
+
+void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
 {
     // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
     m_plugins_log_tocache = true;
 
     // final step for data
     // preprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    if (!(flags & SKIP_PLUGINS_BEFORE))
         m_pHost->preprocessText(window, &parse_data);
 
-    // array for new cmds from actions
-    InputCommands new_cmds;
     if (!(flags & SKIP_ACTIONS))
-        m_helper.processActions(&parse_data, &new_cmds);
+        m_helper.processActions(&parse_data, &pe->data, &pe->commands);
 
     if (!(flags & SKIP_SUBS))
     {
@@ -355,15 +365,13 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_helper.processHighlights(&parse_data);
 
     // postprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    if (!(flags & SKIP_PLUGINS_AFTER))
         m_pHost->postprocessText(window, &parse_data);
+
     m_plugins_log_tocache = false;
 
     int log = m_wlogs[window];
     if (log != -1)
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
-
-    if (!(flags & SKIP_ACTIONS))
-        runCommands(new_cmds);                // process actions' result
 }
