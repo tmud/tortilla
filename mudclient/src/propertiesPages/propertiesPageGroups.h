@@ -83,7 +83,7 @@ private:
             title.c_str(), MB_YESNO|MB_ICONQUESTION) == IDYES)
         {
             m_deleted = true;
-            int index = m_list.GetSelectedIndex();
+            int index = m_list.getOnlySingleSelection();
             m_list.DeleteItem(index);
             const property_value& g = propData->groups.get(index);
             propData->deleteGroup(g.key);
