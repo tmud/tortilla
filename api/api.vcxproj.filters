@@ -34,9 +34,7 @@
     <ClInclude Include="base.h">
       <Filter>Main Files</Filter>
     </ClInclude>
-    <ClInclude Include="modules.h">
-      <Filter>Main Files</Filter>
-    </ClInclude>
+    <ClInclude Include="modules.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="api.def">

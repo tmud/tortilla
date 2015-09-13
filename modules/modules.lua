@@ -22,11 +22,9 @@ end
 
 
 --local n = bass.load('d:\\Mud\\1.mp3')
-local m = bass.load('d:\\Mud\\2.mp3')
-bass.play(m)
 --bass.play(n)
-
-
+--local m = bass.load('d:\\Mud\\2.mp3')
+--bass.play(m)
 --local x = bass.loadSample('d:\\sample.wav')
 --bass.play(x)
 

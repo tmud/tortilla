@@ -1,4 +1,5 @@
 #pragma once
+// Набор вспомогательных классов, не связанных с api (для независимых от клиента модулей)
 
 class luaM_towstring
 {
@@ -6,7 +7,7 @@ public:
     luaM_towstring(lua_State* L, int index) : buffer(NULL)
     {
         if (!lua_isstring(L, index))
-            return;        
+            return;
         const char* utf8_string = lua_tostring(L, index);        
         int symbols_count = MultiByteToWideChar(CP_UTF8, 0, utf8_string, -1, NULL, 0);
         int buffer_required = symbols_count + 1;

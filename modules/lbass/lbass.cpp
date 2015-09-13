@@ -127,7 +127,8 @@ int lbass_load_ex(lua_State *L, bool load_as_sample)
 {
     if (lua_gettop(L) == 1 && lua_isstring(L, 1))
     {
-        std::wstring filename(luaM_towstring(L, 1));
+        TU2W f(lua_tostring(L,1));
+        std::wstring filename(f);
         int index = _bass_loader.find(filename.c_str());
         if (index != -1)
         {
@@ -211,14 +212,31 @@ int lbass_unload(lua_State *L)
     return 1;
 }
 
+
 int lbass_play(lua_State *L)
 {
-    BassObject *obj = getObject(L);
+    int n = lua_gettop(L);
+    if ((n == 1 && lua_isstring(L, 1)) || 
+        (n == 2 && lua_isstring(L, 1) && lua_isnumber(L, 2)))
+    {
+        int volume = (n == 2) ? lua_tointeger(L, 2) : 100;
+        if (volume >= 0 && volume <= 100)
+        {
+            TU2W file(lua_tostring(L, 1));
+
+        
+
+        }
+    }
+
+    
+
+    /*BassObject *obj = getObject(L);
     if (!obj)
         return error_invargs(L, "play");
     bool result = obj->play();
-    lua_pushboolean(L, result ? 1 : 0);
-    return 1;
+    lua_pushboolean(L, result ? 1 : 0);*/
+    return error_invargs(L, "play");
 }
 
 int lbass_init(lua_State* L)
@@ -271,12 +289,14 @@ int lbass_setVolume(lua_State *L)
 
 static const luaL_Reg lbass_methods[] =
 {
-    { "load", lbass_load },
-    { "loadSample", lbass_loadsample },
-    { "unload", lbass_unload },
-    { "play", lbass_play },
     { "init", lbass_init },
     { "free", lbass_free },
+
+   /* { "load", lbass_load },
+    { "loadSample", lbass_loadsample },
+    { "unload", lbass_unload },*/
+
+    { "play", lbass_play },
     { "setVolume", lbass_setVolume },
     { "getVolume", lbass_getVolume },
     { NULL, NULL }
