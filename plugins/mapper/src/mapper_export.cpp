@@ -74,7 +74,7 @@ int init(lua_State *L)
     }
     ld.deletenode();
 
-	if (!m_parent_window.create(L, "Карта", 400, 400, true))
+	if (!m_parent_window.create(L, "Карта", 400, 400))
 		return luaT_error(L, "Не удалось создать окно для карты");
 
     HWND parent = m_parent_window.hwnd();    

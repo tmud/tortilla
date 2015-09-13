@@ -43,9 +43,6 @@
     <ClInclude Include="src\AboutDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\compareObject.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\hotkeyTable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -253,11 +250,23 @@
     <ClInclude Include="src\varProcessor.h">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClInclude>
+    <ClInclude Include="src\compareObject.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\accessors.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\waitCmds.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\windbg.h">
+      <Filter>Source Files\Main</Filter>
+    </ClInclude>
+    <ClInclude Include="src\logicPipeline.h">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\compareObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\mudGameView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -369,8 +378,14 @@
     <ClCompile Include="src\varProcessor.cpp">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClCompile>
-    <ClCompile Include="src\plugins\pluginsImage.cpp">
-      <Filter>Source Files\Plugins</Filter>
+    <ClCompile Include="src\inputProcessorTests.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compareObject.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\accessors.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

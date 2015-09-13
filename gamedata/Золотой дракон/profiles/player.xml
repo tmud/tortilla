@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <profile>
   <viewsize value="5000"/>
   <cmdsize value="20"/>
@@ -7,9 +7,9 @@
   <disableya value="0"/>
   <disableosc value="0"/>
   <historytab value="0"/>
-  <timersf value="0"/>
   <plogs value="1"/>
   <plogswnd value="1"/>
+  <softscroll value="0"/>
   <codepage value="win"/>
   <prompt value="0"/>
   <ptemplate value=""/>
@@ -68,14 +68,14 @@
   <tabwords/>
   <variables/>
   <windows>
-    <window name="Окно 1" left="70" right="420" top="70" bottom="270" side="5" lastside="4" width="350" height="200"/>
+    <window name="Окно 1" left="191" right="1528" top="76" bottom="328" side="4" lastside="4" width="1337" height="252"/>
     <window name="Окно 2" left="140" right="490" top="140" bottom="340" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 3" left="210" right="560" top="210" bottom="410" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 4" left="280" right="630" top="280" bottom="480" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
     <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
   </windows>
-  <mainwindow left="179" right="1250" top="110" bottom="767" width="1430" height="878" fullscreen="0"/>
+  <mainwindow left="314" right="1754" top="140" bottom="950" width="3840" height="1080" fullscreen="0"/>
   <plugins>
     <plugin key="prompt.dll" value="1"/>
     <plugin key="jmc3import.dll" value="1"/>
@@ -89,6 +89,8 @@
     <plugin key="testmsdp.lua" value="0"/>
     <plugin key="tray.dll" value="0"/>
     <plugin key="inveq.lua" value="0"/>
+    <plugin key="testtray.lua" value="0"/>
+    <plugin key="tupdate.lua" value="0"/>
   </plugins>
   <messages>
     <actions value="1"/>

@@ -3,6 +3,7 @@
 #include "highlightHelper.h"
 #include "hotkeyTable.h"
 #include "logicHelper.h"
+void pluginsUpdateActiveObjects(int type);
 
 class ActiveObjectsFilter
 {
@@ -130,7 +131,7 @@ public:
     void update()
     {
         if (m_updatetype >= 0)
-            pluginsUpdateActiveObjects(m_updatetype, L"");
+            pluginsUpdateActiveObjects(m_updatetype);
     }
 
     bool del()

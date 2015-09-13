@@ -38,8 +38,8 @@ void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
 namespace base {
-    inline void addMenu(lua_State* L, const utf8* path, int pos, int id) {
-        luaT_run(L, "addMenu", "sdd", path, pos, id); 
+    inline void addMenu(lua_State* L, const utf8* path, int id, int pos = -1, int bitmap = -1) {
+        luaT_run(L, "addMenu", "sddd", path, id, pos, bitmap);
     }
     inline void addCommand(lua_State* L, const utf8* cmd) {
         luaT_run(L, "addCommand", "s", cmd);
@@ -100,6 +100,9 @@ namespace base {
         lua_pop(L, 1);
         return parent;
     }
+    inline void flashWindow(lua_State *L) {
+        luaT_run(L, "flashWindow", "");
+    }
     inline void saveTable(lua_State* L, const utf8* file) {
         if (lua_istable(L, -1))
             luaT_run(L, "saveTable", "rs", file);
@@ -110,6 +113,19 @@ namespace base {
     }
     inline void pluginName(lua_State* L, const utf8* name) {
         luaT_run(L, "pluginName", "s", name);
+    }
+    inline void updateView(lua_State* L, int view, lua_CFunction f) {
+        luaT_run(L, "updateView", "dF", view, f);
+    }
+    inline bool getViewSize(lua_State* L, int view, int *width, int *height) {
+        luaT_run(L, "getViewSize", "d", view);
+        if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+        {
+            if (width) *width = lua_tointeger(L, 1);
+            if (height) *height = lua_tointeger(L, 2);
+            return true;
+        }
+        return false;
     }
     // createWindow, createPanel, pcre, log -> in classes below
 } // namespace base
@@ -132,18 +148,18 @@ public:
 		window = wnd;
 		return true;
 	}
-    bool create(lua_State *pL, const utf8* caption, int width, int height)
-    {
-        if (!pL)
-            return false;
+	bool create(lua_State *pL, const utf8* caption, int width, int height)
+	{
+		if (!pL)
+			return false;
 		L = pL;
 		luaT_run(L, "createWindow", "sdd", caption, width, height);
 		void *wnd = luaT_toobject(L, -1);
 		if (!wnd)
-            return false;
+			return false;
 		window = wnd;
 		return true;
-    }
+	}
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
@@ -376,6 +392,49 @@ public:
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_pushobject(L, p, LUAT_PCRE);
         luaT_run(L, "find", "ot");
+        return boolresult();
+    }
+    bool find(Pcre *p, int from)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_pushobject(L, p, LUAT_PCRE);
+        luaT_run(L, "find", "otd", from);
+        return boolresult();
+    }
+    bool getBlockPos(int abspos, int *res_block, int *res_pos)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "find", "od", abspos);
+        bool result = false;
+        if (lua_isnumber(L, 1) && lua_isnumber(L, 2))
+        {
+            *res_block = lua_tointeger(L, 1);
+            *res_pos = lua_tointeger(L, 2);
+            result = true;
+        }
+        lua_pop(L, 2);
+        return result;
+    }
+    void setNext(bool next)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setNext", "ob", next);
+    }
+    void setPrev(bool prev)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setPrev", "ob", prev);
+    }
+    bool isNext()
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "isNext", "o");
+        return boolresult();
+    }
+    bool isPrev()
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "isPrev", "o");
         return boolresult();
     }
 

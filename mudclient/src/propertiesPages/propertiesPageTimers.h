@@ -48,15 +48,6 @@ private:
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
 
-    void processTimer(tstring* timer)
-    {
-        int value = _wtoi(timer->c_str());
-        if (value > 999) value = 999;
-        WCHAR buffer[8];
-        _itow(value, buffer, 10);
-        timer->assign(buffer);
-    }
-
     LRESULT OnDeleteElement(WORD, WORD, HWND, BOOL&)
     {
         tstring key;
@@ -79,6 +70,7 @@ private:
         m_filterMode = m_filter.GetCheck() ? true : false;
         loadValues();
         update();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 
@@ -90,6 +82,7 @@ private:
         {
             m_currentGroup = group;
             updateCurrentItem();
+            m_state_helper.setCanSaveState();
             return 0;
         }
         tstring old = m_currentGroup;
@@ -100,6 +93,7 @@ private:
         m_currentGroup = group;
         loadValues();
         update();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 
@@ -111,7 +105,13 @@ private:
         if (item == -1) return 0;
         tstring timer, cmd;
         getWindowText(m_pattern, &timer);
-        processTimer(&timer);
+        double delay = 0;
+        w2double(timer, &delay);
+
+        PropertiesTimer pt;
+        pt.setTimer(delay);
+        timer.assign(pt.timer);
+
         getWindowText(m_text, &cmd);
         timer_value& v = m_list_values.getw(item);
         PropertiesTimer& t = v.value;
@@ -223,7 +223,7 @@ private:
 	{
         m_number.Attach(GetDlgItem(IDC_EDIT_NUMBER));
         m_pattern.Attach(GetDlgItem(IDC_EDIT_PATTERN));
-        m_pattern.SetLimitText(3);
+        m_pattern.SetLimitText(5);
         m_text.Attach(GetDlgItem(IDC_EDIT_PATTERN_TEXT));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));        
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));

@@ -5,7 +5,6 @@ class PluginsViewRender
 {
 public:
     PluginsViewRender(lua_State *pL, int index, HWND wnd);
-    ~PluginsViewRender();
     bool render();
     void setBackground(COLORREF color);
     void setTextColor(COLORREF color);
@@ -14,17 +13,12 @@ public:
     CPen* createPen(lua_State *L);
     CBrush* createBrush(lua_State *L);
     CFont* createFont(lua_State *L);
-
     void selectPen(CPen* p);
     void selectBrush(CBrush* b);
     void selectFont(CFont* f);
-    void regImage(Image *img);
 
     void drawRect(const RECT& r);
     void drawSolidRect(const RECT& r);
-    void drawImage(Image *img, int x, int y);
-    void drawImage(Image *img, int x, int y, int w, int h);
-
     int  print(int x, int y, const tstring& text);
     void update();
     int  getFontHeight();
@@ -45,8 +39,7 @@ private:
     PluginsRenderCollectionT<CPen, PenFactory> pens;
     PluginsRenderCollectionT<CBrush, BrushFactory> brushes;
     PluginsRenderCollectionT<CFont, FontFactory> fonts;
-    std::vector<Image*> images;
-
+    //PluginsRenderCollectionT<CBitmap, BitmapFactory> bitmaps;
     CPen* current_pen;
     CBrush* current_brush;
     CFont* current_font;

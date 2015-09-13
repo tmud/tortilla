@@ -1,10 +1,10 @@
 #pragma once
 
 #define DEFAULT_CMD_HISTORY_SIZE 30
-#define DEFAULT_VIEW_HISTORY_SIZE 3000
+#define DEFAULT_VIEW_HISTORY_SIZE 5000
 #define MIN_CMD_HISTORY_SIZE 10
 #define MAX_CMD_HISTORY_SIZE 50
-#define MIN_VIEW_HISTORY_SIZE 100
+#define MIN_VIEW_HISTORY_SIZE 1000
 #define MAX_VIEW_HISTORY_SIZE 30000
 
 struct PropertiesHighlight
@@ -82,11 +82,23 @@ struct PropertiesTimer
         if (pos != tstring::npos)
         {
            timer.assign(str.substr(0, pos));
-           if (isOnlyNumber(timer))
+           if (isItNumber(timer))
+           {
+               double delay = 0;
+               w2double(timer, &delay);
+               setTimer(delay);
                cmd.assign(str.substr(pos+1));
+           }
            else
                timer.assign(L"0");
         }
+    }
+    void setTimer(double timer_delay)
+    {
+        if (timer_delay <= 0) timer_delay = 0;
+        if (timer_delay >= 1000.0f) timer_delay = 999.9f;
+        bool mod = (getMod(timer_delay) >= 0.09f) ? true : false;
+        double2w(timer_delay, (mod) ? 1 : 0, &timer);
     }
 
     tstring timer;
@@ -107,6 +119,13 @@ public:
     {
         for (int i=0,e=m_values.size(); i<e; ++i)
             if (m_values[i].key == key) { return i; } 
+        return -1;
+    }
+
+    int find(const tstring& key, const tstring& group)
+    {
+        for (int i = 0, e = m_values.size(); i < e; ++i)
+            if (m_values[i].key == key && m_values[i].group == group ) { return i; } 
         return -1;
     }
 
@@ -261,22 +280,16 @@ private:
 
 struct OutputWindow
 {
-    OutputWindow() : side(DOCK_FLOAT), lastside(DOCK_FLOAT)
+    OutputWindow() : side(0), lastside(0)
     {
         pos.left = pos.right = pos.top = pos.bottom = 0;
         size.cx = size.cy = 0;
     }
     void initDefaultPos(int x, int y, int width, int height)
     {
+        lastside = side = DOCK_FLOAT;
         size = { width, height };
         pos = { x, y, x + width, y + height };
-    }
-    void initVisible(bool visible)
-    {
-        if (!visible)
-            side = DOCK_HIDDEN;
-        else
-            side = DOCK_FLOAT;
     }
 
     tstring name;
@@ -307,11 +320,6 @@ struct PluginData
         int x = 100 + windows_count * 50;
         int y = 250 + windows_count * 50;
         w->initDefaultPos(x, y, width, height);
-    }
-
-    void setVisible(bool visible, OutputWindow *w)
-    {
-        w->initVisible(visible);
     }
 
     bool findWindow(const tstring& window_name, OutputWindow *w)
@@ -396,6 +404,7 @@ struct PropertiesData
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
+       , soft_scroll(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();
@@ -462,6 +471,8 @@ struct PropertiesData
     int      recognize_prompt;
     tstring  recognize_prompt_template;
 
+    int      soft_scroll;
+
     RECT main_window;
     int  main_window_fullscreen;
     int  display_width;
@@ -492,16 +503,8 @@ struct PropertiesData
         resetOSCColors();
         font_heigth = 10;
         font_italic = 0;
-        /*if (isVistaOrHigher())
-        {
-            font_name.assign(L"Consolas");   // Consolas more pretty font (exist only Vista+)
-            font_bold = FW_BOLD;
-        }
-        else*/
-        {
-            font_name.assign(L"Fixedsys");
-            font_bold = FW_NORMAL;
-        }
+        font_name.assign(L"Fixedsys");
+        font_bold = FW_NORMAL;
     }
 
     void resetOSCColors()

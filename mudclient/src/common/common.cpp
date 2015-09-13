@@ -20,12 +20,18 @@ void loadString(UINT id, tstring* string)
     string->assign(buffer);
 }
 
+int msgBox(HWND parent, const tstring& msg, UINT options)
+{
+    tstring title_text;
+    loadString(IDR_MAINFRAME, &title_text);
+    return MessageBox(parent, msg.c_str(), title_text.c_str(), options);
+}
+
 int msgBox(HWND parent, UINT msg, UINT options)
 {
-    tstring msg_text, title_text;
+    tstring msg_text;
     loadString(msg, &msg_text);
-    loadString(IDR_MAINFRAME, &title_text);
-    return MessageBox(parent, msg_text.c_str(), title_text.c_str(), options);
+    return msgBox(parent, msg_text, options);
 }
 
 void getWindowText(HWND handle, tstring *string)
@@ -37,7 +43,7 @@ void getWindowText(HWND handle, tstring *string)
     string->assign(buffer);
 }
 
-bool isOnlyNumberA(const std::string& str)
+bool isOnlyDigitsA(const std::string& str)
 {
     if (str.empty()) return false;
     const char* p = str.c_str();
@@ -46,7 +52,7 @@ bool isOnlyNumberA(const std::string& str)
     return (strspn(p, "0123456789") != len) ? false : true;
 }
 
-bool isOnlyNumber(const tstring& str)
+bool isOnlyDigits(const tstring& str)
 {
    if (str.empty()) return false;
    const tchar* p = str.c_str();
@@ -55,18 +61,60 @@ bool isOnlyNumber(const tstring& str)
    return (wcsspn(p, L"0123456789") != len) ? false : true;
 }
 
+bool isItNumber(const tstring& str)
+{
+     if (str.empty()) return false;
+     const tchar* p = str.c_str();
+     int len = str.length();
+     if (*p == L'-') { p++; len--;}
+     return (wcsspn(p, L"e0123456789.,") != len) ? false : true;
+}
+
 bool isOnlySpaces(const tstring& str)
 {
-   int pos = wcsspn(str.c_str(), L" ");
-   return (pos != str.length()) ? false : true;
+   return isOnlySymbols(str, L" ");
+}
+
+bool isOnlySymbols(const tstring& str, const tstring& symbols)
+{
+    int pos = wcsspn(str.c_str(), symbols.c_str());
+    return (pos != str.length()) ? false : true;
+}
+
+bool isOnlyFilnameSymbols(const tstring& str)
+{
+    int pos = wcscspn(str.c_str(), L"?*/\\|:\"<>");
+    return (pos != str.length()) ? false : true;
 }
 
 bool a2int(const std::string& str, int *value)
 {
-    if (!isOnlyNumberA(str))
+    if (!isOnlyDigitsA(str))
         return false;
     *value = atoi(str.c_str());
     return true;
+}
+
+bool w2double(const tstring& str, double *value)
+{
+    if (!isItNumber(str))
+        return false;
+    *value = _wtof(str.c_str());
+    return false;
+}
+
+void double2w(double value, int precision, tstring* str)
+{
+    wchar_t buffer1[16], buffer2[16];
+    swprintf(buffer1, L"%%.%df", precision);
+    swprintf(buffer2, buffer1, value);
+    str->assign(buffer2);
+}
+
+double getMod(double value)
+{
+    double ord = 0;
+    return modf(value, &ord);
 }
 
 bool isExistSymbols(const tstring& str, const tstring& symbols)
@@ -200,6 +248,14 @@ void u8string_substr(u8string *str, int from, int len)
     len = utf8_getbinlen(str->c_str(), from + len);
     u8string res(str->substr(from, len));
     str->swap(res);
+}
+
+bool checkKeysState(bool shift, bool ctrl, bool alt)
+{
+    bool ctrl_key = (GetKeyState(VK_CONTROL) < 0) ? true : false;
+    bool alt_key = (GetKeyState(VK_MENU) < 0) ? true : false;
+    bool shift_key = (GetKeyState(VK_SHIFT) < 0) ? true : false;
+    return (ctrl == ctrl_key && alt_key == alt && shift_key == shift) ? true : false;
 }
 
 Separator::Separator(const tstring& str)

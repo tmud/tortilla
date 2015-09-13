@@ -114,7 +114,7 @@ private:
         RECT pos;
         ::GetWindowRect(GetDlgItem(IDC_STATIC_RICHBOXPLACE), &pos);
         ScreenToClient(&pos);             
-        m_rich.Create(m_hWnd, pos, WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY, WS_EX_STATICEDGE);
+        m_rich.Create(m_hWnd, pos, WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY, WS_EX_CLIENTEDGE);
 
         HRSRC res = FindResource(NULL, MAKEINTRESOURCE(IDR_BINARY_WELCOME), L"BINARY");
         int size = SizeofResource(NULL, res);
@@ -141,34 +141,35 @@ private:
     }
 };
 
-
 class CStartupWorldDlg : public CDialogImpl<CStartupWorldDlg>
 {
     CListBox m_list;
     CButton  m_show_about;
     CButton  m_ok;
+    CEdit    m_edit_profile_name;
     std::vector<tstring> m_data;
     int  m_selected_item;
-    bool m_show_about_state;
+    bool m_show_help;
+    tstring m_profile_name;
 
 public:
-    CStartupWorldDlg() : m_selected_item(-1), m_show_about_state(true) {}
+    CStartupWorldDlg() : m_selected_item(-1), m_show_help(true) {}
     enum { IDD = IDD_STARTUP_WORLD };
     void setList(const std::vector<tstring>& list)
     {
         m_data.assign(list.begin(), list.end());
     }
-
     int getItem() const { return m_selected_item; }
-    bool getAboutState() const { return m_show_about_state; }
+    bool getHelpState() const { return m_show_help; }
+    void getProfileName(tstring *name) const {  name->assign(m_profile_name); }
 
 private:
     BEGIN_MSG_MAP(CStartupWorldDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        MESSAGE_HANDLER(WM_USER, OnFocus)
-        COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
-        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
-        COMMAND_HANDLER(IDC_LIST_STARTUP_WORLD, LBN_SELCHANGE, OnListChanged)
+        MESSAGE_HANDLER(WM_USER+1, OnFocus)
+        COMMAND_ID_HANDLER(IDOK, OnOk)
+        COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+        COMMAND_HANDLER(IDC_EDIT_STARTUP_PROFILE, EN_CHANGE, OnNameChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -177,32 +178,49 @@ private:
         m_list.Attach(GetDlgItem(IDC_LIST_STARTUP_WORLD));
         m_show_about.Attach(GetDlgItem(IDC_CHECK_OPEN_ABOUT));
         m_ok.Attach(GetDlgItem(IDOK));
+        m_edit_profile_name.Attach(GetDlgItem(IDC_EDIT_STARTUP_PROFILE));
+        m_edit_profile_name.SetWindowText(L"player");
+        m_list.AddString(L"Создать пустой профиль");
         for (int i=0,e=m_data.size();i<e;++i)
             m_list.AddString(m_data[i].c_str());
         m_show_about.SetCheck(BST_CHECKED);
-        m_ok.EnableWindow(FALSE);
-        PostMessage(WM_USER, 0, 0);
+        PostMessage(WM_USER+1, 0, 0);
         return TRUE;
     }
 
-    LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
+    LRESULT OnOk(WORD, WORD wID, HWND, BOOL&)
     {
         m_selected_item = m_list.GetCurSel();
-        m_show_about_state = (m_show_about.GetCheck() == BST_CHECKED) ? true : false;
-        EndDialog(wID);
+        if (m_selected_item >= 0)
+            m_selected_item = m_selected_item -1;
+        m_show_help = (m_show_about.GetCheck() == BST_CHECKED) ? true : false;
+
+        getWindowText(m_edit_profile_name, &m_profile_name);
+
+        EndDialog(IDOK);
+        return 0;
+    }
+
+    LRESULT OnCancel(WORD, WORD wID, HWND, BOOL&)
+    {
+        EndDialog(IDCANCEL);
         return 0;
     }
 
     LRESULT OnFocus(UINT, WPARAM, LPARAM, BOOL&)
     {
+        m_list.SetCurSel(0);
         m_list.SetFocus();
         return 0;
     }
 
-    LRESULT OnListChanged(WORD, WORD, HWND, BOOL&)
+    LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
     {
-        int item = m_list.GetCurSel();
-        m_ok.EnableWindow(item == -1 ? FALSE : TRUE);
+        tstring text;
+        getWindowText(m_edit_profile_name, &text);
+        tstring_trim(&text);
+        BOOL ok = (!text.empty() && isOnlyFilnameSymbols(text)) ? TRUE : FALSE;
+        m_ok.EnableWindow(ok);
         return 0;
     }
 };

@@ -50,7 +50,7 @@ int init(lua_State *L)
 
     if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true) ||
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
-            return luaT_error(L, "Не удалось создать окно для Clickpad");
+        return luaT_error(L, "Не удалось создать окно для Clickpad");
 
     base::addMenu(L, "Плагины/Настройка Clickpad...", 1, 2);
 
@@ -74,13 +74,13 @@ int init(lua_State *L)
         if (result)
             m_clickpad->load(ld);
         if (!result) {
-            u8string error("Ошибка загрузки списка с кнопками: ");
-            error.append(path);
-            luaT_log(L, error.c_str());
-        }
-        ld.deletenode();
+        u8string error("Ошибка загрузки списка с кнопками: ");
+        error.append(path);
+        luaT_log(L, error.c_str());
     }
-    
+    ld.deletenode();
+    }
+
     m_pL = L;
     CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
     sd.GetClientRect(&rc);

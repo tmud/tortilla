@@ -213,8 +213,27 @@ private:
 		return TRUE;
 	}
 
+    bool checkOrUpdate(bool flag)
+    {
+        bool r1 = m_aliases.updateChangedTemplate(flag);
+        bool r2 = m_actions.updateChangedTemplate(flag);
+        bool r3 = m_highlights.updateChangedTemplate(flag);
+        bool r4 = m_subs.updateChangedTemplate(flag);
+        bool r5 = m_antisubs.updateChangedTemplate(flag);
+        bool r6 = m_gags.updateChangedTemplate(flag);
+        bool r7 = m_tabwords.updateChangedTemplate(flag);
+        bool r8 = m_hotkeys.updateChangedTemplate(flag);
+        return r1||r2||r3||r4||r5||r6||r7||r8;
+    }
+
 	LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
 	{
+        if (wID == IDOK) {
+          if (checkOrUpdate(true) && msgBox(m_hWnd, L"Были изменены шаблоны некоторых элементов, но не сохранены. Сохранить их?", MB_YESNO|MB_ICONQUESTION)==IDYES)
+          {
+              checkOrUpdate(false);
+          }
+        }
 		EndDialog(wID);
 		return 0;
 	}

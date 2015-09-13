@@ -31,8 +31,8 @@
   </colors>
   <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
   <actions>
-    <action key="Enter Charset:" value="1" group="base"/>
-    <action key="*** НАЖМИТЕ ВВОД:" value="#cr" group="base"/>
+    <action key="^Enter Charset:$" value="1" group="base"/>
+    <action key="*** НАЖМИТЕ ВВОД:$" value="#cr" group="base"/>
   </actions>
   <aliases/>
   <hotkeys>

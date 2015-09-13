@@ -77,11 +77,11 @@ private:
     END_MSG_MAP()
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
-    {
+    { 
         m_pushed = true;
         ::SendMessage(GetParent(), m_click_msg, m_click_param, 0);
         bHandled = FALSE;
-        return 0;
+        return 0; 
     }
 
     LRESULT OnClickUp(UINT, WPARAM, LPARAM, BOOL&bHandled)
@@ -92,7 +92,7 @@ private:
         return 0;
     }
 
-    // override of CBitmapButtonImpl DoPaint(). Adds fillrect
+   // override of CBitmapButtonImpl DoPaint(). Adds fillrect
     void DoPaint(CDCHandle dc)
     {
         // added by SoftGee to resolve image artifacts
@@ -103,7 +103,7 @@ private:
         dc.DrawFrameControl(&rc,DFC_BUTTON, state);
 
         if (!m_text.empty())
-        {
+{
             int len = m_text.length(); 
             if (len > bufferlen) len = bufferlen;
             wcsncpy(buffer, m_text.c_str(), len);
@@ -113,7 +113,7 @@ private:
         }
 
         /*if (m_selected)
-        {
+    {
             COLORREF color = RGB(255,0,0);
             dc.Draw3dRect(&rc, color, color);
         }*/

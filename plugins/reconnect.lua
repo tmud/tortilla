@@ -1,22 +1,37 @@
 ﻿-- reconnect
 -- Плагин для Tortilla mud client
 
+-- Количество попыток переподключения (0 - бесконечное количество)
+local max_count = 10
+
 reconnect = {}
 function reconnect.name() 
     return 'Автореконнект'
 end
 
 function reconnect.description()
-return 'Плагин переподключает клиент к серверу в случае обрыва связи.'
+  local s = 'Плагин переподключает клиент к серверу в случае обрыва связи.\r\nНастройки задаются прямо в файле плагина plugins/reconnect.lua\r\nТекущие настройки:\r\n'
+  if max_count and max_count > 0 then
+    s = s..'Количество попыток переподключения - '..max_count
+  else
+    s = s..'Количество попыток переподключения - бесконечно'
+  end
+  return s
 end
 
 function reconnect.version()
-    return '-'
+    return '1.04'
 end
 
 local connected = false
 local address = nil
 local port = nil
+local attempts = 0
+local function flash()
+  if not props.activated() then
+    flashWindow()
+  end
+end
 
 function reconnect.syscmd(t)
   if #t == 1 and (t[1] == 'zap' or t[1] == 'disconnect') then
@@ -28,16 +43,32 @@ end
 function reconnect.connect()
   connected = true
   reconnect.getaddress()
+  attempts = 0
 end
 
 function reconnect.disconnect()
-  if connected then
-    local p = props.cmdPrefix()
-    local cmd = p..'output Переподключение...'
-    runCommand(cmd)
-    cmd = p..'connect '..address..' '..port
-    runCommand(cmd)
+  if not connected then 
+    return
   end
+  if attempts == 0 then
+    flash()
+  end
+  attempts = attempts + 1
+  if max_count and max_count > 0 then
+    if attempts == max_count+1 then
+       connected = false
+       flash()
+       return
+    end
+  end
+  local p = props.cmdPrefix()
+  local cmd = p..'output Переподключение('..attempts..')...'
+  runCommand(cmd)
+  if system and system.sleep then
+    system.sleep(2000)
+  end
+  cmd = p..'connect '..address..' '..port
+  runCommand(cmd)
 end
 
 function reconnect.init()

@@ -292,7 +292,7 @@ private:
         tstring name, profile;
         getWindowText(m_newworld_name, &name);
         getWindowText(m_newworld_profile, &profile);
-        if (!name.empty() && !profile.empty() && !IsExistIncorrectSymbols(name) && !IsExistIncorrectSymbols(profile))
+        if (!name.empty() && !profile.empty() && isOnlyFilnameSymbols(name) && isOnlyFilnameSymbols(profile))
         {
             bool confilcted_name = false;
             for (int i = 0, e = m_groups_name.size(); i < e; ++i)
@@ -384,7 +384,7 @@ private:
             }
             if (enable_ok)
             {
-                if (IsExistIncorrectSymbols(text))
+                if (!isOnlyFilnameSymbols(text))
                     enable_ok = FALSE;
             }
         }

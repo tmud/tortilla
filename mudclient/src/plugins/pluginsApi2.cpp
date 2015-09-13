@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "api/api.h"
 #include "pluginsApi.h"
 #include "pluginsView.h"
@@ -8,9 +9,6 @@
 
 #include "../MainFrm.h"
 extern CMainFrame _wndMain;
-extern Palette256* _palette;
-extern PropertiesData* _pdata;
-extern LogicProcessorMethods* _lp;
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f)
 {
@@ -172,7 +170,7 @@ int window_isVisible(lua_State *L)
     if (luaT_check(L, 1, LUAT_WINDOW))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int state = _wndMain.m_gameview.isVisibleDockPane(v) ? 1 : 0;
+        int state = v->IsWindowVisible() ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }
@@ -195,17 +193,6 @@ int window_setRender(lua_State *L)
     }
     return pluginInvArgs(L, "window:setRender");
 }
-
-int window_setBlocked(lua_State *L)
-{
-    if (luaT_check(L, 3, LUAT_WINDOW, LUA_TNUMBER, LUA_TNUMBER))
-    {
-        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        _wndMain.m_gameview.setBlockedMode(v, lua_tointeger(L, 2), lua_tointeger(L, 3));
-        return 0;
-    }
-    return pluginInvArgs(L, "window:setBlocked");
-}
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
 {
@@ -221,7 +208,6 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "hide", window_hide);
     regFunction(L, "isVisible", window_isVisible);
     regFunction(L, "setRender", window_setRender);
-    regFunction(L, "setBlocked", window_setBlocked);
     regIndexMt(L);
     lua_pop(L, 1);
 }
@@ -578,13 +564,13 @@ int vd_set(lua_State *L)
                     break;
                 case luaT_ViewData::EXTTEXTCOLOR:
                     if (!p.use_ext_colors)
-                        p.ext_bkg_color = _palette->getColor(p.bkg_color);
+                        p.ext_bkg_color = tortilla::getPalette()->getColor(p.bkg_color);
                     p.use_ext_colors = 1;
                     p.ext_text_color = v;
                     break;
                 case luaT_ViewData::EXTBKGCOLOR:
                     if (!p.use_ext_colors)
-                        p.ext_text_color = _palette->getColor(p.text_color);
+                        p.ext_text_color = tortilla::getPalette()->getColor(p.text_color);
                     p.use_ext_colors = 1;
                     p.ext_bkg_color = v;
                     break;
@@ -752,6 +738,44 @@ int vd_find(lua_State *L)
     }
     return pluginInvArgs(L, "viewdata:find");
 }
+
+int vd_getBlockPos(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int abspos = lua_tointeger(L, 2);
+        PluginViewString *str = pdata->getselected_pvs();
+        int block = 0; int pos = 0;
+        if (str && abspos > 0) 
+        {
+            abspos-=1;
+            for (int i=0,e=str->blocks.size();i<e;++i)
+            {
+                int size = u8string_len(str->blocks[i]);
+                if (size > abspos)
+                {
+                    block = i+1;
+                    pos = abspos+1;
+                    break;
+                }
+                abspos -= size;
+            }
+        }
+        if (block > 0)
+        {
+            lua_pushinteger(L, block);
+            lua_pushinteger(L, pos);
+        }
+        else
+        {         
+            lua_pushnil(L);
+            lua_pushnil(L);
+        }                
+        return 2;
+    }
+    return pluginInvArgs(L, "viewdata:getBlockPos");
+}
 //--------------------------------------------------------------------
 std::map<u8string, int> vdtypes;
 void init_vdtypes()
@@ -770,6 +794,54 @@ int vd_gettype(const utf8* type)
 {
     std::map<u8string, int>::iterator it = vdtypes.find(type);
     return (it == vdtypes.end()) ? -1 : it->second;
+}
+
+int vd_setNext(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
+    {
+         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+         MudViewString *str = pdata->getselected();
+         str->next = lua_toboolean(L, 2) ? true : false;
+         return 0;
+    }
+    return pluginInvArgs(L, "viewdata:setNext");
+}
+
+int vd_setPrev(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        str->prev = lua_toboolean(L, 2) ? true : false;
+        return 0;
+    }
+    return pluginInvArgs(L, "viewdata:setPrev");
+}
+
+int vd_isNext(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        lua_pushboolean(L, str->next ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isNext");
+}
+
+int vd_isPrev(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        lua_pushboolean(L, str->prev ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isPrev");
 }
 
 void reg_mt_viewdata(lua_State *L)
@@ -799,6 +871,11 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteString", vd_deleteString);
     regFunction(L, "createString", vd_createString);
     regFunction(L, "find", vd_find);
+    regFunction(L, "getBlockPos", vd_getBlockPos);
+    regFunction(L, "setNext", vd_setNext);
+    regFunction(L, "setPrev", vd_setPrev);
+    regFunction(L, "isNext", vd_isNext);
+    regFunction(L, "isPrev", vd_isPrev);
     regIndexMt(L);
     lua_pop(L, 1);
 }
@@ -1054,14 +1131,15 @@ public:
     bool canset(const u8string& var) 
     {
         TU2W v(var.c_str());
-        return _lp->canSetVar(tstring(v));
+        VarProcessor *vp = tortilla::getVars();
+        return vp->canSetVar(tstring(v));
     }
 } _vars_filter;
 
 void reg_activeobjects(lua_State *L)
 {
     reg_mt_activeobject(L);
-    PropertiesData *p = _pdata;
+    PropertiesData *p = tortilla::getProperties();
     reg_activeobject(L, "aliases", new AO_Aliases(p));
     reg_activeobject(L, "actions", new AO_Actions(p));
     reg_activeobject(L, "subs", new AO_Subs(p));

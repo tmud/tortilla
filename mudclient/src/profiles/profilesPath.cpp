@@ -85,3 +85,14 @@ ProfilePluginPath::ProfilePluginPath(const tstring& profile, const tstring& plug
     m_path.append(file);
     tstring_replace(&m_path, L"/", L"\\");
 }
+
+GlobalProfilePath::GlobalProfilePath()
+{
+    tchar szPath[MAX_PATH];
+    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, 0, szPath);
+    m_path.assign(szPath);
+    int last = m_path.length() - 1;
+    if (m_path.at(last) != L'\\')
+        m_path.append(L"\\");
+    m_path.append(L"tortilla.xml");
+}

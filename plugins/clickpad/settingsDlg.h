@@ -46,7 +46,7 @@ public:
 };
 
 class SettingsDlg : public CDialogImpl<SettingsDlg>
-{
+{    
     HHOOK m_hHook;
     CEdit m_edit_text;
     CEdit m_edit_command;
@@ -128,7 +128,7 @@ private:
                 m_list.SetItem(item, 2, LVIF_TEXT, TU2W(group.c_str()), 0, 0, 0, NULL);
                 item++;
             }
-        }
+    }
 
         wchar_t buffer[16];
         for (int i=1; i<=5; ++i)
@@ -137,14 +137,14 @@ private:
             m_columns.AddString(_itow(i, buffer, 10));
         ButtonSizeTranslator bt;
         for (int i=0; i<bt.getCount(); ++i)
-        {
+    {
             tstring label;
             bt.getLabel(i, &label);
             m_bsize.AddString(label.c_str());            
         }
-      
-        setIconsFileList();
 
+        setIconsFileList();
+        
         m_del_hotkey.EnableWindow(FALSE);
         return 0;
     }

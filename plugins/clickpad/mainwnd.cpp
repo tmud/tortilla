@@ -37,9 +37,9 @@ void ClickpadMainWnd::setEditMode(bool mode)
 }
 
 void ClickpadMainWnd::onClickButton(int x, int y, bool up)
-{
-    if (!m_editmode)
     {
+    if (!m_editmode)
+        {
         if (up)
             setFocusToMudClient();
         else
@@ -83,7 +83,7 @@ void ClickpadMainWnd::setColumns(int count)
 }
 
 void ClickpadMainWnd::setRowsInArray(int count)
-{
+{    
     int hrows = m_buttons.size();
     int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
     int add = count - hrows;
@@ -209,7 +209,7 @@ void ClickpadMainWnd::load(xml::node& node)
     tstring text, cmd;
     xml::request buttons(node, "buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
-    {
+{
         xml::node n = buttons[i];
         int x = 0; int y = 0;
         if (n.get("x", &x) && n.get("y", &y) && n.get("text", &text) && n.get("command", &cmd) &&
@@ -242,7 +242,7 @@ void ClickpadMainWnd::load(xml::node& node)
 }
 
 void ClickpadMainWnd::setWorkWindowSize()
-{
+{    
     CWindow wnd(getFloatWnd());
     RECT rc; wnd.GetWindowRect(&rc);
     int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;

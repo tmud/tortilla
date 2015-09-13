@@ -19,6 +19,7 @@ class PropertyListCtrl : public CWindowImpl<PropertyListCtrl, CListViewCtrl>
     float m_width_percent;
     PropertyListCtrlHandler *m_pHandler;
     bool m_doubleclick;
+    wchar_t m_temp_buffer[256];
 
 public:
     DECLARE_WND_SUPERCLASS(NULL, CListViewCtrl::GetWndClassName())
@@ -199,10 +200,9 @@ private:
             HFONT old_font = dc.GetCurrentFont();
             dc.SelectFont(GetFont());
 
-            wchar_t buffer[64];
-            GetItemText(pdata.item, pdata.subitem, buffer, 63 );
+            GetItemText(pdata.item, pdata.subitem, m_temp_buffer, 255 );
             pos.left += 4;
-            DrawText(dc, buffer, -1, &pos, DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | DT_EXTERNALLEADING);
+            DrawText(dc, m_temp_buffer, -1, &pos, DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | DT_EXTERNALLEADING);
 
             dc.SelectFont(old_font);
             dc.SetBkColor(old_bk);

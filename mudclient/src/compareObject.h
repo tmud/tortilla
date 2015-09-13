@@ -12,14 +12,13 @@ class CompareObject
 public:
     CompareObject();
     ~CompareObject();
-    bool init(const tstring& key);
-    bool checkToCompare(const tstring& str);
+    bool init(const tstring& key, bool endline_mode);
+    bool compare(const tstring& str);
     void getRange(CompareRange *range) const;
-    void translateParameters(const tstring& value, tstring* result) const;
-
-private:
     void getParameters(std::vector<tstring>* params) const;
-    void createCheckPcre(const tstring& key, tstring *prce_template);
+    bool isFullstrReq() const;
+private:
+    void createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template);
     void checkVars(tstring *pcre_template);
 
 private:
@@ -27,4 +26,5 @@ private:
     tstring m_key;
     tstring m_str;
     std::vector<tstring> m_vars_pcre_parts;
+    bool m_fullstr_req;
 };

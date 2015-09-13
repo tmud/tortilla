@@ -5,6 +5,7 @@
 end
 
 system = require ('system')
+rnd = require 'rnd'
 local res, err
 bass,err = prequire('lbass')
 if not bass then
