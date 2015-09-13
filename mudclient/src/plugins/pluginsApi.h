@@ -5,9 +5,9 @@
 #define PLUGING_MENUID_START 33000
 #define PLUGING_MENUID_END 57000
 void collectGarbage();
-
 bool initPluginsSystem();
 bool loadModules();
+void unloadModules();
 void tmcLog(const tstring& msg);
 void pluginLog(const tstring& msg);
 void pluginLoadError(const wchar_t* msg, const wchar_t *fname);

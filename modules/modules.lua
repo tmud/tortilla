@@ -1,11 +1,12 @@
-﻿local function prequire(m)
+﻿system = require ('system')
+rnd = require 'rnd'
+
+local function prequire(m)
   local ok, err = pcall(require, m) 
   if not ok then return nil, err end
   return err
 end
 
-system = require ('system')
-rnd = require 'rnd'
 local res, err
 bass,err = prequire('lbass')
 if not bass then
@@ -19,12 +20,12 @@ else
     end
 end
 
---[[
-local n = bass.load('d:\\1.mp3')
-local m = bass.load('d:\\2.mp3')
+
+--local n = bass.load('d:\\Mud\\1.mp3')
+local m = bass.load('d:\\Mud\\2.mp3')
 bass.play(m)
-bass.play(n)
-]]
+--bass.play(n)
+
 
 --local x = bass.loadSample('d:\\sample.wav')
 --bass.play(x)

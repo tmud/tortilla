@@ -284,6 +284,43 @@ int getPath(lua_State *L)
     return pluginInvArgs(L, "getPath");
 }
 
+int getResource(lua_State* L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring filename(luaT_towstring(L, 1));
+        tstring rd(L"resources");
+        tstring pd(_cp->get(Plugin::FILENAME));
+        ChangeDir cd;
+        bool error = false;
+        if (!cd.changeDir(rd))
+        {
+            CreateDirectory(rd.c_str(), NULL);
+            if (!cd.changeDir(rd))
+                error = true;
+        }
+        if (!error && !cd.changeDir(pd))
+        {
+            CreateDirectory(pd.c_str(), NULL);
+            if (!cd.changeDir(pd))
+                error = true;
+        }
+        if (!error)
+        {
+            tstring path(cd.getCurrentDir());
+            path.append(rd);
+            path.append(L"\\");
+            path.append(pd);
+            path.append(L"\\");
+            path.append(filename);
+            luaT_pushwstring(L, path.c_str());
+            return 1;
+        }
+        return pluginError("getResource", "Ошибка создания каталога для плагина");
+    }
+    return pluginInvArgs(L, "getResource");
+}
+
 int getProfile(lua_State *L)
 {
     if (luaT_check(L, 0))
@@ -713,6 +750,39 @@ int flashWindow(lua_State *L)
     }
     return pluginInvArgs(L, "flashWindow");
 }
+
+int regUnloadFunction(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TFUNCTION))
+    {
+        lua_getglobal(L, "munloadf");
+        if (!lua_istable(L, -1))
+        {
+            if (!lua_isnil(L, -1))
+            {
+                lua_pop(L, 1);
+                lua_pushboolean(L, 0);
+                return 1;
+            }
+            lua_pop(L, 1);
+            lua_newtable(L);
+            lua_pushvalue(L, -1);
+            lua_setglobal(L, "munloadf");
+        }
+        lua_len(L, -1);
+        int index = lua_tointeger(L, -1) + 1;
+        lua_pop(L, 1);
+        lua_insert(L, -2);
+        lua_pushinteger(L, index);
+        lua_insert(L, -2);
+        lua_settable(L, -3);
+        lua_pop(L, 1);
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -752,6 +822,7 @@ bool initPluginsSystem()
     lua_register(L, "disableMenu", disableMenu);
     lua_register(L, "getPath", getPath);
     lua_register(L, "getProfile", getProfile);
+    lua_register(L, "getResource", getResource);
     lua_register(L, "getParent", getParent);    
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);
@@ -761,6 +832,7 @@ bool initPluginsSystem()
     lua_register(L, "updateView", updateView);
     lua_register(L, "getViewSize", getViewSize);
     lua_register(L, "flashWindow", flashWindow);
+    lua_register(L, "regUnloadFunction", regUnloadFunction);
 
     reg_props(L);
     reg_activeobjects(L);
