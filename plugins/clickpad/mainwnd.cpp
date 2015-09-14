@@ -145,7 +145,12 @@ void ClickpadMainWnd::onCreate()
 void ClickpadMainWnd::onDestroy()
 {
     if (m_settings_dlg)
-      { m_settings_dlg->DestroyWindow(); delete m_settings_dlg; m_settings = NULL; }
+    { 
+        m_settings_dlg->DestroyWindow(); 
+        m_settings_dlg->m_hWnd = NULL;
+        delete m_settings_dlg; 
+        m_settings = NULL; 
+    }
 }
 
 void ClickpadMainWnd::onSize()

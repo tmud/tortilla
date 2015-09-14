@@ -80,8 +80,8 @@ namespace base {
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    inline void getPathAll(lua_State *L, const utf8* file, u8string* path) {
-        luaT_run(L, "getPathAll", "s", file);
+    inline void getResource(lua_State *L, const utf8* file, u8string* path) {
+        luaT_run(L, "getResource", "s", file);
         if (!lua_isstring(L, -1)) return;
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -214,10 +214,10 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
     }
-    void setBlocked(int width, int height)
+    void setFixedSize(int width, int height)
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "setBlocked", "odd", width, height);
+        luaT_run(L, "setFixedSize", "odd", width, height);
     }
 };
 

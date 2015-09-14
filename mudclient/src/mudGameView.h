@@ -41,6 +41,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     PluginsManager m_plugins;
     int m_codepage;
     bool m_activated;
+    bool m_settings_mode;
     std::vector<MudViewHandler*> m_handlers;
 
 private:
@@ -58,7 +59,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(this), m_codepage(CPWIN), m_activated(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false)
     {
     }
 
@@ -135,6 +136,11 @@ public:
     bool activated() const
     {
         return m_activated;
+    }
+
+    bool isSettingsWindowOpen() const
+    {
+        return m_settings_mode;
     }
 
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
@@ -282,6 +288,23 @@ public:
         HWND hwnd = v->m_hWnd;
         DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
         return (ctx) ? ctx->hwndFloated : NULL;
+    }
+
+    void setFixedSize(PluginsView *v, int width, int height)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        if (!ctx) return;
+        CWindow p(ctx->hwndFloated);
+        if (!p.IsWindow()) return;
+        width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
+        height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+        RECT pos = ctx->rcWindow; // p.GetWindowRect(&pos);
+        pos.right = pos.left + width - 1;
+        pos.bottom = pos.top + height - 1;
+        ctx->bBlockFloatingResizeBox = true;
+        ctx->dwFlags |= DCK_NOLEFT|DCK_NORIGHT|DCK_NOTOP|DCK_NOBOTTOM;
+        p.MoveWindow(&pos);
     }
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
@@ -705,6 +728,7 @@ private:
 
     LRESULT OnSettings(WORD, WORD, HWND, BOOL&)
     {
+        m_settings_mode = true;
         PropertiesData& data = *m_manager.getConfig();
         PropertiesData tmp(data);
         PropertiesDlg propDlg(&tmp);
@@ -719,6 +743,7 @@ private:
         {
             data.dlg = tmp.dlg;
         }
+        m_settings_mode = false;
         return 0;
     }
 

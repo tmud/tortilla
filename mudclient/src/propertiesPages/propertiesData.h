@@ -280,7 +280,7 @@ private:
 
 struct OutputWindow
 {
-    OutputWindow() : side(0), lastside(0)
+    OutputWindow() : side(DOCK_FLOAT), lastside(DOCK_FLOAT)
     {
         pos.left = pos.right = pos.top = pos.bottom = 0;
         size.cx = size.cy = 0;
@@ -290,6 +290,13 @@ struct OutputWindow
         lastside = side = DOCK_FLOAT;
         size = { width, height };
         pos = { x, y, x + width, y + height };
+    }
+    void initVisible(bool visible)
+    {
+        if (!visible)
+            side = DOCK_HIDDEN;
+        else
+            side = DOCK_FLOAT;
     }
 
     tstring name;

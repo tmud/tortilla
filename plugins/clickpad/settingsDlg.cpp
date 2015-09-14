@@ -280,7 +280,7 @@ LRESULT SettingsDlg::OnIconChanged(WORD, WORD, HWND, BOOL&)
 void SettingsDlg::setIconsFileList()
 {
     u8string tmp;
-    base::getPathAll(getLuaState(), "", &tmp);
+    base::getResource(getLuaState(), "", &tmp);
     if (tmp.empty())
         return;
     tstring path ( TU2W(tmp.c_str()) );

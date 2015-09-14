@@ -52,14 +52,14 @@ int init(lua_State *L)
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
         return luaT_error(L, "Не удалось создать окно для Clickpad");
 
-    base::addMenu(L, "Плагины/Настройка Clickpad...", 1, 2);
+    base::addMenu(L, "Плагины/Настройка Clickpad...", 1);
 
     HWND parent = m_parent_window.hwnd();
     m_clickpad = new ClickpadMainWnd();
     RECT rc; ::GetClientRect(parent, &rc);
     HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS);
     m_parent_window.attach(res);
-    m_parent_window.setBlocked(0,0);
+    m_parent_window.setFixedSize(0,0);
     m_hwnd_float = m_parent_window.floathwnd();
 
     luaT_run(L, "getPath", "s", "buttons.xml");
@@ -85,7 +85,7 @@ int init(lua_State *L)
     CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
     sd.GetClientRect(&rc);
     m_settings_window.attach(sd);
-    m_settings_window.setBlocked(rc.right, rc.bottom);
+    m_settings_window.setFixedSize(rc.right, rc.bottom);
 
     // todo remove lines
     base::checkMenu(L, 1);
