@@ -68,6 +68,15 @@ int pluginInvArgs(lua_State *L, const utf8* fname)
     return 0;
 }
 
+int pluginLoadFail(lua_State *L, const utf8* fname, const utf8* file)
+{
+    Utf8ToWide f(fname); Utf8ToWide fi(file);
+    swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ",
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, (const wchar_t*)fi);
+    pluginLog(plugin_buffer());
+    return 0;
+}
+
 int pluginError(const utf8* fname, const utf8* error)
 {
     Utf8ToWide f(fname);
