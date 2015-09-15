@@ -19,6 +19,9 @@
     <ClInclude Include="bobjects.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="lbass.cpp">

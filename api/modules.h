@@ -1,36 +1,35 @@
 #pragma once
 // Набор вспомогательных классов, не связанных с api (для независимых от клиента модулей)
 
-class luaM_towstring
+class S2W
 {
 public:
-    luaM_towstring(lua_State* L, int index) : buffer(NULL)
+    S2W(const char* string) : buffer(NULL)
     {
-        if (!lua_isstring(L, index))
-            return;
-        const char* utf8_string = lua_tostring(L, index);        
-        int symbols_count = MultiByteToWideChar(CP_UTF8, 0, utf8_string, -1, NULL, 0);
-        int buffer_required = symbols_count + 1;
+        int symbols_count = MultiByteToWideChar(CP_UTF8, 0, string, -1, NULL, 0);
+        int buffer_required = symbols_count+1;
         buffer = new wchar_t[buffer_required];
-        MultiByteToWideChar(CP_UTF8, 0, utf8_string, -1, buffer, buffer_required);
+        MultiByteToWideChar(CP_UTF8, 0, string, -1, buffer, buffer_required);
         buffer[symbols_count] = 0;
     }
-    ~luaM_towstring()  { delete []buffer; }
+    ~S2W()  { delete []buffer; }
     operator const wchar_t*() const { return (buffer) ? buffer : L""; }
 private:
     wchar_t* buffer;
 };
 
-class luaM_pushwstring
+class W2S
 {
 public:
-    luaM_pushwstring(lua_State *L, const wchar_t* wide_string)
+    W2S(const wchar_t* wide_string) : buffer(NULL)
     {
         int buffer_required = WideCharToMultiByte(CP_UTF8, 0, wide_string, -1, NULL, 0, NULL, NULL);
         char* buffer = new char [buffer_required+1];
         WideCharToMultiByte(CP_UTF8, 0, wide_string, -1, buffer, buffer_required, NULL, NULL);
-        buffer[buffer_required] = 0;
-        lua_pushstring(L, buffer);
-        delete []buffer;
+        buffer[buffer_required] = 0;        
     }
+     ~W2S()  { delete []buffer; }
+    operator const char*() const { return (buffer) ? buffer : ""; }
+private:
+    char* buffer;
 };
