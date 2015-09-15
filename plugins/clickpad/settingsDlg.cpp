@@ -165,7 +165,7 @@ LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
 LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
 {
     luaT_Props p(getLuaState());
-    if (p.settingsWnd())
+    if (p.isSettingsWndOpen())
     {
         m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
         return 0;
@@ -238,7 +238,7 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
             m_edit_command.SetWindowText(text.c_str());
         }
         luaT_Props p(getLuaState());
-        if (!p.settingsWnd())
+        if (!p.isSettingsWndOpen())
         {
             m_del_hotkey.EnableWindow(TRUE);
             m_close_settings.ShowWindow(SW_HIDE);

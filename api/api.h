@@ -707,10 +707,10 @@ public:
         luaT_run(L, "activated", "t");
         return boolresult();
     }
-    bool settingsWnd()
+    bool isSettingsWndOpen()
     {
         lua_getglobal(L, obj);
-        luaT_run(L, "settingsWnd", "t");
+        luaT_run(L, "isSettingsWndOpen", "t");
         return boolresult();
     }
 private:

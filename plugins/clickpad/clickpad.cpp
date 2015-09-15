@@ -52,7 +52,7 @@ int init(lua_State *L)
         !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
         return luaT_error(L, "Не удалось создать окно для Clickpad");
 
-    base::addMenu(L, "Плагины/Настройка Clickpad...", 1);
+    base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
 
     HWND parent = m_parent_window.hwnd();
     m_clickpad = new ClickpadMainWnd();

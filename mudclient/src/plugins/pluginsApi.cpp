@@ -1199,7 +1199,7 @@ int props_activated(lua_State *L)
     return pluginInvArgs(L, "props.activated");
 }
 
-int props_settingsWnd(lua_State *L)
+int props_isSettingsWndOpen(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
@@ -1207,7 +1207,7 @@ int props_settingsWnd(lua_State *L)
         lua_pushboolean(L, state);
         return 1;
     }
-    return pluginInvArgs(L, "props.settingsWnd");
+    return pluginInvArgs(L, "props.isSettingsWndOpen");
 }
 
 void reg_props(lua_State *L)
@@ -1223,6 +1223,6 @@ void reg_props(lua_State *L)
     regFunction(L, "serverPort", props_serverPort);
     regFunction(L, "connected", props_connected);
     regFunction(L, "activated", props_activated);
-    regFunction(L, "settingsWnd", props_settingsWnd);
+    regFunction(L, "isSettingsWndOpen", props_isSettingsWndOpen);
     lua_setglobal(L, "props");
 }
