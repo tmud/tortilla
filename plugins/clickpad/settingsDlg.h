@@ -54,6 +54,7 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     CButton m_del_hotkey, m_del_button;
     CListViewCtrl m_list;
     CStatic m_close_settings;
+    CButton m_template_cmd;
 
     struct image_file
     {
@@ -86,6 +87,7 @@ private:
         COMMAND_ID_HANDLER(IDC_BUTTON_EXIT, OnButtonExit)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELBUTTON, OnDelButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELHOTKEY, OnDelHotkey)
+        COMMAND_ID_HANDLER(IDC_CHECK_TEMPLATE, OnTemplate)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, LVN_ITEMCHANGED, OnListItemChanged)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_SETFOCUS, OnListItemChanged)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_KILLFOCUS, OnListKillFocus)
@@ -105,6 +107,7 @@ private:
         m_list.Attach(GetDlgItem(IDC_LIST_HOTKEYS));
         m_close_settings.Attach(GetDlgItem(IDC_STATIC_CLOSE_SETTING));
         m_images_list.Attach(GetDlgItem(IDC_LIST_ICON));
+        m_template_cmd.Attach(GetDlgItem(IDC_CHECK_TEMPLATE));
 
         RECT rc;
         m_list.GetClientRect(&rc);
@@ -156,13 +159,14 @@ private:
     }
 
     LRESULT OnRowsChanged(WORD, WORD, HWND, BOOL&);
-    LRESULT OnColumnsChanged(WORD, WORD, HWND, BOOL&);   
+    LRESULT OnColumnsChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnBSizeChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnTextChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnCommandChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnButtonExit(WORD, WORD, HWND, BOOL&);
     LRESULT OnDelButton(WORD, WORD, HWND, BOOL&);
-    LRESULT OnDelHotkey(WORD, WORD, HWND, BOOL&);    
+    LRESULT OnDelHotkey(WORD, WORD, HWND, BOOL&);
+    LRESULT OnTemplate(WORD, WORD, HWND, BOOL&);
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&);
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&);
     LRESULT OnIconChanged(WORD, WORD, HWND, BOOL&);

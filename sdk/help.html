@@ -245,7 +245,7 @@ local t = {...} -- правильное написание
 Функция должна возвратить версию плагина.
 <hr>
 <h3>Используемые функции плагина</h3>
-Эти функции можно использовать при необходимости. Функции будут вызываться, если они реализованы в плагине.
+Эти функции можно использовать при необходимости. Функции будут вызываться, если они объявлены в плагине.
 <a name="init"></a>
 <h4>void init()</h4>
 <div class="m">Параметры: нет</div><br>
@@ -404,6 +404,22 @@ local t = {...} -- правильное написание
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается клиентом, когда соединение по протоколу MSDP закрылось. Тут можно произвести сброс плагина.
 См. <a href="#msdpon" class="cmd">msdpon</a>.
+<hr>
+<a name="propsblocked"></a>
+<h4>void propsblocked()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для оповещения плагинов, о том, что было открыто окно настроек. Используется для разрешения проблемы конфликта, если 
+триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>запрещает</b> изменять триггеры до прихода события <a href="#propsunblocked" class="cmd">propsunblocked</a>.<br>
+См. <a href="#props" class="cmd">isPropertiesOpen</a>.
+<hr>
+<a name="propsunblocked"></a>
+<h4>void propsunblocked()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для оповещения плагинов, о том, что окно настроек было закрыто. Используется для разрешения проблемы конфликта, если 
+триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>снимает запрет</b>на изменение триггеров.
+См. <a href="#propsblocked" class="cmd">propsblocked</a>, <a href="#props" class="cmd">isPropertiesOpen</a>.
 <hr>
 <a name="clientapi"></a>
 <h2>Функции взаимодействия плагина с клиентом, API клиента</h2>
@@ -618,7 +634,7 @@ local t = {...} -- правильное написание
 <div class="cmd">bool connected()</div> - признак, что клиент подключен к маду.
 <div class="cmd">HFONT currentFont()</div> - хэндл текущего шрифта клиента.
 <div class="cmd">bool activated()</div> - признак, что окно клиента активно и игрок работает с ним.
-<div class="cmd">bool isSettingsWndOpen()</div> - признак, что открыто окно настроек клиента.
+<div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
 </pre>
 <hr>
 <a name="cppmsdp"></a>
@@ -1068,7 +1084,7 @@ render:rect(r2)
 <div class="cmd">string serverPort()</div> - возвращает порт сервера или nil, если нет подключения.
 <div class="cmd">bool connected()</div> - возвращает признак наличия подключения.
 <div class="cmd">bool activated()</div> -  признак, что окно клиента активно и игрок работает с ним.
-<div class="cmd">bool isSettingsWndOpen()</div> - признак, что открыто окно настроек клиента.
+<div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
 </pre>
 <hr>
 <a name="luaactobj"></a>

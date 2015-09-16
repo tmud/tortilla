@@ -1199,15 +1199,15 @@ int props_activated(lua_State *L)
     return pluginInvArgs(L, "props.activated");
 }
 
-int props_isSettingsWndOpen(lua_State *L)
+int props_isPropertiesOpen(lua_State *L)
 {
     if (luaT_check(L, 0))
     {
-        int state = _wndMain.m_gameview.isSettingsWindowOpen() ? 1 : 0;
+        int state = _wndMain.m_gameview.isPropertiesOpen() ? 1 : 0;
         lua_pushboolean(L, state);
         return 1;
     }
-    return pluginInvArgs(L, "props.isSettingsWndOpen");
+    return pluginInvArgs(L, "props.isPropertiesOpen");
 }
 
 void reg_props(lua_State *L)
@@ -1223,6 +1223,6 @@ void reg_props(lua_State *L)
     regFunction(L, "serverPort", props_serverPort);
     regFunction(L, "connected", props_connected);
     regFunction(L, "activated", props_activated);
-    regFunction(L, "isSettingsWndOpen", props_isSettingsWndOpen);
+    regFunction(L, "isPropertiesOpen", props_isPropertiesOpen);
     lua_setglobal(L, "props");
 }

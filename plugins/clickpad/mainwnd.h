@@ -35,7 +35,8 @@ private:
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { onDestroy(); return 0; }        
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
-    LRESULT OnClickButton(UINT, WPARAM wparam, LPARAM lparam, BOOL&) {
+    LRESULT OnClickButton(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
+    {
         onClickButton(LOWORD(wparam), HIWORD(wparam), (lparam==0) ? false : true);
         return 0;
     }
@@ -48,7 +49,6 @@ private:
     void createButton(int x, int y);
     void setWorkWindowSize();
 
-private:
     void setColumns(int count);
     int  getColumns() const;
     void setRows(int count);

@@ -138,7 +138,7 @@ public:
         return m_activated;
     }
 
-    bool isSettingsWindowOpen() const
+    bool isPropertiesOpen() const
     {
         return m_settings_mode;
     }
@@ -729,6 +729,8 @@ private:
     LRESULT OnSettings(WORD, WORD, HWND, BOOL&)
     {
         m_settings_mode = true;
+        m_plugins.processPluginsMethod("propsblocked", 0);
+
         PropertiesData& data = *m_manager.getConfig();
         PropertiesData tmp(data);
         PropertiesDlg propDlg(&tmp);
@@ -744,6 +746,7 @@ private:
             data.dlg = tmp.dlg;
         }
         m_settings_mode = false;
+        m_plugins.processPluginsMethod("propsunblocked", 0);
         return 0;
     }
 

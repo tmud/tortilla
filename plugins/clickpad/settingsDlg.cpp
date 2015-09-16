@@ -69,6 +69,7 @@ void SettingsDlg::editButton(PadButton *button)
     button->getCommand(&command);
     m_edit_text.SetWindowText(text.c_str());
     m_edit_command.SetWindowText(command.c_str());
+    m_template_cmd.SetCheck(button->getTemplate() ? BST_CHECKED : BST_UNCHECKED);
 
     /*tstring img; int img_index = -1;
     button->getImage(&img, &img_index);
@@ -87,6 +88,13 @@ void SettingsDlg::editButton(PadButton *button)
         m_edit_command.SetFocus();
         m_edit_command.SetSel(pos, pos);
     }
+}
+
+LRESULT SettingsDlg::OnTemplate(WORD, WORD, HWND, BOOL&)
+{
+    bool state = (m_template_cmd.GetCheck() == BST_CHECKED) ? true : false;
+    m_editable_button->setTemplate(state);
+    return 0;
 }
 
 LRESULT SettingsDlg::OnRowsChanged(WORD, WORD, HWND, BOOL&)
@@ -220,6 +228,9 @@ void SettingsDlg::setEditableState(bool state)
         m_edit_text.SetWindowText(L"");
         m_edit_command.SetWindowText(L"");
     }
+    if (!flag)
+        m_template_cmd.SetCheck(BST_UNCHECKED);
+    m_template_cmd.EnableWindow(flag);
 }
 
 LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
@@ -236,6 +247,12 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
             tstring text;
             getListItemText(item_selected, 1, &text);
             m_edit_command.SetWindowText(text.c_str());
+            if (m_edit_text.GetWindowTextLength() == 0)
+            {
+                if (text.length() > 5)
+                    text = text.substr(0, 5);
+                m_edit_text.SetWindowText(text.c_str());                
+            }
         }
         luaT_Props p(getLuaState());
         if (!p.isSettingsWndOpen())

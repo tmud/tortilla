@@ -8,6 +8,7 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     WPARAM m_click_param;
     bool m_pushed;
     bool m_selected;
+    bool m_template;
     static const int bufferlen = 32;
     static WCHAR buffer[bufferlen];    
     tstring m_image_fpath;
@@ -17,11 +18,11 @@ class PadButton : public CBitmapButtonImpl<PadButton>
 public:
     PadButton(UINT msg, WPARAM param) :
         CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
-        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_image_index(-1), m_image(NULL)
+        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false), m_image_index(-1), m_image(NULL)
     {
     }
 
-    void getText(tstring *text)
+    void getText(tstring *text) const
     {
         text->assign(m_text);
     }
@@ -34,7 +35,7 @@ public:
         Invalidate();
     }
 
-    void getCommand(tstring *cmd)
+    void getCommand(tstring *cmd) const
     {
         cmd->assign(m_command);
     }
@@ -62,10 +63,20 @@ public:
        // m_image = m_images.loadImage(fpath);
     }
 
-    void getImage(tstring* fpath, int *index )
+    void getImage(tstring* fpath, int *index ) const
     {
         fpath->assign(m_image_fpath);
         *index = m_image_index;
+    }
+
+    void setTemplate(bool template_flag)
+    {
+        m_template = template_flag;
+    }
+
+    bool getTemplate() const 
+    {
+        return m_template;
     }
 
 private:
