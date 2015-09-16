@@ -48,7 +48,7 @@ void ClickpadMainWnd::onClickButton(int x, int y, bool up)
             assert(button);
             tstring command;
             button->getCommand(&command);
-            runGameCommand(command);
+            processGameCommand(command, button->getTemplate());
         }
         return;
     }
@@ -260,4 +260,10 @@ void ClickpadMainWnd::setWorkWindowSize()
     rc.right = rc.left + width;
     rc.bottom = rc.top + height;
     wnd.MoveWindow(&rc);
+}
+
+void ClickpadMainWnd::settingsBlock(bool block)
+{
+    if (m_settings_dlg)
+        m_settings_dlg->setSettingsBlock(block);
 }

@@ -47,6 +47,9 @@ namespace base {
     inline void runCommand(lua_State* L, const utf8* cmd)  {
         luaT_run(L, "runCommand", "s", cmd);
     }
+    inline void setCommand(lua_State* L, const utf8* cmd)  {
+        luaT_run(L, "setCommand", "s", cmd);
+    }
     inline void addButton(lua_State *L, int bmp, int id, const utf8* tooltip) {
         luaT_run(L, "addButton", "dds", bmp, id, tooltip);
     }
@@ -707,10 +710,10 @@ public:
         luaT_run(L, "activated", "t");
         return boolresult();
     }
-    bool isSettingsWndOpen()
+    bool isPropertiesOpen()
     {
         lua_getglobal(L, obj);
-        luaT_run(L, "isSettingsWndOpen", "t");
+        luaT_run(L, "isPropertiesOpen", "t");
         return boolresult();
     }
 private:

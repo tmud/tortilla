@@ -74,6 +74,7 @@ public:
     LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
     void editButton(PadButton *button);
     void setSettings(ClickpadSettings *settings);
+    void setSettingsBlock(bool block);
     
 private:
     BEGIN_MSG_MAP(SettingsDlg)

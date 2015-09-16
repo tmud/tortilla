@@ -307,6 +307,8 @@ public:
         p.MoveWindow(&pos);
     }
 
+    void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
+
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
     CFont *getStandardFont() { return &m_propElements.standard_font; }

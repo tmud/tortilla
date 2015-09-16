@@ -170,15 +170,22 @@ LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
     return 0; 
 }
 
+void SettingsDlg::setSettingsBlock(bool block)
+{
+    if (block)
+    {
+        m_del_hotkey.EnableWindow(FALSE);
+        m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
+    }
+    else
+    {
+        m_del_hotkey.EnableWindow(TRUE);
+        m_close_settings.ShowWindow(SW_HIDE);
+    }
+}
+
 LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
 {
-    luaT_Props p(getLuaState());
-    if (p.isSettingsWndOpen())
-    {
-        m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
-        return 0;
-    }
-
     int item_selected = m_list.GetSelectedIndex();
     if (item_selected == -1)
         return 0;
@@ -254,14 +261,10 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
                 m_edit_text.SetWindowText(text.c_str());                
             }
         }
+        
         luaT_Props p(getLuaState());
-        if (!p.isSettingsWndOpen())
-        {
+        if (!p.isPropertiesOpen())
             m_del_hotkey.EnableWindow(TRUE);
-            m_close_settings.ShowWindow(SW_HIDE);
-        }
-        else
-            m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
     }
     return 0;
 }

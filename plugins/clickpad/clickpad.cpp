@@ -167,6 +167,20 @@ int closewnd(lua_State *L)
     return 0;
 }
 
+int propsblocked(lua_State *L)
+{
+    if (m_clickpad)
+        m_clickpad->settingsBlock(true);
+    return 0;
+}
+
+int propsunblocked(lua_State *L)
+{
+    if (m_clickpad)
+        m_clickpad->settingsBlock(false);
+    return 0;
+}
+
 static const luaL_Reg clickpad_methods[] =
 {
     { "name", get_name },
@@ -176,6 +190,8 @@ static const luaL_Reg clickpad_methods[] =
     { "release", release },
     { "menucmd", menucmd },
     { "closewindow", closewnd },
+    { "propsblocked", propsblocked },
+    { "propsunblocked", propsunblocked },
     { NULL, NULL }
 };
 
@@ -188,11 +204,15 @@ int WINAPI plugin_open(lua_State *L)
     return 0;
 }
 
-
-void runGameCommand(const tstring& cmd)
+void processGameCommand(const tstring& cmd, bool template_cmd)
 {
-    if (!cmd.empty())
-        base::runCommand(pL, TW2U(cmd.c_str()));
+    if (cmd.empty())
+        return;
+    TW2U c(cmd.c_str());
+    if (!template_cmd)
+        base::runCommand(pL, c);
+    else
+        base::setCommand(pL, c);
 }
 
 void setFocusToMudClient()

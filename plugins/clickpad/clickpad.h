@@ -1,7 +1,7 @@
 #pragma once
 
 void setFocusToMudClient();
-void runGameCommand(const tstring& cmd);
+void processGameCommand(const tstring& cmd, bool template_cmd);
 HWND getFloatWnd();
 HWND getMudclientWnd();
 void exitEditMode();

@@ -148,6 +148,18 @@ int runCommand(lua_State *L)
     return pluginInvArgs(L, "runCommand");
 }
 
+int setCommand(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring cmd(TU2W(lua_tostring(L, 1)));
+        _wndMain.m_gameview.setCommand(cmd);
+        return 0;
+    }
+    return pluginInvArgs(L, "setCommand");
+}
+
 int addMenu(lua_State *L)
 {
     CAN_DO;
@@ -888,6 +900,7 @@ bool initPluginsSystem()
     reg_string(L);
     lua_register(L, "addCommand", addCommand);
     lua_register(L, "runCommand", runCommand);
+    lua_register(L, "setCommand", setCommand);
     lua_register(L, "addMenu", addMenu);
     lua_register(L, "addButton", addButton);
     lua_register(L, "addToolbar", addToolbar);

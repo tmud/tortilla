@@ -23,6 +23,7 @@ public:
     void setEditMode(bool mode);
     void save(xml::node& node);
     void load(xml::node& node);
+    void settingsBlock(bool block);
 
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
