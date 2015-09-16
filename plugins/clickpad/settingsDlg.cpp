@@ -172,14 +172,14 @@ LRESULT SettingsDlg::OnDelButton(WORD, WORD, HWND, BOOL&)
 
 void SettingsDlg::setSettingsBlock(bool block)
 {
+    m_del_hotkey.EnableWindow(FALSE);
     if (block)
     {
-        m_del_hotkey.EnableWindow(FALSE);
         m_close_settings.ShowWindow(SW_SHOWNOACTIVATE);
     }
     else
     {
-        m_del_hotkey.EnableWindow(TRUE);
+        m_list.SetFocus();
         m_close_settings.ShowWindow(SW_HIDE);
     }
 }
