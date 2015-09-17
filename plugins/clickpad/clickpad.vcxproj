@@ -91,6 +91,7 @@
     <ClInclude Include="padbutton.h" />
     <ClInclude Include="mainwnd.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="selectImageDlg.h" />
     <ClInclude Include="settingsDlg.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

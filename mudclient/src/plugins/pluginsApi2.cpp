@@ -202,7 +202,7 @@ int window_setFixedSize(lua_State *L)
         _wndMain.m_gameview.setFixedSize(v, lua_tointeger(L, 2), lua_tointeger(L, 3));
         return 0;
     }
-    return pluginInvArgs(L, "window:setBlocked");
+    return pluginInvArgs(L, "window:setFixedSize");
 }
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)

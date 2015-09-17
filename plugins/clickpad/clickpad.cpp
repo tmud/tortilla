@@ -1,15 +1,22 @@
 #include "stdafx.h"
 #include "resource.h"
 #include "clickpad.h"
-
 #include "mainwnd.h"
 
+lua_State *m_pL = NULL;
 HWND m_hwnd_float = NULL;
 HWND m_hwnd_mudclient = NULL;
 luaT_window m_parent_window;
 ClickpadMainWnd* m_clickpad = NULL;
 luaT_window m_settings_window;
-lua_State *m_pL = NULL;
+SettingsDlg* m_settings = NULL;
+luaT_window m_select_image_window;
+SelectImageDlg* m_select_image = NULL;
+
+lua_State* getLuaState()
+{
+    return m_pL;
+}
 
 int get_name(lua_State *L)
 {
@@ -34,6 +41,8 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
+    m_pL = L;
+
     HWND client_wnd = NULL;
     luaT_run(L, "getParent", "");
     if (lua_isnumber(L, -1))
@@ -48,19 +57,41 @@ int init(lua_State *L)
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
 
-    if (!m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true) ||
-        !m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
+    bool ok = false;
+    if (m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true))
+    {
+        HWND parent = m_parent_window.hwnd();
+        m_clickpad = new ClickpadMainWnd();
+        RECT rc; ::GetClientRect(parent, &rc);
+        HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+        m_parent_window.attach(res);
+        m_parent_window.setFixedSize(0, 0);
+        m_hwnd_float = m_parent_window.floathwnd();
+        ok = true;
+    }
+    if (ok && m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
+    {
+        m_settings = new SettingsDlg();
+        m_settings->Create(m_settings_window.hwnd());
+        m_settings->setSettings(m_clickpad);
+        CWindow sd(m_settings->m_hWnd);
+        RECT rc; sd.GetClientRect(&rc);
+        m_settings_window.attach(sd);
+        m_settings_window.setFixedSize(rc.right, rc.bottom);
+    
+    } else { ok = false; }
+    if (ok && m_select_image_window.create(L, "Иконка для кнопки", 300, 300, false))
+    {
+        m_select_image = new SelectImageDlg();
+        m_select_image->Create(m_select_image_window.hwnd());
+        m_select_image_window.attach(m_select_image->m_hWnd);
+        m_select_image_window.block("left,right,top,bottom");
+    } else { ok = false; }
+
+    if (!ok)
         return luaT_error(L, "Не удалось создать окно для Clickpad");
 
     base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
-
-    HWND parent = m_parent_window.hwnd();
-    m_clickpad = new ClickpadMainWnd();
-    RECT rc; ::GetClientRect(parent, &rc);
-    HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS);
-    m_parent_window.attach(res);
-    m_parent_window.setFixedSize(0,0);
-    m_hwnd_float = m_parent_window.floathwnd();
 
     luaT_run(L, "getPath", "s", "buttons.xml");
     u8string path(lua_tostring(L, -1));
@@ -69,54 +100,62 @@ int init(lua_State *L)
     DWORD fa = GetFileAttributes(TU2W(path.c_str()));
     if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
     {
-        xml::node ld;
-        bool result = ld.load(path.c_str());
-        if (result)
-            m_clickpad->load(ld);
-        if (!result) {
-        u8string error("Ошибка загрузки списка с кнопками: ");
-        error.append(path);
-        luaT_log(L, error.c_str());
+       xml::node ld;
+       bool result = ld.load(path.c_str());
+       if (result)
+          m_clickpad->load(ld);
+       if (!result) 
+       {
+          u8string error("Ошибка загрузки списка с кнопками: ");
+          error.append(path);
+          luaT_log(L, error.c_str());
+       }
+       ld.deletenode();
     }
-    ld.deletenode();
-    }
-
-    m_pL = L;
-    CWindow sd ( m_clickpad->createSettingsDlg( m_settings_window.hwnd()) );
-    sd.GetClientRect(&rc);
-    m_settings_window.attach(sd);
-    m_settings_window.setFixedSize(rc.right, rc.bottom);
 
     // todo remove lines
     base::checkMenu(L, 1);
     m_settings_window.show();
+    m_select_image_window.show();
     m_clickpad->setEditMode(true);    
     return 0;
 }
 
 int release(lua_State *L)
 {
-    if (!m_clickpad)
-        return 0;
-
-    xml::node tosave("clickpad");
-    m_clickpad->save(tosave);
-
-    luaT_run(L, "getPath", "s", "buttons.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
-
-    bool result = tosave.save(path.c_str());
-
-    tosave.deletenode();
-    m_clickpad->DestroyWindow();
-    delete m_clickpad;
-
-    if (!result)
+    if (m_select_image)
     {
-        u8string error("Ошибка записи списка кнопок: ");
-        error.append(path);
-        return luaT_error(L, error.c_str());
+        m_select_image->DestroyWindow();
+        delete m_select_image;
+        m_select_image = NULL;    
+    }
+
+    if (m_settings)
+    {
+        m_settings->DestroyWindow();
+        delete m_settings;
+        m_settings = NULL;
+    }
+
+    if (m_clickpad)
+    {
+        xml::node tosave("clickpad");
+        m_clickpad->save(tosave);
+
+        luaT_run(L, "getPath", "s", "buttons.xml");
+        u8string path(lua_tostring(L, -1));
+        lua_pop(L, 1);
+
+        bool result = tosave.save(path.c_str());
+        tosave.deletenode();
+        m_clickpad->DestroyWindow();
+        delete m_clickpad;
+        if (!result)
+        {
+            u8string error("Ошибка записи списка кнопок: ");
+            error.append(path);
+            return luaT_error(L, error.c_str());
+        }
     }
     return 0;
 }
@@ -161,23 +200,28 @@ int closewnd(lua_State *L)
     else if (hwnd == m_settings_window.hwnd())
     {
         base::uncheckMenu(L, 1);
+        m_select_image_window.hide();
         m_settings_window.hide();
         m_clickpad->setEditMode(false);
+    }
+    else if (hwnd == m_select_image_window.hwnd())
+    {
+        m_select_image_window.hide();
     }
     return 0;
 }
 
 int propsblocked(lua_State *L)
 {
-    if (m_clickpad)
-        m_clickpad->settingsBlock(true);
+    if (m_settings)
+        m_settings->setSettingsBlock(true);
     return 0;
 }
 
 int propsunblocked(lua_State *L)
 {
-    if (m_clickpad)
-        m_clickpad->settingsBlock(false);
+    if (m_settings)
+        m_settings->setSettingsBlock(false);
     return 0;
 }
 
@@ -239,7 +283,3 @@ void exitEditMode()
     m_clickpad->setEditMode(false);
 }
 
-lua_State* getLuaState()
-{
-    return m_pL;
-}

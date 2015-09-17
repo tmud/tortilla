@@ -1,6 +1,7 @@
 #include "resource.h"
 #include "padbutton.h"
 #include "settingsDlg.h"
+#include "selectImageDlg.h"
 
 class ClickpadSettings
 {
@@ -19,12 +20,9 @@ public:
     DECLARE_WND_CLASS_EX(L"Clickpad", 0, COLOR_BTNFACE)
     ClickpadMainWnd();
     ~ClickpadMainWnd();
-    HWND createSettingsDlg(HWND parent);
     void setEditMode(bool mode);
     void save(xml::node& node);
     void load(xml::node& node);
-    void settingsBlock(bool block);
-
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
         MESSAGE_HANDLER(WM_USER, OnClickButton)
@@ -45,11 +43,9 @@ private:
     void onDestroy();
     void onSize();
     void onClickButton(int x, int y, bool up);
-
 private:
     void createButton(int x, int y);
     void setWorkWindowSize();
-
     void setColumns(int count);
     int  getColumns() const;
     void setRows(int count);
@@ -58,9 +54,7 @@ private:
     int  getButtonSize() const;
     void setRowsInArray(int count);
     void setColumnsInArray(int count);
-
 private:
-    SettingsDlg *m_settings_dlg;
     bool m_editmode;
     int m_button_size, m_rows, m_columns;
     std::vector<std::vector<PadButton*>> m_buttons;

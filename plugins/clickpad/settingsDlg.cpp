@@ -5,6 +5,9 @@
 #include "mudclient/src/common/changeDir.h"
 
 extern SettingsDlg* m_settings;
+extern SelectImageDlg* m_select_image;
+extern luaT_window m_select_image_window;
+
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 {
     return m_settings->HookGetMsgProc(nCode, wParam, lParam);
@@ -294,6 +297,13 @@ LRESULT SettingsDlg::OnIconChanged(WORD, WORD, HWND, BOOL&)
     tstring fpath(m_images_path);
     fpath.append(p);*/
    // m_editable_button->setImage(fpath);
+    return 0;
+}
+
+LRESULT SettingsDlg::OnIconButton(WORD, WORD, HWND, BOOL&)
+{
+    if (!m_select_image_window.isVisible())
+        m_select_image_window.show();
     return 0;
 }
 

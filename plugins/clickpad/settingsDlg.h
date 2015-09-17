@@ -93,6 +93,7 @@ private:
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_SETFOCUS, OnListItemChanged)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_KILLFOCUS, OnListKillFocus)
         COMMAND_HANDLER(IDC_LIST_ICON, LBN_SELCHANGE, OnIconChanged)
+        COMMAND_ID_HANDLER(IDC_BUTTON_ICON, OnIconButton)
     END_MSG_MAP()
 
     LRESULT OnInitDlg(UINT, WPARAM, LPARAM, BOOL&)
@@ -171,6 +172,7 @@ private:
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&);
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&);
     LRESULT OnIconChanged(WORD, WORD, HWND, BOOL&);
+    LRESULT OnIconButton(WORD, WORD, HWND, BOOL&);
     
     void resetEditable();
     void setEditableState(bool state);

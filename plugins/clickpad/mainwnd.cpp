@@ -2,9 +2,9 @@
 #include "mainwnd.h"
 #include "clickpad.h"
 
-SettingsDlg* m_settings;
+extern SettingsDlg* m_settings;
 ClickpadMainWnd::ClickpadMainWnd() : m_editmode(false),
-m_button_size(64), m_rows(0), m_columns(0), m_settings_dlg(NULL)
+m_button_size(64), m_rows(0), m_columns(0)
 {
 }
 
@@ -12,20 +12,10 @@ ClickpadMainWnd::~ClickpadMainWnd()
 {
 }
 
-HWND ClickpadMainWnd::createSettingsDlg(HWND parent)
-{
-    m_settings_dlg = new SettingsDlg();
-    m_settings_dlg->Create(parent);
-    m_settings_dlg->setSettings(this);
-    m_settings = m_settings_dlg;
-    setWorkWindowSize();
-    return m_settings_dlg->m_hWnd;
-}
-
 void ClickpadMainWnd::setEditMode(bool mode)
 {
     m_editmode = mode;
-    m_settings_dlg->editButton(NULL);
+    m_settings->editButton(NULL);
     int hrows = m_buttons.size();
     int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
     for (int y=0; y<hrows; ++y) {
@@ -53,7 +43,7 @@ void ClickpadMainWnd::onClickButton(int x, int y, bool up)
         return;
     }
     PadButton *button = m_buttons[y][x];
-    m_settings_dlg->editButton(button);
+    m_settings->editButton(button);
 }
 
 int ClickpadMainWnd::getRows() const
@@ -144,13 +134,6 @@ void ClickpadMainWnd::onCreate()
 
 void ClickpadMainWnd::onDestroy()
 {
-    if (m_settings_dlg)
-    { 
-        m_settings_dlg->DestroyWindow(); 
-        m_settings_dlg->m_hWnd = NULL;
-        delete m_settings_dlg; 
-        m_settings = NULL; 
-    }
 }
 
 void ClickpadMainWnd::onSize()
@@ -260,10 +243,4 @@ void ClickpadMainWnd::setWorkWindowSize()
     rc.right = rc.left + width;
     rc.bottom = rc.top + height;
     wnd.MoveWindow(&rc);
-}
-
-void ClickpadMainWnd::settingsBlock(bool block)
-{
-    if (m_settings_dlg)
-        m_settings_dlg->setSettingsBlock(block);
 }
