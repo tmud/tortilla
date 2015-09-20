@@ -170,8 +170,8 @@ int window_isVisible(lua_State *L)
     if (luaT_check(L, 1, LUAT_WINDOW))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        int state = v->IsWindowVisible() ? 1 : 0;
-        lua_pushboolean(L, state);
+        bool state = _wndMain.m_gameview.isDockPaneVisible(v);        
+        lua_pushboolean(L, state ? 1 : 0);
         return 1;
     }
     return pluginInvArgs(L, "window:isVisible");
@@ -204,6 +204,19 @@ int window_setFixedSize(lua_State *L)
     }
     return pluginInvArgs(L, "window:setFixedSize");
 }
+
+int window_getSize(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_WINDOW))
+    {
+         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+         SIZE sz = _wndMain.m_gameview.getDockPaneSize(v);
+         lua_pushinteger(L, sz.cy);
+         lua_pushinteger(L, sz.cx);
+         return 2;
+    }
+    return pluginInvArgs(L, "window:getSize");
+}
 //--------------------------------------------------------------------
 void reg_mt_window(lua_State *L)
 {
@@ -220,6 +233,7 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "isVisible", window_isVisible);
     regFunction(L, "setRender", window_setRender);
     regFunction(L, "setFixedSize", window_setFixedSize);
+    regFunction(L, "getSize", window_getSize);
     regIndexMt(L);
     lua_pop(L, 1);
 }

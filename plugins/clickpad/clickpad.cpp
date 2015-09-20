@@ -82,8 +82,10 @@ int init(lua_State *L)
     } else { ok = false; }
     if (ok && m_select_image_window.create(L, "Иконка для кнопки", 300, 300, false))
     {
+        SIZE sz = m_select_image_window.getSize();
+        RECT rc = { 0, 0, sz.cx, sz.cy };
         m_select_image = new SelectImageDlg();
-        m_select_image->Create(m_select_image_window.hwnd());
+        m_select_image->Create(m_select_image_window.hwnd(), rc);
         m_select_image_window.attach(m_select_image->m_hWnd);
         m_select_image_window.block("left,right,top,bottom");
     } else { ok = false; }
@@ -283,3 +285,17 @@ void exitEditMode()
     m_clickpad->setEditMode(false);
 }
 
+CAppModule _Module;
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+        _Module.Init(NULL, hModule);
+        break;
+    case DLL_PROCESS_DETACH:
+        _Module.Term();
+        break;
+    }
+    return TRUE;
+}

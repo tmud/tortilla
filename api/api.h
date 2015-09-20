@@ -222,6 +222,16 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "setFixedSize", "odd", width, height);
     }
+    SIZE getSize()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "getSize", "o");
+        SIZE sz;
+        sz.cx = lua_tointeger(L, -1);
+        sz.cy = lua_tointeger(L, -2);
+        lua_pop(L, 2);
+        return sz;
+    }
 };
 
 class luaT_panel

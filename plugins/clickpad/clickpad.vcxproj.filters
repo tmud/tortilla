@@ -52,6 +52,9 @@
     <ClCompile Include="padbutton.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="selectImageDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin.def">

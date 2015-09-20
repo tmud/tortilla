@@ -373,6 +373,7 @@ int getResource(lua_State* L)
         if (!error)
         {
             tstring path(cd.getCurrentDir());
+            path.append(L"\\");
             path.append(rd);
             path.append(L"\\");
             path.append(pd);
