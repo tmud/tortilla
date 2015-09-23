@@ -4,10 +4,21 @@
 class ImageCollection
 {
 public:
-    void scanImages();
+    struct imdata {
+        imdata() : image_size(0), image(NULL) {}
+        int image_size;
+        tstring file_path;
+        tstring name;
+        Image* image;
+    };
 
-private:
-    std::vector<tstring> m_files;
+    ~ImageCollection();
+    void scanImages();
+    int getImagesCount() const;
+    const imdata& getImage(int index) const;
+
+private:    
+    std::vector<imdata> m_files;
 };
 
 class SelectImageCategory : public CWindowImpl<SelectImageCategory>
@@ -36,6 +47,7 @@ class SelectImageDlg : public CWindowImpl<SelectImageDlg>
     ImageCollection m_images;
 public:
     SelectImageDlg() {}
+    ~SelectImageDlg() { if (IsWindow()) DestroyWindow(); m_hWnd = NULL; }
 
 private:
     BEGIN_MSG_MAP(SelectImageDlg)
@@ -64,6 +76,12 @@ private:
         m_vSplitter.SetSplitterPanes(m_category, m_atlas);
 
         m_images.scanImages();
+        for (int i=0,e=m_images.getImagesCount(); i<e; ++i)
+        {
+            const ImageCollection::imdata &image = m_images.getImage(i);
+            
+
+        }
         return 0;
     }
 

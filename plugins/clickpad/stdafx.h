@@ -20,6 +20,7 @@
 #include <algorithm>
 
 typedef std::wstring tstring;
+typedef wchar_t tchar;
 
 const int MAX_ROWS = 5;
 const int MAX_COLUMNS = 10;
