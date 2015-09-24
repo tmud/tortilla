@@ -133,7 +133,7 @@ private:
                 m_list.SetItem(item, 2, LVIF_TEXT, TU2W(group.c_str()), 0, 0, 0, NULL);
                 item++;
             }
-    }
+        }
 
         wchar_t buffer[16];
         for (int i=1; i<=5; ++i)

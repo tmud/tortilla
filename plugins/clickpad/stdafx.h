@@ -13,6 +13,7 @@
 #include <atldlgs.h>
 #include <atlctrls.h>
 #include <atlctrlx.h>
+#include <atlmisc.h>
 
 #include <map>
 #include <vector>

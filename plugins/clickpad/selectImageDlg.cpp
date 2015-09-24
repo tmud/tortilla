@@ -115,7 +115,7 @@ void ImageCollection::scanImages()
     {
         bool exist = false;
         for (int i=0,e=m_files.size(); i<e; ++i) {
-            if (current_files[j].file_path == m_files[i].file_path) { exist = true; break;}
+            if (current_files[j].file_path == m_files[i].file_path) { exist = true; break; }
         }
         if (!exist) 
         {
@@ -134,6 +134,80 @@ void ImageCollection::scanImages()
         }
     }
     m_files.insert(m_files.end(), new_files.begin(), new_files.end());
+}
 
+void SelectImage::setImage(Image* image, int size)
+{
+    if (!image || image->width() == 0 || image->height() == 0 || size < 0) {
+        m_pimg = NULL; m_size = 0; 
+        Invalidate(FALSE);
+        return;
+    }
+    m_pimg = image;
+    m_size = size;
+    Invalidate(FALSE);
+}
 
+void SelectImage::renderImage(HDC hdc, int width, int height)
+{
+    CDCHandle dc(hdc);
+    dc.FillSolidRect(0, 0, width, height, GetSysColor(COLOR_WINDOWFRAME));
+    if (!m_pimg) return;
+    m_pimg->render(dc, 0, 0);
+}
+
+LRESULT SelectImageDlg::OnUser(UINT, WPARAM, LPARAM, BOOL&)
+{
+    tstring item;
+    m_category.getSelectedItem(&item);
+    for (int i = 0, e = m_images.getImagesCount(); i < e; ++i)
+    {
+        const ImageCollection::imdata &image = m_images.getImage(i);
+        if (image.name == item)
+        {
+            m_atlas.setImage(image.image, image.image_size);
+            return 0;
+        }
+    }
+    m_atlas.setImage(NULL, 0);
+    return 0;
+}
+
+LRESULT SelectImageDlg::OnCreate(UINT, WPARAM, LPARAM, BOOL&)
+{
+    RECT rc;
+    GetClientRect(&rc);
+    m_vSplitter.Create(m_hWnd, rc);
+    m_vSplitter.m_cxySplitBar = 3;
+    m_vSplitter.SetSplitterRect();
+    m_vSplitter.SetDefaultSplitterPos();
+
+    RECT pane_left, pane_right;
+    m_vSplitter.GetSplitterPaneRect(0, &pane_left);
+    pane_left.right -= 3;
+    m_vSplitter.GetSplitterPaneRect(1, &pane_right);
+
+    DWORD style = WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VISIBLE;
+    m_category.Create(m_vSplitter, pane_left); // NULL, style, WS_EX_CLIENTEDGE);
+    m_category.setNotyfy(m_hWnd, WM_USER);
+
+    m_atlas.Create(m_vSplitter, pane_right, NULL, style); // | WS_VSCROLL | WS_HSCROLL);
+    m_vSplitter.SetSplitterPanes(m_category, m_atlas);
+
+    m_images.scanImages();
+    for (int i = 0, e = m_images.getImagesCount(); i < e; ++i)
+    {
+        const ImageCollection::imdata &image = m_images.getImage(i);
+        m_category.addItem(image.name);
+    }
+    return 0;
+}
+
+LRESULT SelectImageDlg::OnSize(UINT, WPARAM, LPARAM, BOOL&)
+{
+    RECT rc;
+    GetClientRect(&rc);
+    m_vSplitter.MoveWindow(&rc, FALSE);
+    m_vSplitter.SetSplitterRect();
+    return 0;
 }
