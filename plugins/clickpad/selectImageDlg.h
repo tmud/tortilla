@@ -80,23 +80,27 @@ class SelectImage : public CWindowImpl<SelectImage>
 {
     Image *m_pimg;
     int m_size;
+    int m_width, m_height;
+    int m_wcount, m_hcount;
 
 public:
-    SelectImage() : m_pimg(NULL), m_size(0) {}
+    SelectImage() : m_pimg(NULL), m_size(0),m_width(0),m_height(0),m_wcount(0),m_hcount(0) {}
     void setImage(Image* image, int size);
 
 private:
+    void updateScrollsbars();
+    void setVScrollbar(DWORD pos);
+    void setHScrollbar(DWORD pos);
     void renderImage(HDC hdc, int width, int height);
     BEGIN_MSG_MAP(SelectImage)
-      //MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
-      //MESSAGE_HANDLER(WM_SIZE, OnSize)
+      MESSAGE_HANDLER(WM_SIZE, OnSize)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+      MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
+      MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
     END_MSG_MAP()
-    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
-        return 0;
-    }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) {
+        updateScrollsbars();
         return 0;
     }
     LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&) {
@@ -109,8 +113,45 @@ private:
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&) {
         return 1;
     }
+    LRESULT OnVScroll(UINT, WPARAM wparam, LPARAM, BOOL&) {
+        setVScrollbar(wparam);
+        return 0;
+    }
+    LRESULT OnHScroll(UINT, WPARAM wparam, LPARAM, BOOL&) {
+        setHScrollbar(wparam);
+        return 0;
+    }
 };
 
+class SelectImageProps : public CDialogImpl<SelectImageProps>
+{
+    CStatic m_filename, m_image_size, m_icon_size, m_icon_count;
+public:
+     enum { IDD = IDD_PROPS };
+     struct ImageProps{
+         tstring filename;
+         tstring image_size;
+         tstring icon_size;
+         tstring icon_count;     
+     };
+     void setText(const ImageProps& p) {
+         m_filename.SetWindowText(p.filename.c_str());
+         m_image_size.SetWindowText(p.image_size.c_str());
+         m_icon_size.SetWindowText(p.icon_size.c_str());
+         m_icon_count.SetWindowText(p.icon_count.c_str());
+     }
+private:
+     BEGIN_MSG_MAP(SelectImageProps)
+         MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
+     END_MSG_MAP()
+     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
+         m_filename.Attach(GetDlgItem(IDC_STATIC_FILENAME));
+         m_image_size.Attach(GetDlgItem(IDC_STATIC_IMAGESIZE));
+         m_icon_size.Attach(GetDlgItem(IDC_STATIC_ICONSIZE));
+         m_icon_count.Attach(GetDlgItem(IDC_STATIC_ICONCOUNT));
+         return 0;
+     }
+};
 
 class SelectImageDlg : public CWindowImpl<SelectImageDlg>
 {
@@ -118,10 +159,12 @@ class SelectImageDlg : public CWindowImpl<SelectImageDlg>
     
     SelectImageCategory m_category;
     SelectImage m_atlas;
-    ImageCollection m_images;
+    SelectImageProps m_props;
+    SIZE m_props_size;
+    ImageCollection m_images;    
 
 public:
-    SelectImageDlg() {}
+    SelectImageDlg() { m_props_size.cx=m_props_size.cy=0; }
     ~SelectImageDlg() { if (IsWindow()) DestroyWindow(); m_hWnd = NULL; }
 
 private:

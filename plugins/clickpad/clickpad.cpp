@@ -65,7 +65,7 @@ int init(lua_State *L)
         RECT rc; ::GetClientRect(parent, &rc);
         HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
         m_parent_window.attach(res);
-        m_parent_window.setFixedSize(0, 0);
+        m_parent_window.setFixedSize(rc.right, rc.bottom);
         m_hwnd_float = m_parent_window.floathwnd();
         ok = true;
     }
@@ -80,7 +80,7 @@ int init(lua_State *L)
         m_settings_window.setFixedSize(rc.right, rc.bottom);
     
     } else { ok = false; }
-    if (ok && m_select_image_window.create(L, "Иконка для кнопки", 300, 300, false))
+    if (ok && m_select_image_window.create(L, "Значок для кнопки", 580, 500, false))
     {
         SIZE sz = m_select_image_window.getSize();
         RECT rc = { 0, 0, sz.cx, sz.cy };
