@@ -195,12 +195,37 @@ void SelectImage::updateScrollsbars()
     }
 }
 
-void SelectImage::setVScrollbar(DWORD pos)
+void SelectImage::setVScrollbar(DWORD position)
 {
-
+    RECT rc; GetClientRect(&rc);
+    int max_y = m_height - rc.bottom;
+    int thumbpos = HIWORD(position);
+    int action = LOWORD(position);
+    switch (action) {
+    case SB_LINEUP:
+        m_draw_y -= 1;        
+        break;
+    case SB_LINEDOWN:
+        m_draw_y += 1;
+        break;
+    case SB_PAGEUP:
+        m_draw_y -= m_size;
+        break;
+    case SB_PAGEDOWN:
+        m_draw_y += m_size;
+        break;
+    case SB_THUMBTRACK:
+    case SB_THUMBPOSITION:
+        m_draw_y = thumbpos + 0 - 1;
+        break;
+    }
+    if (m_draw_y < 0) m_draw_y = 0;
+    else if (m_draw_y > max_y) m_draw_y = max_y;
+    SetScrollPos(SB_VERT, m_draw_y);
+    Invalidate(FALSE);
 }
 
-void SelectImage::setHScrollbar(DWORD pos)
+void SelectImage::setHScrollbar(DWORD position) 
 {
 
 }
@@ -210,7 +235,8 @@ void SelectImage::renderImage(HDC hdc, int width, int height)
     CDCHandle dc(hdc);
     dc.FillSolidRect(0, 0, width, height, GetSysColor(COLOR_WINDOWFRAME));
     if (!m_pimg) return;
-    m_pimg->render(dc, 0, 0);
+    image_render_ex p; p.sx = m_draw_x; p.sy = m_draw_y;
+    m_pimg->render(dc, 0, 0, &p);
 }
 
 LRESULT SelectImageDlg::OnUser(UINT, WPARAM, LPARAM, BOOL&)
@@ -298,7 +324,6 @@ LRESULT SelectImageDlg::OnSize(UINT, WPARAM, LPARAM, BOOL&)
     LONG t = rc.bottom;
     rc.bottom -= m_props_size.cy;
     m_vSplitter.MoveWindow(&rc, FALSE);
-    m_vSplitter.SetSplitterRect();
     rc.top = rc.bottom; 
     rc.bottom = t;
     m_props.MoveWindow(&rc, FALSE);

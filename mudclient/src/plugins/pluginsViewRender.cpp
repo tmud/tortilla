@@ -163,7 +163,8 @@ void PluginsViewRender::drawImage(Image *img, int x, int y, int w, int h)
 {
     if (!m_inside_render)
         return;
-    img->render(m_dc, x, y, w, h);
+    image_render_ex p; p.w = w; p.h = h;
+    img->render(m_dc, x, y, &p);
 }
 
 int PluginsViewRender::print(int x, int y, const tstring& text)

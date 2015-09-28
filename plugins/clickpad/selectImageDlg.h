@@ -82,9 +82,10 @@ class SelectImage : public CWindowImpl<SelectImage>
     int m_size;
     int m_width, m_height;
     int m_wcount, m_hcount;
+    int m_draw_x, m_draw_y;
 
 public:
-    SelectImage() : m_pimg(NULL), m_size(0),m_width(0),m_height(0),m_wcount(0),m_hcount(0) {}
+    SelectImage() : m_pimg(NULL), m_size(0),m_width(0),m_height(0),m_wcount(0),m_hcount(0), m_draw_x(0), m_draw_y(0) {}
     void setImage(Image* image, int size);
 
 private:

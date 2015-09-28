@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mainapp-client", "mudclient\mudclient.vcxproj", "{FDCB8C3B-117D-42E9-BB60-04BFCE5EA051}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -41,6 +41,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clickpad", "plugins\clickpa
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rnd", "modules\rnd\rnd.vcxproj", "{7291DF87-397A-4330-81EB-B9370FF48090}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lbass", "modules\lbass\lbass.vcxproj", "{EEE3289F-E716-409F-B6E9-A4D046F17928}"
 EndProject
 Global

@@ -950,8 +950,13 @@ void  image_unload(image img);
 image image_cut(image img, int x, int y, int w, int h);
 int   image_width(image img);
 int   image_height(image img);
-void  image_render(image img, HDC dc, int x, int y);
-void  image_renderex(image img, HDC dc, int x, int y, int w, int h);
+
+struct image_render_ex {
+  image_render_ex() : w(0), h(0), sx(0), sy(0) {}
+  int w, h;                         // scaling (width/height of dest. rect); w/h=0 - default (no scale)
+  int sx, sy;                       // source image position
+};
+void  image_render(image img, HDC dc, int x, int y, image_render_ex *p);
 
 class Image
 {
@@ -971,8 +976,7 @@ public:
     void unload() { if (img) { image_unload(img); img = NULL; } }
     int width() const { return image_width(img); }
     int height() const { return image_height(img); }
-    void render(HDC dc, int x, int y) { image_render(img, dc, x, y); }
-    void render(HDC dc, int x, int y, int w, int h) { image_renderex(img, dc, x, y, w, h); }
+    void render(HDC dc, int x, int y, image_render_ex *p = NULL) { image_render(img, dc, x, y, p); }
 private:
     Image(const Image& op) {}
     Image& operator=(const Image& op) {}
