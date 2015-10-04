@@ -1,5 +1,7 @@
 #pragma once
 
+#include "clickpadImage.h"
+
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
     tstring m_text;
@@ -11,15 +13,16 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     bool m_template;
     static const int bufferlen = 32;
     static WCHAR buffer[bufferlen];    
-    tstring m_image_fpath;
-    int m_image_index;
-    Image* m_image;
+    ClickpadImage* m_image;
 
 public:
     PadButton(UINT msg, WPARAM param) :
         CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
-        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false), m_image_index(-1), m_image(NULL)
+        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false), m_image(NULL)
     {
+    }
+    ~PadButton() { 
+        delete m_image;
     }
 
     void getText(tstring *text) const
@@ -56,17 +59,26 @@ public:
         Invalidate();
     }
 
-    void setImage(const tstring& fpath, int index)
+    bool setImage(const tstring& params)
     {
-        m_image_fpath = fpath;
-        m_image_index = index;
-       // m_image = m_images.loadImage(fpath);
+        ClickpadImage *image = new ClickpadImage();
+        if (!image->load(params))
+            { delete image; return false; }
+        setImage(image);
+        return true;
     }
 
-    void getImage(tstring* fpath, int *index ) const
+    void setImage(ClickpadImage *image)
     {
-        fpath->assign(m_image_fpath);
-        *index = m_image_index;
+       if (m_image)
+           delete m_image;
+       m_image = image;
+       Invalidate(FALSE);
+    }
+
+    ClickpadImage * getImage() const
+    {
+        return m_image;
     }
 
     void setTemplate(bool template_flag)
@@ -114,7 +126,7 @@ private:
         dc.DrawFrameControl(&rc,DFC_BUTTON, state);
 
         if (!m_text.empty())
-{
+        {
             int len = m_text.length(); 
             if (len > bufferlen) len = bufferlen;
             wcsncpy(buffer, m_text.c_str(), len);
@@ -128,7 +140,6 @@ private:
             COLORREF color = RGB(255,0,0);
             dc.Draw3dRect(&rc, color, color);
         }*/
-
 
         // call ancestor DoPaint() method
         //CBitmapButtonImpl<PadButton>::DoPaint(dc);

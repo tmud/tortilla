@@ -80,12 +80,13 @@ int init(lua_State *L)
         m_settings_window.setFixedSize(rc.right, rc.bottom);
     
     } else { ok = false; }
-    if (ok && m_select_image_window.create(L, "Значок для кнопки", 580, 500, false))
+    if (ok && m_select_image_window.create(L, "Иконка для кнопки", 580, 500, false))
     {
         SIZE sz = m_select_image_window.getSize();
         RECT rc = { 0, 0, sz.cx, sz.cy };
         m_select_image = new SelectImageDlg();
         m_select_image->Create(m_select_image_window.hwnd(), rc);
+        m_select_image->setNotify(m_settings->m_hWnd, WM_USER);
         m_select_image_window.attach(m_select_image->m_hWnd);
         m_select_image_window.block("left,right,top,bottom");
     } else { ok = false; }
@@ -144,9 +145,8 @@ int release(lua_State *L)
         xml::node tosave("clickpad");
         m_clickpad->save(tosave);
 
-        luaT_run(L, "getPath", "s", "buttons.xml");
-        u8string path(lua_tostring(L, -1));
-        lua_pop(L, 1);
+        u8string path;
+        base::getProfilePath(L, &path);
 
         bool result = tosave.save(path.c_str());
         tosave.deletenode();

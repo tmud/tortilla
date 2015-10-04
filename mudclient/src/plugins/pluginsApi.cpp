@@ -349,6 +349,26 @@ int getPath(lua_State *L)
     return pluginInvArgs(L, "getPath");
 }
 
+int getProfilePath(lua_State *L)
+{
+    EXTRA_CP;
+    if (_cp && luaT_check(L, 0))
+    {
+        PropertiesManager *pmanager = tortilla::getPropertiesManager();
+        tstring filename(pmanager->getProfileName());
+        filename.append(L".xml");
+        ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
+        ProfileDirHelper dh;
+        if (dh.makeDir(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME)))
+        {
+            luaT_pushwstring(L, pp);
+            return 1;
+        }
+        return pluginError("getProfilePath", "Ошибка создания каталога для плагина");
+    }
+    return pluginInvArgs(L, "getProfilePath");
+}
+
 int getResource(lua_State* L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -912,6 +932,7 @@ bool initPluginsSystem()
     lua_register(L, "enableMenu", enableMenu);
     lua_register(L, "disableMenu", disableMenu);
     lua_register(L, "getPath", getPath);
+    lua_register(L, "getProfilePath", getProfilePath);
     lua_register(L, "getProfile", getProfile);
     lua_register(L, "getResource", getResource);
     lua_register(L, "getParent", getParent);    

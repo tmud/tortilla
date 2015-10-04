@@ -175,12 +175,14 @@ void ClickpadMainWnd::save(xml::node& node)
       node.set("text", text);
       node.set("command", cmd);
       node.set("template", b->getTemplate() ? 1 : 0);
-      tstring image; int image_index = -1;
-      b->getImage(&image, &image_index);
-      if (!image.empty())
-        node.set("image", image);
-      if (image_index != -1)
-        node.set("index", image_index);
+      ClickpadImage *image = b->getImage();
+      if (image)
+      {
+          tstring image_params;
+          image->save(&image_params);
+          if (!image_params.empty())
+            node.set("image", image_params);
+      }
       node = base;
     }}
     node.move("/");
@@ -206,19 +208,16 @@ void ClickpadMainWnd::load(xml::node& node)
         {
             int template_flag = 0;
             n.get("template", &template_flag);
-
+            
             setRowsInArray(y+1);
             setColumnsInArray(x+1);
             PadButton *b = m_buttons[y][x];
             b->setText(text);
             b->setCommand(cmd);
             b->setTemplate( (template_flag==1) ? true : false);
-            tstring image; int image_index = -1;
-            if (n.get("image", &image) && !image.empty())
-            {
-                n.get("index", &image_index);
-                b->setImage(image, image_index);
-            }
+            tstring image_params;
+            if (n.get("image", &image_params))
+                b->setImage(image_params);
         }
     }
     int rows = 0; int columns = 0;

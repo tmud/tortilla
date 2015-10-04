@@ -83,6 +83,12 @@ namespace base {
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
+    inline void getProfilePath(lua_State *L, u8string* path) {
+        luaT_run(L, "getProfilePath", "");
+        if (!lua_isstring(L, -1)) return;
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
     inline void getResource(lua_State *L, const utf8* file, u8string* path) {
         luaT_run(L, "getResource", "s", file);
         if (!lua_isstring(L, -1)) return;

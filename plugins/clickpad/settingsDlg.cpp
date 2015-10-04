@@ -74,12 +74,6 @@ void SettingsDlg::editButton(PadButton *button)
     m_edit_command.SetWindowText(command.c_str());
     m_template_cmd.SetCheck(button->getTemplate() ? BST_CHECKED : BST_UNCHECKED);
 
-    /*tstring img; int img_index = -1;
-    button->getImage(&img, &img_index);
-    if (!img.empty())
-    {        
-    }*/
-
     button->setSelected(true);
     if (text.empty())
     {
@@ -230,9 +224,6 @@ void SettingsDlg::setEditableState(bool state)
     m_edit_text.EnableWindow(flag);
     m_edit_command.EnableWindow(flag);
     m_del_button.EnableWindow(flag);
-    m_images_list.EnableWindow(flag);
-    if (!flag)
-        m_images_list.SetCurSel(-1);
     if (!state)
     {
         m_edit_text.SetWindowText(L"");
@@ -241,6 +232,7 @@ void SettingsDlg::setEditableState(bool state)
     if (!flag)
         m_template_cmd.SetCheck(BST_UNCHECKED);
     m_template_cmd.EnableWindow(flag);
+    m_button_icon.EnableWindow(flag);
 }
 
 LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
@@ -261,10 +253,10 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
             {
                 if (text.length() > 5)
                     text = text.substr(0, 5);
-                m_edit_text.SetWindowText(text.c_str());                
+                m_edit_text.SetWindowText(text.c_str());
             }
         }
-        
+
         luaT_Props p(getLuaState());
         if (!p.isPropertiesOpen())
             m_del_hotkey.EnableWindow(TRUE);
@@ -287,93 +279,11 @@ void SettingsDlg::getListItemText(int item, int subitem, tstring* text)
      text->assign(buffer);
 }
 
-LRESULT SettingsDlg::OnIconChanged(WORD, WORD, HWND, BOOL&)
-{
-    /*int item = m_images_list.GetCurSel();
-    int len = m_images_list.GetTextLen(item);
-    MemoryBuffer mb( (len+1)*sizeof(wchar_t) );
-    wchar_t *p = (wchar_t *)mb.getData();
-    m_images_list.GetText(item, p);
-    tstring fpath(m_images_path);
-    fpath.append(p);*/
-   // m_editable_button->setImage(fpath);
-    return 0;
-}
-
 LRESULT SettingsDlg::OnIconButton(WORD, WORD, HWND, BOOL&)
 {
     if (!m_select_image_window.isVisible())
         m_select_image_window.show();
     return 0;
-}
-
-void SettingsDlg::setIconsFileList()
-{
-    u8string tmp;
-    base::getResource(getLuaState(), "", &tmp);
-    if (tmp.empty())
-        return;
-    tstring path ( TU2W(tmp.c_str()) );
-
-    ChangeDir cd;
-    if (!cd.changeDir(path))
-       return;
-
-    std::vector<tstring> sets;
-    WIN32_FIND_DATA fd;
-    memset(&fd, 0, sizeof(WIN32_FIND_DATA));
-    HANDLE file = FindFirstFile(L"*.*", &fd);
-    if (file != INVALID_HANDLE_VALUE)
-    {
-        do
-        {
-           if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && isSupportedExt(fd.cFileName))
-           {
-               image_file el; el.path = fd.cFileName;
-               m_image_files.push_back(el);
-           }
-           if ((fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-           {
-               tstring dir(fd.cFileName);
-               bool only_numbers = (wcsspn(dir.c_str(), L"0123456789") != dir.length()) ? false : true;
-               if (only_numbers)
-                  sets.push_back(dir);
-           }
-       } while (::FindNextFile(file, &fd));
-       ::FindClose(file);
-   }
-   for (int s=0,se=sets.size();s<se;++s)
-   {
-       tstring dir(sets[s]);
-       dir.append(L"\\*.*");
-       file = FindFirstFile(dir.c_str(), &fd);
-       do
-       {
-           if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && isSupportedExt(fd.cFileName))
-           {
-              image_file el; el.path = fd.cFileName;
-              el.set_size = _wtoi(sets[s].c_str());
-              m_image_files.push_back(el);
-           }
-       } while (::FindNextFile(file, &fd));
-       ::FindClose(file);
-   }
-
-   m_images_list.AddString(L"Без иконки");
-   for (int i=0,e=m_image_files.size();i<e;++i)
-   {
-       image_file &f = m_image_files[i];
-       if (f.set_size == -1)
-           m_images_list.AddString(f.path.c_str());
-       else
-       {
-           wchar_t buffer[16];
-           swprintf(buffer, L"(%d) ", f.set_size);
-           tstring item(buffer);
-           item.append(f.path);
-           m_images_list.AddString(item.c_str());
-       }
-   }
 }
 
 bool SettingsDlg::isSupportedExt(const wchar_t* file)
@@ -383,4 +293,14 @@ bool SettingsDlg::isSupportedExt(const wchar_t* file)
         return false;
     tstring ext(e + 1);
     return (ext == L"png" || ext == L"bmp" || ext == L"gif" || ext == L"ico" || ext == L"jpg") ? true : false;
+}
+
+void SettingsDlg::updateImage()
+{
+    if (m_editable_button)
+    {
+        ClickpadImage* image = m_select_image->createImageSelected();
+        m_editable_button->setImage(image);   
+        m_image_example.setImage(image);
+    }
 }
