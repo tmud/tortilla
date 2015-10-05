@@ -371,6 +371,10 @@ int getProfilePath(lua_State *L)
 
 int getResource(lua_State* L)
 {
+    EXTRA_CP;
+    if (!_cp)
+        return pluginInvArgs(L, "getResource");
+
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         tstring filename(luaT_towstring(L, 1));

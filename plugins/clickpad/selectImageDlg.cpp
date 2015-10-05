@@ -166,9 +166,12 @@ ClickpadImage* SelectImage::createImageFromSelected()
     Image *cut = new Image();
     if (!cut->cut(*m_pimg, x, y, w, h))
         { delete cut; return NULL; }
+    
+    int path_len = m_root_dir.length();
+    tstring fpath(m_filepath.substr(path_len));
 
     ClickpadImage *new_image = new ClickpadImage();
-    new_image->create(cut, m_filepath, m_selected_x, m_selected_y);
+    new_image->create(cut, fpath, m_selected_x, m_selected_y);
     return new_image;
 }
 

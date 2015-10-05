@@ -43,15 +43,7 @@ int init(lua_State *L)
 {
     m_pL = L;
 
-    HWND client_wnd = NULL;
-    luaT_run(L, "getParent", "");
-    if (lua_isnumber(L, -1))
-    {
-        HWND wnd = (HWND)lua_tounsigned(L, -1);
-        lua_pop(L, 1);
-        if (::IsWindow(wnd))
-            client_wnd = wnd;
-    }
+    HWND client_wnd = base::getParent(L);
     if (client_wnd)
         m_hwnd_mudclient = client_wnd;
     else
@@ -94,11 +86,8 @@ int init(lua_State *L)
     if (!ok)
         return luaT_error(L, "Не удалось создать окно для Clickpad");
 
-    base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
-
-    luaT_run(L, "getPath", "s", "buttons.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
+    u8string path;
+    base::getProfilePath(L, &path);
 
     DWORD fa = GetFileAttributes(TU2W(path.c_str()));
     if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
@@ -115,6 +104,8 @@ int init(lua_State *L)
        }
        ld.deletenode();
     }
+
+    base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
 
     // todo remove lines
     base::checkMenu(L, 1);

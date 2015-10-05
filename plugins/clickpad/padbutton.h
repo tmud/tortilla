@@ -118,12 +118,18 @@ private:
    // override of CBitmapButtonImpl DoPaint(). Adds fillrect
     void DoPaint(CDCHandle dc)
     {
-        // added by SoftGee to resolve image artifacts
         RECT rc;
         GetClientRect(&rc);
         UINT state = DFCS_BUTTONPUSH;
         if (m_pushed || m_selected) state |= DFCS_PUSHED;
         dc.DrawFrameControl(&rc,DFC_BUTTON, state);
+
+        if (m_image && !m_image->empty())
+        {
+            int x = (rc.right - m_image->width()) / 2;
+            int y = (rc.bottom - m_image->height()) / 2;
+            m_image->render(dc, x, y);
+        }
 
         if (!m_text.empty())
         {
@@ -134,14 +140,5 @@ private:
             dc.SetBkMode(TRANSPARENT);
             dc.DrawTextEx(buffer, len, &rc, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
         }
-
-        /*if (m_selected)
-    {
-            COLORREF color = RGB(255,0,0);
-            dc.Draw3dRect(&rc, color, color);
-        }*/
-
-        // call ancestor DoPaint() method
-        //CBitmapButtonImpl<PadButton>::DoPaint(dc);
     }
 };

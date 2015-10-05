@@ -81,6 +81,7 @@ class SelectImage : public CWindowImpl<SelectImage>
 {
     Image *m_pimg;
     int m_size;
+    tstring m_root_dir;
     tstring m_filepath;
     int m_width, m_height;
     int m_wcount, m_hcount;
@@ -121,6 +122,9 @@ private:
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
         m_selected.CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNTEXT));
+        base::pluginName(getLuaState(), "clickpad");
+        u8string p; base::getResource(getLuaState(), "", &p);
+        m_root_dir.assign(TU2W(p.c_str()));
         return 0;
     }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) {

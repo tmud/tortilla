@@ -14,7 +14,7 @@ public:
    }
    void render(HDC dc, int x, int y) {
        if (m_image)
-        m_image->render(dc, x, y);
+            m_image->render(dc, x, y);
    }
    int width() const { return (m_image) ? m_image->width() : 0; }
    int height() const { return (m_image) ? m_image->height() : 0; }
@@ -29,6 +29,9 @@ public:
        if (params.empty())
            return false;
        return true;
+   }
+   bool empty() const {
+       return (m_image) ? false : true;
    }
 
 private:

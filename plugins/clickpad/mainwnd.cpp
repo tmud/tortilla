@@ -165,17 +165,18 @@ void ClickpadMainWnd::save(xml::node& node)
     for (int y=0;y<hrows;++y) {
     for (int x=0;x<hcolumns;++x) {
       PadButton *b = m_buttons[y][x];
-      tstring text, cmd;
+      ClickpadImage *image = b->getImage();
+      tstring text;
       b->getText(&text);
-      b->getCommand(&cmd);
-      if (text.empty() && cmd.empty()) continue;
+      if ( text.empty() && (!image || image->empty()) ) continue;
+      tstring cmd;      
+      b->getCommand(&cmd);      
       node.create("button");
       node.set("x", x);
       node.set("y", y);
       node.set("text", text);
       node.set("command", cmd);
       node.set("template", b->getTemplate() ? 1 : 0);
-      ClickpadImage *image = b->getImage();
       if (image)
       {
           tstring image_params;
