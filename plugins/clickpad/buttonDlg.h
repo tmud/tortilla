@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 class ButtonDlg : public CDialogImpl<ButtonDlg>
 {    
 public:
@@ -24,3 +24,4 @@ private:
         return 0;
     }
 };
+*/

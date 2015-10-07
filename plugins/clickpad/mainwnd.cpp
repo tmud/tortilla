@@ -179,10 +179,10 @@ void ClickpadMainWnd::save(xml::node& node)
       node.set("template", b->getTemplate() ? 1 : 0);
       if (image)
       {
-          tstring image_params;
+          /*tstring image_params;
           image->save(&image_params);
           if (!image_params.empty())
-            node.set("image", image_params);
+            node.set("image", image_params);*/
       }
       node = base;
     }}
@@ -201,7 +201,7 @@ void ClickpadMainWnd::load(xml::node& node)
     tstring text, cmd;
     xml::request buttons(node, "buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
-{
+    {
         xml::node n = buttons[i];
         int x = 0; int y = 0;
         if (n.get("x", &x) && n.get("y", &y) && n.get("text", &text) && n.get("command", &cmd) &&
@@ -217,8 +217,8 @@ void ClickpadMainWnd::load(xml::node& node)
             b->setCommand(cmd);
             b->setTemplate( (template_flag==1) ? true : false);
             tstring image_params;
-            if (n.get("image", &image_params))
-                b->setImage(image_params);
+            //if (n.get("image", &image_params))
+              //  b->setImage(image_params);
         }
     }
     int rows = 0; int columns = 0;

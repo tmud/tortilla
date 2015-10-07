@@ -59,14 +59,14 @@ public:
         Invalidate();
     }
 
-    bool setImage(const tstring& params)
+    /*bool setImage(const tstring& params)
     {
         ClickpadImage *image = new ClickpadImage();
         if (!image->load(params))
             { delete image; return false; }
         setImage(image);
         return true;
-    }
+    }*/
 
     void setImage(ClickpadImage *image)
     {

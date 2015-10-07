@@ -2,10 +2,12 @@
 #include "resource.h"
 #include "clickpad.h"
 #include "mainwnd.h"
+#include "imageCollection.h"
 
 lua_State *m_pL = NULL;
 HWND m_hwnd_float = NULL;
 HWND m_hwnd_mudclient = NULL;
+ImageCollection *m_image_collection = NULL;
 luaT_window m_parent_window;
 ClickpadMainWnd* m_clickpad = NULL;
 luaT_window m_settings_window;
@@ -39,6 +41,33 @@ int get_version(lua_State *L)
     return 1;
 }
 
+void destroy()
+{
+    delete m_image_collection;
+    m_image_collection = NULL;
+
+    if (m_select_image)
+    {
+        m_select_image->DestroyWindow();
+        delete m_select_image;
+        m_select_image = NULL;
+    }
+
+    if (m_settings)
+    {
+        m_settings->DestroyWindow();
+        delete m_settings;
+        m_settings = NULL;
+    }
+
+    if (m_clickpad)
+    {
+        m_clickpad->DestroyWindow();
+        delete m_clickpad;
+        m_clickpad = NULL;
+    }
+}
+
 int init(lua_State *L)
 {
     m_pL = L;
@@ -48,6 +77,9 @@ int init(lua_State *L)
         m_hwnd_mudclient = client_wnd;
     else
         return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
+
+    m_image_collection = new ImageCollection();
+    m_image_collection->scanImages();
 
     bool ok = false;
     if (m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true))
@@ -82,9 +114,11 @@ int init(lua_State *L)
         m_select_image_window.attach(m_select_image->m_hWnd);
         m_select_image_window.block("left,right,top,bottom");
     } else { ok = false; }
-
-    if (!ok)
+        
+    if (!ok) {
+        destroy();
         return luaT_error(L, "Не удалось создать окно для Clickpad");
+    }
 
     u8string path;
     base::getProfilePath(L, &path);
@@ -116,21 +150,7 @@ int init(lua_State *L)
 }
 
 int release(lua_State *L)
-{
-    if (m_select_image)
-    {
-        m_select_image->DestroyWindow();
-        delete m_select_image;
-        m_select_image = NULL;    
-    }
-
-    if (m_settings)
-    {
-        m_settings->DestroyWindow();
-        delete m_settings;
-        m_settings = NULL;
-    }
-
+{    
     if (m_clickpad)
     {
         xml::node tosave("clickpad");
@@ -141,15 +161,16 @@ int release(lua_State *L)
 
         bool result = tosave.save(path.c_str());
         tosave.deletenode();
-        m_clickpad->DestroyWindow();
-        delete m_clickpad;
+
         if (!result)
         {
+            destroy();
             u8string error("Ошибка записи списка кнопок: ");
             error.append(path);
             return luaT_error(L, error.c_str());
         }
     }
+    destroy();
     return 0;
 }
 
@@ -276,6 +297,27 @@ void exitEditMode()
     m_clickpad->setEditMode(false);
 }
 
+bool onlyNumbers(const tstring& str)
+{
+    return (wcsspn(str.c_str(), L"0123456789") != str.length()) ? false : true;
+}
+
+bool s2i(const tstring& number, int *value)
+{
+    if (!onlyNumbers(number))
+        return false;
+    *value = _wtoi(number.c_str());
+    return true;
+}
+
+void getImagesDir(tstring* dir)
+{
+    base::pluginName(getLuaState(), "clickpad");
+    u8string p; 
+    base::getResource(getLuaState(), "", &p);
+    dir->assign(TU2W(p.c_str()));
+}
+
 CAppModule _Module;
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
 {
@@ -290,3 +332,4 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
     }
     return TRUE;
 }
+

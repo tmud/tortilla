@@ -89,6 +89,7 @@
     <ClInclude Include="buttonDlg.h" />
     <ClInclude Include="clickpad.h" />
     <ClInclude Include="clickpadImage.h" />
+    <ClInclude Include="imageCollection.h" />
     <ClInclude Include="padbutton.h" />
     <ClInclude Include="mainwnd.h" />
     <ClInclude Include="resource.h" />
@@ -98,6 +99,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clickpad.cpp" />
+    <ClCompile Include="imageCollection.cpp" />
     <ClCompile Include="mainwnd.cpp" />
     <ClCompile Include="padbutton.cpp" />
     <ClCompile Include="selectImageDlg.cpp" />

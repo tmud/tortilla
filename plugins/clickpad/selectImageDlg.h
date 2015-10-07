@@ -1,25 +1,7 @@
 #pragma once
 #include "splitterEx.h"
 #include "resource.h"
-#include "clickpadImage.h"
-
-class ImageCollection
-{
-public:
-    struct imdata {
-        imdata() : image_size(0), image(NULL) {}
-        int image_size;
-        tstring file_path;
-        tstring name;
-        Image* image;
-    };
-    ~ImageCollection();
-    void scanImages();
-    int getImagesCount() const;
-    const imdata& getImage(int index) const;
-private:    
-    std::vector<imdata> m_files;
-};
+#include "imageCollection.h"
 
 class SelectImageCategory : public CDialogImpl<SelectImageCategory>
 {
@@ -81,7 +63,6 @@ class SelectImage : public CWindowImpl<SelectImage>
 {
     Image *m_pimg;
     int m_size;
-    tstring m_root_dir;
     tstring m_filepath;
     int m_width, m_height;
     int m_wcount, m_hcount;
@@ -122,9 +103,6 @@ private:
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
         m_selected.CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNTEXT));
-        base::pluginName(getLuaState(), "clickpad");
-        u8string p; base::getResource(getLuaState(), "", &p);
-        m_root_dir.assign(TU2W(p.c_str()));
         return 0;
     }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) {
@@ -212,7 +190,6 @@ class SelectImageDlg : public CWindowImpl<SelectImageDlg>
     SelectImage m_atlas;
     SelectImageProps m_props;
     SIZE m_props_size;
-    ImageCollection m_images;
     HWND m_notify_wnd;
     UINT m_notify_msg;
 public:
@@ -224,11 +201,11 @@ private:
     BEGIN_MSG_MAP(SelectImageDlg)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
       MESSAGE_HANDLER(WM_SIZE, OnSize)
-      MESSAGE_HANDLER(WM_USER, OnUser)
+      MESSAGE_HANDLER(WM_USER, OnSelectCategory)
       MESSAGE_HANDLER(WM_USER+1, OnSelectImage)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&);
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&);
-    LRESULT OnUser(UINT, WPARAM, LPARAM, BOOL&);
+    LRESULT OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&);
     LRESULT OnSelectImage(UINT, WPARAM, LPARAM, BOOL&);
 };
