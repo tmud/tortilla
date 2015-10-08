@@ -18,10 +18,8 @@ public:
     void scanImages();
     int  getImagesCount() const;
     const imdata& getImage(int index) const;
-    
     ClickpadImage* load(const tstring& params);    
     void save(ClickpadImage* image, tstring* params);
-
 private:
     std::vector<imdata> m_files;
 };

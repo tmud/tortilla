@@ -26,9 +26,6 @@
     <ClInclude Include="settingsDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="buttonDlg.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="clickpad.h">
       <Filter>Source Files</Filter>
     </ClInclude>

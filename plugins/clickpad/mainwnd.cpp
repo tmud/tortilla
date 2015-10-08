@@ -3,6 +3,8 @@
 #include "clickpad.h"
 
 extern SettingsDlg* m_settings;
+extern ImageCollection *m_image_collection;
+
 ClickpadMainWnd::ClickpadMainWnd() : m_editmode(false),
 m_button_size(64), m_rows(0), m_columns(0)
 {
@@ -179,10 +181,10 @@ void ClickpadMainWnd::save(xml::node& node)
       node.set("template", b->getTemplate() ? 1 : 0);
       if (image)
       {
-          /*tstring image_params;
-          image->save(&image_params);
+          tstring image_params;
+          m_image_collection->save(image, &image_params);
           if (!image_params.empty())
-            node.set("image", image_params);*/
+            node.set("image", image_params);
       }
       node = base;
     }}
@@ -217,8 +219,11 @@ void ClickpadMainWnd::load(xml::node& node)
             b->setCommand(cmd);
             b->setTemplate( (template_flag==1) ? true : false);
             tstring image_params;
-            //if (n.get("image", &image_params))
-              //  b->setImage(image_params);
+            if (n.get("image", &image_params))
+            {
+                ClickpadImage *image = m_image_collection->load(image_params);                
+                b->setImage(image);
+            }
         }
     }
     int rows = 0; int columns = 0;

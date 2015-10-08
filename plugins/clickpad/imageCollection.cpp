@@ -37,6 +37,8 @@ void ImageCollection::scanImages()
     if (!(GetFileAttributes(dir.c_str()) & FILE_ATTRIBUTE_DIRECTORY))
         return error(L"Невозможно прочитать каталог с иконками: ", dir.c_str());
 
+    int dir_len = dir.length();
+
     // 1. get current files list
     std::vector<imdata> current_files;
     tchar current_path[MAX_PATH + 1];
@@ -78,6 +80,7 @@ void ImageCollection::scanImages()
                     tstring &p = f.file_path;
                     p.append(fullpath);
                     p.append(filename);
+                    p = p.substr(dir_len);
                     f.image_size = 0;
                     size_t end = fullpath.find_last_of(L'\\');
                     if (end != -1)
@@ -121,12 +124,13 @@ void ImageCollection::scanImages()
         }
         if (!exist)
         {
-            const tchar* filepath = current_files[j].file_path.c_str();
+            tstring filepath(dir);
+            filepath.append( current_files[j].file_path );
             Image *img = new Image();
-            if (!img->load(filepath, 0))
+            if (!img->load(filepath.c_str(), 0))
             {
                 delete img; img = NULL;
-                error(L"Невозможно прочитать файл: ", filepath);
+                error(L"Невозможно прочитать файл: ", filepath.c_str());
             }
             else
             {
@@ -140,10 +144,56 @@ void ImageCollection::scanImages()
 
 ClickpadImage* ImageCollection::load(const tstring& params)
 {
-    return NULL;
+    if (params.empty())
+        return NULL;
+    const tchar* p = params.c_str();
+    const tchar *p1 = wcschr(p, L',');
+    if (!p1) return false;
+    const tchar *p2 = wcschr(p1 + 1, L',');
+    if (!p2) return false;
+    tstring ax(p, p1 - p);
+    tstring ay(p1 + 1, p2 - p1 - 1);
+    tstring path(p2 + 1);
+
+    int x = 0; int y = 0;
+    if (!s2i(ax, &x) || !s2i(ay, &y))
+        return NULL;
+
+    int index = -1;
+    for (int i=0,e=m_files.size();i<e;++i)
+    {
+        if (m_files[i].file_path == path) {
+            index = i; break;
+        }   
+    }
+    if (index == -1)
+        return NULL;
+
+    const imdata& id = getImage(index);
+    int size = id.image_size;
+    int px = x * size;
+    int py = y * size;
+    int w = (size == 0) ? id.image->width() : size;
+    int h = (size == 0) ? id.image->height() : size;
+
+    Image *cut = new Image();
+    if (!cut->cut(*id.image, px, py, w, h))
+    {
+        delete cut; 
+        return NULL;
+    }
+
+    ClickpadImage *clickpad = new ClickpadImage();
+    clickpad->create(cut, path, x, y);
+    return clickpad;
 }
 
 void ImageCollection::save(ClickpadImage* image, tstring* params)
 {
-
+    if (!image) { params->clear(); return; }
+    const ClickpadImageParams& p = image->params();    
+    tchar buffer[32];
+    wsprintf(buffer, L"%d,%d,", p.atlas_x, p.atlas_y);
+    params->assign(buffer);
+    params->append(p.atlas_filename);
 }

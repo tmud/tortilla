@@ -85,6 +85,9 @@ void SettingsDlg::editButton(PadButton *button)
         m_edit_command.SetFocus();
         m_edit_command.SetSel(pos, pos);
     }
+
+    ClickpadImage *image = button->getImage();
+    m_image_example.setImage(image);
 }
 
 LRESULT SettingsDlg::OnTemplate(WORD, WORD, HWND, BOOL&)

@@ -86,7 +86,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="buttonDlg.h" />
     <ClInclude Include="clickpad.h" />
     <ClInclude Include="clickpadImage.h" />
     <ClInclude Include="imageCollection.h" />
