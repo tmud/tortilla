@@ -12,7 +12,8 @@ int get_name(lua_State *L)
 
 int get_description(lua_State *L)
 {
-    lua_pushstring(L, "Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.");
+    lua_pushstring(L, "Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
+        "Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm и другие, запись с микрофона производится в wav.");
     return 1;
 }
 
@@ -44,7 +45,6 @@ int menucmd(lua_State *L)
     return 0;
 }
 
-
 int syscmd(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TTABLE))
@@ -62,7 +62,7 @@ int syscmd(lua_State *L)
             {
                 lua_pushinteger(L, i);
                 lua_gettable(L, -2);
-                if (lua_isstring(L, -1))
+                if (!lua_isstring(L, -1))
                 {
                     lua_pushstring(L, "Неверные параметры");
                     return 1;
@@ -75,8 +75,12 @@ int syscmd(lua_State *L)
                 lua_pop(L, 1);
             }
             lua_pop(L, 1);
-            player.runCommand(params);
-            lua_pushnil(L);
+            tstring error;
+            player.runCommand(params, &error);
+            if (!error.empty())
+                lua_pushstring(L, TW2U(error.c_str()) );
+            else
+                lua_pushnil(L);
             return 1;
         }
     }

@@ -97,20 +97,19 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         if (!hide_cmd)
             fullcmd.append(cmd->parameters);
 
+        syscmdLog(fullcmd);
+
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
 
-        //if (!cmd->changed && cmd->srccmd != cmd->command)
-        //    cmd->changed = true;
         if (cmd->changed)
         {
-            tstring tmp(L" (");
+            tstring tmp(L">");
+            tmp.append(prefix);
             tmp.append(cmd->srccmd);
             tmp.append(cmd->srcparameters);
-            tmp.append(L")");
-            fullcmd.append(tmp);
+            syscmdLog(tmp);
         }
-        syscmdLog(fullcmd);
 
         if (cmd->dropped)
             return;
