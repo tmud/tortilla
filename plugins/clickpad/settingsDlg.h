@@ -95,6 +95,7 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     CStatic m_close_settings;
     CButton m_template_cmd;
     CButton m_button_icon;
+    CButton m_button_delicon;
     ImageExampleWindow m_image_example;
 
     struct image_file
@@ -132,6 +133,7 @@ private:
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_SETFOCUS, OnListItemChanged)
         NOTIFY_HANDLER(IDC_LIST_HOTKEYS, NM_KILLFOCUS, OnListKillFocus)
         COMMAND_ID_HANDLER(IDC_BUTTON_ICON, OnIconButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_DELICON, OnDelIconButton)
         MESSAGE_HANDLER(WM_USER, OnImageChanged)
     END_MSG_MAP()
 
@@ -149,6 +151,7 @@ private:
         m_close_settings.Attach(GetDlgItem(IDC_STATIC_CLOSE_SETTING));
         m_template_cmd.Attach(GetDlgItem(IDC_CHECK_TEMPLATE));
         m_button_icon.Attach(GetDlgItem(IDC_BUTTON_ICON));
+        m_button_delicon.Attach(GetDlgItem(IDC_BUTTON_DELICON));
 
         RECT rc;
         CWindow imagepos(GetDlgItem(IDC_STATIC_IMAGE));
@@ -214,6 +217,7 @@ private:
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&);
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&);
     LRESULT OnIconButton(WORD, WORD, HWND, BOOL&);
+    LRESULT OnDelIconButton(WORD, WORD, HWND, BOOL&);
 
     void resetEditable();
     void setEditableState(bool state);

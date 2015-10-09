@@ -90,6 +90,14 @@ void ClickpadMainWnd::setRowsInArray(int count)
                 createButton(x, y);
         }
     }
+    else if (add < 0)
+    {
+        for (int i=count; i<hrows; ++i)
+        {
+        
+        }
+        
+    }
 }
 
 void ClickpadMainWnd::setColumnsInArray(int count)
@@ -245,7 +253,11 @@ void ClickpadMainWnd::setWorkWindowSize()
     RECT rc; wnd.GetWindowRect(&rc);
     int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) /*+ GetSystemMetrics(SM_CXBORDER)*/) * 2;
     int height = getRows() * m_button_size + (GetSystemMetrics(SM_CYFRAME) /*+ GetSystemMetrics(SM_CYBORDER)*/) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
-    rc.right = rc.left + width + 4;
-    rc.bottom = rc.top + height + 4;
+    
+    //rc.right = rc.left + width + 4;
+    //rc.bottom = rc.top + height + 4;
+    rc.right = rc.left + 900;
+    rc.bottom = rc.top + 500;
+
     wnd.MoveWindow(&rc);
 }

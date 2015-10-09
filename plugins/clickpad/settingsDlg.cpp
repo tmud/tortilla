@@ -236,6 +236,7 @@ void SettingsDlg::setEditableState(bool state)
         m_template_cmd.SetCheck(BST_UNCHECKED);
     m_template_cmd.EnableWindow(flag);
     m_button_icon.EnableWindow(flag);
+    m_button_delicon.EnableWindow(flag);
 }
 
 LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
@@ -286,6 +287,16 @@ LRESULT SettingsDlg::OnIconButton(WORD, WORD, HWND, BOOL&)
 {
     if (!m_select_image_window.isVisible())
         m_select_image_window.show();
+    return 0;
+}
+
+LRESULT SettingsDlg::OnDelIconButton(WORD, WORD, HWND, BOOL&)
+{
+    if (m_editable_button)
+    {
+        m_editable_button->setImage(NULL);
+        m_image_example.setImage(NULL);
+    }
     return 0;
 }
 
