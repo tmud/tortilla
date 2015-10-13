@@ -129,7 +129,10 @@ int init(lua_State *L)
        xml::node ld;
        bool result = ld.load(path.c_str());
        if (result)
-          m_clickpad->load(ld);
+       {
+           m_clickpad->load(ld);
+           m_settings->setSettings(m_clickpad);
+       }
        if (!result) 
        {
           u8string error("Ошибка загрузки списка с кнопками: ");

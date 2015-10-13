@@ -30,12 +30,10 @@ private:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
-
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { onDestroy(); return 0; }        
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
-    LRESULT OnClickButton(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
-    {
+    LRESULT OnClickButton(UINT, WPARAM wparam, LPARAM lparam, BOOL&) {
         onClickButton(LOWORD(wparam), HIWORD(wparam), (lparam==0) ? false : true);
         return 0;
     }
@@ -44,7 +42,8 @@ private:
     void onSize();
     void onClickButton(int x, int y, bool up);
 private:
-    void createButton(int x, int y);
+    PadButton* getButton(int x, int y);
+    void showButton(int x, int y, bool show);
     void setWorkWindowSize();
     void setColumns(int count);
     int  getColumns() const;
@@ -52,10 +51,10 @@ private:
     int  getRows() const;
     void setButtonSize(int size);
     int  getButtonSize() const;
-    void setRowsInArray(int count);
-    void setColumnsInArray(int count);
+    void showRows(int count);
+    void showColumns(int count);
 private:
     bool m_editmode;
     int m_button_size, m_rows, m_columns;
-    std::vector<std::vector<PadButton*>> m_buttons;
+    std::vector<PadButton*> m_buttons;
 };

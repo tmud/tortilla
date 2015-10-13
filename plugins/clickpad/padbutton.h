@@ -50,7 +50,20 @@ public:
 
     bool isEmptyButton() const 
     {
-        return (m_command.empty()) ? true : false;
+        if (m_text.empty() && m_command.empty()) 
+        {
+           if (!m_image || m_image->empty())
+                return true;
+        }
+        return false;
+    }
+
+    void clear()
+    {
+        m_text.clear();
+        m_command.clear();
+        delete m_image;
+        m_image = NULL;    
     }
 
     void setSelected(bool selected)
@@ -58,15 +71,6 @@ public:
         m_selected = selected;
         Invalidate();
     }
-
-    /*bool setImage(const tstring& params)
-    {
-        ClickpadImage *image = new ClickpadImage();
-        if (!image->load(params))
-            { delete image; return false; }
-        setImage(image);
-        return true;
-    }*/
 
     void setImage(ClickpadImage *image)
     {
