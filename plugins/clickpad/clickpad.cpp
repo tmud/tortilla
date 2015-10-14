@@ -93,6 +93,28 @@ int init(lua_State *L)
         m_hwnd_float = m_parent_window.floathwnd();
         ok = true;
     }
+
+    if (ok)
+    {
+        u8string path;
+        base::getProfilePath(L, &path);
+        DWORD fa = GetFileAttributes(TU2W(path.c_str()));
+        if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
+        {
+            xml::node ld;
+            bool result = ld.load(path.c_str());
+            if (result)
+                m_clickpad->load(ld);
+            if (!result)
+            {
+                u8string error("Ошибка загрузки списка с кнопками: ");
+                error.append(path);
+                luaT_log(L, error.c_str());
+            }
+            ld.deletenode();
+        }
+    }
+
     if (ok && m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
     {
         m_settings = new SettingsDlg();
@@ -102,7 +124,7 @@ int init(lua_State *L)
         RECT rc; sd.GetClientRect(&rc);
         m_settings_window.attach(sd);
         m_settings_window.setFixedSize(rc.right, rc.bottom);
-    
+
     } else { ok = false; }
     if (ok && m_select_image_window.create(L, "Иконка для кнопки", 580, 500, false))
     {
@@ -114,32 +136,10 @@ int init(lua_State *L)
         m_select_image_window.attach(m_select_image->m_hWnd);
         m_select_image_window.block("left,right,top,bottom");
     } else { ok = false; }
-        
+
     if (!ok) {
         destroy();
-        return luaT_error(L, "Не удалось создать окно для Clickpad");
-    }
-
-    u8string path;
-    base::getProfilePath(L, &path);
-
-    DWORD fa = GetFileAttributes(TU2W(path.c_str()));
-    if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
-    {
-       xml::node ld;
-       bool result = ld.load(path.c_str());
-       if (result)
-       {
-           m_clickpad->load(ld);
-           m_settings->setSettings(m_clickpad);
-       }
-       if (!result) 
-       {
-          u8string error("Ошибка загрузки списка с кнопками: ");
-          error.append(path);
-          luaT_log(L, error.c_str());
-       }
-       ld.deletenode();
+        return luaT_error(L, "Не удалось запустить плагин Clickpad");
     }
 
     base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
@@ -153,7 +153,7 @@ int init(lua_State *L)
 }
 
 int release(lua_State *L)
-{    
+{
     if (m_clickpad)
     {
         xml::node tosave("clickpad");
@@ -197,9 +197,10 @@ int menucmd(lua_State *L)
         {
             base::uncheckMenu(L, 1);
             m_settings_window.hide();
+            m_select_image_window.hide();
             m_clickpad->setEditMode(false);
         }
-    }  
+    }
     return 0;
 }
 
@@ -297,6 +298,7 @@ void exitEditMode()
     base::pluginName(pL, "clickpad");
     base::uncheckMenu(pL, 1);
     m_settings_window.hide();
+    m_select_image_window.hide();
     m_clickpad->setEditMode(false);
 }
 

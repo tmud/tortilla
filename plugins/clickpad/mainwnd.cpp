@@ -183,7 +183,7 @@ void ClickpadMainWnd::save(xml::node& node)
           continue;
 
       tstring cmd, text;
-      b->getCommand(&cmd);      
+      b->getCommand(&cmd);
       b->getText(&text);
       node.create("button");
       node.set("x", x);
@@ -237,7 +237,7 @@ void ClickpadMainWnd::load(xml::node& node)
             tstring image_params;
             if (n.get("image", &image_params))
             {
-                ClickpadImage *image = m_image_collection->load(image_params);                
+                ClickpadImage *image = m_image_collection->load(image_params);
                 b->setImage(image);
             }
         }
@@ -259,11 +259,7 @@ void ClickpadMainWnd::setWorkWindowSize()
     RECT rc; wnd.GetWindowRect(&rc);
     int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) /*+ GetSystemMetrics(SM_CXBORDER)*/) * 2;
     int height = getRows() * m_button_size + (GetSystemMetrics(SM_CYFRAME) /*+ GetSystemMetrics(SM_CYBORDER)*/) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
-    
-    //rc.right = rc.left + width + 4;
-    //rc.bottom = rc.top + height + 4;
-    rc.right = rc.left + 900;
-    rc.bottom = rc.top + 500;
-
+    rc.right = rc.left + width + 4;
+    rc.bottom = rc.top + height + 4;
     wnd.MoveWindow(&rc);
 }

@@ -6,8 +6,9 @@ class ImageCollection
 {
 public:
     struct imdata {
-        imdata() : image_size(0), image(NULL) {}
+        imdata() : image_size(0), image_border(0), image(NULL) {}
         int image_size;
+        int image_border;
         tstring file_path;
         tstring name;
         Image* image;

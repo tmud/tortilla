@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "imageCollection.h"
+#include "settingsDlg.h"
 
 void error(const tchar* msg, const tchar* p1 = NULL)
 {
@@ -88,10 +89,27 @@ void ImageCollection::scanImages()
                         size_t from = fullpath.find_last_of(L'\\', end - 1);
                         if (from != -1) {
                             tstring lastdir(fullpath.substr(from + 1, end - from - 1));
-                            int size = 0;
-                            s2i(lastdir, &size);
-                            if (size > 0)
-                                f.image_size = size;
+                            int pos = wcsspn(lastdir.c_str(), L"0123456789-");
+                            if (pos == lastdir.length())
+                            {
+                                tstring border;
+                                size_t defis = lastdir.find_last_of(L'-');
+                                if (defis != -1) {
+                                    border.assign(lastdir.substr(defis+1));
+                                    lastdir = lastdir.substr(0,defis);
+                                }
+                                int size = 0; int border_size = 0;
+                                s2i(lastdir, &size);
+                                if (!border.empty()) {
+                                    s2i(border, &border_size);
+                                    if (border_size < 0 || border_size > 8)
+                                        size = 0;
+                                    else
+                                        f.image_border = border_size;
+                                }                                                                
+                                if (size > 0)
+                                    f.image_size = size;
+                            }
                         }
                     }
                     current_files.push_back(f);
@@ -134,8 +152,25 @@ void ImageCollection::scanImages()
             }
             else
             {
-                current_files[j].image = img;
-                new_files.push_back(current_files[j]);
+                ButtonSizeTranslator bst;
+                int min_size = 8;
+                int max_size = bst.getSize(bst.getCount()-1);
+                int s = current_files[j].image_size;
+                if (s == 0)
+                {
+                    int w = img->width(); int h = img->height();
+                    if (w < min_size || h < min_size || w > max_size || h > max_size)
+                      {  delete img; img = NULL; }
+                }
+                else
+                {
+                    if (s < min_size || s > max_size)
+                      {  delete img; img = NULL; }
+                }
+                if (img) {
+                  current_files[j].image = img;
+                  new_files.push_back(current_files[j]);
+                }
             }
         }
     }

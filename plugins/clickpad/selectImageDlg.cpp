@@ -195,14 +195,20 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
             m_atlas.setImage(image.image, image.image_size, image.file_path);
             SelectImageProps::ImageProps p;
 
-            int len = 0;
+            tstring image_dir;
+            getImagesDir(&image_dir);
             {
                 tchar buffer[MAX_PATH+1];
                 if (GetCurrentDirectory(MAX_PATH, buffer))
-                    len = wcslen(buffer)+1;
-            }            
-            const tstring &fp = image.file_path;
-            p.filename = (len < (int)fp.length()) ? fp.substr(len) : fp;
+                {
+                    int len = wcslen(buffer)+1;
+                    image_dir = image_dir.substr(len);
+                }
+                else
+                    image_dir.clear();
+            }
+            image_dir.append(image.file_path);
+            p.filename = image_dir;
 
             int width = image.image->width();
             int height = image.image->height();
