@@ -11,6 +11,77 @@
 typedef char utf8;
 typedef std::string u8string;
 
+// utf8 <-> wide <-> ansi
+typedef void* strbuf;
+void* strbuf_ptr(strbuf b);
+void  strbuf_destroy(strbuf b);
+strbuf convert_utf8_to_wide(const utf8* string);
+strbuf convert_wide_to_utf8(const wchar_t* string);
+strbuf convert_ansi_to_wide(const char* string);
+strbuf convert_wide_to_ansi(const wchar_t* string);
+
+//utf8 helpers functions
+int utf8_symlen(const utf8* symbol);
+int utf8_strlen(const utf8* string);
+int utf8_sympos(const utf8* string, int index);
+strbuf utf8_trim(const utf8* string);
+
+//u8string wrapper
+class U8
+{   u8string& s;
+public:
+    U8(u8string& string) : s(string) {}
+    operator u8string&() { return s; }
+    operator u8string*() { return &s; }
+    u8string at(int index) const {
+        int pos = utf8_sympos(s.c_str(), index);
+        if (pos == -1) return u8string();
+        const utf8 *p = s.c_str()+pos;
+        return u8string(p, utf8_symlen(p));
+    }
+    void trim() {
+        strbuf b = utf8_trim(s.c_str()); 
+        s.assign((const utf8*)strbuf_ptr(b));
+        strbuf_destroy(b);
+    }
+};
+
+class TU2W
+{
+    strbuf b;
+public:
+    TU2W(const utf8* string) { b = convert_utf8_to_wide(string); }
+    ~TU2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2U
+{
+    strbuf b;
+public:
+    TW2U(const wchar_t* string) { b = convert_wide_to_utf8(string); }
+    ~TW2U() { strbuf_destroy(b); }
+    operator const utf8*() const { return (const utf8*)strbuf_ptr(b); }
+};
+
+class TA2W
+{
+    strbuf b;
+public:
+    TA2W(const char* string) { b = convert_ansi_to_wide(string); }
+    ~TA2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2A
+{
+    strbuf b;
+public:
+    TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
+    ~TW2A() { strbuf_destroy(b); }
+    operator const char*() const { return (const char*)strbuf_ptr(b); }
+};
+
 //lua api
 #define LUAT_WINDOW     100
 #define LUAT_VIEWDATA   101
@@ -127,11 +198,13 @@ namespace base {
         }
         return false;
     }
-    inline void vprint(lua_State* L, int view, const utf8* message) {
-        luaT_run(L, "vprint", "ds", view, message);
+    inline void vprint(lua_State* L, int view, const wchar_t* message) {
+        TW2U m(message);
+        luaT_run(L, "vprint", "ds", view, (const char*)(m)); //todo
     }
-    inline void print(lua_State* L, const utf8* message) {
-        luaT_run(L, "vprint", "s", message);
+    inline void print(lua_State* L, const wchar_t* message) {
+        TW2U m(message);
+        luaT_run(L, "print", "s", (const char*)(m)); //todo
     }
     // createWindow, createPanel, pcre, log -> in classes below
 } // namespace base
@@ -578,77 +651,6 @@ private:
         lua_pop(L, 1);
         return result;
     }
-};
-
-// utf8 <-> wide <-> ansi
-typedef void* strbuf;
-void* strbuf_ptr(strbuf b);
-void  strbuf_destroy(strbuf b);
-strbuf convert_utf8_to_wide(const utf8* string);
-strbuf convert_wide_to_utf8(const wchar_t* string);
-strbuf convert_ansi_to_wide(const char* string);
-strbuf convert_wide_to_ansi(const wchar_t* string);
-
-//utf8 helpers functions
-int utf8_symlen(const utf8* symbol);
-int utf8_strlen(const utf8* string);
-int utf8_sympos(const utf8* string, int index);
-strbuf utf8_trim(const utf8* string);
-
-//u8string wrapper
-class U8
-{   u8string& s;
-public:
-    U8(u8string& string) : s(string) {}
-    operator u8string&() { return s; }
-    operator u8string*() { return &s; }
-    u8string at(int index) const {
-        int pos = utf8_sympos(s.c_str(), index);
-        if (pos == -1) return u8string();
-        const utf8 *p = s.c_str()+pos;
-        return u8string(p, utf8_symlen(p));
-    }
-    void trim() {
-        strbuf b = utf8_trim(s.c_str()); 
-        s.assign((const utf8*)strbuf_ptr(b));
-        strbuf_destroy(b);
-    }
-};
-
-class TU2W
-{
-    strbuf b;
-public:
-    TU2W(const utf8* string) { b = convert_utf8_to_wide(string); }
-    ~TU2W() { strbuf_destroy(b); }
-    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
-};
-
-class TW2U
-{
-    strbuf b;
-public:
-    TW2U(const wchar_t* string) { b = convert_wide_to_utf8(string); }
-    ~TW2U() { strbuf_destroy(b); }
-    operator const utf8*() const { return (const utf8*)strbuf_ptr(b); }
-};
-
-class TA2W
-{
-    strbuf b;
-public:
-    TA2W(const char* string) { b = convert_ansi_to_wide(string); }
-    ~TA2W() { strbuf_destroy(b); }
-    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
-};
-
-class TW2A
-{
-    strbuf b;
-public:
-    TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
-    ~TW2A() { strbuf_destroy(b); }
-    operator const char*() const { return (const char*)strbuf_ptr(b); }
 };
 
 class luaT_Props

@@ -89,7 +89,7 @@ int addCommand(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         bool result = false;
-        tstring cmd(luaT_towstring(L, 1));
+        tstring cmd(lua_towstring(L, 1));
         if (!cmd.empty())
             result = lp()->addSystemCommand(cmd);
         if (result)
@@ -117,16 +117,16 @@ int addMenu(lua_State *L)
     int code = -1;
     bool params_ok = false;
     if (luaT_check(L, 1, LUA_TSTRING))
-        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), -1, -1, NULL);
+        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), -1, -1, NULL);
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
     {
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), -1, getId(code, false), NULL);
+        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), -1, getId(code, false), NULL);
     }
     else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
     {
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), NULL);
+        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), NULL);
     }
     else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
     {
@@ -138,13 +138,13 @@ int addMenu(lua_State *L)
                 bmp = LoadBitmap( module, MAKEINTRESOURCE(bmp_id) );
         }
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
+        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
     }
     else { return pluginInvArgs(L, "addMenu"); }
     if (!params_ok) { delCode(code, false); }
     else
     {
-        tstring menu_id(luaT_towstring(L, 1));
+        tstring menu_id(lua_towstring(L, 1));
         _cp->menus.push_back(menu_id);
     }
     return 0;
@@ -212,7 +212,7 @@ int addButton(lua_State *L)
     }
     else if (luaT_check(L, 3, LUA_TNUMBER, LUA_TNUMBER, LUA_TSTRING))
     {
-        image = lua_tointeger(L, 1); code = lua_tointeger(L, 2); hover.assign(luaT_towstring(L, 3));
+        image = lua_tointeger(L, 1); code = lua_tointeger(L, 2); hover.assign(lua_towstring(L, 3));
     }
     else { return pluginInvArgs(L, "addButton"); }
 
@@ -235,11 +235,11 @@ int addToolbar(lua_State *L)
 {
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
-        tbar()->addToolbar(luaT_towstring(L, 1), 15);
+        tbar()->addToolbar(lua_towstring(L, 1), 15);
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
-        tbar()->addToolbar(luaT_towstring(L, 1), lua_tointeger(L, 2));
+        tbar()->addToolbar(lua_towstring(L, 1), lua_tointeger(L, 2));
     else { return pluginInvArgs(L, "addToolbar"); }
-    tstring tbar_name(luaT_towstring(L, 1));
+    tstring tbar_name(lua_towstring(L, 1));
     _cp->toolbars.push_back(tbar_name);
     return 0;
 }
@@ -249,7 +249,7 @@ int hideToolbar(lua_State *L)
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        tbar()->hideToolbar(luaT_towstring(L, 1));
+        tbar()->hideToolbar(lua_towstring(L, 1));
         return 0;
     }
     return pluginInvArgs(L, "hideToolbar");
@@ -260,7 +260,7 @@ int showToolbar(lua_State *L)
     CAN_DO;
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        tbar()->showToolbar(luaT_towstring(L, 1));
+        tbar()->showToolbar(lua_towstring(L, 1));
         return 0;
     }
     return pluginInvArgs(L, "showToolbar");
@@ -271,12 +271,12 @@ int getPath(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         PropertiesManager *pmanager = tortilla::getPropertiesManager();
-        tstring filename(luaT_towstring(L, 1));
+        tstring filename(lua_towstring(L, 1));
         ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
         ProfileDirHelper dh;
         if (dh.makeDir(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME)))
         {
-            luaT_pushwstring(L, pp);
+            lua_pushwstring(L, pp);
             return 1;
         }
         return pluginError("getPath", "Ошибка создания каталога для плагина");
@@ -288,7 +288,7 @@ int getResource(lua_State* L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        tstring filename(luaT_towstring(L, 1));
+        tstring filename(lua_towstring(L, 1));
         tstring rd(L"resources");
         tstring pd(_cp->get(Plugin::FILENAME));
         ChangeDir cd;
@@ -313,7 +313,7 @@ int getResource(lua_State* L)
             path.append(pd);
             path.append(L"\\");
             path.append(filename);
-            luaT_pushwstring(L, path.c_str());
+            lua_pushwstring(L, path.c_str());
             return 1;
         }
         return pluginError("getResource", "Ошибка создания каталога для плагина");
@@ -326,7 +326,7 @@ int getProfile(lua_State *L)
     if (luaT_check(L, 0))
     {
         PropertiesManager *pmanager = tortilla::getPropertiesManager();
-        luaT_pushwstring(L, pmanager->getProfileName().c_str());
+        lua_pushwstring(L, pmanager->getProfileName().c_str());
         return 1;
     }
     return pluginInvArgs(L, "getProfile");
@@ -349,7 +349,7 @@ int loadTable(lua_State *L)
         return pluginInvArgs(L, "loadData");
 
     PropertiesManager *pmanager = tortilla::getPropertiesManager();
-    tstring filename(luaT_towstring(L, 1));
+    tstring filename(lua_towstring(L, 1));
     ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
     filename.assign(pp);
 
@@ -442,7 +442,7 @@ int saveTable(lua_State *L)
     if (!luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
         return pluginInvArgs(L, "saveData");
 
-    tstring filename(luaT_towstring(L, 2));
+    tstring filename(lua_towstring(L, 2));
     lua_pop(L, 1);
 
     // recursive cycles in table

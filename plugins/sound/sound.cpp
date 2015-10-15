@@ -6,27 +6,32 @@ SoundPlayer *player = NULL;
 
 int get_name(lua_State *L)
 {
-    lua_pushstring(L, "Звуковой плагин");
+    lua_pushwstring(L, L"Звуковой плагин");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    lua_pushstring(L, "Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
-        "Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm,mod,umx. Запись с микрофона производится в wav.");
+    lua_pushwstring(L, L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
+        L"Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm,mod,umx. Запись с микрофона производится в wav.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0");
+    lua_pushwstring(L, L"1.0");
     return 1;
 }
 
 int init(lua_State *L)
 {
     player = new SoundPlayer(L);
-
+    if (!player->isBassLoaded())
+    {
+        luaT_log(L, "Модуль Bass не загружен.");
+        luaT_run(L, "terminate", "");
+        return 0;
+    }
     base::addMenu(L, "Плагины/Записать звук...", 1);
     base::addCommand(L, "sound");
     return 0;
@@ -35,6 +40,7 @@ int init(lua_State *L)
 int release(lua_State *L)
 {
     delete player;
+    player = NULL;
     return 0;
 }
 
@@ -59,9 +65,9 @@ int syscmd(lua_State *L)
     {
         lua_pushinteger(L, 1);
         lua_gettable(L, -2);
-        u8string cmd(lua_tostring(L, -1));
+        tstring cmd(lua_towstring(L, -1));
         lua_pop(L, 1);
-        if (cmd == "sound")
+        if (cmd == L"sound")
         {
             std::vector<tstring> params;
             int n = luaL_len(L, -1);
@@ -72,12 +78,12 @@ int syscmd(lua_State *L)
                 lua_gettable(L, -2);
                 if (!lua_isstring(L, -1))
                 {
-                    lua_pushstring(L, "Неверные параметры");
+                    lua_pushwstring(L, L"Неверные параметры");
                     return 1;
                 }
                 else
                 {
-                    tstring p(TU2W(lua_tostring(L, -1)));
+                    tstring p(lua_towstring(L, -1));
                     params.push_back(p);
                 }
                 lua_pop(L, 1);
@@ -86,7 +92,7 @@ int syscmd(lua_State *L)
             tstring error;
             player->runCommand(params, &error);
             if (!error.empty())
-                lua_pushstring(L, TW2U(error.c_str()) );
+                lua_pushwstring(L, error.c_str() );
             else
                 lua_pushnil(L);
             return 1;
@@ -94,22 +100,6 @@ int syscmd(lua_State *L)
     }
     return 1;
 }
-
-/*BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-	return TRUE;
-}*/
 
 static const luaL_Reg sound_methods[] =
 {
@@ -129,3 +119,20 @@ int WINAPI plugin_open(lua_State *L)
     lua_setglobal(L, "sound");
     return 0;
 }
+
+
+/*BOOL APIENTRY DllMain( HMODULE hModule,
+                       DWORD  ul_reason_for_call,
+                       LPVOID lpReserved
+					 )
+{
+	switch (ul_reason_for_call)
+	{
+	case DLL_PROCESS_ATTACH:
+	case DLL_THREAD_ATTACH:
+	case DLL_THREAD_DETACH:
+	case DLL_PROCESS_DETACH:
+		break;
+	}
+	return TRUE;
+}*/

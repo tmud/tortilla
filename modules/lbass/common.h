@@ -4,6 +4,7 @@ float volume_ToFloat(int volume)
 {
     float v = static_cast<float>(volume);
     v = v / 100.0f;
+    v = v + 0.005f;     // компенсация погрешности окгругления
     if (v < 0) v = 0;
     if (v > 1) v = 1;
     return v;
@@ -17,24 +18,19 @@ int volume_toInt(float volume)
     return v;
 }
 
-int error(lua_State* L, const utf8* errmsg)
+int error(lua_State* L, const wchar_t* errmsg)
 {
-    u8string msg("BASS error: ");
-    msg.append(errmsg);    
+    std::wstring msg(L"BASS error: ");
+    msg.append(errmsg);
     lua_pushnil(L);
-    lua_pushstring(L, msg.c_str());
+    lua_pushwstring(L, msg.c_str());
     return 2;
 }
 
-int error_invargs(lua_State* L, const utf8* func)
+int error_invargs(lua_State* L, const wchar_t* func)
 {
-     std::string msg("Invalid arguments in function: 'bass.");
+     std::wstring msg(L"Invalid arguments in function: 'bass.");
      msg.append(func);
-     msg.append("'");
+     msg.append(L"'");
      return error(L, msg.c_str());
-}
-
-int error(lua_State* L, const wchar_t* errmsg)
-{
-    return error(L, W2S(errmsg));
 }

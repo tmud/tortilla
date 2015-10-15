@@ -23,7 +23,6 @@
   <ItemGroup>
     <ClInclude Include="api.h" />
     <ClInclude Include="base.h" />
-    <ClInclude Include="modules.h" />
     <ClInclude Include="src\stdafx.h" />
   </ItemGroup>
   <ItemGroup>

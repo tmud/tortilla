@@ -90,7 +90,7 @@ int window_dock(lua_State *L)
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         std::vector<int> sv;
-        if (window_side(luaT_towstring(L, 2), false, &sv))
+        if (window_side(lua_towstring(L, 2), false, &sv))
         {
             for (int i = 0, e = sv.size(); i < e; ++i)
                 _wndMain.m_gameview.dockDockPane(v, sv[i]);
@@ -117,7 +117,7 @@ int window_block(lua_State *L)
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         std::vector<int> sv;
-        if (window_side(luaT_towstring(L, 2), true, &sv))
+        if (window_side(lua_towstring(L, 2), true, &sv))
         {
             for (int i = 0, e = sv.size(); i < e; ++i)
                 _wndMain.m_gameview.blockDockPane(v, sv[i]);
@@ -133,7 +133,7 @@ int window_unblock(lua_State *L)
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         std::vector<int> sv;
-        if (window_side(luaT_towstring(L, 2), true, &sv))
+        if (window_side(lua_towstring(L, 2), true, &sv))
         {
             for (int i = 0, e = sv.size(); i < e; ++i)
                 _wndMain.m_gameview.unblockDockPane(v, sv[i]);

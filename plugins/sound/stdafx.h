@@ -13,3 +13,4 @@
 #include <atlctrls.h>
 
 typedef std::wstring tstring;
+typedef wchar_t tchar;

@@ -129,6 +129,45 @@ public:
             m_objects[i]->stop();
     }
 
+    int isSample(int id)
+    {
+        BassObject *object = get(id);
+        if (!object)
+            { error_id(id); return -1; }
+        return object->issample() ? 1 : 0;
+    }
+
+    int isStream(int id)
+    {
+        BassObject *object = get(id);
+        if (!object)
+            { error_id(id); return -1; }
+        return object->issample() ? 0 : 1;
+    }
+
+    int isPlaying(int id)
+    {
+        BassObject *object = get(id);
+        if (!object)
+            { error_id(id); return -1; }
+        return object->isplaying() ? 1 : 0;
+    }
+
+    bool isHandle(int id) const
+    {
+        BassObject *object = get(id);
+        return (object) ? true : false;
+    }
+
+    bool getPath(int id, std::wstring* path)
+    {
+        BassObject *object = get(id);
+        if (!object)
+            { error_id(id); return false; }
+        path->assign(object->getname());
+        return true;    
+    }
+
     const wchar_t* getLastError() const
     {
         return m_error_msg.c_str();
@@ -226,7 +265,7 @@ int lbass_play(lua_State *L)
         lua_pushboolean(L, 1);
         return 1;
     }
-    return error_invargs(L, "play");
+    return error_invargs(L, L"play");
 }
 
 int lbass_unload(lua_State *L)
@@ -234,24 +273,21 @@ int lbass_unload(lua_State *L)
     if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
     {
         if ( !_bass_loader.unload(lua_tointeger(L,1)) )
-            return error(L, _bass_loader.getLastError());        
+            return error(L, _bass_loader.getLastError());
         lua_pushboolean(L, 1);
         return 1;
     }
-    return error_invargs(L, "unload");
+    return error_invargs(L, L"unload");
 }
 
-int lbass_load(lua_State *L, const utf8* method, bool as_sample)
+int lbass_load(lua_State *L, const wchar_t* method, bool as_sample)
 {
     if (lua_gettop(L) == 1 && lua_isstring(L, 1))
     {
-        S2W file(lua_tostring(L, 1));
-        int id = _bass_loader.load(file, as_sample);
+        std::wstring file(lua_towstring(L, 1));
+        int id = _bass_loader.load(file.c_str(), as_sample);
         if (id == -1)
-        {
-            W2S errmsg(_bass_loader.getLastError());
-            return error(L, errmsg);
-        }
+            return error(L, _bass_loader.getLastError());
         lua_pushinteger(L, id);
         return 1;
     }
@@ -260,12 +296,75 @@ int lbass_load(lua_State *L, const utf8* method, bool as_sample)
 
 int lbass_loadSample(lua_State *L)
 {
-   return lbass_load(L, "loadSample", true);
+   return lbass_load(L, L"loadSample", true);
 }
 
 int lbass_loadStream(lua_State *L)
 {
-    return lbass_load(L, "loadStream", false);
+    return lbass_load(L, L"loadStream", false);
+}
+
+int lbass_isHandle(lua_State *L)
+{
+    if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
+    {
+        bool result = _bass_loader.isHandle(lua_tointeger(L, 1));
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    return error_invargs(L, L"isHandle");
+}
+
+int lbass_isSample(lua_State *L)
+{
+    if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
+    {
+        int result = _bass_loader.isSample(lua_tointeger(L, 1));
+        if (result == -1)
+            return error(L, _bass_loader.getLastError());
+        lua_pushboolean(L, (result==1) ? 1 : 0);
+        return 1;
+    }
+    return error_invargs(L, L"isSample");
+}
+
+int lbass_isStream(lua_State *L)
+{
+    if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
+    {
+        int result = _bass_loader.isStream(lua_tointeger(L, 1));
+        if (result == -1)
+            return error(L, _bass_loader.getLastError());
+        lua_pushboolean(L, (result==1) ? 1 : 0);
+        return 1;
+    }
+    return error_invargs(L, L"isStream");
+}
+
+int lbass_isPlaying(lua_State *L)
+{
+    if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
+    {
+        int result = _bass_loader.isPlaying(lua_tointeger(L, 1));
+        if (result == -1)
+            return error(L, _bass_loader.getLastError());
+        lua_pushboolean(L, (result==1) ? 1 : 0);
+        return 1;
+    }
+    return error_invargs(L, L"isPlaying");
+}
+
+int lbass_getPath(lua_State *L)
+{
+    if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
+    {
+        std::wstring path; 
+        if (!_bass_loader.getPath(lua_tointeger(L, 1), &path))
+            return error(L, _bass_loader.getLastError());
+        lua_pushwstring(L, path.c_str());
+        return 1;
+    }
+    return error_invargs(L, L"isPlaying");
 }
 
 int lbass_stop(lua_State *L)
@@ -278,7 +377,7 @@ int lbass_stop(lua_State *L)
        lua_pushboolean(L, 1);
        return 1;
    }
-   return error_invargs(L, "stop");
+   return error_invargs(L, L"stop");
 }
 
 int lbass_stopAll(lua_State *L)
@@ -286,15 +385,15 @@ int lbass_stopAll(lua_State *L)
     if (lua_gettop(L) == 0)
     {
         _bass_loader.stopAll();
-        return 0;    
+        return 0;
     }
-    return error_invargs(L, "stopAll");
+    return error_invargs(L, L"stopAll");
 }
 
 int lbass_init(lua_State* L)
 {
     if (lua_gettop(L) != 0)
-        return error_invargs(L, "init");
+        return error_invargs(L, L"init");
     if (!_bass_loader.loadBass())
         return error(L, _bass_loader.getLastError());
     lua_pushboolean(L, 1);
@@ -309,18 +408,18 @@ int lbass_free(lua_State* L)
             return error(L, _bass_loader.getLastError());
         return 0;
     }
-   return error_invargs(L, "free");
+   return error_invargs(L, L"free");
 }
 
 int lbass_getVolume(lua_State* L)
 {
-    if (lua_gettop(L) == 0) 
+    if (lua_gettop(L) == 0)
     {
         float v = BASS_GetVolume();
         lua_pushinteger(L, volume_toInt(v) );
         return 1;
     }
-    return error_invargs(L, "getVolume");
+    return error_invargs(L, L"getVolume");
 }
 
 int lbass_setVolume(lua_State *L)
@@ -334,7 +433,7 @@ int lbass_setVolume(lua_State *L)
             return 0;
        }
     }
-    return error_invargs(L, "setVolume");
+    return error_invargs(L, L"setVolume");
 }
 
 static const luaL_Reg lbass_methods[] =
@@ -344,7 +443,12 @@ static const luaL_Reg lbass_methods[] =
     { "loadSample", lbass_loadSample },
     { "loadStream", lbass_loadStream },
     { "unload", lbass_unload },
-    { "play", lbass_play },    
+    { "isHandle", lbass_isHandle},
+    { "isSample", lbass_isSample},
+    { "isStream", lbass_isStream},
+    { "play", lbass_play },
+    { "isPlaying", lbass_isPlaying },
+    { "getPath", lbass_getPath },
     { "stop", lbass_stop },
     { "stopAll", lbass_stopAll },
     { "setVolume", lbass_setVolume },
