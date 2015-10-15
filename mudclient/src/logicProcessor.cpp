@@ -310,6 +310,12 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     return true;
 }
 
+void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS)
+       printex(window, msgs);
+}
+
 void LogicProcessor::updateLog(const tstring& msg)
 {
     m_updatelog.append(msg);

@@ -2,9 +2,9 @@
 rnd = require 'rnd'
 
 local function prequire(m)
-  local ok, err = pcall(require, m) 
-  if not ok then return nil, err end
-  return err
+  local ok, mod = pcall(require, m) 
+  if not ok then return nil, mod end
+  return mod
 end
 
 local res, err
@@ -19,15 +19,3 @@ else
         regUnloadFunction(bass.free)
     end
 end
-
-
---local n = bass.load('d:\\Mud\\1.mp3')
---bass.play(n)
---local m = bass.load('d:\\Mud\\2.mp3')
---bass.play(m)
---local x = bass.loadSample('d:\\sample.wav')
---bass.play(x)
-
---local v = bass.getVolume()
---system.msgbox(false)
---bass.setVolume(50)

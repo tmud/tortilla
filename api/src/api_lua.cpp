@@ -184,8 +184,11 @@ bool luaT_check(lua_State *L, int n, ...)
 
 int luaT_error(lua_State *L, const utf8* error_message)
 {
-    lua_pushstring(L, error_message);
-    lua_error(L);
+    if (error_message)
+    {
+        lua_pushstring(L, error_message);
+        lua_error(L);
+    }
     return 0;
 }
 

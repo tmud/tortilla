@@ -783,6 +783,46 @@ int regUnloadFunction(lua_State *L)
     lua_pushboolean(L, 0);
     return 1;
 }
+
+int print(lua_State *L)
+{
+    std::vector<tstring> params;
+    int n = lua_gettop(L);
+    for (int i=1; i<=n; ++i)
+    {
+        if (!lua_isstring(L, 1))
+            return pluginInvArgs(L, "print");
+        TU2W p(lua_tostring(L, 1));
+        params.push_back(tstring(p));
+        lp()->windowOutput(0, params);
+    }
+    return 0;
+}
+
+int vprint(lua_State *L)
+{
+    int view = -1;
+    if (lua_isnumber(L, 1))
+    {
+        int n = lua_tointeger(L, 1);
+        if (n>=0 && n<OUTPUT_WINDOWS)
+            view = n;
+    }
+    if (view == -1)
+        return pluginInvArgs(L, "vprint");
+
+    std::vector<tstring> params;
+    int n = lua_gettop(L);
+    for (int i=2; i<=n; ++i)
+    {
+        if (!lua_isstring(L, 1))
+            return pluginInvArgs(L, "vprint");
+        TU2W p(lua_tostring(L, 1));
+        params.push_back(tstring(p));
+        lp()->windowOutput(view, params);
+    }
+    return 0;
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -833,6 +873,8 @@ bool initPluginsSystem()
     lua_register(L, "getViewSize", getViewSize);
     lua_register(L, "flashWindow", flashWindow);
     lua_register(L, "regUnloadFunction", regUnloadFunction);
+    lua_register(L, "print", print);
+    lua_register(L, "vprint", vprint);
 
     reg_props(L);
     reg_activeobjects(L);

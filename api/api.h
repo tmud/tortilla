@@ -127,6 +127,12 @@ namespace base {
         }
         return false;
     }
+    inline void vprint(lua_State* L, int view, const utf8* message) {
+        luaT_run(L, "vprint", "ds", view, message);
+    }
+    inline void print(lua_State* L, const utf8* message) {
+        luaT_run(L, "vprint", "s", message);
+    }
     // createWindow, createPanel, pcre, log -> in classes below
 } // namespace base
 

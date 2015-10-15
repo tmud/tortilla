@@ -2,7 +2,7 @@
 #include "saveSoundDlg.h"
 #include "soundPlayer.h"
 
-SoundPlayer player;
+SoundPlayer *player = NULL;
 
 int get_name(lua_State *L)
 {
@@ -13,7 +13,7 @@ int get_name(lua_State *L)
 int get_description(lua_State *L)
 {
     lua_pushstring(L, "Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
-        "Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm и другие, запись с микрофона производится в wav.");
+        "Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm,mod,umx. Запись с микрофона производится в wav.");
     return 1;
 }
 
@@ -25,8 +25,16 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
+    player = new SoundPlayer(L);
+
     base::addMenu(L, "Плагины/Записать звук...", 1);
     base::addCommand(L, "sound");
+    return 0;
+}
+
+int release(lua_State *L)
+{
+    delete player;
     return 0;
 }
 
@@ -76,7 +84,7 @@ int syscmd(lua_State *L)
             }
             lua_pop(L, 1);
             tstring error;
-            player.runCommand(params, &error);
+            player->runCommand(params, &error);
             if (!error.empty())
                 lua_pushstring(L, TW2U(error.c_str()) );
             else
@@ -87,7 +95,7 @@ int syscmd(lua_State *L)
     return 1;
 }
 
-BOOL APIENTRY DllMain( HMODULE hModule,
+/*BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
                        LPVOID lpReserved
 					 )
@@ -101,7 +109,7 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		break;
 	}
 	return TRUE;
-}
+}*/
 
 static const luaL_Reg sound_methods[] =
 {
@@ -109,6 +117,7 @@ static const luaL_Reg sound_methods[] =
     { "description", get_description },
     { "version", get_version },
     { "init", init },
+    { "release", release },
     { "menucmd", menucmd },
     { "syscmd", syscmd },
     { NULL, NULL }
