@@ -4,21 +4,24 @@
 
 extern ImageCollection *m_image_collection;
 
-void SelectImage::setImage(Image* image, int size, const tstring& image_filepath)
+void SelectImage::setImage(const BigImageData& image)
 {
-    if (!image || image->width() == 0 || image->height() == 0 || size < 0) {
-        m_pimg = NULL; m_size = 0; 
-        Invalidate(FALSE);
+    const Image *ci = image.image;
+    if (!ci || ci->width() <= 0 || ci->height() <= 0 || image.image_size <= 0) {
+        clearImage();
         return;
     }
-    m_filepath = image_filepath;
-    m_pimg = image;
-    m_size = size;
-    m_width = m_pimg->width();
-    m_height = m_pimg->height();
-    m_wcount = (m_size > 0) ? m_width / m_size : 1;
-    m_hcount = (m_size > 0) ? m_height/ m_size : 1;
+    m_img = image;
+    int size = image.image_size;
+    m_wcount = (size > 0) ? image.image->width() / size : 1;
+    m_hcount = (size > 0) ? image.image->height() / size : 1;
     updateScrollsbars();
+    Invalidate(FALSE);
+}
+
+void SelectImage::clearImage()
+{
+    m_img.destroy();
     Invalidate(FALSE);
 }
 
@@ -26,17 +29,18 @@ ClickpadImage* SelectImage::createImageFromSelected()
 {
     if (m_selected_x == -1)
         return NULL;
-    int x = m_selected_x * m_size;
-    int y = m_selected_y * m_size;
-    int w = (m_size == 0) ? m_width : m_size;
-    int h = (m_size == 0) ? m_height : m_size;
+    int size = m_img.image_size;
+    int x = m_selected_x * size;
+    int y = m_selected_y * size;
+    int w = (size == 0) ? m_img.image->width() : size;
+    int h = (size == 0) ? m_img.image->height() : size;
 
     Image *cut = new Image();
-    if (!cut->cut(*m_pimg, x, y, w, h))
+    if (!cut->cut(*m_img.image, x, y, w, h))
         { delete cut; return NULL; }
 
     ClickpadImage *new_image = new ClickpadImage();
-    new_image->create(cut, m_filepath, m_selected_x, m_selected_y);
+    new_image->create(cut, m_img.file_path, m_selected_x, m_selected_y);
     return new_image;
 }
 
@@ -65,12 +69,13 @@ void SelectImage::updateScrollsbars()
 {
     RECT rc; GetClientRect(&rc);
     int window_width = rc.right;
-    m_draw_y = updateBar(SB_VERT, rc.bottom, m_height);
-    m_draw_x = updateBar(SB_HORZ, rc.right, m_width);    
+    m_draw_y = updateBar(SB_VERT, rc.bottom, m_img.image->height());
+    m_draw_x = updateBar(SB_HORZ, rc.right, m_img.image->width());    
 }
 
 int SelectImage::calculateBar(int current, int max_value, DWORD pos)
 {
+    int size = m_img.image_size;
     int thumbpos = HIWORD(pos);
     int action = LOWORD(pos);
     switch (action) {
@@ -81,10 +86,10 @@ int SelectImage::calculateBar(int current, int max_value, DWORD pos)
         current += 1;
         break;
     case SB_PAGEUP:
-        current -= m_size;
+        current -= size;
         break;
     case SB_PAGEDOWN:
-        current += m_size;
+        current += size;
         break;
     case SB_THUMBTRACK:
     case SB_THUMBPOSITION:
@@ -99,7 +104,8 @@ int SelectImage::calculateBar(int current, int max_value, DWORD pos)
 void SelectImage::setHScrollbar(DWORD position)
 {
     RECT rc; GetClientRect(&rc);
-    m_draw_x = calculateBar(m_draw_x, m_width - rc.right, position);
+    int width = m_img.image->width();
+    m_draw_x = calculateBar(m_draw_x, width - rc.right, position);
     SetScrollPos(SB_HORZ, m_draw_x);
     Invalidate(FALSE);
 }
@@ -107,7 +113,8 @@ void SelectImage::setHScrollbar(DWORD position)
 void SelectImage::setVScrollbar(DWORD position)
 {
     RECT rc; GetClientRect(&rc);
-    m_draw_y = calculateBar(m_draw_y, m_height-rc.bottom, position);
+    int height = m_img.image->height();
+    m_draw_y = calculateBar(m_draw_y, height-rc.bottom, position);
     SetScrollPos(SB_VERT, m_draw_y);
     Invalidate(FALSE);
 }
@@ -125,9 +132,10 @@ void SelectImage::renderImage(HDC hdc, int width, int height)
 {
     CDCHandle dc(hdc);
     dc.FillSolidRect(0, 0, width, height, GetSysColor(COLOR_WINDOWFRAME));
-    if (!m_pimg) return;
+    Image* image = m_img.image;
+    if (!image) return;
     image_render_ex p; p.sx = m_draw_x; p.sy = m_draw_y;
-    m_pimg->render(dc, 0, 0, &p);
+    image->render(dc, 0, 0, &p);
     if (m_selected_x >= 0)
     {
         int size = (m_size == 0) ? m_width : m_size;
@@ -189,10 +197,10 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
     m_category.getSelectedItem(&item);
     for (int i = 0, e = m_image_collection->getImagesCount(); i < e; ++i)
     {
-        const ImageCollection::imdata &image = m_image_collection->getImage(i);
+        const BigImageData &image = m_image_collection->getImage(i);
         if (image.name == item)
         {
-            m_atlas.setImage(image.image, image.image_size, image.file_path);
+            m_atlas.setImage(image);
             SelectImageProps::ImageProps p;
 
             tstring image_dir;
@@ -234,7 +242,7 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
             return 0;
         }
     }
-    m_atlas.setImage(NULL, 0, L"");
+    m_atlas.clearImage();
     return 0;
 }
 
@@ -270,7 +278,7 @@ LRESULT SelectImageDlg::OnCreate(UINT, WPARAM, LPARAM, BOOL&)
     if (m_image_collection) {
     for (int i = 0, e = m_image_collection->getImagesCount(); i < e; ++i)
     {
-        const ImageCollection::imdata &image = m_image_collection->getImage(i);
+        const BigImageData &image = m_image_collection->getImage(i);
         m_category.addItem(image.name);
     }}
     return 0;
