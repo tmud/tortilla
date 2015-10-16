@@ -25,7 +25,7 @@ int ImageCollection::getImagesCount() const
     return m_files.size();
 }
 
-const ImageCollection::imdata& ImageCollection::getImage(int index) const
+const BigImageData& ImageCollection::getImage(int index) const
 {
     assert(index >= 0 && index < getImagesCount());
     return m_files[index];
@@ -41,7 +41,7 @@ void ImageCollection::scanImages()
     int dir_len = dir.length();
 
     // 1. get current files list
-    std::vector<imdata> current_files;
+    std::vector<BigImageData> current_files;
     tchar current_path[MAX_PATH + 1];
     GetCurrentDirectory(MAX_PATH, current_path);
     std::vector<tstring> dirs;
@@ -76,7 +76,7 @@ void ImageCollection::scanImages()
                     bool ok = (ext == L"png" || ext == L"bmp" || ext == L"gif" || ext == L"ico" || ext == L"jpg") ? true : false;
                     if (!ok)
                         continue;
-                    imdata f;
+                    BigImageData f;
                     f.name = filename;
                     tstring &p = f.file_path;
                     p.append(fullpath);
@@ -121,7 +121,7 @@ void ImageCollection::scanImages()
     SetCurrentDirectory(current_path);
 
     // check diffs
-    std::vector<imdata> new_files;
+    std::vector<BigImageData> new_files;
     for (int i = 0, e = m_files.size(); i < e; ++i)
     {
         bool exist = false;
@@ -204,7 +204,7 @@ ClickpadImage* ImageCollection::load(const tstring& params)
     if (index == -1)
         return NULL;
 
-    const imdata& id = getImage(index);
+    const BigImageData& id = getImage(index);
     int size = id.image_size;
     int px = x * size;
     int py = y * size;

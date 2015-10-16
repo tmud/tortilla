@@ -61,10 +61,7 @@ private:
 
 class SelectImage : public CWindowImpl<SelectImage>
 {
-    Image *m_pimg;
-    int m_size;
-    tstring m_filepath;
-    int m_width, m_height;
+    BigImageData m_img;
     int m_wcount, m_hcount;
     int m_draw_x, m_draw_y;
     int m_selected_x, m_selected_y;
@@ -73,9 +70,10 @@ class SelectImage : public CWindowImpl<SelectImage>
     HWND m_notify_wnd;
     UINT m_notify_msg;
 public:
-    SelectImage() : m_pimg(NULL), m_size(0),m_width(0),m_height(0),m_wcount(0),m_hcount(0), m_draw_x(0), m_draw_y(0),
+    SelectImage() : m_wcount(0),m_hcount(0), m_draw_x(0), m_draw_y(0),
         m_selected_x(-1), m_selected_y(-1), m_mouseleave(false), m_notify_wnd(0), m_notify_msg(0) {}
-    void setImage(Image* image, int size, const tstring& image_filepath);
+    void setImage(const BigImageData& image);
+    void clearImage();
     void setNotify(HWND wnd, UINT msg) { m_notify_wnd = wnd; m_notify_msg = msg; } 
     ClickpadImage* createImageFromSelected();
 private:
