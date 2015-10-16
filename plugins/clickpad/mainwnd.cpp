@@ -2,9 +2,11 @@
 #include "mainwnd.h"
 #include "clickpad.h"
 
-SettingsDlg* m_settings;
+extern SettingsDlg* m_settings;
+extern ImageCollection *m_image_collection;
+
 ClickpadMainWnd::ClickpadMainWnd() : m_editmode(false),
-m_button_size(64), m_rows(0), m_columns(0), m_settings_dlg(NULL)
+m_button_size(64), m_rows(0), m_columns(0)
 {
 }
 
@@ -12,48 +14,44 @@ ClickpadMainWnd::~ClickpadMainWnd()
 {
 }
 
-HWND ClickpadMainWnd::createSettingsDlg(HWND parent)
+PadButton* ClickpadMainWnd::getButton(int x, int y)
 {
-    m_settings_dlg = new SettingsDlg();
-    m_settings_dlg->Create(parent);
-    m_settings_dlg->setSettings(this);
-    m_settings = m_settings_dlg;
-    setWorkWindowSize();
-    return m_settings_dlg->m_hWnd;
+   int index = y*MAX_COLUMNS + x;
+   assert(index >=0 && index<(int)m_buttons.size());
+   PadButton *b = m_buttons[index];
+   assert(b);
+   return b;
 }
 
 void ClickpadMainWnd::setEditMode(bool mode)
 {
     m_editmode = mode;
-    m_settings_dlg->editButton(NULL);
-    int hrows = m_buttons.size();
-    int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
-    for (int y=0; y<hrows; ++y) {
-    for (int x=0; x<hcolumns; ++x) {
-    PadButton *b = m_buttons[y][x];
+    m_settings->editButton(NULL);
+    for (int y=0; y<m_rows; ++y) {
+    for (int x=0; x<m_columns; ++x) {
+    PadButton *b = getButton(x, y);
     if (b->isEmptyButton())
         b->ShowWindow(mode ? SW_SHOWNOACTIVATE : SW_HIDE);
     }}
 }
 
 void ClickpadMainWnd::onClickButton(int x, int y, bool up)
-    {
+{
     if (!m_editmode)
-        {
+    {
         if (up)
             setFocusToMudClient();
         else
         {
-            PadButton *button = m_buttons[y][x];
-            assert(button);
+            PadButton *button = getButton(x, y);
             tstring command;
             button->getCommand(&command);
-            runGameCommand(command);
+            processGameCommand(command, button->getTemplate());
         }
         return;
     }
-    PadButton *button = m_buttons[y][x];
-    m_settings_dlg->editButton(button);
+    PadButton *button = getButton(x, y);
+    m_settings->editButton(button);
 }
 
 int ClickpadMainWnd::getRows() const
@@ -69,67 +67,14 @@ int ClickpadMainWnd::getColumns() const
 void ClickpadMainWnd::setRows(int count)
 {
     if (count <= 0) return;
-    m_rows = count;
-    setRowsInArray(count);
+    showRows(count);
     setWorkWindowSize();
 }
 
 void ClickpadMainWnd::setColumns(int count)
 {
     if (count <= 0) return;
-    m_columns = count;
-    setColumnsInArray(count);
-    setWorkWindowSize();
-}
-
-void ClickpadMainWnd::setRowsInArray(int count)
-{    
-    int hrows = m_buttons.size();
-    int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
-    int add = count - hrows;
-    if (add > 0)
-    {  // add new rows
-        std::vector<PadButton*> newrow(hcolumns, NULL);
-        for (;add > 0; --add) 
-        {
-            int y = m_buttons.size();
-            m_buttons.push_back(newrow);
-            for (int x=0; x<hcolumns; ++x)
-                createButton(x, y);
-        }
-    }
-}
-
-void ClickpadMainWnd::setColumnsInArray(int count)
-{
-    int hrows = m_buttons.size();
-    int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
-    int add = count - hcolumns;
-    if (add > 0) 
-    {   // add new columns
-        for (int i=0; i<hrows; ++i)
-        {
-            m_buttons[i].resize(count, NULL);
-            for (int j=hcolumns; j<count; ++j)
-                createButton(j, i);
-        }
-    }
-}
-
-void ClickpadMainWnd::setButtonSize(int size)
-{
-    m_button_size = size;
-    int hrows = m_buttons.size();
-    int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
-    for (int y=0; y<hrows; ++y) {
-    for (int x=0; x<hcolumns; ++x) {
-       PadButton *b = m_buttons[y][x];
-       if (!b) continue;
-       int px = x * m_button_size;
-       int py = y * m_button_size;
-       RECT pos = { px, py, px+m_button_size, py+m_button_size };
-       b->MoveWindow(&pos);
-    }}
+    showColumns(count);
     setWorkWindowSize();
 }
 
@@ -138,30 +83,89 @@ int ClickpadMainWnd::getButtonSize() const
     return m_button_size;
 }
 
+void ClickpadMainWnd::showRows(int count)
+{
+    if (count == m_rows) return;
+    if (count > m_rows)
+    {
+        for (int y=m_rows; y<count; ++y)
+         for (int x = 0; x < m_columns; ++x)
+           showButton(x, y, true);
+    }
+    else
+    {
+        for (int y = count; y < m_rows; ++y)
+         for (int x = 0; x < m_columns; ++x)
+           showButton(x, y, false);
+    }
+    m_rows = count; 
+}
+
+void ClickpadMainWnd::showColumns(int count)
+{
+    if (count == m_columns) return;
+    if (count > m_columns)
+    {
+        for (int x = m_columns; x < count; ++x)
+         for (int y = 0; y < m_rows; ++y)
+           showButton(x, y, true);
+    }
+    else
+    {
+        for (int x = count; x < m_columns; ++x)
+         for (int y = 0; y < m_rows; ++y)
+           showButton(x, y, false);
+    }
+    m_columns = count;
+}
+
+void ClickpadMainWnd::setButtonSize(int size)
+{
+    m_button_size = size;
+    for (int y=0; y<MAX_ROWS; ++y) {
+    for (int x=0; x<MAX_COLUMNS; ++x) {
+       PadButton *b = getButton(x, y);
+       int px = x * m_button_size + 2;
+       int py = y * m_button_size + 2;
+       RECT pos = { px, py, px+m_button_size, py+m_button_size };
+       b->MoveWindow(&pos);
+    }}
+    setWorkWindowSize();
+}
+
 void ClickpadMainWnd::onCreate()
 {
+    m_buttons.resize(MAX_COLUMNS*MAX_ROWS, NULL);
+    for (int x=0; x<MAX_COLUMNS; x++) {
+    for (int y=0; y<MAX_ROWS; y++) {
+      PadButton *b = new PadButton(WM_USER, MAKELONG(x, y));
+      int px = x * m_button_size + 2;
+      int py = y * m_button_size + 2;
+      RECT pos = { px, py, px + m_button_size, py + m_button_size };
+      b->Create(m_hWnd, pos, L"", WS_CHILD);
+      int index = y*MAX_COLUMNS + x;
+      m_buttons[index] = b;
+    }}
 }
 
 void ClickpadMainWnd::onDestroy()
 {
-    if (m_settings_dlg)
-      { m_settings_dlg->DestroyWindow(); delete m_settings_dlg; m_settings = NULL; }
+    for (int i=0,e=m_buttons.size();i<e;++i)
+    {
+        PadButton *b = m_buttons[i];
+        b->DestroyWindow();
+        delete b;
+    }
+    m_buttons.clear();
 }
 
 void ClickpadMainWnd::onSize()
 {
 }
 
-void ClickpadMainWnd::createButton(int x, int y)
+void ClickpadMainWnd::showButton(int x, int y, bool show)
 {
-    if (m_buttons[y][x])
-        return;
-    PadButton *b = new PadButton(WM_USER, MAKELONG(x, y));
-    int px = x * m_button_size;
-    int py = y * m_button_size;
-    RECT pos = { px, py, px+m_button_size, py+m_button_size };
-    b->Create(m_hWnd, pos, L"", WS_CHILD|WS_VISIBLE);
-    m_buttons[y][x] = b;
+    getButton(x, y)->ShowWindow(show ? SW_SHOWNOACTIVATE : SW_HIDE);
 }
 
 void ClickpadMainWnd::save(xml::node& node)
@@ -170,28 +174,31 @@ void ClickpadMainWnd::save(xml::node& node)
     node.set("size", m_button_size);
     node.set("columns", m_columns);
     node.set("rows", m_rows);
-    int hrows = m_buttons.size();
-    int hcolumns = (hrows == 0) ? 0 : m_buttons[0].size();
     node.create("/buttons");
     xml::node base(node);
-    for (int y=0;y<hrows;++y) {
-    for (int x=0;x<hcolumns;++x) {
-      PadButton *b = m_buttons[y][x];
-      tstring text, cmd;
-      b->getText(&text);
+    for (int y=0;y<MAX_ROWS;++y) {
+    for (int x=0;x<MAX_COLUMNS;++x) {
+      PadButton *b = getButton(x, y);
+      if (b->isEmptyButton())
+          continue;
+
+      tstring cmd, text;
       b->getCommand(&cmd);
-      if (text.empty() && cmd.empty()) continue;
+      b->getText(&text);
       node.create("button");
       node.set("x", x);
       node.set("y", y);
       node.set("text", text);
       node.set("command", cmd);
-      tstring image; int image_index = -1;
-      b->getImage(&image, &image_index);
-      if (!image.empty())
-        node.set("image", image);
-      if (image_index != -1)
-        node.set("index", image_index);
+      node.set("template", b->getTemplate() ? 1 : 0);
+      ClickpadImage *image = b->getImage();
+      if (image)
+      {
+          tstring image_params;
+          m_image_collection->save(image, &image_params);
+          if (!image_params.empty())
+            node.set("image", image_params);
+      }
       node = base;
     }}
     node.move("/");
@@ -205,26 +212,33 @@ void ClickpadMainWnd::load(xml::node& node)
     if (!bt.checkSize(size))
        size = bt.getDefaultSize();
     m_button_size = size;
+    
+    for (int y = 0; y < MAX_ROWS; ++y) {
+     for (int x = 0; x < MAX_COLUMNS; ++x) {
+       getButton(x, y)->clear();
+    }}
 
     tstring text, cmd;
     xml::request buttons(node, "buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
-{
+    {
         xml::node n = buttons[i];
         int x = 0; int y = 0;
         if (n.get("x", &x) && n.get("y", &y) && n.get("text", &text) && n.get("command", &cmd) &&
             (x >= 0 && x <= MAX_COLUMNS-1 && y >= 0 && y <= MAX_ROWS-1))
         {
-            setRowsInArray(y+1);
-            setColumnsInArray(x+1);
-            PadButton *b = m_buttons[y][x];
+            int template_flag = 0;
+            n.get("template", &template_flag);
+
+            PadButton *b = getButton(x, y);
             b->setText(text);
             b->setCommand(cmd);
-            tstring image; int image_index = -1;
-            if (n.get("image", &image) && !image.empty())
+            b->setTemplate( (template_flag==1) ? true : false);
+            tstring image_params;
+            if (n.get("image", &image_params))
             {
-                n.get("index", &image_index);
-                b->setImage(image, image_index);
+                ClickpadImage *image = m_image_collection->load(image_params);
+                b->setImage(image);
             }
         }
     }
@@ -233,10 +247,8 @@ void ClickpadMainWnd::load(xml::node& node)
     {
         if (columns >= 1 && columns <=MAX_COLUMNS && rows >= 1 && rows <= MAX_ROWS)
         {
-            setRowsInArray(rows);
-            setColumnsInArray(columns);
-            m_rows = rows;
-            m_columns = columns;
+            showRows(rows);
+            showColumns(columns);
         }
     }
 }
@@ -245,9 +257,9 @@ void ClickpadMainWnd::setWorkWindowSize()
 {    
     CWindow wnd(getFloatWnd());
     RECT rc; wnd.GetWindowRect(&rc);
-    int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
-    int height = getRows() * m_button_size + (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
-    rc.right = rc.left + width;
-    rc.bottom = rc.top + height;
+    int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) /*+ GetSystemMetrics(SM_CXBORDER)*/) * 2;
+    int height = getRows() * m_button_size + (GetSystemMetrics(SM_CYFRAME) /*+ GetSystemMetrics(SM_CYBORDER)*/) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+    rc.right = rc.left + width + 4;
+    rc.bottom = rc.top + height + 4;
     wnd.MoveWindow(&rc);
 }

@@ -120,6 +120,11 @@ public:
         m_undo.clear();
     }
 
+    void setCommand(const tstring& cmd)
+    {
+        setText(cmd, -1, false);
+    }
+
 private:
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

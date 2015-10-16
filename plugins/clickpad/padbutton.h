@@ -1,5 +1,7 @@
 #pragma once
 
+#include "clickpadImage.h"
+
 class PadButton : public CBitmapButtonImpl<PadButton>
 {
     tstring m_text;
@@ -8,20 +10,22 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     WPARAM m_click_param;
     bool m_pushed;
     bool m_selected;
+    bool m_template;
     static const int bufferlen = 32;
     static WCHAR buffer[bufferlen];    
-    tstring m_image_fpath;
-    int m_image_index;
-    Image* m_image;
+    ClickpadImage* m_image;
 
 public:
     PadButton(UINT msg, WPARAM param) :
         CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
-        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_image_index(-1), m_image(NULL)
+        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false), m_image(NULL)
     {
     }
+    ~PadButton() { 
+        delete m_image;
+    }
 
-    void getText(tstring *text)
+    void getText(tstring *text) const
     {
         text->assign(m_text);
     }
@@ -34,7 +38,7 @@ public:
         Invalidate();
     }
 
-    void getCommand(tstring *cmd)
+    void getCommand(tstring *cmd) const
     {
         cmd->assign(m_command);
     }
@@ -46,7 +50,20 @@ public:
 
     bool isEmptyButton() const 
     {
-        return (m_command.empty()) ? true : false;
+        if (m_text.empty() && m_command.empty()) 
+        {
+           if (!m_image || m_image->empty())
+                return true;
+        }
+        return false;
+    }
+
+    void clear()
+    {
+        m_text.clear();
+        m_command.clear();
+        delete m_image;
+        m_image = NULL;    
     }
 
     void setSelected(bool selected)
@@ -55,17 +72,27 @@ public:
         Invalidate();
     }
 
-    void setImage(const tstring& fpath, int index)
+    void setImage(ClickpadImage *image)
     {
-        m_image_fpath = fpath;
-        m_image_index = index;
-       // m_image = m_images.loadImage(fpath);
+       if (m_image)
+           delete m_image;
+       m_image = image;
+       Invalidate(FALSE);
     }
 
-    void getImage(tstring* fpath, int *index )
+    ClickpadImage * getImage() const
     {
-        fpath->assign(m_image_fpath);
-        *index = m_image_index;
+        return m_image;
+    }
+
+    void setTemplate(bool template_flag)
+    {
+        m_template = template_flag;
+    }
+
+    bool getTemplate() const 
+    {
+        return m_template;
     }
 
 private:
@@ -95,15 +122,21 @@ private:
    // override of CBitmapButtonImpl DoPaint(). Adds fillrect
     void DoPaint(CDCHandle dc)
     {
-        // added by SoftGee to resolve image artifacts
         RECT rc;
         GetClientRect(&rc);
         UINT state = DFCS_BUTTONPUSH;
         if (m_pushed || m_selected) state |= DFCS_PUSHED;
         dc.DrawFrameControl(&rc,DFC_BUTTON, state);
 
+        if (m_image && !m_image->empty())
+        {
+            int x = (rc.right - m_image->width()) / 2;
+            int y = (rc.bottom - m_image->height()) / 2;
+            m_image->render(dc, x, y);
+        }
+
         if (!m_text.empty())
-{
+        {
             int len = m_text.length(); 
             if (len > bufferlen) len = bufferlen;
             wcsncpy(buffer, m_text.c_str(), len);
@@ -111,15 +144,5 @@ private:
             dc.SetBkMode(TRANSPARENT);
             dc.DrawTextEx(buffer, len, &rc, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
         }
-
-        /*if (m_selected)
-    {
-            COLORREF color = RGB(255,0,0);
-            dc.Draw3dRect(&rc, color, color);
-        }*/
-
-
-        // call ancestor DoPaint() method
-        //CBitmapButtonImpl<PadButton>::DoPaint(dc);
     }
 };

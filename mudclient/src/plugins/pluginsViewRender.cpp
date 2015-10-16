@@ -1,12 +1,20 @@
 #include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsViewRender.h"
+#include "pluginSupport.h"
 
 PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
 m_inside_render(false), m_bkg_color(0), m_text_color(RGB(128,128,128)), m_width(0), m_height(0),
 current_pen(NULL), current_brush(NULL), current_font(NULL)
 {
     assert(pL && index > 0);
+}
+
+PluginsViewRender::~PluginsViewRender()
+{
+    for (int i=0,e=images.size(); i<e; ++i)
+        delete images[i];
+
 }
 
 bool PluginsViewRender::render()
@@ -114,6 +122,11 @@ void PluginsViewRender::selectFont(CFont* f)
     current_font = f;
 }
 
+void PluginsViewRender::regImage(Image *img)
+{
+    images.push_back(img);
+}
+
 void PluginsViewRender::drawRect(const RECT& r)
 {
     if (!m_inside_render)
@@ -137,6 +150,21 @@ void PluginsViewRender::drawSolidRect(const RECT& r)
         return;
     if (current_brush)
         m_dc.FillRect(&r, *current_brush);
+}
+
+void PluginsViewRender::drawImage(Image *img, int x, int y)
+{
+    if (!m_inside_render)
+        return;
+    img->render(m_dc, x, y);
+}
+
+void PluginsViewRender::drawImage(Image *img, int x, int y, int w, int h)
+{
+    if (!m_inside_render)
+        return;
+    image_render_ex p; p.w = w; p.h = h;
+    img->render(m_dc, x, y, &p);
 }
 
 int PluginsViewRender::print(int x, int y, const tstring& text)
@@ -405,6 +433,69 @@ int render_textWidth(lua_State *L)
     return pluginInvArgs(L, "render:textWidth");
 }
 
+int render_createImage(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TSTRING) || 
+        luaT_check(L, 3, LUAT_RENDER, LUA_TSTRING, LUA_TNUMBER))
+    {
+        tstring path(lua_towstring(L, 2));
+        tstring_replace(&path, L"/", L"\\");
+        Image *img = new Image;
+        int param = (lua_gettop(L) == 3) ? lua_tointeger(L, 3) : -1;
+        if (!img->load(path.c_str(), param))
+        {
+            delete img;
+            pluginLoadFail(L, "render::createImage", lua_tostring(L, 2));
+            lua_pushnil(L);
+            return 1;
+        }
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        r->regImage(img);
+        luaT_pushobject(L, img, LUAT_IMAGE);
+        return 1;
+    }
+    return pluginInvArgs(L, "render::createImage");
+}
+
+int render_drawImage(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_RENDER, LUAT_IMAGE, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        Image *img = (Image *)luaT_toobject(L, 2);
+        r->drawImage(img,lua_tointeger(L, 3),lua_tointeger(L, 4));
+        return 0;
+    }
+    else if (luaT_check(L, 6, LUAT_RENDER, LUAT_IMAGE, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        Image *img = (Image *)luaT_toobject(L, 2);
+        r->drawImage(img, lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
+        return 0;
+    }
+    else if (luaT_check(L, 3, LUAT_RENDER, LUAT_IMAGE, LUA_TTABLE))
+    {        
+        ParametersReader pr(L);
+        RECT rc;
+        if (pr.getrect(&rc))
+        {
+            PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+            Image *img = (Image *)luaT_toobject(L, 2);
+            r->drawImage(img, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top);
+            return 0;
+        }
+        int x =0; int y = 0;
+        if (pr.getxy(&x, &y))
+        {
+            PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+            Image *img = (Image *)luaT_toobject(L, 2);
+            r->drawImage(img, x, y);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, "render::drawImage");
+}
+
 void reg_mt_render(lua_State *L)
 {
     luaL_newmetatable(L, "render");
@@ -415,10 +506,12 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "createPen", render_createPen);
     regFunction(L, "createBrush", render_createBrush);
     regFunction(L, "createFont", render_createFont);
+    regFunction(L, "createImage", render_createImage);
     regFunction(L, "select", render_select);
     regFunction(L, "rect", render_rect);
     regFunction(L, "solidRect", render_solidRect);
     regFunction(L, "print", render_print);
+    regFunction(L, "drawImage", render_drawImage);
     regFunction(L, "update", render_update);
     regFunction(L, "fontHeight", render_fontHeight);
     regFunction(L, "textWidth", render_textWidth);

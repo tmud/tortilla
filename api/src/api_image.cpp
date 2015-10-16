@@ -22,17 +22,15 @@ int image_width(image img)
     return fimage_width(img);
 }
 
-int  image_height(image img)
+int image_height(image img)
 {
     return fimage_height(img);
 }
 
-void image_render(image img, HDC dc, int x, int y)
+void  image_render(image img, HDC dc, int x, int y, image_render_ex *p)
 {
-    fimage_render(dc, img, x, y);
-}
-
-void image_renderex(image img, HDC dc, int x, int y, int w, int h)
-{
-    fimage_renderex(dc, img, x, y, w, h);
+    if (!p)
+        fimage_render(dc, img, x, y, NULL);
+    else
+       fimage_render(dc, img, x, y, (fimage_render_ex*)p);
 }

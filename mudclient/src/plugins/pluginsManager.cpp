@@ -205,6 +205,16 @@ Plugin* PluginsManager::findPlugin(HWND view)
     return NULL;
 }
 
+Plugin* PluginsManager::findPlugin(const tstring& name)
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        if (!name.compare(m_plugins[i]->get(Plugin::FILENAME)))
+           return m_plugins[i];
+    }
+    return NULL;
+}
+
 void PluginsManager::updateProps()
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)

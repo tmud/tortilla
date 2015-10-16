@@ -1,6 +1,7 @@
 #include "resource.h"
 #include "padbutton.h"
 #include "settingsDlg.h"
+#include "selectImageDlg.h"
 
 class ClickpadSettings
 {
@@ -19,11 +20,9 @@ public:
     DECLARE_WND_CLASS_EX(L"Clickpad", 0, COLOR_BTNFACE)
     ClickpadMainWnd();
     ~ClickpadMainWnd();
-    HWND createSettingsDlg(HWND parent);
     void setEditMode(bool mode);
     void save(xml::node& node);
     void load(xml::node& node);
-
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
         MESSAGE_HANDLER(WM_USER, OnClickButton)
@@ -31,7 +30,6 @@ private:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
     END_MSG_MAP()
-
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { onDestroy(); return 0; }        
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
@@ -43,24 +41,20 @@ private:
     void onDestroy();
     void onSize();
     void onClickButton(int x, int y, bool up);
-
 private:
-    void createButton(int x, int y);
+    PadButton* getButton(int x, int y);
+    void showButton(int x, int y, bool show);
     void setWorkWindowSize();
-
-private:
     void setColumns(int count);
     int  getColumns() const;
     void setRows(int count);
     int  getRows() const;
     void setButtonSize(int size);
     int  getButtonSize() const;
-    void setRowsInArray(int count);
-    void setColumnsInArray(int count);
-
+    void showRows(int count);
+    void showColumns(int count);
 private:
-    SettingsDlg *m_settings_dlg;
     bool m_editmode;
     int m_button_size, m_rows, m_columns;
-    std::vector<std::vector<PadButton*>> m_buttons;
+    std::vector<PadButton*> m_buttons;
 };

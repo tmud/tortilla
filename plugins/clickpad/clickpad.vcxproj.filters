@@ -26,10 +26,16 @@
     <ClInclude Include="settingsDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="buttonDlg.h">
+    <ClInclude Include="clickpad.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="clickpad.h">
+    <ClInclude Include="selectImageDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="clickpadImage.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imageCollection.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,6 +53,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="padbutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="selectImageDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imageCollection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -118,6 +118,9 @@ namespace base {
     inline void runCommand(lua_State* L, const utf8* cmd)  {
         luaT_run(L, "runCommand", "s", cmd);
     }
+    inline void setCommand(lua_State* L, const utf8* cmd)  {
+        luaT_run(L, "setCommand", "s", cmd);
+    }
     inline void addButton(lua_State *L, int bmp, int id, const utf8* tooltip) {
         luaT_run(L, "addButton", "dds", bmp, id, tooltip);
     }
@@ -151,8 +154,14 @@ namespace base {
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
-    inline void getPathAll(lua_State *L, const utf8* file, u8string* path) {
-        luaT_run(L, "getPathAll", "s", file);
+    inline void getProfilePath(lua_State *L, u8string* path) {
+        luaT_run(L, "getProfilePath", "");
+        if (!lua_isstring(L, -1)) return;
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline void getResource(lua_State *L, const utf8* file, u8string* path) {
+        luaT_run(L, "getResource", "s", file);
         if (!lua_isstring(L, -1)) return;
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -293,10 +302,20 @@ public:
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
     }
-    void setBlocked(int width, int height)
+    void setFixedSize(int width, int height)
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
-        luaT_run(L, "setBlocked", "odd", width, height);
+        luaT_run(L, "setFixedSize", "odd", width, height);
+    }
+    SIZE getSize()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "getSize", "o");
+        SIZE sz;
+        sz.cx = lua_tointeger(L, -1);
+        sz.cy = lua_tointeger(L, -2);
+        lua_pop(L, 2);
+        return sz;
     }
 };
 
@@ -715,10 +734,10 @@ public:
         luaT_run(L, "activated", "t");
         return boolresult();
     }
-    bool settingsWnd()
+    bool isPropertiesOpen()
     {
         lua_getglobal(L, obj);
-        luaT_run(L, "settingsWnd", "t");
+        luaT_run(L, "isPropertiesOpen", "t");
         return boolresult();
     }
 private:
@@ -945,8 +964,13 @@ void  image_unload(image img);
 image image_cut(image img, int x, int y, int w, int h);
 int   image_width(image img);
 int   image_height(image img);
-void  image_render(image img, HDC dc, int x, int y);
-void  image_renderex(image img, HDC dc, int x, int y, int w, int h);
+
+struct image_render_ex {
+  image_render_ex() : w(0), h(0), sx(0), sy(0) {}
+  int w, h;                         // scaling (width/height of dest. rect); w/h=0 - default (no scale)
+  int sx, sy;                       // source image position
+};
+void  image_render(image img, HDC dc, int x, int y, image_render_ex *p);
 
 class Image
 {
@@ -966,8 +990,7 @@ public:
     void unload() { if (img) { image_unload(img); img = NULL; } }
     int width() const { return image_width(img); }
     int height() const { return image_height(img); }
-    void render(HDC dc, int x, int y) { image_render(img, dc, x, y); }
-    void render(HDC dc, int x, int y, int w, int h) { image_renderex(img, dc, x, y, w, h); }
+    void render(HDC dc, int x, int y, image_render_ex *p = NULL) { image_render(img, dc, x, y, p); }
 private:
     Image(const Image& op) {}
     Image& operator=(const Image& op) {}
