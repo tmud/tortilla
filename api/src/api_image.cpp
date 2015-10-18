@@ -27,10 +27,10 @@ int image_height(image img)
     return fimage_height(img);
 }
 
-void  image_render(image img, HDC dc, int x, int y, image_render_ex *p)
+int image_render(image img, HDC dc, int x, int y, image_render_ex *p)
 {
     if (!p)
-        fimage_render(dc, img, x, y, NULL);
+        return fimage_render(dc, img, x, y, NULL);
     else
-       fimage_render(dc, img, x, y, (fimage_render_ex*)p);
+       return fimage_render(dc, img, x, y, (fimage_render_ex*)p);
 }

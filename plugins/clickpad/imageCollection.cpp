@@ -206,8 +206,8 @@ ClickpadImage* ImageCollection::load(const tstring& params)
 
     const BigImageData& id = getImage(index);
     int size = id.image_size;
-    int px = x * size;
-    int py = y * size;
+    int px = x * (size+id.image_border);
+    int py = y * (size+id.image_border);
     int w = (size == 0) ? id.image->width() : size;
     int h = (size == 0) ? id.image->height() : size;
 

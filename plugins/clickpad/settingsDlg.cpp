@@ -287,6 +287,8 @@ LRESULT SettingsDlg::OnIconButton(WORD, WORD, HWND, BOOL&)
 {
     if (!m_select_image_window.isVisible())
         m_select_image_window.show();
+    else
+        m_select_image_window.hide();
     return 0;
 }
 

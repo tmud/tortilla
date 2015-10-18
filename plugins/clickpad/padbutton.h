@@ -125,14 +125,18 @@ private:
         RECT rc;
         GetClientRect(&rc);
         UINT state = DFCS_BUTTONPUSH;
-        if (m_pushed || m_selected) state |= DFCS_PUSHED;
+        if (m_pushed || m_selected) 
+            state |= DFCS_PUSHED;
         dc.DrawFrameControl(&rc,DFC_BUTTON, state);
 
         if (m_image && !m_image->empty())
         {
             int x = (rc.right - m_image->width()) / 2;
             int y = (rc.bottom - m_image->height()) / 2;
-            m_image->render(dc, x, y);
+            if (m_pushed)
+                 m_image->renderpushed(dc, x, y);
+            else
+                m_image->render(dc, x, y);
         }
 
         if (!m_text.empty())

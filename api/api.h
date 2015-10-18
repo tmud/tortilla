@@ -966,17 +966,19 @@ int   image_width(image img);
 int   image_height(image img);
 
 struct image_render_ex {
-  image_render_ex() : w(0), h(0), sx(0), sy(0) {}
+  image_render_ex() : w(0), h(0), sx(0), sy(0), sw(0), sh(0) {}
   int w, h;                         // scaling (width/height of dest. rect); w/h=0 - default (no scale)
   int sx, sy;                       // source image position
+  int sw, sh;                       // source image size
 };
-void  image_render(image img, HDC dc, int x, int y, image_render_ex *p);
+int image_render(image img, HDC dc, int x, int y, image_render_ex *p);  // 0-fail,not 0-ok
 
 class Image
 {
 public:
     Image() : img(NULL) {}
-    ~Image() { unload(); }
+    ~Image() { 
+        unload(); }
     bool load(const wchar_t* file, int option) {
         unload();
         img = image_load(file, option);
@@ -990,7 +992,7 @@ public:
     void unload() { if (img) { image_unload(img); img = NULL; } }
     int width() const { return image_width(img); }
     int height() const { return image_height(img); }
-    void render(HDC dc, int x, int y, image_render_ex *p = NULL) { image_render(img, dc, x, y, p); }
+    int render(HDC dc, int x, int y, image_render_ex *p = NULL) { return image_render(img, dc, x, y, p); }
 private:
     Image(const Image& op) {}
     Image& operator=(const Image& op) {}

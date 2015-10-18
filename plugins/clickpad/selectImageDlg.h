@@ -59,9 +59,17 @@ private:
     }
 };
 
+struct SelectImageParams {
+    int countw, counth;
+    int width, height;
+    int size;
+    tstring filepath;
+};
+
 class SelectImage : public CWindowImpl<SelectImage>
 {
     BigImageData m_img;
+    int m_width, m_height, m_size;
     int m_wcount, m_hcount;
     int m_draw_x, m_draw_y;
     int m_selected_x, m_selected_y;
@@ -70,12 +78,15 @@ class SelectImage : public CWindowImpl<SelectImage>
     HWND m_notify_wnd;
     UINT m_notify_msg;
 public:
-    SelectImage() : m_wcount(0),m_hcount(0), m_draw_x(0), m_draw_y(0),
+    SelectImage() : m_width(0), m_height(0), m_size(0), m_wcount(0),m_hcount(0), m_draw_x(0), m_draw_y(0),
         m_selected_x(-1), m_selected_y(-1), m_mouseleave(false), m_notify_wnd(0), m_notify_msg(0) {}
+    ~SelectImage() { if (IsWindow()) DestroyWindow(); m_hWnd = NULL; }
     void setImage(const BigImageData& image);
     void clearImage();
+    void getParams(SelectImageParams *params);
     void setNotify(HWND wnd, UINT msg) { m_notify_wnd = wnd; m_notify_msg = msg; } 
     ClickpadImage* createImageFromSelected();
+    
 private:
     int  updateBar(int bar, int window_size, int image_size);
     void updateScrollsbars();
@@ -100,7 +111,7 @@ private:
       MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnSelectImage)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
-        m_selected.CreatePen(PS_SOLID, 1, GetSysColor(COLOR_BTNTEXT));
+        m_selected.CreatePen(PS_SOLID, 1, RGB(255,255,0)); //GetSysColor(COLOR_BTNTEXT));
         return 0;
     }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) {

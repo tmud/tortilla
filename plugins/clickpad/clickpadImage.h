@@ -24,11 +24,25 @@ public:
        m_params.atlas_y = y;
        m_params.atlas_filename = filepath;
    }
+   void renderpushed(HDC dc, int x, int y)
+   {
+       if (m_image)
+       {
+           image_render_ex r;
+           r.sw = m_image->width()-3;
+           r.sh = m_image->height()-3;
+           //r.sx = r.sy = 1;
+           r.w = r.sw;
+           r.h = r.sh;
+           m_image->render(dc, x, y, &r);
+       }
+   }
    void render(HDC dc, int x, int y)
    {
        if (m_image)
-            m_image->render(dc, x, y);
+           m_image->render(dc, x, y);
    }
+
    int width() const { return (m_image) ? m_image->width() : 0; }
    int height() const { return (m_image) ? m_image->height() : 0; }
    const ClickpadImageParams& params() const { return m_params; }
