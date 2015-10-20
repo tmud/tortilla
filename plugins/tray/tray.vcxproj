@@ -89,9 +89,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="popupWindow.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
-    <ClInclude Include="timeoutWindow.h" />
     <ClInclude Include="traymain.h" />
+    <ClInclude Include="traySettings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="popupWindow.cpp" />
@@ -101,6 +102,9 @@
     </ClCompile>
     <ClCompile Include="tray.cpp" />
     <ClCompile Include="traymain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="tray.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

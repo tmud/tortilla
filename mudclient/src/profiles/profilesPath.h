@@ -9,11 +9,11 @@ private:
     bool select(const tstring& dir);
 };
 
-class ProfilesListHelper
+class ProfilesDirsListHelper
 {
 public:
-    ProfilesListHelper();
-    std::vector<tstring> profiles;
+    ProfilesDirsListHelper();
+    std::vector<tstring> dirs;
 };
 
 class ProfilePath

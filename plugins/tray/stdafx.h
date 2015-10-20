@@ -18,6 +18,10 @@
 
 #include <vector>
 #include <string>
+#include <deque>
 #include <assert.h>
 
 typedef std::wstring tstring;
+
+#define MAX_TIMEOUT 3600
+#define MAX_INTERVAL 360

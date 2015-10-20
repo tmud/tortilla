@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "api/api.h"
 #include "pluginsApi.h"
 #include "pluginsView.h"
@@ -8,8 +9,6 @@
 
 #include "../MainFrm.h"
 extern CMainFrame _wndMain;
-extern Palette256* _palette;
-extern PropertiesData* _pdata;
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f)
 {
@@ -259,6 +258,19 @@ int vd_isGameCmd(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, "viewdata:isGameCmd");
+}
+
+int vd_isSystem(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString* s = pdata->getselected();
+        int state = (s && s->system) ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isSystem");
 }
 
 int vd_isPrompt(lua_State *L)
@@ -552,13 +564,13 @@ int vd_set(lua_State *L)
                     break;
                 case luaT_ViewData::EXTTEXTCOLOR:
                     if (!p.use_ext_colors)
-                        p.ext_bkg_color = _palette->getColor(p.bkg_color);
+                        p.ext_bkg_color = tortilla::getPalette()->getColor(p.bkg_color);
                     p.use_ext_colors = 1;
                     p.ext_text_color = v;
                     break;
                 case luaT_ViewData::EXTBKGCOLOR:
                     if (!p.use_ext_colors)
-                        p.ext_text_color = _palette->getColor(p.text_color);
+                        p.ext_text_color = tortilla::getPalette()->getColor(p.text_color);
                     p.use_ext_colors = 1;
                     p.ext_bkg_color = v;
                     break;
@@ -662,13 +674,18 @@ int vd_deleteAllBlocks(lua_State *L)
 
 int vd_createString(lua_State *L)
 {
-    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    if (luaT_check(L, 1, LUAT_VIEWDATA) || luaT_check(L, 3, LUAT_VIEWDATA, LUA_TBOOLEAN, LUA_TBOOLEAN))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         bool ok = false;
+        bool system = false; bool gamecmd = false;
+        if (lua_gettop(L) == 3) {
+            system = lua_toboolean(L, 2) != 0 ? true : false;
+            gamecmd = lua_toboolean(L, 3) != 0 ? true : false;
+        }
         if (pdata->getselected_pvs())
         {
-            pdata->insert_new_string();
+            pdata->insert_new_string(gamecmd, system);
             ok = true;
         }
         lua_pushboolean(L, ok ? 1 : 0);
@@ -721,6 +738,44 @@ int vd_find(lua_State *L)
     }
     return pluginInvArgs(L, "viewdata:find");
 }
+
+int vd_getBlockPos(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int abspos = lua_tointeger(L, 2);
+        PluginViewString *str = pdata->getselected_pvs();
+        int block = 0; int pos = 0;
+        if (str && abspos > 0) 
+        {
+            abspos-=1;
+            for (int i=0,e=str->blocks.size();i<e;++i)
+            {
+                int size = u8string_len(str->blocks[i]);
+                if (size > abspos)
+                {
+                    block = i+1;
+                    pos = abspos+1;
+                    break;
+                }
+                abspos -= size;
+            }
+        }
+        if (block > 0)
+        {
+            lua_pushinteger(L, block);
+            lua_pushinteger(L, pos);
+        }
+        else
+        {         
+            lua_pushnil(L);
+            lua_pushnil(L);
+        }                
+        return 2;
+    }
+    return pluginInvArgs(L, "viewdata:getBlockPos");
+}
 //--------------------------------------------------------------------
 std::map<u8string, int> vdtypes;
 void init_vdtypes()
@@ -741,6 +796,54 @@ int vd_gettype(const utf8* type)
     return (it == vdtypes.end()) ? -1 : it->second;
 }
 
+int vd_setNext(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
+    {
+         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+         MudViewString *str = pdata->getselected();
+         str->next = lua_toboolean(L, 2) ? true : false;
+         return 0;
+    }
+    return pluginInvArgs(L, "viewdata:setNext");
+}
+
+int vd_setPrev(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        str->prev = lua_toboolean(L, 2) ? true : false;
+        return 0;
+    }
+    return pluginInvArgs(L, "viewdata:setPrev");
+}
+
+int vd_isNext(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        lua_pushboolean(L, str->next ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isNext");
+}
+
+int vd_isPrev(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *str = pdata->getselected();
+        lua_pushboolean(L, str->prev ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, "viewdata:isPrev");
+}
+
 void reg_mt_viewdata(lua_State *L)
 {
     init_vdtypes();
@@ -751,6 +854,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "isFirst", vd_isFirst);
     regFunction(L, "isLast", vd_isLast);
     regFunction(L, "isGameCmd", vd_isGameCmd);
+    regFunction(L, "isSystem", vd_isSystem);
     regFunction(L, "isPrompt", vd_isPrompt);
     regFunction(L, "getPrompt", vd_getPrompt);
     regFunction(L, "getText", vd_getText);
@@ -767,6 +871,11 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteString", vd_deleteString);
     regFunction(L, "createString", vd_createString);
     regFunction(L, "find", vd_find);
+    regFunction(L, "getBlockPos", vd_getBlockPos);
+    regFunction(L, "setNext", vd_setNext);
+    regFunction(L, "setPrev", vd_setPrev);
+    regFunction(L, "isNext", vd_isNext);
+    regFunction(L, "isPrev", vd_isPrev);
     regIndexMt(L);
     lua_pop(L, 1);
 }
@@ -902,6 +1011,40 @@ int ao_add(lua_State *L)
     return ao_inv_args(L, "activeobjects:add");
 }
 
+int ao_replace(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), lua_tostring(L, 3), lua_tostring(L, 4));
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 4, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TNIL, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), "", lua_tostring(L, 4));
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 4, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TSTRING, LUA_TNIL) ||
+        luaT_check(L, 3, LUAT_ACTIVEOBJS, LUA_TSTRING, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), lua_tostring(L, 3), "");
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 2, LUAT_ACTIVEOBJS, LUA_TSTRING))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->replace(lua_tostring(L, 2), "", "");
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    return ao_inv_args(L, "activeobjects:replace");
+}
+
 int ao_delete(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_ACTIVEOBJS))
@@ -966,6 +1109,7 @@ void reg_mt_activeobject(lua_State *L)
     regFunction(L, "get", ao_get);
     regFunction(L, "size", ao_size);
     regFunction(L, "add", ao_add);
+    regFunction(L, "replace", ao_replace);
     regFunction(L, "delete", ao_delete);
     regFunction(L, "getindex", ao_getIndex);
     regFunction(L, "setindex", ao_setIndex);
@@ -981,10 +1125,21 @@ void reg_activeobject(lua_State *L, const utf8* type, void *object)
     lua_setglobal(L, type);
 }
 
+class VarsFilter : public ActiveObjectsFilter
+{
+public:
+    bool canset(const u8string& var) 
+    {
+        TU2W v(var.c_str());
+        VarProcessor *vp = tortilla::getVars();
+        return vp->canSetVar(tstring(v));
+    }
+} _vars_filter;
+
 void reg_activeobjects(lua_State *L)
 {
     reg_mt_activeobject(L);
-    PropertiesData *p = _pdata;
+    PropertiesData *p = tortilla::getProperties();
     reg_activeobject(L, "aliases", new AO_Aliases(p));
     reg_activeobject(L, "actions", new AO_Actions(p));
     reg_activeobject(L, "subs", new AO_Subs(p));
@@ -995,6 +1150,5 @@ void reg_activeobjects(lua_State *L)
     reg_activeobject(L, "groups", new AO_Groups(p));
     reg_activeobject(L, "tabs", new AO_Tabs(p));
     reg_activeobject(L, "timers", new AO_Timers(p));
-    reg_activeobject(L, "vars", new AO_Vars(p));    
+    reg_activeobject(L, "vars", new AO_Vars(p, &_vars_filter));
 }
-

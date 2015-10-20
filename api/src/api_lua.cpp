@@ -42,6 +42,12 @@ bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
             lua_pushinteger(L, val);
             break;
         }
+        case 'b':
+        {
+            bool val = va_arg(args, bool);
+            lua_pushboolean(L, val ? 1 : 0);
+            break;
+        }
         case 'f':
         {
             double val = va_arg(args, double);

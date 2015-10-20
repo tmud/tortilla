@@ -303,13 +303,12 @@ MudViewParser::parserResult MudViewParser::process_osc(const WCHAR* b, int len)
 
 // collect strings in parse_data in one with same colors 
 // MudViewStringParams(s1) = MudViewStringParams(s2)
-void ColorsCollector::process(parseData *data)
+void ColorsCollector::process(parseDataStrings* pds)
 {
-   parseDataStrings &pds = data->strings;
-   for (int i=0,e=pds.size(); i<e; ++i)
+   for (int i=0,e=pds->size(); i<e; ++i)
    {
        //collect same strings color
-       std::vector<MudViewStringBlock> &b = pds[i]->blocks;
+       std::vector<MudViewStringBlock> &b = pds->at(i)->blocks;
        int j=0, je=b.size()-1;
        while (j<je)
        {
@@ -325,20 +324,6 @@ void ColorsCollector::process(parseData *data)
            }
        }
    }
-}
-
-void StringsWrapper::process(parseData *data)
-{
-    parseDataStrings &s = data->strings;
-    int strings = s.size();
-    for (int i=0; i<strings; ++i)
-    {
-        if (s[i]->getTextLen() <= m_maxlen)
-            continue;
-        MudViewString *newstr = s[i]->divideString(m_maxlen);
-        s.insert(s.begin()+i+1, newstr);
-        strings++;
-    }
 }
 
 #ifdef _DEBUG

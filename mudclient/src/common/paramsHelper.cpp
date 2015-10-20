@@ -1,19 +1,24 @@
 #include "stdafx.h"
 #include "paramsHelper.h"
 
-ParamsHelper::ParamsHelper(const tstring& param) : m_maxid(-1)
+ParamsHelper::ParamsHelper(const tstring& param, bool include_anyid) : m_maxid(-1)
 {
-    pcre.setRegExp(L"(%[0-9]){1}");
+    pcre.setRegExp(!include_anyid ?  L"(%[0-9]){1}" : L"(%[0-9%]){1}");
     pcre.findAllMatches(param);
 
     for (int i=0,e=pcre.getSize(); i<e; ++i)
     {
         int pos = pcre.getFirst(i) + 1;
-        WCHAR symbol = param.at(pos);
-        int id = symbol - L'0';
-        m_ids.push_back(id);
-        if (id > m_maxid)
-            m_maxid = id;
+        tchar symbol = param.at(pos);
+        if (symbol == L'%')
+            { m_ids.push_back(-1); }
+        else
+        {
+            int id = symbol - L'0';
+            m_ids.push_back(id);
+            if (id > m_maxid)
+                m_maxid = id;
+        }
     }
 }
 
@@ -52,6 +57,7 @@ bool ParamsHelper::checkDoubles() const
     for (int i=0,e=m_ids.size(); i<e; ++i)
     {
         int index = m_ids[i];
+        if (index == -1) continue;
         if (indexes[index] != 0)
             return true;        
         indexes[index]++;

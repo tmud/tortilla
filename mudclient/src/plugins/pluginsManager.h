@@ -5,13 +5,13 @@
 
 class PluginsManager
 {
-   PropertiesData *m_propData;
    PluginsList m_plugins;
    tstring m_profile;
    MsdpNetwork m_msdp_network;
+   bool m_plugins_loaded;
 
 public:
-    PluginsManager(PropertiesData *props);
+    PluginsManager();
     ~PluginsManager();
     void loadPlugins(const tstring& group, const tstring& profile);
     void unloadPlugins();
@@ -19,10 +19,10 @@ public:
     Plugin* findPlugin(HWND view);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
-    void processGameCmd(tstring* cmd);
+    void processGameCmd(InputCommand* cmd);
     void processViewData(const char* method, int view, parseData* data);
-    void processBarCmd(tstring *cmd);
-    void processHistoryCmd(tstring *cmd);
+    void processBarCmds(InputPlainCommands* cmds);
+    void processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history);
     void processConnectEvent();
     void processDisconnectEvent();
     void processTick();
@@ -33,10 +33,11 @@ public:
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
-    void concatCommand(const std::vector<tstring>& parts, bool system, tstring* cmd);
+    void concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
-    bool doPluginsTableMethod(const char* method, std::vector<tstring>* table);
+    enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };
+    TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* plugin_name);
     void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const char* error, int plugin_index);
     void terminatePlugin(Plugin* p);

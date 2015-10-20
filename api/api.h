@@ -39,8 +39,8 @@ void  luaT_showTableOnTop(lua_State* L, const utf8* label);
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
 namespace base {
-    inline void addMenu(lua_State* L, const utf8* path, int pos, int id) {
-        luaT_run(L, "addMenu", "sdd", path, pos, id); 
+    inline void addMenu(lua_State* L, const utf8* path, int id, int pos = -1, int bitmap = -1) {
+        luaT_run(L, "addMenu", "sddd", path, id, pos, bitmap);
     }
     inline void addCommand(lua_State* L, const utf8* cmd) {
         luaT_run(L, "addCommand", "s", cmd);
@@ -91,6 +91,9 @@ namespace base {
         lua_pop(L, 1);
         return parent;
     }
+    inline void flashWindow(lua_State *L) {
+        luaT_run(L, "flashWindow", "");
+    }
     inline void saveTable(lua_State* L, const utf8* file) {
         if (lua_istable(L, -1))
             luaT_run(L, "saveTable", "rs", file);
@@ -98,6 +101,19 @@ namespace base {
     inline bool loadTable(lua_State* L, const utf8* file) {
         luaT_run(L, "loadTable", "s", file);
         return lua_istable(L, -1) ? true : false;
+    }
+    inline void updateView(lua_State* L, int view, lua_CFunction f) {
+        luaT_run(L, "updateView", "dF", view, f);
+    }
+    inline bool getViewSize(lua_State* L, int view, int *width, int *height) {
+        luaT_run(L, "getViewSize", "d", view);
+        if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+        {
+            if (width) *width = lua_tointeger(L, 1);
+            if (height) *height = lua_tointeger(L, 2);
+            return true;
+        }
+        return false;
     }
     // createWindow, createPanel, pcre -> classes below
     // log -> luaT_log
@@ -250,6 +266,11 @@ public:
         runcmd("isGameCmd");
         return boolresult();
     }
+    bool isSystem()
+    {
+        runcmd("isSystem");
+        return boolresult();
+    }
     bool isPrompt()
     {
         runcmd("isPrompt");
@@ -327,6 +348,12 @@ public:
         runcmd("createString");
         return boolresult();
     }
+    bool createString(bool system, bool gamecmd)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "createString", "obb", system, gamecmd);
+        return boolresult();
+    }
     bool deleteString()
     {
         runcmd("deleteString");
@@ -337,6 +364,49 @@ public:
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_pushobject(L, p, LUAT_PCRE);
         luaT_run(L, "find", "ot");
+        return boolresult();
+    }
+    bool find(Pcre *p, int from)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_pushobject(L, p, LUAT_PCRE);
+        luaT_run(L, "find", "otd", from);
+        return boolresult();
+    }
+    bool getBlockPos(int abspos, int *res_block, int *res_pos)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "find", "od", abspos);
+        bool result = false;
+        if (lua_isnumber(L, 1) && lua_isnumber(L, 2))
+        {
+            *res_block = lua_tointeger(L, 1);
+            *res_pos = lua_tointeger(L, 2);
+            result = true;
+        }
+        lua_pop(L, 2);
+        return result;
+    }
+    void setNext(bool next)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setNext", "ob", next);
+    }
+    void setPrev(bool prev)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setPrev", "ob", prev);
+    }
+    bool isNext()
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "isNext", "o");
+        return boolresult();
+    }
+    bool isPrev()
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "isPrev", "o");
         return boolresult();
     }
 
@@ -400,6 +470,12 @@ public:
         luaT_run(L, "add", "osss", key, value, group);
         return boolresult();
     }
+    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "replace", "osss", key, value, group);
+        return boolresult();
+    }
     bool del()
     {
         if (!getao()) return false;
@@ -420,13 +496,13 @@ public:
     }
     bool get(int param, u8string* value)
     {
-        if (!param || !value || !getao()) return false;
+        if (!value || !getao()) return false;
         luaT_run(L, "get", "od", param);
         return strresult(value);
     }
     bool set(int param, const utf8* value)
     {
-        if (!param || !value || !getao()) return false;
+        if (!value || !getao()) return false;
         luaT_run(L, "set", "ods", param, value);
         return boolresult();
     }

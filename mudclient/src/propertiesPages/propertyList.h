@@ -19,6 +19,7 @@ class PropertyListCtrl : public CWindowImpl<PropertyListCtrl, CListViewCtrl>
     float m_width_percent;
     PropertyListCtrlHandler *m_pHandler;
     bool m_doubleclick;
+    wchar_t m_temp_buffer[256];
 
 public:
     DECLARE_WND_SUPERCLASS(NULL, CListViewCtrl::GetWndClassName())
@@ -26,18 +27,18 @@ public:
 
     void Attach(HWND hWnd) 
     {
-        SubclassWindow(hWnd);    
+        SubclassWindow(hWnd);
         RECT pos;
         GetClientRect(&pos);
         float width = static_cast<float>(pos.right - (GetSystemMetrics(SM_CXVSCROLL)+2) );
         m_width_percent = width / 100.0f;
     }
 
-    void addColumn(const tstring& text, int width_percents)    
+    void addColumn(const tstring& text, int width_percents)
     {
         float width = m_width_percent * width_percents;
-        int count = GetHeader().GetItemCount();                
-        InsertColumn(count, text.c_str(), LVCFMT_LEFT, static_cast<int>(width));        
+        int count = GetHeader().GetItemCount();
+        InsertColumn(count, text.c_str(), LVCFMT_LEFT, static_cast<int>(width));
     }
 
     void setHandler(PropertyListCtrlHandler* handler)
@@ -108,12 +109,32 @@ public:
         delete[]buffer;
     }
 
+    int getTopItem() const
+    {
+        return GetTopIndex();
+    }
+
+    void setTopItem(int index)
+    {
+        EnsureVisible (index, FALSE);
+        RECT rect;
+        if (GetItemRect (index, &rect, LVIR_LABEL))
+        {
+            CSize size;
+            size.cx = 0;
+            size.cy = rect.bottom - rect.top;
+            size.cy *= index - GetTopIndex();
+            if (index != GetTopIndex())
+                Scroll(size);
+        }
+    }
+
 private:
-    BEGIN_MSG_MAP(PropertyListCtrl)       
+    BEGIN_MSG_MAP(PropertyListCtrl)
        NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
        REFLECTED_NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()
-       
+
     LRESULT OnCustomDraw(int, LPNMHDR pnmh, BOOL&)
     {
         LRESULT result = CDRF_DODEFAULT;
@@ -179,10 +200,9 @@ private:
             HFONT old_font = dc.GetCurrentFont();
             dc.SelectFont(GetFont());
 
-            wchar_t buffer[64];
-            GetItemText(pdata.item, pdata.subitem, buffer, 63 );
+            GetItemText(pdata.item, pdata.subitem, m_temp_buffer, 255 );
             pos.left += 4;
-            DrawText(dc, buffer, -1, &pos, DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | DT_EXTERNALLEADING);
+            DrawText(dc, m_temp_buffer, -1, &pos, DT_SINGLELINE | DT_NOPREFIX | DT_VCENTER | DT_EXTERNALLEADING);
 
             dc.SelectFont(old_font);
             dc.SetBkColor(old_bk);

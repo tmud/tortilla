@@ -1,22 +1,6 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "logicElements.h"
-
-extern PropertiesData* _pdata;
-class CompareVarHelper : public CompareVar
-{
-    PropertiesData *m_pdata;
-public:
-    CompareVarHelper(PropertiesData *pdata) : m_pdata(pdata)  {}
-    bool get(const tstring& var, tstring* value) const
-    {
-        int index = m_pdata->variables.find(var);
-        if (index == -1) return false;
-        const tstring& current_value = m_pdata->variables.get(index).value;
-        value->assign(current_value);
-        return true;
-    }
-};
-
 
 CompareData::CompareData(MudViewString *s) : string(s), start(0)
 {
@@ -27,7 +11,7 @@ void CompareData::reinit()
 {
     fullstr.clear();
     std::vector<MudViewStringBlock> &vb = string->blocks;
-    for (int i=start,e=vb.size(); i<e; ++i)          
+    for (int i=start,e=vb.size(); i<e; ++i)
        fullstr.append(vb[i].string);
 }
 
@@ -47,7 +31,7 @@ int CompareData::fold(CompareRange& range)
     {
         std::vector<MudViewStringBlock> &vb = string->blocks;
         MudViewStringBlock &b = vb[range.begin];
-        for (int i=range.begin+1; i<=range.end; ++i)    
+        for (int i=range.begin+1; i<=range.end; ++i)
             b.string.append(vb[i].string);
         vb.erase(vb.begin()+range.begin+1, vb.begin()+range.end+1);
     }
@@ -60,10 +44,10 @@ bool CompareData::cut(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = cutpos(range.begin, 0);    
+        range.begin = cutpos(range.begin, 0);
         range.end = cutpos(range.end, 1);
         return true;
-    }   
+    }
     return false;
 }
 
@@ -73,7 +57,7 @@ bool CompareData::find(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = findpos(range.begin, 0);    
+        range.begin = findpos(range.begin, 0);
         range.end = findpos(range.end, 1);
         return true;
     }
@@ -126,79 +110,100 @@ int CompareData::findpos(int pos, int d)
     return bi;
 }
 
-Alias::Alias(const property_value& v) : m_key(v.key), m_cmd(v.value)
+class AliasParameters : public InputParameters
 {
-}
-
-bool Alias::processing(const tstring& key, tstring *newcmd)
-{
-    if (key == m_key)
-        { newcmd->assign(m_cmd); return true; }
-    return false;
-}
-
-Hotkey::Hotkey(const property_value& v) : m_key(v.key), m_cmd(v.value)
-{
-}
-
-bool Hotkey::processing(const tstring& key, tstring *newcmd)
-{
-    if (key == m_key)
-        { newcmd->assign(m_cmd); return true; }
-    return false;
-}
-
-Action::Action(const property_value& v) : m_value(v.value)
-{
-    m_compare.init(v.key);
-}
-
-bool Action::processing(CompareData& data, tstring* newcmd)
-{    
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
-        return false;
-    
-    std::vector<tstring> params;            // values of params in key
-    m_compare.getParameters(&params);
-    int params_count = params.size();
-
-    // parse value and generate result
-    int pos = 0;
-    ParamsHelper values(m_value);
-
-    newcmd->clear();
-    for (int i=0,e=values.getSize(); i<e; ++i)
+    const InputCommand *m_pCmd;
+public:
+    AliasParameters(const InputCommand *cmd) : m_pCmd(cmd) {}
+    void getParameters(std::vector<tstring>* params) const
     {
-        newcmd->append( m_value.substr(pos, values.getFirst(i)-pos) );
-        int id = values.getId(i);
-        if (id < params_count)
-            newcmd->append(params[id]);            
-        pos = values.getLast(i);        
+        params->push_back(L"");
+        const std::vector<tstring>&p = m_pCmd->parameters_list;
+        params->insert(params->end(), p.begin(), p.end());
     }
-    newcmd->append(m_value.substr(pos));
+};
 
-    // drop mode -> change source MudViewString
-    if (m_value.find(L"drop") != tstring::npos)
+Alias::Alias(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
+{
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
+}
+
+bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
+{
+    if (cmd->system) {
+        if (cmd->srccmd.compare(m_key))
+            return false;
+    }
+    else if (cmd->command.compare(m_key))
+        return false;
+    AliasParameters ap(cmd);
+    m_cmds.makeCommands(newcmds, &ap);
+
+    const tstring& alias = cmd->alias.empty() ? cmd->srccmd : cmd->alias;
+    for (int i=0,e=newcmds->size();i<e;++i)
+        newcmds->operator[](i)->alias.assign(alias);
+    return true;
+}
+
+Hotkey::Hotkey(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
+{
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
+}
+
+bool Hotkey::processing(const tstring& key, InputCommands *newcmds)
+{
+    if (key != m_key)
+        return false;
+    m_cmds.makeCommands(newcmds, NULL);
+    return true;
+}
+
+class ActionParameters : public InputParameters
+{
+    const CompareObject *m_pCompareObject;
+public:
+    ActionParameters(const CompareObject* co) : m_pCompareObject(co) { assert(m_pCompareObject); }
+    void getParameters(std::vector<tstring>* params) const {
+        m_pCompareObject->getParameters(params);
+    }
+};
+
+Action::Action(const property_value& v, const InputTemplateParameters& p)
+{
+    m_compare.init(v.key, true);
+    InputPlainCommands plain(v.value);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
+}
+
+bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newcmds)
+{
+    if (incompl_flag && m_compare.isFullstrReq())
+        return false;
+    if (!m_compare.compare(data.fullstr))
+        return false;
+    ActionParameters ap(&m_compare);
+    m_cmds.makeCommands(newcmds, &ap);
+    for (int i=0,e=newcmds->size(); i<e; ++i)
     {
-        CompareRange range;
-        m_compare.getRange(&range);
-        data.del(range);
-        if (data.string->blocks.empty())
-            data.string->dropped = true;
+        if (newcmds->operator[](i)->command == L"drop")
+                data.string->dropped = true;
     }
     return true;
 }
 
 Sub::Sub(const property_value& v) : m_value(v.value)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
 }
 
 bool Sub::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -217,20 +222,27 @@ bool Sub::processing(CompareData& data)
 
     int pos = data.fold(range);
     if (pos == -1) return false;
-    data.string->blocks[pos].string = m_value;
+
+    ActionParameters ap(&m_compare); //same adapter for subs
+    InputTranslateParameters tp;
+    tstring value(m_value);
+    tp.doit(&ap, &value);
+
+    InputVarsAccessor va;
+    va.translateVars(&value);
+    data.string->blocks[pos].string = value;
     data.start = pos+1;
     return true;
 }
 
 AntiSub::AntiSub(const property_value& v)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
 }
 
 bool AntiSub::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -247,13 +259,12 @@ bool AntiSub::processing(CompareData& data)
 
 Gag::Gag(const property_value& v)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
 }
 
 bool Gag::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.compare(data.fullstr))
         return false;
 
     CompareRange range;
@@ -270,23 +281,26 @@ bool Gag::processing(CompareData& data)
             return false;
     }
 
-    data.del(range);        
+    int len = data.fullstr.length();
+    if (range.begin == 0 && range.end == len)
+        data.string->dropped = true;
+    else
+        data.del(range);
     data.start = range.end+1;
     return true;
 }
 
 Highlight::Highlight(const property_value& v)
 {
-    m_compare.init(v.key);
+    m_compare.init(v.key, false);
     m_hl.convertFromString(v.value);
 }
 
 bool Highlight::processing(CompareData& data)
 {
-    CompareVarHelper h(_pdata);
-    if (!m_compare.checkToCompare(data.fullstr, &h))
+    if (!m_compare.compare(data.fullstr))
         return false;
-  
+
     CompareRange range;
     m_compare.getRange(&range);
     int pos = data.fold(range);
@@ -306,19 +320,28 @@ Timer::Timer() : timer(0), period(0)
 {
 }
 
-void Timer::init(const property_value& v)
+void Timer::init(const property_value& v, const InputTemplateParameters& p)
 {
     id.assign(v.key);
     PropertiesTimer pt;
     pt.convertFromString(v.value);
-    cmd.assign(pt.cmd);
 
-    int t = _wtoi(pt.timer.c_str());
+    InputPlainCommands plain(pt.cmd);
+    m_cmds.init(plain, p);
+    m_cmds.makeTemplates();
+
+    double t = 0;
+    w2double(pt.timer, &t);
     if (t < 0)
         t = 0;
-
     timer = 0;
-    period = t * 1000;
+    t = t * 1000;
+    period = static_cast<int>(t);
+}
+
+void Timer::makeCommands(InputCommands *cmds)
+{
+    m_cmds.makeCommands(cmds, NULL);
 }
 
 bool Timer::tick(int dt)
@@ -330,7 +353,7 @@ bool Timer::tick(int dt)
     if (timer < period)
         return false;
 
-    timer -= period;    
+    timer -= period;
     return true;
 }
 

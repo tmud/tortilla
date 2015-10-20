@@ -11,15 +11,18 @@ public:
 class ParamsDialog : public CDialogImpl<ParamsDialog>
 {
 public:
+    ParamsDialog() : rewrite_mode(false) {}
     enum { IDD = IDD_IMPORT_PARAMS };
     std::vector<u8string> strings;
     u8string cmdsymbol;
     u8string separator;
+    bool rewrite_mode;
 
 private:
     CEdit m_filepath, m_cmdsymbol, m_separator;
     CButton m_ok, m_browse;
     CStatic m_error_msg;
+    CButton m_rewrite;
     CFont m_error_font;
 
     BEGIN_MSG_MAP(ParamsDialog)
@@ -36,7 +39,8 @@ private:
         m_separator.Attach(GetDlgItem(IDC_EDIT_CMDSEPARATOR));
         m_browse.Attach(GetDlgItem(IDC_BUTTON_BROWSE));
         m_ok.Attach(GetDlgItem(IDOK));
-        m_error_msg.Attach(GetDlgItem(IDC_STATIC_ERROR));                
+        m_error_msg.Attach(GetDlgItem(IDC_STATIC_ERROR));
+        m_rewrite.Attach(GetDlgItem(IDC_CHECK_REWRITE));
         LOGFONT logfont;
         CFontHandle f(m_error_msg.GetFont());
         f.GetLogFont(&logfont);
@@ -108,6 +112,7 @@ private:
         cmdsymbol.assign(TW2U(buffer));
         m_separator.GetWindowText(buffer, 2);
         separator.assign(TW2U(buffer));
+        rewrite_mode = (m_rewrite.GetCheck() == BST_CHECKED) ? true : false;
         EndDialog(IDOK);
         return 0;
     }
@@ -156,7 +161,7 @@ private:
 
         DWORD high = 0;
         DWORD size = GetFileSize(hfile, &high);
-        if (high != 0 || size > (128 * 1024))
+        if (high != 0 || size > (512 * 1024))
         {
             error->assign(L"Файл слишком большого размера!");
             return false; 

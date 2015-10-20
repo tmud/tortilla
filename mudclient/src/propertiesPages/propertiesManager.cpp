@@ -3,7 +3,7 @@
 #include "profiles/profilesPath.h"
 #include "profiles/profileHelpers.h"
 
-PropertiesManager::PropertiesManager()
+PropertiesManager::PropertiesManager() : m_first_startup(false)
 {
 }
 
@@ -16,6 +16,7 @@ bool PropertiesManager::init()
     ProfilesGroupList groups;
     if (!groups.init())
         return false;
+    m_first_startup = groups.isFirstStartUp();
     int last = groups.getLast();
     groups.getName(last, &m_configName);
     return true;
@@ -92,9 +93,9 @@ bool PropertiesManager::loadProfileData()
     loadValue(sd, "disableya", 0, 1, &m_propData.disable_ya);
     loadValue(sd, "disableosc", 0, 1, &m_propData.disable_osc);
     loadValue(sd, "historytab", 0, 1, &m_propData.history_tab);
-    loadValue(sd, "timersf", 0, 1, &m_propData.timers_on);
     loadValue(sd, "plogs", 0, 1, &m_propData.plugins_logs);
     loadValue(sd, "plogswnd", 0, OUTPUT_WINDOWS, &m_propData.plugins_logs_window);
+    loadValue(sd, "softscroll", 0, 1, &m_propData.soft_scroll);
     tstring cp;
     loadString(sd, "codepage", &cp);
     if (cp != L"win" && cp != L"utf8")
@@ -249,9 +250,9 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, "disableya", m_propData.disable_ya);
     saveValue(sd, "disableosc", m_propData.disable_osc);
     saveValue(sd, "historytab", m_propData.history_tab);
-    saveValue(sd, "timersf", m_propData.timers_on);
     saveValue(sd, "plogs", m_propData.plugins_logs);
     saveValue(sd, "plogswnd", m_propData.plugins_logs_window);
+    saveValue(sd, "softscroll", m_propData.soft_scroll);
     saveString(sd, "codepage", m_propData.codepage);
     saveValue(sd, "prompt", m_propData.recognize_prompt);
     saveString(sd, "ptemplate", m_propData.recognize_prompt_template);

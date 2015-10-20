@@ -146,7 +146,7 @@ private:
 
     LRESULT OnCheckUpdates(WORD, WORD, HWND, BOOL&)
     {
-        openURL(L"https://github.com/tmud/tortilla/releases");
+        openURL(L"http://tmud.github.io");
         return 0;
     }
 

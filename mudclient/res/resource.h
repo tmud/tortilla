@@ -23,7 +23,9 @@
 #define IDD_PROPERTY_COLORS_FONT        207
 #define IDS_ERROR_MODULES               207
 #define IDD_LOAD_PROFILE                208
+#define IDS_ERROR_LOADPROFILE_FAILED    208
 #define IDD_NEW_PROFILE                 209
+#define IDS_ERROR_LASTLOAD_FAILED       209
 #define IDD_PROPERTY_COMMON             210
 #define IDD_PROPERTY_GROUPS             211
 #define IDD_PROPERTY_ONEPARAM           212
@@ -34,6 +36,7 @@
 #define IDD_WELCOME                     219
 #define IDR_BINARY_WELCOME              220
 #define IDD_PASSWORD                    221
+#define IDD_STARTUP_WORLD               222
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
@@ -47,11 +50,12 @@
 #define IDC_STATIC_BLLINE               1010
 #define IDC_BUTTON_PROP_TABWORDS        1011
 #define IDC_BUTTON_PROP_TIMERS          1012
-#define IDC_BUTTON_ADD                  1016
-#define IDC_BUTTON_DEL                  1017
-#define IDC_STATIC_BL1                  1018
-#define IDC_STATIC_BL2                  1019
-#define IDC_EDIT_ALIAS                  1020
+#define IDC_BUTTON_ADD                  1013
+#define IDC_BUTTON_DEL                  1014
+#define IDC_STATIC_BL1                  1015
+#define IDC_STATIC_BL2                  1016
+#define IDC_EDIT_ALIAS                  1017
+#define IDC_BUTTON_RESET                1020
 #define IDC_BUTTON_RENAME               1021
 #define IDC_EDIT_PATTERN                1022
 #define IDC_EDIT_ALIAS_TEXT             1023
@@ -107,6 +111,11 @@
 #define IDC_STATIC_RICHBOXPLACE         1129
 #define IDC_EDIT_PASSWORD               1130
 #define IDC_BUTTON_COLOR_RESETOSC       1131
+#define IDC_BUTTON_REPLACE              1132
+#define IDC_LIST_STARTUP_WORLD          1133
+#define IDC_CHECK_OPEN_ABOUT            1134
+#define IDC_CHECK_SOFTSCROLL            1135
+#define IDC_EDIT_STARTUP_PROFILE        1136
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -127,9 +136,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        222
+#define _APS_NEXT_RESOURCE_VALUE        223
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1132
+#define _APS_NEXT_CONTROL_VALUE         1137
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

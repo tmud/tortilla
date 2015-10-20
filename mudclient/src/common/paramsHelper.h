@@ -3,7 +3,7 @@
 class ParamsHelper
 {
 public:
-    ParamsHelper(const tstring& param);
+    ParamsHelper(const tstring& param, bool include_anyid = false);
     int getSize() const;
     int getFirst(int index) const;
     int getLast(int index) const;

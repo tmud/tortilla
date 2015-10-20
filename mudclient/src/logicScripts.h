@@ -32,7 +32,7 @@ class HighlightTestControl : public TestControl
     HighlightHelper m_hh;
 public:
     bool checkPattern(tstring* param) { return true; }
-    bool checkText(tstring* param) { return m_hh.checkText(param); }   
+    bool checkText(tstring* param) { return m_hh.checkText(param); }
 };
 
 class MethodsHelper
@@ -67,8 +67,8 @@ public:
             helper->tmcLog(buffer);
             for (int i=0,e=values->size(); i<e; ++i)
             {
-                const property_value& v = values->get(i);                        
-                swprintf(buffer, buffer_len, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
+                const property_value& v = values->get(i);
+                swprintf(buffer, buffer_len, L"{%s} {%s} [%s]", v.key.c_str(), v.value.c_str(), v.group.c_str());
                 helper->simpleLog(buffer);
             }
             if (values->size() == 0)
@@ -81,7 +81,7 @@ public:
         {
             helper->skipCheckMode();
             tstring pattern(p->at(0));
-            swprintf(buffer, buffer_len, L"%s с '%s':", label2.c_str(), pattern.c_str());
+            swprintf(buffer, buffer_len, L"%s с {%s}:", label2.c_str(), pattern.c_str());
             helper->tmcLog(buffer);
             Pcre16 pcre; 
             if (!pcre.setRegExp(pattern))
@@ -97,11 +97,11 @@ public:
                     pcre.find(v.key);
                     if (pcre.getSize())
                     {
-                        swprintf(buffer, buffer_len, L"'%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
+                        swprintf(buffer, buffer_len, L"{%s} {%s} [%s]", v.key.c_str(), v.value.c_str(), v.group.c_str());
                         helper->simpleLog(buffer);
                         count++;
                     }
-                }               
+                }
                 if (!count)
                     helper->tmcLog(L"Варианты не найдены.");
             }
@@ -133,9 +133,9 @@ public:
             else
                 group.assign(groups->get(0).key);
 
-            int index = values->find(pattern);
+            int index = values->find(pattern, group);
             values->add(index, pattern, text, group);
-            swprintf(buffer, buffer_len, L"%s: '%s' '%s' '%s'", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str());
+            swprintf(buffer, buffer_len, L"%s: {%s} {%s} [%s]", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str());
             helper->updateLog(buffer);
             return 1;
         }
@@ -151,10 +151,15 @@ public:
         const tstring& label,
         MethodsHelper* helper, TestControl* control = NULL)
     {
-        if (p->size() == 1)
+        int n = p->size();
+        if (n == 1 || n == 2)
         {
             tstring pattern(p->at(0));
-            swprintf(buffer, buffer_len, L"%s '%s'",label.c_str(), pattern.c_str());
+            if (n==1)
+                swprintf(buffer, buffer_len, L"%s {%s}",label.c_str(), pattern.c_str());
+            else
+                swprintf(buffer, buffer_len, L"%s {%s} [%s]",label.c_str(), pattern.c_str(), p->c_str(1));
+
             helper->tmcLog(buffer);
             if (control && !control->checkPattern(&pattern))
             {
@@ -163,21 +168,15 @@ public:
                 return 0;
             }
 
-            bool deleted = false;
-            for (int i=0,e=values->size(); i<e; ++i)
+            int index = (n==1) ? values->find(pattern) : values->find(pattern, p->at(1));
+            if (index != -1)
             {
-                const property_value& v = values->get(i);
-                if (v.key == pattern)
-                {
-                    swprintf(buffer, buffer_len, L"Удалено '%s' '%s' '%s'", v.key.c_str(), v.value.c_str(), v.group.c_str());
-                    helper->simpleLog(buffer);
-                    values->del(i);
-                    deleted = true;
-                    break;
-                }
+                const property_value& v = values->get(index);
+                swprintf(buffer, buffer_len, L"Удалено {%s} {%s} [%s]", v.key.c_str(), v.value.c_str(), v.group.c_str());
+                helper->simpleLog(buffer);
+                values->del(index);
             }
-
-            if (!deleted)
+            else
             {
                 helper->tmcLog(L"Варианты не найдены.");
                 return 0;
@@ -203,8 +202,8 @@ public:
             helper->tmcLog(buffer);
             for (int i=0,e=values->size(); i<e; ++i)
             {
-                const property_value& v = values->get(i);                        
-                swprintf(buffer, buffer_len, L"'%s' '%s'", v.key.c_str(), v.group.c_str());
+                const property_value& v = values->get(i);
+                swprintf(buffer, buffer_len, L"{%s} [%s]", v.key.c_str(), v.group.c_str());
                 helper->simpleLog(buffer);
             }
             if (values->size() == 0)
@@ -226,9 +225,9 @@ public:
             else
                 group.assign(groups->get(0).key);
 
-            int index = values->find(pattern);
+            int index = values->find(pattern, group);
             values->add(index, pattern, L"", group);
-            swprintf(buffer, buffer_len, L"%s: '%s' '%s'", label2.c_str(), pattern.c_str(), group.c_str());
+            swprintf(buffer, buffer_len, L"%s: {%s} [%s]", label2.c_str(), pattern.c_str(), group.c_str());
             helper->updateLog(buffer);
             return 1;  
         }
@@ -242,32 +241,31 @@ class DeleteParams2 : public ParamsBuffer
 public:
     int process(parser *p, PropertiesValues *values, const tstring& label, MethodsHelper* helper)
     {
-        if (p->size() == 1)
+        int n = p->size();
+        if (n == 1 || n == 2)
         {
             tstring pattern(p->at(0));
-            swprintf(buffer, buffer_len, L"%s '%s'", label.c_str(), pattern.c_str());
+            if (n==1)
+              swprintf(buffer, buffer_len, L"%s {%s}", label.c_str(), pattern.c_str());
+            else
+              swprintf(buffer, buffer_len, L"%s {%s} [%s]", label.c_str(), pattern.c_str(), p->c_str(1));
             helper->tmcLog(buffer);
           
-            bool deleted = false;
-            for (int i=0,e=values->size(); i<e; ++i)
-            {
-                const property_value& v = values->get(i);
-                if (v.key == pattern)
-                {
-                    swprintf(buffer, buffer_len, L"Удалено '%s' '%s'", v.key.c_str(), v.group.c_str());
-                    helper->simpleLog(buffer);
-                    values->del(i);
-                    deleted = true;
-                    break;
-                }
-            }
-
-            if (!deleted)
-            {
-                helper->tmcLog(L"Варианты не найдены.");
-                return 0;
-            }
-            return 1;
+            int index = (n==1) ? values->find(pattern) : values->find(pattern, p->at(1));
+            
+           if (index != -1)
+           {
+               const property_value& v = values->get(index);
+               swprintf(buffer, buffer_len, L"Удалено {%s} [%s]", v.key.c_str(), v.group.c_str());
+               helper->simpleLog(buffer);
+               values->del(index);
+           }
+           else
+           {
+               helper->tmcLog(L"Варианты не найдены.");
+               return 0;
+           }
+           return 1;
         }
         p->invalidargs();
         return 0;

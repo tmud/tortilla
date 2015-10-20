@@ -23,16 +23,18 @@ public:
         int wide_len = (len == -1) ? wcslen(wide) : len;
         convert(wide, wide_len);
     }
-
     int convert(const wchar_t *wide, int wide_len)
     {
         WideToUtf8Converter con;
         return con.convert(&m_convertBuffer, wide, wide_len);
     }
-
     operator const char* () 
     {
         return m_convertBuffer.getData();
+    }
+    int len() const
+    {
+        return m_convertBuffer.getSize();
     }
 
 private:
@@ -60,18 +62,20 @@ public:
     Utf8ToWide() {}
     Utf8ToWide(const char *utf8, int len = -1)
     {
-        convert(utf8, -1);       
+        convert(utf8, -1);
     }
-
     int convert(const char *utf8, int utf8_len = -1)
     {
         Utf8ToWideConverter con;
         return con.convert(&m_convertBuffer, utf8, utf8_len);
     }
-
     operator const wchar_t* () const
     {
         return (wchar_t*)m_convertBuffer.getData();
+    }
+    int len() const
+    {
+        return m_convertBuffer.getSize();
     }
 
 private:
@@ -89,13 +93,13 @@ public:
     U2W(const std::string& param)
     {
         Utf8ToWide u2w(param.c_str());
-        m_param.assign(u2w);        
+        m_param.assign(u2w);
     }
     operator const tstring&()
     {
         return m_param; 
     }
-    
+
 private:
     tstring m_param;
 };
@@ -110,7 +114,7 @@ public:
     }
     operator const char*() 
     {
-        return m_param.c_str(); 
+        return m_param.c_str();
     }
     operator std::string&()
     {

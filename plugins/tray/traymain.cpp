@@ -1,18 +1,25 @@
 #include "stdafx.h"
 #include "traymain.h"
 
-TrayMainObject::TrayMainObject() : m_activated(false)
-{
-}
-
 TrayMainObject::~TrayMainObject()
 {
-    for (int i=0,e=m_popups.size(); i<e;++i)
+    stopTimer();
+    m_windows.insert(m_windows.end(), m_free_windows.begin(), m_free_windows.end());
+    m_free_windows.clear();
+    for (int i=0,e=m_windows.size(); i<e;++i)
     {
-        PopupWindow *pw = m_popups[i];
+        PopupWindow *pw = m_windows[i];
         pw->DestroyWindow();
         delete pw;
     }
+    m_windows.clear();
+    if (IsWindow())
+        DestroyWindow();
+}
+
+void TrayMainObject::create()
+{
+    Create(HWND_MESSAGE);
 }
 
 void TrayMainObject::setFont(HFONT font)
@@ -27,80 +34,164 @@ void TrayMainObject::setFont(HFONT font)
 
 void TrayMainObject::setAlarmWnd(HWND wnd)
 {
-    m_timeout_wnd.setAlarmWnd(wnd);
+    m_alarmWnd = wnd;
 }
 
  void TrayMainObject::setActivated(bool activated)
  {
-     m_activated = activated;
-     if (m_activated)
-         m_timeout_wnd.stop();
+    m_activated = activated;
+    if (m_activated)
+        stopTimer();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg, COLORREF bkgnd, COLORREF text)
+bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
 {
-  for (int i=0,e=m_popups.size();i<e;++i)
-  {
-      if (!m_popups[i]->isAnimated())
-      {
-          startAnimation(i, msg, bkgnd, text);
-          return true;
-      }
-  }
+#ifndef _DEBUG
+    if (m_activated && !m_settings.showactive)
+       return true;
+#endif
 
-   PopupWindow *wnd = new PopupWindow(&m_font);
-   wnd->Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW);
-   if (!wnd->IsWindow())
-   {
-       delete wnd;
-       return false;
-   }
-   m_popups.push_back(wnd);
-   int index = m_popups.size() - 1;
-   startAnimation(index, msg, bkgnd, text);
-   if (!m_activated)
-       m_timeout_wnd.start();
-   return true;
-}
-
-void TrayMainObject::startAnimation(int window_index, const u8string&msg, COLORREF bkgnd, COLORREF text)
-{
-    PopupWindow *w = getWindow(window_index);
-    if (!w || w->isAnimated()) { assert(false); return; }
-
-    w->setText(msg);
-
-    Animation a;
-    SIZE sz = w->getSize();
-
-    int on_screen = 0; POINT rb = { -1, -1 };
-    for (int i=0,e=m_popups.size();i<e;++i) {
-        if (!m_popups[i]->isAnimated()) 
-            continue;
-        on_screen++;
-        RECT pos;
-        m_popups[i]->GetWindowRect(&pos);
-        POINT p = { GetSystemMetrics(SM_CXSCREEN), pos.top-4 };
-        if (rb.x < 0 || rb.y > p.y) rb = p;
+    if (!from_queue)
+    {
+        if (isHeightLimited()) {
+            m_queue.push_back(msg);
+            return true;
+        }
+        if (!m_queue.empty())
+        {
+            m_queue.push_back(msg);
+            tryShowQueue();
+            return true;
+        }
     }
 
-    if (on_screen == 0)
+    PopupWindow *w = getFreeWindow();
+    if (!w)
+        return false;
+
+    POINT rb = { -1, -1 };
+    Animation a; 
+    if (m_windows.empty())
         rb = GetTaskbarRB();
+    else
+    {
+        int last = m_windows.size() - 1;
+        RECT pos;
+        m_windows[last]->GetWindowRect(&pos);
+        rb.x = GetSystemMetrics(SM_CXSCREEN);
+        rb.y = pos.top-4;
+    }
+
+    w->setText(msg);
+    const TraySettings &s = m_settings;
+    SIZE sz = w->getSize();
+
     rb.x -= 2;
     rb.y -= sz.cy;
     rb.x -= sz.cx;
     a.pos = rb;
     a.speed = 0.5f;
-    a.wait_sec = 3;
-    a.bkgnd_color = bkgnd;
-    a.text_color = text;
+    a.wait_sec = m_settings.timeout;
+    a.bkgnd_color = s.background;
+    a.text_color = s.text;
+    a.notify_wnd = m_hWnd;
+    a.notify_msg = WM_USER;
+    a.notify_param = (WPARAM)w;
+    if (m_windows.empty())
+        m_point0 = rb;
+    m_windows.push_back(w);
     w->startAnimation(a);
+    if (!m_activated)
+      startTimer();
+   return true;
 }
 
-PopupWindow* TrayMainObject::getWindow(int index) const
+void TrayMainObject::onFinishedAnimation(PopupWindow *w)
 {
-    int windows = m_popups.size();
-    return (index >= 0 && index < windows) ? m_popups[index] : NULL;
+    int index = -1;
+    for (int i=0,e=m_windows.size(); i<e; ++i) {
+        if (m_windows[i] == w) { index = i; break; }
+    }
+    if (index == -1) { assert(false); }
+    else { m_windows.erase(m_windows.begin() + index); }
+    freeWindow(w);
+    if (m_windows.empty())
+        tryShowQueue();
+    else
+        tryRunMoveAnimation();
+}
+
+void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
+{
+    assert(!m_windows.empty());
+    int last = m_windows.size() - 1;
+    if (m_windows[last] != w)
+        return;
+    tryShowQueue();
+}
+
+void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
+{
+    tryRunMoveAnimation();
+}
+
+void TrayMainObject::tryRunMoveAnimation()
+{
+    for (int i=0,e=m_windows.size(); i<e; ++i)
+    {
+        int at = m_windows[i]->getAnimationState();
+        if (at == PopupWindow::ANIMATION_TOSTART || at == PopupWindow::ANIMATION_TOEND)
+             return;
+    }
+    POINT p = m_point0;
+    for (int i=0,e=m_windows.size(); i<e; ++i)
+    {
+         PopupWindow* w = m_windows[i];
+         SIZE sz = w->getSize();
+         POINT w_pos = w->getAnimation().pos;
+         if (w_pos.x != p.x || w_pos.y != p.y)
+         {
+             MoveAnimation ma;
+             ma.pos.y = p.y;
+             ma.pos.x = w_pos.x;
+             ma.speed = 0.002f;
+             w->startMoveAnimation(ma);
+         }
+         p.y -= (sz.cy+4);
+    }
+}
+
+void TrayMainObject::tryShowQueue()
+{
+    while (!isHeightLimited() && !m_queue.empty())
+    {
+        u8string msg(*m_queue.begin());
+        m_queue.pop_front();
+        showMessage(msg, true);
+    }
+}
+
+PopupWindow* TrayMainObject::getFreeWindow()
+{
+   if (!m_free_windows.empty())
+   {
+       int last = m_free_windows.size() - 1;
+       PopupWindow *wnd = m_free_windows[last];
+       m_free_windows.pop_back();
+       return wnd;
+   }
+   PopupWindow *wnd = new PopupWindow();
+   if (!wnd->create(&m_font))
+   {
+       delete wnd;
+       return NULL;
+   }
+   return wnd;
+}
+
+void TrayMainObject::freeWindow(PopupWindow *w)
+{
+    m_free_windows.push_back(w);
 }
 
 POINT TrayMainObject::GetTaskbarRB()
@@ -108,7 +199,7 @@ POINT TrayMainObject::GetTaskbarRB()
     POINT pt = { GetSystemMetrics(SM_CXSCREEN),  GetSystemMetrics(SM_CYSCREEN) };
     RECT rect;
     HWND taskBar = FindWindow(L"Shell_traywnd", NULL);
-    if(taskBar && GetWindowRect(taskBar, &rect)) 
+    if(taskBar && ::GetWindowRect(taskBar, &rect)) 
     {
         int height = rect.bottom - rect.top;
         int width = rect.right - rect.left;
@@ -118,4 +209,57 @@ POINT TrayMainObject::GetTaskbarRB()
         }
     }
     return pt;
+}
+
+bool TrayMainObject::isHeightLimited() const
+{
+    if (m_windows.empty())
+        return false;
+    int last = m_windows.size() - 1;
+    const POINT &p = m_windows[last]->getAnimation().pos;
+    return(p.y < getHeightLimit()) ? true : false;
+}
+
+int TrayMainObject::getHeightLimit() const
+{
+    return (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
+}
+
+TraySettings& TrayMainObject::traySettings()
+{
+   return m_settings;
+}
+
+void TrayMainObject::startTimer()
+{
+    if (m_timerStarted) return;
+    const DWORD one_min = 60000;
+    SetTimer(2, m_settings.interval*one_min);
+    m_timerStarted = true;
+}
+
+void TrayMainObject::stopTimer()
+{
+    if (!m_timerStarted) return;
+    KillTimer(2);
+    m_timerStarted = false;
+}
+
+void TrayMainObject::onTimer()
+{
+    if (!::IsWindow(m_alarmWnd))
+       return;
+    FLASHWINFO fw;
+    fw.cbSize = sizeof(FLASHWINFO);
+    fw.hwnd = m_alarmWnd;
+    fw.uCount = 5;
+    fw.dwFlags = FLASHW_ALL;
+    fw.dwTimeout = 0;
+    ::FlashWindowEx(&fw);
+}
+
+void TrayMainObject::onTickPopups()
+{
+    for (int i=0,e=m_windows.size();i<e;++i)
+        m_windows[i]->onTick();
 }

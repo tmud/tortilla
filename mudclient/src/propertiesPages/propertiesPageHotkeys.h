@@ -1,11 +1,12 @@
 #pragma once
 
 #include "hotkeyTable.h"
+#include "propertiesSaveHelper.h"
 
 class HotkeyBox :  public CWindowImpl<HotkeyBox, CEdit>
 {
     HotkeyTable m_table;
-  
+
     BEGIN_MSG_MAP(HotkeyBox)
        MESSAGE_HANDLER(WM_KEYUP, OnKeyUp)
        MESSAGE_HANDLER(WM_SYSKEYUP, OnKeyUp)
@@ -35,10 +36,11 @@ class HotkeyBox :  public CWindowImpl<HotkeyBox, CEdit>
 };
 
 class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
-{ 
+{
     PropertiesValues *propValues;
     PropertiesValues *propGroups;
     PropertiesValues m_list_values;
+    std::vector<int> m_list_positions;
     PropertyListCtrl m_list;
     CBevelLine m_bl1;
     CBevelLine m_bl2;
@@ -46,29 +48,59 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
     CEdit m_text;
     CButton m_add;
     CButton m_del;
+    CButton m_replace;
+    CButton m_reset;
     CButton m_filter;
     CComboBox m_cbox;
     bool m_filterMode;
     tstring m_currentGroup;
     bool m_deleted;
     bool m_update_mode;
+    PropertiesDlgPageState *dlg_state;
+    PropertiesSaveHelper m_state_helper;
 
 public:
     enum { IDD = IDD_PROPERTY_HOTKEYS };
-    PropertyHotkeys(PropertiesData *data) : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false) 
+    PropertyHotkeys(PropertiesData *data) : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false), dlg_state(NULL) 
     {
         propValues = &data->hotkeys;
         propGroups = &data->groups;
     }
-
+    void setParams( PropertiesDlgPageState *state)
+    {
+        dlg_state = state;
+    }
+    bool updateChangedTemplate(bool check)
+    {
+        int item = m_list.getOnlySingleSelection();
+        if (item != -1)
+        {
+            tstring pattern;
+            getWindowText(m_hotkey, &pattern);
+            property_value& v = m_list_values.getw(item);
+            if (v.key != pattern && !pattern.empty())
+            { 
+                if (!check) {
+                tstring text;
+                getWindowText(m_text, &text);
+                v.key = pattern; v.value = text; v.group = m_currentGroup;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 private:
     BEGIN_MSG_MAP(PropertyHotkeys)
        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+       MESSAGE_HANDLER(WM_USER+1, OnSetFocus)
        MESSAGE_HANDLER(WM_USER, OnHotkeyEditChanged)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
-       COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)    
+       COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
        COMMAND_HANDLER(IDC_EDIT_HOTKEY_TEXT, EN_CHANGE, OnHotkeyTextChanged)
@@ -84,10 +116,10 @@ private:
         getWindowText(m_hotkey, &hotkey);
         getWindowText(m_text, &text);
 
-        int index = m_list_values.find(hotkey);
+        int index = m_list_values.find(hotkey, m_currentGroup);
         if (index == -1 && m_filterMode)
         {
-            int index2 = propValues->find(hotkey);
+            int index2 = propValues->find(hotkey, m_currentGroup);
             if (index2 != -1)
                 propValues->del(index2);
         }
@@ -116,20 +148,47 @@ private:
     }
 
     LRESULT OnDeleteElement(WORD, WORD, HWND, BOOL&)
-    {   
+    {
         std::vector<int> selected;
         m_list.getSelected(&selected);
-        int items = selected.size();        
+        int items = selected.size();
         if (items == 1)
             m_deleted = true;
         for (int i = 0; i < items; ++i)
         {
             int index = selected[i];
-            m_list.DeleteItem(index);        
+            m_list.DeleteItem(index);
             m_list_values.del(index);
+            if (m_filterMode)
+                m_list_positions.erase(m_list_positions.begin()+index);
         }
         m_deleted = false;
         m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnReplaceElement(WORD, WORD, HWND, BOOL&)
+    {
+        tstring hotkey, text;
+        getWindowText(m_hotkey, &hotkey);
+        getWindowText(m_text, &text);
+
+        int index = m_list.getOnlySingleSelection();
+        m_list_values.add(index, hotkey, text, m_currentGroup);
+        m_list.setItem(index, 0, hotkey);
+        m_list.setItem(index, 1, text);
+        m_list.setItem(index, 2, m_currentGroup);
+        m_list.SelectItem(index);
+        m_list.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
+    {
+        m_text.SetWindowText(L"");
+        m_hotkey.SetWindowText(L"");
+        m_list.SelectItem(-1);
+        m_hotkey.SetFocus();
         return 0;
     }
 
@@ -139,6 +198,8 @@ private:
         m_filterMode = m_filter.GetCheck() ? true : false;
         loadValues();
         update();
+        updateButtons();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 
@@ -146,41 +207,58 @@ private:
     {
         tstring group;
         getCurrentGroup(&group);
+        if (m_currentGroup == group) return 0;
+        tstring pattern;
+        getWindowText(m_hotkey, &pattern);
         if (!m_filterMode)
         {
             m_currentGroup = group;
-            updateCurrentItem();
+            int index = m_list_values.find(pattern, group);
+            int selected = m_list.getOnlySingleSelection();
+            if (index != -1)
+                m_list.SelectItem(index);
+            else
+               updateCurrentItem();
+            updateButtons();
+            m_state_helper.setCanSaveState();
             return 0;
-        }        
-        tstring old = m_currentGroup;
-        m_currentGroup = group;
-        updateCurrentItem();
-        m_currentGroup = old;
+        }
+        if (propValues->find(pattern, group) == -1)
+        {
+            tstring old = m_currentGroup;
+            m_currentGroup = group;
+            updateCurrentItem();
+            m_currentGroup = old;
+        }
         saveValues();
         m_currentGroup = group;
         loadValues();
-        update();        
+        update();
+        updateButtons();
+        m_state_helper.setCanSaveState();
         return 0;
     }
-    
+
     LRESULT OnHotkeyEditChanged(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (!m_update_mode)
+        if (m_update_mode)
+            return 0;
+ 
+        BOOL currelement = FALSE;
+        int len = m_hotkey.GetWindowTextLength();
+        int selected = m_list.getOnlySingleSelection();
+        if (len > 0)
         {
-             int len = m_hotkey.GetWindowTextLength();
-             m_add.EnableWindow(len == 0 ? FALSE : TRUE);
-             if (len > 0)
-             {
-                tstring hotkey;
-                getWindowText(m_hotkey, &hotkey);
-                int index = m_list_values.find(hotkey);
-                if (index != -1)
-                {
-                    m_list.SelectItem(index);
-                    m_hotkey.SetSel(len, len);
-                }
-              }
+            tstring hotkey;
+            getWindowText(m_hotkey, &hotkey);
+            int index = m_list_values.find(hotkey, m_currentGroup);
+            if (index != -1 && !currelement)
+            {
+                m_list.SelectItem(index);
+                m_hotkey.SetSel(len, len);
+            }
         }
+        updateButtons();
         return 0;
     }
 
@@ -188,6 +266,7 @@ private:
     {
         int item = m_list.getOnlySingleSelection();
         if (item == -1) return;
+        m_update_mode = true;
         tstring hotkey;
         getWindowText(m_hotkey, &hotkey);
         property_value& v = m_list_values.getw(item);
@@ -204,6 +283,7 @@ private:
             v.group = m_currentGroup;
             m_list.setItem(item, 2, m_currentGroup);
         }
+        m_update_mode = false;
     }
 
     LRESULT OnHotkeyTextChanged(WORD, WORD, HWND, BOOL&)
@@ -215,12 +295,12 @@ private:
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
     {
+        if (m_update_mode)
+            return 0;
         m_update_mode = true;
         int items_selected = m_list.GetSelectedCount();
         if (items_selected == 0)
         {
-            m_del.EnableWindow(FALSE);
-            m_add.EnableWindow(FALSE);
             if (!m_deleted) 
             {
               m_hotkey.SetWindowText(L"");
@@ -229,22 +309,20 @@ private:
         }
         else if (items_selected == 1)
         {
-            m_del.EnableWindow(TRUE);
             int item = m_list.getOnlySingleSelection();
             const property_value& v = m_list_values.get(item);
             m_hotkey.SetWindowText( v.key.c_str() );
             m_text.SetWindowText( v.value.c_str() );
             int index = getGroupIndex(v.group);
             m_cbox.SetCurSel(index);
-            m_currentGroup = v.group;            
+            m_currentGroup = v.group;
         }
         else
         {
-            m_del.EnableWindow(TRUE);
-            m_add.EnableWindow(FALSE);
             m_hotkey.SetWindowText(L"");
             m_text.SetWindowText(L"");
         }
+        updateButtons();
         m_update_mode = false;
         return 0;
     }
@@ -258,18 +336,27 @@ private:
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        if (wparam)        
+        if (wparam)
         {
             loadValues();
+            m_update_mode = true;
             m_hotkey.SetWindowText(L"");
             m_text.SetWindowText(L"");
+            m_update_mode = false;
             update();
+            PostMessage(WM_USER+1); // OnSetFocus to list
+            m_state_helper.setCanSaveState();
         }
         else
         {
-            m_del.EnableWindow(FALSE);
             saveValues();
         }
+        return 0;
+    }
+
+    LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetFocus();
         return 0;
     }
 
@@ -279,6 +366,8 @@ private:
         m_text.Attach(GetDlgItem(IDC_EDIT_HOTKEY_TEXT));
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
+        m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
+        m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Hotkey", 20);
@@ -288,9 +377,13 @@ private:
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
-        m_add.EnableWindow(FALSE);
-        m_del.EnableWindow(FALSE);
+        m_state_helper.init(dlg_state, &m_list);
+        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+        if (m_filterMode)
+            m_filter.SetCheck(BST_CHECKED);
         loadValues();
+        updateButtons();
+        m_reset.EnableWindow(TRUE);
         return 0;
     }
 
@@ -318,20 +411,65 @@ private:
         m_list.DeleteAllItems();
         for (int i=0,e=m_list_values.size(); i<e; ++i)
         {
-            const property_value& v = m_list_values.get(i);          
+            const property_value& v = m_list_values.get(i);
             m_list.addItem(i, 0, v.key);
             m_list.addItem(i, 1, v.value);
             m_list.addItem(i, 2, v.group);
         }
 
+        int index = -1;
         tstring hotkey;
         getWindowText(m_hotkey, &hotkey);
         if (!hotkey.empty())
+            index = m_list_values.find(hotkey, m_currentGroup);
+        m_state_helper.loadCursorAndTopPos(index);
+    }
+
+    void updateButtons()
+    {
+        bool pattern_empty = m_hotkey.GetWindowTextLength() == 0;
+        bool text_empty = m_text.GetWindowTextLength() == 0;
+        int items_selected = m_list.GetSelectedCount();
+        if (items_selected == 0)
         {
-            int index = m_list_values.find(hotkey);
-            if (index != -1)
-                m_list.SelectItem(index);
+            m_add.EnableWindow(pattern_empty ? FALSE : TRUE);
+            m_del.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
         }
+        else if(items_selected == 1)
+        {
+            m_del.EnableWindow(TRUE);
+            bool mode = FALSE;
+            if (!pattern_empty)
+            {
+                tstring pattern;
+                getWindowText(m_hotkey, &pattern);
+                int selected = m_list.getOnlySingleSelection();
+                const property_value& v = m_list_values.get(selected);
+                mode = (pattern == v.key) ? FALSE : TRUE;
+            }
+            m_replace.EnableWindow(mode);
+            m_add.EnableWindow(mode);
+        }
+        else
+        {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(TRUE);
+            m_replace.EnableWindow(FALSE);
+        }         
+    }
+
+    void swapItems(int index1, int index2)
+    {
+        const property_value& i1 = m_list_values.get(index1);
+        const property_value& i2 = m_list_values.get(index2);
+        m_list.setItem(index1, 0, i2.key);
+        m_list.setItem(index1, 1, i2.value);
+        m_list.setItem(index1, 2, i2.group);
+        m_list.setItem(index2, 0, i1.key);
+        m_list.setItem(index2, 1, i1.value);
+        m_list.setItem(index2, 2, i1.group);
+        m_list_values.swap(index1, index2);
     }
 
     void loadValues()
@@ -343,45 +481,56 @@ private:
         }
 
         m_list_values.clear();
+        m_list_positions.clear();
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
             if (v.group != m_currentGroup)
                 continue;
             m_list_values.add(-1, v.key, v.value, v.group);
+            m_list_positions.push_back(i);
         }
     }
 
     void saveValues()
     {
+        if (!m_state_helper.save(m_currentGroup, m_filterMode))
+            return;
+
         if (!m_filterMode)
         {
             *propValues = m_list_values;
             return;
         }
 
-        std::vector<int> positions;
+        std::vector<int> todelete;
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
             if (v.group == m_currentGroup)
-                positions.push_back(i);
+            {
+                bool exist = std::find(m_list_positions.begin(), m_list_positions.end(), i) != m_list_positions.end();
+                if (!exist)
+                    todelete.push_back(i);
+            }
+        }
+        for (int i=todelete.size()-1; i>=0; --i)
+        {
+            int pos = todelete[i];
+            propValues->del(pos);
+            for (int j=0,je=m_list_positions.size();j<je;++j) {
+                if (m_list_positions[j] > pos)
+                    m_list_positions[j]--;
+            }
         }
 
-        int pos_count = positions.size();
+        int pos_count = m_list_positions.size();
         int elem_count = m_list_values.size();
         for (int i=0; i<elem_count; ++i)
         {
             const property_value& v = m_list_values.get(i);
-            int index = (i < pos_count) ? positions[i] : -1;
+            int index = (i < pos_count) ? m_list_positions[i] : -1;
             propValues->add(index, v.key, v.value, v.group);
-        }
-
-        int todelete = pos_count - elem_count;
-        for (int i=0; i<todelete; ++i)
-        {
-            int pos = pos_count-(i+1);
-            propValues->del(pos);
         }
     }
 
