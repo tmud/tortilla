@@ -806,10 +806,7 @@ void pluginDeleteResources(Plugin *plugin)
     plugin->commands.clear();
     // delete all triggers
     for (int i = 0,  e = plugin->triggers.size(); i<e; ++i)
-    {
-        PluginsTrigger *t = plugin->triggers[i];
-        delete t;
-    }
+        delete plugin->triggers[i];
     plugin->triggers.clear();
     _cp = old;
 }

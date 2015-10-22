@@ -4,12 +4,13 @@
 
 extern Plugin* _cp;
 
-PluginsTrigger::PluginsTrigger() : L(NULL), m_tigger_func_index(0)
+PluginsTrigger::PluginsTrigger() : L(NULL), m_tigger_func_index(0), m_enabled(false)
 {
 }
 
 PluginsTrigger::~PluginsTrigger()
 {
+    m_enabled = false;
     lua_getglobal(L, "_triggers");
     if (lua_istable(L, -1) && m_tigger_func_index > 0)
     {
@@ -24,14 +25,7 @@ bool PluginsTrigger::init(lua_State *pL)
 {
     L = pL;
     assert(luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION));
-    m_trigger.assign(lua_tostring(L, 1));
-    return reg_trigger();
-}
 
-bool PluginsTrigger::reg_trigger()
-{
-    if (!lua_isfunction(L, -1))
-        return false;
     lua_getglobal(L, "_triggers");
     if (!lua_istable(L, -1))
     {
@@ -44,6 +38,10 @@ bool PluginsTrigger::reg_trigger()
         lua_pushvalue(L, -1);
         lua_setglobal(L, "_triggers");
     }
+
+    tstring key(U2W(lua_tostring(L, 1)));
+    m_compare.init(key, true);
+
     lua_len(L, -1);
     int index = lua_tointeger(L, -1) + 1;
     lua_pop(L, 1);
@@ -53,7 +51,40 @@ bool PluginsTrigger::reg_trigger()
     lua_settable(L, -3);
     lua_pop(L, 1);
     m_tigger_func_index = index;
+    m_enabled = true;
     return true;
+}
+
+bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
+{
+    if (!m_enabled)
+        return false;
+    if (incompl_flag && m_compare.isFullstrReq())
+        return false;
+    if (!m_compare.compare(cd.fullstr))
+        return false;
+    lua_getglobal(L, "_triggers");
+    lua_pushinteger(L, m_tigger_func_index);
+    lua_gettable(L, -2);
+    lua_insert(L, -2);
+    lua_pop(L, 1);
+
+    PluginsTriggerString vs(cd.string);
+    luaT_pushobject(L, &vs, LUAT_VIEWSTRING);
+    if (lua_pcall(L, 1, 0, 0))
+    {      
+        if (luaT_check(L, 1, LUA_TSTRING))
+            pluginError("trigger", lua_tostring(L, -1));
+        else
+            pluginError("trigger", "неизвестная ошибка");
+        lua_settop(L, 0);
+    }
+    return true;
+}
+
+void PluginsTrigger::enable(bool enable)
+{
+    m_enabled = enable;
 }
 
 int trigger_create(lua_State *L)
@@ -75,6 +106,9 @@ int trigger_enable(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_TRIGGER))
     {
+        PluginsTrigger *t = (PluginsTrigger*)luaT_toobject(L, 1);
+        t->enable(true);
+        return 0;
     }
     return pluginInvArgs(L, "trigger:enable");
 }
@@ -83,6 +117,9 @@ int trigger_disable(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_TRIGGER))
     {
+        PluginsTrigger *t = (PluginsTrigger*)luaT_toobject(L, 1);
+        t->enable(false);
+        return 0;
     }
     return pluginInvArgs(L, "trigger:disable");
 }
@@ -99,15 +136,35 @@ void reg_mt_trigger(lua_State *L)
     reg_mt_trigger_string(L);
 }
 
-int ts_blocks(lua_State *L)
+int ts_getBlocks(lua_State *L)
 {
-    return 0;
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsTriggerString *s = (PluginsTriggerString*)luaT_toobject(L, 1);
+        lua_pushinteger(L, s->blocks());
+        return 1;
+    }
+    return pluginInvArgs(L, "viewstring:getBlocks");
+}
+
+int ts_getText(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsTriggerString *s = (PluginsTriggerString*)luaT_toobject(L, 1);
+        tstring text;
+        s->getText(&text);
+        lua_pushstring(L, W2U(text.c_str()) );
+        return 1;
+    }
+    return pluginInvArgs(L, "viewstring:getText");
 }
 
 void reg_mt_trigger_string(lua_State *L)
 {
     luaL_newmetatable(L, "viewstring");
-    regFunction(L, "blocks", ts_blocks);
+    regFunction(L, "getBlocks", ts_getBlocks);
+    regFunction(L, "getText", ts_getText);
     regIndexMt(L);
     lua_pop(L, 1);
 }

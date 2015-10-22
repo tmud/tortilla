@@ -862,6 +862,11 @@ private:
         m_plugins.processViewData("after", view, parse_data);
     }
 
+    void processTriggers(int view, parseData* parse_data)
+    {
+        m_plugins.processTriggers(view, parse_data);
+    }
+
     void addText(int view, parseData* parse_data)
     {
         if (parse_data->strings.empty())

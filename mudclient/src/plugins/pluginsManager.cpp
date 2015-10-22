@@ -266,6 +266,37 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
+void PluginsManager::processTriggers(int view, parseData* data)
+{
+    if (view != 0)
+        return;
+    int count = m_plugins.size();
+    for (int i=0,e=data->strings.size()-1; i<=e; ++i)
+    {
+        MudViewString *s = data->strings[i];
+        if (s->dropped) continue;
+        bool incomplstr = (i==e && !data->last_finished);
+        CompareData cd( data->strings[i] );
+        for (int j = 0; j < count; ++j)
+        {
+            Plugin *p = m_plugins[j];
+            if (!p->state()) continue;
+            _cp = p;
+            for (int k=0,ke=p->triggers.size();k<ke;++k)
+            {
+                PluginsTrigger *t = p->triggers[k];
+                if (t->compare(cd, incomplstr))
+                {
+                    if (s->dropped)
+                        break;
+                    cd.reinit();
+                }
+            }
+            _cp = NULL;
+        }        
+    }
+}
+
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)
 {
     assert(cmds);
