@@ -6,7 +6,7 @@ extern SettingsDlg* m_settings;
 extern ImageCollection *m_image_collection;
 
 ClickpadMainWnd::ClickpadMainWnd() : m_editmode(false),
-m_button_size(64), m_rows(0), m_columns(0)
+m_button_size(64), m_rows(0), m_columns(0), m_backgroundColor(RGB(1,1,1))
 {
 }
 
@@ -146,6 +146,8 @@ void ClickpadMainWnd::onCreate()
       int index = y*MAX_COLUMNS + x;
       m_buttons[index] = b;
     }}
+    updated();
+    PostMessage(WM_USER+1);
 }
 
 void ClickpadMainWnd::onDestroy()
@@ -163,9 +165,27 @@ void ClickpadMainWnd::onSize()
 {
 }
 
+void ClickpadMainWnd::onPaint(HDC dc)
+{
+    RECT rc; GetClientRect(&rc);
+    CDCHandle hdc(dc);
+    hdc.FillSolidRect(&rc, m_backgroundColor);
+}
+
 void ClickpadMainWnd::showButton(int x, int y, bool show)
 {
     getButton(x, y)->ShowWindow(show ? SW_SHOWNOACTIVATE : SW_HIDE);
+}
+
+void ClickpadMainWnd::updated()
+{
+    luaT_Props p(getLuaState());
+    COLORREF c = p.backgroundColor();
+    if (c == m_backgroundColor) return;
+    for (int i=0,e=m_buttons.size();i<e;++i)
+        m_buttons[i]->setBackgroundColor(c);
+    m_backgroundColor = c;
+    Invalidate(FALSE);
 }
 
 void ClickpadMainWnd::save(xml::node& node)

@@ -81,7 +81,7 @@ public:
     SelectImage() : m_width(0), m_height(0), m_size(0), m_wcount(0),m_hcount(0), m_draw_x(0), m_draw_y(0),
         m_selected_x(-1), m_selected_y(-1), m_mouseleave(false), m_notify_wnd(0), m_notify_msg(0) {}
     ~SelectImage() { if (IsWindow()) DestroyWindow(); m_hWnd = NULL; }
-    void setImage(const BigImageData& image);
+    bool setImage(const BigImageData& image);
     void clearImage();
     void getParams(SelectImageParams *params);
     void setNotify(HWND wnd, UINT msg) { m_notify_wnd = wnd; m_notify_msg = msg; } 

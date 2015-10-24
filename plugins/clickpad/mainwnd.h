@@ -23,12 +23,16 @@ public:
     void setEditMode(bool mode);
     void save(xml::node& node);
     void load(xml::node& node);
+    void updated();
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
         MESSAGE_HANDLER(WM_USER, OnClickButton)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
+        MESSAGE_HANDLER(WM_USER+1, OnSetSize)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { onDestroy(); return 0; }        
@@ -37,10 +41,18 @@ private:
         onClickButton(LOWORD(wparam), HIWORD(wparam), (lparam==0) ? false : true);
         return 0;
     }
+    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&) { return 1; }
+    LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&) { 
+        CPaintDC dc(m_hWnd);
+        onPaint(dc);
+        return 0;
+    }
+    LRESULT OnSetSize(UINT, WPARAM, LPARAM, BOOL&) { setWorkWindowSize(); return 0; }
     void onCreate();
     void onDestroy();
     void onSize();
     void onClickButton(int x, int y, bool up);
+    void onPaint(HDC dc);
 private:
     PadButton* getButton(int x, int y);
     void showButton(int x, int y, bool show);
@@ -57,4 +69,5 @@ private:
     bool m_editmode;
     int m_button_size, m_rows, m_columns;
     std::vector<PadButton*> m_buttons;
+    COLORREF m_backgroundColor;
 };

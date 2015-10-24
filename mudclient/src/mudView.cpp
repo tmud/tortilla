@@ -209,10 +209,13 @@ MudViewString* MudView::getString(int idx) const
 void MudView::updateProps()
 {
     if (m_strings.empty())
+    {
+        Invalidate(FALSE);
         return;
+    }
     calcStringsSizes(m_strings);
     initRenderParams();
-    Invalidate();
+    Invalidate(FALSE);
 }
 
 void MudView::removeDropped(parseData* parse_data)

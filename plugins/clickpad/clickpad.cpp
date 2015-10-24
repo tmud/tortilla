@@ -144,11 +144,12 @@ int init(lua_State *L)
 
     base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
 
-    // todo remove lines
+#ifdef _DEBUG // open all windows for edit mode (only for debugging)
     base::checkMenu(L, 1);
     m_settings_window.show();
     m_select_image_window.show();
-    m_clickpad->setEditMode(true);    
+    m_clickpad->setEditMode(true);
+#endif
     return 0;
 }
 
@@ -236,10 +237,12 @@ int propsblocked(lua_State *L)
     return 0;
 }
 
-int propsunblocked(lua_State *L)
+int propsupdated(lua_State *L)
 {
     if (m_settings)
         m_settings->setSettingsBlock(false);
+    if (m_clickpad)
+        m_clickpad->updated();
     return 0;
 }
 
@@ -253,7 +256,7 @@ static const luaL_Reg clickpad_methods[] =
     { "menucmd", menucmd },
     { "closewindow", closewnd },
     { "propsblocked", propsblocked },
-    { "propsunblocked", propsunblocked },
+    { "propsupdated", propsupdated },
     { NULL, NULL }
 };
 

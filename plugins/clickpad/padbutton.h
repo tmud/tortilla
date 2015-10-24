@@ -2,7 +2,7 @@
 
 #include "clickpadImage.h"
 
-class PadButton : public CBitmapButtonImpl<PadButton>
+class PadButton : public CWindowImpl<PadButton>
 {
     tstring m_text;
     tstring m_command;
@@ -14,22 +14,12 @@ class PadButton : public CBitmapButtonImpl<PadButton>
     static const int bufferlen = 32;
     static WCHAR buffer[bufferlen];    
     ClickpadImage* m_image;
-
+    COLORREF m_background_color;
 public:
-    PadButton(UINT msg, WPARAM param) :
-        CBitmapButtonImpl<PadButton>(BMPBTN_AUTOSIZE | BMPBTN_AUTO3D_SINGLE, NULL/*hImageList*/),
-        m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false), m_image(NULL)
-    {
-    }
-    ~PadButton() { 
-        delete m_image;
-    }
-
-    void getText(tstring *text) const
-    {
-        text->assign(m_text);
-    }
-
+    PadButton(UINT msg, WPARAM param) : m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false),
+        m_image(NULL),m_background_color(0) {}
+    ~PadButton() { delete m_image; }
+    void getText(tstring *text) const { text->assign(m_text); }
     void setText(const tstring& text)
     {
         if (text == m_text)
@@ -37,19 +27,9 @@ public:
         m_text.assign(text);
         Invalidate();
     }
-
-    void getCommand(tstring *cmd) const
-    {
-        cmd->assign(m_command);
-    }
-
-    void setCommand(const tstring& cmd)
-    {
-        m_command = cmd;    
-    }
-
-    bool isEmptyButton() const 
-    {
+    void getCommand(tstring *cmd) const { cmd->assign(m_command); }
+    void setCommand(const tstring& cmd) { m_command = cmd; }
+    bool isEmptyButton() const {
         if (m_text.empty() && m_command.empty()) 
         {
            if (!m_image || m_image->empty())
@@ -80,33 +60,24 @@ public:
        Invalidate(FALSE);
     }
 
-    ClickpadImage * getImage() const
-    {
-        return m_image;
-    }
-
-    void setTemplate(bool template_flag)
-    {
-        m_template = template_flag;
-    }
-
-    bool getTemplate() const 
-    {
-        return m_template;
-    }
-
+    ClickpadImage * getImage() const { return m_image; }
+    void setTemplate(bool template_flag) { m_template = template_flag; }
+    bool getTemplate() const { return m_template; }
+    void setBackgroundColor(COLORREF color) { m_background_color = color; }
 private:
     BEGIN_MSG_MAP(PadButton)
       MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONUP, OnClickUp)
-      CHAIN_MSG_MAP(CBitmapButtonImpl<PadButton>)
+      MESSAGE_HANDLER(WM_PAINT, OnPaint)
+      MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
     END_MSG_MAP()
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
     { 
         m_pushed = true;
         ::SendMessage(GetParent(), m_click_msg, m_click_param, 0);
+        Invalidate(FALSE);
         bHandled = FALSE;
         return 0; 
     }
@@ -115,31 +86,39 @@ private:
     {
         m_pushed = false;
         ::SendMessage(GetParent(), m_click_msg, m_click_param, 1);
+        Invalidate(FALSE);
         bHandled = FALSE;
         return 0;
     }
 
-   // override of CBitmapButtonImpl DoPaint(). Adds fillrect
-    void DoPaint(CDCHandle dc)
+    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&) { return 1; }
+    LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&)
     {
-        RECT rc;
+        RECT rc; 
         GetClientRect(&rc);
-        UINT state = DFCS_BUTTONPUSH;
+        CPaintDC pdc(m_hWnd);
+        CMemoryDC dc(pdc, rc);
+
+        dc.FillSolidRect(&rc, m_background_color);
+
+        /*UINT state = DFCS_BUTTONPUSH;
         if (m_pushed || m_selected) 
             state |= DFCS_PUSHED;
-        dc.DrawFrameControl(&rc,DFC_BUTTON, state);
-
+        dc.DrawFrameControl(&rc,DFC_BUTTON, state);*/
+        if (m_pushed || m_selected)
+            dc.DrawFrameControl(&rc,DFC_BUTTON, DFCS_BUTTONPUSH|DFCS_PUSHED);
+        
         if (m_image && !m_image->empty())
         {
             int x = (rc.right - m_image->width()) / 2;
             int y = (rc.bottom - m_image->height()) / 2;
-            if (m_pushed)
+            if (m_pushed || m_selected)
                  m_image->renderpushed(dc, x, y);
             else
                 m_image->render(dc, x, y);
         }
 
-        if (!m_text.empty())
+        /*if (!m_text.empty())
         {
             int len = m_text.length(); 
             if (len > bufferlen) len = bufferlen;
@@ -147,6 +126,7 @@ private:
             rc.left+=2; rc.right-=2;
             dc.SetBkMode(TRANSPARENT);
             dc.DrawTextEx(buffer, len, &rc, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-        }
+        }*/
+        return 0;
     }
 };

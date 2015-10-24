@@ -29,12 +29,12 @@ public:
        if (m_image)
        {
            image_render_ex r;
-           r.sw = m_image->width()-3;
-           r.sh = m_image->height()-3;
-           //r.sx = r.sy = 1;
+           r.sw = m_image->width()-1;
+           r.sh = m_image->height()-1;
+           r.sx = r.sy = 1;
            r.w = r.sw;
            r.h = r.sh;
-           m_image->render(dc, x, y, &r);
+           m_image->render(dc, x+2, y+2, &r);
        }
    }
    void render(HDC dc, int x, int y)

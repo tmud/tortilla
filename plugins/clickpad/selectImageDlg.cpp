@@ -4,12 +4,12 @@
 
 extern ImageCollection *m_image_collection;
 
-void SelectImage::setImage(const BigImageData& image)
+bool SelectImage::setImage(const BigImageData& image)
 {
     const Image *ci = image.image;
-    if (!ci || ci->width() <= 0 || ci->height() <= 0 || image.image_size <= 0) {
+    if (!ci || ci->width() <= 0 || ci->height() <= 0 || image.image_size < 0) {
         clearImage();
-        return;
+        return false;
     }
     m_img = image;
     m_width = image.image->width();
@@ -27,6 +27,7 @@ void SelectImage::setImage(const BigImageData& image)
     }   
     updateScrollsbars();
     Invalidate(FALSE);
+    return true;
 }
 
 void SelectImage::clearImage()
@@ -91,8 +92,12 @@ void SelectImage::updateScrollsbars()
 {
     RECT rc; GetClientRect(&rc);
     int window_width = rc.right;
+    if (m_img.image) {
     m_draw_y = updateBar(SB_VERT, rc.bottom, m_img.image->height());
-    m_draw_x = updateBar(SB_HORZ, rc.right, m_img.image->width());    
+    m_draw_x = updateBar(SB_HORZ, rc.right, m_img.image->width());
+    } else {
+        m_draw_x = m_draw_y = 0;
+    }
 }
 
 int SelectImage::calculateBar(int current, int max_value, DWORD pos)
@@ -223,7 +228,8 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
         const BigImageData &image = m_image_collection->getImage(i);
         if (image.name == item)
         {
-            m_atlas.setImage(image);
+            if (!m_atlas.setImage(image))
+                break;
             SelectImageParams params;
             m_atlas.getParams(&params);
 

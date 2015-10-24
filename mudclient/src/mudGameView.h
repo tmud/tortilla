@@ -758,7 +758,7 @@ private:
             data.dlg = tmp.dlg;
         }
         m_settings_mode = false;
-        m_plugins.processPluginsMethod("propsunblocked", 0);
+        m_plugins.processPluginsMethod("propsupdated", 0);
         return 0;
     }
 
