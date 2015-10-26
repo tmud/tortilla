@@ -3,8 +3,12 @@
 class PluginsTriggerString
 {
     MudViewString *s;
+    std::vector<tstring> m_params;
 public:
-    PluginsTriggerString(MudViewString *ps) : s(ps) { assert(s); }
+    PluginsTriggerString(MudViewString *ps, const CompareObject& co) : s(ps) {
+        assert(s);
+        co.getParameters(&m_params);
+    }
     int blocks() const { return s->blocks.size(); }
     void getText(tstring* text) { s->getText(text); }
     int  getTextLen() const { return s->getTextLen(); }
@@ -20,8 +24,24 @@ public:
         if (block >= 0 && block < blocks())
             s->blocks[block].string.assign(text);
     }
-    
-
+    int getParamsCount() const {
+        int count = m_params.size();
+        return (count > 0) ? count-1 : 0;
+    }
+    bool getParam(int index, tstring* p) {
+        int count = m_params.size();
+        if (index > 0 && count < count)
+        {
+            p->assign(m_params[index]);
+            return true;
+        }
+        return false;
+    }
+    bool getCompared(tstring *p) {
+        if (m_params.empty()) return false;
+        p->assign(m_params[0]);
+        return true;
+    }
 };
 
 class PluginsTrigger

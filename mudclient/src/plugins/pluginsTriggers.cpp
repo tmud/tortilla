@@ -69,10 +69,10 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
     lua_insert(L, -2);
     lua_pop(L, 1);
 
-    PluginsTriggerString vs(cd.string);
+    PluginsTriggerString vs(cd.string, m_compare);
     luaT_pushobject(L, &vs, LUAT_VIEWSTRING);
     if (lua_pcall(L, 1, 0, 0))
-    {      
+    {
         if (luaT_check(L, 1, LUA_TSTRING))
             pluginError("trigger", lua_tostring(L, -1));
         else
@@ -136,7 +136,7 @@ void reg_mt_trigger(lua_State *L)
     reg_mt_trigger_string(L);
 }
 
-int ts_getBlocks(lua_State *L)
+int ts_getBlocksCount(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWSTRING))
     {
@@ -144,7 +144,7 @@ int ts_getBlocks(lua_State *L)
         lua_pushinteger(L, s->blocks());
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getBlocks");
+    return pluginInvArgs(L, "viewstring:getBlocksCount");
 }
 
 int ts_getText(lua_State *L)
@@ -160,11 +160,55 @@ int ts_getText(lua_State *L)
     return pluginInvArgs(L, "viewstring:getText");
 }
 
+int ts_getParameter(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        PluginsTriggerString *s = (PluginsTriggerString*)luaT_toobject(L, 1);
+        tstring p;
+        if (!s->getParam( lua_tointeger(L, 2), &p))
+            lua_pushnil(L);
+        else
+            lua_pushstring(L, TW2U(p.c_str()));
+        return 1;
+    }
+    return pluginInvArgs(L, "viewstring:getParameter");
+}
+
+int ts_getParamsCount(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsTriggerString *s = (PluginsTriggerString*)luaT_toobject(L, 1);
+        lua_pushinteger(L, s->getParamsCount());
+        return 1;
+    }
+    return pluginInvArgs(L, "viewstring:getParamsCount");
+}
+
+int ts_getComparedText(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsTriggerString *s = (PluginsTriggerString*)luaT_toobject(L, 1);
+        tstring p;
+        if (!s->getCompared(&p))
+            lua_pushnil(L);
+        else
+            lua_pushstring(L, TW2U(p.c_str()));
+        return 1;
+    }
+    return pluginInvArgs(L, "viewstring:getParamsCount");
+}
+
 void reg_mt_trigger_string(lua_State *L)
 {
     luaL_newmetatable(L, "viewstring");
-    regFunction(L, "getBlocks", ts_getBlocks);
+    regFunction(L, "getBlocksCount", ts_getBlocksCount);
     regFunction(L, "getText", ts_getText);
+    regFunction(L, "getParamsCount", ts_getParamsCount);
+    regFunction(L, "getParameter", ts_getParameter);
+    regFunction(L, "getComparedText", ts_getComparedText);
     regIndexMt(L);
     lua_pop(L, 1);
 }
