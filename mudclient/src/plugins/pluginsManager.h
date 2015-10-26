@@ -17,6 +17,7 @@ public:
     void unloadPlugins();
     bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
+    Plugin* findPlugin(const tstring& name);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);
@@ -38,7 +39,7 @@ private:
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
     enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };
-    TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* plugin_name);
+    TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg);
     void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const char* error, int plugin_index);
     void terminatePlugin(Plugin* p);

@@ -115,6 +115,7 @@ struct DOCKCONTEXT
    bool bKeepSize;    // Recommend using current size and avoid rescale
    bool bNcActivate;  // Helpful flags to sync floating window header with main window
    bool bUseNcActivate;
+   bool bBlockFloatingResizeBox;
 };
 
 typedef CSimpleValArray<DOCKCONTEXT*> CDockMap;
@@ -332,7 +333,7 @@ template<class T> HCURSOR CSplitterBar<T>::s_hHorizCursor = NULL;
 ///////////////////////////////////////////////////////
 // CFloatingWindow
 
-typedef CWinTraits<WS_OVERLAPPED|WS_CAPTION|WS_THICKFRAME|WS_SYSMENU, WS_EX_TOOLWINDOW|WS_EX_WINDOWEDGE> CFloatWinTraits;
+typedef CWinTraits<WS_OVERLAPPED|WS_CAPTION|WS_THICKFRAME|WS_SYSMENU, WS_EX_TOOLWINDOW> CFloatWinTraits;
 
 template< class T, class TBase = CWindow, class TWinTraits = CFloatWinTraits >
 class ATL_NO_VTABLE CFloatingWindowImpl : 
@@ -356,6 +357,7 @@ public:
       MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnLeftButtonDown)
       MESSAGE_HANDLER(WM_NCRBUTTONDOWN, OnRightButtonDown)
       MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnButtonDblClick)
+      MESSAGE_HANDLER(WM_NCHITTEST, OnNcHittest)
    END_MSG_MAP()
 
    DOCKCONTEXT* m_pCtx;
@@ -391,6 +393,14 @@ public:
       pT->UpdateLayout();
       GetWindowRect(&m_pCtx->rcWindow);
       return 0;
+   }
+
+   LRESULT OnNcHittest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+   {
+       LRESULT lresult = DefWindowProc(uMsg, wParam, lParam);
+       if (m_pCtx->bBlockFloatingResizeBox && lresult >= HTLEFT && lresult <= HTBOTTOMRIGHT)
+           return HTCAPTION;
+       return lresult;
    }
 
    LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
@@ -1257,7 +1267,7 @@ public:
            ATLASSERT(IsDocked(iSide));
            TSimpleWindowParams p;
            p.wnd = new TSimplePanelWindow();
-           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, WS_EX_STATICEDGE))
+           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, 0))
               { delete p.wnd; return FALSE; }
            p.wnd->m_hWndClient = hWnd;
            ::SetParent(hWnd, *p.wnd);
@@ -1436,6 +1446,7 @@ public:
       ctx->hwndFloated = *wndFloat;
       ctx->bNcActivate = m_activated;
       ctx->bUseNcActivate = m_used_activated_mode;
+      ctx->bBlockFloatingResizeBox = false;
 
       ::SetParent(ctx->hwndChild, ctx->hwndDocked);
 
@@ -1491,6 +1502,15 @@ public:
       return pT->_FloatWindow(pCtx);
    }
 
+   BOOL IsVisible(HWND hWnd)
+   {
+       T* pT = static_cast<T*>(this);
+       DOCKCONTEXT* pCtx = _GetContext(hWnd);
+       ATLASSERT(pCtx);
+       if (pCtx == NULL) return FALSE;
+       return (pCtx->Side == DOCK_HIDDEN) ? FALSE : TRUE;
+   }
+
    BOOL HideWindow(HWND hWnd)
    {
       T* pT = static_cast<T*>(this);
@@ -1517,6 +1537,23 @@ public:
       return pT->_FloatWindow(pCtx);
    }
 
+   SIZE GetWindowSize(HWND hWnd)
+   {
+       T* pT = static_cast<T*>(this);
+       DOCKCONTEXT* pCtx = _GetContext(hWnd);
+       ATLASSERT(pCtx);
+       SIZE result = { 0, 0};
+       if (pCtx == NULL) return result;
+       short side = pCtx->Side;
+       if (side == DOCK_HIDDEN)
+           side = pCtx->LastSide;
+       if (IsFloating(side))
+           return pCtx->sizeFloat;
+       result.cx = pCtx->rcWindow.right;
+       result.cy = pCtx->rcWindow.bottom;      
+       return result;
+   }
+
    void SetWindowName(HWND hWnd, const TCHAR *name)
    {
        DOCKCONTEXT* pCtx = _GetContext(hWnd);
@@ -1538,7 +1575,8 @@ public:
    {
       ATLASSERT(IsDocked(Side));
       int cy = m_panes[Side].m_cy;
-      if( cy == 0 ) cy = m_panes[Side].m_cyOld;
+      if( cy == 0 ) 
+        cy = m_panes[Side].m_cyOld;
       return cy;
    }
 
@@ -2004,10 +2042,10 @@ public:
       ATLASSERT(IsDocked(ctx->Side));
       if( !IsDocked(ctx->Side) ) return FALSE;
 
-      int Side = ctx->Side;
+      /*int Side = ctx->Side;
       int size = m_panes[Side].m_cy;
       bool bVertical = IsDockedVertically(Side);
-      (bVertical ? ctx->sizeFloat.cx : ctx->sizeFloat.cy) = size;
+      (bVertical ? ctx->sizeFloat.cx : ctx->sizeFloat.cy) = size;*/
 
       m_panes[ctx->Side].UnDockWindow(ctx);
       ctx->Side = DOCK_HIDDEN;

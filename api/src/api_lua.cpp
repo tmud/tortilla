@@ -9,7 +9,8 @@ struct luaT_userdata
     void *data;
 };
 
-const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render", "pen", "brush", "font", "pcre", "trigger", "viewstring" };
+const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render", "pen", "brush", "font", "pcre", "image", "trigger", "viewstring" };
+
 void getmetatable(lua_State *L, int type)
 {
     if (type >= LUAT_WINDOW && type <= LUAT_LAST)
@@ -190,8 +191,11 @@ bool luaT_check(lua_State *L, int n, ...)
 
 int luaT_error(lua_State *L, const utf8* error_message)
 {
-    lua_pushstring(L, error_message);
-    lua_error(L);
+    if (error_message)
+    {
+        lua_pushstring(L, error_message);
+        lua_error(L);
+    }
     return 0;
 }
 

@@ -33,7 +33,7 @@ return 'Плагин отображает информацию о здоровь
 end
 
 function statusbar.version()
-    return '1.04'
+    return '1.05'
 end
 
 local objs = {}
@@ -217,6 +217,11 @@ end
 function statusbar.disconnect()
   connect = false
   values = {}
+  r:update()
+end
+
+function statusbar.propsupdated()
+  r:setBackground(props.backgroundColor())
   r:update()
 end
 

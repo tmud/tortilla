@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libxml2", "libs\libxml2\libxml2.vcxproj", "{41DC785E-E0D7-4484-93AA-12D0D5412E65}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcre", "libs\pcre\pcre.vcxproj", "{DC5A8763-1BD9-4434-AD37-1DBB2AEE8A1B}"
@@ -8,6 +10,13 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "libs\zlib\zlib.vcxproj", "{A8F6FF43-14F0-4398-B910-B264C24A3BD4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "libs\lua\lua.vcxproj", "{973F1327-C81C-4492-B02E-EEBBB39C321D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "fimage", "libs\freeimage\fimage\fimage.vcxproj", "{0EE71BA9-8218-4860-BE19-234F31228C01}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C8EE31DB-531A-4DD1-A0E4-A85B49D27276} = {C8EE31DB-531A-4DD1-A0E4-A85B49D27276}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freeimagelib", "libs\freeimagelib\freeimagelib.vcxproj", "{C8EE31DB-531A-4DD1-A0E4-A85B49D27276}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -31,6 +40,14 @@ Global
 		{973F1327-C81C-4492-B02E-EEBBB39C321D}.Debug|Win32.Build.0 = Debug|Win32
 		{973F1327-C81C-4492-B02E-EEBBB39C321D}.Release|Win32.ActiveCfg = Release|Win32
 		{973F1327-C81C-4492-B02E-EEBBB39C321D}.Release|Win32.Build.0 = Release|Win32
+		{0EE71BA9-8218-4860-BE19-234F31228C01}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0EE71BA9-8218-4860-BE19-234F31228C01}.Debug|Win32.Build.0 = Debug|Win32
+		{0EE71BA9-8218-4860-BE19-234F31228C01}.Release|Win32.ActiveCfg = Release|Win32
+		{0EE71BA9-8218-4860-BE19-234F31228C01}.Release|Win32.Build.0 = Release|Win32
+		{C8EE31DB-531A-4DD1-A0E4-A85B49D27276}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C8EE31DB-531A-4DD1-A0E4-A85B49D27276}.Debug|Win32.Build.0 = Debug|Win32
+		{C8EE31DB-531A-4DD1-A0E4-A85B49D27276}.Release|Win32.ActiveCfg = Release|Win32
+		{C8EE31DB-531A-4DD1-A0E4-A85B49D27276}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -20,6 +20,9 @@
     <ClCompile Include="src\api_pcre.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\api_image.cpp">
+      <Filter>Main Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\stdafx.h">

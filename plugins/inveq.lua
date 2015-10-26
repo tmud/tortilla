@@ -21,24 +21,19 @@ end
 if window ~= 0 then return end
 end]]
 
-local r
+local r, img
 function inveq.render()
   r:print(4, 4, 'Экипировка:')
+  r:drawImage(img, 20, 20)
 end
 
 function inveq.init()
   --local p = createWindow("right", 256, 400)
   --p:dock("right")
-  --[[local p = createPanel("right", 300)
+  local p = createPanel("right", 300)
   r = p:setRender(inveq.render)
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(text_color))
-  r:select(props.currentFont())]]
-
-
-  createTrigger("Вы хотите %1", inveq.event)
-end
-
-function inveq.event(s)
-  log("Сработал триггер")
+  r:select(props.currentFont())
+  img = r:createImage("plugins/1.png")
 end

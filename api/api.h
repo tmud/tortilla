@@ -11,6 +11,77 @@
 typedef char utf8;
 typedef std::string u8string;
 
+// utf8 <-> wide <-> ansi
+typedef void* strbuf;
+void* strbuf_ptr(strbuf b);
+void  strbuf_destroy(strbuf b);
+strbuf convert_utf8_to_wide(const utf8* string);
+strbuf convert_wide_to_utf8(const wchar_t* string);
+strbuf convert_ansi_to_wide(const char* string);
+strbuf convert_wide_to_ansi(const wchar_t* string);
+
+//utf8 helpers functions
+int utf8_symlen(const utf8* symbol);
+int utf8_strlen(const utf8* string);
+int utf8_sympos(const utf8* string, int index);
+strbuf utf8_trim(const utf8* string);
+
+//u8string wrapper
+class U8
+{   u8string& s;
+public:
+    U8(u8string& string) : s(string) {}
+    operator u8string&() { return s; }
+    operator u8string*() { return &s; }
+    u8string at(int index) const {
+        int pos = utf8_sympos(s.c_str(), index);
+        if (pos == -1) return u8string();
+        const utf8 *p = s.c_str()+pos;
+        return u8string(p, utf8_symlen(p));
+    }
+    void trim() {
+        strbuf b = utf8_trim(s.c_str()); 
+        s.assign((const utf8*)strbuf_ptr(b));
+        strbuf_destroy(b);
+    }
+};
+
+class TU2W
+{
+    strbuf b;
+public:
+    TU2W(const utf8* string) { b = convert_utf8_to_wide(string); }
+    ~TU2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2U
+{
+    strbuf b;
+public:
+    TW2U(const wchar_t* string) { b = convert_wide_to_utf8(string); }
+    ~TW2U() { strbuf_destroy(b); }
+    operator const utf8*() const { return (const utf8*)strbuf_ptr(b); }
+};
+
+class TA2W
+{
+    strbuf b;
+public:
+    TA2W(const char* string) { b = convert_ansi_to_wide(string); }
+    ~TA2W() { strbuf_destroy(b); }
+    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
+};
+
+class TW2A
+{
+    strbuf b;
+public:
+    TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
+    ~TW2A() { strbuf_destroy(b); }
+    operator const char*() const { return (const char*)strbuf_ptr(b); }
+};
+
 //lua api
 #define LUAT_WINDOW     100
 #define LUAT_VIEWDATA   101
@@ -21,9 +92,10 @@ typedef std::string u8string;
 #define LUAT_BRUSH      106
 #define LUAT_FONT       107
 #define LUAT_PCRE       108
-#define LUAT_TRIGGER    109
-#define LUAT_VIEWSTRING 110
-#define LUAT_LAST       110
+#define LUAT_IMAGE      109
+#define LUAT_TRIGGER    110
+#define LUAT_VIEWSTRING 111
+#define LUAT_LAST       111
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
@@ -47,6 +119,9 @@ namespace base {
     }
     inline void runCommand(lua_State* L, const utf8* cmd)  {
         luaT_run(L, "runCommand", "s", cmd);
+    }
+    inline void setCommand(lua_State* L, const utf8* cmd)  {
+        luaT_run(L, "setCommand", "s", cmd);
     }
     inline void addButton(lua_State *L, int bmp, int id, const utf8* tooltip) {
         luaT_run(L, "addButton", "dds", bmp, id, tooltip);
@@ -77,16 +152,32 @@ namespace base {
     }
     inline void getPath(lua_State *L, const utf8* file, u8string* path) {
         luaT_run(L, "getPath", "s", file);
+        if (!lua_isstring(L, -1)) return;
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline void getProfilePath(lua_State *L, u8string* path) {
+        luaT_run(L, "getProfilePath", "");
+        if (!lua_isstring(L, -1)) return;
+        path->assign(lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+    inline void getResource(lua_State *L, const utf8* file, u8string* path) {
+        luaT_run(L, "getResource", "s", file);
+        if (!lua_isstring(L, -1)) return;
         path->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     inline void getProfile(lua_State *L, u8string* profile) {
         luaT_run(L, "getProfile", "");
+        if (!lua_isstring(L, -1)) return;
         profile->assign(lua_tostring(L, -1));
         lua_pop(L, 1);
     }
     inline HWND getParent(lua_State *L) {
         luaT_run(L, "getParent", "");
+        if (!lua_isnumber(L,1))
+            return 0;
         HWND parent = (HWND)lua_tounsigned(L, -1);
         lua_pop(L, 1);
         return parent;
@@ -102,6 +193,9 @@ namespace base {
         luaT_run(L, "loadTable", "s", file);
         return lua_istable(L, -1) ? true : false;
     }
+    inline void pluginName(lua_State* L, const utf8* name) {
+        luaT_run(L, "pluginName", "s", name);
+    }
     inline void updateView(lua_State* L, int view, lua_CFunction f) {
         luaT_run(L, "updateView", "dF", view, f);
     }
@@ -115,8 +209,15 @@ namespace base {
         }
         return false;
     }
-    // createWindow, createPanel, pcre -> classes below
-    // log -> luaT_log
+    inline void vprint(lua_State* L, int view, const wchar_t* message) {
+        TW2U m(message);
+        luaT_run(L, "vprint", "ds", view, (const char*)(m)); //todo
+    }
+    inline void print(lua_State* L, const wchar_t* message) {
+        TW2U m(message);
+        luaT_run(L, "print", "s", (const char*)(m)); //todo
+    }
+    // createWindow, createPanel, pcre, log -> in classes below
 } // namespace base
 
 class luaT_window
@@ -125,6 +226,18 @@ class luaT_window
     void *window;
 public:
     luaT_window() : L(NULL), window(NULL) {}
+	bool create(lua_State *pL, const utf8* caption, int width, int height, bool visible)
+	{
+		if (!pL)
+            return false;
+		L = pL;
+		luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
+		void *wnd = luaT_toobject(L, -1);
+		if (!wnd)
+			return false;
+		window = wnd;
+		return true;
+	}
 	bool create(lua_State *pL, const utf8* caption, int width, int height)
 	{
 		if (!pL)
@@ -190,6 +303,21 @@ public:
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
         luaT_run(L, "attach", "od", child);
+    }
+    void setFixedSize(int width, int height)
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "setFixedSize", "odd", width, height);
+    }
+    SIZE getSize()
+    {
+        luaT_pushobject(L, window, LUAT_WINDOW);
+        luaT_run(L, "getSize", "o");
+        SIZE sz;
+        sz.cx = lua_tointeger(L, -1);
+        sz.cy = lua_tointeger(L, -2);
+        lua_pop(L, 2);
+        return sz;
     }
 };
 
@@ -546,78 +674,6 @@ private:
     }
 };
 
-typedef void* strbuf;
-void* strbuf_ptr(strbuf b);
-void  strbuf_destroy(strbuf b);
-
-//utf8 helpers functions
-int utf8_symlen(const utf8* symbol);
-int utf8_strlen(const utf8* string);
-int utf8_sympos(const utf8* string, int index);
-strbuf utf8_trim(const utf8* string);
-
-//u8string wrapper
-class U8
-{   u8string& s;
-public:
-    U8(u8string& string) : s(string) {}
-    operator u8string&() { return s; }
-    operator u8string*() { return &s; }
-    u8string at(int index) const {
-        int pos = utf8_sympos(s.c_str(), index);
-        if (pos == -1) return u8string();
-        const utf8 *p = s.c_str()+pos;
-        return u8string(p, utf8_symlen(p));
-    }
-    void trim() {
-        strbuf b = utf8_trim(s.c_str()); 
-        s.assign((const utf8*)strbuf_ptr(b));
-        strbuf_destroy(b);
-    }
-};
-
-// utf8 <-> wide <-> ansi (used by TU2W, etc classes).
-strbuf convert_utf8_to_wide(const utf8* string);
-strbuf convert_wide_to_utf8(const wchar_t* string);
-strbuf convert_ansi_to_wide(const char* string);
-strbuf convert_wide_to_ansi(const wchar_t* string);
-
-class TU2W
-{
-    strbuf b;
-public:
-    TU2W(const utf8* string) { b = convert_utf8_to_wide(string); }
-    ~TU2W() { strbuf_destroy(b); }
-    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
-};
-
-class TW2U
-{
-    strbuf b;
-public:
-    TW2U(const wchar_t* string) { b = convert_wide_to_utf8(string); }
-    ~TW2U() { strbuf_destroy(b); }
-    operator const utf8*() const { return (const utf8*)strbuf_ptr(b); }
-};
-
-class TA2W
-{
-    strbuf b;
-public:
-    TA2W(const char* string) { b = convert_ansi_to_wide(string); }
-    ~TA2W() { strbuf_destroy(b); }
-    operator const wchar_t*() const { return (const wchar_t*)strbuf_ptr(b); }
-};
-
-class TW2A
-{
-    strbuf b;
-public:
-    TW2A(const wchar_t* string) { b = convert_wide_to_ansi(string); }
-    ~TW2A() { strbuf_destroy(b); }
-    operator const char*() const { return (const char*)strbuf_ptr(b); }
-};
-
 class luaT_Props
 {
     lua_State *L;
@@ -680,7 +736,12 @@ public:
         luaT_run(L, "activated", "t");
         return boolresult();
     }
-
+    bool isPropertiesOpen()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "isPropertiesOpen", "t");
+        return boolresult();
+    }
 private:
     bool boolresult()
     {
@@ -816,7 +877,6 @@ namespace xml
         bool getattrvalue(int index, u8string* value) { return _getp(xml_get_attr_value(m_Node, index), value); }
         bool move(const utf8* path) { return _nmove(path, false); }
         bool create(const utf8* path) { return _nmove(path, true); }
-
     private:
         bool _getp(xstring str, u8string* value)
         {
@@ -832,6 +892,7 @@ namespace xml
             m_Node = newnode;
             return true;
         }
+    private:
         xnode m_Node;
     };
 
@@ -853,6 +914,9 @@ namespace xml
         int   size() const { return m_ListSize; }
         bool  empty() const { return (m_ListSize==0) ? true : false; }
         xml::node operator[](int node_index) { return xml::node(xml_list_getnode(m_NodeList, node_index)); }
+    private:
+        request(const request& r) {}
+        request& operator=(const request& r) {}
     private:
         xlist m_NodeList;
         int   m_ListSize;
@@ -889,5 +953,51 @@ public:
     int  last(int index) { return pcre_last(regexp, index); }
     void get(int index, u8string *str) { str->assign(pcre_string(regexp, index)); }
 private:
+    Pcre(const Pcre& p) {}
+    Pcre& operator=(const Pcre& p) {}
+private:
     pcre8 regexp;
+};
+
+// images support
+typedef void* image;
+image image_load(const wchar_t* file, int extra_option);
+void  image_unload(image img);
+image image_cut(image img, int x, int y, int w, int h);
+int   image_width(image img);
+int   image_height(image img);
+
+struct image_render_ex {
+  image_render_ex() : w(0), h(0), sx(0), sy(0), sw(0), sh(0) {}
+  int w, h;                         // scaling (width/height of dest. rect); w/h=0 - default (no scale)
+  int sx, sy;                       // source image position
+  int sw, sh;                       // source image size
+};
+int image_render(image img, HDC dc, int x, int y, image_render_ex *p);  // 0-fail,not 0-ok
+
+class Image
+{
+public:
+    Image() : img(NULL) {}
+    ~Image() { 
+        unload(); }
+    bool load(const wchar_t* file, int option) {
+        unload();
+        img = image_load(file, option);
+        return (img) ? true : false;
+    }
+    bool cut(const Image& from, int x, int y, int w, int h) {
+        unload();
+        img = image_cut(from.img, x, y, w, h);
+        return (img) ? true : false;
+    }
+    void unload() { if (img) { image_unload(img); img = NULL; } }
+    int width() const { return image_width(img); }
+    int height() const { return image_height(img); }
+    int render(HDC dc, int x, int y, image_render_ex *p = NULL) { return image_render(img, dc, x, y, p); }
+private:
+    Image(const Image& op) {}
+    Image& operator=(const Image& op) {}
+private:
+    image img;
 };

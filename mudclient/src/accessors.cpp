@@ -47,3 +47,8 @@ VarProcessor* tortilla::getVars()
 {
     return &m_vars;
 }
+
+bool tortilla::isPropertiesOpen()
+{
+    return _gameview->isPropertiesOpen();
+}

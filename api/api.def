@@ -46,3 +46,9 @@ EXPORTS
 	utf8_strlen
 	utf8_sympos
 	utf8_trim
+	image_load
+	image_unload
+	image_cut
+	image_width
+	image_height
+	image_render

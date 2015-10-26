@@ -103,7 +103,19 @@ public:
         lua_pop(L, 1);
         return result;
     }
-
+    bool get(const utf8* field, int *value)
+    {
+        bool result = false;
+        lua_pushstring(L, field);
+        lua_gettable(L, -2);
+        if (lua_isnumber(L, -1))
+        {
+            *value = lua_tointeger(L, -1);
+            result = true;
+        }
+        lua_pop(L, 1);
+        return result;
+    }
     bool getcolor(COLORREF *color)
     {
         lua_pushstring(L, "color");
@@ -170,6 +182,13 @@ public:
             bottom = true;
         }
         return (left && top && right && bottom) ? true : false;     
+    }
+
+    bool getxy(int *x, int *y)
+    {
+        if (get("x", x) && get("y", y))
+            return true;
+        return false;           
     }
 };
 
