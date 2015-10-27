@@ -75,7 +75,7 @@ private:
          if (m_image) {
             int x = (rc.right - m_image->width()) / 2;
             int y = (rc.bottom - m_image->height()) / 2;
-            m_image->render(dc, x, y);
+            m_image->render(dc, x, y, 0, 0);
         }     
         return 0;
     }

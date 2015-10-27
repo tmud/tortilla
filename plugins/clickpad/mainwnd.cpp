@@ -135,19 +135,6 @@ void ClickpadMainWnd::setButtonSize(int size)
 
 void ClickpadMainWnd::onCreate()
 {
-    m_buttons.resize(MAX_COLUMNS*MAX_ROWS, NULL);
-    for (int x=0; x<MAX_COLUMNS; x++) {
-    for (int y=0; y<MAX_ROWS; y++) {
-      PadButton *b = new PadButton(WM_USER, MAKELONG(x, y));
-      int px = x * m_button_size + 2;
-      int py = y * m_button_size + 2;
-      RECT pos = { px, py, px + m_button_size, py + m_button_size };
-      b->Create(m_hWnd, pos, L"", WS_CHILD);
-      int index = y*MAX_COLUMNS + x;
-      m_buttons[index] = b;
-    }}
-    updated();
-    PostMessage(WM_USER+1);
 }
 
 void ClickpadMainWnd::onDestroy()
@@ -232,11 +219,26 @@ void ClickpadMainWnd::load(xml::node& node)
     if (!bt.checkSize(size))
        size = bt.getDefaultSize();
     m_button_size = size;
+
+    m_buttons.resize(MAX_COLUMNS*MAX_ROWS, NULL);
+    for (int x = 0; x < MAX_COLUMNS; x++) {
+        for (int y = 0; y < MAX_ROWS; y++) {
+            PadButton *b = new PadButton(WM_USER, MAKELONG(x, y));
+            int px = x * m_button_size + 2;
+            int py = y * m_button_size + 2;
+            RECT pos = { px, py, px + m_button_size, py + m_button_size };
+            b->Create(m_hWnd, pos, L"", WS_CHILD);
+            int index = y*MAX_COLUMNS + x;
+            m_buttons[index] = b;
+        }
+    }
+    /*updated();
+    PostMessage(WM_USER + 1);*/
     
-    for (int y = 0; y < MAX_ROWS; ++y) {
+    /*for (int y = 0; y < MAX_ROWS; ++y) {
      for (int x = 0; x < MAX_COLUMNS; ++x) {
        getButton(x, y)->clear();
-    }}
+    }}*/
 
     tstring text, cmd;
     xml::request buttons(node, "buttons/button");

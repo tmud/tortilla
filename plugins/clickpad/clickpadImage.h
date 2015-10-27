@@ -24,7 +24,7 @@ public:
        m_params.atlas_y = y;
        m_params.atlas_filename = filepath;
    }
-   void renderpushed(HDC dc, int x, int y)
+   void renderpushed(HDC dc, int x, int y, int w, int h)
    {
        if (m_image)
        {
@@ -32,15 +32,19 @@ public:
            r.sw = m_image->width()-1;
            r.sh = m_image->height()-1;
            r.sx = r.sy = 1;
-           r.w = r.sw;
-           r.h = r.sh;
+           r.w = w-1;
+           r.h = h-1;
            m_image->render(dc, x+2, y+2, &r);
        }
    }
-   void render(HDC dc, int x, int y)
+   void render(HDC dc, int x, int y, int w, int h)
    {
        if (m_image)
-           m_image->render(dc, x, y);
+       {
+           image_render_ex r;
+           r.w = w; r.h = h;
+           m_image->render(dc, x, y, &r);
+       }
    }
 
    int width() const { return (m_image) ? m_image->width() : 0; }

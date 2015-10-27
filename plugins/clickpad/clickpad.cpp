@@ -81,6 +81,21 @@ int init(lua_State *L)
     m_image_collection = new ImageCollection();
     m_image_collection->scanImages();
 
+    xml::node ld;
+    u8string path;
+    base::getProfilePath(L, &path);
+    DWORD fa = GetFileAttributes(TU2W(path.c_str()));
+    if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
+    {
+        bool result = ld.load(path.c_str());
+        if (!result)
+        {
+            u8string error("Ошибка загрузки списка с кнопками: ");
+            error.append(path);
+            luaT_log(L, error.c_str());
+        }
+    }
+
     bool ok = false;
     if (m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true))
     {
@@ -88,32 +103,13 @@ int init(lua_State *L)
         m_clickpad = new ClickpadMainWnd();
         RECT rc; ::GetClientRect(parent, &rc);
         HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+        m_clickpad->load(ld);
         m_parent_window.attach(res);
         m_parent_window.setFixedSize(rc.right, rc.bottom);
         m_hwnd_float = m_parent_window.floathwnd();
         ok = true;
     }
-
-    if (ok)
-    {
-        u8string path;
-        base::getProfilePath(L, &path);
-        DWORD fa = GetFileAttributes(TU2W(path.c_str()));
-        if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
-        {
-            xml::node ld;
-            bool result = ld.load(path.c_str());
-            if (result)
-                m_clickpad->load(ld);
-            if (!result)
-            {
-                u8string error("Ошибка загрузки списка с кнопками: ");
-                error.append(path);
-                luaT_log(L, error.c_str());
-            }
-            ld.deletenode();
-        }
-    }
+    ld.deletenode();
 
     if (ok && m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
     {
