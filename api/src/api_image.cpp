@@ -34,3 +34,17 @@ int image_render(image img, HDC dc, int x, int y, image_render_ex *p)
     else
        return fimage_render(dc, img, x, y, (fimage_render_ex*)p);
 }
+
+int image_getpixelcolor(image img, int x, int y, COLORREF *c)
+{
+    if (!fimage_getpixel(img, x, y, c))
+    {
+        int index = 0;
+        if (!fimage_getindex(img, x, y, &index))
+            return 0;
+        if (!fimage_getpalette(img, index, c))
+            return 0;
+        return 1;
+    }
+    return 1;
+}

@@ -119,6 +119,24 @@ void ClickpadMainWnd::showColumns(int count)
     m_columns = count;
 }
 
+void ClickpadMainWnd::setFont(LOGFONT font)
+{
+  m_logfont = font;
+  if (!m_buttons_font.IsNull())
+      m_buttons_font.DeleteObject();
+  HFONT hfont = m_buttons_font.CreateFontIndirect(&m_logfont);
+  for (int y = 0; y < MAX_ROWS; ++y) {
+  for (int x = 0; x < MAX_COLUMNS; ++x) {
+  PadButton *b = getButton(x, y);
+    b->setFont(hfont);
+  }}
+}
+
+void ClickpadMainWnd::getFont(LOGFONT* font) const
+{
+    *font = m_logfont;
+}
+
 void ClickpadMainWnd::setButtonSize(int size)
 {
     m_button_size = size;
@@ -177,7 +195,13 @@ void ClickpadMainWnd::updated()
 
 void ClickpadMainWnd::save(xml::node& node)
 {
-    node.create("params");
+    node.create("font");
+    node.set("name", m_logfont.lfFaceName);
+    node.set("height", MulDiv(-m_logfont.lfHeight, 72, GetDeviceCaps(GetDC(), LOGPIXELSY)));
+    node.set("bold", m_logfont.lfWeight);
+    node.set("italic", m_logfont.lfItalic);
+
+    node.create("/params");
     node.set("size", m_button_size);
     node.set("columns", m_columns);
     node.set("rows", m_rows);
@@ -213,6 +237,23 @@ void ClickpadMainWnd::save(xml::node& node)
 
 void ClickpadMainWnd::load(xml::node& node)
 {
+    LOGFONT lf;
+    initLogFont(&lf);
+    xml::request fnode(node, "font");
+    if (fnode.size() == 1)
+    {
+        xml::node font(fnode[0]);
+        tstring fname; int height = 0; int bold = 0; int italic = 0;
+        if (font.get("name", &fname) && font.get("height", &height) && 
+            font.get("bold", &bold) && font.get("italic", &italic))
+        {
+            wcscpy(lf.lfFaceName, fname.c_str());
+            lf.lfHeight = -MulDiv(height, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
+            lf.lfItalic = (italic) ? 1 : 0;
+            lf.lfWeight = bold;
+        }
+    }
+
     int size = 0;
     node.get("params/size", &size);
     ButtonSizeTranslator bt;
@@ -232,14 +273,6 @@ void ClickpadMainWnd::load(xml::node& node)
             m_buttons[index] = b;
         }
     }
-    /*updated();
-    PostMessage(WM_USER + 1);*/
-    
-    /*for (int y = 0; y < MAX_ROWS; ++y) {
-     for (int x = 0; x < MAX_COLUMNS; ++x) {
-       getButton(x, y)->clear();
-    }}*/
-
     tstring text, cmd;
     xml::request buttons(node, "buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
@@ -273,10 +306,12 @@ void ClickpadMainWnd::load(xml::node& node)
             showColumns(columns);
         }
     }
+    setFont(lf);
+    PostMessage(WM_USER+1);
 }
 
 void ClickpadMainWnd::setWorkWindowSize()
-{    
+{
     CWindow wnd(getFloatWnd());
     RECT rc; wnd.GetWindowRect(&rc);
     int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) /*+ GetSystemMetrics(SM_CXBORDER)*/) * 2;
@@ -284,4 +319,22 @@ void ClickpadMainWnd::setWorkWindowSize()
     rc.right = rc.left + width + 4;
     rc.bottom = rc.top + height + 4;
     wnd.MoveWindow(&rc);
+}
+
+void ClickpadMainWnd::initLogFont(LOGFONT *f)
+{
+    f->lfHeight = -MulDiv(8, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
+    f->lfWidth = 0;
+    f->lfEscapement = 0;
+    f->lfOrientation = 0;
+    f->lfWeight = FW_NORMAL;
+    f->lfItalic = 0;
+    f->lfUnderline = 0;
+    f->lfStrikeOut = 0;
+    f->lfCharSet = DEFAULT_CHARSET;
+    f->lfOutPrecision = OUT_DEFAULT_PRECIS;
+    f->lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    f->lfQuality = DEFAULT_QUALITY;
+    f->lfPitchAndFamily = DEFAULT_PITCH;
+    wcscpy(f->lfFaceName, L"Tahoma");
 }

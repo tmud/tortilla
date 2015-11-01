@@ -12,6 +12,8 @@ public:
     virtual int  getRows() const = 0;
     virtual void setButtonSize(int size) = 0;
     virtual int  getButtonSize() const = 0;
+    virtual void getFont(LOGFONT* font) const = 0;
+    virtual void setFont(LOGFONT font) = 0;
 };
 
 class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >, public ClickpadSettings
@@ -65,9 +67,14 @@ private:
     int  getButtonSize() const;
     void showRows(int count);
     void showColumns(int count);
+    void getFont(LOGFONT* font) const;
+    void setFont(LOGFONT font);
+    void initLogFont(LOGFONT *f);
 private:
     bool m_editmode;
     int m_button_size, m_rows, m_columns;
     std::vector<PadButton*> m_buttons;
     COLORREF m_backgroundColor;
+    LOGFONT m_logfont;
+    CFont m_buttons_font;
 };

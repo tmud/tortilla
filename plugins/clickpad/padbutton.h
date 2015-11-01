@@ -15,9 +15,11 @@ class PadButton : public CWindowImpl<PadButton>
     static WCHAR buffer[bufferlen];    
     ClickpadImage* m_image;
     COLORREF m_background_color;
+    HFONT m_font;
+
 public:
     PadButton(UINT msg, WPARAM param) : m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false),
-        m_image(NULL),m_background_color(0) {}
+        m_image(NULL),m_background_color(0), m_font(0) {}
     ~PadButton() { delete m_image; }
     void getText(tstring *text) const { text->assign(m_text); }
     void setText(const tstring& text)
@@ -58,6 +60,12 @@ public:
            delete m_image;
        m_image = image;
        Invalidate(FALSE);
+    }
+
+    void setFont(HFONT font)
+    {
+        m_font = font;
+        Invalidate(FALSE);
     }
 
     ClickpadImage * getImage() const { return m_image; }

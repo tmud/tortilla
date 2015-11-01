@@ -964,6 +964,7 @@ void  image_unload(image img);
 image image_cut(image img, int x, int y, int w, int h);
 int   image_width(image img);
 int   image_height(image img);
+int   image_getpixelcolor(image img, int x, int y, COLORREF *c); // return 0-false/not 0-true
 
 struct image_render_ex {
   image_render_ex() : w(0), h(0), sx(0), sy(0), sw(0), sh(0) {}
@@ -993,6 +994,7 @@ public:
     int width() const { return image_width(img); }
     int height() const { return image_height(img); }
     int render(HDC dc, int x, int y, image_render_ex *p = NULL) { return image_render(img, dc, x, y, p); }
+    bool getcolor(int x, int y, COLORREF *c) { return (image_getpixelcolor(img, x, y, c) == 0) ? false : true; }
 private:
     Image(const Image& op) {}
     Image& operator=(const Image& op) {}

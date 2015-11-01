@@ -24,7 +24,16 @@ bool SelectImage::setImage(const BigImageData& image)
     else
     {
         m_wcount = m_hcount = 1;
-    }   
+    }
+
+    COLORREF color =  RGB(255, 255, 0);
+    COLORREF c = 0;
+    if (image.image->getcolor(0, 0, &c)) 
+        color = RGB((GetRValue(c) ^ 0xff),(GetGValue(c) ^ 0xff),(GetBValue(c) ^ 0xff));
+    if (!m_selected.IsNull())
+        m_selected.DeleteObject();
+    m_selected.CreatePen(PS_SOLID, 1, color);
+
     updateScrollsbars();
     Invalidate(FALSE);
     return true;
@@ -36,6 +45,8 @@ void SelectImage::clearImage()
     m_width = m_height = m_size = 0;
     m_wcount = m_hcount = 0;
     Invalidate(FALSE);
+    if (!m_selected.IsNull())
+        m_selected.DeleteObject();
 }
 
 void SelectImage::getParams(SelectImageParams *params)
@@ -170,11 +181,12 @@ void SelectImage::renderImage(HDC hdc, int width, int height)
         int lx = px + size - 1;
         int ly = py + size - 1;
         CRect rc(px, py, lx, ly);
+        if (!m_selected.IsNull()) {
         HPEN old = dc.SelectPen(m_selected);
         renderRect(dc, rc);
         rc.DeflateRect(1,1);
         renderRect(dc, rc);
-        dc.SelectPen(old);
+        dc.SelectPen(old); }
     }
 }
 

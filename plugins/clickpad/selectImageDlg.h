@@ -111,7 +111,6 @@ private:
       MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnSelectImage)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) {
-        m_selected.CreatePen(PS_SOLID, 1, RGB(255,255,0)); //GetSysColor(COLOR_BTNTEXT));
         return 0;
     }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) {

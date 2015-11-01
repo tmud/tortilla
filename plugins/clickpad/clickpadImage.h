@@ -29,12 +29,12 @@ public:
        if (m_image)
        {
            image_render_ex r;
-           r.sw = m_image->width()-1;
-           r.sh = m_image->height()-1;
-           r.sx = r.sy = 1;
-           r.w = w-1;
-           r.h = h-1;
-           m_image->render(dc, x+2, y+2, &r);
+           r.sw = m_image->width();
+           r.sh = m_image->height();
+           r.sx = r.sy = 0;
+           r.w = w;
+           r.h = h;
+           m_image->render(dc, x+1, y+1, &r);
        }
    }
    void render(HDC dc, int x, int y, int w, int h)
@@ -42,7 +42,8 @@ public:
        if (m_image)
        {
            image_render_ex r;
-           r.w = w; r.h = h;
+           r.w = w;
+           r.h = h;
            m_image->render(dc, x, y, &r);
        }
    }

@@ -141,10 +141,13 @@ int init(lua_State *L)
     base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
 
 #ifdef _DEBUG // open all windows for edit mode (only for debugging)
-    base::checkMenu(L, 1);
+    /*base::checkMenu(L, 1);
     m_settings_window.show();
     m_select_image_window.show();
-    m_clickpad->setEditMode(true);
+    m_clickpad->setEditMode(true);*/
+    m_clickpad->setEditMode(false);
+#else
+    m_clickpad->setEditMode(false);
 #endif
     return 0;
 }

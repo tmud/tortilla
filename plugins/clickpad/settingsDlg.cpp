@@ -302,6 +302,18 @@ LRESULT SettingsDlg::OnDelIconButton(WORD, WORD, HWND, BOOL&)
     return 0;
 }
 
+LRESULT SettingsDlg::OnSelectFont(WORD, WORD, HWND, BOOL&)
+{
+    LOGFONT lf;
+    m_settings->getFont(&lf);
+    CFontDialog dlg(&lf, CF_SCREENFONTS, NULL, m_hWnd);
+    if (dlg.DoModal() == IDOK)
+    {
+        m_settings->setFont(lf);
+    }
+    return 0;
+}
+
 bool SettingsDlg::isSupportedExt(const wchar_t* file)
 {
     const wchar_t *e = wcsrchr(file, L'.');
