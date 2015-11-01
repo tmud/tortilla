@@ -215,6 +215,13 @@ namespace base {
         TW2U m(message);
         luaT_run(L, "print", "s", (const char*)(m)); //todo
     }
+    inline void terminate(lua_State *L) {
+        luaT_run(L, "terminate", "");
+    }
+    inline void log(lua_State *L, const wchar_t* message) {
+        TW2U m(message);
+        luaT_run(L, "log", "s", (const char*)(m)); //todo
+    }
     // createWindow, createPanel, pcre, log -> in classes below
 } // namespace base
 

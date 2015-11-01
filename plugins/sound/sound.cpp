@@ -28,8 +28,8 @@ int init(lua_State *L)
     player = new SoundPlayer(L);
     if (!player->isBassLoaded())
     {
-        luaT_log(L, "Модуль Bass не загружен.");
-        luaT_run(L, "terminate", "");
+        base::log(L, L"Модуль Bass не загружен.");
+        base::terminate(L);
         return 0;
     }
     base::addMenu(L, "Плагины/Записать звук...", 1);
