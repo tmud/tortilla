@@ -948,6 +948,7 @@ void reg_mt_render(lua_State *L);
 void reg_mt_pcre(lua_State *L);
 void reg_msdp(lua_State *L);
 void reg_mt_image(lua_State *L);
+void reg_mt_trigger(lua_State *L);
 //---------------------------------------------------------------------
 bool initPluginsSystem()
 {
@@ -979,7 +980,7 @@ bool initPluginsSystem()
     lua_register(L, "getProfilePath", getProfilePath);
     lua_register(L, "getProfile", getProfile);
     lua_register(L, "getResource", getResource);
-    lua_register(L, "getParent", getParent);    
+    lua_register(L, "getParent", getParent);
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);
     lua_register(L, "createWindow", createWindow);
@@ -1002,6 +1003,7 @@ bool initPluginsSystem()
     reg_mt_render(L);
     reg_mt_pcre(L);
     reg_msdp(L);
+    reg_mt_trigger(L);
     return true;
 }
 
@@ -1030,11 +1032,14 @@ void pluginDeleteResources(Plugin *plugin)
     for (int i = 0, e = plugin->panels.size(); i < e; ++i)
         _wndMain.m_gameview.deletePanel(plugin->panels[i]);
     plugin->panels.clear();
-
     // delete all system commands of plugin
     for (int i = 0, e = plugin->commands.size(); i < e; ++i)
         lp()->deleteSystemCommand(plugin->commands[i]);
     plugin->commands.clear();
+    // delete all triggers
+    for (int i = 0,  e = plugin->triggers.size(); i<e; ++i)
+        delete plugin->triggers[i];
+    plugin->triggers.clear();
     _cp = old;
 }
 //--------------------------------------------------------------------
@@ -1093,7 +1098,7 @@ int string_strstr(lua_State *L)
          const utf8* s2 = lua_tostring(L, 2);
          const utf8* pos = strstr(s1, s2);
          if (pos)
-         {  
+         {
             u8string tmp(s1, pos-s1);
             int find_pos = u8string_len(tmp) + 1;
             lua_pushinteger(L, find_pos);

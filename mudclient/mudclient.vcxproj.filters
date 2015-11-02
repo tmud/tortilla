@@ -241,6 +241,9 @@
     <ClInclude Include="src\plugins\pluginsRenderObjects.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\plugins\pluginsTriggers.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
     <ClInclude Include="src\msdp\msdpNetwork.h">
       <Filter>Source Files\Msdp</Filter>
     </ClInclude>
@@ -370,6 +373,9 @@
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
     <ClCompile Include="src\plugins\pluginsPcre.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsTriggers.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
     <ClCompile Include="src\msdp\msdpNetwork.cpp">

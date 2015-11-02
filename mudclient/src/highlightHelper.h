@@ -10,7 +10,7 @@ class HighlightHelper
 public:
     HighlightHelper()
     {
-        colors.assign(L"(black|red|green|brown|blue|magenta|cyan|gray|coal|light red|light green|yellow|light blue|purple|light cyan|white|light magenta|light brown|grey)");
+        colors.assign(L"(^black$|^red$|^green$|^brown$|^blue$|^magenta$|^cyan$|^gray$|^coal$|^light red$|^light green$|^yellow$|^light blue$|^purple$|^light cyan$|^white$|^light magenta$|^light brown$|^grey$)");
         pcre_colors.setRegExp(colors);
         pcre_rgb.setRegExp(L"rgb([0-9]+,[0-9]+,[0-9]+)");
         pcre_prefix.setRegExp(L"border|line|italic|b");

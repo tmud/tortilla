@@ -281,7 +281,11 @@ bool Gag::processing(CompareData& data)
             return false;
     }
 
-    data.del(range);
+    int len = data.fullstr.length();
+    if (range.begin == 0 && range.end == len)
+        data.string->dropped = true;
+    else
+        data.del(range);
     data.start = range.end+1;
     return true;
 }

@@ -46,7 +46,7 @@ int luapcre_size(lua_State *L)
 {
     if (luaT_check(L, 1), LUAT_PCRE)
     {
-        Pcre *p = (Pcre*)luaT_toobject(L, 1);        
+        Pcre *p = (Pcre*)luaT_toobject(L, 1);
         lua_pushinteger(L, p->size());
         return 1;
     }

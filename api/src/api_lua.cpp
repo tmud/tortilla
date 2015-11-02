@@ -9,11 +9,18 @@ struct luaT_userdata
     void *data;
 };
 
-const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render", "pen", "brush", "font", "pcre", "image" };
+const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render", "pen", "brush", "font", "pcre", "image", "trigger", "viewstring" };
+
 void getmetatable(lua_State *L, int type)
 {
-    type = type - LUAT_WINDOW;  // first type
-    luaL_getmetatable(L, metatables[type]);
+    if (type >= LUAT_WINDOW && type <= LUAT_LAST)
+    {
+        type = type - LUAT_WINDOW;
+        luaL_getmetatable(L, metatables[type]);
+    }
+    else{
+        lua_pushnil(L);
+    }
 }
 
 bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...)
@@ -208,6 +215,7 @@ void* luaT_toobject(lua_State* L, int index)
 
 void luaT_pushobject(lua_State* L, void *object, int type)
 {
+    if (!object) { lua_pushnil(L);  return; }
     luaT_userdata *o = (luaT_userdata*)lua_newuserdata(L, sizeof(luaT_userdata));
     o->data = object;
     o->type = type;
@@ -215,7 +223,7 @@ void luaT_pushobject(lua_State* L, void *object, int type)
     if (lua_istable(L, -1))
         lua_setmetatable(L, -2);
     else
-        lua_pop(L, 1);
+        lua_pop(L, 1);      // error - userdata without metatable!
 }
 
 bool luaT_isobject(lua_State* L, int type, int index)

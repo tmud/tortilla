@@ -18,6 +18,7 @@ public:
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
     virtual void postprocessText(int view, parseData* parse_data) = 0;
+    virtual void processTriggers(int view, parseData* parse_data) = 0;
     virtual void addText(int view, parseData* parse_data) = 0;
     virtual void clearText(int view) = 0;
     virtual void showWindow(int view, bool show) = 0;

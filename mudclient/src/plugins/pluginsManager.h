@@ -22,6 +22,7 @@ public:
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);
     void processViewData(const char* method, int view, parseData* data);
+    void processTriggers(int view, parseData* data);
     void processBarCmds(InputPlainCommands* cmds);
     void processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history);
     void processConnectEvent();

@@ -352,7 +352,10 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_pHost->preprocessText(window, &parse_data);
 
     if (!(flags & SKIP_ACTIONS))
+    {
+        m_pHost->processTriggers(window, &parse_data);
         m_helper.processActions(&parse_data, &pe->data, &pe->commands);
+    }
 
     if (!(flags & SKIP_SUBS))
     {

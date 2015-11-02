@@ -93,7 +93,9 @@ public:
 #define LUAT_FONT       107
 #define LUAT_PCRE       108
 #define LUAT_IMAGE      109
-#define LUAT_LAST       109
+#define LUAT_TRIGGER    110
+#define LUAT_VIEWSTRING 111
+#define LUAT_LAST       111
 
 bool  luaT_check(lua_State *L, int n, ...);
 bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);
