@@ -8,8 +8,8 @@ struct BigImageData
     void destroy() { delete image; image = NULL; image_size = image_border = 0; file_path.clear(); name.clear(); }
     int image_size;
     int image_border;
-    tstring file_path;
-    tstring name;
+    std::wstring file_path;
+    std::wstring name;
     Image* image;
 };
 
@@ -21,8 +21,8 @@ public:
     void scanImages();
     int  getImagesCount() const;
     const BigImageData& getImage(int index) const;
-    ClickpadImage* load(const tstring& params);    
-    void save(ClickpadImage* image, tstring* params);
+    ClickpadImage* load(const std::wstring& params);    
+    void save(ClickpadImage* image, std::wstring* params);
 private:
     std::vector<BigImageData> m_files;
 };

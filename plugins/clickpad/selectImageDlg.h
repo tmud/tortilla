@@ -13,15 +13,15 @@ class SelectImageCategory : public CDialogImpl<SelectImageCategory>
 public:
     enum { IDD = IDD_SELECTFILE };
     SelectImageCategory() : m_selected(-1), m_notify_wnd(NULL), m_notify_msg(0) {}
-    void addItem(const tstring& text) {
+    void addItem(const std::wstring& text) {
         m_list.AddString(text.c_str());
     }
-    void getSelectedItem(tstring *text) {
+    void getSelectedItem(std::wstring *text) {
         int sel = m_list.GetCurSel();
         if (sel != -1)
         {
             int len = m_list.GetTextLen(sel);
-            tchar *buffer = new tchar[len+1];
+            wchar_t *buffer = new wchar_t[len+1];
             m_list.GetText(sel, buffer);
             text->assign(buffer);
             delete []buffer;
@@ -63,7 +63,7 @@ struct SelectImageParams {
     int countw, counth;
     int width, height;
     int size;
-    tstring filepath;
+    std::wstring filepath;
 };
 
 class SelectImage : public CWindowImpl<SelectImage>
@@ -167,10 +167,10 @@ class SelectImageProps : public CDialogImpl<SelectImageProps>
 public:
      enum { IDD = IDD_PROPS };
      struct ImageProps{
-         tstring filename;
-         tstring image_size;
-         tstring icon_size;
-         tstring icon_count;     
+         std::wstring filename;
+         std::wstring image_size;
+         std::wstring icon_size;
+         std::wstring icon_count;
      };
      void setText(const ImageProps& p) {
          m_filename.SetWindowText(p.filename.c_str());

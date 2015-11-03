@@ -4,8 +4,8 @@
 
 class PadButton : public CWindowImpl<PadButton>
 {
-    tstring m_text;
-    tstring m_command;
+    std::wstring m_text;
+    std::wstring m_command;
     UINT m_click_msg;
     WPARAM m_click_param;
     bool m_pushed;
@@ -21,16 +21,16 @@ public:
     PadButton(UINT msg, WPARAM param) : m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false),
         m_image(NULL),m_background_color(0), m_font(0) {}
     ~PadButton() { delete m_image; }
-    void getText(tstring *text) const { text->assign(m_text); }
-    void setText(const tstring& text)
+    void getText(std::wstring *text) const { text->assign(m_text); }
+    void setText(const std::wstring& text)
     {
         if (text == m_text)
             return;
         m_text.assign(text);
         Invalidate(FALSE);
     }
-    void getCommand(tstring *cmd) const { cmd->assign(m_command); }
-    void setCommand(const tstring& cmd) { m_command = cmd; }
+    void getCommand(std::wstring *cmd) const { cmd->assign(m_command); }
+    void setCommand(const std::wstring& cmd) { m_command = cmd; }
     bool isEmptyButton() const {
         if (m_text.empty() && m_command.empty()) 
         {

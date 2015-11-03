@@ -12,7 +12,7 @@ extern "C" {
 
 #include <stdlib.h>
 
-class lua_pushwstring
+/*class lua_pushwstring
 {
 public:
     lua_pushwstring(lua_State* L, const wchar_t* string) {
@@ -39,7 +39,7 @@ public:
     }
     ~lua_towstring() { delete buffer; }
     operator const wchar_t*() const { return buffer; }
-};
+};*/
 
 class wstring_to_int
 {

@@ -13,7 +13,7 @@ m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_
 }
 Jmc3Import::~Jmc3Import() {}
 
-bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
+bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<std::wstring>* errors)
 {
     m_parent = parent_for_dlgs;
     ParamsDialog params;
@@ -25,9 +25,9 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
 
     HCURSOR cursor = SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_WAIT)));
 
-    std::vector<u8string> &v = params.strings;
+    std::vector<std::wstring> &v = params.strings;
 
-    std::vector<u8string> disabled_groups;
+    std::vector<std::wstring> disabled_groups;
 
     // get jmc cmd prefix
     for (int i=0,e=v.size(); i<e; ++i)

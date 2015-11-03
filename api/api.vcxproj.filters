@@ -6,6 +6,9 @@
       <Extensions>
       </Extensions>
     </Filter>
+    <Filter Include="External Common Libs">
+      <UniqueIdentifier>{d2d2f714-e493-4897-bdc0-46b3e4f4aabe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\api.cpp">
@@ -23,6 +26,9 @@
     <ClCompile Include="src\api_image.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\libs\common\pcreHelper.cpp">
+      <Filter>External Common Libs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\stdafx.h">
@@ -33,6 +39,18 @@
     </ClInclude>
     <ClInclude Include="base.h">
       <Filter>Main Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\dataQueue.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\elapsedTimeCounter.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\memoryBuffer.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libs\common\pcreHelper.h">
+      <Filter>External Common Libs</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

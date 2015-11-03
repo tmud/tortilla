@@ -6,5 +6,7 @@
 #include <windows.h>
 
 #include <string>
-typedef std::wstring tstring;
+#include <vector>
+
+#include <assert.h>
 

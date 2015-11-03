@@ -13,9 +13,9 @@ class ParamsDialog : public CDialogImpl<ParamsDialog>
 public:
     ParamsDialog() : rewrite_mode(false) {}
     enum { IDD = IDD_IMPORT_PARAMS };
-    std::vector<u8string> strings;
-    u8string cmdsymbol;
-    u8string separator;
+    std::vector<std::wstring> strings;
+    std::wstring cmdsymbol;
+    std::wstring separator;
     bool rewrite_mode;
 
 private:
@@ -76,7 +76,7 @@ private:
         typedef std::map<std::wstring, int>::iterator iterator;
         for (int i=0,e=strings.size(); i<e; ++i)
         {
-            std::wstring wstr( TU2W(strings[i].c_str()) );
+            std::wstring wstr( strings[i].c_str() );
             std::wstring symbol( wstr.substr(0, 1) );
             int pos = wcsspn(symbol.c_str(), L"#$%&*!@~`:;'¹^|\\/_=.,");
             if (pos != symbol.length()) 
@@ -109,9 +109,9 @@ private:
     {
         wchar_t buffer[4];
         m_cmdsymbol.GetWindowText(buffer, 2);
-        cmdsymbol.assign(TW2U(buffer));
+        cmdsymbol.assign(buffer);
         m_separator.GetWindowText(buffer, 2);
-        separator.assign(TW2U(buffer));
+        separator.assign(buffer);
         rewrite_mode = (m_rewrite.GetCheck() == BST_CHECKED) ? true : false;
         EndDialog(IDOK);
         return 0;
@@ -200,8 +200,8 @@ private:
             if (s.empty())
                 continue;
             TA2W wide(s.c_str());
-            TW2U u8str(wide);
-            strings.push_back(u8string(u8str));
+            std::wstring w(wide);
+            strings.push_back(w);
         }
         return true;
     }

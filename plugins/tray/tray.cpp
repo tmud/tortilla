@@ -102,26 +102,24 @@ int release(lua_State *L)
 {
     TraySettings &s = g_tray.traySettings();
 
-    xml::node sv("tray");
-    sv.create("params");
-    sv.set("timeout", s.timeout);
-    sv.set("interval", s.interval);
-    sv.set("showactive", s.showactive ? 1 : 0);
-    utf8 buffer[16];
-    sprintf(buffer, "%d,%d,%d", GetRValue(s.text), GetGValue(s.text), GetBValue(s.text));
-    sv.set("textcolor", buffer);
-    sprintf(buffer, "%d,%d,%d", GetRValue(s.background), GetGValue(s.background), GetBValue(s.background));
-    sv.set("bkgndcolor", buffer);
-    sv.move("/");
+    xml::node sv(L"tray");
+    sv.create(L"params");
+    sv.set(L"timeout", s.timeout);
+    sv.set(L"interval", s.interval);
+    sv.set(L"showactive", s.showactive ? 1 : 0);
+    wchar_t buffer[16];
+    swprintf(buffer, L"%d,%d,%d", GetRValue(s.text), GetGValue(s.text), GetBValue(s.text));
+    sv.set(L"textcolor", buffer);
+    swprintf(buffer, L"%d,%d,%d", GetRValue(s.background), GetGValue(s.background), GetBValue(s.background));
+    sv.set(L"bkgndcolor", buffer);
+    sv.move(L"/");
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
-
+    tstring path;
+    base::getPath(L, "config.xml", &path);   
     if (!sv.save(path.c_str()))
     {
         sv.deletenode();
-        u8string error("Ошибка записи файла с настройками плагина : ");
+        tstring error(L"Ошибка записи файла с настройками плагина : ");
         error.append(path);
         return luaT_error(L, error.c_str());
     }

@@ -6,7 +6,7 @@ struct ClickpadImageParams
     ClickpadImageParams() : atlas_x(0), atlas_y(0) {}
     int atlas_x;
     int atlas_y;
-    tstring atlas_filename;
+    std::wstring atlas_filename;
 };
 
 class ClickpadImage
@@ -16,7 +16,7 @@ class ClickpadImage
 public:
    ClickpadImage() : m_image(NULL) {}
    ~ClickpadImage() { delete m_image; }
-   void create(Image* image, const tstring& filepath, int x, int y) 
+   void create(Image* image, const std::wstring& filepath, int x, int y) 
    {
        delete m_image;
        m_image = image;

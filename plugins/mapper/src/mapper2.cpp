@@ -76,26 +76,26 @@ void Mapper::saveMaps(lua_State *L)
         {
             RoomsLevel *level = zone->getLevel(j, false);
             if (level->isEmpty()) continue;
-            xml::node l = s.createsubnode("level");
-            l.set("z", j);
+            xml::node l = s.createsubnode(L"level");
+            l.set(L"z", j);
             for (int x = 0, xe = level->width(); x<xe; ++x) {
             for (int y = 0, ye = level->height(); y<ye; ++y) {
             Room *room = level->getRoom(x, y);
             if (!room) continue;
-            xml::node r = l.createsubnode("room");
-            r.set("name", room->roomdata.name);            
-            r.set("exits", room->roomdata.exits);
-            r.set("x", room->x);
-            r.set("y", room->y);
+            xml::node r = l.createsubnode(L"room");
+            r.set(L"name", room->roomdata.name);            
+            r.set(L"exits", room->roomdata.exits);
+            r.set(L"x", room->x);
+            r.set(L"y", room->y);
             if (room->use_color)
             {
-                char buffer[8]; COLORREF c = room->color;
-                sprintf(buffer, "%.2x%.2x%.2x", GetRValue(c), GetGValue(c), GetBValue(c));
-                r.set("color", buffer);
+                wchar_t buffer[8]; COLORREF c = room->color;
+                swprintf(buffer, L"%.2x%.2x%.2x", GetRValue(c), GetGValue(c), GetBValue(c));
+                r.set(L"color", buffer);
             }
             if (room->icon > 0)
-                r.set("icon", room->icon);
-            r.set("descr", room->roomdata.descr);
+                r.set(L"icon", room->icon);
+            r.set(L"descr", room->roomdata.descr);
             
             for (int dir = RD_NORTH; dir <= RD_DOWN; ++dir)
             {                
@@ -103,26 +103,26 @@ void Mapper::saveMaps(lua_State *L)
                 if (!exit.exist)
                     continue;                
                 
-                xml::node e = r.createsubnode("exit");
-                e.set("dir", RoomDirName[dir]);
+                xml::node e = r.createsubnode(L"exit");
+                e.set(L"dir", s[dir]);
 
                 //u8string state;
                 Room* next_room = exit.next_room;
                 if (next_room)
                 {
-                    e.set("x", next_room->x);
-                    e.set("y", next_room->y);
-                    e.set("z", next_room->level->getLevel());
+                    e.set(L"x", next_room->x);
+                    e.set(L"y", next_room->y);
+                    e.set(L"z", next_room->level->getLevel());
                     Zone* zone0 = next_room->level->getZone();
                     if (zone != zone0)
                     {
                         ZoneParams zp0;
                         zone0->getParams(&zp0);
-                        e.set("zone", zp0.name);
+                        e.set(L"zone", zp0.name);
                     }
                 }
                 if (exit.door)
-                    e.set("door", 1);
+                    e.set(L"door", 1);
             }
             }}
         }
@@ -138,11 +138,11 @@ void Mapper::saveMaps(lua_State *L)
         tstring path(dir);
         path.append(zp.name);
         path.append(L".map");
-        if ( !s.save( TW2U(path.c_str())) )
+        if ( !s.save( path.c_str()) )
         {
-            u8string error("Ошибка записи файла с зоной:");
-            error.append( TW2U(zp.name.c_str()));
-            luaT_log(L, error.c_str());
+            tstring error(L"Ошибка записи файла с зоной:");
+            error.append( zp.name);
+            base::log(L, error.c_str());
         }
         s.deletenode();
     }
@@ -159,9 +159,8 @@ void Mapper::saveMaps(lua_State *L)
 
 void Mapper::loadMaps(lua_State *L)
 {
-    luaT_run(L, "getPath", "s", "");
-    tstring dir(TU2W(lua_tostring(L, -1)));
-    lua_pop(L, 1);   
+    tstring dir;
+    base::getPath(L, L"", &dir);
 
     tstring mask(dir);
     mask.append(L"*.map");
@@ -193,7 +192,7 @@ void Mapper::loadMaps(lua_State *L)
         if (zn.load(fpath.c_str()))
         {
             loaded = true;
-            xml::request levels(zn, "level");
+            xml::request levels(zn, L"level");
             for (int j = 0, je = levels.size(); j < je; ++j)
             {
                 int z = 0;

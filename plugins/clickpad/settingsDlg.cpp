@@ -67,7 +67,7 @@ void SettingsDlg::editButton(PadButton *button)
     if (!button)
         return;
 
-    tstring text, command;
+    std::wstring text, command;
     button->getText(&text);
     button->getCommand(&command);
     m_edit_text.SetWindowText(text.c_str());
@@ -123,7 +123,7 @@ LRESULT SettingsDlg::OnBSizeChanged(WORD, WORD, HWND, BOOL&)
     return 0;
 }
 
-void getWindowText(HWND handle, tstring *string)
+void getWindowText(HWND handle, std::wstring *string)
 {
     int text_len = ::GetWindowTextLength(handle);
     WCHAR *buffer = new WCHAR[text_len+2];
@@ -136,7 +136,7 @@ LRESULT SettingsDlg::OnTextChanged(WORD, WORD, HWND, BOOL&)
 {
     if (!m_editable_button)
         return 0;
-    tstring text;
+    std::wstring text;
     getWindowText(m_edit_text, &text);
     m_editable_button->setText(text);
     return 0;
@@ -146,7 +146,7 @@ LRESULT SettingsDlg::OnCommandChanged(WORD, WORD, HWND, BOOL&)
 {
     if (!m_editable_button)
         return 0;
-    tstring cmd;
+    std::wstring cmd;
     getWindowText(m_edit_command, &cmd);
     m_editable_button->setCommand(cmd);
     return 0;
@@ -189,20 +189,20 @@ LRESULT SettingsDlg::OnDelHotkey(WORD, WORD, HWND, BOOL&)
     int item_selected = m_list.GetSelectedIndex();
     if (item_selected == -1)
         return 0;
-    tstring key0, cmd0, group0;
+    std::wstring key0, cmd0, group0;
     getListItemText(item_selected, 0, &key0);
     getListItemText(item_selected, 1, &cmd0);
     getListItemText(item_selected, 2, &group0);
     m_list.DeleteItem(item_selected);
 
     luaT_ActiveObjects hk(getLuaState(), "hotkeys");
-    u8string key, value, group;
+    std::wstring key, value, group;
     for (int i=1,e=hk.size();i<=e;++i)
     {
         hk.select(i);
-        if (hk.get(luaT_ActiveObjects::KEY, &key) && !key0.compare(TU2W(key.c_str())) &&
-            hk.get(luaT_ActiveObjects::VALUE, &value) && !cmd0.compare(TU2W(value.c_str())) &&
-            hk.get(luaT_ActiveObjects::GROUP, &group) && !group0.compare(TU2W(group.c_str()))
+        if (hk.get(luaT_ActiveObjects::KEY, &key) && !key0.compare(key.c_str()) &&
+            hk.get(luaT_ActiveObjects::VALUE, &value) && !cmd0.compare(value.c_str()) &&
+            hk.get(luaT_ActiveObjects::GROUP, &group) && !group0.compare(group.c_str())
             )
         {
             hk.del();
@@ -250,7 +250,7 @@ LRESULT SettingsDlg::OnListItemChanged(int , LPNMHDR , BOOL&)
     {
         if (m_edit_command.IsWindowEnabled())
         {
-            tstring text;
+            std::wstring text;
             getListItemText(item_selected, 1, &text);
             m_edit_command.SetWindowText(text.c_str());
             if (m_edit_text.GetWindowTextLength() == 0)
@@ -276,7 +276,7 @@ LRESULT SettingsDlg::OnListKillFocus(int , LPNMHDR , BOOL&)
     return 0;
 }
 
-void SettingsDlg::getListItemText(int item, int subitem, tstring* text)
+void SettingsDlg::getListItemText(int item, int subitem, std::wstring* text)
 {
      wchar_t buffer[256];
      m_list.GetItemText(item, subitem, buffer, 255);
@@ -319,7 +319,7 @@ bool SettingsDlg::isSupportedExt(const wchar_t* file)
     const wchar_t *e = wcsrchr(file, L'.');
     if (!e)
         return false;
-    tstring ext(e + 1);
+    std::wstring ext(e + 1);
     return (ext == L"png" || ext == L"bmp" || ext == L"gif" || ext == L"ico" || ext == L"jpg") ? true : false;
 }
 

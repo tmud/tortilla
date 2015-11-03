@@ -38,14 +38,14 @@ bool PropertiesManager::loadSettings()
     if (!loadFromFile(sd, L"settings.xml"))
         return false;
 
-    std::string profile;
-    xml::request r(sd, "profile");
+    tstring profile;
+    xml::request r(sd, L"profile");
     if (r.size() != 0)
         r[0].gettext(&profile);
     if (profile.empty())
         return false;
 
-    m_profileName.assign( Utf8ToWide(profile.c_str()) );
+    m_profileName.assign( profile );
     sd.deletenode();
     return true;
 }
@@ -57,17 +57,13 @@ bool PropertiesManager::loadHistory()
     if (!loadFromFile(hd, L"history.xml"))
         return false;
 
-    Utf8ToWide u2w;
-    xml::request r(hd, "cmd");
+    xml::request r(hd, L"cmd");
     for (int i=0,e=r.size(); i<e; ++i)
     {
-        std::string cmd;
+        tstring cmd;
         r[i].gettext(&cmd);
         if (!cmd.empty())
-        {
-            u2w.convert(cmd.c_str(), cmd.length());
-            m_propData.cmd_history.push_back(tstring(u2w));
-        }
+           m_propData.cmd_history.push_back(cmd);
         if (i>MAX_CMD_HISTORY_SIZE)
             break;
     }
@@ -106,10 +102,10 @@ bool PropertiesManager::loadProfileData()
     if (m_propData.recognize_prompt_template.empty())
         m_propData.recognize_prompt = 0;
 
-    xml::request colors(sd, "colors/color");
+    xml::request colors(sd, L"colors/color");
     for (int i=0,e=colors.size(); i<e; ++i)
     {
-        std::string name; COLORREF clr;
+        tstring name; COLORREF clr;
         if (loadRgbColor(colors[i], &name, &clr))
         {
             if (name == "background")
@@ -496,13 +492,13 @@ void PropertiesManager::saveList(xml::node parent, const std::string& name, cons
     }
 }
 //----------------------------------------------------------------------------
-bool PropertiesManager::loadValue(xml::node parent, const std::string& name, int min, int max, int *value)
+bool PropertiesManager::loadValue(xml::node parent, const tstring& name, int min, int max, int *value)
 {
     xml::request r(parent, name.c_str());
     if (r.size() == 0)
         return false;
     int v = 0;
-    if (!r[0].get("value", &v))
+    if (!r[0].get(L"value", &v))
         return false;
 
     if (v < min)
@@ -513,19 +509,19 @@ bool PropertiesManager::loadValue(xml::node parent, const std::string& name, int
     return true;
 }
 
-void PropertiesManager::saveValue(xml::node parent, const std::string& name, int value)
+void PropertiesManager::saveValue(xml::node parent, const tstring& name, int value)
 {
     xml::node n = parent.createsubnode(name.c_str());
-    n.set("value", value);
+    n.set(L"value", value);
 }
 
-bool PropertiesManager::loadString(xml::node parent, const std::string& name, tstring* value)
+bool PropertiesManager::loadString(xml::node parent, const tstring& name, tstring* value)
 {
      xml::request r(parent, name.c_str());
      if (r.size() == 0)
          return false;
      std::string v;
-     if (!r[0].get("value", &v))
+     if (!r[0].get(L"value", &v))
          return false;
 
      U2W u2w(v);
@@ -533,56 +529,55 @@ bool PropertiesManager::loadString(xml::node parent, const std::string& name, ts
      return true;
 }
 
-void PropertiesManager::saveString(xml::node parent, const std::string& name, const tstring& value)
+void PropertiesManager::saveString(xml::node parent, const tstring& name, const tstring& value)
 {
-    W2U w2u(value);
     xml::node n = parent.createsubnode(name.c_str());
-    n.set("value", w2u);
+    n.set(L"value", value);
 }
 
-bool PropertiesManager::loadRgbColor(xml::node n, std::string* name, COLORREF* color)
+bool PropertiesManager::loadRgbColor(xml::node n, tstring* name, COLORREF* color)
 {
-    std::string cn;
-    if (!n.get("id", &cn))
+    tstring cn;
+    if (!n.get(L"id", &cn))
         return false;
     int r=0; int g=0; int b=0;
-    if (!n.get("r", &r) ||
-        !n.get("g", &g) ||
-        !n.get("b", &b)
+    if (!n.get(L"r", &r) ||
+        !n.get(L"g", &g) ||
+        !n.get(L"b", &b)
        ) return false;
     name->assign(cn);
     *color = RGB(r,g,b);
     return true;
 }
 
-void PropertiesManager::saveRgbColor(xml::node parent, const std::string& name, COLORREF color)
+void PropertiesManager::saveRgbColor(xml::node parent, const tstring& name, COLORREF color)
 {
-    xml::node n = parent.createsubnode("color");
-    n.set("id", name.c_str());
-    n.set("r", GetRValue(color));
-    n.set("g", GetGValue(color));
-    n.set("b", GetBValue(color));    
+    xml::node n = parent.createsubnode(L"color");
+    n.set(L"id", name.c_str());
+    n.set(L"r", GetRValue(color));
+    n.set(L"g", GetGValue(color));
+    n.set(L"b", GetBValue(color));    
 }
 
 bool PropertiesManager::loadFromFile(xml::node& node, const tstring& file)
 {
-    WideToUtf8 config( ProfilePath(m_configName, file) );
-    return (node.load(config)) ? true : false;        
+    ProfilePath config(m_configName, file);
+    return (node.load(config)) ? true : false;
 }
 
 bool PropertiesManager::saveToFile(xml::node node, const tstring& file)
 {
-    WideToUtf8 config(ProfilePath(m_configName, file));
+    ProfilePath config(m_configName, file);
     return (node.save(config)) ? true : false;
 }
 
 bool PropertiesManager::loadRECT(xml::node n, RECT *rc)
 {
     int left = 0; int right = 0; int top = 0; int bottom = 0;
-    if (!n.get("left", &left) ||
-        !n.get("right", &right) ||
-        !n.get("top", &top) ||
-        !n.get("bottom", &bottom))
+    if (!n.get(L"left", &left) ||
+        !n.get(L"right", &right) ||
+        !n.get(L"top", &top) ||
+        !n.get(L"bottom", &bottom))
         return false;
 
     RECT pos = { left, top, right, bottom };
@@ -592,10 +587,10 @@ bool PropertiesManager::loadRECT(xml::node n, RECT *rc)
 
 void PropertiesManager::saveRECT(xml::node n, const RECT &rc)
 {
-    n.set("left", rc.left);
-    n.set("right", rc.right);
-    n.set("top", rc.top);
-    n.set("bottom", rc.bottom);
+    n.set(L"left", rc.left);
+    n.set(L"right", rc.right);
+    n.set(L"top", rc.top);
+    n.set(L"bottom", rc.bottom);
 }
 //----------------------------------------------------------------------------
 bool PropertiesManager::createNewProfile(const tstring& name)

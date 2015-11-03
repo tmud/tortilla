@@ -233,7 +233,7 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
     if (!m_image_collection)
         return 0;
 
-    tstring item;
+    std::wstring item;
     m_category.getSelectedItem(&item);
     for (int i = 0, e = m_image_collection->getImagesCount(); i < e; ++i)
     {
@@ -247,10 +247,10 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
 
             SelectImageProps::ImageProps p;
 
-            tstring image_dir;
+            std::wstring image_dir;
             getImagesDir(&image_dir);
             {
-                tchar buffer[MAX_PATH+1];
+                wchar_t buffer[MAX_PATH+1];
                 if (GetCurrentDirectory(MAX_PATH, buffer))
                 {
                     int len = wcslen(buffer)+1;
@@ -262,7 +262,7 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
             image_dir.append(params.filepath);
             p.filename = image_dir;
 
-            tchar buffer[64];
+            wchar_t buffer[64];
             swprintf(buffer, L"%dx%d", params.width, params.height);
             p.image_size = buffer;
             int s = params.size;

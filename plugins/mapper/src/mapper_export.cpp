@@ -35,7 +35,7 @@ int init(lua_State *L)
     luaT_run(L, "addButton", "dds", IDB_MAP, 2, "Настройка карты");
 
     luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
+    tstring path(lua_towstring(L, -1));
     lua_pop(L, 1);
 
     m_props.initAllDefault();
@@ -43,39 +43,39 @@ int init(lua_State *L)
     xml::node ld;
     if (ld.load(path.c_str()))
     {
-        ld.get("darkroom/label", &m_props.dark_room);
-        ld.get("name/begin", &m_props.begin_name);
-        ld.get("name/end", &m_props.end_name);
-        ld.get("descr/begin", &m_props.begin_descr);
-        ld.get("descr/end", &m_props.end_descr);
-        ld.get("exits/begin", &m_props.begin_exits);
-        ld.get("exits/end", &m_props.end_exits);
-        ld.get("prompt/begin", &m_props.begin_prompt);
-        ld.get("prompt/end", &m_props.end_prompt);
+        ld.get(L"darkroom/label", &m_props.dark_room);
+        ld.get(L"name/begin", &m_props.begin_name);
+        ld.get(L"name/end", &m_props.end_name);
+        ld.get(L"descr/begin", &m_props.begin_descr);
+        ld.get(L"descr/end", &m_props.end_descr);
+        ld.get(L"exits/begin", &m_props.begin_exits);
+        ld.get(L"exits/end", &m_props.end_exits);
+        ld.get(L"prompt/begin", &m_props.begin_prompt);
+        ld.get(L"prompt/end", &m_props.end_prompt);
         
-        if (ld.move("dirs"))
+        if (ld.move(L"dirs"))
         {
-            ld.get("north", &m_props.north_exit);
-            ld.get("south", &m_props.south_exit);
-            ld.get("west", &m_props.west_exit);
-            ld.get("east", &m_props.east_exit);
-            ld.get("up", &m_props.up_exit);
-            ld.get("down", &m_props.down_exit);
+            ld.get(L"north", &m_props.north_exit);
+            ld.get(L"south", &m_props.south_exit);
+            ld.get(L"west", &m_props.west_exit);
+            ld.get(L"east", &m_props.east_exit);
+            ld.get(L"up", &m_props.up_exit);
+            ld.get(L"down", &m_props.down_exit);
         }
-        if (ld.move("/cmds"))
+        if (ld.move(L"/cmds"))
         {
-            ld.get("north", &m_props.north_cmd);
-            ld.get("south", &m_props.south_cmd);
-            ld.get("west", &m_props.west_cmd);
-            ld.get("east", &m_props.east_cmd);
-            ld.get("up", &m_props.up_cmd);
-            ld.get("down", &m_props.down_cmd);
+            ld.get(L"north", &m_props.north_cmd);
+            ld.get(L"south", &m_props.south_cmd);
+            ld.get(L"west", &m_props.west_cmd);
+            ld.get(L"east", &m_props.east_cmd);
+            ld.get(L"up", &m_props.up_cmd);
+            ld.get(L"down", &m_props.down_cmd);
         }
     }
     ld.deletenode();
 
 	if (!m_parent_window.create(L, "Карта", 400, 400))
-		return luaT_error(L, "Не удалось создать окно для карты");
+		return luaT_error(L, L"Не удалось создать окно для карты");
 
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isVisible();
@@ -97,40 +97,40 @@ int release(lua_State *L)
 {
     m_mapper_window->saveMaps(L);
            
-    xml::node s("mapper");
-    s.set("darkroom/label", m_props.dark_room);
-    s.set("name/begin", m_props.begin_name);
-    s.set("name/end", m_props.end_name);
-    s.set("descr/begin", m_props.begin_descr);
-    s.set("descr/end", m_props.end_descr);
-    s.set("exits/begin", m_props.begin_exits);
-    s.set("exits/end", m_props.end_exits);
-    s.set("prompt/begin", m_props.begin_prompt);
-    s.set("prompt/end", m_props.end_prompt);
-    s.create("dirs");
-    s.set("north", m_props.north_exit);
-    s.set("south", m_props.south_exit);
-    s.set("west", m_props.west_exit);
-    s.set("east", m_props.east_exit);
-    s.set("up", m_props.up_exit);
-    s.set("down", m_props.down_exit);
-    s.create("/cmds");
-    s.set("north", m_props.north_cmd);
-    s.set("south", m_props.south_cmd);
-    s.set("west", m_props.west_cmd);
-    s.set("east", m_props.east_cmd);
-    s.set("up", m_props.up_cmd);
-    s.set("down", m_props.down_cmd);
-    s.move("/");
+    xml::node s(L"mapper");
+    s.set(L"darkroom/label", m_props.dark_room);
+    s.set(L"name/begin", m_props.begin_name);
+    s.set(L"name/end", m_props.end_name);
+    s.set(L"descr/begin", m_props.begin_descr);
+    s.set(L"descr/end", m_props.end_descr);
+    s.set(L"exits/begin", m_props.begin_exits);
+    s.set(L"exits/end", m_props.end_exits);
+    s.set(L"prompt/begin", m_props.begin_prompt);
+    s.set(L"prompt/end", m_props.end_prompt);
+    s.create(L"dirs");
+    s.set(L"north", m_props.north_exit);
+    s.set(L"south", m_props.south_exit);
+    s.set(L"west", m_props.west_exit);
+    s.set(L"east", m_props.east_exit);
+    s.set(L"up", m_props.up_exit);
+    s.set(L"down", m_props.down_exit);
+    s.create(L"/cmds");
+    s.set(L"north", m_props.north_cmd);
+    s.set(L"south", m_props.south_cmd);
+    s.set(L"west", m_props.west_cmd);
+    s.set(L"east", m_props.east_cmd);
+    s.set(L"up", m_props.up_cmd);
+    s.set(L"down", m_props.down_cmd);
+    s.move(L"/");
 
     luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
+    tstring path(lua_towstring(L, -1));
     lua_pop(L, 1);
 
     if (!s.save(path.c_str()))
     {
         s.deletenode();
-        u8string error("Ошибка записи настроек карты: ");
+        tstring error(L"Ошибка записи настроек карты: ");
         error.append(path);
         return luaT_error(L, error.c_str());
     }

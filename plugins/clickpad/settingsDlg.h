@@ -11,7 +11,7 @@ class ButtonSizeTranslator
 {
 public:
     int  getCount() const { return 3; }
-    void getLabel(int index, tstring *label) {
+    void getLabel(int index, std::wstring *label) {
         switch(index) {  
             case 0: label->assign(L"48x48"); break;
             case 1: label->assign(L"64x64"); break;
@@ -103,7 +103,7 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     struct image_file
     {
         image_file() : set_size(-1) {}
-        tstring path;
+        std::wstring path;
         int set_size;
     };
     std::vector<image_file> m_image_files;
@@ -172,7 +172,7 @@ private:
         m_list.InsertColumn(2, L"Группа", LVCFMT_LEFT, static_cast<int>(width_percent * 20));
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
         luaT_ActiveObjects hk(getLuaState(), "hotkeys");
-        u8string key, value, group;
+        std::wstring key, value, group;
         int item = 0;
         for (int i=1,e=hk.size();i<=e;++i)
         {
@@ -181,9 +181,9 @@ private:
                 hk.get(luaT_ActiveObjects::VALUE, &value) &&
                 hk.get(luaT_ActiveObjects::GROUP, &group))
             {
-                m_list.AddItem(item, 0, TU2W(key.c_str()));
-                m_list.SetItem(item, 1, LVIF_TEXT, TU2W(value.c_str()), 0, 0, 0, NULL);
-                m_list.SetItem(item, 2, LVIF_TEXT, TU2W(group.c_str()), 0, 0, 0, NULL);
+                m_list.AddItem(item, 0, key.c_str());
+                m_list.SetItem(item, 1, LVIF_TEXT, value.c_str(), 0, 0, 0, NULL);
+                m_list.SetItem(item, 2, LVIF_TEXT, group.c_str(), 0, 0, 0, NULL);
                 item++;
             }
         }
@@ -196,7 +196,7 @@ private:
         ButtonSizeTranslator bt;
         for (int i=0; i<bt.getCount(); ++i)
         {
-            tstring label;
+            std::wstring label;
             bt.getLabel(i, &label);
             m_bsize.AddString(label.c_str());            
         }
@@ -227,7 +227,7 @@ private:
 
     void resetEditable();
     void setEditableState(bool state);
-    void getListItemText(int item, int subitem, tstring* text);
+    void getListItemText(int item, int subitem, std::wstring* text);
     bool isSupportedExt(const wchar_t* file);
     void updateImage();
     LRESULT OnImageChanged(UINT, WPARAM, LPARAM, BOOL&) {     

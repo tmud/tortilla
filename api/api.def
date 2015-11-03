@@ -6,6 +6,7 @@ EXPORTS
 	convert_wide_to_ansi
 	strbuf_ptr
 	strbuf_destroy
+	strbuf_new
 	xml_load
 	xml_save
 	xml_open
@@ -27,7 +28,6 @@ EXPORTS
 	luaT_check
 	luaT_run
 	luaT_error
-	luaT_log
 	luaT_toobject
 	luaT_pushobject
 	luaT_isobject

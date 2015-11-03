@@ -2,12 +2,11 @@
 #include "imageCollection.h"
 #include "settingsDlg.h"
 
-void error(const tchar* msg, const tchar* p1 = NULL)
+void error(const wchar_t* msg, const wchar_t* p1 = NULL)
 {
-    tstring errtext(msg);
+    std::wstring errtext(msg);
     if (p1) errtext.append(p1);
-    TW2U text(errtext.c_str());
-    luaT_log(getLuaState(), text);
+    base::log(getLuaState(), errtext.c_str());
 }
 
 ImageCollection::ImageCollection()
@@ -33,7 +32,7 @@ const BigImageData& ImageCollection::getImage(int index) const
 
 void ImageCollection::scanImages()
 {
-    tstring dir;
+    std::wstring dir;
     getImagesDir(&dir);
     if (!(GetFileAttributes(dir.c_str()) & FILE_ATTRIBUTE_DIRECTORY))
         return error(L"Ќевозможно прочитать каталог с иконками: ", dir.c_str());
@@ -42,13 +41,13 @@ void ImageCollection::scanImages()
 
     // 1. get current files list
     std::vector<BigImageData> current_files;
-    tchar current_path[MAX_PATH + 1];
+    wchar_t current_path[MAX_PATH + 1];
     GetCurrentDirectory(MAX_PATH, current_path);
-    std::vector<tstring> dirs;
+    std::vector<std::wstring> dirs;
     dirs.push_back(dir);
     for (int index = 0; index != dirs.size(); ++index)
     {
-        tstring fullpath(dirs[index]);
+        std::wstring fullpath(dirs[index]);
         if (!SetCurrentDirectory(fullpath.c_str()))
             continue;
         WIN32_FIND_DATA fd;
@@ -58,12 +57,12 @@ void ImageCollection::scanImages()
         {
             do
             {
-                tstring filename(fd.cFileName);
+                std::wstring filename(fd.cFileName);
                 if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
                 {
                     if (filename == L"." || filename == L"..")
                         continue;
-                    tstring newdir(fullpath);
+                    std::wstring newdir(fullpath);
                     newdir.append(filename);
                     newdir.append(L"\\");
                     dirs.insert(dirs.begin() + index + 1, newdir);
@@ -72,13 +71,13 @@ void ImageCollection::scanImages()
                 {
                     size_t e = filename.find_last_of(L'.');
                     if (e == -1) continue;
-                    tstring ext(filename.substr(e + 1));
+                    std::wstring ext(filename.substr(e + 1));
                     bool ok = (ext == L"png" || ext == L"bmp" || ext == L"gif" || ext == L"ico" || ext == L"jpg") ? true : false;
                     if (!ok)
                         continue;
                     BigImageData f;
                     f.name = filename;
-                    tstring &p = f.file_path;
+                    std::wstring &p = f.file_path;
                     p.append(fullpath);
                     p.append(filename);
                     p = p.substr(dir_len);
@@ -88,11 +87,11 @@ void ImageCollection::scanImages()
                     {
                         size_t from = fullpath.find_last_of(L'\\', end - 1);
                         if (from != -1) {
-                            tstring lastdir(fullpath.substr(from + 1, end - from - 1));
+                            std::wstring lastdir(fullpath.substr(from + 1, end - from - 1));
                             int pos = wcsspn(lastdir.c_str(), L"0123456789-");
                             if (pos == lastdir.length())
                             {
-                                tstring border;
+                                std::wstring border;
                                 size_t defis = lastdir.find_last_of(L'-');
                                 if (defis != -1) {
                                     border.assign(lastdir.substr(defis+1));
@@ -142,7 +141,7 @@ void ImageCollection::scanImages()
         }
         if (!exist)
         {
-            tstring filepath(dir);
+            std::wstring filepath(dir);
             filepath.append( current_files[j].file_path );
             Image *img = new Image();
             if (!img->load(filepath.c_str(), 0))
@@ -177,18 +176,18 @@ void ImageCollection::scanImages()
     m_files.insert(m_files.end(), new_files.begin(), new_files.end());
 }
 
-ClickpadImage* ImageCollection::load(const tstring& params)
+ClickpadImage* ImageCollection::load(const std::wstring& params)
 {
     if (params.empty())
         return NULL;
-    const tchar* p = params.c_str();
-    const tchar *p1 = wcschr(p, L',');
+    const wchar_t* p = params.c_str();
+    const wchar_t *p1 = wcschr(p, L',');
     if (!p1) return false;
-    const tchar *p2 = wcschr(p1 + 1, L',');
+    const wchar_t *p2 = wcschr(p1 + 1, L',');
     if (!p2) return false;
-    tstring ax(p, p1 - p);
-    tstring ay(p1 + 1, p2 - p1 - 1);
-    tstring path(p2 + 1);
+    std::wstring ax(p, p1 - p);
+    std::wstring ay(p1 + 1, p2 - p1 - 1);
+    std::wstring path(p2 + 1);
 
     int x = 0; int y = 0;
     if (!s2i(ax, &x) || !s2i(ay, &y))
@@ -223,11 +222,11 @@ ClickpadImage* ImageCollection::load(const tstring& params)
     return clickpad;
 }
 
-void ImageCollection::save(ClickpadImage* image, tstring* params)
+void ImageCollection::save(ClickpadImage* image, std::wstring* params)
 {
     if (!image) { params->clear(); return; }
     const ClickpadImageParams& p = image->params();    
-    tchar buffer[32];
+    wchar_t buffer[32];
     wsprintf(buffer, L"%d,%d,", p.atlas_x, p.atlas_y);
     params->assign(buffer);
     params->append(p.atlas_filename);

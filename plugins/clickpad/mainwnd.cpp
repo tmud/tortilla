@@ -44,7 +44,7 @@ void ClickpadMainWnd::onClickButton(int x, int y, bool up)
         else
         {
             PadButton *button = getButton(x, y);
-            tstring command;
+            std::wstring command;
             button->getCommand(&command);
             processGameCommand(command, button->getTemplate());
         }
@@ -195,17 +195,17 @@ void ClickpadMainWnd::updated()
 
 void ClickpadMainWnd::save(xml::node& node)
 {
-    node.create("font");
-    node.set("name", m_logfont.lfFaceName);
-    node.set("height", MulDiv(-m_logfont.lfHeight, 72, GetDeviceCaps(GetDC(), LOGPIXELSY)));
-    node.set("bold", m_logfont.lfWeight);
-    node.set("italic", m_logfont.lfItalic);
+    node.create(L"font");
+    node.set(L"name", m_logfont.lfFaceName);
+    node.set(L"height", MulDiv(-m_logfont.lfHeight, 72, GetDeviceCaps(GetDC(), LOGPIXELSY)));
+    node.set(L"bold", m_logfont.lfWeight);
+    node.set(L"italic", m_logfont.lfItalic);
 
-    node.create("/params");
-    node.set("size", m_button_size);
-    node.set("columns", m_columns);
-    node.set("rows", m_rows);
-    node.create("/buttons");
+    node.create(L"/params");
+    node.set(L"size", m_button_size);
+    node.set(L"columns", m_columns);
+    node.set(L"rows", m_rows);
+    node.create(L"/buttons");
     xml::node base(node);
     for (int y=0;y<MAX_ROWS;++y) {
     for (int x=0;x<MAX_COLUMNS;++x) {
@@ -213,39 +213,39 @@ void ClickpadMainWnd::save(xml::node& node)
       if (b->isEmptyButton())
           continue;
 
-      tstring cmd, text;
+      std::wstring cmd, text;
       b->getCommand(&cmd);
       b->getText(&text);
-      node.create("button");
-      node.set("x", x);
-      node.set("y", y);
-      node.set("text", text);
-      node.set("command", cmd);
-      node.set("template", b->getTemplate() ? 1 : 0);
+      node.create(L"button");
+      node.set(L"x", x);
+      node.set(L"y", y);
+      node.set(L"text", text);
+      node.set(L"command", cmd);
+      node.set(L"template", b->getTemplate() ? 1 : 0);
       ClickpadImage *image = b->getImage();
       if (image)
       {
-          tstring image_params;
+          std::wstring image_params;
           m_image_collection->save(image, &image_params);
           if (!image_params.empty())
-            node.set("image", image_params);
+            node.set(L"image", image_params);
       }
       node = base;
     }}
-    node.move("/");
+    node.move(L"/");
 }
 
 void ClickpadMainWnd::load(xml::node& node)
 {
     LOGFONT lf;
     initLogFont(&lf);
-    xml::request fnode(node, "font");
+    xml::request fnode(node, L"font");
     if (fnode.size() == 1)
     {
         xml::node font(fnode[0]);
-        tstring fname; int height = 0; int bold = 0; int italic = 0;
-        if (font.get("name", &fname) && font.get("height", &height) && 
-            font.get("bold", &bold) && font.get("italic", &italic))
+        std::wstring fname; int height = 0; int bold = 0; int italic = 0;
+        if (font.get(L"name", &fname) && font.get(L"height", &height) && 
+            font.get(L"bold", &bold) && font.get(L"italic", &italic))
         {
             wcscpy(lf.lfFaceName, fname.c_str());
             lf.lfHeight = -MulDiv(height, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
@@ -255,7 +255,7 @@ void ClickpadMainWnd::load(xml::node& node)
     }
 
     int size = 0;
-    node.get("params/size", &size);
+    node.get(L"params/size", &size);
     ButtonSizeTranslator bt;
     if (!bt.checkSize(size))
        size = bt.getDefaultSize();
@@ -273,24 +273,24 @@ void ClickpadMainWnd::load(xml::node& node)
             m_buttons[index] = b;
         }
     }
-    tstring text, cmd;
-    xml::request buttons(node, "buttons/button");
+    std::wstring text, cmd;
+    xml::request buttons(node, L"buttons/button");
     for (int i=0,e=buttons.size(); i<e; ++i)
     {
         xml::node n = buttons[i];
         int x = 0; int y = 0;
-        if (n.get("x", &x) && n.get("y", &y) && n.get("text", &text) && n.get("command", &cmd) &&
+        if (n.get(L"x", &x) && n.get(L"y", &y) && n.get(L"text", &text) && n.get(L"command", &cmd) &&
             (x >= 0 && x <= MAX_COLUMNS-1 && y >= 0 && y <= MAX_ROWS-1))
         {
             int template_flag = 0;
-            n.get("template", &template_flag);
+            n.get(L"template", &template_flag);
 
             PadButton *b = getButton(x, y);
             b->setText(text);
             b->setCommand(cmd);
             b->setTemplate( (template_flag==1) ? true : false);
-            tstring image_params;
-            if (n.get("image", &image_params))
+            std::wstring image_params;
+            if (n.get(L"image", &image_params))
             {
                 ClickpadImage *image = m_image_collection->load(image_params);
                 b->setImage(image);
@@ -298,7 +298,7 @@ void ClickpadMainWnd::load(xml::node& node)
         }
     }
     int rows = 0; int columns = 0;
-    if (node.get("params/rows", &rows) && node.get("params/columns", &columns))
+    if (node.get(L"params/rows", &rows) && node.get(L"params/columns", &columns))
     {
         if (columns >= 1 && columns <=MAX_COLUMNS && rows >= 1 && rows <= MAX_ROWS)
         {

@@ -76,28 +76,28 @@ int init(lua_State *L)
     if (client_wnd)
         m_hwnd_mudclient = client_wnd;
     else
-        return luaT_error(L, "Не удалось получить доступ к главному окну клиента");
+        return luaT_error(L, L"Не удалось получить доступ к главному окну клиента");
 
     m_image_collection = new ImageCollection();
     m_image_collection->scanImages();
 
     xml::node ld;
-    u8string path;
+    std::wstring path;
     base::getProfilePath(L, &path);
-    DWORD fa = GetFileAttributes(TU2W(path.c_str()));
+    DWORD fa = GetFileAttributes(path.c_str());
     if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
     {
         bool result = ld.load(path.c_str());
         if (!result)
         {
-            u8string error("Ошибка загрузки списка с кнопками: ");
+            std::wstring error(L"Ошибка загрузки списка с кнопками: ");
             error.append(path);
-            luaT_log(L, error.c_str());
+            base::log(L, error.c_str());
         }
     }
 
     bool ok = false;
-    if (m_parent_window.create(L, "Игровая панель Clickpad", 400, 100, true))
+    if (m_parent_window.create(L, L"Игровая панель Clickpad", 400, 100, true))
     {
         HWND parent = m_parent_window.hwnd();
         m_clickpad = new ClickpadMainWnd();
@@ -111,7 +111,7 @@ int init(lua_State *L)
     }
     ld.deletenode();
 
-    if (ok && m_settings_window.create(L, "Настройки Clickpad", 250, 250, false))
+    if (ok && m_settings_window.create(L, L"Настройки Clickpad", 250, 250, false))
     {
         m_settings = new SettingsDlg();
         m_settings->Create(m_settings_window.hwnd());
@@ -122,7 +122,7 @@ int init(lua_State *L)
         m_settings_window.setFixedSize(rc.right, rc.bottom);
 
     } else { ok = false; }
-    if (ok && m_select_image_window.create(L, "Иконка для кнопки", 580, 500, false))
+    if (ok && m_select_image_window.create(L, L"Иконка для кнопки", 580, 500, false))
     {
         SIZE sz = m_select_image_window.getSize();
         RECT rc = { 0, 0, sz.cx, sz.cy };
@@ -130,15 +130,15 @@ int init(lua_State *L)
         m_select_image->Create(m_select_image_window.hwnd(), rc);
         m_select_image->setNotify(m_settings->m_hWnd, WM_USER);
         m_select_image_window.attach(m_select_image->m_hWnd);
-        m_select_image_window.block("left,right,top,bottom");
+        m_select_image_window.block(L"left,right,top,bottom");
     } else { ok = false; }
 
     if (!ok) {
         destroy();
-        return luaT_error(L, "Не удалось запустить плагин Clickpad");
+        return luaT_error(L, L"Не удалось запустить плагин Clickpad");
     }
 
-    base::addMenu(L, "Плагины/Игровая панель Clickpad...", 1);
+    base::addMenu(L, L"Плагины/Игровая панель Clickpad...", 1);
 
 #ifdef _DEBUG // open all windows for edit mode (only for debugging)
     /*base::checkMenu(L, 1);
@@ -159,7 +159,7 @@ int release(lua_State *L)
         xml::node tosave("clickpad");
         m_clickpad->save(tosave);
 
-        u8string path;
+        std::wstring path;
         base::getProfilePath(L, &path);
 
         bool result = tosave.save(path.c_str());
@@ -168,7 +168,7 @@ int release(lua_State *L)
         if (!result)
         {
             destroy();
-            u8string error("Ошибка записи списка кнопок: ");
+            std::wstring error(L"Ошибка записи списка кнопок: ");
             error.append(path);
             return luaT_error(L, error.c_str());
         }
@@ -268,15 +268,14 @@ int WINAPI plugin_open(lua_State *L)
     return 0;
 }
 
-void processGameCommand(const tstring& cmd, bool template_cmd)
+void processGameCommand(const std::wstring& cmd, bool template_cmd)
 {
     if (cmd.empty())
         return;
-    TW2U c(cmd.c_str());
     if (!template_cmd)
-        base::runCommand(pL, c);
+        base::runCommand(pL, cmd.c_str());
     else
-        base::setCommand(pL, c);
+        base::setCommand(pL, cmd.c_str());
 }
 
 void setFocusToMudClient()
@@ -297,19 +296,19 @@ HWND getMudclientWnd()
 
 void exitEditMode()
 {
-    base::pluginName(pL, "clickpad");
+    base::pluginName(pL, L"clickpad");
     base::uncheckMenu(pL, 1);
     m_settings_window.hide();
     m_select_image_window.hide();
     m_clickpad->setEditMode(false);
 }
 
-bool onlyNumbers(const tstring& str)
+bool onlyNumbers(const std::wstring& str)
 {
     return (wcsspn(str.c_str(), L"0123456789") != str.length()) ? false : true;
 }
 
-bool s2i(const tstring& number, int *value)
+bool s2i(const std::wstring& number, int *value)
 {
     if (!onlyNumbers(number))
         return false;
@@ -317,12 +316,12 @@ bool s2i(const tstring& number, int *value)
     return true;
 }
 
-void getImagesDir(tstring* dir)
+void getImagesDir(std::wstring* dir)
 {
-    base::pluginName(getLuaState(), "clickpad");
-    u8string p; 
-    base::getResource(getLuaState(), "", &p);
-    dir->assign(TU2W(p.c_str()));
+    base::pluginName(getLuaState(), L"clickpad");
+    std::wstring p; 
+    base::getResource(getLuaState(), L"", &p);
+    dir->assign(p);
 }
 
 CAppModule _Module;
