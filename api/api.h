@@ -28,25 +28,27 @@ int utf8_strlen(const utf8* string);
 int utf8_sympos(const utf8* string, int index);
 strbuf utf8_trim(const utf8* string);
 
-//u8string wrapper
-class U8
-{   u8string& s;
+class wstring_helper
+{
+    std::wstring &s;
 public:
-    U8(u8string& string) : s(string) {}
-    operator u8string&() { return s; }
-    operator u8string*() { return &s; }
-    u8string at(int index) const {
-        int pos = utf8_sympos(s.c_str(), index);
-        if (pos == -1) return u8string();
-        const utf8 *p = s.c_str()+pos;
-        return u8string(p, utf8_symlen(p));
-    }
-    void trim() {
-        strbuf b = utf8_trim(s.c_str()); 
-        s.assign((const utf8*)strbuf_ptr(b));
-        strbuf_destroy(b);
+    wstring_helper(std::wstring & string) : s(string) {}
+    void trim()
+    {
+        int pos = wcsspn(s.c_str(), L" ");
+        if (pos != 0)
+            s.assign(s.substr(pos));
+        if (s.empty())
+            return;
+        int last = s.size() - 1;
+        pos = last;
+        while (s.at(pos) == L' ')
+           pos--;
+        if (pos != last)
+           s.assign(s.substr(0, pos + 1));
     }
 };
+
 
 class TU2W
 {

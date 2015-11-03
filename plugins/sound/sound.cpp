@@ -6,20 +6,20 @@ SoundPlayer *player = NULL;
 
 int get_name(lua_State *L)
 {
-    lua_pushwstring(L, L"Звуковой плагин");
+    luaT_pushwstring(L, L"Звуковой плагин");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    lua_pushwstring(L, L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
+    luaT_pushwstring(L, L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
         L"Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm,mod,umx. Запись с микрофона производится в wav.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushwstring(L, L"1.0");
+    luaT_pushwstring(L, L"1.0");
     return 1;
 }
 
@@ -32,8 +32,8 @@ int init(lua_State *L)
         base::terminate(L);
         return 0;
     }
-    base::addMenu(L, "Плагины/Записать звук...", 1);
-    base::addCommand(L, "sound");
+    base::addMenu(L, L"Плагины/Записать звук...", 1);
+    base::addCommand(L, L"sound");
     return 0;
 }
 
@@ -65,34 +65,34 @@ int syscmd(lua_State *L)
     {
         lua_pushinteger(L, 1);
         lua_gettable(L, -2);
-        tstring cmd(lua_towstring(L, -1));
+        std::wstring cmd(luaT_towstring(L, -1));
         lua_pop(L, 1);
         if (cmd == L"sound")
         {
-            std::vector<tstring> params;
+            std::vector<std::wstring> params;
             int n = luaL_len(L, -1);
-            u8string text;
+            std::wstring text;
             for (int i=2; i<=n; ++i)
             {
                 lua_pushinteger(L, i);
                 lua_gettable(L, -2);
                 if (!lua_isstring(L, -1))
                 {
-                    lua_pushwstring(L, L"Неверные параметры");
+                    luaT_pushwstring(L, L"Неверные параметры");
                     return 1;
                 }
                 else
                 {
-                    tstring p(lua_towstring(L, -1));
+                    std::wstring p(luaT_towstring(L, -1));
                     params.push_back(p);
                 }
                 lua_pop(L, 1);
             }
             lua_pop(L, 1);
-            tstring error;
+            std::wstring error;
             player->runCommand(params, &error);
             if (!error.empty())
-                lua_pushwstring(L, error.c_str() );
+                luaT_pushwstring(L, error.c_str() );
             else
                 lua_pushnil(L);
             return 1;

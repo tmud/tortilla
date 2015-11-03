@@ -6,27 +6,28 @@ TrayMainObject g_tray;
 
 int get_name(lua_State *L)
 {
-    lua_pushstring(L, "Плагин оповещения в трее");
+    luaT_pushwstring(L, L"Плагин оповещения в трее");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
     luaT_Props p(L);
-    u8string prefix;
+    std::wstring prefix;
     p.cmdPrefix(&prefix);
-    u8string text("Плагин добавляет в клиент команду "); text.append(prefix);
-    text.append("tray. Данная команда выводит текстовое сообщение\r\n"
-         "(параметры команды) в правый нижний угол рабочего стола в виде всплывающей подсказки.\r\n"
-         "Если были получены новые сообщения, а клиент работал в фоновом режиме, то иконка\r\n"
-         "клиента в панели задач будет переодически мигать. См. настройки в меню клиента.");
-    lua_pushstring(L, text.c_str());
+    std::wstring text(L"Плагин добавляет в клиент команду ");
+    text.append(prefix);
+    text.append(L"tray. Данная команда выводит текстовое сообщение\r\n"
+         L"(параметры команды) в правый нижний угол рабочего стола в виде всплывающей подсказки.\r\n"
+         L"Если были получены новые сообщения, а клиент работал в фоновом режиме, то иконка\r\n"
+         L"клиента в панели задач будет переодически мигать. См. настройки в меню клиента.");
+    luaT_pushwstring(L, text.c_str());
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.09");
+    luaT_pushwstring(L, L"1.10");
     return 1;
 }
 
@@ -43,10 +44,10 @@ bool check_color(int color, unsigned char *c)
     return true;
 }
 
-void parse_color(const u8string& text, COLORREF *color)
+void parse_color(const std::wstring& text, COLORREF *color)
 {
     int r = 0; int g = 0; int b = 0;
-    sscanf(text.c_str(), "%d,%d,%d", &r, &g, &b);
+    swscanf(text.c_str(), L"%d,%d,%d", &r, &g, &b);
     unsigned char rb = 0; unsigned char gb = 0; unsigned char bb = 0;
     if (check_color(r, &rb) && check_color(g, &gb) && check_color(b, &bb))
     {
@@ -56,8 +57,8 @@ void parse_color(const u8string& text, COLORREF *color)
 
 int init(lua_State *L)
 {
-    base::addCommand(L, "tray");
-    base::addMenu(L, "Плагины/Оповещения (tray)...", 1);
+    base::addCommand(L, L"tray");
+    base::addMenu(L, L"Плагины/Оповещения (tray)...", 1);
 
     g_tray.create();
     luaT_Props p(L);
@@ -66,7 +67,7 @@ int init(lua_State *L)
     g_tray.setActivated(p.activated());
 
     luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
+    std::wstring path(luaT_towstring(L, -1));
     lua_pop(L, 1);
 
     TraySettings &s = g_tray.traySettings();
@@ -77,22 +78,22 @@ int init(lua_State *L)
     s.background = GetSysColor(COLOR_INFOBK);
 
     xml::node ld;
-    if (ld.load(path.c_str()) && ld.move("params"))
+    if (ld.load(path.c_str()) && ld.move(L"params"))
     {
-        if (ld.get("timeout", &s.timeout))
+        if (ld.get(L"timeout", &s.timeout))
             check_minmax(&s.timeout, 1, 5, MAX_TIMEOUT, MAX_TIMEOUT);
-        if (ld.get("interval", &s.interval))
+        if (ld.get(L"interval", &s.interval))
             check_minmax(&s.interval, 5, 5, MAX_INTERVAL, MAX_INTERVAL);
         int showactive = 0;
-        if (ld.get("showactive", &showactive))
+        if (ld.get(L"showactive", &showactive))
             check_minmax(&showactive, 0, 0, 1, 0);
         s.showactive = showactive ? true : false;
-        u8string text, bkgnd;
-        if (ld.get("textcolor", &text))
+        std::wstring text, bkgnd;
+        if (ld.get(L"textcolor", &text))
             parse_color(text, &s.text);
-        if (ld.get("bkgndcolor", &bkgnd))
+        if (ld.get(L"bkgndcolor", &bkgnd))
             parse_color(bkgnd, &s.background);
-        ld.move("/");
+        ld.move(L"/");
     }
     ld.deletenode();
     return 0;
@@ -114,12 +115,12 @@ int release(lua_State *L)
     sv.set(L"bkgndcolor", buffer);
     sv.move(L"/");
 
-    tstring path;
-    base::getPath(L, "config.xml", &path);   
+    std::wstring path;
+    base::getPath(L, L"config.xml", &path);   
     if (!sv.save(path.c_str()))
     {
         sv.deletenode();
-        tstring error(L"Ошибка записи файла с настройками плагина : ");
+        std::wstring error(L"Ошибка записи файла с настройками плагина : ");
         error.append(path);
         return luaT_error(L, error.c_str());
     }

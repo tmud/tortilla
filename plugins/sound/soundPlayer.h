@@ -4,10 +4,10 @@
 class SoundPlayer
 {
     lua_State *L;
-    tstring *perror;
+    std::wstring *perror;
     int m_music;
-    std::map<tstring, int> m_sounds;
-    typedef std::map<tstring, int>::iterator iterator;
+    std::map<std::wstring, int> m_sounds;
+    typedef std::map<std::wstring, int>::iterator iterator;
 
 public:
     SoundPlayer(lua_State* l) : L(l), perror(NULL), m_music(-1) {}
@@ -19,13 +19,13 @@ public:
         return result;
     }
 
-    void runCommand(const std::vector<tstring>& params, tstring* error)
+    void runCommand(const std::vector<std::wstring>& params, std::wstring* error)
     {
         if (params.empty())
             { error->assign(L"Не заданы параметры"); return; }
 
         perror = error;
-        const tstring &cmd = params[0];
+        const std::wstring &cmd = params[0];
         if (cmd == L"play")
             return play(params);
         else if (cmd == L"music")
@@ -37,7 +37,7 @@ public:
     }
 
 private:
-    void volume(const std::vector<tstring>& params)
+    void volume(const std::vector<std::wstring>& params)
     {
         int count = params.size() - 1;
         if (count != 0 && count != 1)
@@ -50,8 +50,8 @@ private:
                return incorrectMethod(L"getVolume");
             if (!lua_isnumber(L, -1))
                 return incorrectResult(L"getVolume");
-            tstring v(L"Текущая громкость: ");
-            v.append( lua_towstring(L, -1) );
+            std::wstring v(L"Текущая громкость: ");
+            v.append( luaT_towstring(L, -1) );
             print(v);
             return;
        }
@@ -63,7 +63,7 @@ private:
            pushBass();
            if (!luaT_run(L, "setVolume", "td", volume))
                return incorrectMethod(L"setVolume");
-           tstring v(L"Установлена громкость: ");
+           std::wstring v(L"Установлена громкость: ");
            v.append( int_to_wstring(volume) );
            print(v);
            return;
@@ -72,7 +72,7 @@ private:
        return incorrectParameters(L"volume");
     }
 
-    void play(const std::vector<tstring>& params)
+    void play(const std::vector<std::wstring>& params)
     {
         int count = params.size() - 1;
         if (count == 1 || count == 2)
@@ -84,7 +84,7 @@ private:
                 if (!check)
                     return incorrectParameters(L"play");
             }
-            const tstring &name = params[1];
+            const std::wstring &name = params[1];
             iterator it = m_sounds.find(name);
 
 
@@ -94,7 +94,7 @@ private:
         return incorrectParameters(L"play");
     }
 
-    void music(const std::vector<tstring>& params)
+    void music(const std::vector<std::wstring>& params)
     {
         int count = params.size() - 1;
         if (count == 1 || count == 2)
@@ -106,16 +106,16 @@ private:
                 if (!check)
                     return incorrectParameters(L"music");
             }
-            const tstring &name = params[1];
+            const std::wstring &name = params[1];
 
             return;
         }
         return incorrectParameters(L"music");
     }
 
-    void print(const tstring& message)
+    void print(const std::wstring& message)
     {
-        tstring text(L"[sound] ");
+        std::wstring text(L"[sound] ");
         text.append(message);
         base::print(L, text.c_str() );
     }
@@ -124,17 +124,17 @@ private:
         lua_getglobal(L, "bass");
     }
 
-    void incorrectMethod(const tchar* method)
+    void incorrectMethod(const wchar_t* method)
     {
         perror->assign(L"Неизвестный метод bass.");
         perror->append(method);
     }
-    void incorrectResult(const tchar* method)
+    void incorrectResult(const wchar_t* method)
     {
         perror->assign(L"Некорректный результат из функции bass.");
         perror->append(method);
     }
-    void incorrectParameters(const tchar* cmd)
+    void incorrectParameters(const wchar_t* cmd)
     {
         perror->assign(L"Некорректные параметры для команды '");
         perror->append(cmd);

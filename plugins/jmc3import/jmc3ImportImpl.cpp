@@ -35,21 +35,21 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<std::wstring>* errors)
         base.find(v[i].c_str());
         if (!base.size())
             continue;
-        u8string cmdsymbol;
+        std::wstring cmdsymbol;
         base.get(1, &cmdsymbol);
         if (cmdsymbol != params.cmdsymbol)
             continue;
 
-        u8string c, p;
+        std::wstring c, p;
         base.get(2, &c);          // command
         base.get(3, &p);          // params
 
         param.findall(p.c_str());
         if (!param.size())        //simple options
         {
-            if (c == "group" && disable_group.find(p.c_str()) )
+            if (c == L"group" && disable_group.find(p.c_str()) )
             {
-                u8string group;
+                std::wstring group;
                 disable_group.get(1, &group);
                 disabled_groups.push_back(group);            
             }
@@ -57,21 +57,21 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<std::wstring>* errors)
         }
 
         bool result = true;
-        if (c == "action")
+        if (c == L"action")
             result = processAction();
-        else if (c == "alias")
+        else if (c == L"alias")
             result = processAlias();
-        else if (c == "substitute")
+        else if (c == L"substitute")
             result = processSubs();
-        else if (c == "antisubstitute")
+        else if (c == L"antisubstitute")
             result = processAntisub();
-        else if (c == "highlight")
+        else if (c == L"highlight")
             result = processHighlight();
-        else if (c == "hot")
+        else if (c == L"hot")
             result = processHotkey();
-        else if (c == "gag")
+        else if (c == L"gag")
             result = processGags();
-        else if (c == "variable")
+        else if (c == L"variable")
             result = processVariable();
         if (!result && errors)
             errors->push_back(v[i]);
@@ -81,11 +81,11 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<std::wstring>* errors)
         for (int j=1,je=m_groups.size(); j<=je; ++j)
         {
             m_groups.select(j);
-            u8string group;
+            std::wstring group;
             m_groups.get(luaT_ActiveObjects::KEY, &group);
             if (group == disabled_groups[i])
             {
-                m_groups.set(luaT_ActiveObjects::VALUE, "0");
+                m_groups.set(luaT_ActiveObjects::VALUE, L"0");
                 break;
             }
         }
@@ -98,13 +98,13 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<std::wstring>* errors)
     return true;
 }
 
-bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
+bool Jmc3Import::parseParams(int min, int max, std::vector<std::wstring> *params)
 {
     int n = param.size()-1;
     if (n < min || n > max) return false;
     for (int i=1; i<=n; i++)
     {
-        u8string t;
+        std::wstring t;
         param.get(i, &t);
         int l = t.size()-2;
         if (l <= 0)
@@ -117,7 +117,7 @@ bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
 
 bool Jmc3Import::processAlias()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(3, 3, &p))
         return false;
     convert(&p[1]);
@@ -127,7 +127,7 @@ bool Jmc3Import::processAlias()
 
 bool Jmc3Import::processAction()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(4, 4, &p))
         return false;
     convert(&p[1]);
@@ -137,28 +137,28 @@ bool Jmc3Import::processAction()
 
 bool Jmc3Import::processSubs()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(2, 2, &p))
         return false;
-    return (rewrite_mode) ? m_subs.replace(p[0].c_str(), p[1].c_str(), "default") :
-        m_subs.add(p[0].c_str(), p[1].c_str(), "default");
+    return (rewrite_mode) ? m_subs.replace(p[0].c_str(), p[1].c_str(), L"default") :
+        m_subs.add(p[0].c_str(), p[1].c_str(), L"default");
 }
 
 bool Jmc3Import::processAntisub()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
-    return (rewrite_mode) ? m_antisubs.replace(p[0].c_str(), NULL, "default") :
-        m_antisubs.add(p[0].c_str(), NULL, "default");
+    return (rewrite_mode) ? m_antisubs.replace(p[0].c_str(), NULL, L"default") :
+        m_antisubs.add(p[0].c_str(), NULL, L"default");
 }
 
 bool Jmc3Import::processHotkey()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(2, 3, &p)) 
         return false;
-    u8string group("default");
+    std::wstring group(L"default");
     int ps = p.size();
     if (ps == 3)
         group = p[2];
@@ -169,16 +169,16 @@ bool Jmc3Import::processHotkey()
 
 bool Jmc3Import::processGags()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
-    return (rewrite_mode) ? m_gags.replace(p[0].c_str(), NULL, "default") :
-        m_gags.add(p[0].c_str(), NULL, "default");
+    return (rewrite_mode) ? m_gags.replace(p[0].c_str(), NULL, L"default") :
+        m_gags.add(p[0].c_str(), NULL, L"default");
 }
 
 bool Jmc3Import::processHighlight()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(3, 3, &p))
         return false;
     return (rewrite_mode) ? m_highlights.replace(p[1].c_str(), p[0].c_str(), p[2].c_str()) :
@@ -187,19 +187,19 @@ bool Jmc3Import::processHighlight()
 
 bool Jmc3Import::processVariable()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(2, 2, &p)) 
         return false;
     return (rewrite_mode) ?  m_vars.replace(p[0].c_str(), p[1].c_str(), NULL) :
         m_vars.add(p[0].c_str(), p[1].c_str(), NULL);
 }
 
-bool Jmc3Import::convert(u8string *str)
+bool Jmc3Import::convert(std::wstring *str)
 {
-    std::vector<u8string> cmds;
+    std::vector<std::wstring> cmds;
     bool params_exists = param.findall(str->c_str());
     Pcre find_separators;
-    u8string regexp("\\");
+    std::wstring regexp(L"\\");
     regexp.append(jmc_separator);
     find_separators.init(regexp.c_str());
     if (!find_separators.findall(str->c_str()))
@@ -225,33 +225,33 @@ bool Jmc3Import::convert(u8string *str)
         int startpos = 0;
         for (int i=0, e=pos.size(); i<e; ++i)
         {
-            u8string cmd(str->substr(startpos, pos[i] - startpos));
-            U8 t(cmd); t.trim();
+            std::wstring cmd(str->substr(startpos, pos[i] - startpos));
+            wstring_helper t(cmd); t.trim();
             if (!cmd.empty())
                 cmds.push_back(cmd);
             startpos = pos[i] + 1;
         }
-        u8string cmd(str->substr(startpos));
-        U8 t(cmd); t.trim();
+        std::wstring cmd(str->substr(startpos));
+        wstring_helper t(cmd); t.trim();
         if (!cmd.empty())
             cmds.push_back(cmd);
     }
 
     str->clear();
-    u8string default_cmdsymbol("#");
+    std::wstring default_cmdsymbol(L"#");
 
     // support import #wait command
-    u8string waitcmd(jmc_cmdsymbol);
-    waitcmd.append("wait");
+    std::wstring waitcmd(jmc_cmdsymbol);
+    waitcmd.append(L"wait");
     int last = cmds.size()-1;
     for (int i=last; i>=0; --i)
     {
-        u8string &cmd = cmds[i];
+        std::wstring &cmd = cmds[i];
         if (cmd.find(waitcmd) != -1 && i != last)
         {
-            cmd.append(" {");
+            cmd.append(L" {");
             cmd.append(cmds[i+1]);
-            cmd.append("}");
+            cmd.append(L"}");
             cmds.erase(cmds.begin()+(i+1));
             last = cmds.size()-1;
         }
@@ -262,22 +262,23 @@ bool Jmc3Import::convert(u8string *str)
         if (i != 0)
             str->append(separator);
 
-        u8string s(cmds[i]);
-        U8 t(s); t.trim();
+        std::wstring s(cmds[i]);
+        wstring_helper t(s); t.trim();
         replaceLegacy(&s);
-        u8string p(t.at(0));
+        wchar_t tmp[2] = { s.at(0), 0 };
+        std::wstring p(tmp);
 
         if (jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) 
              str->append(s);        // it game command
         else
         {
-            u8string new_cmd(cmdsymbol);
+            std::wstring new_cmd(cmdsymbol);
             if (!ifcmd.find(s.c_str())) 
             {
                 if (!base.find(s.c_str()))
                     new_cmd.append(s.substr(p.length()));
                 else {
-                u8string curr_cmd;
+                std::wstring curr_cmd;
                 base.get(2, &curr_cmd);
                 replaceCommand(&curr_cmd);
                 new_cmd.append(curr_cmd);
@@ -288,7 +289,7 @@ bool Jmc3Import::convert(u8string *str)
             { // if command -> recursive process
               if (!param.findall(s.c_str()) || param.size() != 3)
                   return false;
-              u8string if_cmds;
+              std::wstring if_cmds;
               param.get(2, &if_cmds);
               int right_index = param.first(2);
               int len = if_cmds.length() - 2;
@@ -297,9 +298,9 @@ bool Jmc3Import::convert(u8string *str)
                   return false;
               int pos = p.length(); // postition after prefix
               new_cmd.append(s.substr(pos, right_index-pos));
-              new_cmd.append("{");
+              new_cmd.append(L"{");
               new_cmd.append(if_cmds);
-              new_cmd.append("}");
+              new_cmd.append(L"}");
             }
             str->append(new_cmd);
         }
@@ -307,7 +308,7 @@ bool Jmc3Import::convert(u8string *str)
     return true;
 }
 
-void Jmc3Import::replaceLegacy(u8string *legacy)
+void Jmc3Import::replaceLegacy(std::wstring *legacy)
 {
     iterator it = m_legacy.begin(), it_end = m_legacy.end();
     for (; it!=it_end; ++it)
@@ -315,7 +316,7 @@ void Jmc3Import::replaceLegacy(u8string *legacy)
         int pos = legacy->find(it->first);
         while (pos != -1)
         {         
-            u8string newstr(legacy->substr(0, pos));
+            std::wstring newstr(legacy->substr(0, pos));
             newstr.append(it->second);
             pos = pos + it->first.length();
             newstr.append(legacy->substr(pos));
@@ -325,15 +326,15 @@ void Jmc3Import::replaceLegacy(u8string *legacy)
     }
 }
 
-void Jmc3Import::replaceCommand(u8string *cmd)
+void Jmc3Import::replaceCommand(std::wstring *cmd)
 {
     if (cmd->length() < 3)
         return;
      iterator it = m_commands.begin(), it_end = m_commands.end();
      for (;it!=it_end;++it)
      {
-         const u8string& key = it->first;
-         if (!strncmp(key.c_str(), cmd->c_str(), cmd->length()))
+         const std::wstring& key = it->first;
+         if (!wcsncmp(key.c_str(), cmd->c_str(), cmd->length()))
          {
             cmd->assign(it->second);
             return;
@@ -343,27 +344,27 @@ void Jmc3Import::replaceCommand(u8string *cmd)
 
 void Jmc3Import::initLegacy()
 {
-    std::map<u8string, u8string>& l = m_legacy;
-    l["%%"] = "%";
-    std::map<u8string, u8string>& c = m_commands;
-    c["daa"] = "hide";
-    c["restorewindow"] = "showwindow";
-    c["showme"] = "woutput 1";
-    c["substitute"] = "sub";
-    c["antisubstitute"] = "antisub";
-    c["unantisubstitute"] = "unantisub";
-    c["tabadd"] = "tab";
-    c["tabdel"] = "untab";
-    c["variable"] = "var";
-    c["output"] = "woutput 1";
+    std::map<std::wstring, std::wstring>& l = m_legacy;
+    l[L"%%"] = L"%";
+    std::map<std::wstring, std::wstring>& c = m_commands;
+    c[L"daa"] = L"hide";
+    c[L"restorewindow"] = L"showwindow";
+    c[L"showme"] = L"woutput 1";
+    c[L"substitute"] = L"sub";
+    c[L"antisubstitute"] = L"antisub";
+    c[L"unantisubstitute"] = L"unantisub";
+    c[L"tabadd"] = L"tab";
+    c[L"tabdel"] = L"untab";
+    c[L"variable"] = L"var";
+    c[L"output"] = L"woutput 1";
 }
 
 void Jmc3Import::initPcre()
 {
-    base.init("^(\\W)(.*?) +(.*) *");
-    param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
-    ifcmd.init("^.if .*");
-    disable_group.init("disable (.*)");
+    base.init(L"^(\\W)(.*?) +(.*) *");
+    param.init(L"\\{((?:(?>[^{}]+)|(?R))*)\\}");
+    ifcmd.init(L"^.if .*");
+    disable_group.init(L"disable (.*)");
 }
 
 void Jmc3Import::initCmdSymbols()

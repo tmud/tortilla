@@ -9,43 +9,43 @@ int system_messagebox(lua_State *L)
 
     bool params_ok = false;
 
-    u8string text;
-    u8string caption("Tortilla Mud Client");
+    std::wstring text;
+    std::wstring caption(L"Tortilla Mud Client");
     UINT buttons = MB_OK;
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        text.assign(lua_tostring(L, 1));
+        text.assign(luaT_towstring(L, 1));
         params_ok = true;
     }
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
     {
-        caption.assign(lua_tostring(L, 1));
-        text.assign(lua_tostring(L, 2));
+        caption.assign(luaT_towstring(L, 1));
+        text.assign(luaT_towstring(L, 2));
         params_ok = true;
     }
     else if (luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
     {
-        caption.assign(lua_tostring(L, 1));
-        text.assign(lua_tostring(L, 2));
+        caption.assign(luaT_towstring(L, 1));
+        text.assign(luaT_towstring(L, 2));
 
-        u8string b(lua_tostring(L, 3));
-        if (b == "ok,cancel") buttons = MB_OKCANCEL;
-        else if (b == "cancel,ok") buttons = MB_OKCANCEL|MB_DEFBUTTON2;
-        else if (b == "yes,no") buttons = MB_YESNO;
-        else if (b == "no,yes") buttons = MB_YESNO|MB_DEFBUTTON2;
+        std::wstring b(luaT_towstring(L, 3));
+        if (b == L"ok,cancel") buttons = MB_OKCANCEL;
+        else if (b == L"cancel,ok") buttons = MB_OKCANCEL|MB_DEFBUTTON2;
+        else if (b == L"yes,no") buttons = MB_YESNO;
+        else if (b == L"no,yes") buttons = MB_YESNO|MB_DEFBUTTON2;
 
-        if (strstr(b.c_str(), "error")) buttons |= MB_ICONERROR;
-        else if (strstr(b.c_str(), "stop")) buttons |= MB_ICONERROR;
-        else if (strstr(b.c_str(), "info")) buttons |= MB_ICONINFORMATION;
-        else if (strstr(b.c_str(), "information")) buttons |= MB_ICONINFORMATION;
-        else if (strstr(b.c_str(), "warning")) buttons |= MB_ICONWARNING;
-        else if (strstr(b.c_str(), "question")) buttons |= MB_ICONQUESTION;
+        if (wcsstr(b.c_str(), L"error")) buttons |= MB_ICONERROR;
+        else if (wcsstr(b.c_str(), L"stop")) buttons |= MB_ICONERROR;
+        else if (wcsstr(b.c_str(), L"info")) buttons |= MB_ICONINFORMATION;
+        else if (wcsstr(b.c_str(), L"information")) buttons |= MB_ICONINFORMATION;
+        else if (wcsstr(b.c_str(), L"warning")) buttons |= MB_ICONWARNING;
+        else if (wcsstr(b.c_str(), L"question")) buttons |= MB_ICONQUESTION;
 
         params_ok = true;
     }
     UINT result = 0;
     if (params_ok)
-        result = MessageBox(parent, TU2W(text.c_str()), TU2W(caption.c_str()), buttons);
+        result = MessageBox(parent, text.c_str(), caption.c_str(), buttons);
 
     lua_pushinteger(L, result);
     return 1;
@@ -55,8 +55,7 @@ int system_debugstack(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        std::string label(lua_tostring(L, -1));
-        lua_pop(L, 1);
+        std::wstring label(luaT_towstring(L, -1));
         luaT_showLuaStack(L, label.c_str());
         return 0;
     }
@@ -68,8 +67,7 @@ int system_dbgtable(lua_State *L)
 {
     if (luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
     {
-        std::string label(lua_tostring(L, -1));
-        lua_pop(L, 1);
+        std::wstring label(luaT_towstring(L, -1));
         luaT_showTableOnTop(L, label.c_str());
         return 0;
     }

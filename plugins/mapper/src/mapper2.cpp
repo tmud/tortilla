@@ -55,9 +55,8 @@ void Mapper::newZone(Room *room, RoomDir dir)
 
 void Mapper::saveMaps(lua_State *L)
 {
-    luaT_run(L, "getPath", "s", "");
-    tstring dir( TU2W(lua_tostring(L, -1)) );
-    lua_pop(L, 1);
+    tstring dir;
+    base::getPath(L, L"", &dir);
 
     std::vector<tstring> todelete;
     for (int i = 0, e = m_zones.size(); i < e; ++i)
@@ -104,7 +103,7 @@ void Mapper::saveMaps(lua_State *L)
                     continue;                
                 
                 xml::node e = r.createsubnode(L"exit");
-                e.set(L"dir", s[dir]);
+                e.set(L"dir", RoomDirName[dir]);
 
                 //u8string state;
                 Room* next_room = exit.next_room;
@@ -185,39 +184,38 @@ void Mapper::loadMaps(lua_State *L)
         tstring filepath(dir);
         filepath.append(file);
 
-        u8string fpath(TW2U(filepath.c_str()) );
         xml::node zn;
         bool loaded = false;
         Zone *zone = new Zone(name);
-        if (zn.load(fpath.c_str()))
+        if (zn.load(filepath.c_str()))
         {
             loaded = true;
             xml::request levels(zn, L"level");
             for (int j = 0, je = levels.size(); j < je; ++j)
             {
                 int z = 0;
-                if (!levels[j].get("z", &z))
+                if (!levels[j].get(L"z", &z))
                     { loaded = false;  break; }
                 RoomsLevel *level = zone->getLevel(z, true);
-                xml::request rooms(levels[j], "room");
+                xml::request rooms(levels[j], L"room");
                 for (int r = 0, re = rooms.size(); r < re; ++r)
                 {
                     RoomData rdata;
                     xml::node room = rooms[r];
                     int x = 0, y = 0;
-                    if (!room.get("x", &x) || !room.get("y", &y) || 
-                        !room.get("name", &rdata.name) || !room.get("descr", &rdata.descr) || !room.get("exits", &rdata.exits)
+                    if (!room.get(L"x", &x) || !room.get(L"y", &y) || 
+                        !room.get(L"name", &rdata.name) || !room.get(L"descr", &rdata.descr) || !room.get(L"exits", &rdata.exits)
                        ) { continue; }                    
                     rdata.calcHash();
                     Room *new_room = createNewRoom(rdata);
                     int icon = 0;
-                    if (room.get("icon", &icon) && icon > 0)
+                    if (room.get(L"icon", &icon) && icon > 0)
                         new_room->icon = icon;
-                    u8string color;
-                    if (room.get("color", &color))
+                    tstring color;
+                    if (room.get(L"color", &color))
                     {
-                        char *p = NULL;
-                        COLORREF n = strtol(color.c_str(), &p, 16);
+                        wchar_t *p = NULL;
+                        COLORREF n = wcstol(color.c_str(), &p, 16);
                         if (*p == 0)
                             { new_room->color = n; new_room->use_color = 1; }
                     }
@@ -234,34 +232,34 @@ void Mapper::loadMaps(lua_State *L)
             for (int j = 0, je = levels.size(); j < je; ++j)
             {
                 int z = 0;
-                levels[j].get("z", &z);
+                levels[j].get(L"z", &z);
                 RoomsLevel *level = zone->getLevel(z, false);
-                xml::request rooms(levels[j], "room");
+                xml::request rooms(levels[j], L"room");
                 for (int r = 0, re = rooms.size(); r < re; ++r)
                 {
                     int x = 0, y = 0;
-                    if (!rooms[r].get("x", &x) || !rooms[r].get("y", &y))
+                    if (!rooms[r].get(L"x", &x) || !rooms[r].get(L"y", &y))
                         continue;
                     Room* room = level->getRoom(x, y);
-                    xml::request exits(rooms[r], "exit");
+                    xml::request exits(rooms[r], L"exit");
                     for (int e = 0, ee = exits.size(); e < ee; ++e)
                     {
                         xml::node exitnode = exits[e];
-                        u8string exit_dir;
-                        exitnode.get("dir", &exit_dir);
+                        tstring exit_dir;
+                        exitnode.get(L"dir", &exit_dir);
                         int dir = -1;
                         for (int d = RD_NORTH; d <= RD_DOWN; ++d) { if (!exit_dir.compare(RoomDirName[d])) { dir = d; break; }}
                         if (dir == -1)
                             continue;
                         RoomExit &exit = room->dirs[dir];
                         exit.exist = true;
-                        int d = 0; if (exitnode.get("door", &d) && d == 1) exit.door = true;
+                        int d = 0; if (exitnode.get(L"door", &d) && d == 1) exit.door = true;
 
-                        if (!exitnode.get("x", &x) || !exitnode.get("y", &y) || !exitnode.get("z", &z))
+                        if (!exitnode.get(L"x", &x) || !exitnode.get(L"y", &y) || !exitnode.get(L"z", &z))
                             continue;
                         RoomsLevel *next_level = NULL;
                         tstring zone_name;
-                        if (exitnode.get("zone", &zone_name))
+                        if (exitnode.get(L"zone", &zone_name))
                         {
                             if (zone_name.empty()) continue;
                             int index = -1;
@@ -289,9 +287,9 @@ void Mapper::loadMaps(lua_State *L)
         if (!loaded)
         {
             delete zone;
-            u8string error("Ошибка загрузки зоны:");
-            error.append(fpath);
-            luaT_log(L, error.c_str());
+            tstring error(L"Ошибка загрузки зоны:");
+            error.append(filepath);
+            base::log(L, error.c_str());
             continue;
         }             
     }
