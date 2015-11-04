@@ -37,18 +37,17 @@ void pluginsMenuCmd(UINT id) { m_idcontrol.runPluginCmd(id); }
 void tmcLog(const tstring& msg) { lp()->tmcLog(msg); }
 void pluginLog(const tstring& msg) { lp()->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
-const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
+const tchar* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
-const wchar_t* unknown_plugin = L"?плагин?";
+const tchar* unknown_plugin = L"?плагин?";
 //---------------------------------------------------------------------
-MemoryBuffer pluginBuffer(16384*sizeof(wchar_t));
-wchar_t* plugin_buffer() { return (wchar_t*)pluginBuffer.getData(); }
-int pluginInvArgs(lua_State *L, const utf8* fname)
+MemoryBuffer pluginBuffer(16384*sizeof(tchar));
+tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
+int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     int n = lua_gettop(L);
-    Utf8ToWide f(fname);
     swprintf(plugin_buffer(), L"'%s'.%s: Некорректные параметры(%d): ",
-        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, n);
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, n);
     tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
@@ -68,41 +67,36 @@ int pluginInvArgs(lua_State *L, const utf8* fname)
     return 0;
 }
 
-int pluginLoadFail(lua_State *L, const utf8* fname, const utf8* file)
+int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    Utf8ToWide f(fname); Utf8ToWide fi(file);
     swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ",
-        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, (const wchar_t*)fi);
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, file);
     pluginLog(plugin_buffer());
     return 0;
 }
 
-int pluginError(const utf8* fname, const utf8* error)
+int pluginError(const tchar* fname, const tchar* error)
 {
-    Utf8ToWide f(fname);
-    Utf8ToWide e(error);
-    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)f, (const wchar_t*)e);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, error);
     pluginLog(plugin_buffer());
     return 0;
 }
 
-int pluginError(const utf8* error)
+int pluginError(const tchar* error)
 {
-    Utf8ToWide e(error);
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)e);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, error);
     pluginLog(plugin_buffer());
     return 0;
 }
 
-int pluginLog(const utf8* msg)
+int pluginLog(const tchar* msg)
 {
-    Utf8ToWide e(msg);
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, (const wchar_t*)e);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, msg);
     pluginLog(plugin_buffer());
     return 0;
 }
 
-void pluginLoadError(const wchar_t* msg, const wchar_t *fname)
+void pluginLoadError(const tchar* msg, const tchar *fname)
 {
     swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", fname, msg);
     pluginLog(plugin_buffer());
@@ -115,7 +109,7 @@ int pluginName(lua_State *L)
         _extra_plugin_name.assign(TU2W(lua_tostring(L, 1))); 
         return 0;
     }
-    return pluginInvArgs(L, "pluginName");
+    return pluginInvArgs(L, L"pluginName");
 }
 //---------------------------------------------------------------------
 int addCommand(lua_State *L)
@@ -125,7 +119,7 @@ int addCommand(lua_State *L)
     if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         bool result = false;
-        tstring cmd(lua_towstring(L, 1));
+        tstring cmd(luaT_towstring(L, 1));
         if (!cmd.empty())
             result = lp()->addSystemCommand(cmd);
         if (result)
@@ -133,7 +127,7 @@ int addCommand(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "addCommand");
+    return pluginInvArgs(L, L"addCommand");
 }
 
 int runCommand(lua_State *L)
@@ -141,11 +135,11 @@ int runCommand(lua_State *L)
     EXTRA_CP;
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        tstring cmd(TU2W(lua_tostring(L, 1)));
+        tstring cmd(luaT_towstring(L, 1));
         lp()->processPluginCommand(cmd);
         return 0;
     }
-    return pluginInvArgs(L, "runCommand");
+    return pluginInvArgs(L, L"runCommand");
 }
 
 int setCommand(lua_State *L)
@@ -153,11 +147,11 @@ int setCommand(lua_State *L)
     EXTRA_CP;
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        tstring cmd(TU2W(lua_tostring(L, 1)));
+        tstring cmd(luaT_towstring(L, 1));
         _wndMain.m_gameview.setCommand(cmd);
         return 0;
     }
-    return pluginInvArgs(L, "setCommand");
+    return pluginInvArgs(L, L"setCommand");
 }
 
 int addMenu(lua_State *L)
@@ -165,20 +159,20 @@ int addMenu(lua_State *L)
     CAN_DO;
     EXTRA_CP;
     if (!_cp)
-         return pluginInvArgs(L, "addMenu");
+         return pluginInvArgs(L, L"addMenu");
     int code = -1;
     bool params_ok = false;
     if (luaT_check(L, 1, LUA_TSTRING))
-        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), -1, -1, NULL);
+        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), -1, -1, NULL);
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
     {
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), -1, getId(code, false), NULL);
+        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), -1, getId(code, false), NULL);
     }
     else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
     {
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), NULL);
+        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), NULL);
     }
     else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
     {
@@ -190,13 +184,13 @@ int addMenu(lua_State *L)
                 bmp = LoadBitmap( module, MAKEINTRESOURCE(bmp_id) );
         }
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(lua_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
+        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
     }
-    else { return pluginInvArgs(L, "addMenu"); }
+    else { return pluginInvArgs(L, L"addMenu"); }
     if (!params_ok) { delCode(code, false); }
     else
     {
-        tstring menu_id(lua_towstring(L, 1));
+        tstring menu_id(luaT_towstring(L, 1));
         _cp->menus.push_back(menu_id);
     }
     return 0;
@@ -213,7 +207,7 @@ int checkMenu(lua_State *L)
         tbar()->checkToolbarButton(findId(code, true), TRUE);
         return 0;
     }
-    return pluginInvArgs(L, "checkMenu");
+    return pluginInvArgs(L, L"checkMenu");
 }
 
 int uncheckMenu(lua_State *L)
@@ -227,7 +221,7 @@ int uncheckMenu(lua_State *L)
         tbar()->checkToolbarButton(findId(code, true), FALSE);
         return 0;
     }
-    return pluginInvArgs(L, "uncheckMenu");
+    return pluginInvArgs(L, L"uncheckMenu");
 }
 
 int enableMenu(lua_State *L)
@@ -241,7 +235,7 @@ int enableMenu(lua_State *L)
         tbar()->enableToolbarButton(findId(code, true), TRUE);
         return 0;
     }
-    return pluginInvArgs(L, "enableMenu");
+    return pluginInvArgs(L, L"enableMenu");
 }
 
 int disableMenu(lua_State *L)
@@ -255,7 +249,7 @@ int disableMenu(lua_State *L)
         tbar()->enableToolbarButton(findId(code, true), FALSE);
         return 0;
     }
-    return pluginInvArgs(L, "disableMenu");
+    return pluginInvArgs(L, L"disableMenu");
 }
 
 int addButton(lua_State *L)
@@ -263,7 +257,7 @@ int addButton(lua_State *L)
     CAN_DO;
     EXTRA_CP;
     if (!_cp) 
-        return pluginInvArgs(L, "addButton");
+        return pluginInvArgs(L, L"addButton");
     int image = -1, code = -1; tstring hover;
     if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
     {
@@ -271,9 +265,9 @@ int addButton(lua_State *L)
     }
     else if (luaT_check(L, 3, LUA_TNUMBER, LUA_TNUMBER, LUA_TSTRING))
     {
-        image = lua_tointeger(L, 1); code = lua_tointeger(L, 2); hover.assign(lua_towstring(L, 3));
+        image = lua_tointeger(L, 1); code = lua_tointeger(L, 2); hover.assign(luaT_towstring(L, 3));
     }
-    else { return pluginInvArgs(L, "addButton"); }
+    else { return pluginInvArgs(L, L"addButton"); }
 
     if (image > 0 && code > 0)
     {
@@ -295,13 +289,13 @@ int addToolbar(lua_State *L)
     CAN_DO;
     EXTRA_CP;
     if (!_cp)
-        return pluginInvArgs(L, "addToolbar");
+        return pluginInvArgs(L, L"addToolbar");
     if (luaT_check(L, 1, LUA_TSTRING))
-        tbar()->addToolbar(lua_towstring(L, 1), 15);
+        tbar()->addToolbar(luaT_towstring(L, 1), 15);
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
-        tbar()->addToolbar(lua_towstring(L, 1), lua_tointeger(L, 2));
-    else { return pluginInvArgs(L, "addToolbar"); }
-    tstring tbar_name(lua_towstring(L, 1));
+        tbar()->addToolbar(luaT_towstring(L, 1), lua_tointeger(L, 2));
+    else { return pluginInvArgs(L, L"addToolbar"); }
+    tstring tbar_name(luaT_towstring(L, 1));
     _cp->toolbars.push_back(tbar_name);
     return 0;
 }
@@ -312,10 +306,10 @@ int hideToolbar(lua_State *L)
     EXTRA_CP;
     if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
-        tbar()->hideToolbar(lua_towstring(L, 1));
+        tbar()->hideToolbar(luaT_towstring(L, 1));
         return 0;
     }
-    return pluginInvArgs(L, "hideToolbar");
+    return pluginInvArgs(L, L"hideToolbar");
 }
 
 int showToolbar(lua_State *L)
@@ -324,10 +318,10 @@ int showToolbar(lua_State *L)
     EXTRA_CP;
     if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
-        tbar()->showToolbar(lua_towstring(L, 1));
+        tbar()->showToolbar(luaT_towstring(L, 1));
         return 0;
     }
-    return pluginInvArgs(L, "showToolbar");
+    return pluginInvArgs(L, L"showToolbar");
 }
 
 int getPath(lua_State *L)
@@ -336,17 +330,17 @@ int getPath(lua_State *L)
     if (_cp && luaT_check(L, 1, LUA_TSTRING))
     {
         PropertiesManager *pmanager = tortilla::getPropertiesManager();
-        tstring filename(lua_towstring(L, 1));
+        tstring filename(luaT_towstring(L, 1));
         ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
         ProfileDirHelper dh;
         if (dh.makeDir(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME)))
         {
-            lua_pushwstring(L, pp);
+            luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginError("getPath", "Ошибка создания каталога для плагина");
+        return pluginError(L"getPath", L"Ошибка создания каталога для плагина");
     }
-    return pluginInvArgs(L, "getPath");
+    return pluginInvArgs(L, L"getPath");
 }
 
 int getProfilePath(lua_State *L)
@@ -361,23 +355,23 @@ int getProfilePath(lua_State *L)
         ProfileDirHelper dh;
         if (dh.makeDir(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME)))
         {
-            lua_pushwstring(L, pp);
+            luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginError("getProfilePath", "Ошибка создания каталога для плагина");
+        return pluginError(L"getProfilePath", L"Ошибка создания каталога для плагина");
     }
-    return pluginInvArgs(L, "getProfilePath");
+    return pluginInvArgs(L, L"getProfilePath");
 }
 
 int getResource(lua_State* L)
 {
     EXTRA_CP;
     if (!_cp)
-        return pluginInvArgs(L, "getResource");
+        return pluginInvArgs(L, L"getResource");
 
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        tstring filename(lua_towstring(L, 1));
+        tstring filename(luaT_towstring(L, 1));
         tstring rd(L"resources");
         tstring pd(_cp->get(Plugin::FILENAME));
         ChangeDir cd;
@@ -406,9 +400,9 @@ int getResource(lua_State* L)
             lua_pushwstring(L, path.c_str());
             return 1;
         }
-        return pluginError("getResource", "Ошибка создания каталога для плагина");
+        return pluginError(L"getResource", L"Ошибка создания каталога для плагина");
     }
-    return pluginInvArgs(L, "getResource");
+    return pluginInvArgs(L, L"getResource");
 }
 
 int getProfile(lua_State *L)
@@ -419,7 +413,7 @@ int getProfile(lua_State *L)
         lua_pushwstring(L, pmanager->getProfileName().c_str());
         return 1;
     }
-    return pluginInvArgs(L, "getProfile");
+    return pluginInvArgs(L, L"getProfile");
 }
 
 int getParent(lua_State *L)
@@ -430,17 +424,17 @@ int getParent(lua_State *L)
         lua_pushunsigned(L, (DWORD)hwnd);
         return 1;
     }
-    return pluginInvArgs(L, "getParent");
+    return pluginInvArgs(L, L"getParent");
 }
 
 int loadTable(lua_State *L)
 {
     EXTRA_CP;
     if (!_cp || !luaT_check(L, 1, LUA_TSTRING))
-        return pluginInvArgs(L, "loadData");
+        return pluginInvArgs(L, L"loadData");
 
     PropertiesManager *pmanager = tortilla::getPropertiesManager();
-    tstring filename(lua_towstring(L, 1));
+    tstring filename(luaT_towstring(L, 1));
     ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
     filename.assign(pp);
 
@@ -448,19 +442,17 @@ int loadTable(lua_State *L)
     if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)
         return 0;
     xml::node doc;
-    if (!doc.load(WideToUtf8(pp)) )
+    if (!doc.load(pp) )
     {
-       W2U f(filename);
-       utf8 buffer[128];
-       sprintf(buffer, "Ошибка чтения: %s", (const utf8*)f);
-       pluginError("loadData", buffer);
+       swprintf(plugin_buffer(), L"Ошибка чтения: %s", filename);
+       pluginError(L"loadData", plugin_buffer());
        return 0;
     }
     lua_pop(L, 1);
 
     struct el { el(xml::node n, int l) : node(n), level(l) {} xml::node node; int level; };
     std::vector<el> stack;
-    xml::request req(doc, "*");
+    xml::request req(doc, L"*");
     for (int i = 0, e = req.size(); i < e; ++i)
        { stack.push_back( el(req[i], 0) ); }
 
@@ -473,20 +465,20 @@ int loadTable(lua_State *L)
        int array_index = 0;
        bool it_array = false;
 
-       u8string name, val;
+       tstring name, val;
        n.getname(&name);
-       if (name == "array") 
+       if (name == L"array") 
        { //can be number index
-         if (n.get("index", &array_index))
+         if (n.get(L"index", &array_index))
              it_array = true;
        }
-       if (n.get("value", &val))
+       if (n.get(L"value", &val))
        {   // it is simple value
            if (it_array)
              lua_pushinteger(L, array_index);
            else
-             lua_pushstring(L, name.c_str());
-           lua_pushstring(L, val.c_str());
+             luaT_pushwstring(L, name.c_str());
+           luaT_pushwstring(L, val.c_str());
            lua_settable(L, -3);
        }
        else
@@ -495,13 +487,13 @@ int loadTable(lua_State *L)
            if (it_array)
                lua_pushinteger(L, array_index);
            else
-               lua_pushstring(L, name.c_str());
+               luaT_pushwstring(L, name.c_str());
            lua_pushvalue(L, -2);
            lua_settable(L, -4);
 
            // insert subnodes
            int new_level = s_el.level + 1;
-           xml::request req(n, "*");
+           xml::request req(n, L"*");
            std::vector<el> tmp;
            for (int i = 0, e = req.size(); i < e; ++i)
                tmp.push_back(el(req[i], new_level));
@@ -532,24 +524,24 @@ int saveTable(lua_State *L)
 {
     EXTRA_CP;
     if (!_cp || !luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
-        return pluginInvArgs(L, "saveData");
+        return pluginInvArgs(L, L"saveData");
 
-    tstring filename(lua_towstring(L, 2));
+    tstring filename(luaT_towstring(L, 2));
     lua_pop(L, 1);
 
     // recursive cycles in table
     struct saveDataNode
     {
-        typedef std::pair<std::string, std::string> value;
-        typedef std::map<int, std::string> tarray;
+        typedef std::pair<tstring, tstring> value;
+        typedef std::map<int, tstring> tarray;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
-        std::string name;
+        tstring name;
         tarray array;
     };
 
     saveDataNode *current = new saveDataNode();
-    current->name = "plugindata";
+    current->name = L"plugindata";
 
     std::vector<saveDataNode*> stack;
     std::vector<saveDataNode*> list;
@@ -588,7 +580,7 @@ int saveTable(lua_State *L)
             }
             if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING || value_type == LUA_TBOOLEAN)
             {
-                current->attributes.push_back( saveDataNode::value( lua_tostring(L, -2), lua_tostring(L, -1)) );
+                current->attributes.push_back( saveDataNode::value( luaT_towstring(L, -2), luaT_towstring(L, -1)) );
             }
             else if (value_type == LUA_TTABLE)
             {
@@ -596,7 +588,7 @@ int saveTable(lua_State *L)
                 if (key_type == LUA_TNUMBER)
                     new_node->name = current->name;
                 else
-                    new_node->name = lua_tostring(L, -2);
+                    new_node->name = luaT_towstring(L, -2);
                 current->childnodes.push_back(new_node);
                 stack.push_back(current);
                 list.push_back(new_node);

@@ -39,7 +39,7 @@ bool PluginsTrigger::init(lua_State *pL)
         lua_setglobal(L, "_triggers");
     }
 
-    tstring key(lua_towstring(L, 1));
+    tstring key(luaT_towstring(L, 1));
     m_compare.init(key, true);
 
     lua_len(L, -1);

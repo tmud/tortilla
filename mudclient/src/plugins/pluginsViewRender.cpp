@@ -447,7 +447,7 @@ int render_createImage(lua_State *L)
     if (luaT_check(L, 2, LUAT_RENDER, LUA_TSTRING) || 
         luaT_check(L, 3, LUAT_RENDER, LUA_TSTRING, LUA_TNUMBER))
     {
-        tstring path(lua_towstring(L, 2));
+        tstring path(luaT_towstring(L, 2));
         tstring_replace(&path, L"/", L"\\");
         Image *img = new Image;
         int param = (lua_gettop(L) == 3) ? lua_tointeger(L, 3) : -1;

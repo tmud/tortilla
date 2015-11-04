@@ -60,7 +60,7 @@ public:
         for (int i=0,e=values->size(); i<e; ++i)
         {
             const property_value &v = values->get(i);
-            if (!isOnlyDigits(v.key))
+            if (!isInt(v.key))
                 continue;
             int id = _wtoi(v.key.c_str());
             if (id < 1 || id > TIMERS_COUNT)

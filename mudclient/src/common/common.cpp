@@ -43,16 +43,13 @@ void getWindowText(HWND handle, tstring *string)
     string->assign(buffer);
 }
 
-bool isOnlyDigitsA(const std::string& str)
+bool isOnlyDigits(const tstring& str)
 {
-    if (str.empty()) return false;
-    const char* p = str.c_str();
-    int len = str.length();
-    if (*p == '-') { p++; len--; }
-    return (strspn(p, "0123456789") != len) ? false : true;
+   if (str.empty()) return false;
+   return isOnlySymbols(str, L"0123456789");
 }
 
-bool isOnlyDigits(const tstring& str)
+bool isInt(const tstring& str)
 {
    if (str.empty()) return false;
    const tchar* p = str.c_str();
@@ -87,12 +84,18 @@ bool isOnlyFilnameSymbols(const tstring& str)
     return (pos != str.length()) ? false : true;
 }
 
-bool a2int(const std::string& str, int *value)
+bool w2int(const tstring& str, int *value)
 {
-    if (!isOnlyDigitsA(str))
+    if (!isInt(str))
         return false;
-    *value = atoi(str.c_str());
+    *value = _wtoi(str.c_str());
     return true;
+}
+void int2w(int value, tstring* str)
+{
+    wchar_t buffer[16];
+    swprintf(buffer, L"%d", value);
+    str->assign(buffer);
 }
 
 bool w2double(const tstring& str, double *value)

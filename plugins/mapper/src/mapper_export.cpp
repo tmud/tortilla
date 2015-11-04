@@ -11,32 +11,31 @@ Mapper* m_mapper_window = NULL;
 //-------------------------------------------------------------------------
 int get_name(lua_State *L) 
 {
-    lua_pushstring(L, "Карта(map)");
+    luaT_pushwstring(L, L"Карта(map)");
     return 1;
 }
 
 int get_description(lua_State *L) 
 {
-    lua_pushstring(L, "Отображает схему комнат и выходов. Показывает местоположение игрока.");
+    luaT_pushwstring(L, L"Отображает схему комнат и выходов. Показывает местоположение игрока.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0 dev");
+    luaT_pushwstring(L, L"1.0dev");
     return 1;
 }
 
 int init(lua_State *L)
 {
-    luaT_run(L, "addMenu", "sddd", "Карта/Окно с картой", 1, 2, IDB_MAP);
-    luaT_run(L, "addMenu", "s", "Карта/-");
-    luaT_run(L, "addMenu", "sdd", "Карта/Настройка карты...", 2, 2);
-    luaT_run(L, "addButton", "dds", IDB_MAP, 2, "Настройка карты");
+    luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
+    luaT_run(L, "addMenu", "s", L"Карта/-");
+    luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
+    luaT_run(L, "addButton", "dds", IDB_MAP, 2, L"Настройка карты");
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    tstring path(lua_towstring(L, -1));
-    lua_pop(L, 1);
+    tstring path;
+    base::getPath(L, L"config.xml", &path);
 
     m_props.initAllDefault();
 
@@ -52,7 +51,7 @@ int init(lua_State *L)
         ld.get(L"exits/end", &m_props.end_exits);
         ld.get(L"prompt/begin", &m_props.begin_prompt);
         ld.get(L"prompt/end", &m_props.end_prompt);
-        
+
         if (ld.move(L"dirs"))
         {
             ld.get(L"north", &m_props.north_exit);
@@ -96,7 +95,7 @@ int init(lua_State *L)
 int release(lua_State *L)
 {
     m_mapper_window->saveMaps(L);
-           
+
     xml::node s(L"mapper");
     s.set(L"darkroom/label", m_props.dark_room);
     s.set(L"name/begin", m_props.begin_name);
@@ -123,9 +122,8 @@ int release(lua_State *L)
     s.set(L"down", m_props.down_cmd);
     s.move(L"/");
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    tstring path(lua_towstring(L, -1));
-    lua_pop(L, 1);
+    tstring path;
+    base::getPath(L, L"config.xml", &path);
 
     if (!s.save(path.c_str()))
     {
@@ -189,10 +187,9 @@ int stream(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        const char *stream = lua_tostring(L, -1);
-        const wchar_t *wstream = TU2W(stream);
-        m_mapper_window->processNetworkData(wstream, wcslen(wstream));
-    }    
+        std::string stream ( lua_tostring(L, -1) );
+        m_mapper_window->processNetworkData(stream.c_str(), stream.length());
+    }
     return 1;
 }
 

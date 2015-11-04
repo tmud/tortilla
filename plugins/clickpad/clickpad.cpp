@@ -22,22 +22,22 @@ lua_State* getLuaState()
 
 int get_name(lua_State *L)
 {
-    lua_pushstring(L, "Игровая панель Clickpad");
+    luaT_pushwstring(L, L"Игровая панель Clickpad");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    lua_pushstring(L, "Данный плагин позволяет играть в мад используя мышь.\r\n"
-        "С его помощью можно создать панель кнопок-горячих клавиш с нужными командами.\r\n"
-        "С помощью плагина можно перести часть горячих клавиш (hotkeys) на данную панель,\r\n"
-        "тем самым освободив их под другие задачи.");
+    luaT_pushwstring(L, L"Данный плагин позволяет играть в мад используя мышь.\r\n"
+        L"С его помощью можно создать панель кнопок-горячих клавиш с нужными командами.\r\n"
+        L"С помощью плагина можно перести часть горячих клавиш (hotkeys) на данную панель,\r\n"
+        L"тем самым освободив их под другие задачи.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "1.0");
+    luaT_pushwstring(L, L"1.0");
     return 1;
 }
 
@@ -156,7 +156,7 @@ int release(lua_State *L)
 {
     if (m_clickpad)
     {
-        xml::node tosave("clickpad");
+        xml::node tosave(L"clickpad");
         m_clickpad->save(tosave);
 
         std::wstring path;
@@ -338,4 +338,3 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
     }
     return TRUE;
 }
-

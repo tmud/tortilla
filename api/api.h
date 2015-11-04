@@ -49,7 +49,6 @@ public:
     }
 };
 
-
 class TU2W
 {
     strbuf b;
@@ -795,7 +794,7 @@ private:
 class luaT_Msdp
 {
      lua_State *L;
-      const char* obj = "msdp";
+     const char* obj = "msdp";
 public:
     luaT_Msdp(lua_State *pL) : L(pL) {}
     void list(const std::wstring& listname)
@@ -899,6 +898,7 @@ namespace xml
         bool move(const wchar_t* path) { return _nmove(path, false); }
         bool create(const wchar_t* path) { return _nmove(path, true); }
     private:
+        node(const char* rootnode) {} // blocked constructor (protect from ansi names strings)
         bool _getp(xstringw str, std::wstring* value)
         {
             if (!str) { value->clear(); return false; }
@@ -929,8 +929,8 @@ namespace xml
         }
         request(xml::node& node, const wchar_t *request_string)
         {
-            m_NodeList = xml_request(node, request_string); 
-            m_ListSize = xml_list_size(m_NodeList); 
+            m_NodeList = xml_request(node, request_string);
+            m_ListSize = xml_list_size(m_NodeList);
         }
         ~request() { xml_list_delete(m_NodeList);  }
         int   size() const { return m_ListSize; }
@@ -1010,8 +1010,7 @@ class Image
 {
 public:
     Image() : img(NULL) {}
-    ~Image() { 
-        unload(); }
+    ~Image() { unload(); }
     bool load(const wchar_t* file, int option) {
         unload();
         img = image_load(file, option);

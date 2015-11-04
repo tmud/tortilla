@@ -19,7 +19,7 @@ bool luaT_script::run(const tstring& script, tstring* error)
         return true;
 
     if (error)
-        error->assign( lua_towstring(L, -1) );
+        error->assign( luaT_towstring(L, -1) );
     lua_pop(L, 1);
     return false;
 }

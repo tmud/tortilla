@@ -6,7 +6,7 @@ int luapcre_create(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         Pcre *p = new Pcre();
-        if (p->init(lua_tostring(L, 1)))
+        if (p->init(luaT_towstring(L, 1)))
             luaT_pushobject(L, p, LUAT_PCRE);
         else
         {
@@ -23,7 +23,7 @@ int luapcre_find(lua_State *L)
     if (luaT_check(L, 2), LUAT_PCRE, LUA_TSTRING)
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
-        bool result = p->find(lua_tostring(L, 2));
+        bool result = p->find(luaT_towstring(L, 2));
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -35,7 +35,7 @@ int luapcre_findall(lua_State *L)
     if (luaT_check(L, 2), LUAT_PCRE, LUA_TSTRING)
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
-        bool result = p->findall(lua_tostring(L, 2));
+        bool result = p->findall(luaT_towstring(L, 2));
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -82,9 +82,9 @@ int luapcre_get(lua_State *L)
     if (luaT_check(L, 2), LUAT_PCRE, LUA_TNUMBER)
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
-        u8string str;
+        tstring str;
         p->get(lua_tointeger(L, 2), &str);
-        lua_pushstring(L, str.c_str());
+        luaT_pushwstring(L, str.c_str());
         return 1;
     }
     return pluginInvArgs(L, "pcre:get");

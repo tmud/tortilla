@@ -149,7 +149,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 
      if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
      {
-         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         if (isInt(p1) && isInt(p2))
          {
              int n1 = _wtoi(p1.c_str());
              int n2 = _wtoi(p2.c_str());
@@ -187,7 +187,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
 
      if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
      {
-         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         if (isInt(p1) && isInt(p2))
          {
              int r = 0;
              int n1 = _wtoi(p1.c_str());

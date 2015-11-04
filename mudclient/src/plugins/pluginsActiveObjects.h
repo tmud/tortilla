@@ -8,7 +8,7 @@ void pluginsUpdateActiveObjects(int type);
 class ActiveObjectsFilter
 {
 public:
-    virtual bool canset(const u8string& var) = 0;
+    virtual bool canset(const tchar* var) = 0;
 };
 
 class ActiveObjects
@@ -16,45 +16,29 @@ class ActiveObjects
 public:
     ActiveObjects() {}
     virtual ~ActiveObjects() {}
-    virtual const utf8* type() const = 0;
+    virtual const tchar* type() const = 0;
     virtual bool select(int index) = 0;
-    virtual bool get(int param, u8string* value) = 0;
-    virtual bool set(int param, const utf8* value) = 0;
+    virtual bool get(int param, tstring* value) = 0;
+    virtual bool set(int param, const tchar* value) = 0;
     virtual int  size() const = 0;
-    virtual bool add(const utf8* key, const utf8* value, const utf8* group) = 0;
-    virtual bool replace(const utf8* key, const utf8* value, const utf8* group) = 0;
+    virtual bool add(const tchar* key, const tchar* value, const tchar* group) = 0;
+    virtual bool replace(const tchar* key, const tchar* value, const tchar* group) = 0;
     virtual int  getindex() = 0;
     virtual bool setindex(int index) = 0;
     virtual void update() = 0;
     virtual bool del() = 0;
-
-protected:
-    bool _get(const tstring& src, u8string *dst)
-    {
-        w2u.convert(src.c_str(), src.length());
-        dst->assign(w2u);
-        return true;
-    }
-    bool _set(tstring& dst, const utf8 *value)
-    {
-        u2w.convert(value);
-        dst.assign(u2w);
-        return true;
-    }
-    WideToUtf8 w2u;
-    Utf8ToWide u2w;
 };
 
 class ActiveObjectsEx : public ActiveObjects
 {
 public:
     enum { CAN_ALL = 0, CAN_VALUE = 1, CAN_GROUP = 2 };
-    ActiveObjectsEx(PropertiesData* data, PropertiesValues* obj, const utf8* type, int updatetype, DWORD flags) : 
+    ActiveObjectsEx(PropertiesData* data, PropertiesValues* obj, const tchar* type, int updatetype, DWORD flags) : 
         pdata(data), actobj(obj), m_type(type), m_updatetype(updatetype), selected(-1), m_flags(flags)
     {
-        check_doubles.init("(%[0-9]){1}");
+        check_doubles.init(L"(%[0-9]){1}");
     }
-    const utf8* type() const
+    const tchar* type() const
     {
         return m_type.c_str();
     }
@@ -67,7 +51,7 @@ public:
         if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
     }
-    bool get(int param, u8string* value)
+    bool get(int param, tstring* value)
     {
         if (m_flags&CAN_GROUP && param == luaT_ActiveObjects::VALUE)
             return false;
@@ -77,16 +61,16 @@ public:
         {
             const property_value &v = actobj->get(selected);
             if (param == luaT_ActiveObjects::KEY)
-                return _get(v.key, value);
+                { value->assign(v.key); return true; }
             if (param == luaT_ActiveObjects::VALUE)
-                return _get(v.value, value);
+                { value->assign(v.value); return true; }
             if (param == luaT_ActiveObjects::GROUP)
-                return _get(v.group, value);
+                { value->assign(v.group); return true; }
             return false;
         }
         return false;
     }
-    bool set(int param, const utf8* value)
+    bool set(int param, const tchar* value)
     {
         if (m_flags&CAN_GROUP && param == luaT_ActiveObjects::VALUE)
             return false;
@@ -94,7 +78,7 @@ public:
             return false;
         if (selected >= 0 && selected < size())
         {
-            u8string val(value);
+            tstring val(value);
             if (!canset(param, val))
                 return false;
             property_value &v = actobj->getw(selected);
@@ -102,12 +86,13 @@ public:
             {
                 if (find(val.c_str()) != -1)
                     return false;
-                return _set(v.key, val.c_str());
+                v.key = val;
+                return true;
             }
             if (param == luaT_ActiveObjects::VALUE)
-                return _set(v.value, val.c_str());
+                { v.value = val; return true; }
             if (param == luaT_ActiveObjects::GROUP)
-                return _set(v.group, val.c_str());
+                { v.group = val; return true; }
             return false;
         }
         return false;
@@ -143,13 +128,13 @@ public:
         return true;
     }
 
-    virtual bool canset(int param, u8string& value) 
+    virtual bool canset(int param, tstring& value) 
     {
         return true; 
     }
 
 protected:
-    bool checkDoubles(const utf8* key)
+    bool checkDoubles(const tchar* key)
     {
         int max_index = -1;
         std::vector<int> indexes;
@@ -157,7 +142,7 @@ protected:
         for (int i = 1, e = check_doubles.size(); i<e; ++i)
         {
             int pos = check_doubles.first(i) + 1;
-            char symbol = key[pos];
+            tchar symbol = key[pos];
             int id = symbol - L'0';
             indexes.push_back(id);
             if (id > max_index)
@@ -176,28 +161,27 @@ protected:
         return false;
     }
 
-    int find(const utf8* key)
+    int find(const tchar* key)
     {
-        U2W k(key);
         for (int i = 0, e = actobj->size(); i < e; ++i)
         {
             const property_value &v = actobj->get(i);
-            if (!v.key.compare(k))
+            if (!v.key.compare(key))
                 return i;
         }
         return -1;
     }
-    void add3(int index, const utf8* key, const utf8* value, const utf8* group)
+
+    void add3(int index, const tchar* key, const tchar* value, const tchar* group)
     {
-        U2W _key(key), _value(value), _group(group);
-        if (strlen(group) > 0)
-            pdata->addGroup(_group);
-        actobj->add(index, _key, _value, _group);
+        if (wcslen(group) > 0)
+            pdata->addGroup(group);
+        actobj->add(index, key, value, group);
     }
 
     PropertiesData* pdata;
     PropertiesValues* actobj;
-    u8string m_type;
+    tstring m_type;
     int m_updatetype;
     Pcre check_doubles;
     int selected;
@@ -207,10 +191,10 @@ protected:
 class AO_Aliases : public ActiveObjectsEx
 {
 public:
-    AO_Aliases(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->aliases, "aliases", LogicHelper::UPDATE_ALIASES, CAN_ALL)
+    AO_Aliases(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->aliases, L"aliases", LogicHelper::UPDATE_ALIASES, CAN_ALL)
     {
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
@@ -219,7 +203,7 @@ public:
         add3(-1, key, value, group);
         return true;
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
@@ -232,10 +216,10 @@ public:
 class AO_Subs : public ActiveObjectsEx
 {
 public:
-    AO_Subs(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->subs, "subs", LogicHelper::UPDATE_SUBS, CAN_ALL)
+    AO_Subs(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->subs, L"subs", LogicHelper::UPDATE_SUBS, CAN_ALL)
     {
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
@@ -244,7 +228,7 @@ public:
         add3(-1, key, value, group);
         return true;
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
@@ -257,24 +241,24 @@ public:
 class AO_Antisubs : public ActiveObjectsEx
 {
 public:
-    AO_Antisubs(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->antisubs, "antisubs", LogicHelper::UPDATE_ANTISUBS, CAN_GROUP)
+    AO_Antisubs(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->antisubs, L"antisubs", LogicHelper::UPDATE_ANTISUBS, CAN_GROUP)
     {
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
         if (find(key) != -1)
             return false;
-        add3(-1, key, "", group);
+        add3(-1, key, L"", group);
         return true;
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
         int index = find(key);
-        add3(index, key, "", group);
+        add3(index, key, L"", group);
         return true;
     }
 };
@@ -282,10 +266,10 @@ public:
 class AO_Actions : public ActiveObjectsEx
 {
 public:
-    AO_Actions(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->actions, "actions", LogicHelper::UPDATE_ACTIONS, CAN_ALL)
+    AO_Actions(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->actions, L"actions", LogicHelper::UPDATE_ACTIONS, CAN_ALL)
     {
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
@@ -294,7 +278,7 @@ public:
         add3(-1, key, value, group);
         return true;
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
@@ -308,48 +292,42 @@ class AO_Highlihts : public ActiveObjectsEx
 {
     HighlightHelper hh;
 public:
-    AO_Highlihts(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->highlights, "highlights", LogicHelper::UPDATE_HIGHLIGHTS, CAN_ALL)
+    AO_Highlihts(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->highlights, L"highlights", LogicHelper::UPDATE_HIGHLIGHTS, CAN_ALL)
     {
     }
-    bool canset(int param, u8string& value)
+    bool canset(int param, tstring& value)
     {
         if (param == luaT_ActiveObjects::VALUE)
         {
-            U2W c(value);
-            tstring color(c);
-            if (!hh.checkText(&color))
+            if (!hh.checkText(&value))
                 return false;
-            W2U r(color.c_str());
-            value.assign((const utf8*)r);
             return true;
         }
         return true;
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        return add(key, value, group,false);
+        return add(key, value, group, false);
     }
 
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        return add(key, value, group,true);
+        return add(key, value, group, true);
     }
 private:
-    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
         if (checkDoubles(key))
             return false;
         int index = find(key);
         if (index != -1 && !replace_mode)
             return false;
-        U2W c(value);
-        tstring color(c);
+        tstring color(value);
         tstring_replace(&color, L",", L" "); 
         if (!hh.checkText(&color))  // Highlight helper
             return false;
-        U2W _key(key), _group(group);
-        pdata->addGroup(_group);
-        actobj->add(index, _key, color, _group);
+        pdata->addGroup(group);
+        actobj->add(index, key, color, group);
         return true;
     }
 };
@@ -358,46 +336,40 @@ class AO_Hotkeys : public ActiveObjectsEx
 {
     HotkeyTable hk;
 public:
-    AO_Hotkeys(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->hotkeys, "hotkeys", LogicHelper::UPDATE_HOTKEYS, CAN_ALL)
+    AO_Hotkeys(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->hotkeys, L"hotkeys", LogicHelper::UPDATE_HOTKEYS, CAN_ALL)
     {
     }
-    bool canset(int param, u8string& value)
+    bool canset(int param, tstring& value)
     {
         if (param == luaT_ActiveObjects::KEY)
         {
-            U2W k(value.c_str());
-            tstring key(k);
             tstring norm;
-            return hk.isKey(key, &norm);
+            return hk.isKey(value, &norm);
         }
         return true;
     }
 
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, false);
     }
 
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, true);
     }
 
 private:
-    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
-        U2W k(key);
-        tstring _key(k);
         tstring normkey;
-        if (!hk.isKey(_key, &normkey))
+        if (!hk.isKey(key, &normkey))
             return false;
-        W2U nk(normkey.c_str());
-        int index = find(nk);
+        int index = find(normkey.c_str());
         if (index != -1 && !replace_mode)
             return false;
-        U2W _value(value), _group(group);
-        pdata->addGroup(_group);
-        actobj->add(index, normkey, _value, _group);
+        pdata->addGroup(group);
+        actobj->add(index, normkey, value, group);
         return true;
     }
 };
@@ -405,24 +377,24 @@ private:
 class AO_Gags : public ActiveObjectsEx
 {
 public:
-    AO_Gags(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->gags, "gags", LogicHelper::UPDATE_GAGS, CAN_GROUP)
+    AO_Gags(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->gags, L"gags", LogicHelper::UPDATE_GAGS, CAN_GROUP)
     {
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
         if (find(key) != -1)
             return false;
-        add3(-1, key, "", group);
+        add3(-1, key, L"", group);
         return true;
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         if (checkDoubles(key))
             return false;
         int index = find(key);
-        add3(index, key, "", group);
+        add3(index, key, L"", group);
         return true;
     }
 };
@@ -431,28 +403,28 @@ class AO_Vars : public ActiveObjectsEx
 {
     ActiveObjectsFilter *m_pFilter;
 public:
-    AO_Vars(PropertiesData* obj, ActiveObjectsFilter* filter) : ActiveObjectsEx(obj, &obj->variables, "vars", -1, CAN_VALUE), m_pFilter(filter)
+    AO_Vars(PropertiesData* obj, ActiveObjectsFilter* filter) : ActiveObjectsEx(obj, &obj->variables, L"vars", -1, CAN_VALUE), m_pFilter(filter)
     {
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         if (find(key) != -1)
             return false;
-        add3(-1, key, value, "");
+        add3(-1, key, value, L"");
         return true;
     }
 
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         int index = find(key);
-        add3(index, key, value, "");
+        add3(index, key, value, L"");
         return true;
     }
 
-    bool canset(int param, u8string& value)
+    bool canset(int param, tstring& value)
     {
         if (param == luaT_ActiveObjects::KEY && m_pFilter)
-            return m_pFilter->canset(value);
+            return m_pFilter->canset(value.c_str());
         return true;
     }
 };
@@ -460,10 +432,10 @@ public:
 class AO_Timers : public ActiveObjectsEx
 {
 public:
-    AO_Timers(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->timers, "timers", LogicHelper::UPDATE_TIMERS, CAN_ALL)
+    AO_Timers(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->timers, L"timers", LogicHelper::UPDATE_TIMERS, CAN_ALL)
     {
     }
-    bool canset(int param, u8string& value)
+    bool canset(int param, tstring& value)
     {
         if (param == luaT_ActiveObjects::KEY)
         {
@@ -471,36 +443,36 @@ public:
         }
         if (param == luaT_ActiveObjects::VALUE)
         {
-            const utf8 *v = value.c_str();
-            const utf8 *p = strchr(v, ';');
+            const tchar *v = value.c_str();
+            const tchar *p = wcschr(v, L';');
             if (!p) return false;
-            u8string period(value, p - v);
-            return isnumber(period.c_str());
+            tstring period(value, p - v);
+            return isnumber(period);
         }
         return true;
     }
 
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, false);
     }
 
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, true);
     }
 
 private:
-    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
         // key = 1..10, value = interval;action (ex. 1;drink)
         if (isindex(key))
         {
-            const utf8 *p = strchr(value, ';');
+            const tchar *p = wcschr(value, L';');
             if (!p) return false;
-            u8string period(value, p - value);
-            if (!isnumber(period.c_str())) return false;
-            u8string action(p + 1);
+            tstring period(value, p - value);
+            if (!isnumber(period)) return false;
+            tstring action(p + 1);
             if (action.empty()) return false;
             int index = find(key);
             if (index != -1 && !replace_mode)
@@ -511,15 +483,16 @@ private:
         return false;
     }
 
-    bool isnumber(const utf8* str) const
+    bool isnumber(const tstring& str) const
     {
-        return (strspn(str, "0123456789") != strlen(str)) ? false : true;
+        return isOnlyDigits(str);
     }
-    bool isindex(const utf8* str) const
+    bool isindex(const tstring& str) const
     {
         if (!isnumber(str))
             return false;
-        int index = atoi(str);
+        int index = 0;
+        w2int(str, &index);
         return (index >= 1 && index <= 10) ? true : false;
     }
 };
@@ -527,39 +500,39 @@ private:
 class AO_Groups : public ActiveObjectsEx
 {
 public:
-    AO_Groups(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->groups, "groups", LogicHelper::UPDATE_ALL, CAN_VALUE)
+    AO_Groups(PropertiesData* obj) : ActiveObjectsEx(obj, &obj->groups, L"groups", LogicHelper::UPDATE_ALL, CAN_VALUE)
     {
     }
-    bool canset(int param, u8string& value)
+    bool canset(int param, tstring& value)
     {
         if (param == luaT_ActiveObjects::VALUE)
         {
-            if (value == "0" || value == "1")
+            if (value == L"0" || value == L"1")
                 return true;
             return false;
         }
         return true;
     }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, false);
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         return false;
     }
 private:
-    bool add(const utf8* key, const utf8* value, const utf8* group, bool replace_mode)
+    bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
         int index = find(key);
         if (index != -1 && !replace_mode)
             return false;
-        u8string v(value);
+        tstring v(value);
         if (v.empty())
-            v = "0";
-        if (v == "0" || v == "1")
+            v = L"0";
+        if (v == L"0" || v == L"1")
         {
-            add3(index, key, v.c_str(), "");
+            add3(index, key, v.c_str(), L"");
             return true;
         }
         return false;
@@ -574,35 +547,32 @@ public:
     AO_Tabs(PropertiesData* obj) : data(obj), selected(-1)
     {
     }
-    const utf8* type() const { return "tabs"; }
+    const tchar* type() const { return L"tabs"; }
     bool select(int index)
     {
         if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
     }
-    bool get(int param, u8string* value)
+    bool get(int param, tstring* value)
     {
         if (param != luaT_ActiveObjects::KEY)
             return false;
         if (selected >= 0 && selected < size())
         {
             const tstring &v = data->tabwords.get(selected);
-            w2u.convert(v.c_str(), v.length());
-            value->assign(w2u);
+            value->assign(v);
             return true;
         }
         return false;
-
     }
-    bool set(int param, const utf8* value)
+    bool set(int param, const tchar* value)
     {
         if (param != luaT_ActiveObjects::KEY)
             return false;
         if (selected >= 0 && selected < size())
         {
             tstring &v = data->tabwords.getw(selected);
-            u2w.convert(value);
-            v.assign(u2w);
+            v.assign(value);
             return true;
         }
         return false;
@@ -610,10 +580,9 @@ public:
     int getindex() { return selected+1; }
     bool setindex(int index) { return false; }
     int size() const { return data->tabwords.size(); }
-    bool add(const utf8* key, const utf8* value, const utf8* group)
+    bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        u2w.convert(key);
-        tstring new_tab(u2w);
+        tstring new_tab(key);
         if (new_tab.empty())
             return false;
         PropertiesList &tabs = data->tabwords;
@@ -622,10 +591,9 @@ public:
         tabs.add(-1, new_tab);
         return true;
     }
-    bool replace(const utf8* key, const utf8* value, const utf8* group)
+    bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        u2w.convert(key);
-        tstring new_tab(u2w);
+        tstring new_tab(key);
         if (new_tab.empty())
             return false;
         PropertiesList &tabs = data->tabwords;

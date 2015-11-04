@@ -38,7 +38,7 @@ private:
     bool loadString(xml::node parent, const tstring& name, tstring* value);
     void saveString(xml::node parent, const tstring& name, const tstring& value);
     bool loadRgbColor(xml::node n, tstring* name, COLORREF* color);
-    void saveRgbColor(xml::node parent, const std::string& name, COLORREF color);
+    void saveRgbColor(xml::node parent, const tstring& name, COLORREF color);
     bool loadRECT(xml::node n, RECT *rc);
     void saveRECT(xml::node n, const RECT &rc);
     bool loadFromFile(xml::node& node, const tstring& file);

@@ -67,7 +67,7 @@ void Mapper::saveMaps(lua_State *L)
         ZoneParams zp;
         zone->getParams(&zp);
 
-        xml::node s("zone");
+        xml::node s(L"zone");
         //s.set("width", zone->width());
         //s.set("height", zone->height());
         //s.set("name", zp.name);

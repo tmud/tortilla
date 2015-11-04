@@ -28,15 +28,15 @@ bool loadModules()
         lua_register(L, "require", require_stub);
         return false;
     }
-    
+
     tstring path(cd.getCurrentDir());
     path.append(L"\\modules\\?.dll");
     luaopen_package(L);
-    lua_pushstring(L, "path");
-    lua_pushstring(L, "");
+    luaT_pushwstring(L, L"path");
+    luaT_pushwstring(L, L"");
     lua_settable(L, -3);
-    lua_pushstring(L, "cpath");
-    lua_pushstring(L, W2U(path));
+    luaT_pushwstring(L, L"cpath");
+    luaT_pushwstring(L, path.c_str());
     lua_settable(L, -3);
     lua_setglobal(L, "package");
     lua_pop(L, 1);

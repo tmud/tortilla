@@ -19,7 +19,7 @@ public:
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
     const tstring& params() const { return cmd->parameters; }
-    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isOnlyDigits(p); }
+    bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isInt(p); }
     int toInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return _wtoi(p.c_str()); }
     bool isNumber(int index) const { const tstring& p = cmd->parameters_list[index]; return isItNumber(p); }
     double toNumber(int index) const { const tstring& p = cmd->parameters_list[index]; double v = 0; w2double(p, &v); return v; }
