@@ -448,7 +448,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется string|nil", i);
+            turnoffPlugin(L"Неверный тип полученного значения. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
@@ -495,7 +495,7 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
+            turnoffPlugin(L"Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -554,7 +554,7 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
     return result;
 }
 
-void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
+void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
@@ -562,7 +562,7 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     _cp = p;
     if (error)
         pluginError(error);
-    pluginError("Плагин отключен!");
+    pluginError(L"Плагин отключен!");
     p->setOn(false);
     _cp = old;
     PluginsDataValues &modules = tortilla::getProperties()->plugins;

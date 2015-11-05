@@ -41,6 +41,6 @@ private:
     enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };
     TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg);
     void doPluginsMethod(const char* method, int args);
-    void turnoffPlugin(const char* error, int plugin_index);
+    void turnoffPlugin(const tchar* error, int plugin_index);
     void terminatePlugin(Plugin* p);
 };

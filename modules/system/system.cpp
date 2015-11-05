@@ -76,42 +76,42 @@ int system_dbgtable(lua_State *L)
     return 0;
 }
 
-void formatByType(lua_State* L, int index, u8string *buf)
+void formatByType(lua_State* L, int index, std::wstring *buf)
 {
     int i = index;
     int type = lua_type(L, i);
-    utf8 dbuf[32];
+    wchar_t dbuf[32];
     buf->clear();
     switch (type)
     {
     case LUA_TNIL:
-        buf->append("nil");
+        buf->append(L"nil");
         break;
     case LUA_TNUMBER:
-        sprintf(dbuf, "%d", lua_tointeger(L, i));
+        swprintf(dbuf, L"%d", lua_tointeger(L, i));
         buf->append(dbuf);
         break;
     case LUA_TBOOLEAN:
-        sprintf(dbuf, "%s", (lua_toboolean(L, i) == 0) ? "false" : "true");
+        swprintf(dbuf, L"%s", (lua_toboolean(L, i) == 0) ? L"false" : L"true");
         buf->append(dbuf);
         break;
     case LUA_TSTRING:
-        buf->append(lua_tostring(L, i));
+        buf->append(luaT_towstring(L, i));
         break;
     default:
-        buf->append("[?]");
+        buf->append(L"[?]");
         break;
     }
 }
 
 int system_dbglog(lua_State *L)
 {
-    u8string msg;
+    std::wstring msg;
     for (int i=1,e=lua_gettop(L); i<=e; ++i)
     {
         formatByType(L, i, &msg);
     }
-    OutputDebugString(TU2W(msg.c_str()));
+    OutputDebugString(msg.c_str());
     return 0;
 }
 

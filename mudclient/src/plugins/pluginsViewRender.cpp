@@ -61,9 +61,9 @@ bool PluginsViewRender::render()
         // error in call
         result = false;
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError("render", lua_tostring(L, -1));
+            pluginError(L"render", luaT_towstring(L, -1));
         else
-            pluginError("render", "неизвестная ошибка");
+            pluginError(L"render", L"неизвестная ошибка");
         lua_settop(L, 0);
     }
     m_inside_render = false;
@@ -243,7 +243,7 @@ int render_setBackground(lua_State *L)
         r->setBackground(color);
         return 0;
     }
-    return pluginInvArgs(L, "render:setBackground");
+    return pluginInvArgs(L, L"render:setBackground");
 }
 
 int render_textColor(lua_State *L)
@@ -271,7 +271,7 @@ int render_textColor(lua_State *L)
         r->setTextColor(color);
         return 0;
     }
-    return pluginInvArgs(L, "render:textColor");
+    return pluginInvArgs(L, L"render:textColor");
 }
 
 int render_width(lua_State *L)
@@ -282,7 +282,7 @@ int render_width(lua_State *L)
         lua_pushinteger(L, r->width());
         return 1;
     }
-    return pluginInvArgs(L, "render:width");
+    return pluginInvArgs(L, L"render:width");
 }
 
 int render_height(lua_State *L)
@@ -293,7 +293,7 @@ int render_height(lua_State *L)
         lua_pushinteger(L, r->height());
         return 1;
     }
-    return pluginInvArgs(L, "render:height");
+    return pluginInvArgs(L, L"render:height");
 }
 
 int render_createPen(lua_State *L)
@@ -308,7 +308,7 @@ int render_createPen(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render:createPen");
+    return pluginInvArgs(L, L"render:createPen");
 }
 
 int render_createBrush(lua_State *L)
@@ -323,7 +323,7 @@ int render_createBrush(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render:createBrush");
+    return pluginInvArgs(L, L"render:createBrush");
 }
 
 int render_createFont(lua_State *L)
@@ -338,7 +338,7 @@ int render_createFont(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render:createFont");
+    return pluginInvArgs(L, L"render:createFont");
 }
 
 int render_select(lua_State *L)
@@ -364,7 +364,7 @@ int render_select(lua_State *L)
         r->selectFont(f);
         return 0;
     }
-    return pluginInvArgs(L, "render:select");
+    return pluginInvArgs(L, L"render:select");
 }
 
 int render_rect(lua_State *L)
@@ -378,7 +378,7 @@ int render_rect(lua_State *L)
         r->drawRect(rc);
         return 0;
     }
-    return pluginInvArgs(L, "render:rect");
+    return pluginInvArgs(L, L"render:rect");
 }
 
 int render_solidRect(lua_State *L)
@@ -392,7 +392,7 @@ int render_solidRect(lua_State *L)
         r->drawSolidRect(rc);
         return 0;
     }
-    return pluginInvArgs(L, "render:solidRect");
+    return pluginInvArgs(L, L"render:solidRect");
 }
 
 int render_print(lua_State *L)
@@ -405,7 +405,7 @@ int render_print(lua_State *L)
         lua_pushinteger(L, width);
         return 1;
     }
-    return pluginInvArgs(L, "render:print");
+    return pluginInvArgs(L, L"render:print");
 }
 
 int render_update(lua_State *L)
@@ -416,7 +416,7 @@ int render_update(lua_State *L)
         r->update();
         return 0;
     }
-    return pluginInvArgs(L, "render:update");
+    return pluginInvArgs(L, L"render:update");
 }
 
 int render_fontHeight(lua_State *L)
@@ -427,7 +427,7 @@ int render_fontHeight(lua_State *L)
         lua_pushinteger(L, r->getFontHeight());
         return 1;
     }
-    return pluginInvArgs(L, "render:fontHeight");
+    return pluginInvArgs(L, L"render:fontHeight");
 }
 
 int render_textWidth(lua_State *L)
@@ -439,7 +439,7 @@ int render_textWidth(lua_State *L)
         lua_pushinteger(L, r->getTextWidth(text));
         return 1;
     }
-    return pluginInvArgs(L, "render:textWidth");
+    return pluginInvArgs(L, L"render:textWidth");
 }
 
 int render_createImage(lua_State *L)
@@ -454,7 +454,7 @@ int render_createImage(lua_State *L)
         if (!img->load(path.c_str(), param))
         {
             delete img;
-            pluginLoadFail(L, "render::createImage", lua_tostring(L, 2));
+            pluginLoadFail(L, L"render::createImage", luaT_towstring(L, 2));
             lua_pushnil(L);
             return 1;
         }
@@ -463,7 +463,7 @@ int render_createImage(lua_State *L)
         luaT_pushobject(L, img, LUAT_IMAGE);
         return 1;
     }
-    return pluginInvArgs(L, "render::createImage");
+    return pluginInvArgs(L, L"render::createImage");
 }
 
 int render_drawImage(lua_State *L)
@@ -472,7 +472,7 @@ int render_drawImage(lua_State *L)
     {
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         Image *img = (Image *)luaT_toobject(L, 2);
-        r->drawImage(img,lua_tointeger(L, 3),lua_tointeger(L, 4));
+        r->drawImage(img,lua_tointeger(L, 3), lua_tointeger(L, 4));
         return 0;
     }
     else if (luaT_check(L, 6, LUAT_RENDER, LUAT_IMAGE, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
@@ -502,7 +502,7 @@ int render_drawImage(lua_State *L)
             return 0;
         }
     }
-    return pluginInvArgs(L, "render::drawImage");
+    return pluginInvArgs(L, L"render::drawImage");
 }
 
 void reg_mt_render(lua_State *L)

@@ -129,10 +129,11 @@ bool Plugin::runMethod(const char* method, int args, int results, bool *not_supp
     if (lua_pcall(L, args, results, 0))
     {
         // error in call
+        TA2W m(method);
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(method, lua_tostring(L, -1));
+            pluginError(m, luaT_towstring(L, -1));
         else
-            pluginError(method, "неизвестная ошибка");
+            pluginError(m, L"неизвестная ошибка");
         _cp = old;
         lua_settop(L, 0);
         return false;

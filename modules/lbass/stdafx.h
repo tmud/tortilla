@@ -8,5 +8,3 @@
 
 #include <string>
 #include <algorithm>
-typedef std::string u8string;
-typedef char utf8;

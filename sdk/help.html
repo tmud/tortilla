@@ -148,8 +148,7 @@ Decoda - это среда разработки и отладки на <div clas
 Плагин должен реализовать точно такую же функцию, только с именем <div class="m">plugin_open</div>, чтобы клиент смог его подключить. Список функций которые должны реализовать плагин 
 представлены в разделе <a href="#pluginsapi">API для плагинов</a>. В SDK также есть пример плагина на <div class="m">С++</div>, в котором представлены аспекты уже для плагинов.<br><br>
 Следующий аспект, который нужно учесть - это кодировка текстовых строк в плагинах и модулях. Это <div class="m">UTF8 !</div> То есть Lua объекты типа string - это строка 
-символов в кодировке UTF8. В SDK это решается за счет макроса который включает поддержку этой кодировки в Visual Studio (данный макрос работает только там). При наличии 
-этого макроса все ANSI строки в исходных текстах компилируются как UTF8. В <div class="m">API</div> есть вспомогательные функции для работы с кодировками, см. <a href="#api">функции API</a>.
+символов в кодировке UTF8. В <div class="m">API</div> есть вспомогательные функции для работы с кодировками, см. <a href="#api">функции API</a>.
 
 <a name="devlua"></a>
 <h2>Разработка на Lua</h2>
@@ -432,9 +431,7 @@ local t = {...} -- правильное написание
 <h3>API клиента C++</h3>
 Все необходимое API для разработки плагинов находится в <div class="m">api.h</div>, его можно открыть и посмотеть подробно. В этом разделе 
 представлено описание содержимого данного файла. Другой файл <div class="m">base.h</div> подключает <div class="m">API Lua</div> 
-и с этой частью можно познакомиться в документации к языку.<br><br>
-В плагинах используется кодировка <div class="m">UTF8</div>, обратите внимание! Это достигается за счет макроса в файле <div class="m">base.h</div>. 
-Все ansi-строки в исходных текстах, при наличии макроса, компилируются как UTF8. Данный макрос работает только в Visual Studio.
+и с этой частью можно познакомиться в документации к языку.
 <hr>
 <h4>bool luaT_check(lua_State *L, int n, ...);</h4>
 <div class="m">Параметры: n - количество параметров, ... - параметры</div><br>
@@ -442,13 +439,13 @@ local t = {...} -- правильное написание
 Функция проверяет состояние стека Lua машины на соответствие параметрам. Нужно указать количество параметров и их типы. Функция 
 предназначена для выбора нужной ветки кода в зависимости от параметров в С++ обработчиках вызовов со стороны Lua.
 <hr>
-<h4>bool luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);</h4>
+<h4>bool luaT_run(lua_State *L, const char* func, const char* op, ...);</h4>
 <div class="m">Параметры: func - название функции для запуска, op - количество и число параметров, ... - параметры</div><br>
 <div class="m">Результат: true/false<br></div><br>
 Функция запускает Lua-функцию с заданным именем. Следующий параметр определяет количество и число параметров (одна буква - один параметр):
 <ul>
 <li>d - целое число (int)</li>
-<li>s - строка (utf8)</li>
+<li>s - строка (wchar_t*)</li>
 <li>u - беззнаковое целое число (unsigned int)</li>
 <li>o - объект или таблица, данный символ может быть только в первой позиции, сам объект/таблицу нужно предварительно поместить в стек через luaT_pushobject. 
 Вызов метода идет в ООП режиме, когда в качестве первого параметра передается сам объект (в Lua это вызов функции через двоеточие).</li>
@@ -456,7 +453,7 @@ local t = {...} -- правильное написание
 </ul>
 Далее, после строки с типом и числом параметров, идут сами параметры.
 <hr>
-<h4>int luaT_error(lua_State *L, const utf8* error_message);</h4>
+<h4>int luaT_error(lua_State *L, const wchar_t* error_message);</h4>
 <div class="m">Параметры: error_message - сообщение об ошибке</div><br>
 <div class="m">Результат: число - значение с числом параметров на стеке, предназначено для передачи в Lua<br></div><br>
 Функция предназначена для завершения какой-либо другой функции, в случае ошибки. Сообщение об ошибке передается в клиент, где и отображается.<br>
@@ -469,7 +466,7 @@ local t = {...} -- правильное написание
 }
 </div></pre>
 <hr>
-<h4>void luaT_log(lua_State *L, const utf8* log_message);</h4>
+<h4>void luaT_log(lua_State *L, const wchar_t* log_message);</h4>
 <div class="m">Параметры: log_message - сообщение для пользователя</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция предназначена для вывода строк с логами в окно клиента. В настройках клиента указывается окно в которое нужно их выводить.
@@ -511,17 +508,17 @@ local t = {...} -- правильное написание
 возможностей в клиент (см. <a href="#render" class="cmd">render</a>).
 <br>
 <pre>
-<div class="cmd">bool create(lua_State *pL, const utf8* caption, int width, int height)</div> - создание окна-контейера, с заданными 
+<div class="cmd">bool create(lua_State *pL, const wchar_t* caption, int width, int height)</div> - создание окна-контейера, с заданными 
 размерами и заголовком.
 <div class="cmd">HWND hwnd()</div> - получение дескриптора окна.
 <div class="cmd">HWND floathwnd()</div> - получение дескриптора самого базового окна с рамкой и заголовком.
 <div class="cmd">void hide()</div> - скрыть окно.
 <div class="cmd">void show()</div> - показать окно.
 <div class="cmd">bool isVisible()</div> - проверка видимо окно или нет.
-<div class="cmd">void dock(const utf8* side)</div> - заставляет окно пристыковаться к нужной стороне клиента. 
+<div class="cmd">void dock(const wchar_t* side)</div> - заставляет окно пристыковаться к нужной стороне клиента. 
 Возможные варианты: 'left', 'right', 'top', 'bottom'. Допускается перечисление нескольких вариантов через запятую.
 <div class="cmd">void undock()</div> - окно открепляется от окна клиента.
-<div class="cmd">void block(const utf8* side)</div> - блокировка возможности прикрепить окно к определенной стороне. 
+<div class="cmd">void block(const wchar_t* side)</div> - блокировка возможности прикрепить окно к определенной стороне. 
 Возможные варианты: 'left', 'right', 'top', 'bottom', 'float'. Вариант 'float' означает, что окно не может быть 
 плавающим и всегда должно быть пристыкованным. Допускается перечисление нескольких вариантов через запятую.
 <div class="cmd">void attach(HWND child)</div> - подключение своего окна внутрь дополнительного окна. Дополнительное окно выступает 
@@ -540,7 +537,7 @@ local t = {...} -- правильное написание
 В дополнительное окно можно подключить свое окно (использовать как контейнер), а можно рисовать (только из Lua-скриптов) с помощью встроенных 
 возможностей в клиент (см. <a href="#render" class="cmd">render</a>).
 <pre>
-<div class="cmd">bool create(lua_State *pL, const utf8* side, int size)</div> - создание панели. Нужно указать сторону, где будет 
+<div class="cmd">bool create(lua_State *pL, const wchar_t* side, int size)</div> - создание панели. Нужно указать сторону, где будет 
 располагаться панель и ее размер в пикселях. Вариант значения <div class="cmd">side</div> - 'left', 'right', 'top', 'bottom'.
 <div class="cmd">void attach(HWND child)</div> - подключение своего окна внутрь панели. Панель выступает в качестве контейнера.
 <div class="cmd">HWND hwnd()</div> - получение дескриптора окна панели.</div>
@@ -562,16 +559,16 @@ local t = {...} -- правильное написание
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
 <div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
-<div class="cmd">void getPrompt(u8string *str)</div> - возвращает prompt-строку (без возможных команд в строке).
-<div class="cmd">void getText(u8string* str)</div> - полный текст строки (без учета расцветки).
+<div class="cmd">void getPrompt(std::Wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
+<div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
-<div class="cmd">void getHash(u8string* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
+<div class="cmd">void getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество отдельных блоков в текущей строке.
 <div class="cmd">bool get(int block, int param, unsigned int *value)</div> - значение параметра блока текущей строки. Допустимые значения параметра:
 <div class="m">TEXTCOLOR</div>, <div class="m">BKGCOLOR</div>, <div class="m">UNDERLINE</div>, <div class="m">ITALIC</div>, <div class="m">BLINK</div>, <div class="m">REVERSE</div>, <div class="m">EXTTEXTCOLOR</div>, <div class="m">EXTBKGCOLOR</div>.
 <div class="cmd">bool set(int block, int param, unsigned int value)</div> - устанавливает значение параметра блока текущей строки.
-<div class="cmd">void getBlockText(int block, u8string* str)</div> - текст блока текущей строки.
-<div class="cmd">bool setBlockText(int block, const utf8* text)</div> - задает новый текст блоку текущей строки.
+<div class="cmd">void getBlockText(int block, std::wstring* str)</div> - текст блока текущей строки.
+<div class="cmd">bool setBlockText(int block, const wchar_t* text)</div> - задает новый текст блоку текущей строки.
 <div class="cmd">bool copyBlock(int block, int dst_string, int dst_block)</div> - копирует заданный блок текущей строки в другую строку.
 <div class="cmd">bool deleteBlock(int block)</div> - удаляет блок текущей строки.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
@@ -610,16 +607,16 @@ local t = {...} -- правильное написание
 <div class="cmd">luaT_ActiveObjects(lua_State *pL, const char* type)</div> - инициализация (конструктор), возможные типы см. выше.
 <div class="cmd">int  size()</div> - количество элементов.
 <div class="cmd">bool select(int index)</div> - выбор нужного элемента по индексу.
-<div class="cmd">bool add(const utf8* key, const utf8* value, const utf8* group)</div> - добавление нового элемента. Если элемент существует, 
+<div class="cmd">bool add(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - добавление нового элемента. Если элемент существует, 
 то выходит с ошибкой.
-<div class="cmd">bool replace(const utf8* key, const utf8* value, const utf8* group)</div> - заменяет текущий элемент. Если элемент не существует, 
+<div class="cmd">bool replace(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - заменяет текущий элемент. Если элемент не существует, 
 то добавляет новый.
 <div class="cmd">bool del()</div> - удаление текущего элемента.
 <div class="cmd">int  getIndex()</div> - получение позиции текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - переместить текущий элемент в нужную позицию.
-<div class="cmd">bool get(int param, u8string* value)</div> - получить параметр текущего элемента. Возможные варианты параметра:
+<div class="cmd">bool get(int param, std::wstring* value)</div> - получить параметр текущего элемента. Возможные варианты параметра:
 <div class="m">KEY</div>, <div class="m">VALUE</div>, <div class="m">GROUP</div>.
-<div class="cmd">bool set(int param, const utf8* value)</div> - установка нужного параметра у текущего элемента.
+<div class="cmd">bool set(int param, const wchar_t* value)</div> - установка нужного параметра у текущего элемента.
 <div class="cmd">bool update()</div> - применить все изменения. Только после вызова этого оператора все изменения вступят в силу.
 </pre>
 <hr>
@@ -630,10 +627,10 @@ local t = {...} -- правильное написание
 <pre>
 <div class="cmd">COLORREF paletteColor(int index)</div> - цвет из палитры клиента. Возможные значения индекса от 0 до 255.
 <div class="cmd">COLORREF backgroundColor()</div> - цвет фона всех окон клиента.
-<div class="cmd">void cmdPrefix(u8string* str)</div> - получение префикса системной команды клиента.
-<div class="cmd">void cmdSeparator(u8string* str)</div> - получение разделителя команд клиента.
-<div class="cmd">void serverHost(u8string* str)</div> - адрес сервера, куда подключен клиент (пустая строка, если нет подключения).
-<div class="cmd">void serverPort(u8string* str)</div> - адрес порта подключения (пустая строка, если нет подключения).
+<div class="cmd">void cmdPrefix(std::wstring* str)</div> - получение префикса системной команды клиента.
+<div class="cmd">void cmdSeparator(std::wstring* str)</div> - получение разделителя команд клиента.
+<div class="cmd">void serverHost(std::wstring* str)</div> - адрес сервера, куда подключен клиент (пустая строка, если нет подключения).
+<div class="cmd">void serverPort(std::wstring* str)</div> - адрес порта подключения (пустая строка, если нет подключения).
 <div class="cmd">bool connected()</div> - признак, что клиент подключен к маду.
 <div class="cmd">HFONT currentFont()</div> - хэндл текущего шрифта клиента.
 <div class="cmd">bool activated()</div> - признак, что окно клиента активно и игрок работает с ним.
@@ -645,11 +642,11 @@ local t = {...} -- правильное написание
 Класс предназначен для работы с протоколом MSDP. Методы класса отправляют серверу управялющие команды протокола. Данные поступают через 
 метод <a href="#msdp" class="cmd">msdp</a> плагина. Стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
 <pre>
-<div class="cmd">void list(const u8string&amp; listname)</div> - получение списка переменных заданной категории(списка).
-<div class="cmd">void send(const std::vector&lt;u8string&gt;&amp; vars)</div> - однократное получение текущих значений переменных.
-<div class="cmd">void reset(const std::vector&lt;u8string&gt;&amp; vars)</div> - сброс переменных в исходное состояние.
-<div class="cmd">void report(const std::vector&lt;u8string&gt;&amp; vars)</div> - подписка на оповещение об изменении переменных.
-<div class="cmd">void unreport(const std::vector&lt;u8string&gt;&amp; vars)</div> - отписка от оповещения.
+<div class="cmd">void list(const std::wstring&amp; listname)</div> - получение списка переменных заданной категории(списка).
+<div class="cmd">void send(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - однократное получение текущих значений переменных.
+<div class="cmd">void reset(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - сброс переменных в исходное состояние.
+<div class="cmd">void report(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - подписка на оповещение об изменении переменных.
+<div class="cmd">void unreport(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - отписка от оповещения.
 </pre>
 См. также <a href="#luamsdp" class="cmd">msdp</a>.
 <hr>
@@ -676,32 +673,32 @@ u8string x( TW2U(L"строка") );
 <h4>class xml::node</h4>
 Класс представляет собой обертку вокруг методов работы с вершиной <div class="m">XML</div> документа.
 <pre>
-<div class="cmd">node(const utf8* rootnode)</div> - создание нового документа с заданным именем корнего узла
+<div class="cmd">node(const wchar_t* rootnode)</div> - создание нового документа с заданным именем корнего узла
 <div class="cmd">node(xnode xml_node)</div> - подключение обертки к вершине
-<div class="cmd">bool load(const utf8 *filename)</div> - загрузка в вершину xml-файла
-<div class="cmd">bool save(const utf8 *filename)</div> - запись вершины в xml-файл
+<div class="cmd">bool load(const wchar_t *filename)</div> - загрузка в вершину xml-файла
+<div class="cmd">bool save(const wchar_t *filename)</div> - запись вершины в xml-файл
 <div class="cmd">void deletenode()</div> - удалить вершину.
-<div class="cmd">void getname(u8string *name)</div> - имя вершины.
-<div class="cmd">bool get(const utf8* attribute, u8string* value)</div> - атрибут вершины.
-<div class="cmd">bool get(const utf8* attribute, int* value)</div> - атрибут вершины в виде числа.
-<div class="cmd">bool get(const utf8* attribute, std::wstring* value)</div> - атрибут вершины в виде строки UTF16.
-<div class="cmd">void set(const utf8* attribute, const utf8* value)</div> - задать атрибут.
-<div class="cmd">void set(const utf8* attribute, int value)</div> - задать атрибут в виде числа.
-<div class="cmd">void set(const utf8* attribute, const std::wstring& value)</div> - задать атрибут в виде строки UTF16.
-<div class="cmd">void gettext(u8string *text)</div> - текст вершины.
-<div class="cmd">void settext(const utf8* text)</div> - задать текст вершины.
-<div class="cmd">xml::node createsubnode(const utf8* name)</div> - создать дочернюю вершину.
+<div class="cmd">void getname(std::wstring *name)</div> - имя вершины.
+<div class="cmd">bool get(const wchar_t* attribute, std::wstring* value)</div> - атрибут вершины.
+<div class="cmd">bool get(const wchar_t* attribute, int* value)</div> - атрибут вершины в виде числа.
+<div class="cmd">bool get(const wchar_t* attribute, std::wstring* value)</div> - атрибут вершины в виде строки UTF16.
+<div class="cmd">void set(const wchar_t* attribute, const wchar_t* value)</div> - задать атрибут.
+<div class="cmd">void set(const wchar_t* attribute, int value)</div> - задать атрибут в виде числа.
+<div class="cmd">void set(const wchar_t* attribute, const std::wstring& value)</div> - задать атрибут в виде строки UTF16.
+<div class="cmd">void gettext(std::wstring *text)</div> - текст вершины.
+<div class="cmd">void settext(const wchar_t* text)</div> - задать текст вершины.
+<div class="cmd">xml::node createsubnode(const wchar_t* name)</div> - создать дочернюю вершину.
 <div class="cmd">int  size()</div> - количество атрибутов у вершины.
-<div class="cmd">bool getattrname(int index, u8string* value)</div> - имя атрибута по индексу.
-<div class="cmd">bool getattrvalue(int index, u8string* value)</div> - значение атрибута по индексу.
-<div class="cmd">bool move(const utf8* path)</div> - переместить вершину в другую позицию по заданному пути.
-<div class="cmd">bool create(const utf8* path)</div> - создать вершину по заданному пути.
+<div class="cmd">bool getattrname(int index, std::wstring* value)</div> - имя атрибута по индексу.
+<div class="cmd">bool getattrvalue(int index, std::wstring* value)</div> - значение атрибута по индексу.
+<div class="cmd">bool move(const wchar_t* path)</div> - переместить вершину в другую позицию по заданному пути.
+<div class="cmd">bool create(const wchar_t* path)</div> - создать вершину по заданному пути.
 </pre>
 <h4>class xml::request</h4>
 Класс позволяет делать выборку нужных вершин по выражению. Похоже на запрос к базе данных.
 <pre>
-<div class="cmd">request(xnode node, const utf8 *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
-<div class="cmd">request(xml::node& node, const utf8 *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
+<div class="cmd">request(xnode node, const wchar_t *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
+<div class="cmd">request(xml::node& node, const wchar_t *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
 <div class="cmd">int  size()</div> - количество вершин в выборке.
 <div class="cmd">bool empty()</div> - проверка, что выборка пустая.
 <div class="cmd">xml::node operator[](int node_index)</div> - получить вершину выборки по индексу.
@@ -716,9 +713,9 @@ u8string x( TW2U(L"строка") );
 Методы <div class="cmd">first</div>, <div class="cmd">last</div>, <div class="cmd">size</div> используются для работы с такими скобками. См. документацию 
 по PCRE.
 <pre>
-<div class="cmd">bool init(const utf8* _rgxp)</div> - инициализация регулярным выражением.
-<div class="cmd">bool find(const utf8* string)</div> - поиск в строке по регулярному выражению.
-<div class="cmd">bool findall(const utf8* string)</div> - поиск всех подстрок в строке по регулярному выражению.
+<div class="cmd">bool init(const wchar_t* _rgxp)</div> - инициализация регулярным выражением.
+<div class="cmd">bool find(const wchar_t* string)</div> - поиск в строке по регулярному выражению.
+<div class="cmd">bool findall(const wchar_t* string)</div> - поиск всех подстрок в строке по регулярному выражению.
 <div class="cmd">int  size()</div> - количество найденных параметров в круглых скобках + 1 (совпадение по всему регулярному выражению). 
 <div class="m">Замечание:</div> Если поиск производился методом <div class="cmd">find</div>, то по индексу <div class="m">0</div> будут получены границы совпадения 
 всего регулярного выражения, а с индекса <div class="m">1</div> начнутся совпадения для круглых скобок <div class="m">'()'</div>. Если поиск производился 
@@ -728,7 +725,7 @@ u8string x( TW2U(L"строка") );
 совпадение по регулярному выражению.
 <div class="cmd">int  last(int index)</div> - конечная позиция в строке (индекс символа+1), на котором заканчивается совпадение 
 по регулярному выражению.
-<div class="cmd">void getstring(int index, u8string *str)</div> - получить строку, которая находится в границах по заданному индексу.
+<div class="cmd">void getstring(int index, std::wstring *str)</div> - получить строку, которая находится в границах по заданному индексу.
 </pre>
 <hr>
 <a name="imagecpp"></a>

@@ -74,9 +74,9 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
     if (lua_pcall(L, 1, 0, 0))
     {
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError("trigger", lua_tostring(L, -1));
+            pluginError(L"trigger", luaT_towstring(L, -1));
         else
-            pluginError("trigger", "неизвестная ошибка");
+            pluginError(L"trigger", L"неизвестная ошибка");
         lua_settop(L, 0);
     }
     return true;
@@ -99,7 +99,7 @@ int trigger_create(lua_State *L)
         luaT_pushobject(L, t, LUAT_TRIGGER);
         return 1;
     }
-    return pluginInvArgs(L, "createTrigger");
+    return pluginInvArgs(L, L"createTrigger");
 }
 
 int trigger_enable(lua_State *L)
@@ -110,7 +110,7 @@ int trigger_enable(lua_State *L)
         t->enable(true);
         return 0;
     }
-    return pluginInvArgs(L, "trigger:enable");
+    return pluginInvArgs(L, L"trigger:enable");
 }
 
 int trigger_disable(lua_State *L)
@@ -121,7 +121,7 @@ int trigger_disable(lua_State *L)
         t->enable(false);
         return 0;
     }
-    return pluginInvArgs(L, "trigger:disable");
+    return pluginInvArgs(L, L"trigger:disable");
 }
 
 void reg_mt_trigger_string(lua_State *L);
@@ -144,7 +144,7 @@ int ts_getBlocksCount(lua_State *L)
         lua_pushinteger(L, s->string()->blocks.size());
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getBlocksCount");
+    return pluginInvArgs(L, L"viewstring:getBlocksCount");
 }
 
 int ts_getText(lua_State *L)
@@ -154,10 +154,10 @@ int ts_getText(lua_State *L)
         PluginsTriggerString *s = (PluginsTriggerString*)luaT_toobject(L, 1);
         tstring text;
         s->string()->getText(&text);
-        lua_pushwstring(L, text.c_str() );
+        luaT_pushwstring(L, text.c_str() );
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getText");
+    return pluginInvArgs(L, L"viewstring:getText");
 }
 
 int ts_getParameter(lua_State *L)
@@ -169,10 +169,10 @@ int ts_getParameter(lua_State *L)
         if (!s->getParam( lua_tointeger(L, 2), &p))
             lua_pushnil(L);
         else
-            lua_pushwstring(L, p.c_str());
+            luaT_pushwstring(L, p.c_str());
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getParameter");
+    return pluginInvArgs(L, L"viewstring:getParameter");
 }
 
 int ts_getParamsCount(lua_State *L)
@@ -183,7 +183,7 @@ int ts_getParamsCount(lua_State *L)
         lua_pushinteger(L, s->getParamsCount());
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getParamsCount");
+    return pluginInvArgs(L, L"viewstring:getParamsCount");
 }
 
 int ts_getComparedText(lua_State *L)
@@ -195,10 +195,10 @@ int ts_getComparedText(lua_State *L)
         if (!s->getCompared(&p))
             lua_pushnil(L);
         else
-            lua_pushwstring(L, p.c_str());
+            luaT_pushwstring(L, p.c_str());
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getParamsCount");
+    return pluginInvArgs(L, L"viewstring:getParamsCount");
 }
 
 int ts_isPrompt(lua_State *L)
@@ -209,7 +209,7 @@ int ts_isPrompt(lua_State *L)
         lua_pushboolean(L, (s->string()->prompt > 0) ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:isPrompt");
+    return pluginInvArgs(L, L"viewstring:isPrompt");
 }
 
 int ts_getPrompt(lua_State *L)
@@ -222,11 +222,11 @@ int ts_getPrompt(lua_State *L)
         else {
             tstring text;
             s->string()->getPrompt(&text);
-            lua_pushwstring(L, text.c_str());
+            luaT_pushwstring(L, text.c_str());
         }
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:getPrompt");
+    return pluginInvArgs(L, L"viewstring:getPrompt");
 }
 
 int ts_isGameCmd(lua_State *L)
@@ -237,7 +237,7 @@ int ts_isGameCmd(lua_State *L)
         lua_pushboolean(L, s->string()->gamecmd ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:isGameCmd");
+    return pluginInvArgs(L, L"viewstring:isGameCmd");
 }
 
 int ts_isSystem(lua_State *L)
@@ -248,7 +248,7 @@ int ts_isSystem(lua_State *L)
         lua_pushboolean(L, s->string()->system ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:isSystem");
+    return pluginInvArgs(L, L"viewstring:isSystem");
 }
 
 int ts_drop(lua_State *L)
@@ -259,7 +259,7 @@ int ts_drop(lua_State *L)
         s->string()->dropped = true;
         return 0;
     }
-    return pluginInvArgs(L, "viewstring:drop");
+    return pluginInvArgs(L, L"viewstring:drop");
 }
 
 int ts_deleteBlock(lua_State *L)
@@ -280,7 +280,7 @@ int ts_deleteBlock(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 0;
     }
-    return pluginInvArgs(L, "viewstring:deleteBlock");
+    return pluginInvArgs(L, L"viewstring:deleteBlock");
 }
 
 int ts_deleteAllBlocks(lua_State *L)
@@ -291,10 +291,10 @@ int ts_deleteAllBlocks(lua_State *L)
         s->string()->blocks.clear();
         return 0;
     }
-    return pluginInvArgs(L, "viewstring:drop");
+    return pluginInvArgs(L, L"viewstring:drop");
 }
 
-int vd_gettype(const utf8* type);
+int vd_gettype(const tchar* type);
 tbyte _check(unsigned int val, unsigned int min, unsigned int max);
 int ts_get(lua_State *L)
 {
@@ -306,9 +306,9 @@ int ts_get(lua_State *L)
             type = lua_tointeger(L, 3);
         else
         {
-            type = vd_gettype(lua_tostring(L, 3));
+            type = vd_gettype(luaT_towstring(L, 3));
             if (type == -1)
-                return pluginInvArgs(L, "viewstring:get");
+                return pluginInvArgs(L, L"viewstring:get");
         }
 
         bool ok = false;
@@ -373,7 +373,7 @@ int ts_get(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:get");
+    return pluginInvArgs(L, L"viewstring:get");
 }
 
 int ts_set(lua_State *L)
@@ -386,9 +386,9 @@ int ts_set(lua_State *L)
             type = lua_tointeger(L, 3);
         else
         {
-            type = vd_gettype(lua_tostring(L, 3));
+            type = vd_gettype(luaT_towstring(L, 3));
             if (type == -1)
-                return pluginInvArgs(L, "viewstring:set");
+                return pluginInvArgs(L, L"viewstring:set");
         }
 
         bool ok = false;
@@ -451,7 +451,7 @@ int ts_set(lua_State *L)
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, "viewstring:set");
+    return pluginInvArgs(L, L"viewstring:set");
 }
 
 void reg_mt_trigger_string(lua_State *L)

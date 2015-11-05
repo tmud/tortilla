@@ -105,7 +105,6 @@ void Mapper::saveMaps(lua_State *L)
                 xml::node e = r.createsubnode(L"exit");
                 e.set(L"dir", RoomDirName[dir]);
 
-                //u8string state;
                 Room* next_room = exit.next_room;
                 if (next_room)
                 {

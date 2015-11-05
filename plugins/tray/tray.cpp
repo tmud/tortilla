@@ -145,12 +145,12 @@ int syscmd(lua_State *L)
     {
         lua_pushinteger(L, 1);
         lua_gettable(L, -2);
-        u8string cmd(lua_tostring(L, -1));
+        std::wstring cmd(luaT_towstring(L, -1));
         lua_pop(L, 1);
-        if (cmd == "tray")
+        if (cmd == L"tray")
         {
             int n = luaL_len(L, -1);
-            u8string text;
+            std::wstring text;
             for (int i=2; i<=n; ++i)
             {
                 lua_pushinteger(L, i);
@@ -158,8 +158,8 @@ int syscmd(lua_State *L)
                 if (lua_isstring(L, -1))
                 {
                     if (!text.empty())
-                        text.append(" ");
-                    text.append(lua_tostring(L, -1));
+                        text.append(L" ");
+                    text.append(luaT_towstring(L, -1));
                 }
                 lua_pop(L, 1);
             }

@@ -10,7 +10,7 @@ int luaimage_width(lua_State *L)
         lua_pushinteger(L, p->width());
         return 1;
     }
-    return pluginInvArgs(L, "image:width");
+    return pluginInvArgs(L, L"image:width");
 }
 
 int luaimage_height(lua_State *L)
@@ -21,7 +21,7 @@ int luaimage_height(lua_State *L)
         lua_pushinteger(L, p->height());
         return 1;
     }
-    return pluginInvArgs(L, "image:height");
+    return pluginInvArgs(L, L"image:height");
 }
 
 int luaimage_cut(lua_State *L)
@@ -44,7 +44,7 @@ int luaimage_cut(lua_State *L)
             return 1;
         }
     }
-    return pluginInvArgs(L, "image:cut");
+    return pluginInvArgs(L, L"image:cut");
 }
 
 void reg_mt_image(lua_State *L)
