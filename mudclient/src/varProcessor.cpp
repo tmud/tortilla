@@ -81,8 +81,8 @@ bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, boo
     if (m_vars_regexp.getSize() == 0)
         return true;
 
-    tstring newparam(p->substr(0, m_vars_regexp.getFirst(0)));
-    for (int i = 0, e = m_vars_regexp.getSize() - 1; i <= e; ++i)
+    tstring newparam(p->substr(0, m_vars_regexp.getFirst(1)));
+    for (int i=1, e=m_vars_regexp.getSize()-1; i<=e; ++i)
     {
         tstring tmp, var;
         m_vars_regexp.getString(i, &tmp);

@@ -67,7 +67,7 @@ bool loadModules()
         {
             tstring error(L"Ошибка при загрузке модуля: ");
             error.append(files[j]);
-            pluginLog(error);
+            pluginLog(error.c_str());
         }
     }
     return true;

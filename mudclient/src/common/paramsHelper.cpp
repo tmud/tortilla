@@ -5,8 +5,7 @@ ParamsHelper::ParamsHelper(const tstring& param, bool include_anyid) : m_maxid(-
 {
     pcre.setRegExp(!include_anyid ?  L"(%[0-9]){1}" : L"(%[0-9%]){1}");
     pcre.findAllMatches(param);
-
-    for (int i=0,e=pcre.getSize(); i<e; ++i)
+    for (int i=1,e=pcre.getSize(); i<e; ++i)
     {
         int pos = pcre.getFirst(i) + 1;
         tchar symbol = param.at(pos);
@@ -24,17 +23,18 @@ ParamsHelper::ParamsHelper(const tstring& param, bool include_anyid) : m_maxid(-
 
 int ParamsHelper::getSize() const 
 {
-    return pcre.getSize();
+    int size = pcre.getSize();
+    return (size > 0) ? size-1 : 0;
 }
 
 int ParamsHelper::getFirst(int index) const
 {
-    return pcre.getFirst(index);
+    return pcre.getFirst(index+1);
 }
 
 int ParamsHelper::getLast(int index) const 
 {
-    return pcre.getLast(index);
+    return pcre.getLast(index+1);
 }
 
 int ParamsHelper::getId(int index) const              // return index of parameter [0-9]

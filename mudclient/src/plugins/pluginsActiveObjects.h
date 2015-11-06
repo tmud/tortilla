@@ -36,7 +36,7 @@ public:
     ActiveObjectsEx(PropertiesData* data, PropertiesValues* obj, const tchar* type, int updatetype, DWORD flags) : 
         pdata(data), actobj(obj), m_type(type), m_updatetype(updatetype), selected(-1), m_flags(flags)
     {
-        check_doubles.init(L"(%[0-9]){1}");
+        check_doubles.setRegExp(L"(%[0-9]){1}");
     }
     const tchar* type() const
     {
@@ -138,10 +138,10 @@ protected:
     {
         int max_index = -1;
         std::vector<int> indexes;
-        check_doubles.findall(key);
-        for (int i = 1, e = check_doubles.size(); i<e; ++i)
+        check_doubles.findAllMatches(key);
+        for (int i=1, e=check_doubles.getSize(); i<e; ++i)
         {
-            int pos = check_doubles.first(i) + 1;
+            int pos = check_doubles.getFirst(i) + 1;
             tchar symbol = key[pos];
             int id = symbol - L'0';
             indexes.push_back(id);
@@ -183,7 +183,7 @@ protected:
     PropertiesValues* actobj;
     tstring m_type;
     int m_updatetype;
-    Pcre check_doubles;
+    Pcre16 check_doubles;
     int selected;
     DWORD m_flags;
 };

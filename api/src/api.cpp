@@ -44,7 +44,7 @@ public:
             push_back(t);
             p = p + len + 1;
         }
-    }    
+    }
 };
 
 class PullOfBuffers {
@@ -71,11 +71,11 @@ public:
     {
         MemoryBuffer *b = get();
         b->alloc(bytes);
-        return b;    
+        return b;
     }
     void free(MemoryBuffer* b)
     {
-        m_free.push_back(b);    
+        m_free.push_back(b);
     }
 private:
    std::vector<MemoryBuffer*> m_free;  
@@ -130,7 +130,7 @@ void strbuf_destroy(strbuf b)
 strbuf strbuf_new(int bytes)
 {
     if (bytes < 0) return NULL;
-    MemoryBuffer *buffer = _pull.get(bytes);    
+    MemoryBuffer *buffer = _pull.get(bytes);
     memset(buffer->getData(), 0, bytes);
     return buffer;
 }
@@ -181,7 +181,7 @@ public:
                 m_escaped.append(buffer);
                 b = b + pos + 1;
             }
-        }            
+        }
     }
     operator const utf8*() { return m_escaped.empty() ? m_string.c_str() : m_escaped.c_str(); }
 
@@ -195,7 +195,7 @@ class EscSymbolsDecoder
 public:
     EscSymbolsDecoder(xstring string)
     {
-        if (!string) return;        
+        assert(string);
         const utf8 *b = strstr(string, "&#");
         if (!b) { m_result.assign(string); return; }
         u8string decoded;
@@ -215,7 +215,7 @@ public:
                 else
                 {
                     utf8 tmp[2] = { atoi(symbol.c_str()), 0 };
-                    decoded.append(tmp); b = e + 1;                    
+                    decoded.append(tmp); b = e + 1;
                 }
             }
             string = b;
@@ -267,10 +267,10 @@ xstringw xml_get_attr(xnode node, const wchar_t* name)
         if (r.size() != 1)
             return NULL;
         node = r[0];
-    }    
-    int last = tk.size() - 1;    
-    EscSymbolsDecoder esc( xmlGetAttribute(node, TW2U(tk[last].c_str())) );
-    return convert_utf8_to_wide(esc);
+    }
+    int last = tk.size() - 1;
+    xstring s = xmlGetAttribute(node, TW2U(tk[last].c_str()));
+    return (s) ? convert_utf8_to_wide(EscSymbolsDecoder(s)) : NULL;
 }
 
 void xml_set_text(xnode node, const wchar_t* text)
@@ -284,8 +284,7 @@ xstringw xml_get_text(xnode node)
     xstring result = xmlGetText(node);
     if (!result)
         return "";
-    EscSymbolsDecoder esc(result);
-    return convert_utf8_to_wide(esc);
+    return convert_utf8_to_wide(EscSymbolsDecoder(result));
 }
 
 xnode xml_create_child(xnode node, const wchar_t* childname)

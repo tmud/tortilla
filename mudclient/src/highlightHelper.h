@@ -97,7 +97,7 @@ private:
         WCHAR* table[16] = { L"64,64,64", L"128,0,0", L"0,128,0", L"128,128,0", L"0,64,128", L"128,0,128", L"0,128,128", L"192,192,192",
            L"128,128,128", L"255,0,0", L"0,255,0", L"255,255,0", L"0,128,255", L"255,0,255", L"0,255,255", L"255,255,255" };
         tstring name;
-        for (int i=p.getSize()-1; i>=0; --i)
+        for (int i=p.getSize()-1; i>=1; --i)
         {
             p.getString(i, &name);
             int pos = colors.find(name);

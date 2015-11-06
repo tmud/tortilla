@@ -173,7 +173,7 @@ void CompareObject::checkVars(tstring *pcre_template)
     tstring tmp(*pcre_template);
     pcre_template->clear();
     int pos = 0;
-    for (int i = 0, e = vars.getSize(); i < e; ++i)
+    for (int i=1, e=vars.getSize(); i<e; ++i)
     {
         int dp = vars.getFirst(i);
         if (dp > 1 && tmp.at(dp - 1) == L'\\' && tmp.at(dp - 2) != L'\\')

@@ -35,7 +35,7 @@ UINT findId(int code, bool button) { return m_idcontrol.findId(_cp,code,button);
 void delId(UINT id) { m_idcontrol.unregisterById(_cp, id); }
 void pluginsMenuCmd(UINT id) { m_idcontrol.runPluginCmd(id); }
 void tmcLog(const tstring& msg) { lp()->tmcLog(msg); }
-void pluginLog(const tstring& msg) { lp()->pluginLog(msg);  }
+void pluginLogOut(const tstring& msg) { lp()->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
 const tchar* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
@@ -63,7 +63,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
             log.append(L"unknown");
         if (i != n) log.append(L",");
     }
-    pluginLog(log.c_str());
+    pluginLogOut(log);
     return 0;
 }
 
@@ -71,37 +71,35 @@ int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
     swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ",
         _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, file);
-    pluginLog(plugin_buffer());
+    pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* fname, const tchar* error)
 {
     swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, error);
-    pluginLog(plugin_buffer());
+    pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* error)
 {
     swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, error);
-    pluginLog(plugin_buffer());
+    pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginLog(const tchar* msg)
 {
-    tstring tmp(msg);
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, tmp.c_str());
-    tmp.assign(plugin_buffer());
-    pluginLog(tmp);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, msg);
+    pluginLogOut(plugin_buffer());
     return 0;
 }
 
-void pluginLoadError(const tchar* msg, const tchar *fname)
+void pluginLoadError(const tchar* msg, const tchar *plugin_fname)
 {
-    swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", fname, msg);
-    pluginLog(plugin_buffer());
+    swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", plugin_fname, msg);
+    pluginLogOut(plugin_buffer());
 }
 //---------------------------------------------------------------------
 int pluginName(lua_State *L)
