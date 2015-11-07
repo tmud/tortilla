@@ -40,7 +40,7 @@ int menucmd(lua_State *L)
         {
             if (!errors.empty())
             {
-                base::log(L, L"Ошибки импорта из JMC3 (неверный синтаксис или такой элемент уже есть):");
+                base::log(L, L"Ошибки импорта из JMC3 (неверный синтаксис,такой элемент уже есть или переменная %x повторяется):");
                 for (int i = 0, e = errors.size(); i < e; ++i)
                 {
                     std::wstring msg(L"Ошибка: ");
