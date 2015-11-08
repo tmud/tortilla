@@ -51,6 +51,8 @@ private:
     bool loadDllPlugin(const wchar_t* fname);
     bool loadLuaPlugin(const wchar_t* fname);
     bool initLoadedPlugin(const wchar_t* fname);
+    bool isAlreadyLoaded(const wchar_t* filename);
+    bool isLoadedPlugin(const wchar_t* module_name);
     void getparam(const char* state, tstring* value);
 
 private:

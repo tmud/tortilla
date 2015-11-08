@@ -15,6 +15,8 @@ int  pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file);
 int  pluginError(const tchar* fname, const tchar* error);
 int  pluginError(const tchar* error);
 int  pluginLog(const tchar* msg);
+int  pluginOut(const tchar* msg);
+
 void pluginsMenuCmd(UINT id);
 void pluginsUpdateActiveObjects(int type);
 

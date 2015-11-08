@@ -252,7 +252,7 @@ void PluginsManager::processGameCmd(InputCommand* cmd)
             tstring src(cmd->srccmd);
             src.append(cmd->parameters);
             swprintf(plugin_buffer(), L"%s (%s)", error_msg.c_str(), src.c_str());
-            pluginLog(plugin_buffer());
+            pluginOut(plugin_buffer());
         }
     }
 }

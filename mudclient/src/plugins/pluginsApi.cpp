@@ -96,6 +96,12 @@ int pluginLog(const tchar* msg)
     return 0;
 }
 
+int pluginOut(const tchar* msg)
+{
+    pluginLogOut(msg);
+    return 0;
+}
+
 void pluginLoadError(const tchar* msg, const tchar *plugin_fname)
 {
     swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", plugin_fname, msg);
