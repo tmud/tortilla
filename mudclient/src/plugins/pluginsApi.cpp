@@ -39,7 +39,9 @@ void pluginLogOut(const tstring& msg) { lp()->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
 const tchar* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
-const tchar* unknown_plugin = L"?плагин?";
+const tchar* unknown_plugin_name = L"?плагин?";
+//const tchar* unknown_plugin() { return _extra_plugin_name.empty() ? unknown_plugin_name : _extra_plugin_name.c_str(); }
+const tchar* unknown_plugin() { return unknown_plugin_name; }
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
@@ -47,7 +49,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     int n = lua_gettop(L);
     swprintf(plugin_buffer(), L"'%s'.%s: Некорректные параметры(%d): ",
-        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, n);
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), fname, n);
     tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
@@ -70,28 +72,28 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
     swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ",
-        _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, file);
+        _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, fname, error);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* error)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, error);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginLog(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin, msg);
+    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), msg);
     pluginLogOut(plugin_buffer());
     return 0;
 }
@@ -897,16 +899,17 @@ int regUnloadFunction(lua_State *L)
 
 int print(lua_State *L)
 {
+    luaT_showLuaStack(L, L"d");
     std::vector<tstring> params;
     int n = lua_gettop(L);
     for (int i=1; i<=n; ++i)
     {
-        if (!lua_isstring(L, 1))
+        if (!lua_isstring(L, i))
             return pluginInvArgs(L, L"print");
-        TU2W p(lua_tostring(L, 1));
+        TU2W p(lua_tostring(L, i));
         params.push_back(tstring(p));
-        lp()->windowOutput(0, params);
     }
+    lp()->windowOutput(0, params);
     return 0;
 }
 
@@ -926,12 +929,12 @@ int vprint(lua_State *L)
     int n = lua_gettop(L);
     for (int i=2; i<=n; ++i)
     {
-        if (!lua_isstring(L, 1))
+        if (!lua_isstring(L, i))
             return pluginInvArgs(L, L"vprint");
-        tstring p(luaT_towstring(L, 1));
+        tstring p(luaT_towstring(L, i));
         params.push_back(p);
-        lp()->windowOutput(view, params);
     }
+    lp()->windowOutput(view, params);
     return 0;
 }
 //---------------------------------------------------------------------

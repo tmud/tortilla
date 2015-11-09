@@ -149,7 +149,7 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
         lua_settop(L, n); // restore stack
         std::wstring error(L"luaT_run:");
         error.append(TU2W(func));
-        luaT_error(L, error.c_str());
+        luaT_run(L, "log", "s", error.c_str());
         return false;
     }
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))

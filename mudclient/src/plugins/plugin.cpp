@@ -51,8 +51,6 @@ bool Plugin::reloadPlugin()
     if (file.empty())
         return false;
     const wchar_t* fname = file.c_str();
-    if (isAlreadyLoaded(fname))
-        return false;
     bool result = false;
     const wchar_t *e = wcsrchr(fname, L'.');
     if (!e) return false;

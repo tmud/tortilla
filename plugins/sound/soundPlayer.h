@@ -1,43 +1,19 @@
 #pragma once
 #include <map>
 
-class BassInterface
-{
-    lua_State *L;
-public:
-    BassInterface(lua_State *l) : L(l) {}
-    bool isBassLoaded()
-    {
-        pushBass();
-        bool result = (lua_istable(L, -1)) ? true : false;
-        lua_pop(L, 1);
-        return result;
-    }
-
-    int getVolume() {
-
-    }
-
-private:
-    void pushBass() {
-        lua_getglobal(L, "bass");
-    }
-};
-
-
 class SoundPlayer
 {
     lua_State *L;
     std::wstring *perror;
-    int m_music;
-    std::map<std::wstring, int> m_sounds;
-    typedef std::map<std::wstring, int>::iterator iterator;
+    //int m_music;
+    //std::map<std::wstring, int> m_sounds;
+    //typedef std::map<std::wstring, int>::iterator iterator;
 
 public:
-    SoundPlayer(lua_State* l) : L(l), perror(NULL), m_music(-1) {}
-    bool isBassLoaded() 
+    SoundPlayer(lua_State* l) : L(l), perror(NULL) {}
+    bool isPlayerLoaded() 
     {
-        pushBass();
+        pushPlayer();
         bool result = (lua_istable(L, -1)) ? true : false;
         lua_pop(L, 1);
         return result;
@@ -69,7 +45,7 @@ private:
             return incorrectParameters(L"volume");
         if (count == 0)
         {
-            pushBass();
+            pushPlayer();
             if (!luaT_run(L, "getVolume", "t"))
                return incorrectMethod(L"getVolume");
             if (!lua_isnumber(L, -1))
@@ -83,7 +59,7 @@ private:
        int volume = wstring_to_int(params[1].c_str(), &check);
        if (check && volume >= 0 && volume <= 100)
        {
-           pushBass();
+           pushPlayer();
            if (!luaT_run(L, "setVolume", "td", volume))
                return incorrectMethod(L"setVolume");
            std::wstring v(L"Новая громкость: ");
@@ -108,9 +84,6 @@ private:
             }
             const std::wstring &name = params[1];
             iterator it = m_sounds.find(name);
-
-            
-
             return;
         }*/
         return incorrectParameters(L"play");
@@ -118,7 +91,7 @@ private:
 
     bool music(const std::vector<std::wstring>& params)
     {
-        /*int count = params.size() - 1;
+        int count = params.size() - 1;
         if (count == 1 || count == 2)
         {
             int volume = 100;
@@ -129,25 +102,15 @@ private:
                     return incorrectParameters(L"music");
             }
             const std::wstring &name = params[1];
-
-            bool result = false;
-            if (!runInt_Bool("isStream", m_music, &result) || !result)
-                return false;
-            if (!runInt_Bool("stop", m_music, &result))
-                return false;
-            m_music = -1;
-            int newid = -1;
-            if (!runString_Int("loadStream", name.c_str(), &newid))
-                return false;
-            m_music = newid;
-            result = false;
-            runInt_Bool("play", newid, &result);
-            return false;
-        }*/
+            pushPlayer();
+            if (!luaT_run(L, "music", "tsd", name.c_str(), volume))
+               return incorrectMethod(L"music");
+            return true;
+        }
         return incorrectParameters(L"music");
     }
 
-    bool runInt_Bool(const char* method, int param, bool* result)
+    /*bool runInt_Bool(const char* method, int param, bool* result)
     {
         pushBass();
         if (!luaT_run(L, method, "td", param))
@@ -169,9 +132,7 @@ private:
         *result = lua_tointeger(L, -1) ? true : false;
         lua_pop(L, 1);
         return true;
-    }
-
-
+    }*/
 
     void print(const std::wstring& message)
     {
@@ -182,13 +143,13 @@ private:
 
     bool incorrectMethod(const wchar_t* method)
     {
-        perror->assign(L"Неизвестный метод bass.");
+        perror->assign(L"Неизвестный метод soundplayer.");
         perror->append(method);
         return false;
     }
     bool incorrectResult(const wchar_t* method)
     {
-        perror->assign(L"Некорректный результат из sфункции bass.");
+        perror->assign(L"Некорректный результат из функции soundplayer.");
         perror->append(method);
         return false;
     }
@@ -199,7 +160,7 @@ private:
         perror->append(L"'");
         return false;
     }
-    void pushBass() {
-        lua_getglobal(L, "bass");
+    void pushPlayer() {
+        lua_getglobal(L, "soundplayer");
     }
 };

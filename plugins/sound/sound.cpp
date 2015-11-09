@@ -26,9 +26,9 @@ int get_version(lua_State *L)
 int init(lua_State *L)
 {
     player = new SoundPlayer(L);
-    if (!player->isBassLoaded())
+    if (!player->isPlayerLoaded())
     {
-        base::log(L, L"Модуль Bass не загружен.");
+        base::log(L, L"Модуль SoundPlayer не загружен.");
         base::terminate(L);
         return 0;
     }
