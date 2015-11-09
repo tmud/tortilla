@@ -62,12 +62,12 @@ bool loadModules()
 
     for (int j = 0, je = files.size(); j < je; ++j)
     {
-        WideToAnsi w2a(files[j].c_str());
+        TW2A w2a(files[j].c_str());
         if (luaL_dofile(L, w2a))
         {
             tstring error(L"Ошибка при загрузке модуля: ");
             error.append(files[j]);
-            pluginLog(error.c_str());
+            pluginOut(error.c_str());
         }
     }
     return true;

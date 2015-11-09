@@ -41,15 +41,15 @@ const tchar* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
 const tchar* unknown_plugin_name = L"?плагин?";
 //const tchar* unknown_plugin() { return _extra_plugin_name.empty() ? unknown_plugin_name : _extra_plugin_name.c_str(); }
-const tchar* unknown_plugin() { return unknown_plugin_name; }
+const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : unknown_plugin_name; }
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
 int pluginInvArgs(lua_State *L, const tchar* fname)
 {
+    tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
     int n = lua_gettop(L);
-    swprintf(plugin_buffer(), L"'%s'.%s: Некорректные параметры(%d): ",
-        _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), fname, n);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s(%d): ", plugin_name(), fname, p.c_str(), n);
     tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
@@ -71,29 +71,28 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ",
-        _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), fname, file);
+    swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: ", plugin_name(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"'%s'.%s: %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), fname, error);
+    swprintf(plugin_buffer(), L"'%s'.%s: %s", plugin_name(), fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* error)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), error);
+    swprintf(plugin_buffer(), L"'%s': %s", plugin_name(), error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginLog(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", _cp ? _cp->get(Plugin::FILE) : unknown_plugin(), msg);
+    swprintf(plugin_buffer(), L"'%s': %s", plugin_name(), msg);
     pluginLogOut(plugin_buffer());
     return 0;
 }
