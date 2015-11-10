@@ -5,12 +5,15 @@ class SoundPlayer
 {
     lua_State *L;
     std::wstring *perror;
-    //int m_music;
-    //std::map<std::wstring, int> m_sounds;
-    //typedef std::map<std::wstring, int>::iterator iterator;
+    std::map<std::wstring, std::wstring> m_files_list;
+    typedef std::map<std::wstring, std::wstring>::iterator iterator;
 
 public:
-    SoundPlayer(lua_State* l) : L(l), perror(NULL) {}
+    SoundPlayer(lua_State* l) : L(l), perror(NULL) 
+    {
+        scanFiles();
+    }
+
     bool isPlayerLoaded() 
     {
         pushPlayer();
@@ -32,6 +35,8 @@ public:
             return music(params);
         else if (cmd == L"volume")
             return volume(params);
+        else if (cmd == L"update")
+            return update(params);
         error->assign(L"Неизвестная команда: ");
         error->append(cmd);
         return false;
@@ -102,37 +107,85 @@ private:
                     return incorrectParameters(L"music");
             }
             const std::wstring &name = params[1];
+            iterator it = m_files_list.find(name);
+            if (it == m_files_list.end())
+               return incorrectFile(name.c_str());
+
             pushPlayer();
-            if (!luaT_run(L, "music", "tsd", name.c_str(), volume))
+            if (!luaT_run(L, "music", "tsd", it->second.c_str(), volume))
                return incorrectMethod(L"music");
             return true;
         }
         return incorrectParameters(L"music");
     }
 
-    /*bool runInt_Bool(const char* method, int param, bool* result)
+    bool update(const std::vector<std::wstring>& params)
     {
-        pushBass();
-        if (!luaT_run(L, method, "td", param))
-            return incorrectMethod(TA2W(method));
-        if (!lua_isboolean(L, -1))
-            return incorrectResult(TA2W(method));
-        *result = lua_toboolean(L, -1) ? true : false;
-        lua_pop(L, 1);
-        return true;
+        int count = params.size() - 1;
+        if (count == 0)
+        {
+            scanFiles();
+            return true;        
+        }
+        return incorrectParameters(L"update");
     }
 
-    bool runString_Int(const char* method, const wchar_t* param, int* result)
+    bool isMusicFile(const std::wstring& ext)
     {
-        pushBass();
-        if (!luaT_run(L, method, "ts", param))
-            return incorrectMethod(TA2W(method));
-        if (!lua_isnumber(L, -1))
-            return incorrectResult(TA2W(method));
-        *result = lua_tointeger(L, -1) ? true : false;
-        lua_pop(L, 1);
-        return true;
-    }*/
+       return (ext == L"wav" || ext == L"mp3" || ext == L"ogg" || ext == L"s3m" || ext == L"it" || ext == L"xm" || ext == L"mod" ) ? true : false;
+    }
+
+    void scanCurrentDir(const wchar_t* current_dir)
+    {
+        WIN32_FIND_DATA fd;
+        memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+        HANDLE file = FindFirstFile(L"*.*", &fd);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            do
+            {
+                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                {
+                    const wchar_t *file = fd.cFileName;
+                    const wchar_t *e = wcsrchr(file, L'.');
+                    if (e)
+                    { 
+                        std::wstring ext(e+1);
+                        if (isMusicFile(ext))
+                        {
+                            std::wstring id(file);
+                            std::wstring path(current_dir);
+                            path.append(file);
+                            m_files_list[id] = path;
+                        }
+                    }
+                }
+            } while (::FindNextFile(file, &fd));
+            ::FindClose(file);
+        }
+    }
+
+    void scanFiles()
+    {
+        std::wstring path;
+        base::getResource(L, L"", &path);
+
+        DWORD buffer_required = ::GetCurrentDirectory(0, NULL);
+        wchar_t * buffer = new wchar_t[buffer_required];
+        GetCurrentDirectory(buffer_required, buffer);
+        if (SetCurrentDirectory(path.c_str()))
+        {
+            scanCurrentDir(path.c_str());
+        }
+        SetCurrentDirectory(buffer);
+        base::getPath(L, L"", &path);
+        if (SetCurrentDirectory(path.c_str()))
+        {
+            scanCurrentDir(path.c_str());
+        }
+        SetCurrentDirectory(buffer);
+        delete []buffer;
+    }
 
     void print(const std::wstring& message)
     {
@@ -160,6 +213,15 @@ private:
         perror->append(L"'");
         return false;
     }
+
+    bool incorrectFile(const wchar_t* file)
+    {
+        perror->assign(L"Не найден звуковой файл '");
+        perror->append(file);
+        perror->append(L"'");
+        return false;
+    }
+
     void pushPlayer() {
         lua_getglobal(L, "soundplayer");
     }

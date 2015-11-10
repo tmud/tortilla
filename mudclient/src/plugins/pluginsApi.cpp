@@ -429,9 +429,7 @@ int getResource(lua_State* L)
         }
         if (!error)
         {
-            tstring path(cd.getCurrentDir());
-            path.append(L"\\");
-            path.append(rd);
+            tstring path(rd);
             path.append(L"\\");
             path.append(pd);
             path.append(L"\\");
@@ -442,16 +440,6 @@ int getResource(lua_State* L)
         return pluginError(L"getResource", L"Ошибка создания каталога для плагина");
     }
     return pluginInvArgs(L, L"getResource");
-}
-
-int getFilesList(lua_State *L)
-{
-    if (luaT_check(L, 1, LUA_TSTRING))
-    {
-        // todo
-        return 0;
-    }
-    return pluginInvArgs(L, L"getFilesList");
 }
 
 int getProfile(lua_State *L)
@@ -940,7 +928,6 @@ int regUnloadFunction(lua_State *L)
 
 int print(lua_State *L)
 {
-    luaT_showLuaStack(L, L"d");
     std::vector<tstring> params;
     int n = lua_gettop(L);
     for (int i=1; i<=n; ++i)
@@ -1023,7 +1010,6 @@ bool initPluginsSystem()
     lua_register(L, "getProfilePath", getProfilePath);
     lua_register(L, "getProfile", getProfile);
     lua_register(L, "getResource", getResource);
-    lua_register(L, "getFilesList", getFilesList);
     lua_register(L, "getParent", getParent);
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);

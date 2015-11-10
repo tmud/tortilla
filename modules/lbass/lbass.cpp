@@ -109,7 +109,7 @@ public:
             BassObject *object = m_objects[id];
             if (!object->play(volume_ToFloat(volume)))
                 return error(object->geterror().c_str());
-            return 0;
+            return true;
         }
         return error_id(id);
     }
@@ -364,7 +364,7 @@ int lbass_getPath(lua_State *L)
         lua_pushwstring(L, path.c_str());
         return 1;
     }
-    return error_invargs(L, L"isPlaying");
+    return error_invargs(L, L"getPath");
 }
 
 int lbass_stop(lua_State *L)

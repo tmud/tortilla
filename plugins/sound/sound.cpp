@@ -13,7 +13,7 @@ int get_name(lua_State *L)
 int get_description(lua_State *L)
 {
     luaT_pushwstring(L, L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
-        L"Воспроизводятся wav,mp3,ogg,aiff,s3m,it,xm,mod,umx. Запись с микрофона производится в wav.");
+        L"Воспроизводятся wav,mp3,ogg,s3m,it,xm,mod. Запись с микрофона производится в wav.");
     return 1;
 }
 
