@@ -342,6 +342,7 @@ private:
         MESSAGE_HANDLER(WM_USER+4, OnBarSetFocus)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
+        MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnWheel)
@@ -664,11 +665,8 @@ private:
         return 0;
     }
 
-    LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
+    void processUserCommand(const tstring& cmd, bool process_history)
     {
-        tstring cmd;
-        m_bar.getCommand(&cmd);
-
         InputPlainCommands cmds(cmd);
         int count = cmds.size();
         if (count > 1)
@@ -687,15 +685,17 @@ private:
         }
         else if (count == 1)
         {
+            if (process_history) {
             InputPlainCommands history;
             m_plugins.processHistoryCmds(cmds, &history);
             for (int i=0,e=history.size(); i<e; ++i)
                 m_bar.addToHistory(history[i]);
+            }
         }
         else
         {
             assert(false);
-            return 0;
+            return;
         }
 
         InputTemplateParameters p;
@@ -708,6 +708,25 @@ private:
         tcmds.extract(&cmds);
         m_plugins.processBarCmds(&cmds);
         m_processor.processUserCommand(cmds);
+    }
+
+    LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        tstring cmd;
+        m_bar.getCommand(&cmd);
+        processUserCommand(cmd, true);
+        return 0;
+    }
+
+    LRESULT OnCopyData(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
+    {
+        tstring window, cmd;
+        if (readCommandToWindow(wparam, lparam, &window, &cmd))
+        {
+            PropertiesManager *pmanager = tortilla::getPropertiesManager();
+            if (window.empty() || window == pmanager->getProfileName())
+                processUserCommand(cmd, false);
+        }
         return 0;
     }
 

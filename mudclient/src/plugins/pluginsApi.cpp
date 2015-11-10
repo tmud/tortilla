@@ -161,6 +161,38 @@ int setCommand(lua_State *L)
     return pluginInvArgs(L, L"setCommand");
 }
 
+int sendCommand(lua_State *L)
+{
+    EXTRA_CP;
+    int n = lua_gettop(L);
+    if (n > 1)
+    {
+        bool params_ok = false;
+        tstring window, cmd;
+        if (lua_isnil(L, 1) || lua_isstring(L, 1))
+        {
+            params_ok = true;
+            if (lua_isstring(L, 1))
+                window.assign(luaT_towstring(L, 1));
+        }
+        if (params_ok)
+        {
+            for (int i=2;i<=n;++i)
+            {
+                if (!lua_isstring(L, i)) { params_ok = false; break; }
+                if (i != 2) cmd.append(L" ");
+                cmd.append(luaT_towstring(L, i));
+            }
+        }
+        if (params_ok)
+        {
+            sendCommandToWindow(_wndMain, window, cmd);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"sendCommand");
+}
+
 int addMenu(lua_State *L)
 {
     CAN_DO;
@@ -410,6 +442,16 @@ int getResource(lua_State* L)
         return pluginError(L"getResource", L"Ошибка создания каталога для плагина");
     }
     return pluginInvArgs(L, L"getResource");
+}
+
+int getFilesList(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        // todo
+        return 0;
+    }
+    return pluginInvArgs(L, L"getFilesList");
 }
 
 int getProfile(lua_State *L)
@@ -905,8 +947,8 @@ int print(lua_State *L)
     {
         if (!lua_isstring(L, i))
             return pluginInvArgs(L, L"print");
-        TU2W p(lua_tostring(L, i));
-        params.push_back(tstring(p));
+        tstring p(lua_towstring(L, i));
+        params.push_back(p);
     }
     lp()->windowOutput(0, params);
     return 0;
@@ -967,6 +1009,7 @@ bool initPluginsSystem()
     lua_register(L, "addCommand", addCommand);
     lua_register(L, "runCommand", runCommand);
     lua_register(L, "setCommand", setCommand);
+    lua_register(L, "sendCommand", sendCommand);
     lua_register(L, "addMenu", addMenu);
     lua_register(L, "addButton", addButton);
     lua_register(L, "addToolbar", addToolbar);
@@ -980,6 +1023,7 @@ bool initPluginsSystem()
     lua_register(L, "getProfilePath", getProfilePath);
     lua_register(L, "getProfile", getProfile);
     lua_register(L, "getResource", getResource);
+    lua_register(L, "getFilesList", getFilesList);
     lua_register(L, "getParent", getParent);
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);

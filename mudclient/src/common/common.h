@@ -20,6 +20,8 @@ bool isOnlyFilnameSymbols(const tstring& str);
 COLORREF invertColor(COLORREF c);
 bool sendToClipboard(HWND owner, const tstring& text);
 bool getFromClipboard(HWND owner, tstring* text);
+void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd);
+bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring* cmd);
 
 void tstring_trimleft(tstring *str);
 void tstring_trimright(tstring *str);
