@@ -77,7 +77,7 @@ private:
 
     bool play(const std::vector<std::wstring>& params)
     {
-        /*int count = params.size() - 1;
+        int count = params.size() - 1;
         if (count == 1 || count == 2)
         {
             int volume = 100;
@@ -88,9 +88,15 @@ private:
                     return incorrectParameters(L"play");
             }
             const std::wstring &name = params[1];
-            iterator it = m_sounds.find(name);
-            return;
-        }*/
+            iterator it = m_files_list.find(name);
+            if (it == m_files_list.end())
+                return incorrectFile(name.c_str());
+
+            pushPlayer();
+            if (!luaT_run(L, "play", "tsd", it->second.c_str(), volume))
+                return incorrectMethod(L"play");
+            return true;
+        }
         return incorrectParameters(L"play");
     }
 

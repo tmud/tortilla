@@ -255,15 +255,34 @@ private:
 int lbass_play(lua_State *L)
 {
     int n = lua_gettop(L);
-    if ((n == 1 && lua_isnumber(L, 1)) || 
-        (n == 2 && lua_isnumber(L, 1) && lua_isnumber(L, 2)))
+    if (n >= 1 && n <= 3 && lua_isnumber(L, 1))
     {
-        int id = lua_tointeger(L, 1);
-        int volume = (n == 2) ? 100 : lua_tointeger(L, 2);
-        if (!_bass_loader.play(id, volume))
-             return error(L, _bass_loader.getLastError());
-        lua_pushboolean(L, 1);
-        return 1;
+        bool params_ok = true;
+        int volume = 100;
+        if (n >= 2)
+        {
+            if (lua_isnumber(L, 2))
+                volume = lua_tointeger(L, 2);
+            else if (!lua_isnil(L, 2))
+                params_ok = false;
+        }
+        if (params_ok && n == 3)
+        {
+            if (!lua_isfunction(L, 3))
+                params_ok = false;
+        }
+        if (params_ok)
+        {
+            int id = lua_tointeger(L, 1);
+            if (n == 3)
+            {
+                lua_getglobal(L, "_lbassf"); //todo
+            }
+            if (!_bass_loader.play(id, volume))
+                 return error(L, _bass_loader.getLastError());
+            lua_pushboolean(L, 1);
+            return 1;
+        }
     }
     return error_invargs(L, L"play");
 }

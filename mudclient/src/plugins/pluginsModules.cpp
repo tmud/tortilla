@@ -75,18 +75,7 @@ bool loadModules()
 
 void unloadModules()
 {
-    lua_getglobal(L, "munloadf");
-    if (!lua_istable(L, -1))
-    {
-        lua_pop(L, 1);
-        return;
-    }
-    lua_pushnil(L);                     // first key
-    while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
-    {
-        if (lua_isfunction(L, -1))
-            lua_pcall(L, 0, 0, 0);
-        else
-            lua_pop(L, 1);
-    }
+    luaT_fun_table ft("_munloadf");
+    while (ft.next(L))
+      lua_pcall(L, 0, 0, 0);
 }

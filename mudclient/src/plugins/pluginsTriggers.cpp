@@ -11,14 +11,8 @@ PluginsTrigger::PluginsTrigger() : L(NULL), m_tigger_func_index(0), m_enabled(fa
 PluginsTrigger::~PluginsTrigger()
 {
     m_enabled = false;
-    lua_getglobal(L, "_triggers");
-    if (lua_istable(L, -1) && m_tigger_func_index > 0)
-    {
-        lua_pushinteger(L, m_tigger_func_index);
-        lua_pushnil(L);
-        lua_settable(L, -3);
-    }
-    lua_pop(L, 1);
+    luaT_fun_table ft("_triggers");
+    ft.popFunction(L, m_tigger_func_index);
 }
 
 bool PluginsTrigger::init(lua_State *pL)
@@ -26,30 +20,10 @@ bool PluginsTrigger::init(lua_State *pL)
     L = pL;
     assert(luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION));
 
-    lua_getglobal(L, "_triggers");
-    if (!lua_istable(L, -1))
-    {
-        if (!lua_isnil(L, -1)) {
-            lua_pop(L, 1);
-            return false;
-        }
-        lua_pop(L, 1);
-        lua_newtable(L);
-        lua_pushvalue(L, -1);
-        lua_setglobal(L, "_triggers");
-    }
-
+    luaT_fun_table ft("_triggers");
+    int index = ft.pushFunction(L);
     tstring key(luaT_towstring(L, 1));
     m_compare.init(key, true);
-
-    lua_len(L, -1);
-    int index = lua_tointeger(L, -1) + 1;
-    lua_pop(L, 1);
-    lua_insert(L, -2);
-    lua_pushinteger(L, index);
-    lua_insert(L, -2);
-    lua_settable(L, -3);
-    lua_pop(L, 1);
     m_tigger_func_index = index;
     m_enabled = true;
     return true;
@@ -63,11 +37,9 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
         return false;
     if (!m_compare.compare(cd.fullstr))
         return false;
-    lua_getglobal(L, "_triggers");
-    lua_pushinteger(L, m_tigger_func_index);
-    lua_gettable(L, -2);
-    lua_insert(L, -2);
-    lua_pop(L, 1);
+    luaT_fun_table ft("_triggers");
+    if (!ft.getFunction(L, m_tigger_func_index))
+        return false;
 
     PluginsTriggerString vs(cd.string, m_compare);
     luaT_pushobject(L, &vs, LUAT_VIEWSTRING);

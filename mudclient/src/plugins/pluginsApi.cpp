@@ -71,7 +71,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    swprintf(plugin_buffer(), L"'%s'.%s: Îøèáêà çàãğóçêè ôàéëà: ", plugin_name(), fname, file);
+    swprintf(plugin_buffer(), L"'%s'.%s: Îøèáêà çàãğóçêè ôàéëà: %s", plugin_name(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
@@ -895,34 +895,9 @@ int flashWindow(lua_State *L)
 
 int regUnloadFunction(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TFUNCTION))
-    {
-        lua_getglobal(L, "munloadf");
-        if (!lua_istable(L, -1))
-        {
-            if (!lua_isnil(L, -1))
-            {
-                lua_pop(L, 1);
-                lua_pushboolean(L, 0);
-                return 1;
-            }
-            lua_pop(L, 1);
-            lua_newtable(L);
-            lua_pushvalue(L, -1);
-            lua_setglobal(L, "munloadf");
-        }
-        lua_len(L, -1);
-        int index = lua_tointeger(L, -1) + 1;
-        lua_pop(L, 1);
-        lua_insert(L, -2);
-        lua_pushinteger(L, index);
-        lua_insert(L, -2);
-        lua_settable(L, -3);
-        lua_pop(L, 1);
-        lua_pushboolean(L, 1);
-        return 1;
-    }
-    lua_pushboolean(L, 0);
+    luaT_fun_table ft("_munloadf");
+    int result = ft.pushFunction(L);
+    lua_pushboolean(L, (result>0) ? 1 : 0);
     return 1;
 }
 

@@ -13,15 +13,8 @@ current_pen(NULL), current_brush(NULL), current_font(NULL)
 PluginsViewRender::~PluginsViewRender()
 {
     lua_State *L = renderL;
-    lua_getglobal(L, "_pvrender");
-    if (lua_istable(L, -1) && m_render_func_index > 0)
-    {
-        lua_pushinteger(L, m_render_func_index);
-        lua_pushnil(L);
-        lua_settable(L, -3);
-    }
-    lua_pop(L, 1);
-
+    luaT_fun_table ft("_pvrender");
+    ft.popFunction(L, m_render_func_index);
     for (int i=0,e=images.size(); i<e; ++i)
         delete images[i];
 }
@@ -38,21 +31,9 @@ bool PluginsViewRender::render()
     m_width = rc.right; m_height = rc.bottom;
     m_dc.FillSolidRect(&rc, m_bkg_color);
 
-    lua_getglobal(L, "_pvrender");
-    if (!lua_istable(L, -1))
-    {
-        lua_pop(L, 1);
+    luaT_fun_table ft("_pvrender");
+    if (!ft.getFunction(L, m_render_func_index))
         return true;
-    }
-    lua_pushinteger(L, m_render_func_index);
-    lua_gettable(L, -2);
-    if (!lua_isfunction(L, -1))
-    {
-        lua_pop(L, 2);
-        return true;
-    }
-    lua_insert(L, -2);
-    lua_pop(L, 1);
     luaT_pushobject(L, this, LUAT_RENDER);
     m_inside_render = true;
     bool result = true;
