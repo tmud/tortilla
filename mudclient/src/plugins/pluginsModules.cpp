@@ -36,7 +36,7 @@ bool loadModules()
     lua_pushstring(L, "");
     lua_settable(L, -3);
     lua_pushstring(L, "cpath");
-    lua_pushstring(L, W2U(path));
+    lua_pushstring(L, TW2A(path.c_str()));
     lua_settable(L, -3);
     lua_setglobal(L, "package");
     lua_pop(L, 1);
