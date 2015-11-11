@@ -43,6 +43,6 @@ public:
 private:
     lua_State *L;
     CompareObject m_compare;
-    int m_tigger_func_index;
+    lua_ref m_trigger_func_ref;
     bool m_enabled;
 };

@@ -1,16 +1,18 @@
-﻿-- модуль воспроизведения звуковых файлов
--- использует для своей работы модуль bass (lbass.dll + bass.dll)
+﻿-- soundplayer.lua
+-- модуль воспроизведения звуковых файлов
+-- использует для своей работы bass (lbass.dll + bass.dll)
 -- модуль soundplayer используется плагином sound
 
 if soundplayer then return end
+
 dofile 'modules.lua'
 
-local function print(...)
-  log(...)
+local function log(...)
+  print('[soundplayer]', ...)
 end
 
 if not bass then
-  print("Модуль SoundPlayer не загружен, требуется Bass.")
+  log("Модуль SoundPlayer не загружен, требуется Bass.")
 end
 
 soundplayer = {}
@@ -25,24 +27,35 @@ function soundplayer.setVolume(v)
 end
 
 function soundplayer.play(filename, volume)
+  local v = volume and volume or 100
+  if v < 0 or v > 100 then
+    log("Ошибка: Допустимый диапозон громкости 0-100")
+	return false
+  end
   local id, err = bass.loadSample(filename)
   if not id then
-    print(err)
+    log(err)
 	return false
   end
   sp.samples[id] = true
-  local v = volume and volume or 100
-  if v > 100 then v = 100 end
-  if v < 0 then v = 0 end
   local res,err = bass.play(id, v)
   if not res then
-	 print(err)
+	 log(err)
 	 return false
   end
   return id
 end
 
+function endplaying(id)
+  log(id)
+end
+
 function soundplayer.music(filename, volume)
+  local v = volume and volume or 100
+  if v < 0 or v > 100 then
+    log("Ошибка: Допустимый диапозон громкости 0-100")
+	return false
+  end
   if sp.music then
     bass.stop(sp.music)
     bass.unload(sp.music)
@@ -50,16 +63,13 @@ function soundplayer.music(filename, volume)
   end
   local id, err = bass.loadStream(filename)
   if not id then
-    print(err)
+    log(err)
 	return false
   end
   sp.music = id
-  local v = volume and volume or 100
-  if v > 100 then v = 100 end
-  if v < 0 then v = 0 end
-  local res,err = bass.play(id, v)
+  local res,err = bass.play(id, v, endplaying)
   if not res then
-	 print(err)
+	 log(err)
 	 return false
   end
   return id

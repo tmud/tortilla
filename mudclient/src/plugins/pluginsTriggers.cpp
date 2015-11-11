@@ -4,15 +4,14 @@
 #include "accessors.h"
 extern Plugin* _cp;
 
-PluginsTrigger::PluginsTrigger() : L(NULL), m_tigger_func_index(0), m_enabled(false)
+PluginsTrigger::PluginsTrigger() : L(NULL), m_enabled(false)
 {
 }
 
 PluginsTrigger::~PluginsTrigger()
 {
     m_enabled = false;
-    luaT_fun_table ft("_triggers");
-    ft.popFunction(L, m_tigger_func_index);
+    m_trigger_func_ref.unref(L);
 }
 
 bool PluginsTrigger::init(lua_State *pL)
@@ -20,11 +19,10 @@ bool PluginsTrigger::init(lua_State *pL)
     L = pL;
     assert(luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION));
 
-    luaT_fun_table ft("_triggers");
-    int index = ft.pushFunction(L);
+    m_trigger_func_ref.createRef(L);
     tstring key(luaT_towstring(L, 1));
     m_compare.init(key, true);
-    m_tigger_func_index = index;
+
     m_enabled = true;
     return true;
 }
@@ -37,9 +35,8 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
         return false;
     if (!m_compare.compare(cd.fullstr))
         return false;
-    luaT_fun_table ft("_triggers");
-    if (!ft.getFunction(L, m_tigger_func_index))
-        return false;
+
+    m_trigger_func_ref.pushValue(L);
 
     PluginsTriggerString vs(cd.string, m_compare);
     luaT_pushobject(L, &vs, LUAT_VIEWSTRING);

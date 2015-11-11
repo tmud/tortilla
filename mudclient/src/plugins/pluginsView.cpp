@@ -21,11 +21,3 @@ bool PluginsView::render()
     m_plugin->setRenderState(false);
     return render_ok;
 }
-
-int PluginsView::reg_pview_render(lua_State* L)
-{
-    if (!lua_isfunction(L, -1))
-        return 0;
-    luaT_fun_table ft("_pvrender");
-    return ft.pushFunction(L);
-}

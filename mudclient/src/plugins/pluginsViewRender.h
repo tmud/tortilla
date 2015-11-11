@@ -4,7 +4,7 @@
 class PluginsViewRender
 {
 public:
-    PluginsViewRender(lua_State *pL, int index, HWND wnd);
+    PluginsViewRender(lua_State *pL, HWND wnd);
     ~PluginsViewRender();
     bool render();
     void setBackground(COLORREF color);
@@ -32,7 +32,7 @@ public:
 
 private:
     lua_State *renderL;
-    int m_render_func_index;
+    lua_ref m_render_func_ref;
     CWindow m_wnd;
     CDCHandle m_dc;
     bool m_inside_render;

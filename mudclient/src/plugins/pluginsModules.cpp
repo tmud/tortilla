@@ -73,9 +73,29 @@ bool loadModules()
     return true;
 }
 
+std::vector<lua_ref> m_unload_functions;
 void unloadModules()
 {
-    luaT_fun_table ft("_munloadf");
-    while (ft.next(L))
-      lua_pcall(L, 0, 0, 0);
+    int last = m_unload_functions.size()-1;
+    for (int i=last;i>=0;--i)
+    {
+        m_unload_functions[i].pushValue(L);
+        lua_pcall(L, 0, 0, 0);
+        m_unload_functions[i].unref(L);
+    }
+    m_unload_functions.clear();
+}
+
+int regUnloadFunction(lua_State *L)
+{
+    if (!lua_isfunction(L, -1))
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    lua_ref f;
+    f.createRef(L);
+    m_unload_functions.push_back(f);
+    lua_pushboolean(L, 1);
+    return 1;
 }

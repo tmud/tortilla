@@ -1,14 +1,21 @@
 #pragma once
 #include <vector>
 
-class BassObject
+class BassObjectEvents
+{
+public:
+    virtual void playingEnd() = 0;
+};
+
+class BassObject : public BassObjectEvents
 {
     std::wstring m_filename;
     std::wstring m_error;
     bool m_sample;
+    BassObjectEvents* m_callback;
 public:
-    BassObject(bool sample) : m_sample(sample) {}
-    virtual ~BassObject() {}
+    BassObject(bool sample) : m_callback(NULL), m_sample(sample) {}
+    virtual ~BassObject() { delete m_callback; }
     virtual bool play(float volume) = 0;
     virtual bool isplaying() = 0;
     virtual void stop() = 0;
@@ -17,7 +24,23 @@ public:
     void setname(const wchar_t* fname) { m_filename.assign(fname); }
     const std::wstring& geterror() const { return m_error; }
     void seterror(const wchar_t* error) { m_error.assign(error); }
+    void setcallback(BassObjectEvents* callback) {
+        delete m_callback;
+        m_callback = callback;
+    }
+private:
+    void playingEnd()
+    {
+        if (m_callback)
+            m_callback->playingEnd();
+    }
 };
+
+void CALLBACK SyncProc(HSYNC handle, DWORD channel, DWORD data, void *user)
+{
+    BassObjectEvents *e = (BassObjectEvents*)user;
+    e->playingEnd();
+}
 
 class BassStream : public BassObject
 {
@@ -42,6 +65,8 @@ public:
     {
         if (!m_stream)
             return false;
+        BASS_ChannelSetAttribute(m_stream, BASS_ATTRIB_VOL, volume);
+        BASS_ChannelSetSync(m_stream,BASS_SYNC_ONETIME|BASS_SYNC_END, 0, SyncProc, (BassObjectEvents*)this);
         return (BASS_ChannelPlay(m_stream, TRUE)) ? true : false;
     }
     bool isplaying()
@@ -57,6 +82,7 @@ public:
         m_stream = NULL;
     }
 };
+
 class BassSample : public BassObject
 {
     HSAMPLE m_sample;
@@ -79,10 +105,9 @@ public:
     bool play(float volume)
     {
         if (!m_sample)
-            return false;
+            return false;        
         HCHANNEL ch = BASS_SampleGetChannel(m_sample, FALSE);
-        BASS_ChannelSetAttribute(ch, BASS_ATTRIB_VOL, volume);
-        //BASS_ChannelSetAttribute(ch, BASS_ATTRIB_PAN, ((rand() % 201) - 100) / 100.f);
+        BASS_ChannelSetAttribute(ch, BASS_ATTRIB_VOL, volume);     
         return (BASS_ChannelPlay(ch, FALSE)) ? true : false;
     }
     bool isplaying()
@@ -103,7 +128,7 @@ class BassMusic : public BassObject
 {
     HMUSIC m_music;
 public:
-    BassMusic() : BassObject(true), m_music(NULL) {}
+    BassMusic() : BassObject(false), m_music(NULL) {}
     ~BassMusic() {
         if (m_music) 
             BASS_MusicFree(m_music);
@@ -121,7 +146,9 @@ public:
     bool play(float volume)
     {
         if (!m_music)
-            return false;
+            return false;         
+         BASS_ChannelSetAttribute(m_music, BASS_ATTRIB_VOL, volume);
+         BASS_ChannelSetSync(m_music,BASS_SYNC_ONETIME|BASS_SYNC_END, 0, SyncProc, (BassObjectEvents*)this);
          return (BASS_ChannelPlay(m_music, TRUE)) ? true : false;
     }
     bool isplaying()
@@ -130,7 +157,7 @@ public:
         DWORD status = BASS_ChannelIsActive(m_music);
         return (status == BASS_ACTIVE_PLAYING) ? true : false;
     }
-     void stop()
+    void stop()
     {
         if (m_music)
             BASS_ChannelStop(m_music);

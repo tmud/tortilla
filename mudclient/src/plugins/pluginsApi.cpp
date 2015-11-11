@@ -893,13 +893,7 @@ int flashWindow(lua_State *L)
     return pluginInvArgs(L, L"flashWindow");
 }
 
-int regUnloadFunction(lua_State *L)
-{
-    luaT_fun_table ft("_munloadf");
-    int result = ft.pushFunction(L);
-    lua_pushboolean(L, (result>0) ? 1 : 0);
-    return 1;
-}
+int regUnloadFunction(lua_State *L);
 
 int print(lua_State *L)
 {

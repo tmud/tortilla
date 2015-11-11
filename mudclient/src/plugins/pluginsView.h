@@ -27,9 +27,8 @@ public:
     {
         if (m_render)
             { delete m_render; m_render = NULL; }
-        int render_id = reg_pview_render(L);
-        if (render_id > 0)
-            m_render = new PluginsViewRender(L, render_id, m_hWnd);
+        if (lua_isfunction(L, -1))
+            m_render = new PluginsViewRender(L, m_hWnd);
         return m_render;
     }
 
@@ -89,6 +88,5 @@ private:
         return 0;
     }
 private:
-    int  reg_pview_render(lua_State* L);
     bool render();
 };

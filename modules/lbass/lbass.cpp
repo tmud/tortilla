@@ -5,6 +5,23 @@
 #include "bobjects.h"
 #include "common.h"
 
+class BassCaller : public BassObjectEvents
+{
+    lua_State *L;
+    lua_ref m_function_ref;
+    int m_id;
+public:
+    BassCaller(lua_State *l, int id) : L(l), m_id(id) {  m_function_ref.createRef(L); }
+    ~BassCaller() {  m_function_ref.unref(L); }
+    void playingEnd()
+    {
+        m_function_ref.pushValue(L);
+        lua_pushinteger(L, m_id);
+        lua_pcall(L, 1, 0, 0);
+        m_function_ref.unref(L);
+    }
+};
+
 class BassLoader
 {
     bool bass_loaded;
@@ -75,8 +92,8 @@ public:
             }
             else if (ext == L"mo3" || ext == L"xm" || ext == L"it" || ext == L"s3m" || ext == L"mtm" || ext == L"mod" || ext == L"umx")
             {
-                if (!as_sample)
-                    return error_file(L"Can't load as stream", file);
+                if (as_sample)
+                    return error_file(L"Can't load as sample", file);
                  correct_ext = true;
                  index = _bass_loader.loadMusic(file);
             }
@@ -99,14 +116,18 @@ public:
         return true;
     }
 
-    bool play(int id, int volume)
+    bool play(int id, int volume, BassCaller *caller)
     {
         if (!bass_loaded)
+        {
+            delete caller;
             return error(L"BASS not initialized");
+        }
         int objects = m_objects.size();
         if (id >= 0 && id < objects)
         {
             BassObject *object = m_objects[id];
+            object->setcallback(caller);
             if (!object->play(volume_ToFloat(volume)))
                 return error(object->geterror().c_str());
             return true;
@@ -135,14 +156,6 @@ public:
         if (!object)
             { error_id(id); return -1; }
         return object->issample() ? 1 : 0;
-    }
-
-    int isStream(int id)
-    {
-        BassObject *object = get(id);
-        if (!object)
-            { error_id(id); return -1; }
-        return object->issample() ? 0 : 1;
     }
 
     int isPlaying(int id)
@@ -209,7 +222,7 @@ private:
 
     int loadStream(const wchar_t* file)
     {
-        BassStream *stream = new (std::nothrow) BassStream;
+        BassStream *stream = new (std::nothrow) BassStream();
         if (!stream || !stream->load(file))
             { delete stream; return -1; }
         return push(stream);
@@ -217,7 +230,7 @@ private:
 
     int loadSample(const wchar_t* file)
     {
-        BassSample *sample = new (std::nothrow) BassSample;
+        BassSample *sample = new (std::nothrow) BassSample();
         if (!sample || !sample->load(file))
             { delete sample; return -1; }
         return push(sample);
@@ -225,7 +238,7 @@ private:
 
     int loadMusic(const wchar_t* file)
     {
-        BassMusic *music = new (std::nothrow) BassMusic;
+        BassMusic *music = new (std::nothrow) BassMusic();
         if (!music || !music->load(file))
             { delete music; return -1; }
         return push(music);
@@ -274,11 +287,10 @@ int lbass_play(lua_State *L)
         if (params_ok)
         {
             int id = lua_tointeger(L, 1);
+            BassCaller *func = NULL;
             if (n == 3)
-            {
-                lua_getglobal(L, "_lbassf"); //todo
-            }
-            if (!_bass_loader.play(id, volume))
+                func = new BassCaller(L, id);
+            if (!_bass_loader.play(id, volume, func))
                  return error(L, _bass_loader.getLastError());
             lua_pushboolean(L, 1);
             return 1;
@@ -345,19 +357,6 @@ int lbass_isSample(lua_State *L)
         return 1;
     }
     return error_invargs(L, L"isSample");
-}
-
-int lbass_isStream(lua_State *L)
-{
-    if (lua_gettop(L) == 1 && lua_isnumber(L, 1))
-    {
-        int result = _bass_loader.isStream(lua_tointeger(L, 1));
-        if (result == -1)
-            return error(L, _bass_loader.getLastError());
-        lua_pushboolean(L, (result==1) ? 1 : 0);
-        return 1;
-    }
-    return error_invargs(L, L"isStream");
 }
 
 int lbass_isPlaying(lua_State *L)
@@ -464,7 +463,6 @@ static const luaL_Reg lbass_methods[] =
     { "unload", lbass_unload },
     { "isHandle", lbass_isHandle},
     { "isSample", lbass_isSample},
-    { "isStream", lbass_isStream},
     { "play", lbass_play },
     { "isPlaying", lbass_isPlaying },
     { "getPath", lbass_getPath },

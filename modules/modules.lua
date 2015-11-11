@@ -1,5 +1,8 @@
-﻿-- загрузчик dll-модулей
+﻿-- modules.lua
+-- загрузчик dll-модулей
+
 if system then return end
+
 system = require 'system'
 rnd = require 'rnd'
 
@@ -12,9 +15,14 @@ end
 if not bass then
   local res, err
   bass,err = prequire('lbass')
-  if not bass then print (err)
+  if not bass then 
+    print (err)
   else
     res, err = bass.init()
-    if not res then print (err) end
+    if not res then 
+	  print (err)
+	else
+	  regUnloadFunction(bass.free)
+	end
   end
 end

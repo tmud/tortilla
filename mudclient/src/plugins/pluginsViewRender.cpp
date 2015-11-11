@@ -3,18 +3,18 @@
 #include "pluginsViewRender.h"
 #include "pluginSupport.h"
 
-PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
+PluginsViewRender::PluginsViewRender(lua_State *pL, HWND wnd) : renderL(pL), m_wnd(wnd),
 m_inside_render(false), m_bkg_color(0), m_text_color(RGB(128,128,128)), m_width(0), m_height(0),
 current_pen(NULL), current_brush(NULL), current_font(NULL)
 {
-    assert(pL && index > 0);
+    assert(pL);
+    assert(lua_isfunction(pL, -1));
+    m_render_func_ref.createRef(pL);
 }
 
 PluginsViewRender::~PluginsViewRender()
 {
-    lua_State *L = renderL;
-    luaT_fun_table ft("_pvrender");
-    ft.popFunction(L, m_render_func_index);
+    m_render_func_ref.unref(renderL);
     for (int i=0,e=images.size(); i<e; ++i)
         delete images[i];
 }
@@ -31,9 +31,7 @@ bool PluginsViewRender::render()
     m_width = rc.right; m_height = rc.bottom;
     m_dc.FillSolidRect(&rc, m_bkg_color);
 
-    luaT_fun_table ft("_pvrender");
-    if (!ft.getFunction(L, m_render_func_index))
-        return true;
+    m_render_func_ref.pushValue(L);
     luaT_pushobject(L, this, LUAT_RENDER);
     m_inside_render = true;
     bool result = true;
