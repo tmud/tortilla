@@ -1271,9 +1271,9 @@ local l = s:len() -- l = 17
 local s1 = s:substr(3) -- s1 = "Мад"
 local s2 = s:substr(5, 8) -- s2 = "отличная"
 </div>
-<div class="cmd">int strstr(string where, string what [,int from])</div> - ищет подстроку в строке. Можно указать с какого символа нужно искать.
-<div class="cmd">table strall(string where, string what)</div> - ищет все вхождения подстроки в строке. Возвращает таблицу индексов с которых начинается 
-заданная подстрока.
+<div class="cmd">int strstr(string what [,int from])</div> - ищет подстроку в строке. Можно указать с какого символа нужно искать.
+<div class="cmd">table strall(string what)</div> - ищет все вхождения подстроки в строке. Возвращает таблицу индексов с которых начинается 
+заданная подстрока (nil - ничего не найдено).
 </pre>
 <hr>
 <a name="decoda"></a>

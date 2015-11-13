@@ -126,6 +126,133 @@ int system_sleep(lua_State *L)
     return 0;
 }
 
+class AutoCloseHandle {
+    HANDLE hfile;
+public:
+    AutoCloseHandle(HANDLE file) : hfile(file) {}
+    ~AutoCloseHandle() { CloseHandle(hfile); }
+};
+
+int system_loadTextFile(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        HANDLE file = CreateFile(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        if (file == INVALID_HANDLE_VALUE)
+            return 0;
+        AutoCloseHandle auto_close(file);
+        DWORD high = 0;
+        DWORD size = GetFileSize(file, &high);
+        if (high != 0) return 0;
+
+        lua_newtable(L);
+        if (size == 0) return 1;
+
+        typedef unsigned char uchar;
+
+        int string_index = 1;
+        std::string current_string;
+        const DWORD buffer_size = 128;
+        uchar* buffer = new uchar[buffer_size];
+
+        DWORD inbuffer = 0;
+        bool last_0d = false;
+        bool bom_check = false;
+        while (size > 0 || inbuffer > 0)
+        {
+            DWORD readed = inbuffer;
+            if (size > 0) {
+            DWORD toread = buffer_size - inbuffer;
+            if (toread > size) toread = size;
+            if (!ReadFile(file, buffer+inbuffer, toread, &readed, NULL))
+                return 0;
+            size -= readed;
+            readed = inbuffer + readed;
+            }
+
+            uchar *p = buffer;
+            uchar *e = p + readed;
+
+            if (!bom_check && readed >= 3)
+            {
+                bom_check = true;
+                if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf)
+                    p += 3;
+            }
+
+            uchar *b = p;
+            while (p != e)
+            {
+                uchar c = *p; p++;
+                if (c == 0xd || c == 0xa)
+                {
+                    if (c == 0xa && last_0d)
+                        { b = p; last_0d = false;  continue; }
+
+                    current_string.append((char*)b, p-b-1);
+                    lua_pushinteger(L, string_index++);
+                    lua_pushstring(L, current_string.c_str());
+                    lua_rawset(L, -3);
+                    current_string.clear();
+
+                    if (c == 0xd && last_0d)
+                        { last_0d = false; break; }
+                    if (c == 0xd)
+                          last_0d = true;
+                    break;
+                }
+                last_0d = false;
+
+                if (c < ' ')
+                {
+                    uchar *x = p-1;
+                    *x = ' ';
+                    //current_string.append((char*)b, p-b-1);
+                    //b = p;
+                }
+            }
+            if (p == e)
+                current_string.append((char*)b, e-b);
+            DWORD processed = p - buffer;
+            DWORD notprocessed = readed - processed;
+            memcpy(buffer, p, notprocessed);
+            inbuffer = notprocessed;
+        }
+        delete []buffer;
+        if (!current_string.empty())
+        {
+            lua_pushinteger(L, string_index++);
+            lua_pushstring(L, current_string.c_str());
+            lua_rawset(L, -3);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+int system_convertFromWin(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        TA2W t1(lua_tostring(L, 1));
+        luaT_pushwstring(L, t1);
+        return 1;
+    }
+    return 0;
+}
+
+int system_convertToWin(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        std::wstring t1(luaT_towstring(L, 1));
+        lua_pushstring(L, TW2A(t1.c_str()));
+        return 1;
+    }
+    return 0;
+}
+
 static const luaL_Reg system_methods[] =
 {
     { "dbgstack", system_debugstack},
@@ -133,6 +260,9 @@ static const luaL_Reg system_methods[] =
     { "dbglog", system_dbglog },
     { "msgbox", system_messagebox },
     { "sleep", system_sleep },
+    { "loadTextFile", system_loadTextFile },
+    { "convertFromWin", system_convertFromWin },
+    { "convertToWin", system_convertToWin },
     { NULL, NULL }
 };
 

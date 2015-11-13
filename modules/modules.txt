@@ -3,13 +3,22 @@
 system - модуль системных методов:
 void system.sleep(number ms) - засыпание потока на заданное количество мс.
 void system.dbglog(string [,number|string|boolean)) - Выводит лог-информацию в отладчик посредством OutputDebugString.
-int system.msgbox([string caption,] string text [,string buttons_and_icons] ) - Отображение мессадж бокса с текстом (+заголовок, +иконка и кнопки).
+
+int system.msgbox([string caption,] string text [,string buttons_and_icons] ) - Отображение мессадж бокса с текстом 
+(+заголовок, +иконка и кнопки).
+
 Кнопки: 
 - ok,cancel - по умолчанию ok (первая кнопка)
 - cancel,ok 
 - yes,no
 - no,yes
 Иконки: error,stop,info,information,warning,question
+
+table system.loadTextFile(filepath) - загружает текстовый файл в таблицу отдельными строками. Индексы строк начинаютя от 1.
+Возвращает nul, если файл прочитать не удалось. Непечатаемые символы с кодом до 32 (кроме \r\n) заменяются на пробелы.
+
+string system.convertFromWin(string) - конвертация строки из win-кодировки(ansi) в utf8-кодировку
+string system.convertToWin(string) - конвертация из utf8-кодировки в win-кодировку
 ------------------------------------------------------------------------------------------------------------
 rnd - генератор случайных чисел и строк
 void rnd.seed(uint seed) - сброс ключа генератора на другое значение.

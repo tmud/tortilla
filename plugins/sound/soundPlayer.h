@@ -29,10 +29,10 @@ public:
 
         perror = error;
         const std::wstring &cmd = params[0];
-        if (cmd == L"play")
+        if (cmd == L"playfx" || cmd == L"fx")
+            return playfx(params);
+        else if (cmd == L"play")
             return play(params);
-        else if (cmd == L"music")
-            return music(params);
         else if (cmd == L"volume")
             return volume(params);
         else if (cmd == L"update")
@@ -75,6 +75,30 @@ private:
        return incorrectParameters(L"volume");
     }
 
+    bool playfx(const std::vector<std::wstring>& params)
+    {
+        int count = params.size() - 1;
+        if (count == 1 || count == 2)
+        {
+            int volume = 100;
+            if (count == 2) {
+                bool check = false;
+                volume = wstring_to_int(params[2].c_str(), &check);
+                if (!check)
+                    return incorrectParameters(L"playfx");
+            }
+            std::wstring name = params[1];
+            iterator it = m_files_list.find(name);
+            if (it != m_files_list.end())
+                name = it->second;
+            pushPlayer();
+            if (!luaT_run(L, "playfx", "tsd", name.c_str(), volume))
+                return incorrectMethod(L"playfx");
+            return true;
+        }
+        return incorrectParameters(L"playfx");
+    }
+
     bool play(const std::vector<std::wstring>& params)
     {
         int count = params.size() - 1;
@@ -87,42 +111,27 @@ private:
                 if (!check)
                     return incorrectParameters(L"play");
             }
-            const std::wstring &name = params[1];
+            std::wstring name = params[1];
             iterator it = m_files_list.find(name);
-            if (it == m_files_list.end())
-                return incorrectFile(name.c_str());
+            if (it != m_files_list.end())
+                name = it->second;
+
+            int pos = name.rfind(L'.');
+            if (pos != -1)
+            {
+                std::wstring ext(name.substr(pos+1));
+                if (ext == L"lst")
+                {
+                    return playlist(name, volume);
+                }
+            }
 
             pushPlayer();
-            if (!luaT_run(L, "play", "tsd", it->second.c_str(), volume))
-                return incorrectMethod(L"play");
+            if (!luaT_run(L, "play", "tsd", name.c_str(), volume))
+               return incorrectMethod(L"play");
             return true;
         }
         return incorrectParameters(L"play");
-    }
-
-    bool music(const std::vector<std::wstring>& params)
-    {
-        int count = params.size() - 1;
-        if (count == 1 || count == 2)
-        {
-            int volume = 100;
-            if (count == 2) {
-                bool check = false;
-                volume = wstring_to_int(params[2].c_str(), &check);
-                if (!check)
-                    return incorrectParameters(L"music");
-            }
-            const std::wstring &name = params[1];
-            iterator it = m_files_list.find(name);
-            if (it == m_files_list.end())
-               return incorrectFile(name.c_str());
-
-            pushPlayer();
-            if (!luaT_run(L, "music", "tsd", it->second.c_str(), volume))
-               return incorrectMethod(L"music");
-            return true;
-        }
-        return incorrectParameters(L"music");
     }
 
     bool update(const std::vector<std::wstring>& params)
@@ -136,8 +145,14 @@ private:
         return incorrectParameters(L"update");
     }
 
+    bool playlist(const std::wstring& playlist, int volume)
+    {
+        return true;
+    }
+
     bool isMusicFile(const std::wstring& ext)
     {
+       if (ext == L"lst") return true;  // playlist file
        return (ext == L"wav" || ext == L"mp3" || ext == L"ogg" || ext == L"s3m" || ext == L"it" || ext == L"xm" || ext == L"mod" ) ? true : false;
     }
 
@@ -216,14 +231,6 @@ private:
     {
         perror->assign(L"Некорректные параметры для команды '");
         perror->append(cmd);
-        perror->append(L"'");
-        return false;
-    }
-
-    bool incorrectFile(const wchar_t* file)
-    {
-        perror->assign(L"Не найден звуковой файл '");
-        perror->append(file);
         perror->append(L"'");
         return false;
     }

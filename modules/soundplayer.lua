@@ -26,62 +26,109 @@ function soundplayer.setVolume(v)
   return bass.setVolume(v)
 end
 
-function soundplayer.play(filename, volume)
+function soundplayer.playfx(filename, volume)
   local v = volume and volume or 100
   if v < 0 or v > 100 then
-    log("Ошибка: Допустимый диапозон громкости 0-100")
-	return false
+    log("Ошибка: Допустимый диапазон громкости 0-100")
+    return false
   end
   local id, err = bass.loadSample(filename)
   if not id then
     log(err)
-	return false
+    return false
   end
   sp.samples[id] = true
   local res,err = bass.play(id, v)
   if not res then
-	 log(err)
-	 return false
+    log(err)
+    return false
   end
   return id
 end
 
-function endplaying(id)
-  log(id)
+local playlist, pl_index, pl_volume
+
+local function stopplaylist()
+  pl_volume = nil
+  pl_index = nil
+  pl_volume = nil
 end
 
-function soundplayer.music(filename, volume)
+local function nextfile()
+  local last_track = #playlist
+  if last_track == 0 then
+    return
+  end
+  local filename = playlist[pl_index]
+  pl_index = pl_index + 1
+  return filename
+end
+
+local function nexttrack()
+  local filename = nextfile()
+  while filename do
+    local id, err = bass.loadStream(filename)
+    if not id then
+      log(err)
+    end
+    local res,err = bass.play(id, v, nextfile)
+    if not res then
+      log(err)
+    else
+      sp.music = id
+      return
+    end
+  end
+  stopplaylist()
+end
+
+function soundplayer.playlist(t, volume)
   local v = volume and volume or 100
   if v < 0 or v > 100 then
-    log("Ошибка: Допустимый диапозон громкости 0-100")
-	return false
+    log("Ошибка: Допустимый диапазон громкости 0-100")
+    return false
   end
-  if sp.music then
-    bass.stop(sp.music)
-    bass.unload(sp.music)
-	sp.music = nil
+  soundplayer.stop(-1)
+  playlist = t
+  pl_volume = volume
+  pl_index = 1
+  nexttrack()
+  return -1
+end
+
+function soundplayer.play(filename, volume)
+  local v = volume and volume or 100
+  if v < 0 or v > 100 then
+    log("Ошибка: Допустимый диапазон громкости 0-100")
+    return false
   end
+
+  soundplayer.stop(-1)
   local id, err = bass.loadStream(filename)
   if not id then
     log(err)
-	return false
+    return false
   end
   sp.music = id
-  local res,err = bass.play(id, v, endplaying)
+  local res,err = bass.play(id, v)
   if not res then
-	 log(err)
-	 return false
+    log(err)
+    return false
   end
   return id
 end
 
 function soundplayer.stop(id)
   if not id then return end
-  if sp.music == id then 
+  if id == -1 then
+    stopplaylist()
+    id = sp.music
+  end
+  if id == sp.music then
     bass.stop(id)
     bass.unload(id)
-	sp.music = nil
-	return
+    sp.music = nil
+    return
   end
   bass.stop(id)
 end
@@ -97,5 +144,5 @@ local function unload()
   end
   sp.samples = {}
 end
-regUnloadFunction(unload)
 
+regUnloadFunction(unload)
