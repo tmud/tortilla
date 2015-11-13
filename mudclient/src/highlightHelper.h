@@ -10,7 +10,7 @@ class HighlightHelper
 public:
     HighlightHelper()
     {
-        colors.assign(L"(\\bblack\\b|\\bred\\b|\\bgreen\\b|\\bbrown\\b|\\bblue\\b|\\bmagenta\\b|\\bcyan\\b|\\bgray\\b|\\bcoal\\b|\\blight red\\b|\\blight green\\b|\\byellow\\b|\\blight blue\\b|\\bpurple\\b|\\blight cyan\\b|\\bwhite\\b|\\blight magenta\\b|\\blight brown\\b|\\bgrey\\b|\\bcharcoal\\b)");
+        colors.assign(L"(\\bblack\\b|\\bred\\b|\\bgreen\\b|\\bbrown\\b|\\bblue\\b|\\bmagenta\\b|\\bcyan\\b|\\bgray\\b|\\bcoal\\b|\\blight red\\b|\\blight green\\b|\\byellow\\b|\\blight blue\\b|\\bpurple\\b|\\blight cyan\\b|\\bwhite\\b|\\blight magenta\\b|\\blight brown\\b|\\bgrey\\b|\\bcharcoal\\b|\\blight yellow\\b)");
         pcre_colors.setRegExp(colors, true);
         pcre_rgb.setRegExp(L"rgb([0-9]+,[0-9]+,[0-9]+)");
         pcre_prefix.setRegExp(L"border|line|italic|b");
@@ -111,6 +111,7 @@ private:
             if (colorid == 17) colorid = 11; // light brown -> yellow
             if (colorid == 18) colorid = 7;  // grey -> gray
             if (colorid == 19) colorid = 8;  // charcoal -> coal
+            if (colorid == 20) colorid = 11; // light yellow -> yellow
 
             tstring tmp(str.substr(0,p.getFirst(i)));
             tmp.append(L"rgb");

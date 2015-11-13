@@ -19,6 +19,17 @@ ParamsHelper::ParamsHelper(const tstring& param, bool include_anyid) : m_maxid(-
                 m_maxid = id;
         }
     }
+    if (m_maxid == -1)
+        return;
+    std::vector<int> indexes(m_maxid+1, 0);
+    for (int i=m_ids.size()-1; i >= 0; --i)
+    {
+        int index = m_ids[i];
+        if (index == -1) continue;
+        if (indexes[index] != 0)
+            m_ids[i] = -1;
+        indexes[index]++;
+    }
 }
 
 int ParamsHelper::getSize() const 
@@ -45,22 +56,4 @@ int ParamsHelper::getId(int index) const              // return index of paramet
 int ParamsHelper::getMaxId() const
 {
     return m_maxid;
-}
-
-bool ParamsHelper::checkDoubles() const
-{
-    if (m_maxid == -1)
-        return false;
-
-    std::vector<int> indexes;
-    indexes.resize(m_maxid+1, 0);
-    for (int i=0,e=m_ids.size(); i<e; ++i)
-    {
-        int index = m_ids[i];
-        if (index == -1) continue;
-        if (indexes[index] != 0)
-            return true;        
-        indexes[index]++;
-    }
-    return false;
 }

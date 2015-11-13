@@ -778,7 +778,7 @@ int vd_getBlockPos(lua_State *L)
             abspos-=1;
             for (int i=0,e=str->blocks.size();i<e;++i)
             {
-                int size = str->blocks[i].length();
+                int size = u8string_len(str->blocks[i]);
                 if (size > abspos)
                 {
                     block = i+1;
@@ -794,10 +794,10 @@ int vd_getBlockPos(lua_State *L)
             lua_pushinteger(L, pos);
         }
         else
-        {         
+        {
             lua_pushnil(L);
             lua_pushnil(L);
-        }                
+        }
         return 2;
     }
     return pluginInvArgs(L, L"viewdata:getBlockPos");

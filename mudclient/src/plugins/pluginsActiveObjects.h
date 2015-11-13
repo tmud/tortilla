@@ -136,7 +136,7 @@ public:
 protected:
     bool checkDoubles(const tchar* key)
     {
-        int max_index = -1;
+        /*int max_index = -1;
         std::vector<int> indexes;
         check_doubles.findAllMatches(key);
         for (int i=1, e=check_doubles.getSize(); i<e; ++i)
@@ -157,7 +157,7 @@ protected:
             if (doubles[index] != 0)
                 return true;
             doubles[index]++;
-        }
+        }*/
         return false;
     }
 

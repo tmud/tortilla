@@ -10,9 +10,6 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     if (key.empty())
         return false;
 
-    ParamsHelper ph(key);
-    if (ph.checkDoubles())
-        return false;
     m_key = key;
 
     tstring regexp;
