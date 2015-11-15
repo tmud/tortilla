@@ -134,33 +134,6 @@ public:
     }
 
 protected:
-    bool checkDoubles(const tchar* key)
-    {
-        /*int max_index = -1;
-        std::vector<int> indexes;
-        check_doubles.findAllMatches(key);
-        for (int i=1, e=check_doubles.getSize(); i<e; ++i)
-        {
-            int pos = check_doubles.getFirst(i) + 1;
-            tchar symbol = key[pos];
-            int id = symbol - L'0';
-            indexes.push_back(id);
-            if (id > max_index)
-                max_index = id;
-        }
-        if (indexes.empty())
-            return false;
-        std::vector<int> doubles(max_index + 1, 0);
-        for (int i = 0, e = indexes.size(); i<e; ++i)
-        {
-            int index = indexes[i];
-            if (doubles[index] != 0)
-                return true;
-            doubles[index]++;
-        }*/
-        return false;
-    }
-
     int find(const tchar* key)
     {
         for (int i = 0, e = actobj->size(); i < e; ++i)
@@ -196,8 +169,6 @@ public:
     }
     bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         if (find(key) != -1)
             return false;
         add3(-1, key, value, group);
@@ -205,8 +176,6 @@ public:
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         int index = find(key);
         add3(index, key, value, group);
         return true;
@@ -221,8 +190,6 @@ public:
     }
     bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         if (find(key) != -1)
             return false;
         add3(-1, key, value, group);
@@ -230,8 +197,6 @@ public:
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         int index = find(key);
         add3(index, key, value, group);
         return true;
@@ -246,8 +211,6 @@ public:
     }
     bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         if (find(key) != -1)
             return false;
         add3(-1, key, L"", group);
@@ -255,8 +218,6 @@ public:
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         int index = find(key);
         add3(index, key, L"", group);
         return true;
@@ -271,8 +232,6 @@ public:
     }
     bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         if (find(key) != -1)
             return false;
         add3(-1, key, value, group);
@@ -280,8 +239,6 @@ public:
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         int index = find(key);
         add3(index, key, value, group);
         return true;
@@ -317,8 +274,6 @@ public:
 private:
     bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
-        if (checkDoubles(key))
-            return false;
         int index = find(key);
         if (index != -1 && !replace_mode)
             return false;
@@ -382,8 +337,6 @@ public:
     }
     bool add(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         if (find(key) != -1)
             return false;
         add3(-1, key, L"", group);
@@ -391,8 +344,6 @@ public:
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
-        if (checkDoubles(key))
-            return false;
         int index = find(key);
         add3(index, key, L"", group);
         return true;

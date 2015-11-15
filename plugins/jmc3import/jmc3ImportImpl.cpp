@@ -131,6 +131,7 @@ bool Jmc3Import::processAction()
     if (!parseParams(4, 4, &p))
         return false;
     convert(&p[1]);
+    replaceDoubles(&p[0]);
     return (rewrite_mode) ? m_actions.replace(p[0].c_str(), p[1].c_str(), p[3].c_str()) :
         m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
 }
@@ -140,6 +141,7 @@ bool Jmc3Import::processSubs()
     std::vector<std::wstring> p;
     if (!parseParams(2, 2, &p))
         return false;
+    replaceDoubles(&p[0]);
     return (rewrite_mode) ? m_subs.replace(p[0].c_str(), p[1].c_str(), L"default") :
         m_subs.add(p[0].c_str(), p[1].c_str(), L"default");
 }
@@ -149,6 +151,7 @@ bool Jmc3Import::processAntisub()
     std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
+    replaceParams(&p[0]);
     return (rewrite_mode) ? m_antisubs.replace(p[0].c_str(), NULL, L"default") :
         m_antisubs.add(p[0].c_str(), NULL, L"default");
 }
@@ -172,6 +175,7 @@ bool Jmc3Import::processGags()
     std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
+    replaceParams(&p[0]);
     return (rewrite_mode) ? m_gags.replace(p[0].c_str(), NULL, L"default") :
         m_gags.add(p[0].c_str(), NULL, L"default");
 }
@@ -181,6 +185,7 @@ bool Jmc3Import::processHighlight()
     std::vector<std::wstring> p;
     if (!parseParams(3, 3, &p))
         return false;
+    replaceParams(&p[1]);
     return (rewrite_mode) ? m_highlights.replace(p[1].c_str(), p[0].c_str(), p[2].c_str()) :
         m_highlights.add(p[1].c_str(), p[0].c_str(), p[2].c_str());
 }
@@ -308,6 +313,71 @@ bool Jmc3Import::convert(std::wstring *str)
     return true;
 }
 
+void Jmc3Import::replaceDoubles(std::wstring* str)
+{
+    params.findall(str->c_str());
+    if (params.size() == 0)
+        return;
+    std::vector<int> ids;
+    int maxid = -1;
+    for (int i = 1, e = params.size(); i<e; ++i)
+    {
+        int pos = params.first(i) + 1;
+        wchar_t symbol = str->at(pos);
+        int id = symbol - L'0';
+        ids.push_back(id);
+        if (id > maxid)
+            maxid = id;
+    }
+    if (maxid == -1) return;
+
+    std::vector<int> indexes(maxid + 1, 0);
+    for (int i = ids.size() - 1; i >= 0; --i)
+    {
+        int index = ids[i];
+        if (index == -1) continue;
+        if (indexes[index] != 0)
+            ids[i] = -1;
+        indexes[index]++;
+    }
+
+    std::wstring result;
+    int pos = 0;
+    for (int i = 1, e = params.size(); i < e; ++i)
+    {
+        int id = ids[i-1];
+        result.append(str->substr(pos, params.first(i) - pos));
+        if (id == -1)
+            result.append(L"%%");
+        else
+        {
+            std::wstring tmp;
+            params.get(i, &tmp);
+            result.append(tmp);
+        }
+        pos = params.last(i);
+    }
+    result.append(str->substr(pos));
+    str->swap(result);
+}
+
+void Jmc3Import::replaceParams(std::wstring* str)
+{
+    params.findall(str->c_str());
+    if (params.size() == 0)
+        return;
+    std::wstring result;
+    int pos = 0;
+    for (int i=1, e=params.size(); i<e; ++i)
+    {
+        result.append(str->substr(pos, params.first(i) - pos));
+        result.append(L"%%");
+        pos = params.last(i);
+    }
+    result.append(str->substr(pos));
+    str->swap(result);
+}
+
 void Jmc3Import::replaceLegacy(std::wstring *legacy)
 {
     iterator it = m_legacy.begin(), it_end = m_legacy.end();
@@ -365,6 +435,7 @@ void Jmc3Import::initPcre()
     param.init(L"\\{((?:(?>[^{}]+)|(?R))*)\\}");
     ifcmd.init(L"^.if .*");
     disable_group.init(L"disable (.*)");
+    params.init(L"(%[0-9]){1}");
 }
 
 void Jmc3Import::initCmdSymbols()

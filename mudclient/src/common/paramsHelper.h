@@ -3,7 +3,8 @@
 class ParamsHelper
 {
 public:
-    ParamsHelper(const tstring& param, bool include_anyid = false);
+    enum { DEFAULT = 0, DETECT_ANYID = 1, BLOCK_DOUBLEID = 2 };
+    ParamsHelper(const tstring& param, unsigned int mode );
     int getSize() const;
     int getFirst(int index) const;
     int getLast(int index) const;

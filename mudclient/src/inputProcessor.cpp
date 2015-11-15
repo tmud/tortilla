@@ -22,7 +22,7 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
 
     tstring result;
     int pos = 0;
-    ParamsHelper values(*cmd);
+    ParamsHelper values(*cmd, ParamsHelper::DEFAULT);
     for (int i = 0, e = values.getSize(); i < e; ++i)
     {
         result.append(cmd->substr(pos, values.getFirst(i) - pos));

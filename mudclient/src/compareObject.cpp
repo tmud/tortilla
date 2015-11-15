@@ -57,10 +57,9 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
 {
     assert(params);
     std::vector<tstring> &p = *params;
-    int size = m_pcre.getSize();
-    if (size == 0)  { p.clear(); return; }
+    if (m_pcre.getSize() == 0)  { p.clear(); return; }
 
-    ParamsHelper keys(m_key);
+    ParamsHelper keys(m_key, ParamsHelper::BLOCK_DOUBLEID);
     int maxid = keys.getMaxId()+1;
     if (maxid <= 0)
         maxid = 1;
@@ -71,11 +70,12 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     p[0] = m_str.substr(begin, end-begin);  //default value of %0 parameter
 
     // pcre find values of %1
-    for (int i=0,e=size-1; i<e; ++i)
+    for (int i=0,e=keys.getSize(); i<e; ++i)
     {
         int id = keys.getId(i);
-        int begin = m_pcre.getFirst(i+1);
-        int end = m_pcre.getLast(i+1);
+        if (id == -1) continue;
+        int begin = m_pcre.getFirst(id);
+        int end = m_pcre.getLast(id);
         p[id] = m_str.substr(begin, end-begin);
     }
 }
@@ -128,7 +128,7 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
 
     // replace parameters, like %0 etc. to regexp
     int pos = 0; int len = tmp.length();
-    ParamsHelper ph(tmp, true);
+    ParamsHelper ph(tmp, ParamsHelper::DETECT_ANYID|ParamsHelper::BLOCK_DOUBLEID);
     for (int i=0,e=ph.getSize(); i<e; ++i)
     {
         prce_template->append(tmp.substr(pos, ph.getFirst(i) - pos));
