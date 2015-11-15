@@ -129,6 +129,7 @@ void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
 const char* luaT_typename(lua_State* L, int index);
+bool  luaT_dostring(lua_State *L, const wchar_t* script_text);
 void  luaT_showLuaStack(lua_State* L, const wchar_t* label);
 void  luaT_showTableOnTop(lua_State* L, const wchar_t* label);
 #define SS(L,n) luaT_showLuaStack(L,n)

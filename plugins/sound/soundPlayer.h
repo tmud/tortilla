@@ -1,5 +1,6 @@
 #pragma once
 #include <map>
+#include "api/base.h"
 
 class SoundPlayer
 {
@@ -140,13 +141,64 @@ private:
         if (count == 0)
         {
             scanFiles();
-            return true;        
+            return true;
         }
         return incorrectParameters(L"update");
     }
 
+    void replace(std::wstring *str)
+    {
+        size_t pos = 0;
+        while ((pos = str->find(L"\\", pos)) != std::string::npos)
+        {
+            str->replace(pos, 1, L"\\\\");
+            pos += 2;
+        }
+    }
+
     bool playlist(const std::wstring& playlist, int volume)
     {
+        std::wstring list(playlist);
+        replace(&list);
+        lua_getglobal(L, "system");
+        if (!luaT_run(L, "loadTextFile", "ts", list.c_str()))
+            return false;
+        if (!lua_istable(L, -1))
+            return incorrectPlaylist(playlist.c_str());;
+
+        lua_len(L, -1);
+        int len = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        if (len == 0)
+        {
+            base::log(L, L"[sound] Список пуст");
+            return false;
+        }
+        for (int i=1;i<=len;++i)
+        {
+            lua_pushinteger(L, i);
+            lua_gettable(L, -2);
+            if (!lua_isstring(L, -1))
+            {
+                lua_settop(L, 0);
+                return incorrectPlaylist(playlist.c_str());
+            }
+            std::wstring name(luaT_towstring(L, -1));
+            lua_pop(L, 1);
+            iterator it = m_files_list.find(name);
+            if (it != m_files_list.end())
+            {
+                name = it->second;
+                lua_pushinteger(L, i);
+                luaT_pushwstring(L, name.c_str());
+                lua_settable(L, -3);
+            }
+        }
+
+        pushPlayer();
+        lua_insert(L, -2);
+        if (!luaT_run(L, "playlist", "ttd", volume))
+            return incorrectMethod(L"play");
         return true;
     }
 
@@ -231,6 +283,14 @@ private:
     {
         perror->assign(L"Некорректные параметры для команды '");
         perror->append(cmd);
+        perror->append(L"'");
+        return false;
+    }
+
+    bool incorrectPlaylist(const wchar_t* file)
+    {
+        perror->assign(L"Некорректный файл плейлиста '");
+        perror->append(file);
         perror->append(L"'");
         return false;
     }

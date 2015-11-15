@@ -83,6 +83,10 @@ local function nexttrack()
 end
 
 function soundplayer.playlist(t, volume)
+  for _,f in ipairs(t) do
+    log(f)
+  end
+
   local v = volume and volume or 100
   if v < 0 or v > 100 then
     log("Ошибка: Допустимый диапазон громкости 0-100")
@@ -92,7 +96,7 @@ function soundplayer.playlist(t, volume)
   playlist = t
   pl_volume = volume
   pl_index = 1
-  nexttrack()
+  --nexttrack()
   return -1
 end
 

@@ -32,6 +32,7 @@ EXPORTS
 	luaT_pushobject
 	luaT_isobject
 	luaT_typename
+	luaT_dostring
 	luaT_showLuaStack
 	luaT_showTableOnTop
 	pcre_create

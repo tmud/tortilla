@@ -96,11 +96,17 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     }
     va_end(args);
 
+    std::wstring error_msg;
     int required_func_pos = n - on_stack + 1;
     if (success && object_method)
     {
         if (!lua_isuserdata(L, required_func_pos) && !lua_istable(L, required_func_pos))
+        {
+            error_msg.append(L"Попытка вызвать функцию у объекта: ");
+            TA2W type(luaT_typename(L, required_func_pos));
+            error_msg.append(type);
             success = false;
+        }
     }
     if (success)
     {
@@ -129,7 +135,10 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
             {
                 lua_getmetatable(L, required_func_pos);
                 if (!lua_istable(L, -1))
+                {
+                    error_msg.append(L"Функция у объекта не существует");
                     success = false;
+                }
                 else
                 {
                     lua_pushstring(L, func);
@@ -142,14 +151,19 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     }
 
     if (success && !lua_isfunction(L, required_func_pos))
+    {
+        error_msg.append(L"Функция у объекта не существует");
         success = false;
+    }
 
     if (!success)
     {
         lua_settop(L, n); // restore stack
-        std::wstring error(L"luaT_run:");
+        std::wstring error(L"Ошибка luaT_run '");
         error.append(TU2W(func));
-        luaT_run(L, "log", "s", error.c_str());
+        error.append(L"': ");
+        error.append(error_msg);
+        base::log(L, error.c_str());
         return false;
     }
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))
@@ -239,6 +253,13 @@ const char* luaT_typename(lua_State* L, int index)
         return metatables[ti];
     }
     return "unknown_ud";
+}
+
+bool luaT_dostring(lua_State *L, const wchar_t* script_text)
+{
+    if (!luaL_dostring(L, TW2U(script_text)))
+        return true;
+    return false;
 }
 
 void formatByType(lua_State* L, int index, std::wstring *buf)
