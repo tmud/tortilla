@@ -12,7 +12,9 @@ class BassCaller : public BassObjectEvents
     int m_id;
 public:
     BassCaller(lua_State *l, int id) : L(l), m_id(id) {  m_function_ref.createRef(L); }
-    ~BassCaller() {  m_function_ref.unref(L); }
+    ~BassCaller() {
+        m_function_ref.unref(L);
+    }
     void playingEnd()
     {
         m_function_ref.pushValue(L);

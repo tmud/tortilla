@@ -46,47 +46,63 @@ function soundplayer.playfx(filename, volume)
   return id
 end
 
-local playlist, pl_index, pl_volume
+local playlist, pl_index, pl_volume, pl_last
 
-local function stopplaylist()
+local function clearplaylist()
+  playlist = nil
   pl_volume = nil
   pl_index = nil
-  pl_volume = nil
+  pl_last = nil
+end
+
+local nexttrack
+local function playfile(filename)
+  local id, err = bass.loadStream(filename)
+  if not id then
+    log(err)
+    return false
+  end
+  local res,err = bass.play(id, pl_volume, nexttrack)
+  if not res then
+    log(err)
+    return false
+  end
+  sp.music = id
+  return true
 end
 
 local function nextfile()
-  local last_track = #playlist
-  if last_track == 0 then
-    return
-  end
+  if not playlist then return end
   local filename = playlist[pl_index]
   pl_index = pl_index + 1
   return filename
 end
 
-local function nexttrack()
-  local filename = nextfile()
-  while filename do
-    local id, err = bass.loadStream(filename)
-    if not id then
-      log(err)
+function nexttrack()
+  while true do
+    soundplayer.stop(sp.music)
+    local filename = nextfile()
+    if not filename and not pl_last then
+      log('Ошибка: В плейлисте нет ни одной мелодии')
+      return
     end
-    local res,err = bass.play(id, v, nextfile)
-    if not res then
-      log(err)
-    else
-      sp.music = id
+    if not filename then
+      pl_index = 1
+      pl_last = nil
+      filename = nextfile()
+      if not filename then
+        log('Ошибка: В плейлисте нет ни одной мелодии')
+        return
+      end
+    end
+    if playfile(filename) then 
+      pl_last = true
       return
     end
   end
-  stopplaylist()
 end
 
-function soundplayer.playlist(t, volume)
-  for _,f in ipairs(t) do
-    log(f)
-  end
-
+function soundplayer.playlist(t, volume)  
   local v = volume and volume or 100
   if v < 0 or v > 100 then
     log("Ошибка: Допустимый диапазон громкости 0-100")
@@ -96,7 +112,8 @@ function soundplayer.playlist(t, volume)
   playlist = t
   pl_volume = volume
   pl_index = 1
-  --nexttrack()
+  pl_last = nil
+  nexttrack()
   return -1
 end
 
@@ -125,7 +142,7 @@ end
 function soundplayer.stop(id)
   if not id then return end
   if id == -1 then
-    stopplaylist()
+    clearplaylist()
     id = sp.music
   end
   if id == sp.music then
