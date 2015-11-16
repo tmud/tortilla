@@ -143,8 +143,8 @@ void ClickpadMainWnd::setButtonSize(int size)
     for (int y=0; y<MAX_ROWS; ++y) {
     for (int x=0; x<MAX_COLUMNS; ++x) {
        PadButton *b = getButton(x, y);
-       int px = x * m_button_size + 2;
-       int py = y * m_button_size + 2;
+       int px = x * (m_button_size+2) + 2;
+       int py = y * (m_button_size+2) + 2;
        RECT pos = { px, py, px+m_button_size, py+m_button_size };
        b->MoveWindow(&pos);
     }}
@@ -265,8 +265,8 @@ void ClickpadMainWnd::load(xml::node& node)
     for (int x = 0; x < MAX_COLUMNS; x++) {
         for (int y = 0; y < MAX_ROWS; y++) {
             PadButton *b = new PadButton(WM_USER, MAKELONG(x, y));
-            int px = x * m_button_size + 2;
-            int py = y * m_button_size + 2;
+            int px = x * (m_button_size+2) + 2;
+            int py = y * (m_button_size+2) + 2;
             RECT pos = { px, py, px + m_button_size, py + m_button_size };
             b->Create(m_hWnd, pos, L"", WS_CHILD);
             int index = y*MAX_COLUMNS + x;
@@ -314,10 +314,10 @@ void ClickpadMainWnd::setWorkWindowSize()
 {
     CWindow wnd(getFloatWnd());
     RECT rc; wnd.GetWindowRect(&rc);
-    int width = getColumns() * m_button_size + (GetSystemMetrics(SM_CXFRAME) /*+ GetSystemMetrics(SM_CXBORDER)*/) * 2;
-    int height = getRows() * m_button_size + (GetSystemMetrics(SM_CYFRAME) /*+ GetSystemMetrics(SM_CYBORDER)*/) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
-    rc.right = rc.left + width + 4;
-    rc.bottom = rc.top + height + 4;
+    int width = getColumns() * (m_button_size+2) + (GetSystemMetrics(SM_CXFRAME)) * 2 + 2;
+    int height = getRows() * (m_button_size+2) + (GetSystemMetrics(SM_CYFRAME)) * 2 + GetSystemMetrics(SM_CYSMCAPTION) + 2;
+    rc.right = rc.left + width;
+    rc.bottom = rc.top + height;
     wnd.MoveWindow(&rc);
 }
 

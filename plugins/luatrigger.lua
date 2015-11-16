@@ -16,6 +16,7 @@ end
 
 local function event(v)
   log("Сработал lua-триггер: "..v:getText())
+  --print("Сработал lua-триггер: ")
 end
 
 function luatrigger.init()

@@ -116,8 +116,8 @@ void ImageCollection::scanImages()
             } while (::FindNextFile(file, &fd));
             ::FindClose(file);
         }
+        SetCurrentDirectory(current_path);
     }
-    SetCurrentDirectory(current_path);
 
     // check diffs
     std::vector<BigImageData> new_files;

@@ -12,21 +12,21 @@ void PadButton::onPaint()
     CMemoryDC dc(pdc, rc);
 
     dc.FillSolidRect(&rc, m_background_color);
-    rc.DeflateRect(1, 1);
+    //rc.DeflateRect(1, 1);
  
     if (m_image && !m_image->empty())
     {
        if (m_pushed || m_selected)
-           m_image->renderpushed(dc, 0, 0, rc.right+1, rc.bottom+1 );
+           m_image->renderpushed(dc, 0, 0, rc.right, rc.bottom );
        else
-           m_image->render(dc, 0, 0, rc.right+1, rc.bottom+1);
+           m_image->render(dc, 0, 0, rc.right, rc.bottom);
     } else
     {
-        POINT pt = {2,2};
+        POINT pt = {1,1};
         if (m_pushed || m_selected) { 
           rc.left += 1; rc.top += 1;
-        }
-        dc.RoundRect(&rc, pt);
+        }        
+        dc.FillSolidRect(&rc, GetSysColor(COLOR_BTNFACE));
         if (!m_text.empty())
         {
             HFONT old_font = NULL;
