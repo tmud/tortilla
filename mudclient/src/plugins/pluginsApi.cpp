@@ -1295,6 +1295,22 @@ int props_isPropertiesOpen(lua_State *L)
     return pluginInvArgs(L, L"props.isPropertiesOpen");
 }
 
+int props_pluginsLogWindow(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        if (tortilla::getProperties()->plugins_logs)
+        {
+            int window = tortilla::getProperties()->plugins_logs_window;
+            lua_pushinteger(L, window);
+            return 1;
+        }
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.pluginsLogWindow");
+}
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
@@ -1309,5 +1325,6 @@ void reg_props(lua_State *L)
     regFunction(L, "connected", props_connected);
     regFunction(L, "activated", props_activated);
     regFunction(L, "isPropertiesOpen", props_isPropertiesOpen);
+    regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);    
     lua_setglobal(L, "props");
 }

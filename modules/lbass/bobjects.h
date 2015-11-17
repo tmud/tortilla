@@ -49,7 +49,7 @@ public:
     BassStream() : BassObject(false), m_stream(NULL) {}
     ~BassStream() {
         if (m_stream)
-            BASS_StreamFree(m_stream);
+           BASS_StreamFree(m_stream);
     }
     bool load(const wchar_t* file)
     {
@@ -79,7 +79,6 @@ public:
     {
         if (m_stream)
             BASS_ChannelStop(m_stream);
-        m_stream = NULL;
     }
 };
 
@@ -105,7 +104,7 @@ public:
     bool play(float volume)
     {
         if (!m_sample)
-            return false;        
+            return false;
         HCHANNEL ch = BASS_SampleGetChannel(m_sample, FALSE);
         BASS_ChannelSetAttribute(ch, BASS_ATTRIB_VOL, volume);     
         return (BASS_ChannelPlay(ch, FALSE)) ? true : false;
@@ -120,7 +119,6 @@ public:
     {
         if (m_sample)
             BASS_ChannelStop(m_sample);
-        m_sample = NULL;    
     }
 };
 
@@ -146,7 +144,7 @@ public:
     bool play(float volume)
     {
         if (!m_music)
-            return false;         
+            return false;
          BASS_ChannelSetAttribute(m_music, BASS_ATTRIB_VOL, volume);
          BASS_ChannelSetSync(m_music,BASS_SYNC_ONETIME|BASS_SYNC_END, 0, SyncProc, (BassObjectEvents*)this);
          return (BASS_ChannelPlay(m_music, TRUE)) ? true : false;
@@ -161,6 +159,35 @@ public:
     {
         if (m_music)
             BASS_ChannelStop(m_music);
-        m_music = NULL;    
+    }
+};
+
+
+class BassRecord
+{
+    HRECORD m_record;
+public:
+    BassRecord() : m_record(NULL) {}
+    ~BassRecord() {
+        if (m_record)
+            BASS_StreamFree(m_record);
+    }   
+    bool record(float volume)
+    {
+        if (!m_record)
+            return false;
+        //BASS_ChannelSetAttribute(m_stream, BASS_ATTRIB_VOL, volume);
+        //BASS_ChannelSetSync(m_stream, BASS_SYNC_ONETIME | BASS_SYNC_END, 0, SyncProc, (BassObjectEvents*)this);
+        //return (BASS_ChannelPlay(m_stream, TRUE)) ? true : false;
+    }
+    bool save(const wchar_t* file)
+    {
+        if (!m_record) return false;
+        return false;
+    }
+    void stop()
+    {
+        if (m_record)
+            BASS_ChannelStop(m_record);
     }
 };

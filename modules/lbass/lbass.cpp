@@ -18,9 +18,9 @@ public:
     void playingEnd()
     {
         m_function_ref.pushValue(L);
+        m_function_ref.unref(L);
         lua_pushinteger(L, m_id);
         lua_pcall(L, 1, 0, 0);
-        m_function_ref.unref(L);
     }
 };
 
@@ -186,6 +186,11 @@ public:
     const wchar_t* getLastError() const
     {
         return m_error_msg.c_str();
+    }
+
+    bool startRecord(int volume)
+    {
+    
     }
 
 private:
@@ -456,12 +461,30 @@ int lbass_setVolume(lua_State *L)
     return error_invargs(L, L"setVolume");
 }
 
+int lbass_startRecord(lua_State *L)
+{
+    int n = lua_gettop(L);
+    if (n == 0 || (n == 1 && lua_isnumber(L, -1)))
+    {
+        int volume = 100;
+        if (n == 1)
+        { 
+          volume = lua_tointeger(L, -1);
+          if (volume < 0) volume = 0;
+          if (volume > 100) volume = 10;
+        }
+
+    }
+    return error_invargs(L, L"startRecord");
+}
+
 static const luaL_Reg lbass_methods[] =
 {
     { "init", lbass_init },
     { "free", lbass_free },
     { "loadSample", lbass_loadSample },
     { "loadStream", lbass_loadStream },
+    { "startRecord", lbass_startRecord },
     { "unload", lbass_unload },
     { "isHandle", lbass_isHandle},
     { "isSample", lbass_isSample},

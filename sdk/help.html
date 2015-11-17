@@ -630,6 +630,7 @@ local t = {...} -- правильное написание
 <div class="cmd">HFONT currentFont()</div> - хэндл текущего шрифта клиента.
 <div class="cmd">bool activated()</div> - признак, что окно клиента активно и игрок работает с ним.
 <div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
+<div class="cmd">int pluginsLogWindow()</div> - номер окна, куда выводятся логи плагинов. Если вывод логов отключен возвращается -1.
 </pre>
 <hr>
 <a name="cppmsdp"></a>
@@ -1118,6 +1119,7 @@ render:rect(r2)
 <div class="cmd">bool connected()</div> - возвращает признак наличия подключения.
 <div class="cmd">bool activated()</div> -  признак, что окно клиента активно и игрок работает с ним.
 <div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
+<div class="cmd">false|int pluginsLogWindow()</div> - возращает номер окна, куда выводится лог плагинов. Если вывод логов отключен, то возвращается false.
 </pre>
 <hr>
 <a name="luaactobj"></a>

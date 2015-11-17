@@ -771,6 +771,16 @@ public:
         luaT_run(L, "isPropertiesOpen", "t");
         return boolresult();
     }
+    int pluginsLogWindow()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "pluginLogWindow", "t");
+        if (lua_isboolean(L, -1)) 
+            { lua_pop(L, 1); return -1; }
+        if (lua_isnumber(L, -1))
+            { int w = lua_tointeger(L, -1); lua_pop(L, 1); return w; }
+        return -1;
+    }
 private:
     bool boolresult()
     {
