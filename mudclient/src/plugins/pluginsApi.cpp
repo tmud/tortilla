@@ -71,14 +71,14 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    swprintf(plugin_buffer(), L"'%s'.%s: Ошибка загрузки файла: %s", plugin_name(), fname, file);
+    swprintf(plugin_buffer(), L"'%s' %s: Ошибка загрузки файла: %s", plugin_name(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"'%s'.%s: %s", plugin_name(), fname, error);
+    swprintf(plugin_buffer(), L"'%s' %s: %s", plugin_name(), fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }

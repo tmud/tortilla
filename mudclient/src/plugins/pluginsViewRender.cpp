@@ -433,7 +433,7 @@ int render_createImage(lua_State *L)
         if (!img->load(path.c_str(), param))
         {
             delete img;
-            pluginLoadFail(L, L"render::createImage", luaT_towstring(L, 2));
+            pluginLoadFail(L, L"render:createImage", luaT_towstring(L, 2));
             lua_pushnil(L);
             return 1;
         }
@@ -442,7 +442,7 @@ int render_createImage(lua_State *L)
         luaT_pushobject(L, img, LUAT_IMAGE);
         return 1;
     }
-    return pluginInvArgs(L, L"render::createImage");
+    return pluginInvArgs(L, L"render:createImage");
 }
 
 int render_drawImage(lua_State *L)

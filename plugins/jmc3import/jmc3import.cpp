@@ -9,7 +9,7 @@ int get_name(lua_State *L)
 
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Позволяет импортировать триггеры, макросы и другие игровые настройки\r\nиз игровых сетов мад-клиента Jaba Mud Client 3.x");
+    luaT_pushwstring(L, L"Позволяет импортировать триггеры, макросы и другие игровые элементы\r\nиз игровых сетов мад-клиента Jaba Mud Client 3.x");
     return 1;
 }
 

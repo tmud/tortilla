@@ -24,7 +24,7 @@ end]]
 local r, img
 function inveq.render()
   r:print(4, 4, 'Экипировка:')
-  r:drawImage(img, 20, 20)
+  --r:drawImage(img, 20, 20)
 end
 
 function inveq.init()

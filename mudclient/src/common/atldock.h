@@ -1267,7 +1267,7 @@ public:
            ATLASSERT(IsDocked(iSide));
            TSimpleWindowParams p;
            p.wnd = new TSimplePanelWindow();
-           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, 0))
+           if (!p.wnd->Create(m_dock, rcDefault, NULL, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN|WS_CLIPSIBLINGS, WS_EX_STATICEDGE))
               { delete p.wnd; return FALSE; }
            p.wnd->m_hWndClient = hWnd;
            ::SetParent(hWnd, *p.wnd);
@@ -1371,15 +1371,15 @@ public:
 
    void SetStatusBar(HWND hWnd)
    {
-	   ATLASSERT(::IsWindow(hWnd));
-	   ATLASSERT(::GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD);
-	   m_hwndBar = hWnd;
-	   m_barHeight = 0;
+       ATLASSERT(::IsWindow(hWnd));
+       ATLASSERT(::GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD);
+       m_hwndBar = hWnd;
+       m_barHeight = 0;
    }
 
    void SetStatusBarHeight(int height)
    {
-	   m_barHeight = height;
+       m_barHeight = height;
        T* pT = static_cast<T*>(this);
        pT->UpdateLayout();
    }
@@ -1400,7 +1400,7 @@ public:
    BOOL IsDockPane(HWND hWnd) const
    {
       ATLASSERT(::IsWindow(hWnd));
-      for( int i = 0; i < m_map.GetSize(); i++ ) if( m_map[i]->hwndChild == hWnd ) return TRUE;      
+      for( int i = 0; i < m_map.GetSize(); i++ ) if( m_map[i]->hwndChild == hWnd ) return TRUE;
       return FALSE;
    }
 
@@ -1550,7 +1550,7 @@ public:
        if (IsFloating(side))
            return pCtx->sizeFloat;
        result.cx = pCtx->rcWindow.right;
-       result.cy = pCtx->rcWindow.bottom;      
+       result.cy = pCtx->rcWindow.bottom;
        return result;
    }
 
@@ -1640,11 +1640,11 @@ public:
          if( ::IsWindow(m_map[i]->hwndFloated) ) ::DestroyWindow(m_map[i]->hwndFloated);
       }
       for( i = 0; i < m_map.GetSize(); i++ ) {
-		 delete m_map[i];
+        delete m_map[i];
       }
       for( i = 0; i < 4; i++ ) {
-		 m_panes[i].m_map.RemoveAll();
-	  }
+        m_panes[i].m_map.RemoveAll();
+      }
       m_map.RemoveAll();
       return 0;
    }
@@ -1787,7 +1787,7 @@ public:
       for( int i = 0; i < 4; i++ ) 
       {
          if( pTI->pCtx->dwFlags & (1<<i) )
-			 continue; // DCK_NOxxx flag?
+            continue; // DCK_NOxxx flag?
 
          RECT dc;             // docking check area for mouse
          if( m_panes[i].m_cy == 0 ) 
@@ -1797,35 +1797,35 @@ public:
             switch( m_panes[i].m_Side )
             {
                 case DOCK_LEFT:
-				case DOCK_RIGHT:
-				{
-					if (isUsedStatusBar())
-						rc.bottom -= m_barHeight;
+                case DOCK_RIGHT:
+                {
+                    if (isUsedStatusBar())
+                        rc.bottom -= m_barHeight;
                     m_panels.recalcIntPos(rc);
 
-					LONG top = rc.top; LONG bottom = rc.bottom;
+                    LONG top = rc.top; LONG bottom = rc.bottom;
                     rc.top = rc.top + m_panes[DOCK_TOP].m_cy;
                     rc.bottom = rc.bottom - m_panes[DOCK_BOTTOM].m_cy;
-					short curSide = pTI->pCtx->Side;
-					if (curSide == DOCK_TOP || curSide == DOCK_BOTTOM)
-					{
-						int count = 0;
-						for (int i = 0; i < m_map.GetSize(); i++)
-						{
-							if (m_map[i]->Side == curSide) count++;
-						}
-						if (count == 1)
-						{
-							if (curSide == DOCK_TOP) rc.top = top;
-							else rc.bottom = bottom;
-						}
-					}
-				}
+                    short curSide = pTI->pCtx->Side;
+                    if (curSide == DOCK_TOP || curSide == DOCK_BOTTOM)
+                    {
+                        int count = 0;
+                        for (int i = 0; i < m_map.GetSize(); i++)
+                        {
+                            if (m_map[i]->Side == curSide) count++;
+                        }
+                        if (count == 1)
+                        {
+                            if (curSide == DOCK_TOP) rc.top = top;
+                            else rc.bottom = bottom;
+                        }
+                    }
+                }
                 break;
-				case DOCK_TOP:
-				case DOCK_BOTTOM:
-					if (isUsedStatusBar())
-						rc.bottom -= m_barHeight;
+                case DOCK_TOP:
+                case DOCK_BOTTOM:
+                    if (isUsedStatusBar())
+                        rc.bottom -= m_barHeight;
                     m_panels.recalcIntPos(rc);
                 break;
             };
@@ -1935,13 +1935,13 @@ public:
       RECT rect;
       GetClientRect(&rect);
 
-	  if (isUsedStatusBar())
-	  {
-		  RECT bar(rect);
-		  bar.top = bar.bottom - m_barHeight;
-		  ::SetWindowPos(m_hwndBar, NULL, bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top, SWP_NOZORDER | SWP_NOACTIVATE);
-		  rect.bottom -= m_barHeight;
-	  }
+      if (isUsedStatusBar())
+      {
+        RECT bar(rect);
+        bar.top = bar.bottom - m_barHeight;
+        ::SetWindowPos(m_hwndBar, NULL, bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        rect.bottom -= m_barHeight;
+      }
 
       m_panels.movePanels(rect);
 
@@ -2171,10 +2171,10 @@ public:
    }
 
 private:
-	bool isUsedStatusBar() const
-	{
-		return (m_barHeight > 0 && ::IsWindow(m_hwndBar) && ::IsWindowVisible(m_hWnd)) ? true : false;
-	}
+    bool isUsedStatusBar() const
+    {
+        return (m_barHeight > 0 && ::IsWindow(m_hwndBar) && ::IsWindowVisible(m_hWnd)) ? true : false;
+    }
 };
 
 class CDockingWindow : public CDockingWindowImpl<CDockingWindow>
