@@ -29,27 +29,37 @@ bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
     return false;
 }
 
-void LogicHelper::processActions(parseData *parse_data, parseData *not_processed, InputCommands* newcmds)
+void LogicHelper::processActions(parseData *parse_data, PluginsTriggersHandler* plugins_triggers, parseData *not_processed, InputCommands* newcmds)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        //if (s->gamecmd || s->system) continue;
         bool incomplstr = (j==je && !parse_data->last_finished);
-        for (int i=0, e=m_actions.size(); i<e; ++i)
+
+        bool processed = plugins_triggers->processTriggers(s, incomplstr);
+        if (!processed)
         {
-            CompareData cd(s);
-            if (m_actions[i]->processing(cd, incomplstr, newcmds))
+            for (int i=0, e=m_actions.size(); i<e; ++i)
             {
-                s->system = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-                not_processed->last_finished = parse_data->last_finished;
-                parse_data->last_finished = true;
-                not_processed->update_prev_string = false;
-                int from = j+1;
-                not_processed->strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
-                parse_data->strings.resize(from);
-                return;
+              CompareData cd(s);
+              if (m_actions[i]->processing(cd, incomplstr, newcmds))
+              {
+                  processed = true;
+                  break;
+              }
             }
+        }
+
+        if (processed)
+        {
+            s->system = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+            not_processed->last_finished = parse_data->last_finished;
+            parse_data->last_finished = true;
+            not_processed->update_prev_string = false;
+            int from = j+1;
+            not_processed->strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
+            parse_data->strings.resize(from);
+            break;
         }
     }
 }

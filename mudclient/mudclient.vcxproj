@@ -176,6 +176,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\plugins\pluginsManager.h" />
     <ClInclude Include="src\plugins\pluginsRenderObjects.h" />
     <ClInclude Include="src\plugins\pluginsTriggers.h" />
+    <ClInclude Include="src\plugins\pluginsTriggersHandler.h" />
     <ClInclude Include="src\plugins\pluginSupport.h" />
     <ClInclude Include="src\plugins\pluginsView.h" />
     <ClInclude Include="src\plugins\pluginsParseData.h" />

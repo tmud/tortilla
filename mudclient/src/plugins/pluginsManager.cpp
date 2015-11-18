@@ -276,35 +276,35 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-void PluginsManager::processTriggers(int view, parseData* data)
+bool PluginsManager::processTriggers(MudViewString *s, bool incomplstr)
 {
-    if (view != 0)
-        return;
+    if (s->dropped)
+        return false; 
+    bool processed = false;
+    CompareData cd(s);
     int count = m_plugins.size();
-    for (int i=0,e=data->strings.size()-1; i<=e; ++i)
+    for (int j=0, je= m_plugins.size(); j<je; ++j)
     {
-        MudViewString *s = data->strings[i];
-        if (s->dropped) continue;
-        bool incomplstr = (i==e && !data->last_finished);
-        CompareData cd( data->strings[i] );
-        for (int j = 0; j < count; ++j)
+        Plugin *p = m_plugins[j];
+        if (!p->state()) 
+            continue;
+        _cp = p;
+        for (int k=0,ke=p->triggers.size();k<ke;++k)
         {
-            Plugin *p = m_plugins[j];
-            if (!p->state()) continue;
-            _cp = p;
-            for (int k=0,ke=p->triggers.size();k<ke;++k)
+            PluginsTrigger *t = p->triggers[k];
+            if (t->compare(cd, incomplstr))
             {
-                PluginsTrigger *t = p->triggers[k];
-                if (t->compare(cd, incomplstr))
-                {
-                    if (s->dropped)
-                        break;
-                    cd.reinit();
-                }
+                processed = true;
+                if (s->dropped)
+                    break;
+                cd.reinit();
             }
-            _cp = NULL;
-        }        
+        }
+        _cp = NULL;
+        if (s->dropped)
+            break;
     }
+    return processed;
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)

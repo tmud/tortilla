@@ -2,8 +2,9 @@
 
 #include "plugin.h"
 #include "msdp/msdpNetwork.h"
+#include "pluginsTriggersHandler.h"
 
-class PluginsManager
+class PluginsManager : public PluginsTriggersHandler
 {
    PluginsList m_plugins;
    tstring m_profile;
@@ -22,7 +23,6 @@ public:
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);
     void processViewData(const char* method, int view, parseData* data);
-    void processTriggers(int view, parseData* data);
     void processBarCmds(InputPlainCommands* cmds);
     void processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history);
     void processConnectEvent();
@@ -35,6 +35,7 @@ public:
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
+    bool processTriggers(MudViewString *s, bool incomplstr);
     void concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);

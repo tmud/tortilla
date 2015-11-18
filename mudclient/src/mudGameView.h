@@ -922,9 +922,9 @@ private:
         m_plugins.processViewData("after", view, parse_data);
     }
 
-    void processTriggers(int view, parseData* parse_data)
+    PluginsTriggersHandler* getPluginsTriggers() 
     {
-        m_plugins.processTriggers(view, parse_data);
+        return &m_plugins;
     }
 
     void addText(int view, parseData* parse_data)

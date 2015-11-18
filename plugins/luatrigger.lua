@@ -20,5 +20,5 @@ local function event(v)
 end
 
 function luatrigger.init()
-  createTrigger("Please,", event)
+  createTrigger("Using keytable", event)
 end

@@ -406,8 +406,6 @@ void PropertiesManager::loadArray(xml::node parent, const tstring& name, bool va
         tstring key, val, grp;
         if (r[i].get(L"key", &key) && !key.empty())
         {
-            if (values->exist(key)) 
-                continue;
             if (values_req)
             {
                 bool value_exists = r[i].get(L"value", &val);
@@ -418,6 +416,15 @@ void PropertiesManager::loadArray(xml::node parent, const tstring& name, bool va
             {
                 bool group_exists = r[i].get(L"group", &grp);
                 if (!group_exists || grp.empty())
+                    continue;
+            }
+            if (values->exist(key)) 
+            {
+                if (!groups_req)
+                    continue;
+                int exist = values->find(key);
+                const property_value&data = values->get(exist);
+                if (data.group == grp)
                     continue;
             }
             values->add(-1, key, val, grp);

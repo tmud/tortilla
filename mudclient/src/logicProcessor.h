@@ -18,7 +18,6 @@ public:
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
     virtual void postprocessText(int view, parseData* parse_data) = 0;
-    virtual void processTriggers(int view, parseData* parse_data) = 0;
     virtual void addText(int view, parseData* parse_data) = 0;
     virtual void clearText(int view) = 0;
     virtual void showWindow(int view, bool show) = 0;
@@ -28,6 +27,7 @@ public:
     virtual void preprocessCommand(InputCommand* cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
+    virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
 };
 
 class LogicProcessorMethods
