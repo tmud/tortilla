@@ -38,6 +38,8 @@ public:
             return volume(params);
         else if (cmd == L"update")
             return update(params);
+        else if (cmd == L"stop")
+            return stop(params);
         error->assign(L"Неизвестная команда: ");
         error->append(cmd);
         return false;
@@ -133,6 +135,19 @@ private:
             return true;
         }
         return incorrectParameters(L"play");
+    }
+
+    bool stop(const std::vector<std::wstring>& params)
+    {
+        int count = params.size() - 1;
+        if (count == 0)
+        {
+            pushPlayer();
+            if (!luaT_run(L, "stopAll", "ts"))
+                return incorrectMethod(L"stopAll");
+            return true;
+        }
+        return incorrectParameters(L"stop");
     }
 
     bool update(const std::vector<std::wstring>& params)

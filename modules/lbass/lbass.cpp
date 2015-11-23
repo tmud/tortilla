@@ -30,8 +30,11 @@ class BassLoader
     std::vector<BassObject*> m_objects;
     std::vector<int> m_indexes;
     std::wstring m_error_msg;
+    DWORD m_freq_record;
+    DWORD m_chans_record;
+    HRECORD m_record;
 public:
-    BassLoader() : bass_loaded(false) {}
+    BassLoader() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_record(NULL) {}
     ~BassLoader() {}
 
     bool loadBass()
@@ -188,9 +191,13 @@ public:
         return m_error_msg.c_str();
     }
 
-    bool startRecord(int volume)
+    bool setRecord(const wchar_t* param, int value)
     {
-    
+        if (param == L"freq")
+            { m_freq_record = value; return true; }
+        if (param == L"channels")
+            { m_chans_record = value; return true; }
+        return false;
     }
 
 private:
@@ -256,6 +263,7 @@ private:
         int count = m_objects.size();
         return (id >= 0 && id < count) ? m_objects[id] : NULL;
     }
+
 private:
     int push(BassObject* obj)
     {
@@ -461,19 +469,38 @@ int lbass_setVolume(lua_State *L)
     return error_invargs(L, L"setVolume");
 }
 
+int lbass_setRecord(lua_State *L)
+{
+    int n = lua_gettop(L);
+    if (n == 2 && lua_isstring(L, 1) && lua_isnumber(L, 2))
+    {
+        std::wstring p(lua_towstring(L, 1));
+        int value = lua_tointeger(L, 2);
+        if (_bass_loader.setRecord(p.c_str(), value))
+            return 0;
+    }
+    return error_invargs(L, L"setRecord");
+}
+
+int lbass_getRecordDevices(lua_State *L)
+{
+
+    return error_invargs(L, L"getRecordDevices");
+}
+
+int lbass_selectRecordDevice(lua_State *L)
+{
+
+    return error_invargs(L, L"selectRecordDevice");
+}
+
+
 int lbass_startRecord(lua_State *L)
 {
     int n = lua_gettop(L);
-    if (n == 0 || (n == 1 && lua_isnumber(L, -1)))
+    if (n == 1 && lua_isstring(L, -1))
     {
-        int volume = 100;
-        if (n == 1)
-        { 
-          volume = lua_tointeger(L, -1);
-          if (volume < 0) volume = 0;
-          if (volume > 100) volume = 10;
-        }
-
+        
     }
     return error_invargs(L, L"startRecord");
 }
@@ -484,7 +511,6 @@ static const luaL_Reg lbass_methods[] =
     { "free", lbass_free },
     { "loadSample", lbass_loadSample },
     { "loadStream", lbass_loadStream },
-    { "startRecord", lbass_startRecord },
     { "unload", lbass_unload },
     { "isHandle", lbass_isHandle},
     { "isSample", lbass_isSample},
@@ -495,6 +521,10 @@ static const luaL_Reg lbass_methods[] =
     { "stopAll", lbass_stopAll },
     { "setVolume", lbass_setVolume },
     { "getVolume", lbass_getVolume },
+    { "setRecord", lbass_setRecord },
+    { "getRecordDevices", lbass_getRecordDevices },
+    { "selectRecordDevice", lbass_selectRecordDevice },
+    { "startRecord", lbass_startRecord },
     { NULL, NULL }
 };
 

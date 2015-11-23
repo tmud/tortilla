@@ -161,33 +161,3 @@ public:
             BASS_ChannelStop(m_music);
     }
 };
-
-
-class BassRecord
-{
-    HRECORD m_record;
-public:
-    BassRecord() : m_record(NULL) {}
-    ~BassRecord() {
-        if (m_record)
-            BASS_StreamFree(m_record);
-    }   
-    bool record(float volume)
-    {
-        if (!m_record)
-            return false;
-        //BASS_ChannelSetAttribute(m_stream, BASS_ATTRIB_VOL, volume);
-        //BASS_ChannelSetSync(m_stream, BASS_SYNC_ONETIME | BASS_SYNC_END, 0, SyncProc, (BassObjectEvents*)this);
-        //return (BASS_ChannelPlay(m_stream, TRUE)) ? true : false;
-    }
-    bool save(const wchar_t* file)
-    {
-        if (!m_record) return false;
-        return false;
-    }
-    void stop()
-    {
-        if (m_record)
-            BASS_ChannelStop(m_record);
-    }
-};

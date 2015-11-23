@@ -36,7 +36,7 @@ void LogicHelper::processActions(parseData *parse_data, PluginsTriggersHandler* 
         MudViewString *s = parse_data->strings[j];
         bool incomplstr = (j==je && !parse_data->last_finished);
 
-        bool processed = plugins_triggers->processTriggers(s, incomplstr);
+        bool processed = false; //todo plugins_triggers->processTriggers(s, incomplstr);
         if (!processed)
         {
             for (int i=0, e=m_actions.size(); i<e; ++i)

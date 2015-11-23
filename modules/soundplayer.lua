@@ -29,18 +29,33 @@ function soundplayer.setVolume(v)
   return bass.setVolume(v)
 end
 
+function soundplayer.isPlaying(id)
+  return bass.isPlaying(id)
+end
+
 function soundplayer.playfx(filename, volume)
   local v = volume and volume or 100
   if v < 0 or v > 100 then
     log("Ошибка: Допустимый диапазон громкости 0-100")
     return false
   end
-  local id, err = bass.loadSample(filename)
-  if not id then
-    log(err)
-    return false
+  local l = {}
+  for sid,f in pairs(sp.samples) do
+    if f == filename then l[#l+1] = sid end
   end
-  sp.samples[id] = true
+  local id
+  for _,sid in ipairs(l) do
+    if not bass.isPlaying(sid) then id = sid; break; end
+  end
+  if not id then
+    local sid, err = bass.loadSample(filename)
+    if not sid then
+      log(err)
+      return false
+    end
+    id = sid
+    sp.samples[id] = filename
+  end
   local res,err = bass.play(id, v)
   if not res then
     log(err)
@@ -157,16 +172,21 @@ function soundplayer.stop(id)
   bass.stop(id)
 end
 
-local function unload()
+function soundplayer.stopAll()
   if sp.music then
     bass.stop(sp.music)
     bass.unload(sp.music)
+    sp.music = nil
   end
   for id,_ in pairs(sp.samples) do
     bass.stop(id)
     bass.unload(id)
   end
   sp.samples = {}
+end
+
+local function unload()
+  soundplayer.stopall()
 end
 
 regUnloadFunction(unload)
