@@ -96,10 +96,14 @@
   <ItemGroup>
     <ClInclude Include="bobjects.h" />
     <ClInclude Include="common.h" />
+    <ClInclude Include="player.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="common.cpp" />
     <ClCompile Include="lbass.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="player2.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

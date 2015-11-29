@@ -168,6 +168,50 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     }
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))
     {
+        if (lua_isstring(L, -1))
+        {
+            std::wstring error(luaT_towstring(L, -1));
+            /*error.append(L" (");
+            for (int i = 0; i < oplen; ++i)
+            {
+                if (i != 0)
+                    error.append(L", ");
+                switch (op[i])
+                {
+                case 'd':
+                    error.append(L"int");
+                    break;
+                case 'b':
+                    error.append(L"bool");
+                    break;
+                case 'f':
+                    error.append(L"float");
+                    break;
+                case 'u':
+                    error.append(L"unsigned");
+                    break;
+                case 's':
+                    error.append(L"string");
+                    break;
+                case 'F':
+                    error.append(L"function");
+                    break;
+                case 'r':
+                    error.append(L"reference");
+                    break;
+                case 't':
+                    error.append(L"table");
+                    break;
+                case 'o':
+                    error.append(L"object");
+                    break;                
+                default:
+                    error.append(L"unknown");
+                }
+            }
+            error.append(L")");*/
+            base::log(L, error.c_str());
+        }
         return false;
     }
     return true;

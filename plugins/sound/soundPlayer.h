@@ -27,7 +27,6 @@ public:
     {
         if (params.empty())
             { error->assign(L"Не заданы параметры"); return false; }
-
         perror = error;
         const std::wstring &cmd = params[0];
         if (cmd == L"playfx" || cmd == L"fx")
@@ -45,6 +44,28 @@ public:
         return false;
     }
 
+    bool startRecord(const wchar_t* filename,  std::wstring* error)
+    {
+        pushBass();
+        if (!luaT_run(L, "setRecord", "tsd", L"freq", 22050))
+            return setError(error);
+        pushBass();
+        if (!luaT_run(L, "setRecord", "tsd", L"channels", 1))
+            return setError(error);
+        pushBass();
+        if (!luaT_run(L, "startRecord", "ts", filename))
+            return setError(error);
+        return true;
+    }
+
+    bool stopRecord(std::wstring* error)
+    {
+        pushBass();
+        if (!luaT_run(L, "stopRecord", "t"))
+            return setError(error);
+        return true;
+    }
+
 private:
     bool volume(const std::vector<std::wstring>& params)
     {
@@ -55,7 +76,7 @@ private:
         {
             pushPlayer();
             if (!luaT_run(L, "getVolume", "t"))
-               return incorrectMethod(L"getVolume");
+               return incorrectCall(L"getVolume");
             if (!lua_isnumber(L, -1))
                 return incorrectResult(L"getVolume");
             std::wstring v(L"Текущая громкость: ");
@@ -69,7 +90,7 @@ private:
        {
            pushPlayer();
            if (!luaT_run(L, "setVolume", "td", volume))
-               return incorrectMethod(L"setVolume");
+               return incorrectCall(L"setVolume");
            std::wstring v(L"Новая громкость: ");
            v.append( int_to_wstring(volume) );
            print(v);
@@ -96,7 +117,7 @@ private:
                 name = it->second;
             pushPlayer();
             if (!luaT_run(L, "playfx", "tsd", name.c_str(), volume))
-                return incorrectMethod(L"playfx");
+                return incorrectCall(L"playfx");
             return true;
         }
         return incorrectParameters(L"playfx");
@@ -131,7 +152,7 @@ private:
 
             pushPlayer();
             if (!luaT_run(L, "play", "tsd", name.c_str(), volume))
-               return incorrectMethod(L"play");
+               return incorrectCall(L"play");
             return true;
         }
         return incorrectParameters(L"play");
@@ -144,7 +165,7 @@ private:
         {
             pushPlayer();
             if (!luaT_run(L, "stopAll", "ts"))
-                return incorrectMethod(L"stopAll");
+                return incorrectCall(L"stopAll");
             return true;
         }
         return incorrectParameters(L"stop");
@@ -213,7 +234,7 @@ private:
         pushPlayer();
         lua_insert(L, -2);
         if (!luaT_run(L, "playlist", "ttd", volume))
-            return incorrectMethod(L"play");
+            return incorrectCall(L"playlist");
         return true;
     }
 
@@ -282,9 +303,9 @@ private:
         base::print(L, text.c_str() );
     }
 
-    bool incorrectMethod(const wchar_t* method)
+    bool incorrectCall(const wchar_t* method)
     {
-        perror->assign(L"Неизвестный метод soundplayer.");
+        perror->assign(L"Ошибка при вызове метода soundplayer.");
         perror->append(method);
         return false;
     }
@@ -310,7 +331,18 @@ private:
         return false;
     }
 
+    bool setError(std::wstring* error)
+    {
+        if (lua_isstring(L, -1))
+            error->assign(luaT_towstring(L, -1));
+        return false;
+    }
+
     void pushPlayer() {
         lua_getglobal(L, "soundplayer");
+    }
+
+    void pushBass() {
+        lua_getglobal(L, "bass");
     }
 };

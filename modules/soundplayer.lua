@@ -162,6 +162,7 @@ function soundplayer.stop(id)
   if id == -1 then
     clearplaylist()
     id = sp.music
+	if not id then return end
   end
   if id == sp.music then
     bass.stop(id)

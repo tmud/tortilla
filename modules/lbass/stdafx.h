@@ -6,5 +6,8 @@
 #include <windows.h>
 #include "api/base.h"
 
+#include <vector>
 #include <string>
 #include <algorithm>
+
+#include "bass/c/bass.h"

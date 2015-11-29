@@ -1,11 +1,5 @@
 #pragma once
-#include <vector>
-
-class BassObjectEvents
-{
-public:
-    virtual void playingEnd() = 0;
-};
+#include "common.h"
 
 class BassObject : public BassObjectEvents
 {

@@ -53,7 +53,7 @@ int menucmd(lua_State *L)
     if (menuid == 1)
     {
         HWND parent = base::getParent(L);
-        SaveSoundDlg dlg;
+        SaveSoundDlg dlg(player);
         dlg.DoModal(parent);
     }
     return 0;
