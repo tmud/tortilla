@@ -391,19 +391,12 @@ int utf8_strnlen(const utf8* str, int str_len)
     int p = 0;
     while (str_len > 0)
     {
-        const unsigned char &c = str[p];
-        if (c < 0x80) { len++; str_len--; p++; }
-        else if (c < 0xc0 || c > 0xf7) return -1;  // ошибка в строке - выходим
-        else
-        {
-            int sym_len = 2;
-            if ((c & 0xf0) == 0xe0) sym_len = 3;
-            else if ((c & 0xf8) == 0xf0) sym_len = 4;
-            if (sym_len > str_len) return -1;      // ошибка - выходим
-            len++;
-            str_len -= sym_len;
-            p += sym_len;
-        }
+        int sym_len = utf8_symlen(&str[p]);
+        if (sym_len == 0 || sym_len > str_len)
+            return -1;      // ошибка в строке - выходим
+        len++;
+        str_len -= sym_len;
+        p += sym_len;
     }
     return len;
 }

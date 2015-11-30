@@ -76,7 +76,6 @@ void MudView::addText(parseData* parse_data)
     calcStringsSizes(parse_data->strings);
     int count = parse_data->strings.size();
     pushText(parse_data);
-    checkLimit();
 
     if (m_use_softscrolling) {
         if (m_start_softscroll == -1)
@@ -84,6 +83,7 @@ void MudView::addText(parseData* parse_data)
         return;
     }
 
+    checkLimit();
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
@@ -102,9 +102,9 @@ void MudView::updateSoftScrolling()
         return;
 
     int last_string = getLastString();
+    int new_visible_line = last_string;
     if (m_last_visible_line != last_string)
     {
-        int new_visible_line = last_string;
         int count = last_string - m_last_visible_line;
         int p = min((count / 10)+1 , 3);
         if (count >= (m_lines_count * 2))
@@ -115,12 +115,11 @@ void MudView::updateSoftScrolling()
             new_visible_line = m_last_visible_line + p*2;
         else if (count > p)
             new_visible_line = m_last_visible_line + p;
-
-        if (new_visible_line == last_string) 
-            stopSoftScroll();
-        updateScrollbar(new_visible_line);
-        Invalidate(FALSE);
     }
+    if (new_visible_line == last_string)
+        stopSoftScroll();
+    updateScrollbar(new_visible_line);
+    Invalidate(FALSE);
 }
 
 void MudView::setSoftScrollingMode(bool mode)
@@ -792,6 +791,7 @@ void MudView::calcDragLine(int line, dragline type)
 void MudView::stopSoftScroll()
 {
     m_start_softscroll = -1;
+    checkLimit();
 }
 
 bool MudView::inSoftScrolling() const

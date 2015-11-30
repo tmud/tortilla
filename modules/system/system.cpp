@@ -253,6 +253,17 @@ int system_convertToWin(lua_State *L)
     return 0;
 }
 
+int system_beep(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        ::Beep(lua_tounsigned(L, 1), lua_tounsigned(L, 2));
+        return 0;
+    }
+    lua_pushstring(L, "Incorrect parameters system.beep");
+    return lua_error(L);
+}
+
 static const luaL_Reg system_methods[] =
 {
     { "dbgstack", system_debugstack},
@@ -263,6 +274,7 @@ static const luaL_Reg system_methods[] =
     { "loadTextFile", system_loadTextFile },
     { "convertFromWin", system_convertFromWin },
     { "convertToWin", system_convertToWin },
+    { "beep", system_beep },
     { NULL, NULL }
 };
 
