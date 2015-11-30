@@ -152,7 +152,6 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\accessors.h" />
     <ClInclude Include="src\common\criticalSection.h" />
     <ClInclude Include="src\common\replaceColor.h" />
-    <ClInclude Include="src\common\tempThread.h" />
     <ClInclude Include="src\common\tokenizer.h" />
     <ClInclude Include="src\common\toolbarEx.h" />
     <ClInclude Include="src\compareObject.h" />

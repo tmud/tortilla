@@ -11,6 +11,7 @@ extern "C" {
 
 #include <stdlib.h>
 #include <assert.h>
+#include <string>
 
 class lua_pushwstring
 {
@@ -81,4 +82,81 @@ public:
     void createRef(lua_State *L) { assert(ref==LUA_NOREF); ref=luaL_ref(L, LUA_REGISTRYINDEX); }
     void pushValue(lua_State *L) { lua_rawgeti(L, LUA_REGISTRYINDEX, ref); }
     void unref(lua_State *L) { luaL_unref(L, LUA_REGISTRYINDEX, ref); ref=LUA_NOREF; }
+};
+
+class lua_format
+{
+public:
+    void format(lua_State* L, int index, std::wstring *result)
+    {
+        int i = index;
+        int type = lua_type(L, i);
+        wchar_t dbuf[32];
+        result->clear();
+
+        switch (type)
+        {
+        case LUA_TNIL:
+            result->append(L"nil");
+            break;
+        case LUA_TNUMBER:
+            swprintf(dbuf, L"number: %d", lua_tointeger(L, i));
+            result->append(dbuf);
+            break;
+        case LUA_TBOOLEAN:
+            swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
+            result->append(dbuf);
+            break;
+        case LUA_TSTRING:
+            result->append(L"string: ");
+            result->append(lua_towstring(L, i));
+            break;
+        case LUA_TUSERDATA:
+            swprintf(dbuf, L"userdata: 0x%p", lua_topointer(L, i));
+            result->append(dbuf);
+            break;
+        case LUA_TLIGHTUSERDATA:
+            swprintf(dbuf, L"lightuserdata: 0x%p", lua_topointer(L, i));
+            result->append(dbuf);
+            break;
+        case LUA_TFUNCTION:
+            swprintf(dbuf, L"function: 0x%p", lua_topointer(L, i));
+            result->append(dbuf);
+            break;
+        case LUA_TTHREAD:
+            swprintf(dbuf, L"thread: 0x%p", lua_topointer(L, i));
+            result->append(dbuf);
+            break;
+        case LUA_TTABLE:
+            swprintf(dbuf, L"table: 0x%p", lua_topointer(L, i));
+            result->append(dbuf);
+            break;
+        default:
+            result->append(L"unknown");
+            break;
+        }
+    }
+};
+
+class lua_dumpparams
+{
+    std::wstring dump;
+public:
+    lua_dumpparams(lua_State *L, const wchar_t* text) 
+    {
+        lua_format lf;
+        if (text) dump.append(text);
+        dump.append(L" (");
+        int n = lua_gettop(L);
+        for (int i = 1; i <= n; ++i)
+        {
+            if (i != 1)
+                dump.append(L",");
+            std::wstring result;
+            lf.format(L, i, &result);
+            dump.append(result);
+        }
+        dump.append(L")");
+    }
+    operator const wchar_t*() const { return dump.c_str(); }
 };

@@ -169,9 +169,6 @@
     <ClInclude Include="src\highlightHelper.h">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClInclude>
-    <ClInclude Include="src\common\tempThread.h">
-      <Filter>Libs</Filter>
-    </ClInclude>
     <ClInclude Include="src\common\criticalSection.h">
       <Filter>Libs</Filter>
     </ClInclude>

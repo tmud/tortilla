@@ -46,13 +46,7 @@ public:
 
     bool startRecord(const wchar_t* filename,  std::wstring* error)
     {
-        pushBass();
-        if (!luaT_run(L, "setRecord", "tsd", L"freq", 22050))
-            return setError(error);
-        pushBass();
-        if (!luaT_run(L, "setRecord", "tsd", L"channels", 1))
-            return setError(error);
-        pushBass();
+        pushPlayer();
         if (!luaT_run(L, "startRecord", "ts", filename))
             return setError(error);
         return true;
@@ -60,7 +54,7 @@ public:
 
     bool stopRecord(std::wstring* error)
     {
-        pushBass();
+        pushPlayer();
         if (!luaT_run(L, "stopRecord", "t"))
             return setError(error);
         return true;
@@ -340,9 +334,5 @@ private:
 
     void pushPlayer() {
         lua_getglobal(L, "soundplayer");
-    }
-
-    void pushBass() {
-        lua_getglobal(L, "bass");
     }
 };

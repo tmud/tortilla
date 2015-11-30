@@ -32,10 +32,11 @@ int error(lua_State* L, const wchar_t* errmsg)
 
 int error_invargs(lua_State* L, const wchar_t* func)
 {
-    std::wstring msg(L"Ошибка в параметрах функции: 'bass.");
+    std::wstring msg(L"Incorrect parameters in function: 'bass.");
     msg.append(func);
     msg.append(L"'");
-    lua_pushwstring(L, msg.c_str());
+    lua_dumpparams p(L, msg.c_str());
+    lua_pushwstring(L, p);
     return lua_error(L);
 }
 

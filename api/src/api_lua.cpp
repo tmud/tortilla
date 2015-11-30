@@ -159,7 +159,7 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     if (!success)
     {
         lua_settop(L, n); // restore stack
-        std::wstring error(L"Ошибка luaT_run '");
+        std::wstring error(L"Ошибка вызова luaT_run '");
         error.append(TU2W(func));
         error.append(L"': ");
         error.append(error_msg);
@@ -171,45 +171,6 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
         if (lua_isstring(L, -1))
         {
             std::wstring error(luaT_towstring(L, -1));
-            /*error.append(L" (");
-            for (int i = 0; i < oplen; ++i)
-            {
-                if (i != 0)
-                    error.append(L", ");
-                switch (op[i])
-                {
-                case 'd':
-                    error.append(L"int");
-                    break;
-                case 'b':
-                    error.append(L"bool");
-                    break;
-                case 'f':
-                    error.append(L"float");
-                    break;
-                case 'u':
-                    error.append(L"unsigned");
-                    break;
-                case 's':
-                    error.append(L"string");
-                    break;
-                case 'F':
-                    error.append(L"function");
-                    break;
-                case 'r':
-                    error.append(L"reference");
-                    break;
-                case 't':
-                    error.append(L"table");
-                    break;
-                case 'o':
-                    error.append(L"object");
-                    break;                
-                default:
-                    error.append(L"unknown");
-                }
-            }
-            error.append(L")");*/
             base::log(L, error.c_str());
         }
         return false;
@@ -308,52 +269,8 @@ bool luaT_dostring(lua_State *L, const wchar_t* script_text)
 
 void formatByType(lua_State* L, int index, std::wstring *buf)
 {
-    int i = index;
-    int type = lua_type(L, i);
-    wchar_t dbuf[32];
-    buf->clear();
-
-    switch (type)
-    {
-    case LUA_TNIL:
-        buf->append(L"nil");
-        break;
-    case LUA_TNUMBER:
-        swprintf(dbuf, L"number: %d", lua_tointeger(L, i));
-        buf->append(dbuf);
-        break;
-    case LUA_TBOOLEAN:
-        swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
-        buf->append(dbuf);
-        break;
-    case LUA_TSTRING:
-        buf->append(L"string: ");
-        buf->append(luaT_towstring(L, i));
-        break;
-    case LUA_TUSERDATA:
-        swprintf(dbuf, L"userdata: 0x%p", lua_topointer(L, i));
-        buf->append(dbuf);
-        break;
-    case LUA_TLIGHTUSERDATA:
-        swprintf(dbuf, L"lightuserdata: 0x%p", lua_topointer(L, i));
-        buf->append(dbuf);
-        break;
-    case LUA_TFUNCTION:
-        swprintf(dbuf, L"function: 0x%p", lua_topointer(L, i));
-        buf->append(dbuf);
-        break;
-    case LUA_TTHREAD:
-        swprintf(dbuf, L"thread: 0x%p", lua_topointer(L, i));
-        buf->append(dbuf);
-        break;
-    case LUA_TTABLE:
-        swprintf(dbuf, L"table: 0x%p", lua_topointer(L, i));
-        buf->append(dbuf);
-        break;
-    default:
-        buf->append(L"unknown");
-        break;
-    }
+    lua_format lf;
+    lf.format(L, index, buf);
 }
 
 void luaT_showLuaStack(lua_State* L, const wchar_t* label)

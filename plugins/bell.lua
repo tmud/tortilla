@@ -7,7 +7,7 @@ function bell.name()
 end
 
 function bell.description()
-return 'Плагин проигрывает звук, если сервер присылает символ ascii 0x7 (bell).'
+return 'Плагин проигрывает короткий звук, если сервер присылает символ ascii 0x7 (bell).'
 end
 
 function bell.version()
@@ -15,15 +15,15 @@ function bell.version()
 end
 
 function bell.streamdata(s)
-  local count = 1
-  local sym = ':'
+  local count = 0
+  local sym = '/a'
   local p = s:strstr(sym)
   while p do
     count = count + 1
 	p = s:strstr(sym, p+1)
   end
   if count > 0 then
-    system.beep(2000, 100)
+    system.beep(2000, 150)
   end
   return s
 end

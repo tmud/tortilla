@@ -162,7 +162,7 @@ function soundplayer.stop(id)
   if id == -1 then
     clearplaylist()
     id = sp.music
-	if not id then return end
+    if not id then return end
   end
   if id == sp.music then
     bass.stop(id)
@@ -184,6 +184,16 @@ function soundplayer.stopAll()
     bass.unload(id)
   end
   sp.samples = {}
+end
+
+function soundplayer.startRecord(file)
+  bass.setRecord("freq", 22050)
+  bass.setRecord("channels", 2)
+  bass.startRecord(file)
+end
+
+function soundplayer.stopRecord()
+  bass.stopRecord()
 end
 
 local function unload()

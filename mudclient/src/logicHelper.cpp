@@ -111,7 +111,10 @@ void LogicHelper::processGags(parseData *parse_data)
         {
             CompareData cd(s);
             while (m_gags[i]->processing(cd))
+            {
+                if (s->dropped) break;
                 cd.fullinit();
+            }
         }
     }
 }
