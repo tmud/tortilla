@@ -848,9 +848,15 @@ int string_strstr(lua_State *L)
          luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TNUMBER))
      {
          const utf8* s1 = lua_tostring(L, 1);
+         int index = 0;
          if (lua_gettop(L) == 3)
          {
-             int index = lua_tointeger(L, 3);
+             index = lua_tointeger(L, 3);
+             if (index <= 0) {
+                 lua_pushnil(L);
+                 return 1;
+             }
+             index = index - 1;
              int pos = utf8_sympos(s1, index);
              if (pos == -1) {
                  lua_pushnil(L);
@@ -861,9 +867,9 @@ int string_strstr(lua_State *L)
          const utf8* s2 = lua_tostring(L, 2);
          const utf8* pos = strstr(s1, s2);
          if (pos)
-         {  
+         {
             u8string tmp(s1, pos-s1);
-            int find_pos = u8string_len(tmp) + 1;
+            int find_pos = u8string_len(tmp)+1+index;
             lua_pushinteger(L, find_pos);
             return 1;
          }
