@@ -11,12 +11,12 @@ return 'Плагин проигрывает короткий звук, если 
 end
 
 function bell.version()
-    return '-'
+    return '1.0'
 end
 
 function bell.streamdata(s)
   local count = 0
-  local sym = '/a'
+  local sym = '/a' -- bell symbol
   local p = s:strstr(sym)
   while p do
     count = count + 1

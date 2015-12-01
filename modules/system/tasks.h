@@ -2,38 +2,31 @@
 
 #include "common/tempThread.h"
 
-class Task
-{
-public:
-    virtual ~Task() {}
-    virtual void doTask() = 0;
-};
-
-class Tasks : public TempThread
+class BeepTasks : public TempThread
 {
     CRITICAL_SECTION m_cs;
-    std::deque<Task*> m_tasks;
+    typedef std::pair<DWORD,DWORD> beep_data;
+    std::deque<beep_data> m_tasks;
     HANDLE m_event;
 public:
-    Tasks() : m_event(NULL) 
+    BeepTasks() : m_event(NULL) 
     {
        InitializeCriticalSection(&m_cs); 
        m_event = CreateEvent(NULL, FALSE, FALSE, NULL);
        run(); 
     }
-    ~Tasks() 
+    ~BeepTasks() 
     { 
         stop();
         wait();
         CloseHandle(m_event);
         DeleteCriticalSection(&m_cs); 
-        std::for_each(m_tasks.begin(), m_tasks.end(), [](Task *o){ delete o;});
     } 
-    void runTask(Task *t)
+    void runTask(DWORD freq, DWORD duration)
     {
         EnterCriticalSection(&m_cs);
-        if (t)
-            m_tasks.push_back(t);
+        beep_data bd(freq, duration);
+        m_tasks.push_back(bd);
         LeaveCriticalSection(&m_cs);
         SetEvent(m_event);
     }
@@ -42,23 +35,30 @@ private:
     {
         while (!needStop())
         {
-            Task *t = NULL;
+            bool tasks_exists = false;
+            beep_data bd(0, 0);
             EnterCriticalSection(&m_cs);
             if (!m_tasks.empty())
             {
-                t = m_tasks[0];
+                bd = m_tasks[0];
                 m_tasks.pop_front();
+                tasks_exists = true;
             }
             LeaveCriticalSection(&m_cs);
-            if (t)
+            if (tasks_exists)
             {
-                t->doTask();
-                delete t;
+                if (bd.first > 0 && bd.second > 0)
+                    ::Beep(bd.first, bd.second);
             }
             else
             {
-                WaitForSingleObject(m_event, 500);
+                WaitForSingleObject(m_event, INFINITE);
             }
         }
+    }
+
+    void threadStop()
+    {
+        SetEvent(m_event);
     }
 };

@@ -46,6 +46,7 @@ xcopy ..\plugins\autowrap.lua tortilla\plugins /Y
 xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
 xcopy ..\plugins\historyfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\colorgamecmd.lua tortilla\plugins /Y
+xcopy ..\plugins\bell.lua tortilla\plugins /Y
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y
@@ -56,6 +57,7 @@ xcopy ..\mudclient\readme.txt tortilla /Y
 xcopy ..\mudclient\changelog.txt tortilla /Y
 
 xcopy ..\sdk\*.* sdk /E /Y
+xcopy ..\modules\modules.txt sdk /Y
 
 7za.exe a -tzip %filename% tortilla
 7za.exe a -tzip %sdk% sdk

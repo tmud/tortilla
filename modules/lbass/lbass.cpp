@@ -306,7 +306,7 @@ static const luaL_Reg lbass_methods[] =
     { "canRecord", lbass_canRecord },
     { "startRecord", lbass_startRecord },
     { "stopRecord", lbass_stopRecord },
-    { "isRecording", lbass_isRecording },
+    //{ "isRecording", lbass_isRecording },
     { NULL, NULL }
 };
 

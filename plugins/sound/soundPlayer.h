@@ -8,11 +8,17 @@ class SoundPlayer
     std::wstring *perror;
     std::map<std::wstring, std::wstring> m_files_list;
     typedef std::map<std::wstring, std::wstring>::iterator iterator;
+    int m_playing_music;
 
 public:
-    SoundPlayer(lua_State* l) : L(l), perror(NULL) 
+    SoundPlayer(lua_State* l) : L(l), perror(NULL), m_playing_music(-2)
     {
         scanFiles();
+    }
+
+    ~SoundPlayer()
+    {
+       stopMusic();
     }
 
     bool isPlayerLoaded() 
@@ -140,13 +146,17 @@ private:
                 std::wstring ext(name.substr(pos+1));
                 if (ext == L"lst")
                 {
-                    return playlist(name, volume);
+                    bool result = playlist(name, volume);
+                    if (result)
+                        m_playing_music = -1;   // playlist id
+                    return result;
                 }
             }
 
             pushPlayer();
             if (!luaT_run(L, "play", "tsd", name.c_str(), volume))
                return incorrectCall(L"play");
+            m_playing_music = lua_tointeger(L, -1);
             return true;
         }
         return incorrectParameters(L"play");
@@ -157,12 +167,19 @@ private:
         int count = params.size() - 1;
         if (count == 0)
         {
-            pushPlayer();
-            if (!luaT_run(L, "stopAll", "ts"))
-                return incorrectCall(L"stopAll");
+            stopMusic();
             return true;
         }
         return incorrectParameters(L"stop");
+    }
+
+    void stopMusic()
+    {
+        if (m_playing_music != -2) {
+            pushPlayer();
+            luaT_run(L, "stop", "td", m_playing_music);
+        }
+        m_playing_music = -2;
     }
 
     bool update(const std::vector<std::wstring>& params)

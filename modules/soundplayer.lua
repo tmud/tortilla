@@ -174,11 +174,7 @@ function soundplayer.stop(id)
 end
 
 function soundplayer.stopAll()
-  if sp.music then
-    bass.stop(sp.music)
-    bass.unload(sp.music)
-    sp.music = nil
-  end
+  soundplayer.stop(-1)
   for id,_ in pairs(sp.samples) do
     bass.stop(id)
     bass.unload(id)

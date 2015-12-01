@@ -2,8 +2,6 @@
 #include "tasks.h"
 #pragma comment(lib, "lua.lib")
 
-Tasks* g_background_tasks = NULL;
-
 int system_messagebox(lua_State *L)
 {
     HWND parent = base::getParent(L);
@@ -256,22 +254,12 @@ int system_convertToWin(lua_State *L)
     return 0;
 }
 
-class BeepTask : public Task
-{
-    DWORD m_freq, m_duration;
-public:
-    BeepTask(DWORD freq, DWORD dur) : m_freq(freq), m_duration(dur) {}
-    void doTask()
-    {
-        ::Beep(m_freq, m_duration);
-    }
-};
-
+BeepTasks* g_background_beep_tasks = NULL;
 int system_beep(lua_State *L)
 {
     if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
     {
-        g_background_tasks->runTask( new BeepTask(lua_tounsigned(L, 1), lua_tounsigned(L, 2)) );
+        g_background_beep_tasks->runTask( lua_tounsigned(L, 1), lua_tounsigned(L, 2) );
         return 0;
     }
     lua_pushstring(L, "Incorrect parameters system.beep");
@@ -304,10 +292,10 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
     switch (ul_reason_for_call)
     {
     case DLL_PROCESS_ATTACH:
-        g_background_tasks = new Tasks();
+        g_background_beep_tasks = new BeepTasks();
         break;
     case DLL_PROCESS_DETACH:
-        delete g_background_tasks;
+        delete g_background_beep_tasks;
         break;
     }
     return TRUE;
