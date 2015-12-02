@@ -35,7 +35,7 @@ public:
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
-    bool processTriggers(MudViewString *s, bool incomplstr);
+    bool processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe);
     void concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);

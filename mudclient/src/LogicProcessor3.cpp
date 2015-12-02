@@ -14,7 +14,7 @@ void LogicProcessor::processStackTick()
         }
         int window = pdata->plugins_logs_window;
         MudViewString *last = m_pHost->getLastString(window);
-        if (last && !last->prompt && !last->gamecmd && !last->system)
+        if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
             { /*skip*/ }
         else
         {
@@ -33,7 +33,7 @@ void LogicProcessor::processStackTick()
     if (m_prompt_mode == OFF)
         return;
     MudViewString *last = m_pHost->getLastString(0);
-    if (last && !last->prompt && !last->gamecmd && !last->system)
+    if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
             return;
     printStack(FROM_TIMER);
 }
@@ -43,7 +43,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (window == 0 && m_prompt_mode != OFF && flags & (GAME_LOG | GAME_CMD) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
-       if (last && !last->prompt && !last->gamecmd && !last->system)
+       if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
        {
            // в стек, если нельзя сразу добавить команды в окно (нет prompt/gamecmd, возможно это разрыв текста).
            stack_el e;
@@ -164,7 +164,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     {
         MudViewString *s = parse_data.strings[i];
         if (s->prompt) { p_exist = true; }
-        if (s->gamecmd || s->prompt || s->system) { last_game_cmd = i; continue; }
+        if (s->gamecmd || s->prompt || s->system || s->triggered) { last_game_cmd = i; continue; }
         if (pdata->recognize_prompt)
         {
             // recognize prompt string via template
@@ -201,7 +201,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                int last = tmp.size();
                MudViewString *s = parse_data.strings[i];
                tmp.push_back(s);
-               if (s->gamecmd || s->system) { last_game_cmd = last; continue; }
+               if (s->gamecmd || s->system || s->triggered) { last_game_cmd = last; continue; }
 
                tstring text; s->getText(&text);
                m_univ_prompt_pcre.find(text);
@@ -312,9 +312,9 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
     {
         int last = pds.size() - 1;
         MudViewString *s = pds[last];
-        if (!s->prompt && !s->gamecmd && !s->system)
+        if (!s->prompt && !s->gamecmd && !s->system && !s->triggered)
         {
-            // last string not finished (игровой текст, не промпт, не команда и не лог)        
+            // last string not finished (игровой текст, не промпт, не команда и не лог)
             parse_data.last_finished = false;
 #ifdef MARKERS_IN_VIEW
             std::vector<MudViewStringBlock> &b = s->blocks;
@@ -351,11 +351,28 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!(flags & SKIP_PLUGINS_BEFORE))
         m_pHost->preprocessText(window, &parse_data);
 
-    if (!(flags & SKIP_ACTIONS))
+    //process lua triggers and actions
+    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
+    bool skip_actions = (flags & SKIP_ACTIONS);
+    for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        m_helper.processActions(&parse_data, m_pHost->getPluginsTriggers(), pe);
+        if (luatriggers->processTriggers(parse_data, j, pe))
+        {
+            /*parseData &not_processed = pe->data;
+            not_processed.last_finished = parse_data->last_finished;
+            parse_data->last_finished = true;
+            not_processed.update_prev_string = false;
+            int from = j+1;
+            not_processed.strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
+            parse_data->strings.resize(from);
+            return;*/
+        }
+        if (!skip_actions) {
+            if (m_helper.processActions(&parse_data, j, pe))
+                break;
+        }
     }
-
+       
     if (!(flags & SKIP_SUBS))
     {
         m_helper.processAntiSubs(&parse_data);

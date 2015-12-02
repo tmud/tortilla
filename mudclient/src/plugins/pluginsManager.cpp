@@ -276,9 +276,9 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-bool PluginsManager::processTriggers(MudViewString *s, bool incomplstr)
+bool PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
 {
-    if (s->dropped)
+    /*if (s->dropped)
         return false; 
     bool processed = false;
     CompareData cd(s);
@@ -304,7 +304,8 @@ bool PluginsManager::processTriggers(MudViewString *s, bool incomplstr)
         if (s->dropped)
             break;
     }
-    return processed;
+    return processed;*/
+    return false;
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)
