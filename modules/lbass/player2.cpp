@@ -74,7 +74,7 @@ bool BassPlayer::startRecord(const wchar_t* file)
     if (device == -1)
         return error(L"Microphone not found.");
     if (!BASS_RecordInit(device))
-        return error_bass(L"Can't initialize microphone.");
+        return error_bass(L"Can't initialize microphone.", NULL);
     HANDLE hfile = CreateFile(file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hfile == INVALID_HANDLE_VALUE)
     {
@@ -95,7 +95,7 @@ bool BassPlayer::startRecord(const wchar_t* file)
     DWORD wf_size = sizeof(WAVEFORMATEX) - sizeof(WORD);
 
     DWORD headerSize = 20 + wf_size + 8;
-    unsigned char* header = new unsigned char [headerSize];    
+    unsigned char* header = new unsigned char [headerSize];
     memcpy(header, "RIFF\0\0\0\0WAVEfmt \20\0\0\0", 20);
     memcpy(header+20, &wf, wf_size);
     memcpy(header+20+wf_size, "data\0\0\0\0", 8);
@@ -119,7 +119,7 @@ bool BassPlayer::startRecord(const wchar_t* file)
         m_record_params = NULL;
         CloseHandle(hfile);
         DeleteFile(file);
-        return error_bass(L"Can't start recording.");
+        return error_bass(L"Can't start recording.", NULL);
     }
     return true;
 }

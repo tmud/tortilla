@@ -7,7 +7,7 @@ bool BassPlayer::loadBass()
     if (HIWORD(BASS_GetVersion()) != BASSVERSION)
         return error(L"An incorrect version of bass.dll");
     if (!BASS_Init(-1, 44100, 0, NULL, NULL))
-        return error_bass(L"Can't initialize sound system");
+        return error_bass(L"Can't initialize sound system", NULL);
     bass_loaded = true;
     return true;
 }
@@ -22,7 +22,7 @@ bool BassPlayer::unloadBass()
     m_objects.clear();
     m_indexes.clear();
     if (!BASS_Free())
-        return error_bass(L"Can't unload bass");
+        return error_bass(L"Can't unload bass", NULL);
     return true;
 }
 
@@ -65,15 +65,15 @@ int BassPlayer::load(const wchar_t* file, bool as_sample)
         else if (ext == L"mo3" || ext == L"xm" || ext == L"it" || ext == L"s3m" || ext == L"mtm" || ext == L"mod" || ext == L"umx")
         {
             if (as_sample)
-                return error_file(L"Can't load as sample", file);
+                return error_bass(L"Can't load as sample", file);
             correct_ext = true;
             index = loadMusic(file);
         }
     }
     if (!correct_ext)
-        return error_file(L"Unknown file type", file);
+        { error_bass(L"Unknown file type", file); return -1; }
     if (index == -1)
-        return error_file(L"Can't open file", file);
+        { error_bass(L"Can't open file", file); return -1; }
     return index;
 }
 
@@ -214,9 +214,13 @@ int BassPlayer::push(BassObject* obj)
     return index;
 }
 
-bool BassPlayer::error_bass(const wchar_t* error_text)
+bool BassPlayer::error_bass(const wchar_t* error_text, const wchar_t* file)
 {
     std::wstring msg(error_text);
+    if (file) {
+        msg.append(L" ");
+        msg.append(file);
+    }
     msg.append(L" (error code: ");
     wchar_t buffer[16];
     msg.append(_itow(BASS_ErrorGetCode(), buffer, 10));

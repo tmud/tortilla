@@ -66,6 +66,14 @@ public:
         return true;
     }
 
+    bool playFile(const wchar_t* file, std::wstring* error)
+    {
+        pushPlayer();
+        if (!luaT_run(L, "play", "ts", file))
+            return setError(error);
+        return true;
+    }
+
 private:
     bool volume(const std::vector<std::wstring>& params)
     {

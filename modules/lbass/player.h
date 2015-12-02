@@ -46,7 +46,7 @@ private:
     int push(BassObject* obj);
     void deleteRecordParams();
 
-    bool error_bass(const wchar_t* error_text);
+    bool error_bass(const wchar_t* error_text, const wchar_t* file);
     bool error(const wchar_t* error_text);
     bool error_id(int id);    
     int  error_file(const wchar_t* error_text, const wchar_t* file);
