@@ -4,5 +4,6 @@ struct LogicPipelineElement;
 class PluginsTriggersHandler
 {
 public:
-    virtual bool processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe) = 0;
+    enum PTResult { FAIL = 0, OK, WAIT };
+    virtual PTResult processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe) = 0;
 };

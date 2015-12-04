@@ -356,7 +356,8 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     bool skip_actions = (flags & SKIP_ACTIONS);
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        if (luatriggers->processTriggers(parse_data, j, pe))
+        PluginsTriggersHandler::PTResult result = luatriggers->processTriggers(parse_data, j, pe);
+        //if (luatriggers->processTriggers(parse_data, j, pe))
         {
             /*parseData &not_processed = pe->data;
             not_processed.last_finished = parse_data->last_finished;
@@ -372,7 +373,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
                 break;
         }
     }
-       
+
     if (!(flags & SKIP_SUBS))
     {
         m_helper.processAntiSubs(&parse_data);

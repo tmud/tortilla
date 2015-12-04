@@ -276,36 +276,52 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-bool PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
+PluginsTriggersHandler::PTResult PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
 {
-    /*if (s->dropped)
-        return false; 
-    bool processed = false;
+    int i = start_string; int last = parse_data.strings.size() - 1;
+
+    MudViewString *s = parse_data.strings[i];
     CompareData cd(s);
-    int count = m_plugins.size();
-    for (int j=0, je= m_plugins.size(); j<je; ++j)
+    bool incomplstr = (i==last && !parse_data.last_finished);
+
+    for (int j=0, je=m_plugins.size(); j<je; ++j)
     {
         Plugin *p = m_plugins[j];
         if (!p->state()) 
             continue;
+        std::vector<PluginsTrigger*>& vt = p->triggers;
+        if (vt.empty())
+            continue;
         _cp = p;
-        for (int k=0,ke=p->triggers.size();k<ke;++k)
+        for (int k=0,ke=vt.size();k<ke;++k)
         {
-            PluginsTrigger *t = p->triggers[k];
-            if (t->compare(cd, incomplstr))
+            PluginsTrigger *t = vt[k];
+            if (!t->isEnabled())
+                continue;
+            if (!t->compare(0, cd, incomplstr))
+                continue;
+            if (t->getLen() == 1)
+              { _cp = NULL;  return PluginsTriggersHandler::OK; }
+            int count = last+1;
+            if (t->getLen() > count)
+              { _cp = NULL; return PluginsTriggersHandler::WAIT; }
+            // compare next strings
+            bool compared = true;
+            for (int q=1, qe=t->getLen(); q<qe; ++q )
             {
-                processed = true;
-                if (s->dropped)
-                    break;
-                cd.reinit();
+                int si = start_string + q;
+                MudViewString *s2 = parse_data.strings[si];
+                CompareData cd2(s);
+                bool incomplstr2 = (si==last && !parse_data.last_finished);
+                if (!t->compare(q, cd2, incomplstr2))
+                  { compared = false;  break; }
             }
+            if (compared)
+              { _cp = NULL;  return PluginsTriggersHandler::OK; }
         }
         _cp = NULL;
-        if (s->dropped)
-            break;
     }
-    return processed;*/
-    return false;
+    return PluginsTriggersHandler::FAIL;
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)
