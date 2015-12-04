@@ -135,7 +135,7 @@ function soundplayer.playlist(t, volume)
   return -1
 end
 
-function soundplayer.play(filename, volume)
+function soundplayer.play(filename, volume, endfunc)
   local v = volume and volume or 100
   if v < 0 or v > 100 then
     log("Ошибка: Допустимый диапазон громкости 0-100")
@@ -149,7 +149,7 @@ function soundplayer.play(filename, volume)
     return false
   end
   sp.music = id
-  local res,err = bass.play(id, v)
+  local res,err = bass.play(id, v, endfunc)
   if not res then
     log(err)
     return false
@@ -183,7 +183,7 @@ function soundplayer.stopAll()
 end
 
 function soundplayer.startRecord(file)
-  bass.setRecord("freq", 22050)
+  bass.setRecord("frequency", 22050)
   bass.setRecord("channels", 2)
   bass.startRecord(file)
 end

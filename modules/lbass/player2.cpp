@@ -5,12 +5,24 @@
 
 struct RecordParams
 {
-    RecordParams() : hfile(INVALID_HANDLE_VALUE), error(FALSE), recording(FALSE), stopped(FALSE) {}
+    RecordParams() : hfile(INVALID_HANDLE_VALUE), error(FALSE), recording(FALSE), stopped(FALSE), written(0) {}
     HANDLE hfile;
     BOOL error;
     BOOL recording;
     BOOL stopped;
+    DWORD written;
 };
+
+static BOOL RecordDword(HANDLE hfile, DWORD pos, DWORD value)
+{    
+   if ((SetFilePointer(hfile, pos, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER))
+       return FALSE;
+   DWORD written = 0;
+   DWORD towrite = sizeof(DWORD);
+   if (!WriteFile(hfile, &value, towrite, &written, NULL) || written != towrite)
+       return FALSE;
+   return TRUE;
+}
 
 static BOOL CALLBACK MyRecordProc(HRECORD handle, const void *buffer, DWORD length, void *user)
 {
@@ -21,11 +33,19 @@ static BOOL CALLBACK MyRecordProc(HRECORD handle, const void *buffer, DWORD leng
         rp->error = TRUE;
         rp->stopped = TRUE;
     }
+    rp->written += written;
     if (!rp->recording)
         rp->stopped = TRUE;
-
     if (rp->stopped)
     {
+        BOOL finished = RecordDword(rp->hfile, 4, rp->written-8);
+        if (finished)
+            finished = RecordDword(rp->hfile, 40, rp->written-44);
+        if (!finished)
+        {
+            rp->error = TRUE;
+            rp->stopped = TRUE;
+       }
        CloseHandle(rp->hfile);
        rp->hfile = INVALID_HANDLE_VALUE;
        return FALSE;
@@ -55,12 +75,16 @@ bool BassPlayer::canRecord()
 
 bool BassPlayer::setRecord(const wchar_t* param, int value)
 {
-    if (!wcscmp(param, L"freq")) {
+    if (!wcscmp(param, L"frequency")) {
         m_freq_record = value;
         return true;
     }
     if (!wcscmp(param, L"channels")) {
         m_chans_record = value;
+        return true;
+    }
+    if (!wcscmp(param, L"sensitivity")) {
+        m_sensivity_record = value;
         return true;
     }
     return false;
@@ -121,6 +145,14 @@ bool BassPlayer::startRecord(const wchar_t* file)
         DeleteFile(file);
         return error_bass(L"Can't start recording.", NULL);
     }
+    
+    // set a volume effect on the recording channel
+    HFX volfx = BASS_ChannelSetFX(m_record, BASS_FX_BFX_VOLUME, 0);
+    BASS_BFX_VOLUME param;
+    param.lChannel = 0; // global volume control
+    param.fVolume = 1;  // the volume level
+    BASS_FXSetParameters(volfx, &param); // apply the level change
+ 
     return true;
 }
 
@@ -130,7 +162,10 @@ void BassPlayer::stopRecord()
         return;
     m_record_params->recording = FALSE;
     while (!m_record_params->stopped) { ::Sleep(100);  }
+    BASS_ChannelStop(m_record);
+    m_record =NULL;
     deleteRecordParams();
+    BASS_RecordFree();
 }
 
 bool BassPlayer::isRecording()
@@ -145,7 +180,8 @@ void BassPlayer::deleteRecordParams()
     if (!m_record_params)
         return;
     HANDLE h = m_record_params->hfile;
-    if (h != INVALID_HANDLE_VALUE) CloseHandle(h);
+    if (h != INVALID_HANDLE_VALUE) 
+        CloseHandle(h);
     delete m_record_params;
     m_record_params = NULL;
 }

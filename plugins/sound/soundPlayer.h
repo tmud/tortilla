@@ -2,16 +2,26 @@
 #include <map>
 #include "api/base.h"
 
-class SoundPlayer
+int endplaying(lua_State *L);
+
+class SoundPlayerCallback
+{
+public:
+    virtual void endPlaying() = 0;
+};
+
+class SoundPlayer : public SoundPlayerCallback
 {
     lua_State *L;
     std::wstring *perror;
     std::map<std::wstring, std::wstring> m_files_list;
     typedef std::map<std::wstring, std::wstring>::iterator iterator;
     int m_playing_music;
+    SoundPlayerCallback *m_pcb;
+    int m_replay_sound_id;
 
 public:
-    SoundPlayer(lua_State* l) : L(l), perror(NULL), m_playing_music(-2)
+    SoundPlayer(lua_State* l) : L(l), perror(NULL), m_playing_music(-2), m_pcb(NULL), m_replay_sound_id(-1)
     {
         scanFiles();
     }
@@ -66,12 +76,39 @@ public:
         return true;
     }
 
-    bool playFile(const wchar_t* file, std::wstring* error)
+    bool playFile(const wchar_t* file, std::wstring* error, SoundPlayerCallback *cb)
     {
+        if (m_replay_sound_id != -1)
+        {
+            if (!luaT_run(L, "stop", "td", m_replay_sound_id))
+                return setError(error);
+            m_replay_sound_id = -1;
+        }
+
+        m_pcb = cb;
         pushPlayer();
-        if (!luaT_run(L, "play", "ts", file))
+        if (!luaT_run(L, "play", "tsdF", file, 100, (void*)endplaying ))
             return setError(error);
+        m_replay_sound_id = lua_tointeger(L, -1);
         return true;
+    }
+
+    bool stopPlayFile(std::wstring* error)
+    {
+        if (m_replay_sound_id == -1)
+            return true;
+        pushPlayer();
+        if (!luaT_run(L, "stop", "td", m_replay_sound_id))
+            return setError(error);
+        m_replay_sound_id = -1;
+        return true;    
+    }
+
+    void endPlaying()
+    {
+        if (m_pcb)
+            m_pcb->endPlaying();
+        m_pcb = NULL;
     }
 
 private:
@@ -361,3 +398,11 @@ private:
         lua_getglobal(L, "soundplayer");
     }
 };
+
+extern SoundPlayer* player;
+int endplaying(lua_State *L)
+{
+    if (player)
+        player->endPlaying();
+    return 0;
+}

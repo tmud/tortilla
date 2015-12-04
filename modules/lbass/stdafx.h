@@ -11,3 +11,5 @@
 #include <algorithm>
 
 #include "bass/c/bass.h"
+#include "bassfx/c/bass_fx.h"
+

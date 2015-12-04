@@ -8,6 +8,10 @@ bool BassPlayer::loadBass()
         return error(L"An incorrect version of bass.dll");
     if (!BASS_Init(-1, 44100, 0, NULL, NULL))
         return error_bass(L"Can't initialize sound system", NULL);
+    BASS_FX_GetVersion();
+    //m_fx_plugin = BASS_PluginLoad(L"bass_fx.dll", 0);
+    //if (!m_fx_plugin)
+      //  return error_bass(L"Can't initialize fx plugin", NULL);
     bass_loaded = true;
     return true;
 }

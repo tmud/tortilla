@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #pragma comment(lib, "bass/c/bass.lib")
+#pragma comment(lib, "bassfx/c/bass_fx.lib")
 #include "common.h"
 #include "player.h"
 
