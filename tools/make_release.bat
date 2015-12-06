@@ -31,6 +31,7 @@ xcopy ..\help\*.* tortilla\help /Y
 xcopy ..\modules\system.dll tortilla\modules /Y
 xcopy ..\modules\rnd.dll tortilla\modules /Y
 xcopy ..\modules\bass.dll tortilla\modules /Y
+xcopy ..\modules\bass_fx.dll tortilla\modules /Y
 xcopy ..\modules\lbass.dll tortilla\modules /Y
 xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y

@@ -38,6 +38,54 @@ public:
         lua_pop(L, 1);
         return result;
     }
+    bool runPlayCommand(const std::vector<std::wstring>& params, std::wstring* error)
+    {
+        perror = error;
+        int count = params.size();
+        if (count == 0)
+        {
+            stopMusic();
+            return true;
+        }
+        if (count == 1 || count == 2)
+        {
+            int volume = 100;
+            if (count == 2) {
+                bool check = false;
+                volume = wstring_to_int(params[1].c_str(), &check);
+                if (!check)
+                {
+                    error->assign(L"Неверный набор параметров");
+                    return false;
+                }
+            }
+            std::wstring name = params[0];
+            iterator it = m_files_list.find(name);
+            if (it != m_files_list.end())
+                name = it->second;
+
+            int pos = name.rfind(L'.');
+            if (pos != -1)
+            {
+                std::wstring ext(name.substr(pos + 1));
+                if (ext == L"lst")
+                {
+                    bool result = playlist(name, volume);
+                    if (result)
+                        m_playing_music = -1;   // playlist id
+                    return result;
+                }
+            }
+
+            pushPlayer();
+            if (!luaT_run(L, "play", "tsd", name.c_str(), volume))
+                return incorrectCall(L"play");
+             m_playing_music = lua_tointeger(L, -1);
+            return true;
+        }
+        error->assign(L"Неверный набор параметров");
+        return false;
+    }
 
     bool runCommand(const std::vector<std::wstring>& params, std::wstring* error)
     {

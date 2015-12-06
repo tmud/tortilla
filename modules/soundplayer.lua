@@ -182,9 +182,12 @@ function soundplayer.stopAll()
   sp.samples = {}
 end
 
-function soundplayer.startRecord(file)
+function soundplayer.startRecord(file, sensivity)
   bass.setRecord("frequency", 22050)
   bass.setRecord("channels", 2)
+  if sensivity then
+    bass.setRecord("sensivity", sensivity)  
+  end
   bass.startRecord(file)
 end
 

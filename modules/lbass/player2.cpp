@@ -150,9 +150,8 @@ bool BassPlayer::startRecord(const wchar_t* file)
     HFX volfx = BASS_ChannelSetFX(m_record, BASS_FX_BFX_VOLUME, 0);
     BASS_BFX_VOLUME param;
     param.lChannel = 0; // global volume control
-    param.fVolume = 1;  // the volume level
+    param.fVolume = volume_ToFloat(m_sensivity_record); // recording volume
     BASS_FXSetParameters(volfx, &param); // apply the level change
- 
     return true;
 }
 

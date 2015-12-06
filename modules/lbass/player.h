@@ -17,7 +17,7 @@ class  BassPlayer
     RecordParams *m_record_params;
 
 public:
-    BassPlayer() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_sensivity_record(80), m_record(NULL), m_record_params(NULL) {}
+    BassPlayer() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_sensivity_record(30), m_record(NULL), m_record_params(NULL) {}
     ~BassPlayer() { deleteRecordParams(); }
 
     bool loadBass();

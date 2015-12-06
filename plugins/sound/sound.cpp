@@ -10,16 +10,34 @@ int get_name(lua_State *L)
     return 1;
 }
 
+void wstring_replace(std::wstring *str, const std::wstring& what, const std::wstring& forr)
+{
+    size_t pos = 0;
+    while ((pos = str->find(what, pos)) != std::string::npos)
+    {
+        str->replace(pos, what.length(), forr);
+        pos += forr.length();
+    }
+}
+
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
+    std::wstring s(L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
         L"Воспроизводятся wav,mp3,ogg,s3m,it,xm,mod. Запись с микрофона производится в wav.\r\n"
+        L"Добавляются две команды #sound и #play. Подробнее в справке #help sound.\r\n"
+        L"#play file [volume] - воспроизведение музыкального файла, аналог (#sound play)\r\n"
+        L"#play - останавливает воспроизведение музыкального файла, аналог (#sound stop)\r\n"
         L"#sound play file [volume] - воспроизведение музыкального файла или плейлиста (*.lst)\r\n"
-        L"#sound playfx|fx file [volume] - воспроизведение  звукового эффекта\r\n"
-        L"#sound volume [значение] - устанавливает или показывает текущую мастер-громкость\r\n"
+        L"#sound playfx|fx file [volume] - воспроизведение звукового эффекта\r\n"       
+        L"#sound volume [значение] - устанавливает или показывает текущую мастер-громкость плагина\r\n"
         L"#sound stop - останавливает воспроизведение музыкального файла\r\n"
-        L"#sound update - обновляет список файлов, доступных по короткому имени\r\n"
-        L"Подробнее в справке #help sound");
+        L"#sound update - обновляет список файлов, доступных по короткому имени");
+    luaT_Props props(L);
+    std::wstring p;
+    props.cmdPrefix(&p);
+    if (p != L"#")
+        wstring_replace(&s, L"#", p);
+    luaT_pushwstring(L, s.c_str());
     return 1;
 }
 
@@ -40,6 +58,7 @@ int init(lua_State *L)
     }
     base::addMenu(L, L"Плагины/Записать звук...", 1);
     base::addCommand(L, L"sound");
+    base::addCommand(L, L"play");
     return 0;
 }
 
@@ -73,7 +92,7 @@ int syscmd(lua_State *L)
         lua_gettable(L, -2);
         std::wstring cmd(luaT_towstring(L, -1));
         lua_pop(L, 1);
-        if (cmd == L"sound")
+        if (cmd == L"sound" || cmd == L"play")
         {
             std::vector<std::wstring> params;
             int n = luaL_len(L, -1);
@@ -95,8 +114,12 @@ int syscmd(lua_State *L)
                 lua_pop(L, 1);
             }
             lua_pop(L, 1);
+            
             std::wstring error;
-            player->runCommand(params, &error);
+            if (cmd == L"play")
+                player->runPlayCommand(params, &error);
+            else
+                player->runCommand(params, &error);
             if (!error.empty())
                 luaT_pushwstring(L, error.c_str() );
             else
@@ -125,20 +148,3 @@ int WINAPI plugin_open(lua_State *L)
     lua_setglobal(L, "sound");
     return 0;
 }
-
-
-/*BOOL APIENTRY DllMain( HMODULE hModule,
-                       DWORD  ul_reason_for_call,
-                       LPVOID lpReserved
-					 )
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-	return TRUE;
-}*/

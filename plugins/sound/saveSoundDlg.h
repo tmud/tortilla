@@ -13,9 +13,12 @@ class SaveSoundDlg : public CDialogImpl<SaveSoundDlg>, public SoundPlayerCallbac
     std::wstring m_temp_file;
     bool m_recording;
     int m_recording_id;
+    CTrackBarCtrl m_sensivity_slider;
+    CEdit m_sensivity_level;
+    bool m_block_update;
 
 public:
-    SaveSoundDlg(SoundPlayer* p) : player(p), m_recording(false), m_recording_id(-1) {}
+    SaveSoundDlg(SoundPlayer* p) : player(p), m_recording(false), m_recording_id(-1), m_block_update(false) {}
     ~SaveSoundDlg() { deleteTempFile(); }
     enum { IDD = IDD_SAVE_SOUND };
 
@@ -28,6 +31,9 @@ private:
         COMMAND_ID_HANDLER(IDC_BUTTON_STOPRECORD, OnStopRecord)       
         COMMAND_ID_HANDLER(IDC_BUTTON_PLAYRECORD, OnPlayRecord)
         COMMAND_ID_HANDLER(IDC_BUTTON_SAVERECORD, OnSaveRecord)
+        MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
+        COMMAND_HANDLER(IDC_EDIT_SENSIVITY, EN_CHANGE, OnSensChanging)
+        COMMAND_HANDLER(IDC_EDIT_SENSIVITY, EN_KILLFOCUS, OnSensChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -37,6 +43,10 @@ private:
         m_stop.Attach(GetDlgItem(IDC_BUTTON_STOPRECORD));
         m_play.Attach(GetDlgItem(IDC_BUTTON_PLAYRECORD));
         m_save.Attach(GetDlgItem(IDC_BUTTON_SAVERECORD));
+        m_sensivity_slider.Attach(GetDlgItem(IDC_SLIDER_SENSIVITY));
+        m_sensivity_slider.SetRange(0, 100);
+        m_sensivity_level.Attach(GetDlgItem(IDC_EDIT_SENSIVITY));
+        m_sensivity_level.SetLimitText(3);
         
         m_stop.EnableWindow(FALSE);
         m_play.EnableWindow(FALSE);
@@ -44,6 +54,45 @@ private:
 
         m_start.SetFocus();
         CenterWindow(GetParent());
+        return 0;
+    }
+
+    LRESULT OnHScroll(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        if (m_block_update)
+            return 0;
+        int pos = m_sensivity_slider.GetPos();
+        wchar_t buffer[8];
+        swprintf(buffer, L"%d", pos);
+        m_block_update = true;
+        m_sensivity_level.SetWindowText(buffer);
+        m_block_update = false;
+        return 0;
+    }
+
+    LRESULT OnSensChanging(WORD, WORD, HWND, BOOL&)
+    {
+        if (m_block_update)
+            return 0;
+        int len = m_sensivity_level.GetWindowTextLength();
+        wchar_t *buffer = new wchar_t[len+1];
+        m_sensivity_level.GetWindowText(buffer, len+1);
+        bool check = false;
+        int value = wstring_to_int(buffer, &check);
+        if (check)
+        {
+            value = max(min(value, 100), 0);
+            m_block_update = true;
+            m_sensivity_slider.SetPos(value);
+            m_block_update = false;
+        }
+        return 0;
+    }
+
+    LRESULT OnSensChanged(WORD, WORD, HWND, BOOL&)
+    {
+        BOOL b = FALSE;
+        OnHScroll(0, 0, 0, b);
         return 0;
     }
 
