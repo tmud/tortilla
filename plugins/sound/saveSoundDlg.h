@@ -10,11 +10,14 @@ class SaveSoundDlg : public CDialogImpl<SaveSoundDlg>, public SoundPlayerCallbac
     CButton m_stop;
     CButton m_play;
     CButton m_save;
+    CButton m_cat_mud;
+    CButton m_cat_public;
+    CEdit m_recording_file;
     std::wstring m_temp_file;
     bool m_recording;
     int m_recording_id;
-    CTrackBarCtrl m_sensivity_slider;
-    CEdit m_sensivity_level;
+    CTrackBarCtrl m_sens_slider;
+    CEdit m_sens_level;
     bool m_block_update;
 
 public:
@@ -43,11 +46,24 @@ private:
         m_stop.Attach(GetDlgItem(IDC_BUTTON_STOPRECORD));
         m_play.Attach(GetDlgItem(IDC_BUTTON_PLAYRECORD));
         m_save.Attach(GetDlgItem(IDC_BUTTON_SAVERECORD));
-        m_sensivity_slider.Attach(GetDlgItem(IDC_SLIDER_SENSIVITY));
-        m_sensivity_slider.SetRange(0, 100);
-        m_sensivity_level.Attach(GetDlgItem(IDC_EDIT_SENSIVITY));
-        m_sensivity_level.SetLimitText(3);
-        
+        m_sens_slider.Attach(GetDlgItem(IDC_SLIDER_SENSIVITY));
+        m_sens_slider.SetRange(0, 100);
+        m_sens_level.Attach(GetDlgItem(IDC_EDIT_SENSIVITY));
+        m_sens_level.SetLimitText(3);
+
+        m_cat_mud.Attach(GetDlgItem(IDC_RADIO_MUDCAT));
+        m_cat_public.Attach(GetDlgItem(IDC_RADIO_PUBLICCAT));
+        m_recording_file.Attach(GetDlgItem(IDC_EDIT_FILENAME));
+
+        int level = player->recordingParams().sensitivity;
+        m_sens_level.SetWindowText(int_to_wstring(level));
+
+        int destination = player->recordingParams().destfolder;
+        if (destination == 1)
+            m_cat_public.SetCheck(1);
+        else
+            m_cat_mud.SetCheck(1);
+
         m_stop.EnableWindow(FALSE);
         m_play.EnableWindow(FALSE);
         m_save.EnableWindow(FALSE);
@@ -61,12 +77,13 @@ private:
     {
         if (m_block_update)
             return 0;
-        int pos = m_sensivity_slider.GetPos();
+        int pos = m_sens_slider.GetPos();
         wchar_t buffer[8];
         swprintf(buffer, L"%d", pos);
         m_block_update = true;
-        m_sensivity_level.SetWindowText(buffer);
+        m_sens_level.SetWindowText(buffer);
         m_block_update = false;
+        player->recordingParams().sensitivity = pos;
         return 0;
     }
 
@@ -74,16 +91,17 @@ private:
     {
         if (m_block_update)
             return 0;
-        int len = m_sensivity_level.GetWindowTextLength();
+        int len = m_sens_level.GetWindowTextLength();
         wchar_t *buffer = new wchar_t[len+1];
-        m_sensivity_level.GetWindowText(buffer, len+1);
+        m_sens_level.GetWindowText(buffer, len+1);
         bool check = false;
         int value = wstring_to_int(buffer, &check);
         if (check)
         {
             value = max(min(value, 100), 0);
             m_block_update = true;
-            m_sensivity_slider.SetPos(value);
+            m_sens_slider.SetPos(value);
+            player->recordingParams().sensitivity = value;
             m_block_update = false;
         }
         return 0;
@@ -177,6 +195,28 @@ private:
 
     LRESULT OnSaveRecord(WORD, WORD, HWND, BOOL&)
     {
+        int len = m_recording_file.GetWindowTextLength();
+        if (len == 0)
+        {
+            MessageBox(L"Введите имя файла для записи!", L"Запись звука", MB_ICONSTOP|MB_OK);
+            m_recording_file.SetFocus();
+            return 0;
+        }
+        wchar_t *buffer = new wchar_t[len+1];
+        m_recording_file.GetWindowText(buffer, len+1);
+        std::wstring filname(buffer);
+        delete []buffer;
+        filname.append(L".wav");
+        saveParameters();
+        bool result = player->saveFile(m_temp_file.c_str(), filname.c_str());       
+        if (!result)
+             MessageBox(L"Не удалось сохранить файл!", L"Запись звука", MB_ICONSTOP|MB_OK);
+        else
+        {
+            deleteTempFile();
+            m_error_label.SetWindowText(L"Успешно сохранено.");
+            m_recording_file.SetWindowText(L"");
+        }
         return 0;
     }
 
@@ -186,17 +226,29 @@ private:
         OnStopRecord(0, 0, 0, h);
     }
 
+    void saveParameters()
+    {
+        int level = m_sens_slider.GetPos();
+        player->recordingParams().sensitivity = level;
+        int desination = 0;
+        if (m_cat_public.GetCheck() == BST_CHECKED)
+            desination = 1;
+        player->recordingParams().destfolder = desination;
+    }
+
     LRESULT OnOk(WORD, WORD, HWND, BOOL&)
-    {        
-        EndDialog(IDOK);
+    {
         stopRecord();
+        saveParameters();
+        EndDialog(IDOK);
         return 0;
     }
 
     LRESULT OnCancel(WORD, WORD, HWND, BOOL&)
     {
-        EndDialog(IDCANCEL);
         stopRecord();
+        saveParameters();
+        EndDialog(IDCANCEL);        
         return 0;
     }
 

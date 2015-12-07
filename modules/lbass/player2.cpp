@@ -132,7 +132,7 @@ bool BassPlayer::startRecord(const wchar_t* file)
         message.append(file);
         return error(message.c_str());
     }
-    
+
     m_record_params = new RecordParams;
     m_record_params->hfile = hfile;
     m_record_params->recording = TRUE;
@@ -145,7 +145,7 @@ bool BassPlayer::startRecord(const wchar_t* file)
         DeleteFile(file);
         return error_bass(L"Can't start recording.", NULL);
     }
-    
+
     // set a volume effect on the recording channel
     HFX volfx = BASS_ChannelSetFX(m_record, BASS_FX_BFX_VOLUME, 0);
     BASS_BFX_VOLUME param;
