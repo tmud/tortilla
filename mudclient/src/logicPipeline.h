@@ -3,10 +3,12 @@
 #include "mudViewParser.h"
 #include "inputProcessor.h"
 
+class PluginsTrigger;
 struct LogicPipelineElement 
 {
-   InputCommands commands;
    parseData data;
+   InputCommands commands;                  // from actions
+   std::vector<PluginsTrigger*> triggers;   // from plugin's triggers
 };
 
 class LogicPipeline
@@ -39,6 +41,6 @@ public:
         e->data.last_finished = true;
         e->data.update_prev_string = false;
         e->data.strings.clear();
-        m_free.push_back(e);    
+        m_free.push_back(e);
     }
 };

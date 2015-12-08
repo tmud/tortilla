@@ -74,8 +74,8 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     {
         int id = keys.getId(i);
         if (id == -1) continue;
-        int begin = m_pcre.getFirst(id);
-        int end = m_pcre.getLast(id);
+        int begin = m_pcre.getFirst(i+1);
+        int end = m_pcre.getLast(i+1);
         p[id] = m_str.substr(begin, end-begin);
     }
 }

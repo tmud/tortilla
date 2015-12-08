@@ -4,7 +4,7 @@
 #include "accessors.h"
 extern Plugin* _cp;
 
-PluginsTrigger::PluginsTrigger() : L(NULL), m_enabled(false)
+PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_enabled(false)
 {
 }
 
@@ -14,29 +14,70 @@ PluginsTrigger::~PluginsTrigger()
     m_trigger_func_ref.unref(L);
 }
 
-bool PluginsTrigger::init(lua_State *pL)
+bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
 {
-    L = pL;
-    assert(luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION));
-
-    m_trigger_func_ref.createRef(L);
-    tstring key(luaT_towstring(L, 1));
-    m_compare.init(key, true);
-
-    m_enabled = true;
-    return true;
+    assert(pl && pp);
+    L = pl; p = pp;
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
+        luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
+    {
+        m_trigger_func_ref.createRef(L);  // save function on the top of stack
+        if (lua_isstring(L, 1))
+        {
+            m_compare_objects.resize(1);
+            tstring key(luaT_towstring(L, 1));
+            m_compare_objects[0].init(key, true);
+        }
+        else
+        {
+            std::vector<tstring> keys;
+            lua_pushnil(L);                     // first key
+            while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+            {
+                if (!lua_isstring(L, -1))
+                    return false;
+                tstring key(luaT_towstring(L, -1));
+                keys.push_back(key);
+                lua_pop(L, 1);
+            }
+            m_compare_objects.resize(keys.size());
+            for (int i=0,e=keys.size();i<e;++i)
+            {
+                m_compare_objects[i].init(keys[i], true);
+            }
+        }
+        m_enabled = true;
+        return true;
+    }
+    return false;
 }
 
-bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
+void PluginsTrigger::enable(bool enable)
 {
-    if (!m_enabled)
-        return false;
-    if (incompl_flag && m_compare.isFullstrReq())
-        return false;
-    if (!m_compare.compare(cd.fullstr))
-        return false;
+    m_enabled = enable;
+}
 
-    m_trigger_func_ref.pushValue(L);
+bool PluginsTrigger::isEnabled() const
+{
+    return m_enabled;
+}
+
+int PluginsTrigger::getLen() const
+{
+    return m_compare_objects.size();
+}
+
+bool PluginsTrigger::compare(int index, const CompareData& cd, bool incompl_flag)
+{
+    CompareObject &co = m_compare_objects[index];
+    if (incompl_flag && co.isFullstrReq())
+        return false;
+    return co.compare(cd.fullstr);
+}
+
+void PluginsTrigger::run()
+{
+    /* m_trigger_func_ref.pushValue(L);
 
     PluginsTriggerString vs(cd.string, m_compare);
     luaT_pushobject(L, &vs, LUAT_VIEWSTRING);
@@ -47,13 +88,7 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
         else
             pluginError(L"trigger", L"неизвестная ошибка");
         lua_settop(L, 0);
-    }
-    return true;
-}
-
-void PluginsTrigger::enable(bool enable)
-{
-    m_enabled = enable;
+    }*/
 }
 
 int trigger_create(lua_State *L)
@@ -61,12 +96,14 @@ int trigger_create(lua_State *L)
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION))
     {
         PluginsTrigger *t = new PluginsTrigger();
-        if (!t->init(L))
-            { delete t;  t = NULL; }
+        if (!t->init(L, _cp))
+            { delete t; }
         else
-            { _cp->triggers.push_back(t); }
-        luaT_pushobject(L, t, LUAT_TRIGGER);
-        return 1;
+        {
+            _cp->triggers.push_back(t);
+            luaT_pushobject(L, t, LUAT_TRIGGER);
+            return 1;
+        }
     }
     return pluginInvArgs(L, L"createTrigger");
 }
