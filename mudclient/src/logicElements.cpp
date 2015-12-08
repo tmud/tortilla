@@ -15,6 +15,12 @@ void CompareData::reinit()
        fullstr.append(vb[i].string);
 }
 
+void CompareData::fullinit()
+{
+    start = 0;
+    reinit();
+}
+
 void CompareData::del(CompareRange& range)
 {
     if (!cut(range))

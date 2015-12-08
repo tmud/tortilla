@@ -3,6 +3,8 @@
 #include "propertiesPages/propertiesData.h"
 #include "logicElements.h"
 #include "varProcessor.h"
+#include "plugins/pluginsTriggersHandler.h"
+#include "logicPipeline.h"
 
 template <class T>
 class LogicWrapper : public std::vector<T*>
@@ -60,7 +62,7 @@ public:
         for (int i=0,e=values->size(); i<e; ++i)
         {
             const property_value &v = values->get(i);
-            if (!isOnlyDigits(v.key))
+            if (!isInt(v.key))
                 continue;
             int id = _wtoi(v.key.c_str());
             if (id < 1 || id > TIMERS_COUNT)
@@ -121,7 +123,7 @@ public:
     void updateProps(int what = UPDATE_ALL);
     bool processAliases(const InputCommand* cmd, InputCommands* newcmds);
     bool processHotkeys(const tstring& key, InputCommands* newcmds);
-    void processActions(parseData *parse_data, parseData *not_processed, InputCommands* newcmds);
+    bool processActions(parseData *parse_data, int index, LogicPipelineElement *pe);
     void processSubs(parseData *parse_data);
     void processAntiSubs(parseData *parse_data);
     void processGags(parseData *parse_data);

@@ -1,16 +1,18 @@
-#pragma once
+#pragma once 
 
 bool isVistaOrHigher();
 void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, const tstring& msg, UINT options);
 int msgBox(HWND parent, UINT msg, UINT options);
 void getWindowText(HWND handle, tstring *string);
-bool a2int(const std::string& str, int *value);
+bool w2int(const tstring& str, int *value);
+void int2w(int value, tstring* str);
 bool w2double(const tstring& str, double *value);
 void double2w(double value, int precision, tstring* str);
 double getMod(double value);
 bool isExistSymbols(const tstring& str, const tstring& symbols);
 bool isOnlyDigits(const tstring& str);
+bool isInt(const tstring& str);
 bool isItNumber(const tstring& str);
 bool isOnlySpaces(const tstring& str);
 bool isOnlySymbols(const tstring& str, const tstring& symbols);
@@ -18,6 +20,8 @@ bool isOnlyFilnameSymbols(const tstring& str);
 COLORREF invertColor(COLORREF c);
 bool sendToClipboard(HWND owner, const tstring& text);
 bool getFromClipboard(HWND owner, tstring* text);
+void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd);
+bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring* cmd);
 
 void tstring_trimleft(tstring *str);
 void tstring_trimright(tstring *str);

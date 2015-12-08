@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98beta2"
+#define TORTILLA_VERSION L"0.98b12"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -66,6 +66,7 @@ typedef unsigned int uint;
 
 #define OUTPUT_WINDOWS 6
 #define TIMERS_COUNT 10
+#define MAINWND_CLASS_NAME L"TortillaMudClient"
 
 // only for debug (debuging text formatting)
 #ifdef _DEBUG

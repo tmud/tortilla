@@ -130,7 +130,7 @@ private:
         return _wtoi(val);
     }
 
-    void getWindowText(HWND handle, tstring *string)
+    void getWindowText(HWND handle, std::wstring *string)
     {
         int text_len = ::GetWindowTextLength(handle);
         wchar_t *tmp = new wchar_t[text_len + 2];
@@ -178,7 +178,7 @@ private:
 
     LRESULT OnTimeout(WORD, WORD wID, HWND, BOOL&)
     {
-        tstring timeout;
+        std::wstring timeout;
         getWindowText(m_timeout, &timeout);
         int val = !timeout.empty() ? a2i(timeout.c_str()) : 0;
         if (val < 1) { val = 5; m_timeout.SetWindowText(i2a(val)); }
@@ -189,7 +189,7 @@ private:
 
     LRESULT OnInterval(WORD, WORD wID, HWND, BOOL&)
     {
-        tstring interval;
+        std::wstring interval;
         getWindowText(m_interval, &interval);
         int val = !interval.empty() ? a2i(interval.c_str()) : 0;
         if (val < 5) { val = 5; m_interval.SetWindowText(i2a(val)); }

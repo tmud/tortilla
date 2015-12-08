@@ -41,6 +41,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     PluginsManager m_plugins;
     int m_codepage;
     bool m_activated;
+    bool m_settings_mode;
     std::vector<MudViewHandler*> m_handlers;
 
 private:
@@ -58,7 +59,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(this), m_codepage(CPWIN), m_activated(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false)
     {
     }
 
@@ -137,10 +138,15 @@ public:
         return m_activated;
     }
 
+    bool isPropertiesOpen() const
+    {
+        return m_settings_mode;
+    }
+
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
     {
         PluginsView *v = new PluginsView(p);
-        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD|WS_VISIBLE);
+        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD);
         int dt = (w.side == DOCK_LEFT || w.side == DOCK_RIGHT) ? GetSystemMetrics(SM_CXEDGE) : GetSystemMetrics(SM_CYEDGE);
         m_dock.m_panels.AddWindow(*v, w.side, w.size+dt);
         return v;
@@ -157,7 +163,7 @@ public:
     PluginsView* createDockPane(const OutputWindow& w, Plugin* p)
     {
         PluginsView *v = new PluginsView(p);
-        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_STATICEDGE);
+        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, 0);
         m_dock.AddWindow(*v);
         if (IsDocked(w.side))
         {
@@ -265,16 +271,24 @@ public:
         }
     }
 
+    bool isDockPaneVisible(PluginsView* v)
+    {
+       return m_dock.IsVisible(v->m_hWnd) ? true : false;
+    }
+
     void hideDockPane(PluginsView* v)
     {
-        HWND hwnd = v->m_hWnd;
-        m_dock.HideWindow(hwnd);
+        m_dock.HideWindow(v->m_hWnd);
     }
 
     void showDockPane(PluginsView* v)
     {
-        HWND hwnd = v->m_hWnd;
-        m_dock.ShowWindow(hwnd);
+        m_dock.ShowWindow(v->m_hWnd);
+    }
+
+    SIZE getDockPaneSize(PluginsView *v)
+    {
+        return m_dock.GetWindowSize(v->m_hWnd);
     }
 
     HWND getFloatingWnd(PluginsView* v)
@@ -283,6 +297,27 @@ public:
         DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
         return (ctx) ? ctx->hwndFloated : NULL;
     }
+
+    void setFixedSize(PluginsView *v, int width, int height)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        if (!ctx) return;
+        if (width <= 0 || height <= 0)            
+            return;
+        CWindow p(ctx->hwndFloated);
+        if (!p.IsWindow()) return;
+        width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
+        height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+        RECT pos = ctx->rcWindow;
+        pos.right = pos.left + width - 1;
+        pos.bottom = pos.top + height - 1;
+        ctx->bBlockFloatingResizeBox = true;
+        ctx->dwFlags |= DCK_NOLEFT|DCK_NORIGHT|DCK_NOTOP|DCK_NOBOTTOM;
+        p.MoveWindow(&pos);
+    }
+
+    void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
@@ -307,6 +342,7 @@ private:
         MESSAGE_HANDLER(WM_USER+4, OnBarSetFocus)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
+        MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnWheel)
@@ -354,7 +390,7 @@ private:
                 m_parent.SendMessage(WM_USER, menu_id, 1);
             m_parent.SendMessage(WM_USER+1, menu_id, (WPARAM)w.name.c_str());
 
-            v->Create(m_dock, rcDefault, w.name.c_str(), style, WS_EX_CLIENTEDGE);
+            v->Create(m_dock, rcDefault, w.name.c_str(), style, 0);
             m_views.push_back(v);
             m_dock.AddWindow(*v);
             if (IsDocked(w.side))
@@ -429,6 +465,7 @@ private:
         for (int i = 0, e = m_plugins_views.size(); i<e; ++i)
             delete m_plugins_views[i];
         onClose();
+        unloadModules();
         return 0;
     }
 
@@ -628,11 +665,8 @@ private:
         return 0;
     }
 
-    LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
+    void processUserCommand(const tstring& cmd, bool process_history)
     {
-        tstring cmd;
-        m_bar.getCommand(&cmd);
-
         InputPlainCommands cmds(cmd);
         int count = cmds.size();
         if (count > 1)
@@ -651,15 +685,17 @@ private:
         }
         else if (count == 1)
         {
+            if (process_history) {
             InputPlainCommands history;
             m_plugins.processHistoryCmds(cmds, &history);
             for (int i=0,e=history.size(); i<e; ++i)
                 m_bar.addToHistory(history[i]);
+            }
         }
         else
         {
             assert(false);
-            return 0;
+            return;
         }
 
         InputTemplateParameters p;
@@ -672,6 +708,25 @@ private:
         tcmds.extract(&cmds);
         m_plugins.processBarCmds(&cmds);
         m_processor.processUserCommand(cmds);
+    }
+
+    LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        tstring cmd;
+        m_bar.getCommand(&cmd);
+        processUserCommand(cmd, true);
+        return 0;
+    }
+
+    LRESULT OnCopyData(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
+    {
+        tstring window, cmd;
+        if (readCommandToWindow(wparam, lparam, &window, &cmd))
+        {
+            PropertiesManager *pmanager = tortilla::getPropertiesManager();
+            if (window.empty() || window == pmanager->getProfileName())
+                processUserCommand(cmd, false);
+        }
         return 0;
     }
 
@@ -704,6 +759,9 @@ private:
 
     LRESULT OnSettings(WORD, WORD, HWND, BOOL&)
     {
+        m_settings_mode = true;
+        m_plugins.processPluginsMethod("propsblocked", 0);
+
         PropertiesData& data = *m_manager.getConfig();
         PropertiesData tmp(data);
         PropertiesDlg propDlg(&tmp);
@@ -718,6 +776,8 @@ private:
         {
             data.dlg = tmp.dlg;
         }
+        m_settings_mode = false;
+        m_plugins.processPluginsMethod("propsupdated", 0);
         return 0;
     }
 
@@ -860,6 +920,11 @@ private:
     void postprocessText(int view, parseData* parse_data)
     {
         m_plugins.processViewData("after", view, parse_data);
+    }
+
+    PluginsTriggersHandler* getPluginsTriggers() 
+    {
+        return &m_plugins;
     }
 
     void addText(int view, parseData* parse_data)

@@ -169,9 +169,6 @@
     <ClInclude Include="src\highlightHelper.h">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClInclude>
-    <ClInclude Include="src\common\tempThread.h">
-      <Filter>Libs</Filter>
-    </ClInclude>
     <ClInclude Include="src\common\criticalSection.h">
       <Filter>Libs</Filter>
     </ClInclude>
@@ -241,6 +238,9 @@
     <ClInclude Include="src\plugins\pluginsRenderObjects.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\plugins\pluginsTriggers.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
     <ClInclude Include="src\msdp\msdpNetwork.h">
       <Filter>Source Files\Msdp</Filter>
     </ClInclude>
@@ -264,6 +264,9 @@
     </ClInclude>
     <ClInclude Include="src\logicPipeline.h">
       <Filter>Source Files\LogicProcessor</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsTriggersHandler.h">
+      <Filter>Source Files\Plugins</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -372,6 +375,9 @@
     <ClCompile Include="src\plugins\pluginsPcre.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
+    <ClCompile Include="src\plugins\pluginsTriggers.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
     <ClCompile Include="src\msdp\msdpNetwork.cpp">
       <Filter>Source Files\Msdp</Filter>
     </ClCompile>
@@ -386,6 +392,9 @@
     </ClCompile>
     <ClCompile Include="src\accessors.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsImage.cpp">
+      <Filter>Source Files\Plugins</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

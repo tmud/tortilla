@@ -12,7 +12,7 @@ public:
     void create();
     void setFont(HFONT font);
     void setAlarmWnd(HWND wnd);
-    bool showMessage(const u8string& msg, bool from_queue);
+    bool showMessage(const std::wstring& msg, bool from_queue);
     void setActivated(bool activated);
     TraySettings& traySettings();
 
@@ -77,5 +77,5 @@ private:
     bool m_timerStarted;
     HWND m_alarmWnd;
     POINT m_point0;
-    std::deque<u8string> m_queue;
+    std::deque<std::wstring> m_queue;
 };

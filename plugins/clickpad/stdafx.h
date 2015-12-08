@@ -13,9 +13,15 @@
 #include <atldlgs.h>
 #include <atlctrls.h>
 #include <atlctrlx.h>
+#include <atlmisc.h>
 
+#include <map>
 #include <vector>
 #include <string>
-#include <assert.h>
+#include <algorithm>
 
-typedef std::wstring tstring;
+const int MAX_ROWS = 5;
+const int MAX_COLUMNS = 10;
+
+#include <assert.h>
+#include "api/api.h"

@@ -177,7 +177,7 @@ void LogicProcessor::updateProps()
         t1.findAllMatches(tmpl);
         std::vector<tstring> parts;
         int pos = 0;
-        for (int i = 0, e = t1.getSize(); i < e;  ++i)
+        for (int i = 1,e=t1.getSize(); i<e;  ++i)
         {
             int last = t1.getFirst(i);
             parts.push_back(tmpl.substr(pos, last - pos));
@@ -308,6 +308,12 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     int index = p.find(cmd);
     p.del(index);
     return true;
+}
+
+void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS)
+       printex(window, msgs);
 }
 
 void LogicProcessor::updateLog(const tstring& msg)

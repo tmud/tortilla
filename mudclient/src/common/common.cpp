@@ -43,16 +43,13 @@ void getWindowText(HWND handle, tstring *string)
     string->assign(buffer);
 }
 
-bool isOnlyDigitsA(const std::string& str)
+bool isOnlyDigits(const tstring& str)
 {
-    if (str.empty()) return false;
-    const char* p = str.c_str();
-    int len = str.length();
-    if (*p == '-') { p++; len--; }
-    return (strspn(p, "0123456789") != len) ? false : true;
+   if (str.empty()) return false;
+   return isOnlySymbols(str, L"0123456789");
 }
 
-bool isOnlyDigits(const tstring& str)
+bool isInt(const tstring& str)
 {
    if (str.empty()) return false;
    const tchar* p = str.c_str();
@@ -87,12 +84,18 @@ bool isOnlyFilnameSymbols(const tstring& str)
     return (pos != str.length()) ? false : true;
 }
 
-bool a2int(const std::string& str, int *value)
+bool w2int(const tstring& str, int *value)
 {
-    if (!isOnlyDigitsA(str))
+    if (!isInt(str))
         return false;
-    *value = atoi(str.c_str());
+    *value = _wtoi(str.c_str());
     return true;
+}
+void int2w(int value, tstring* str)
+{
+    wchar_t buffer[16];
+    swprintf(buffer, L"%d", value);
+    str->assign(buffer);
 }
 
 bool w2double(const tstring& str, double *value)
@@ -188,7 +191,7 @@ void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
 
 bool tstring_cmpl(const tstring& str, const WCHAR* lstr)
 {
-    return (wcsncmp(str.c_str(), lstr, wcslen(lstr)) == 0) ? true : false;    
+    return (wcsncmp(str.c_str(), lstr, wcslen(lstr)) == 0) ? true : false;
 }
 
 int utf8_getbinlen(const utf8* str, int symbol)
@@ -319,18 +322,18 @@ bool sendToClipboard(HWND owner, const tstring& text)
     HGLOBAL hGlob = GlobalAlloc(GMEM_FIXED, size);
     if (!hGlob)
     {
-        CloseClipboard();   
+        CloseClipboard();
         return false;
     }
 
     WCHAR* buffer = (WCHAR*)GlobalLock(hGlob);
     wcscpy(buffer, text.c_str());
     GlobalUnlock(hGlob);
-    bool result = (SetClipboardData(CF_UNICODETEXT, hGlob) == NULL) ? false : true;        
+    bool result = (SetClipboardData(CF_UNICODETEXT, hGlob) == NULL) ? false : true;
     CloseClipboard();
     if (!result)
         GlobalFree(hGlob);
-    return result;    
+    return result;
 }
 
 bool getFromClipboard(HWND owner, tstring* text)
@@ -352,4 +355,80 @@ bool getFromClipboard(HWND owner, tstring* text)
     }
     CloseClipboard();
     return result;
+}
+
+const int maxClassLen = 128;
+tchar className[maxClassLen];
+std::vector<HWND> clients;
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM)
+{
+   if (GetClassName(hwnd,className,maxClassLen))
+   {
+       if (!wcscmp(className, MAINWND_CLASS_NAME))
+           clients.push_back(hwnd);
+   }
+   return TRUE;
+}
+
+void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd)
+{
+    EnumWindows(EnumWindowsProc, 0);
+    int window_size = window.size();
+    int cmd_size = cmd.size();
+
+    int buffer_len = (window_size + cmd_size + 2)*sizeof(tchar) + 2*sizeof(int);
+    unsigned char* buffer = new unsigned char[buffer_len];
+    unsigned char* p = buffer;
+
+    int tocopy = sizeof(int);
+    memcpy(p, &window_size,tocopy); p += tocopy;
+    tocopy = (window_size+1)*sizeof(tchar);
+    memcpy(p, window.c_str(), tocopy); p += tocopy;
+    tocopy = sizeof(int);
+    memcpy(p, &cmd_size,tocopy); p += tocopy;
+    tocopy = (cmd_size+1)*sizeof(tchar);
+    memcpy(p, cmd.c_str(),tocopy); p += tocopy;
+
+    COPYDATASTRUCT cd;
+    cd.dwData = 0x55aa;
+    cd.cbData = buffer_len;
+    cd.lpData = buffer;
+
+    for (int i=0,e=clients.size(); i<e;++i)
+        SendMessage(clients[i], WM_COPYDATA, (WPARAM)owner, (LPARAM)&cd);
+    delete []buffer;
+    clients.clear();
+}
+
+bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring* cmd)
+{
+    assert(window && cmd);
+    COPYDATASTRUCT* cd = (COPYDATASTRUCT*)lparam;
+    if (cd->dwData != 0x55aa)
+        return false;
+    if (cd->cbData == 0)
+        return false;
+    int len = cd->cbData;
+    unsigned char *p = (unsigned char *)cd->lpData;
+    int window_size = 0; int cmd_size = 0;
+
+    int tocopy = sizeof(int);
+    if (tocopy > len) return false;
+    memcpy(&window_size, p, tocopy); p += tocopy; len -= tocopy;
+    if (window_size < 0) return false;
+
+    tocopy = (window_size+1)*sizeof(tchar);
+    if (tocopy > len) return false;
+    window->assign((const tchar*)p); p += tocopy; len -= tocopy;
+
+    tocopy = sizeof(int);
+    if (tocopy > len) return false;
+    memcpy(&cmd_size, p, tocopy); p += tocopy; len -= tocopy;
+    if (cmd_size < 0) return false;
+
+    tocopy = (cmd_size+1)*sizeof(tchar);
+    if (tocopy > len) return false;
+    cmd->assign((const tchar*)p); p += tocopy; len -= tocopy;
+
+    return (len == 0) ? true : false;
 }

@@ -27,6 +27,7 @@ public:
     virtual void preprocessCommand(InputCommand* cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
+    virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
 };
 
 class LogicProcessorMethods
@@ -42,6 +43,7 @@ public:
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
     virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
+    virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
 };
 
 class parser;
@@ -101,7 +103,7 @@ public:
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
-
+    void windowOutput(int window, const std::vector<tstring>& msgs);
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);

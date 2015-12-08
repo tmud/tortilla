@@ -1,12 +1,22 @@
 #include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsViewRender.h"
+#include "pluginSupport.h"
 
-PluginsViewRender::PluginsViewRender(lua_State *pL, int index, HWND wnd) : renderL(pL), m_render_func_index(index), m_wnd(wnd),
+PluginsViewRender::PluginsViewRender(lua_State *pL, HWND wnd) : renderL(pL), m_wnd(wnd),
 m_inside_render(false), m_bkg_color(0), m_text_color(RGB(128,128,128)), m_width(0), m_height(0),
 current_pen(NULL), current_brush(NULL), current_font(NULL)
 {
-    assert(pL && index > 0);
+    assert(pL);
+    assert(lua_isfunction(pL, -1));
+    m_render_func_ref.createRef(pL);
+}
+
+PluginsViewRender::~PluginsViewRender()
+{
+    m_render_func_ref.unref(renderL);
+    for (int i=0,e=images.size(); i<e; ++i)
+        delete images[i];
 }
 
 bool PluginsViewRender::render()
@@ -21,21 +31,7 @@ bool PluginsViewRender::render()
     m_width = rc.right; m_height = rc.bottom;
     m_dc.FillSolidRect(&rc, m_bkg_color);
 
-    lua_getglobal(L, "pvrender");
-    if (!lua_istable(L, -1))
-    {
-        lua_pop(L, 1);
-        return true;
-    }
-    lua_pushinteger(L, m_render_func_index);
-    lua_gettable(L, -2);
-    if (!lua_isfunction(L, -1))
-    {
-        lua_pop(L, 2);
-        return true;
-    }
-    lua_insert(L, -2);
-    lua_pop(L, 1);
+    m_render_func_ref.pushValue(L);
     luaT_pushobject(L, this, LUAT_RENDER);
     m_inside_render = true;
     bool result = true;
@@ -44,9 +40,9 @@ bool PluginsViewRender::render()
         // error in call
         result = false;
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError("render", lua_tostring(L, -1));
+            pluginError(L"render", luaT_towstring(L, -1));
         else
-            pluginError("render", "неизвестная ошибка");
+            pluginError(L"render", L"неизвестная ошибка");
         lua_settop(L, 0);
     }
     m_inside_render = false;
@@ -114,6 +110,11 @@ void PluginsViewRender::selectFont(CFont* f)
     current_font = f;
 }
 
+void PluginsViewRender::regImage(Image *img)
+{
+    images.push_back(img);
+}
+
 void PluginsViewRender::drawRect(const RECT& r)
 {
     if (!m_inside_render)
@@ -137,6 +138,21 @@ void PluginsViewRender::drawSolidRect(const RECT& r)
         return;
     if (current_brush)
         m_dc.FillRect(&r, *current_brush);
+}
+
+void PluginsViewRender::drawImage(Image *img, int x, int y)
+{
+    if (!m_inside_render)
+        return;
+    img->render(m_dc, x, y);
+}
+
+void PluginsViewRender::drawImage(Image *img, int x, int y, int w, int h)
+{
+    if (!m_inside_render)
+        return;
+    image_render_ex p; p.w = w; p.h = h;
+    img->render(m_dc, x, y, &p);
 }
 
 int PluginsViewRender::print(int x, int y, const tstring& text)
@@ -206,7 +222,7 @@ int render_setBackground(lua_State *L)
         r->setBackground(color);
         return 0;
     }
-    return pluginInvArgs(L, "render:setBackground");
+    return pluginInvArgs(L, L"render:setBackground");
 }
 
 int render_textColor(lua_State *L)
@@ -234,7 +250,7 @@ int render_textColor(lua_State *L)
         r->setTextColor(color);
         return 0;
     }
-    return pluginInvArgs(L, "render:textColor");
+    return pluginInvArgs(L, L"render:textColor");
 }
 
 int render_width(lua_State *L)
@@ -245,7 +261,7 @@ int render_width(lua_State *L)
         lua_pushinteger(L, r->width());
         return 1;
     }
-    return pluginInvArgs(L, "render:width");
+    return pluginInvArgs(L, L"render:width");
 }
 
 int render_height(lua_State *L)
@@ -256,7 +272,7 @@ int render_height(lua_State *L)
         lua_pushinteger(L, r->height());
         return 1;
     }
-    return pluginInvArgs(L, "render:height");
+    return pluginInvArgs(L, L"render:height");
 }
 
 int render_createPen(lua_State *L)
@@ -271,7 +287,7 @@ int render_createPen(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render:createPen");
+    return pluginInvArgs(L, L"render:createPen");
 }
 
 int render_createBrush(lua_State *L)
@@ -286,7 +302,7 @@ int render_createBrush(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render:createBrush");
+    return pluginInvArgs(L, L"render:createBrush");
 }
 
 int render_createFont(lua_State *L)
@@ -301,7 +317,7 @@ int render_createFont(lua_State *L)
             lua_pushnil(L);
         return 1;
     }
-    return pluginInvArgs(L, "render:createFont");
+    return pluginInvArgs(L, L"render:createFont");
 }
 
 int render_select(lua_State *L)
@@ -327,7 +343,7 @@ int render_select(lua_State *L)
         r->selectFont(f);
         return 0;
     }
-    return pluginInvArgs(L, "render:select");
+    return pluginInvArgs(L, L"render:select");
 }
 
 int render_rect(lua_State *L)
@@ -341,7 +357,7 @@ int render_rect(lua_State *L)
         r->drawRect(rc);
         return 0;
     }
-    return pluginInvArgs(L, "render:rect");
+    return pluginInvArgs(L, L"render:rect");
 }
 
 int render_solidRect(lua_State *L)
@@ -355,7 +371,7 @@ int render_solidRect(lua_State *L)
         r->drawSolidRect(rc);
         return 0;
     }
-    return pluginInvArgs(L, "render:solidRect");
+    return pluginInvArgs(L, L"render:solidRect");
 }
 
 int render_print(lua_State *L)
@@ -368,7 +384,7 @@ int render_print(lua_State *L)
         lua_pushinteger(L, width);
         return 1;
     }
-    return pluginInvArgs(L, "render:print");
+    return pluginInvArgs(L, L"render:print");
 }
 
 int render_update(lua_State *L)
@@ -379,7 +395,7 @@ int render_update(lua_State *L)
         r->update();
         return 0;
     }
-    return pluginInvArgs(L, "render:update");
+    return pluginInvArgs(L, L"render:update");
 }
 
 int render_fontHeight(lua_State *L)
@@ -390,7 +406,7 @@ int render_fontHeight(lua_State *L)
         lua_pushinteger(L, r->getFontHeight());
         return 1;
     }
-    return pluginInvArgs(L, "render:fontHeight");
+    return pluginInvArgs(L, L"render:fontHeight");
 }
 
 int render_textWidth(lua_State *L)
@@ -402,7 +418,70 @@ int render_textWidth(lua_State *L)
         lua_pushinteger(L, r->getTextWidth(text));
         return 1;
     }
-    return pluginInvArgs(L, "render:textWidth");
+    return pluginInvArgs(L, L"render:textWidth");
+}
+
+int render_createImage(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TSTRING) || 
+        luaT_check(L, 3, LUAT_RENDER, LUA_TSTRING, LUA_TNUMBER))
+    {
+        tstring path(luaT_towstring(L, 2));
+        tstring_replace(&path, L"/", L"\\");
+        Image *img = new Image;
+        int param = (lua_gettop(L) == 3) ? lua_tointeger(L, 3) : -1;
+        if (!img->load(path.c_str(), param))
+        {
+            delete img;
+            pluginLoadFail(L, L"render:createImage", luaT_towstring(L, 2));
+            lua_pushnil(L);
+            return 1;
+        }
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        r->regImage(img);
+        luaT_pushobject(L, img, LUAT_IMAGE);
+        return 1;
+    }
+    return pluginInvArgs(L, L"render:createImage");
+}
+
+int render_drawImage(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_RENDER, LUAT_IMAGE, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        Image *img = (Image *)luaT_toobject(L, 2);
+        r->drawImage(img,lua_tointeger(L, 3), lua_tointeger(L, 4));
+        return 0;
+    }
+    else if (luaT_check(L, 6, LUAT_RENDER, LUAT_IMAGE, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        Image *img = (Image *)luaT_toobject(L, 2);
+        r->drawImage(img, lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
+        return 0;
+    }
+    else if (luaT_check(L, 3, LUAT_RENDER, LUAT_IMAGE, LUA_TTABLE))
+    {
+        ParametersReader pr(L);
+        RECT rc;
+        if (pr.getrect(&rc))
+        {
+            PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+            Image *img = (Image *)luaT_toobject(L, 2);
+            r->drawImage(img, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top);
+            return 0;
+        }
+        int x =0; int y = 0;
+        if (pr.getxy(&x, &y))
+        {
+            PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+            Image *img = (Image *)luaT_toobject(L, 2);
+            r->drawImage(img, x, y);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"render::drawImage");
 }
 
 void reg_mt_render(lua_State *L)
@@ -415,10 +494,12 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "createPen", render_createPen);
     regFunction(L, "createBrush", render_createBrush);
     regFunction(L, "createFont", render_createFont);
+    regFunction(L, "createImage", render_createImage);
     regFunction(L, "select", render_select);
     regFunction(L, "rect", render_rect);
     regFunction(L, "solidRect", render_solidRect);
     regFunction(L, "print", render_print);
+    regFunction(L, "drawImage", render_drawImage);
     regFunction(L, "update", render_update);
     regFunction(L, "fontHeight", render_fontHeight);
     regFunction(L, "textWidth", render_textWidth);
