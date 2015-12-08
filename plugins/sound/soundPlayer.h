@@ -50,6 +50,16 @@ public:
                 if (value != 1) value = 0;
                 m_recording_params.destfolder = value;
             }
+            lua_pop(L, 1);
+            lua_pushstring(L, "volume");
+            lua_gettable(L, -2);
+            if (lua_isnumber(L, -1))
+            {
+                int value = lua_tointeger(L, -1);
+                value = max(min(value, 100), 0);
+                pushPlayer();
+                luaT_run(L, "setVolume", "td", value);
+            }
             lua_pop(L, 2);
         }
         scanFiles();
@@ -58,7 +68,6 @@ public:
     ~SoundPlayer()
     {
        stopMusic();
-
        lua_newtable(L);
        lua_pushstring(L, "sensitivity");
        lua_pushinteger(L, m_recording_params.sensitivity);
@@ -66,6 +75,13 @@ public:
        lua_pushstring(L, "destination");
        lua_pushinteger(L, m_recording_params.destfolder);
        lua_settable(L, -3);
+       pushPlayer();
+       if (luaT_run(L, "getVolume", "t") && lua_isnumber(L, -1))
+       {
+           lua_pushstring(L, "volume");
+           lua_insert(L, -2);
+           lua_settable(L, -3);
+       }
        base::saveTable(L, L"config.xml");
     }
 
@@ -172,9 +188,12 @@ public:
         std::wstring destpath;
         if (m_recording_params.destfolder)
           base::getResource(L, filename, &destpath);
-        else           
+        else
           base::getPath(L, filename, &destpath);
-        return CopyFile(temp_file, destpath.c_str(), TRUE) ? true : false;
+        bool result = CopyFile(temp_file, destpath.c_str(), TRUE) ? true : false;
+        if (result)
+            scanFiles();
+        return result;
     }
 
     bool playFile(const wchar_t* file, std::wstring* error, SoundPlayerCallback *cb)
@@ -202,7 +221,7 @@ public:
         if (!luaT_run(L, "stop", "td", m_replay_sound_id))
             return setError(error);
         m_replay_sound_id = -1;
-        return true;    
+        return true;
     }
 
     void endPlaying()

@@ -122,8 +122,6 @@ private:
         GetTempPath(MAX_PATH, buffer);
         std::wstring path(buffer);
 
-        path.assign(L"D:\\");
-
         SYSTEMTIME st;
         GetLocalTime(&st);
         swprintf(buffer, L"tw%x%x%x.wav", st.wSecond, st.wMinute, st.wMilliseconds );
