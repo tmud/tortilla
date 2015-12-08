@@ -37,7 +37,7 @@ class PluginsTrigger
 public:
     PluginsTrigger();
     ~PluginsTrigger();
-    bool init(lua_State *pL);
+    bool init(lua_State *pl, Plugin *pp);
     void enable(bool enable);
     bool isEnabled() const;
     int  getLen() const;
@@ -45,6 +45,7 @@ public:
     void run();
 private:
     lua_State *L;
+    Plugin *p;
     std::vector<CompareObject> m_compare_objects;
     lua_ref m_trigger_func_ref;
     bool m_enabled;

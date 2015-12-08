@@ -4,7 +4,7 @@
 #include "accessors.h"
 extern Plugin* _cp;
 
-PluginsTrigger::PluginsTrigger() : L(NULL), m_enabled(false)
+PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_enabled(false)
 {
 }
 
@@ -14,9 +14,10 @@ PluginsTrigger::~PluginsTrigger()
     m_trigger_func_ref.unref(L);
 }
 
-bool PluginsTrigger::init(lua_State *pL)
+bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
 {
-    L = pL;
+    assert(pl && pp);
+    L = pl; p = pp;
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
         luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
@@ -95,7 +96,7 @@ int trigger_create(lua_State *L)
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION))
     {
         PluginsTrigger *t = new PluginsTrigger();
-        if (!t->init(L))
+        if (!t->init(L, _cp))
             { delete t; }
         else
         {

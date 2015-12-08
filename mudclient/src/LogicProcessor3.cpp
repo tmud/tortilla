@@ -330,8 +330,13 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
 {
     LogicPipelineElement *e = m_pipeline.createElement();
     printParseData(parse_data, flags, window, e);
-    while (!e->commands.empty())
+    while (!e->triggers.empty() || !e->commands.empty())
     {
+        // выполняем функции триггеров
+        // todo
+        if (!e->triggers.empty())
+          { e->triggers.clear(); continue; }
+       
         runCommands(e->commands);
         LogicPipelineElement *e2 = m_pipeline.createElement();
         printParseData(e->data, flags|SKIP_PLUGINS_BEFORE, window, e2);
@@ -356,22 +361,15 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     bool skip_actions = (flags & SKIP_ACTIONS);
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        PluginsTriggersHandler::PTResult result = luatriggers->processTriggers(parse_data, j, pe);
-        //if (luatriggers->processTriggers(parse_data, j, pe))
-        {
-            /*parseData &not_processed = pe->data;
-            not_processed.last_finished = parse_data->last_finished;
-            parse_data->last_finished = true;
-            not_processed.update_prev_string = false;
-            int from = j+1;
-            not_processed.strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
-            parse_data->strings.resize(from);
-            return;*/
+        bool triggered = false; //todo luatriggers->processTriggers(parse_data, j, pe);
+        if (triggered && pe->triggers.empty()) {
+            break;  // waiting next strings
         }
         if (!skip_actions) {
             if (m_helper.processActions(&parse_data, j, pe))
                 break;
         }
+        if (triggered) break;
     }
 
     if (!(flags & SKIP_SUBS))

@@ -276,7 +276,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-PluginsTriggersHandler::PTResult PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
+bool PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
 {
     int i = start_string; int last = parse_data.strings.size() - 1;
 
@@ -284,15 +284,16 @@ PluginsTriggersHandler::PTResult PluginsManager::processTriggers(parseData& pars
     CompareData cd(s);
     bool incomplstr = (i==last && !parse_data.last_finished);
 
+    bool processed = false;
+    bool wait = false;
     for (int j=0, je=m_plugins.size(); j<je; ++j)
     {
         Plugin *p = m_plugins[j];
-        if (!p->state()) 
+        if (!p->state())
             continue;
         std::vector<PluginsTrigger*>& vt = p->triggers;
         if (vt.empty())
             continue;
-        _cp = p;
         for (int k=0,ke=vt.size();k<ke;++k)
         {
             PluginsTrigger *t = vt[k];
@@ -301,10 +302,19 @@ PluginsTriggersHandler::PTResult PluginsManager::processTriggers(parseData& pars
             if (!t->compare(0, cd, incomplstr))
                 continue;
             if (t->getLen() == 1)
-              { _cp = NULL;  return PluginsTriggersHandler::OK; }
+            {
+                processed = true;
+                pe->triggers.push_back(t);
+                continue;
+            }
             int count = last+1;
             if (t->getLen() > count)
-              { _cp = NULL; return PluginsTriggersHandler::WAIT; }
+            {
+                processed = true;
+                wait = true;
+                pe->triggers.clear();
+                break;
+            }
             // compare next strings
             bool compared = true;
             for (int q=1, qe=t->getLen(); q<qe; ++q )
@@ -317,11 +327,28 @@ PluginsTriggersHandler::PTResult PluginsManager::processTriggers(parseData& pars
                   { compared = false;  break; }
             }
             if (compared)
-              { _cp = NULL;  return PluginsTriggersHandler::OK; }
+            {
+                processed = true;
+                pe->triggers.push_back(t);               
+            }
         }
-        _cp = NULL;
+        if (wait) break;
     }
-    return PluginsTriggersHandler::FAIL;
+
+    if (processed)
+    {
+        if (!wait)
+            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        parseData &not_processed = pe->data;
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = start_string + (wait) ? 0 : 1;   // если wait то оставляет строчку срабатывания на обработку в след. круг
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+    }
+
+    return processed;
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)

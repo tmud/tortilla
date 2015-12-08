@@ -34,17 +34,16 @@ bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipeline
     int j = index; int je = parse_data->strings.size()-1;
     {
         MudViewString *s = parse_data->strings[j];
-        bool incomplstr = (j==je && !parse_data->last_finished);
+        if (s->dropped) return false;
 
+        bool incomplstr = (j==je && !parse_data->last_finished);
         bool processed = false;
         for (int i=0, e=m_actions.size(); i<e; ++i)
         {
            CompareData cd(s);
            if (m_actions[i]->processing(cd, incomplstr, &pe->commands))
-           {
-               processed = true;
-               break;
-           }
+              processed = true;
+           if (s->dropped) break;
         }
 
         if (processed)
@@ -67,7 +66,7 @@ void LogicHelper::processSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        //if (s->gamecmd || s->system) continue;
+        if (s->dropped) continue;
         bool incomplstr = (j==je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_subs.size(); i<e; ++i)
@@ -84,7 +83,7 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        //if (s->gamecmd || s->system) continue;
+        if (s->dropped) continue;
         bool incomplstr = (j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
@@ -101,7 +100,7 @@ void LogicHelper::processGags(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        //if (s->gamecmd || s->system) continue;
+        if (s->dropped) continue;
         bool incomplstr = (j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_gags.size(); i<e; ++i)
@@ -122,7 +121,9 @@ void LogicHelper::processHighlights(parseData *parse_data)
     {
         for (int i=0,e=m_highlights.size(); i<e; ++i)
         {
-            CompareData cd(parse_data->strings[j]);
+            MudViewString *s = parse_data->strings[j];
+            if (s->dropped) continue;
+            CompareData cd(s);
             while (m_highlights[i]->processing(cd))
                 cd.reinit();  // restart highlight
         }
