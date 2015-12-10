@@ -7,7 +7,7 @@
     <button x="1" y="0" text="Север" command="с" template="0"/>
     <button x="3" y="0" text="Играть" command="#connect sowmud.ru 4000" template="0"/>
     <button x="0" y="1" text="Запад" command="з" template="0"/>
-    <button x="1" y="1" text="Осмотр." command="осм" template="0"/>
+    <button x="1" y="1" text="Смотреть" command="см" template="0"/>
     <button x="2" y="1" text="Восток" command="в" template="0"/>
     <button x="0" y="2" text="Вниз" command="вн" template="0"/>
     <button x="1" y="2" text="Юг" command="ю" template="0"/>

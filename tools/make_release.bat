@@ -61,7 +61,7 @@ xcopy ..\sdk\*.* sdk /E /Y
 xcopy ..\modules\modules.txt sdk /Y
 
 7za.exe a -tzip %filename% tortilla
-7za.exe a -tzip %sdk% sdk
+7za.exe a -tzip %sdk% sdk -xr!.gitignore
 
 rd tortilla /s /q
 rd sdk /s /q

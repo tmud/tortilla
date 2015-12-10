@@ -89,6 +89,7 @@ copy $(SolutionDir)\libs\bassfx\bass_fx.dll $(SolutionDir)\modules</Command>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration);$(SolutionDir)\libs</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>lbass.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
       <Command>copy $(SolutionDir)\libs\bass\bass.dll $(SolutionDir)\modules
