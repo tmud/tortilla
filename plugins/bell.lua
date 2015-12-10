@@ -20,7 +20,7 @@ function bell.streamdata(s)
   local p = s:strstr(sym)
   while p do
     count = count + 1
-	p = s:strstr(sym, p+1)
+    p = s:strstr(sym, p+1)
   end
   if count > 0 then
     system.beep(2000, 150)
