@@ -73,7 +73,7 @@ int init(lua_State *L)
     TraySettings &s = g_tray.traySettings();
     s.timeout = 5;
     s.interval = 15;
-    s.showactive = 0;
+    s.showactive = 1;
     s.text = GetSysColor(COLOR_INFOTEXT);
     s.background = GetSysColor(COLOR_INFOBK);
 
@@ -84,7 +84,7 @@ int init(lua_State *L)
             check_minmax(&s.timeout, 1, 5, MAX_TIMEOUT, MAX_TIMEOUT);
         if (ld.get(L"interval", &s.interval))
             check_minmax(&s.interval, 5, 5, MAX_INTERVAL, MAX_INTERVAL);
-        int showactive = 0;
+        int showactive = 1;
         if (ld.get(L"showactive", &showactive))
             check_minmax(&showactive, 0, 0, 1, 0);
         s.showactive = showactive ? true : false;
