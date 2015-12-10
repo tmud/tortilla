@@ -26,3 +26,5 @@ if not bass then
     end
   end
 end
+
+lvoice = require 'voice'
