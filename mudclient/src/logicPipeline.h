@@ -37,6 +37,7 @@ public:
 
     void freeElement(LogicPipelineElement* e)
     {
+        e->triggers.clear();
         e->commands.clear();
         e->data.last_finished = true;
         e->data.update_prev_string = false;

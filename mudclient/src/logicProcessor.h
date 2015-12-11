@@ -13,7 +13,7 @@ class LogicProcessorHost
 public:
     virtual void connectToNetwork(const tstring& address, int port) = 0;
     virtual void disconnectFromNetwork() = 0;
-    virtual void sendToNetwork(const tstring& data) = 0;    
+    virtual void sendToNetwork(const tstring& data) = 0;
     virtual MudViewString* getLastString(int view) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;

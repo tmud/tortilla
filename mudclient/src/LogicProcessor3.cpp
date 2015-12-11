@@ -332,12 +332,15 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
     printParseData(parse_data, flags, window, e);
     while (!e->triggers.empty() || !e->commands.empty())
     {
-        // выполняем функции триггеров
-        // todo
         if (!e->triggers.empty())
-          { e->triggers.clear(); continue; }
-       
-        runCommands(e->commands);
+        {
+            // todo выполняем функции lua триггеров
+        }
+        else
+        {
+            // выполняем команды actions триггеров
+            runCommands(e->commands);
+        }
         LogicPipelineElement *e2 = m_pipeline.createElement();
         printParseData(e->data, flags|SKIP_PLUGINS_BEFORE, window, e2);
         m_pipeline.freeElement(e);
@@ -361,7 +364,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     bool skip_actions = (flags & SKIP_ACTIONS);
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        bool triggered = false; //todo luatriggers->processTriggers(parse_data, j, pe);
+        bool triggered = luatriggers->processTriggers(parse_data, j, pe);
         if (triggered && pe->triggers.empty()) {
             break;  // waiting next strings
         }

@@ -329,7 +329,7 @@ bool PluginsManager::processTriggers(parseData& parse_data, int start_string, Lo
             if (compared)
             {
                 processed = true;
-                pe->triggers.push_back(t);               
+                pe->triggers.push_back(t);
             }
         }
         if (wait) break;
@@ -343,7 +343,7 @@ bool PluginsManager::processTriggers(parseData& parse_data, int start_string, Lo
         not_processed.last_finished = parse_data.last_finished;
         parse_data.last_finished = true;
         not_processed.update_prev_string = false;
-        int from = start_string + (wait) ? 0 : 1;   // если wait то оставляет строчку срабатывания на обработку в след. круг
+        int from = start_string;
         not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
         parse_data.strings.resize(from);
     }
