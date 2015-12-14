@@ -322,10 +322,10 @@ LRESULT SelectImageDlg::OnSize(UINT, WPARAM, LPARAM, BOOL&)
     GetClientRect(&rc);
     LONG t = rc.bottom;
     rc.bottom -= m_props_size.cy;
-    m_vSplitter.MoveWindow(&rc, FALSE);
+    m_vSplitter.MoveWindow(&rc);
     rc.top = rc.bottom; 
     rc.bottom = t;
-    m_props.MoveWindow(&rc, FALSE);
+    m_props.MoveWindow(&rc);
     return 0;
 }
 
