@@ -33,7 +33,7 @@ return 'Плагин отображает информацию о здоровь
 end
 
 function statusbar.version()
-    return '1.06'
+    return '1.07'
 end
 
 local objs = {}
@@ -119,11 +119,11 @@ function statusbar.drawbars()
     pos.x = pos.x + pos.width + delta_bars
   end
 
-  if values.xpv then
-  local expbar = {val=values.xpv,maxval=values.maxxp-values.minxp,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
-  if statusbar.drawbar(expbar, pos) then
-    pos.x = pos.x + pos.width + delta_bars
-  end
+  if values.xpv and values.xpm then
+    local expbar = {val=values.xpv,maxval=values.xpm,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
+    if statusbar.drawbar(expbar, pos) then
+      pos.x = pos.x + pos.width + delta_bars
+    end
   end
 
 -- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
@@ -198,10 +198,27 @@ function statusbar.before(window, v)
 
   values.xpv = nil
   if values.minxp and values.maxxp then
+    values.xpm = values.maxxp - values.minxp
     if values.xp then
       values.xpv = values.xp-values.minxp
     elseif values.dsu then
       values.xpv = values.maxxp - values.minxp - values.dsu 
+    end
+  else
+    if values.maxxp and values.maxdsu then
+      if values.xp or values.dsu then
+        values.xpm = values.maxxp + values.maxdsu
+        if values.xp then
+          values.xpv = values.xp
+        else
+          values.xpv = values.xpm - values.dsu
+        end
+      end
+    else
+      if values.xp and values.dsu then
+        values.xpv = values.xp
+        values.xpm = values.xp + values.dsu
+      end
     end
   end
 
