@@ -872,6 +872,52 @@ int getViewSize(lua_State *L)
     return pluginInvArgs(L, L"getViewSize");
 }
 
+int isViewVisible(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 1 && view <=OUTPUT_WINDOWS)
+        {
+            bool visible = _wndMain.m_gameview.isViewVisible(view);
+            lua_pushboolean(L, visible ? 1 : 0);
+            return 1;
+        }
+    }
+    return pluginInvArgs(L, L"isViewVisible");
+}
+
+int showView(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 1 && view <=OUTPUT_WINDOWS)
+        {
+            _wndMain.m_gameview.showView(view, true);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"showView");
+}
+
+int hideView(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 1 && view <=OUTPUT_WINDOWS)
+        {
+            _wndMain.m_gameview.showView(view, false);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"hideView");
+}
+
 int flashWindow(lua_State *L)
 {
    EXTRA_CP;
@@ -986,7 +1032,10 @@ bool initPluginsSystem()
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);
-    lua_register(L, "getViewSize", getViewSize);
+    lua_register(L, "getViewSize", getViewSize);  
+    lua_register(L, "isViewVisible", isViewVisible);
+    lua_register(L, "showView", showView);
+    lua_register(L, "hideView", hideView);
     lua_register(L, "flashWindow", flashWindow);
     lua_register(L, "pluginName", pluginName);
     lua_register(L, "regUnloadFunction", regUnloadFunction);

@@ -318,6 +318,8 @@ public:
     }
 
     void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
+    void showView(int view, bool show) { showWindow(view, show); }
+    bool isViewVisible(int view) { return isWindowVisible(view); }
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
@@ -328,6 +330,7 @@ public:
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
     MudViewHandler* getHandler(int view);
+    
 
 private:
     BEGIN_MSG_MAP(MudGameView)
@@ -999,6 +1002,13 @@ private:
     {
         assert(view >=1 && view <= OUTPUT_WINDOWS);
         showWindowEx(*m_views[view-1], show);
+    }
+
+    bool isWindowVisible(int view)
+    {
+        assert(view >=1 && view <= OUTPUT_WINDOWS);
+        MudView* v = m_views[view-1];
+        return isWindowShown(*v);
     }
 
     void setWindowName(int view, const tstring& name)

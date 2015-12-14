@@ -223,6 +223,18 @@ namespace base {
     inline void updateView(lua_State* L, int view, lua_CFunction f) {
         luaT_run(L, "updateView", "dF", view, f);
     }
+    inline bool isViewVisible(lua_State* L, int view) {
+        luaT_run(L, "isViewVisible", "d", view);
+        int result = (lua_isboolean(L, -1)) ? lua_toboolean(L, -1) : 0;
+        lua_pop(L, 1);
+        return (result == 1);
+    }
+    inline void showView(lua_State* L, int view) {
+        luaT_run(L, "showView", "d", view);
+    }
+    inline void hideView(lua_State* L, int view) {
+        luaT_run(L, "hideView", "d", view);
+    }
     inline bool getViewSize(lua_State* L, int view, int *width, int *height) {
         luaT_run(L, "getViewSize", "d", view);
         if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
