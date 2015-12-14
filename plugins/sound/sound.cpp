@@ -30,8 +30,7 @@ int get_description(lua_State *L)
         L"#sound play file [volume] - воспроизведение музыкального файла или плейлиста (*.lst)\r\n"
         L"#sound playfx|fx file [volume] - воспроизведение звукового эффекта\r\n"       
         L"#sound volume [значение] - устанавливает или показывает текущую мастер-громкость плагина\r\n"
-        L"#sound stop - останавливает воспроизведение музыкального файла\r\n"
-        L"#sound update - обновляет список файлов, доступных по короткому имени");
+        L"#sound stop - останавливает воспроизведение музыкального файла\r\n");
     luaT_Props props(L);
     std::wstring p;
     props.cmdPrefix(&p);
@@ -43,7 +42,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.0");
+    luaT_pushwstring(L, L"1.01");
     return 1;
 }
 

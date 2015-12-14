@@ -1,8 +1,10 @@
 #pragma once
 #include <map>
 #include "api/base.h"
+#include <algorithm>
 
 int endplaying(lua_State *L);
+void wstring_replace(std::wstring *str, const std::wstring& what, const std::wstring& forr);
 
 class SoundPlayerCallback
 {
@@ -21,8 +23,6 @@ class SoundPlayer : public SoundPlayerCallback
 {
     lua_State *L;
     std::wstring *perror;
-    std::map<std::wstring, std::wstring> m_files_list;
-    typedef std::map<std::wstring, std::wstring>::iterator iterator;
     int m_playing_music;
     SoundPlayerCallback *m_pcb;
     int m_replay_sound_id;
@@ -62,7 +62,6 @@ public:
             }
             lua_pop(L, 2);
         }
-        scanFiles();
     }
 
     ~SoundPlayer()
@@ -114,9 +113,7 @@ public:
                 }
             }
             std::wstring name = params[0];
-            iterator it = m_files_list.find(name);
-            if (it != m_files_list.end())
-                name = it->second;
+            translate_shortname(&name);
 
             int pos = name.rfind(L'.');
             if (pos != -1)
@@ -153,8 +150,6 @@ public:
             return play(params);
         else if (cmd == L"volume")
             return volume(params);
-        else if (cmd == L"update")
-            return update(params);
         else if (cmd == L"stop")
             return stop(params);
         error->assign(L"Неизвестная команда: ");
@@ -190,10 +185,7 @@ public:
           base::getResource(L, filename, &destpath);
         else
           base::getPath(L, filename, &destpath);
-        bool result = CopyFile(temp_file, destpath.c_str(), TRUE) ? true : false;
-        if (result)
-            scanFiles();
-        return result;
+        return CopyFile(temp_file, destpath.c_str(), TRUE) ? true : false;
     }
 
     bool playFile(const wchar_t* file, std::wstring* error, SoundPlayerCallback *cb)
@@ -264,6 +256,29 @@ private:
        return incorrectParameters(L"volume");
     }
 
+    void translate_shortname(std::wstring* name)
+    {
+        wstring_replace(name, L"/", L"\\");
+        std::wstring path;
+        base::getPath(L, L"", &path);
+        path.append(*name);
+        DWORD fa = GetFileAttributes(path.c_str());
+        if (fa != INVALID_FILE_ATTRIBUTES)
+        {
+            if (!(fa & FILE_ATTRIBUTE_DIRECTORY))
+                { name->assign(path); return; }        
+        }
+
+        base::getResource(L, L"", &path);
+        path.append(*name);
+        fa = GetFileAttributes(path.c_str());
+        if (fa != INVALID_FILE_ATTRIBUTES)
+        {
+            if (!(fa & FILE_ATTRIBUTE_DIRECTORY))
+                { name->assign(path); return; }        
+        }    
+    }
+
     bool playfx(const std::vector<std::wstring>& params)
     {
         int count = params.size() - 1;
@@ -276,10 +291,10 @@ private:
                 if (!check)
                     return incorrectParameters(L"playfx");
             }
+
             std::wstring name = params[1];
-            iterator it = m_files_list.find(name);
-            if (it != m_files_list.end())
-                name = it->second;
+            translate_shortname(&name);
+
             pushPlayer();
             if (!luaT_run(L, "playfx", "tsd", name.c_str(), volume))
                 return incorrectCall(L"playfx");
@@ -300,10 +315,9 @@ private:
                 if (!check)
                     return incorrectParameters(L"play");
             }
+
             std::wstring name = params[1];
-            iterator it = m_files_list.find(name);
-            if (it != m_files_list.end())
-                name = it->second;
+            translate_shortname(&name);
 
             int pos = name.rfind(L'.');
             if (pos != -1)
@@ -347,17 +361,6 @@ private:
         m_playing_music = -2;
     }
 
-    bool update(const std::vector<std::wstring>& params)
-    {
-        int count = params.size() - 1;
-        if (count == 0)
-        {
-            scanFiles();
-            return true;
-        }
-        return incorrectParameters(L"update");
-    }
-
     void replace(std::wstring *str)
     {
         size_t pos = 0;
@@ -397,14 +400,10 @@ private:
             }
             std::wstring name(luaT_towstring(L, -1));
             lua_pop(L, 1);
-            iterator it = m_files_list.find(name);
-            if (it != m_files_list.end())
-            {
-                name = it->second;
-                lua_pushinteger(L, i);
-                luaT_pushwstring(L, name.c_str());
-                lua_settable(L, -3);
-            }
+            translate_shortname(&name);
+            lua_pushinteger(L, i);
+            luaT_pushwstring(L, name.c_str());
+            lua_settable(L, -3);
         }
 
         pushPlayer();
@@ -416,60 +415,10 @@ private:
 
     bool isMusicFile(const std::wstring& ext)
     {
-       if (ext == L"lst") return true;  // playlist file
-       return (ext == L"wav" || ext == L"mp3" || ext == L"ogg" || ext == L"s3m" || ext == L"it" || ext == L"xm" || ext == L"mod" ) ? true : false;
-    }
-
-    void scanCurrentDir(const wchar_t* current_dir)
-    {
-        WIN32_FIND_DATA fd;
-        memset(&fd, 0, sizeof(WIN32_FIND_DATA));
-        HANDLE file = FindFirstFile(L"*.*", &fd);
-        if (file != INVALID_HANDLE_VALUE)
-        {
-            do
-            {
-                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                {
-                    const wchar_t *file = fd.cFileName;
-                    const wchar_t *e = wcsrchr(file, L'.');
-                    if (e)
-                    { 
-                        std::wstring ext(e+1);
-                        if (isMusicFile(ext))
-                        {
-                            std::wstring id(file);
-                            std::wstring path(current_dir);
-                            path.append(file);
-                            m_files_list[id] = path;
-                        }
-                    }
-                }
-            } while (::FindNextFile(file, &fd));
-            ::FindClose(file);
-        }
-    }
-
-    void scanFiles()
-    {
-        std::wstring path;
-        base::getResource(L, L"", &path);
-
-        DWORD buffer_required = ::GetCurrentDirectory(0, NULL);
-        wchar_t * buffer = new wchar_t[buffer_required];
-        GetCurrentDirectory(buffer_required, buffer);
-        if (SetCurrentDirectory(path.c_str()))
-        {
-            scanCurrentDir(path.c_str());
-        }
-        SetCurrentDirectory(buffer);
-        base::getPath(L, L"", &path);
-        if (SetCurrentDirectory(path.c_str()))
-        {
-            scanCurrentDir(path.c_str());
-        }
-        SetCurrentDirectory(buffer);
-        delete []buffer;
+       std::wstring t(ext);
+       std::transform(t.begin(), t.end(), t.begin(), ::tolower);
+       if (t == L"lst") return true;  // playlist file
+       return (t == L"wav" || t == L"mp3" || t == L"ogg" || t == L"s3m" || t == L"it" || t == L"xm" || t == L"mod" ) ? true : false;
     }
 
     void print(const std::wstring& message)
