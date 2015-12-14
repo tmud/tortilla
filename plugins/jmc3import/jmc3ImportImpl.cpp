@@ -419,14 +419,14 @@ void Jmc3Import::initLegacy()
     std::map<std::wstring, std::wstring>& c = m_commands;
     c[L"daa"] = L"hide";
     c[L"restorewindow"] = L"showwindow";
-    c[L"showme"] = L"woutput 1";
+    c[L"showme"] = L"out";
     c[L"substitute"] = L"sub";
     c[L"antisubstitute"] = L"antisub";
     c[L"unantisubstitute"] = L"unantisub";
     c[L"tabadd"] = L"tab";
     c[L"tabdel"] = L"untab";
     c[L"variable"] = L"var";
-    c[L"output"] = L"woutput 1";
+    c[L"output"] = L"wout 1";
 }
 
 void Jmc3Import::initPcre()
