@@ -297,6 +297,9 @@ HWND getMudclientWnd()
 void exitEditMode()
 {
     base::pluginName(pL, L"clickpad");
+    HWND wnd = base::getParent(pL);
+    ::SetFocus(wnd);
+    base::pluginName(pL, L"clickpad");
     base::uncheckMenu(pL, 1);
     m_settings_window.hide();
     m_select_image_window.hide();
