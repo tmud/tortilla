@@ -23,7 +23,8 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
     tstring result;
     int pos = 0;
     ParamsHelper values(*cmd, ParamsHelper::DEFAULT);
-    for (int i = 0, e = values.getSize(); i < e; ++i)
+    int values_count = values.getSize();
+    for (int i = 0; i < values_count; ++i)
     {
         result.append(cmd->substr(pos, values.getFirst(i) - pos));
         int id = values.getId(i);
@@ -33,6 +34,10 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
     }
     result.append(cmd->substr(pos));
     cmd->swap(result);
+    if (values_count == 0)
+    {
+        params->doNoValues(cmd);
+    }
 }
 
 InputPlainCommands::InputPlainCommands() {}
@@ -76,6 +81,11 @@ void InputTemplateCommands::extract(InputPlainCommands* cmds)
         cmd.append(at(i).srccmd);
         cmds->push_back(cmd);
     }
+}
+
+int InputTemplateCommands::size() const
+{
+    return base::size();
 }
 
 void InputTemplateCommands::makeTemplates()

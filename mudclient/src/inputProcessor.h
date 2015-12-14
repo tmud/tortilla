@@ -11,6 +11,7 @@ class InputParameters
 {
 public:
     virtual void getParameters(std::vector<tstring>* params) const = 0;
+    virtual void doNoValues(tstring* cmd) const = 0;
 };
 
 class InputTranslateParameters
@@ -111,6 +112,7 @@ public:
     void extract(InputPlainCommands* cmds);
     void makeTemplates();
     void makeCommands(InputCommands *cmds, const InputParameters* params);
+    int  size() const;
 private:
     const tchar MARKER = L'\t';
     InputTemplateParameters _params;
