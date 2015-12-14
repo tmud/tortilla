@@ -320,17 +320,25 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
     {
         if (!isbracket(p))
             { p++; continue; }
-        // check space before open bracket
+        // check space or bracket before open bracket
         if (!bracket_begin)
         {
-            if (p != b0 && p[-1] != ' ')
-                { p++; continue; }
+            if (p != b0)
+            {
+                const tchar* p1 = p-1;
+                if (!iscloseorspace(p1) )
+                    { p++; continue; }
+            }
         }
         // check space after close bracket
         else
         {
-            if (*p != '{' && p+1 != e && p[1] != ' ' && p[1] != _params.separator)
-                { p++; continue; }
+            if (*p != '{' && p+1 != e)
+            {
+                const tchar* p1 = p+1;
+                if (!isopenorspace(p1) && *p1 != _params.separator)
+                    { p++; continue; }
+            }
         }
 
         if (stack.empty())
@@ -475,3 +483,12 @@ bool InputTemplateCommands::isbracket(const tchar *p) const
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
 
+bool InputTemplateCommands::isopenorspace(const tchar *p) const
+{
+    return (wcschr(L"{ \"'", *p)) ? true : false;
+}
+
+bool InputTemplateCommands::iscloseorspace(const tchar *p) const
+{
+    return (wcschr(L"} \"'", *p)) ? true : false;
+}

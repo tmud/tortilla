@@ -122,6 +122,8 @@ private:
     void markbrackets(tstring *cmd) const;
     void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
     bool isbracket(const tchar *p) const;
+    bool isopenorspace(const tchar *p) const;
+    bool iscloseorspace(const tchar *p) const;
 };
 
 #ifdef _DEBUG
