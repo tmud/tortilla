@@ -8,6 +8,7 @@ m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_
 {
     L = pL;
     initPcre();
+    initBracketsPcre();
     initCmdSymbols();
     initLegacy();
 }
@@ -232,12 +233,14 @@ bool Jmc3Import::convert(std::wstring *str)
         {
             std::wstring cmd(str->substr(startpos, pos[i] - startpos));
             wstring_helper t(cmd); t.trim();
+            fixBrackets(&cmd);
             if (!cmd.empty())
                 cmds.push_back(cmd);
             startpos = pos[i] + 1;
         }
         std::wstring cmd(str->substr(startpos));
         wstring_helper t(cmd); t.trim();
+        fixBrackets(&cmd);
         if (!cmd.empty())
             cmds.push_back(cmd);
     }
@@ -443,4 +446,30 @@ void Jmc3Import::initCmdSymbols()
     luaT_Props p(L);
     p.cmdPrefix(&cmdsymbol);
     p.cmdSeparator(&separator);
+}
+
+void Jmc3Import::fixBrackets(std::wstring* cmd)
+{
+    fixHotkeysBrackets(cmd);
+}
+
+void Jmc3Import::initBracketsPcre()
+{
+    hotkey_pcre.init(L".hotk?e?y? +([^ ]+) +([^{\'\"].*)");
+}
+
+void Jmc3Import::fixHotkeysBrackets(std::wstring* cmd)
+{
+    if (hotkey_pcre.find(cmd->c_str()))
+    {
+        cmd->assign(cmdsymbol);
+        cmd->append(L"hot ");
+        std::wstring p;
+        hotkey_pcre.get(1, &p);
+        cmd->append(p);
+        cmd->append(L" {");
+        hotkey_pcre.get(2, &p);
+        cmd->append(p);
+        cmd->append(L"}");
+    }
 }
