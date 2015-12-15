@@ -6,6 +6,7 @@
 #include "pluginSupport.h"
 #include "../profiles/profilesPath.h"
 #include "plugins/pluginsParseData.h"
+#include "highlightHelper.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
 extern CMainFrame _wndMain;
@@ -980,6 +981,24 @@ int vprint(lua_State *L)
     lp()->windowOutput(view, params);
     return 0;
 }
+
+int translateColors(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring p(luaT_towstring(L, 1));
+        HighlightHelper hh;
+        if (!hh.checkText(&p))
+            return 0;
+        PropertiesHighlight ph;
+        ph.convertFromString(p);
+        lua_pushunsigned(L, ph.textcolor);
+        lua_pushunsigned(L, ph.bkgcolor);
+        return 2;
+    }
+    return pluginInvArgs(L, L"translateColors");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -1041,6 +1060,7 @@ bool initPluginsSystem()
     lua_register(L, "regUnloadFunction", regUnloadFunction);
     lua_register(L, "print", print);
     lua_register(L, "vprint", vprint);
+    lua_register(L, "translateColors", translateColors);
 
     reg_props(L);
     reg_activeobjects(L);

@@ -21,11 +21,12 @@ public:
     void regImage(Image *img);
 
     void drawRect(const RECT& r);
-    void drawSolidRect(const RECT& r);
+    void drawSolidRect(const RECT& r, COLORREF* solid_color);
     void drawImage(Image *img, int x, int y);
     void drawImage(Image *img, int x, int y, int w, int h);
 
     int  print(int x, int y, const tstring& text);
+    int  print(const RECT& r, const tstring& text);
     void update();
     int  getFontHeight();
     int  getTextWidth(const tstring& text);

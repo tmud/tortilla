@@ -257,6 +257,17 @@ namespace base {
     inline void log(lua_State *L, const wchar_t* message) {
         luaT_run(L, "log", "s", message);
     }
+    inline bool translateColors(lua_State* L, const wchar_t* str, COLORREF* text, COLORREF *bgnd) {
+        luaT_run(L, "translateColors", "s", str);
+        if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+        {
+            if (text) *text = lua_tounsigned(L, 1);
+            if (bgnd) *bgnd = lua_tounsigned(L, 2);
+            return true;
+        }
+        return false;
+    }
+
     // createWindow, createPanel, pcre -> in classes below
 } // namespace base
 
