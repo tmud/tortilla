@@ -819,6 +819,28 @@ private:
 
     bool processKey(int vkey)
     {
+        if ((vkey == VK_UP || vkey == VK_DOWN) && checkKeysState(false, true, false))
+        {
+            BOOL hv = m_history.IsWindowVisible();
+            if (vkey == VK_UP && !hv)
+            {
+                int vs = m_view.getViewString();
+                if (vs > 1)
+                    showHistory(vs-1, 1);
+                return true;
+            }
+            if (vkey == VK_DOWN && !hv)
+                return true;
+            MudView &view = m_history;
+            int visible_string = view.getViewString();
+            if (vkey == VK_UP)
+                visible_string -= 1;
+            else
+                visible_string += 1;
+            view.setViewString(visible_string);
+            return true;
+        }
+
         if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
         {
             if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
