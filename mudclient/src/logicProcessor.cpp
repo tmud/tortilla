@@ -98,9 +98,11 @@ void LogicProcessor::runCommands(InputCommands& cmds)
 {
     if (!processAliases(cmds))
         return;
+    InputCommandVarsProcessor vp;
     for (int i=0,e=cmds.size(); i<e; ++i)
     {
         InputCommand *cmd = cmds[i];
+        vp.makeCommand(cmd);
         if (cmd->system)
             processSystemCommand(cmd); //it is system command for client
         else

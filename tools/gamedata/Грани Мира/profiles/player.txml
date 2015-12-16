@@ -31,30 +31,30 @@
   </colors>
   <font italic="0" bold="400" height="10" name="Fixedsys"/>
   <actions>
-    <action key="^Select your charset:$" value="2" group="base"/>
+    <action key="^Select your charset:$" value="2" group="default"/>
   </actions>
   <aliases/>
   <hotkeys>
-    <hotkey key="NUM8" value="с" group="base"/>
-    <hotkey key="NUM2" value="ю" group="base"/>
-    <hotkey key="NUM4" value="з" group="base"/>
-    <hotkey key="NUM6" value="в" group="base"/>
-    <hotkey key="NUM7" value="вв" group="base"/>
-    <hotkey key="NUM1" value="вн" group="base"/>
-    <hotkey key="NUM0" value="см" group="base"/>
-    <hotkey key="F12" value="#connect planescape.su 4000" group="base"/>
-    <hotkey key="NUMDEL" value="сч" group="base"/>
-    <hotkey key="NUM5" value="огл" group="base"/>
+    <hotkey key="NUM8" value="с" group="default"/>
+    <hotkey key="NUM2" value="ю" group="default"/>
+    <hotkey key="NUM4" value="з" group="default"/>
+    <hotkey key="NUM6" value="в" group="default"/>
+    <hotkey key="NUM7" value="вв" group="default"/>
+    <hotkey key="NUM1" value="вн" group="default"/>
+    <hotkey key="NUM0" value="см" group="default"/>
+    <hotkey key="F12" value="#connect planescape.su 4000" group="default"/>
+    <hotkey key="NUMDEL" value="сч" group="default"/>
+    <hotkey key="NUM5" value="огл" group="default"/>
   </hotkeys>
   <subs/>
   <asubs/>
   <gags/>
   <highlights>
-    <highlight key="[tortilla] %%" value="txt[0,128,255],bkg[0,0,0],ubi[0,0,0]" group="base"/>
+    <highlight key="[tortilla] %%" value="txt[0,128,255],bkg[0,0,0],ubi[0,0,0]" group="default"/>
   </highlights>
   <timers/>
   <groups>
-    <group key="base" value="1"/>
+    <group key="default" value="1"/>
     <group key="off" value="0"/>
   </groups>
   <tabwords/>

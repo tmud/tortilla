@@ -126,6 +126,12 @@ private:
     bool iscloseorspace(const tchar *p) const;
 };
 
+class InputCommandVarsProcessor
+{
+public:
+    void makeCommand(InputCommand *cmd);
+};
+
 #ifdef _DEBUG
 class InputCommandTemplateUnitTest
 {

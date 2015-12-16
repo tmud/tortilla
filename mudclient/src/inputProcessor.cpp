@@ -13,6 +13,14 @@ void InputVarsAccessor::translateVars(tstring *cmd)
     tortilla::getVars()->processVars(cmd);
 }
 
+void InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
+{
+    VarProcessor *vp = tortilla::getVars();
+    vp->processVars(&cmd->parameters);
+    for (int i=0,e=cmd->parameters_list.size(); i<e; ++i)
+       vp->processVars(&cmd->parameters_list[i]);
+}
+
 void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
 {
     assert(params && cmd);
@@ -137,8 +145,6 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
             InputTranslateParameters tp;
             tp.doit(params, &t);
         }
-        InputVarsAccessor va;
-        va.translateVars(&t);       //translate vars in template
 
         pos = t.find(L" ");
         if (pos == -1) {
@@ -226,7 +232,7 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
             {
                 if (stack == 0 && *p == L'}')
                 {
-                    cmd.append(bracket_begin+1, p-bracket_begin-1);                    
+                    cmd.append(bracket_begin+1, p-bracket_begin-1);
                     break;
                 }
                 else
