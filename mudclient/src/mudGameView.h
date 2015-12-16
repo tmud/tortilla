@@ -42,6 +42,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     int m_codepage;
     bool m_activated;
     bool m_settings_mode;
+    bool m_drag_flag;
     std::vector<MudViewHandler*> m_handlers;
 
 private:
@@ -59,7 +60,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
     }
 
@@ -962,6 +963,20 @@ private:
             bool last = m_view.isLastString();
             bool last_updated = m_view.isLastStringUpdated();
             int count = parse_data->strings.size();
+            int max_count = m_propData->view_history_size;
+            if (count > max_count)
+            {
+                int tomove = count - max_count;
+                parseData history;
+                history.update_prev_string = parse_data->update_prev_string;
+                parse_data->update_prev_string = false;
+                parseDataStrings &s = parse_data->strings;
+                parseDataStrings &d = history.strings;
+                d.insert(d.begin(), s.begin(), s.begin()+tomove);
+                s.erase(s.begin(), s.begin()+tomove);
+                count = max_count;
+            }
+
             bool in_soft_scrolling = m_view.inSoftScrolling();
             m_view.addText(parse_data);
 
@@ -985,8 +1000,19 @@ private:
             {
                 if (!soft_scroll || !in_soft_scrolling)
                 {
-                    showHistory(vs, 1);
-                    if (soft_scroll) {
+                    bool skip_history = false;
+                    if (m_view.isDragMode())
+                    {
+                        m_drag_flag = true;
+                        return;
+                    }
+                    else
+                    {
+                        if (m_drag_flag) { m_drag_flag = false; skip_history = true; }
+                    }
+                    if (!skip_history)
+                        showHistory(vs, 1);
+                    if (soft_scroll || skip_history) {
                       int last = m_view.getLastString();
                       m_view.setViewString(last);
                     }
@@ -994,8 +1020,8 @@ private:
             }
             else if (history_visible)
             {
-                int vs = m_history.getViewString();
-                m_history.setViewString(vs);
+                //int vs = m_history.getViewString();
+                //m_history.setViewString(vs);
             }
             return;
         }
