@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98b14"
+#define TORTILLA_VERSION L"0.98beta4"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")

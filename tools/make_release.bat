@@ -42,6 +42,7 @@ xcopy ..\plugins\prompt.dll tortilla\plugins /Y
 xcopy ..\plugins\clickpad.dll tortilla\plugins /Y
 xcopy ..\plugins\sound.dll tortilla\plugins /Y
 xcopy ..\plugins\send.lua tortilla\plugins /Y
+xcopy ..\plugins\status.lua tortilla\plugins /Y
 xcopy ..\plugins\statusbar.lua tortilla\plugins /Y
 xcopy ..\plugins\autowrap.lua tortilla\plugins /Y
 xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
