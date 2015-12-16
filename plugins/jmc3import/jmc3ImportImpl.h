@@ -37,10 +37,12 @@ private:
     void replaceLegacy(std::wstring *legacy);
     void replaceCommand(std::wstring *cmds);
 private: // fix separate commands
-    void initBracketsPcre();
-    void fixBrackets(std::wstring* cmd);
+    void initSeparateCmdsPcre();
+    void fixSeparateCmd(std::wstring* cmd);
     void fixHotkeysBrackets(std::wstring* cmd);
+    void fixStatusCmd(std::wstring* cmd);
 
 private:
     Pcre hotkey_pcre;
+    Pcre status_pcre;
 };
