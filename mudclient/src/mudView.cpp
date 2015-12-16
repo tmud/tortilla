@@ -791,7 +791,7 @@ void MudView::calcDragLine(int line, dragline type)
 void MudView::stopSoftScroll()
 {
     m_start_softscroll = -1;
-    checkLimit();
+    //checkLimit(); // создает проблемы при закрытии истории по переполнению
 }
 
 bool MudView::inSoftScrolling() const

@@ -1097,8 +1097,8 @@ private:
         {
             int count = m_history.getLastString();
             int maxcount = (hs*3);
-            if (maxcount > MAX_VIEW_HISTORY_SIZE) 
-                    maxcount = MAX_VIEW_HISTORY_SIZE;
+            if (maxcount > TOTAL_MAX_VIEW_HISTORY_SIZE)
+                maxcount = TOTAL_MAX_VIEW_HISTORY_SIZE;
             if (count > maxcount)
                 closeHistory();
         }
