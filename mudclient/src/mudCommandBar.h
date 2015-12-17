@@ -270,7 +270,17 @@ private:
                 onHistoryDown();
         }
         else if (key == VK_UP)
+        {
+            int from = 0, to = 0;
+            m_edit.GetSel(from, to);
+            if (from != to)
+            {
+                int len = m_edit.GetWindowTextLength();
+                m_edit.SetSel(len, len);
+                return TRUE;
+            }
             onHistoryUp();
+        }
         else if (key == VK_ESCAPE)
             { clear(); clearHistory(); }
         else if (key == VK_TAB)
