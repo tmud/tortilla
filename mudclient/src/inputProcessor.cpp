@@ -10,16 +10,16 @@ bool InputVarsAccessor::get(const tstring&name, tstring* value)
 
 void InputVarsAccessor::translateVars(tstring *cmd)
 {
-    tortilla::getVars()->processVars(cmd);
+    tortilla::getVars()->processVars(cmd, false);
 }
 
-void InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
+bool InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
 {
     VarProcessor *vp = tortilla::getVars();
-    vp->processVars(&cmd->command);
-    vp->processVars(&cmd->parameters);
+    vp->processVars(&cmd->parameters, false);
     for (int i=0,e=cmd->parameters_list.size(); i<e; ++i)
-       vp->processVars(&cmd->parameters_list[i]);
+       vp->processVars(&cmd->parameters_list[i], false);
+    return vp->processVars(&cmd->command, false);
 }
 
 void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)

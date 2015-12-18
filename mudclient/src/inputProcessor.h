@@ -78,6 +78,9 @@ public:
     InputCommand* operator[] (int index) const { 
         return base::operator[](index);
     }
+    void remove(int pos) {
+        base::erase(begin()+pos);
+    }
     void erase(int pos) {
         InputCommand *cmd = base::operator[](pos);
         delete cmd;
@@ -93,6 +96,9 @@ public:
     }
     void push_back(InputCommand *cmd) {
         base::push_back(cmd);
+    }
+    void pop_back() {
+        base::pop_back();
     }
 };
 
@@ -129,7 +135,7 @@ private:
 class InputCommandVarsProcessor
 {
 public:
-    void makeCommand(InputCommand *cmd);
+    bool makeCommand(InputCommand *cmd);
 };
 
 #ifdef _DEBUG

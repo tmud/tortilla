@@ -159,7 +159,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
-     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
+     if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
          if (isInt(p1) && isInt(p2))
          {
@@ -197,7 +197,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
 
-     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
+     if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
          if (isInt(p1) && isInt(p2))
          {
