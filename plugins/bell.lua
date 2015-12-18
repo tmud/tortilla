@@ -11,7 +11,7 @@ return 'Плагин проигрывает короткий звук, если 
 end
 
 function bell.version()
-    return '1.0'
+    return '1.01'
 end
 
 function bell.streamdata(s)
