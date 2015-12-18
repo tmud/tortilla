@@ -16,6 +16,7 @@ void InputVarsAccessor::translateVars(tstring *cmd)
 void InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
 {
     VarProcessor *vp = tortilla::getVars();
+    vp->processVars(&cmd->command);
     vp->processVars(&cmd->parameters);
     for (int i=0,e=cmd->parameters_list.size(); i<e; ++i)
        vp->processVars(&cmd->parameters_list[i]);
