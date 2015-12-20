@@ -1,6 +1,6 @@
 #pragma once
 
-class HighlightHelper
+class HighlightHelperImpl
 {
     Pcre16 pcre_colors;
     Pcre16 pcre_rgb;
@@ -8,7 +8,7 @@ class HighlightHelper
     tstring colors;
 
 public:
-    HighlightHelper()
+    HighlightHelperImpl()
     {
         colors.assign(L"(\\bblack\\b|\\bred\\b|\\bgreen\\b|\\bbrown\\b|\\bblue\\b|\\bmagenta\\b|\\bcyan\\b|\\bgray\\b|\\bcoal\\b|\\blight red\\b|\\blight green\\b|\\byellow\\b|\\blight blue\\b|\\bpurple\\b|\\blight cyan\\b|\\bwhite\\b|\\blight magenta\\b|\\blight brown\\b|\\bgrey\\b|\\bcharcoal\\b|\\blight yellow\\b)");
         pcre_colors.setRegExp(colors, true);
@@ -139,4 +139,11 @@ private:
          int len = str.length();
          return (p.getFirst(0) == 0 && p.getLast(0) == len) ? true : false;
      }
+};
+
+class HighlightHelper
+{
+   static HighlightHelperImpl m_impl;
+public:
+   bool checkText(tstring* param);
 };

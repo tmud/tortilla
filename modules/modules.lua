@@ -20,9 +20,9 @@ if not bass then
   else
     res, err = bass.init()
     if not res then 
-	  print (err)
-	else
-	  regUnloadFunction(bass.free)
-	end
+      print (err)
+    else
+      regUnloadFunction(bass.free)
+    end
   end
 end

@@ -11,6 +11,7 @@ class InputParameters
 {
 public:
     virtual void getParameters(std::vector<tstring>* params) const = 0;
+    virtual void doNoValues(tstring* cmd) const = 0;
 };
 
 class InputTranslateParameters
@@ -77,6 +78,9 @@ public:
     InputCommand* operator[] (int index) const { 
         return base::operator[](index);
     }
+    void remove(int pos) {
+        base::erase(begin()+pos);
+    }
     void erase(int pos) {
         InputCommand *cmd = base::operator[](pos);
         delete cmd;
@@ -92,6 +96,9 @@ public:
     }
     void push_back(InputCommand *cmd) {
         base::push_back(cmd);
+    }
+    void pop_back() {
+        base::pop_back();
     }
 };
 
@@ -111,6 +118,7 @@ public:
     void extract(InputPlainCommands* cmds);
     void makeTemplates();
     void makeCommands(InputCommands *cmds, const InputParameters* params);
+    int  size() const;
 private:
     const tchar MARKER = L'\t';
     InputTemplateParameters _params;
@@ -120,6 +128,14 @@ private:
     void markbrackets(tstring *cmd) const;
     void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
     bool isbracket(const tchar *p) const;
+    bool isopenorspace(const tchar *p) const;
+    bool iscloseorspace(const tchar *p) const;
+};
+
+class InputCommandVarsProcessor
+{
+public:
+    bool makeCommand(InputCommand *cmd);
 };
 
 #ifdef _DEBUG

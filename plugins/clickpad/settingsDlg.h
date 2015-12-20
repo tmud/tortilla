@@ -10,35 +10,38 @@ class ClickpadSettings;
 class ButtonSizeTranslator
 {
 public:
-    int  getCount() const { return 3; }
+    int  getCount() const { return 4; }
     void getLabel(int index, std::wstring *label) {
         switch(index) {  
-            case 0: label->assign(L"48x48"); break;
-            case 1: label->assign(L"64x64"); break;
-            case 2: label->assign(L"80x80"); break;
+            case 0: label->assign(L"32x32"); break;
+            case 1: label->assign(L"48x48"); break;
+            case 2: label->assign(L"64x64"); break;
+            case 3: label->assign(L"80x80"); break;
             default: assert(false); break;
         }
     }
     int getSize(int index) const {
           switch(index) {  
-            case 0: return 48;
-            case 1: return 64;
-            case 2: return 80;
+            case 0: return 32;
+            case 1: return 48;
+            case 2: return 64;
+            case 3: return 80;
             default: assert(false); break;
         }
         return 64;
     }
     bool checkSize(int size) const {
-        if (size != 48 && size != 64 && size != 80)
+        if (size != 32 && size != 48 && size != 64 && size != 80)
             return false;
         return true;
     }
     int getDefaultSize() const { return 64; }
     int getIndex(int size) const {
         switch(size) {
-            case 48: return 0;
-            case 64: return 1;
-            case 80: return 2;
+            case 32: return 0;
+            case 48: return 1;
+            case 64: return 2;
+            case 80: return 3;
             default: assert(false); break;
         }
         return 1;
@@ -65,7 +68,7 @@ private:
         return 0;
     }
     LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&) {
-        CPaintDC dc(m_hWnd);         
+        CPaintDC dc(m_hWnd);
          HPEN old = dc.SelectPen(m_border);
          HBRUSH oldb = dc.SelectBrush(m_bkgnd);
          RECT rc; GetClientRect(&rc);
@@ -76,7 +79,7 @@ private:
             int x = (rc.right - m_image->width()) / 2;
             int y = (rc.bottom - m_image->height()) / 2;
             m_image->render(dc, x, y, 0, 0);
-        }     
+        }
         return 0;
     }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&) {
@@ -164,7 +167,7 @@ private:
         ScreenToClient(&rc);
         imagepos.ShowWindow(SW_HIDE);
         m_image_example.Create(m_hWnd, rc, NULL, WS_CHILD | WS_VISIBLE);
-        
+
         m_list.GetClientRect(&rc);
         float width_percent =  static_cast<float>(rc.right) / 100;
         m_list.InsertColumn(0, L"Hotkey", LVCFMT_LEFT, static_cast<int>(width_percent * 15));
@@ -189,16 +192,16 @@ private:
         }
 
         wchar_t buffer[16];
-        for (int i=1; i<=5; ++i)
+        for (int i=1; i<=MAX_ROWS; ++i)
             m_rows.AddString(_itow(i, buffer, 10));
-        for (int i=1; i<=10; ++i)
+        for (int i=1; i<=MAX_COLUMNS; ++i)
             m_columns.AddString(_itow(i, buffer, 10));
         ButtonSizeTranslator bt;
         for (int i=0; i<bt.getCount(); ++i)
         {
             std::wstring label;
             bt.getLabel(i, &label);
-            m_bsize.AddString(label.c_str());            
+            m_bsize.AddString(label.c_str());
         }
         m_del_hotkey.EnableWindow(FALSE);
         return 0;
@@ -230,7 +233,7 @@ private:
     void getListItemText(int item, int subitem, std::wstring* text);
     bool isSupportedExt(const wchar_t* file);
     void updateImage();
-    LRESULT OnImageChanged(UINT, WPARAM, LPARAM, BOOL&) {     
+    LRESULT OnImageChanged(UINT, WPARAM, LPARAM, BOOL&) {
         updateImage();
         return 0;
     }

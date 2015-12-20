@@ -12,11 +12,12 @@ class  BassPlayer
 
     DWORD m_freq_record;
     DWORD m_chans_record;
+    DWORD m_sensivity_record;
     HRECORD m_record;
     RecordParams *m_record_params;
 
 public:
-    BassPlayer() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_record(NULL), m_record_params(NULL) {}
+    BassPlayer() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_sensivity_record(30), m_record(NULL), m_record_params(NULL) {}
     ~BassPlayer() { deleteRecordParams(); }
 
     bool loadBass();
@@ -46,7 +47,7 @@ private:
     int push(BassObject* obj);
     void deleteRecordParams();
 
-    bool error_bass(const wchar_t* error_text);
+    bool error_bass(const wchar_t* error_text, const wchar_t* file);
     bool error(const wchar_t* error_text);
     bool error_id(int id);    
     int  error_file(const wchar_t* error_text, const wchar_t* file);

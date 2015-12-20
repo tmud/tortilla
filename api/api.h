@@ -223,6 +223,18 @@ namespace base {
     inline void updateView(lua_State* L, int view, lua_CFunction f) {
         luaT_run(L, "updateView", "dF", view, f);
     }
+    inline bool isViewVisible(lua_State* L, int view) {
+        luaT_run(L, "isViewVisible", "d", view);
+        int result = (lua_isboolean(L, -1)) ? lua_toboolean(L, -1) : 0;
+        lua_pop(L, 1);
+        return (result == 1);
+    }
+    inline void showView(lua_State* L, int view) {
+        luaT_run(L, "showView", "d", view);
+    }
+    inline void hideView(lua_State* L, int view) {
+        luaT_run(L, "hideView", "d", view);
+    }
     inline bool getViewSize(lua_State* L, int view, int *width, int *height) {
         luaT_run(L, "getViewSize", "d", view);
         if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
@@ -245,6 +257,17 @@ namespace base {
     inline void log(lua_State *L, const wchar_t* message) {
         luaT_run(L, "log", "s", message);
     }
+    inline bool translateColors(lua_State* L, const wchar_t* str, COLORREF* text, COLORREF *bgnd) {
+        luaT_run(L, "translateColors", "s", str);
+        if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+        {
+            if (text) *text = lua_tounsigned(L, 1);
+            if (bgnd) *bgnd = lua_tounsigned(L, 2);
+            return true;
+        }
+        return false;
+    }
+
     // createWindow, createPanel, pcre -> in classes below
 } // namespace base
 

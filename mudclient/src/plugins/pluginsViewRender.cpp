@@ -130,14 +130,19 @@ void PluginsViewRender::drawRect(const RECT& r)
     m_dc.LineTo(r.left, r.top);
 }
 
-void PluginsViewRender::drawSolidRect(const RECT& r)
+void PluginsViewRender::drawSolidRect(const RECT& r, COLORREF* solid_color)
 {
     if (!m_inside_render)
         return;
     if (r.left > r.right || r.top > r.bottom)
         return;
-    if (current_brush)
+    if (solid_color)
+        m_dc.FillSolidRect(&r, *solid_color);
+    else 
+    {
+      if (current_brush)
         m_dc.FillRect(&r, *current_brush);
+    }
 }
 
 void PluginsViewRender::drawImage(Image *img, int x, int y)
@@ -167,6 +172,21 @@ int PluginsViewRender::print(int x, int y, const tstring& text)
     GetTextExtentPoint32(m_dc, text.c_str(), text.length(), &sz);
     m_dc.TextOut(x, y, text.c_str(), text.length());
     return sz.cx;
+}
+
+int PluginsViewRender::print(const RECT& r, const tstring& text)
+{
+    if (!m_inside_render)
+        return 0;
+    m_dc.SetBkMode(TRANSPARENT);
+    m_dc.SetTextColor(m_text_color);
+    if (current_font)
+        m_dc.SelectFont(*current_font);
+    SIZE sz = { 0, 0 };
+    GetTextExtentPoint32(m_dc, text.c_str(), text.length(), &sz);
+    RECT pos(r);
+    m_dc.DrawText(text.c_str(), text.length(), &pos, DT_SINGLELINE|DT_VCENTER);
+    return min(sz.cx, r.right);
 }
 
 void PluginsViewRender::update()
@@ -368,7 +388,11 @@ int render_solidRect(lua_State *L)
         RECT rc;
         ParametersReader pr(L);
         pr.getrect(&rc);
-        r->drawSolidRect(rc);
+        COLORREF color;
+        if (pr.getcolor(&color))
+            r->drawSolidRect(rc, &color);
+        else
+            r->drawSolidRect(rc, NULL);
         return 0;
     }
     return pluginInvArgs(L, L"render:solidRect");
@@ -381,6 +405,20 @@ int render_print(lua_State *L)
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         tstring text(TU2W(lua_tostring(L, 4)));
         int width = r->print(lua_tointeger(L, 2), lua_tointeger(L, 3), text);
+        lua_pushinteger(L, width);
+        return 1;
+    }
+    if (luaT_check(L, 3, LUAT_RENDER, LUA_TTABLE, LUA_TSTRING))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        tstring text(TU2W(lua_tostring(L, 3)));
+        lua_pop(L, 1);
+        
+        RECT rc;
+        ParametersReader pr(L);
+        pr.getrect(&rc);
+
+        int width = r->print(rc, text);
         lua_pushinteger(L, width);
         return 1;
     }

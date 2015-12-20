@@ -6,6 +6,7 @@
 #include "pluginSupport.h"
 #include "../profiles/profilesPath.h"
 #include "plugins/pluginsParseData.h"
+#include "highlightHelper.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
 extern CMainFrame _wndMain;
@@ -872,6 +873,52 @@ int getViewSize(lua_State *L)
     return pluginInvArgs(L, L"getViewSize");
 }
 
+int isViewVisible(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 1 && view <=OUTPUT_WINDOWS)
+        {
+            bool visible = _wndMain.m_gameview.isViewVisible(view);
+            lua_pushboolean(L, visible ? 1 : 0);
+            return 1;
+        }
+    }
+    return pluginInvArgs(L, L"isViewVisible");
+}
+
+int showView(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 1 && view <=OUTPUT_WINDOWS)
+        {
+            _wndMain.m_gameview.showView(view, true);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"showView");
+}
+
+int hideView(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int view = lua_tointeger(L, 1);
+        if (view >= 1 && view <=OUTPUT_WINDOWS)
+        {
+            _wndMain.m_gameview.showView(view, false);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"hideView");
+}
+
 int flashWindow(lua_State *L)
 {
    EXTRA_CP;
@@ -934,6 +981,24 @@ int vprint(lua_State *L)
     lp()->windowOutput(view, params);
     return 0;
 }
+
+int translateColors(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring p(luaT_towstring(L, 1));
+        HighlightHelper hh;
+        if (!hh.checkText(&p))
+            return 0;
+        PropertiesHighlight ph;
+        ph.convertFromString(p);
+        lua_pushunsigned(L, ph.textcolor);
+        lua_pushunsigned(L, ph.bkgcolor);
+        return 2;
+    }
+    return pluginInvArgs(L, L"translateColors");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -986,12 +1051,16 @@ bool initPluginsSystem()
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);
-    lua_register(L, "getViewSize", getViewSize);
+    lua_register(L, "getViewSize", getViewSize);  
+    lua_register(L, "isViewVisible", isViewVisible);
+    lua_register(L, "showView", showView);
+    lua_register(L, "hideView", hideView);
     lua_register(L, "flashWindow", flashWindow);
     lua_register(L, "pluginName", pluginName);
     lua_register(L, "regUnloadFunction", regUnloadFunction);
     lua_register(L, "print", print);
     lua_register(L, "vprint", vprint);
+    lua_register(L, "translateColors", translateColors);
 
     reg_props(L);
     reg_activeobjects(L);

@@ -31,6 +31,7 @@ xcopy ..\help\*.* tortilla\help /Y
 xcopy ..\modules\system.dll tortilla\modules /Y
 xcopy ..\modules\rnd.dll tortilla\modules /Y
 xcopy ..\modules\bass.dll tortilla\modules /Y
+xcopy ..\modules\bass_fx.dll tortilla\modules /Y
 xcopy ..\modules\lbass.dll tortilla\modules /Y
 xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y
@@ -41,6 +42,7 @@ xcopy ..\plugins\prompt.dll tortilla\plugins /Y
 xcopy ..\plugins\clickpad.dll tortilla\plugins /Y
 xcopy ..\plugins\sound.dll tortilla\plugins /Y
 xcopy ..\plugins\send.lua tortilla\plugins /Y
+xcopy ..\plugins\status.lua tortilla\plugins /Y
 xcopy ..\plugins\statusbar.lua tortilla\plugins /Y
 xcopy ..\plugins\autowrap.lua tortilla\plugins /Y
 xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
@@ -60,7 +62,7 @@ xcopy ..\sdk\*.* sdk /E /Y
 xcopy ..\modules\modules.txt sdk /Y
 
 7za.exe a -tzip %filename% tortilla
-7za.exe a -tzip %sdk% sdk
+7za.exe a -tzip %sdk% sdk -xr!.gitignore
 
 rd tortilla /s /q
 rd sdk /s /q

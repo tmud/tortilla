@@ -44,6 +44,7 @@ public:
     void updateSoftScrolling();
     void setSoftScrollingMode(bool mode);
     bool inSoftScrolling() const;
+    bool isDragMode() const;
 
 private:
 	BEGIN_MSG_MAP(MudView)

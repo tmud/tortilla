@@ -42,6 +42,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     int m_codepage;
     bool m_activated;
     bool m_settings_mode;
+    bool m_drag_flag;
     std::vector<MudViewHandler*> m_handlers;
 
 private:
@@ -59,7 +60,7 @@ public:
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false)
+        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
     }
 
@@ -318,6 +319,8 @@ public:
     }
 
     void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
+    void showView(int view, bool show) { showWindow(view, show); }
+    bool isViewVisible(int view) { return isWindowVisible(view); }
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
@@ -328,6 +331,7 @@ public:
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
     MudViewHandler* getHandler(int view);
+    
 
 private:
     BEGIN_MSG_MAP(MudGameView)
@@ -816,6 +820,28 @@ private:
 
     bool processKey(int vkey)
     {
+        if ((vkey == VK_UP || vkey == VK_DOWN) && checkKeysState(false, true, false))
+        {
+            BOOL hv = m_history.IsWindowVisible();
+            if (vkey == VK_UP && !hv)
+            {
+                int vs = m_view.getViewString();
+                if (vs > 1)
+                    showHistory(vs-1, 1);
+                return true;
+            }
+            if (vkey == VK_DOWN && !hv)
+                return true;
+            MudView &view = m_history;
+            int visible_string = view.getViewString();
+            if (vkey == VK_UP)
+                visible_string -= 1;
+            else
+                visible_string += 1;
+            view.setViewString(visible_string);
+            return true;
+        }
+
         if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
         {
             if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
@@ -937,6 +963,20 @@ private:
             bool last = m_view.isLastString();
             bool last_updated = m_view.isLastStringUpdated();
             int count = parse_data->strings.size();
+            int max_count = m_propData->view_history_size;
+            if (count > max_count)
+            {
+                int tomove = count - max_count;
+                parseData history;
+                history.update_prev_string = parse_data->update_prev_string;
+                parse_data->update_prev_string = false;
+                parseDataStrings &s = parse_data->strings;
+                parseDataStrings &d = history.strings;
+                d.insert(d.begin(), s.begin(), s.begin()+tomove);
+                s.erase(s.begin(), s.begin()+tomove);
+                count = max_count;
+            }
+
             bool in_soft_scrolling = m_view.inSoftScrolling();
             m_view.addText(parse_data);
 
@@ -960,8 +1000,19 @@ private:
             {
                 if (!soft_scroll || !in_soft_scrolling)
                 {
-                    showHistory(vs, 1);
-                    if (soft_scroll) {
+                    bool skip_history = false;
+                    if (m_view.isDragMode())
+                    {
+                        m_drag_flag = true;
+                        return;
+                    }
+                    else
+                    {
+                        if (m_drag_flag) { m_drag_flag = false; skip_history = true; }
+                    }
+                    if (!skip_history)
+                        showHistory(vs, 1);
+                    if (soft_scroll || skip_history) {
                       int last = m_view.getLastString();
                       m_view.setViewString(last);
                     }
@@ -969,8 +1020,8 @@ private:
             }
             else if (history_visible)
             {
-                int vs = m_history.getViewString();
-                m_history.setViewString(vs);
+                //int vs = m_history.getViewString();
+                //m_history.setViewString(vs);
             }
             return;
         }
@@ -999,6 +1050,13 @@ private:
     {
         assert(view >=1 && view <= OUTPUT_WINDOWS);
         showWindowEx(*m_views[view-1], show);
+    }
+
+    bool isWindowVisible(int view)
+    {
+        assert(view >=1 && view <= OUTPUT_WINDOWS);
+        MudView* v = m_views[view-1];
+        return isWindowShown(*v);
     }
 
     void setWindowName(int view, const tstring& name)
@@ -1065,8 +1123,8 @@ private:
         {
             int count = m_history.getLastString();
             int maxcount = (hs*3);
-            if (maxcount > MAX_VIEW_HISTORY_SIZE) 
-                    maxcount = MAX_VIEW_HISTORY_SIZE;
+            if (maxcount > TOTAL_MAX_VIEW_HISTORY_SIZE)
+                maxcount = TOTAL_MAX_VIEW_HISTORY_SIZE;
             if (count > maxcount)
                 closeHistory();
         }

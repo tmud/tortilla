@@ -98,9 +98,24 @@ void LogicProcessor::runCommands(InputCommands& cmds)
 {
     if (!processAliases(cmds))
         return;
-    for (int i=0,e=cmds.size(); i<e; ++i)
+    InputCommandVarsProcessor vp;
+    int i=0,e=cmds.size();
+    for (; i<e; ++i)
     {
         InputCommand *cmd = cmds[i];
+        while (vp.makeCommand(cmd))
+        {
+            // found $var in cmd name -> run aliases again
+            cmds.remove(i);
+            InputCommands alias;
+            alias.push_back(cmd);
+            bool result = processAliases(alias);
+            cmds.insert(i, alias);
+            e = cmds.size();
+            cmd = cmds[i];
+            if (!result) return;
+        }
+
         if (cmd->system)
             processSystemCommand(cmd); //it is system command for client
         else

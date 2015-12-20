@@ -270,7 +270,17 @@ private:
                 onHistoryDown();
         }
         else if (key == VK_UP)
+        {
+            int from = 0, to = 0;
+            m_edit.GetSel(from, to);
+            if (from != to)
+            {
+                int len = m_edit.GetWindowTextLength();
+                m_edit.SetSel(len, len);
+                return TRUE;
+            }
             onHistoryUp();
+        }
         else if (key == VK_ESCAPE)
             { clear(); clearHistory(); }
         else if (key == VK_TAB)
@@ -306,7 +316,22 @@ private:
     {
         if (m_history_const.empty() && m_history_index == -1)
         {
-            getText(&m_history_const);
+            int start = -1; int end = -1;
+            m_edit.GetSel(start, end);
+            if (start == end)
+                getText(&m_history_const);
+            else
+            {
+                std::vector<tstring> &h = propData->cmd_history;
+                if (!h.empty())
+                {
+                     tstring t;
+                     getText(&t);
+                     int last = h.size() - 1;
+                     if (h[last] == t)
+                         m_history_index = last;
+                }
+            }
         }
     }
 

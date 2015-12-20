@@ -31,15 +31,15 @@ end
 function send.syscmd(t)
   local c = t[1]
   if c == 'send' or c == 'sendall' then
-	local params = {}
-	if c == 'send' then
-	  for i=3,#t do params[i-2] = t[i] end
-	  sendCommand(t[2], table.concat(params, ' '))
-	else
-	  for i=2,#t do params[i-1] = t[i] end
-	  sendCommand(nil, table.concat(params, ' '))
-	end
-	return nil
+    local params = {}
+    if c == 'send' then
+    for i=3,#t do params[i-2] = t[i] end
+      sendCommand(t[2], table.concat(params, ' '))
+    else
+      for i=2,#t do params[i-1] = t[i] end
+      sendCommand(nil, table.concat(params, ' '))
+    end
+    return nil
   end
   return t
 end

@@ -8,6 +8,7 @@ m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_
 {
     L = pL;
     initPcre();
+    initSeparateCmdsPcre();
     initCmdSymbols();
     initLegacy();
 }
@@ -232,12 +233,14 @@ bool Jmc3Import::convert(std::wstring *str)
         {
             std::wstring cmd(str->substr(startpos, pos[i] - startpos));
             wstring_helper t(cmd); t.trim();
+            fixSeparateCmd(&cmd);
             if (!cmd.empty())
                 cmds.push_back(cmd);
             startpos = pos[i] + 1;
         }
         std::wstring cmd(str->substr(startpos));
         wstring_helper t(cmd); t.trim();
+        fixSeparateCmd(&cmd);
         if (!cmd.empty())
             cmds.push_back(cmd);
     }
@@ -419,14 +422,14 @@ void Jmc3Import::initLegacy()
     std::map<std::wstring, std::wstring>& c = m_commands;
     c[L"daa"] = L"hide";
     c[L"restorewindow"] = L"showwindow";
-    c[L"showme"] = L"woutput 1";
+    c[L"showme"] = L"out";
     c[L"substitute"] = L"sub";
     c[L"antisubstitute"] = L"antisub";
     c[L"unantisubstitute"] = L"unantisub";
     c[L"tabadd"] = L"tab";
     c[L"tabdel"] = L"untab";
     c[L"variable"] = L"var";
-    c[L"output"] = L"woutput 1";
+    c[L"output"] = L"wout 1";
 }
 
 void Jmc3Import::initPcre()
@@ -443,4 +446,52 @@ void Jmc3Import::initCmdSymbols()
     luaT_Props p(L);
     p.cmdPrefix(&cmdsymbol);
     p.cmdSeparator(&separator);
+}
+
+void Jmc3Import::fixSeparateCmd(std::wstring* cmd)
+{
+    fixHotkeysBrackets(cmd);
+    fixStatusCmd(cmd);
+}
+
+void Jmc3Import::initSeparateCmdsPcre()
+{
+    hotkey_pcre.init(L".hotk?e?y? +([^ ]+) +([^{\'\"].*)");
+    status_pcre.init(L".status +{?([0-9]+)}? +(.*)");
+}
+
+void Jmc3Import::fixHotkeysBrackets(std::wstring* cmd)
+{
+    if (hotkey_pcre.find(cmd->c_str()))
+    {
+        cmd->assign(cmdsymbol);
+        cmd->append(L"hot ");
+        std::wstring p;
+        hotkey_pcre.get(1, &p);
+        cmd->append(p);
+        cmd->append(L" {");
+        hotkey_pcre.get(2, &p);
+        cmd->append(p);
+        cmd->append(L"}");
+    }
+}
+
+void Jmc3Import::fixStatusCmd(std::wstring* cmd)
+{
+    if (status_pcre.find(cmd->c_str()))
+    {
+        std::wstring index, params;
+        status_pcre.get(1, &index);
+        status_pcre.get(2, &params);        
+        if (param.findall(params.c_str()))
+        {
+            cmd->assign(cmdsymbol);
+            cmd->append(L"status ");
+            cmd->append(index);
+            cmd->append(L" ");
+            std::wstring cmd_string;
+            param.get(1, &cmd_string);
+            cmd->append(cmd_string);
+        }
+    }
 }

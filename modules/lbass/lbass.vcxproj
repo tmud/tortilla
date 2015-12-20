@@ -67,7 +67,8 @@
       <ModuleDefinitionFile>lbass.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\libs\bass\bass.dll $(SolutionDir)\modules</Command>
+      <Command>copy $(SolutionDir)\libs\bass\bass.dll $(SolutionDir)\modules
+copy $(SolutionDir)\libs\bassfx\bass_fx.dll $(SolutionDir)\modules</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -88,9 +89,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration);$(SolutionDir)\libs</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>lbass.def</ModuleDefinitionFile>
+      <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)\libs\bass\bass.dll $(SolutionDir)\modules</Command>
+      <Command>copy $(SolutionDir)\libs\bass\bass.dll $(SolutionDir)\modules
+copy $(SolutionDir)\libs\bassfx\bass_fx.dll $(SolutionDir)\modules</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

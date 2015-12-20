@@ -37,7 +37,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.0");
+    luaT_pushwstring(L, L"1.01");
     return 1;
 }
 
@@ -296,6 +296,9 @@ HWND getMudclientWnd()
 
 void exitEditMode()
 {
+    base::pluginName(pL, L"clickpad");
+    HWND wnd = base::getParent(pL);
+    ::SetFocus(wnd);
     base::pluginName(pL, L"clickpad");
     base::uncheckMenu(pL, 1);
     m_settings_window.hide();

@@ -396,6 +396,9 @@
     <ClCompile Include="src\plugins\pluginsImage.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
+    <ClCompile Include="src\highlightHelper.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">

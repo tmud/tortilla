@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #pragma comment(lib, "bass/c/bass.lib")
+#pragma comment(lib, "bassfx/c/bass_fx.lib")
 #include "common.h"
 #include "player.h"
 
@@ -56,14 +57,14 @@ int lbass_play(lua_State *L)
         }
         if (params_ok && n == 3)
         {
-            if (!lua_isfunction(L, 3))
+            if (!lua_isfunction(L, 3) && !lua_isnil(L, 3))
                 params_ok = false;
         }
         if (params_ok)
         {
             int id = lua_tointeger(L, 1);
             BassCaller *func = NULL;
-            if (n == 3)
+            if (n == 3 && lua_isfunction(L, 3))
                 func = new BassCaller(L, id);
             if (!_bass_player.play(id, volume, func))
                  return error(L, _bass_player.getLastError());

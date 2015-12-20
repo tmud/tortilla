@@ -31,9 +31,9 @@
     <color id="14" r="0" g="255" b="255"/>
     <color id="15" r="255" g="255" b="255"/>
   </colors>
-  <font italic="0" bold="400" heigth="10" name="Fixedsys"/>
+  <font italic="0" bold="400" height="10" name="Fixedsys"/>
   <actions>
-    <action key="^Enter Charset:$" value="1" group="base"/>
+    <action key="^You select:$" value="2j" group="base"/>
   </actions>
   <aliases/>
   <hotkeys>
@@ -69,6 +69,10 @@
     <plugin key="statusbar.lua" value="1"/>
     <plugin key="reconnect.lua" value="0"/>
     <plugin key="colorgamecmd.lua" value="1"/>
+    <plugin key="clickpad.dll" value="1"/>
     <plugin key="tray.dll" value="1"/>
+    <plugin key="sound.dll" value="1"/>
+    <plugin key="bell.lua" value="1"/>
+    <plugin key="send.lua" value="1"/>
   </plugins>
 </profile>

@@ -48,7 +48,7 @@ private:
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_history_size.Attach(GetDlgItem(IDC_EDIT_VIEW_HISTORY));
-        m_history_size.SetLimitText(5);
+        m_history_size.SetLimitText(6);
         m_cmd_size.Attach(GetDlgItem(IDC_EDIT_CMD_HISTORY));
         m_cmd_size.SetLimitText(3);
         m_show_system_cmds.Attach(GetDlgItem(IDC_CHECK_SHOW_SYSTEM_CMDS));

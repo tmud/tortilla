@@ -249,16 +249,6 @@ LRESULT SelectImageDlg::OnSelectCategory(UINT, WPARAM, LPARAM, BOOL&)
 
             std::wstring image_dir;
             getImagesDir(&image_dir);
-            {
-                wchar_t buffer[MAX_PATH+1];
-                if (GetCurrentDirectory(MAX_PATH, buffer))
-                {
-                    int len = wcslen(buffer)+1;
-                    image_dir = image_dir.substr(len);
-                }
-                else
-                    image_dir.clear();
-            }
             image_dir.append(params.filepath);
             p.filename = image_dir;
 
@@ -332,10 +322,10 @@ LRESULT SelectImageDlg::OnSize(UINT, WPARAM, LPARAM, BOOL&)
     GetClientRect(&rc);
     LONG t = rc.bottom;
     rc.bottom -= m_props_size.cy;
-    m_vSplitter.MoveWindow(&rc, FALSE);
+    m_vSplitter.MoveWindow(&rc);
     rc.top = rc.bottom; 
     rc.bottom = t;
-    m_props.MoveWindow(&rc, FALSE);
+    m_props.MoveWindow(&rc);
     return 0;
 }
 

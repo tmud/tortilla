@@ -70,12 +70,14 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     p[0] = m_str.substr(begin, end-begin);  //default value of %0 parameter
 
     // pcre find values of %1
+    int pi = 1;
     for (int i=0,e=keys.getSize(); i<e; ++i)
     {
         int id = keys.getId(i);
         if (id == -1) continue;
-        int begin = m_pcre.getFirst(i+1);
-        int end = m_pcre.getLast(i+1);
+        int begin = m_pcre.getFirst(pi);
+        int end = m_pcre.getLast(pi);
+        pi++;
         p[id] = m_str.substr(begin, end-begin);
     }
 }
