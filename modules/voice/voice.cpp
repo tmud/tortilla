@@ -45,7 +45,7 @@ void voice_destroy()
         pVoice->Release();
 }
 
-int voice_play(lua_State *L)
+int voice_speak(lua_State *L)
 {
     if (!pVoice)
         return error_voice(L);
@@ -53,9 +53,9 @@ int voice_play(lua_State *L)
     {
         lua_towstring text(L, -1);
         HRESULT hr = pVoice->Speak(text, SPF_ASYNC, NULL);
-        return return_result(L, L"play", hr);
+        return return_result(L, L"speak", hr);
     }
-    return error_invargs(L, L"play");
+    return error_invargs(L, L"speak");
 }
 
 int voice_stop(lua_State *L)
@@ -194,8 +194,25 @@ int voice_selectVoice(lua_State *L)
         }
         if (index >= 0 && index < (int)count)
         {
-
-                    
+            if (pToken)
+                { pToken->Release(); pToken = NULL; }
+            hr = pTokens->Item(index, &pToken);
+            if (FAILED(hr))
+            {
+                pToken = NULL;
+                lua_pushboolean(L, 0);
+                return 1;
+            }
+            hr = pVoice->SetVoice(pToken);
+            if (FAILED(hr))
+            {
+                pToken->Release();
+                pToken = NULL;
+                lua_pushboolean(L, 0);
+                return 1;
+            }
+            lua_pushboolean(L, 1);
+            return 1;
         }
     }
     return error_invargs(L, L"selectVoice");
@@ -225,7 +242,7 @@ static const luaL_Reg voice_methods[] =
 {
     { "init", voice_init },
     { "release", voice_release },
-    { "play", voice_play },
+    { "speak", voice_speak },
     { "stop", voice_stop },
     { "getVolume", voice_getVolume },
     { "setVolume", voice_setVolume },
