@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "sharingController.h"
 
-const tchar *global_share_name = L"TortillaTray";
+const wchar_t *global_share_name = L"TortillaTray";
 const int global_share_size = 65536;
 
 SharingController::SharingController() : m_shared_revision(-1), m_locked(false)
@@ -17,7 +17,7 @@ bool SharingController::init()
     if (!m_shared_memory.open(this, global_share_name, global_share_size))
         return false;
     {   // gen id
-        tchar buffer[MAX_PATH];
+        wchar_t buffer[MAX_PATH];
         GetTempFileName(L"", L"", 0, buffer);
         m_id.assign(&buffer[1]);
     }

@@ -26,7 +26,7 @@ private:
         memset(m_shared_memory.ptr(), 0, m_shared_memory.size());
         m_shared_memory.unlock();
     }
-    tstring m_id;
+    std::wstring m_id;
     int m_shared_revision;
     SharedMemory m_shared_memory;
     SharingData m_shared_data;

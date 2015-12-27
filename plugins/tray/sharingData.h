@@ -2,20 +2,21 @@
 
 #include "memoryBuffer.h"
 #include "dataQueue.h"
+#include <algorithm>
 
 class Serialize
 {
     DataQueue &d;
 public:
     Serialize(DataQueue &dq) : d(dq) {}
-    void write(const tstring& s)
+    void write(const std::wstring& s)
     {
        int len = s.length();
        d.write(&len, sizeof(int));
        if (len > 0)
-            d.write(s.c_str(), len*sizeof(tchar));
+            d.write(s.c_str(), len*sizeof(wchar_t));
     }
-    bool read(tstring &s)
+    bool read(std::wstring &s)
     {
         int string_len = 0;
         if (!d.read(&string_len, sizeof(int)) || string_len < 0)
@@ -23,11 +24,11 @@ public:
         if (string_len > 0)
         {
             MemoryBuffer mb;
-            int toread_bytes = string_len * sizeof(tchar);
+            int toread_bytes = string_len * sizeof(wchar_t);
             mb.alloc(toread_bytes);
             if (!d.read(mb.getData(), toread_bytes))
                 return false;
-            s.assign((tchar*)mb.getData(), string_len);
+            s.assign((wchar_t*)mb.getData(), string_len);
         }
         return true;
     }
@@ -61,7 +62,7 @@ public:
 struct SharingDataMessage
 {
     SharingDataMessage() : background(0), text(0), showtime(0), windowpos(RECT()) {}
-    std::vector<tstring> textlines;
+    std::vector<std::wstring> textlines;
     COLORREF background;
     COLORREF text;
     int showtime;
@@ -86,7 +87,7 @@ struct SharingDataMessage
             return false;
         for (int i=0; i<strings; ++i)
         {
-            tstring t;
+            std::wstring t;
             if (!s.read(t)) 
                 return false;
             textlines.push_back(t);
@@ -137,7 +138,7 @@ struct AddMessageCommand : public SharingCommand
 
 struct RegTrayCommand : public SharingCommand
 {
-    RegTrayCommand(const tstring& trayid)
+    RegTrayCommand(const std::wstring& trayid)
     {
         command = SC_REGTRAY;
         DataQueue d;
@@ -150,7 +151,7 @@ struct RegTrayCommand : public SharingCommand
 
 struct UnregTrayCommand : public SharingCommand
 {
-    UnregTrayCommand(const tstring& trayid)
+    UnregTrayCommand(const std::wstring& trayid)
     {
         command = SC_UNREGTRAY;
         DataQueue d;
@@ -163,8 +164,8 @@ struct UnregTrayCommand : public SharingCommand
 
 struct SharingData
 {
-    tstring main_tray_id;
-    tstring new_tray_id;
+    std::wstring main_tray_id;
+    std::wstring new_tray_id;
     std::vector<SharingDataMessage*> windows;
     std::vector<SharingCommand*> commands;
 
