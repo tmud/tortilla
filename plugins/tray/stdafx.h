@@ -19,11 +19,7 @@
 #include <vector>
 #include <string>
 #include <deque>
-#include <algorithm>
 #include <assert.h>
-
-typedef wchar_t tchar;
-typedef std::wstring tstring;
 
 #define MAX_TIMEOUT 3600
 #define MAX_INTERVAL 360

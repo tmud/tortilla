@@ -1,5 +1,5 @@
 #pragma once
-#include "common/tempThread.h"
+#include "../common/tempThread.h"
 #include "mudViewParser.h"
 #include "propertiesPages/propertiesData.h"
 #include "palette256.h"

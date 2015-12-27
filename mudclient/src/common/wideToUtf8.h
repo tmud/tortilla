@@ -82,7 +82,7 @@ private:
     MemoryBuffer m_convertBuffer;
 };
 
-class U2W
+/*class U2W
 {
 public:
     U2W(const char* param)
@@ -123,3 +123,4 @@ public:
 private:
     std::string m_param;
 };
+*/

@@ -28,7 +28,7 @@ bool loadModules()
         lua_register(L, "require", require_stub);
         return false;
     }
-    
+
     tstring path(cd.getCurrentDir());
     path.append(L"\\modules\\?.dll");
     luaopen_package(L);
@@ -36,7 +36,7 @@ bool loadModules()
     lua_pushstring(L, "");
     lua_settable(L, -3);
     lua_pushstring(L, "cpath");
-    lua_pushstring(L, W2U(path));
+    lua_pushstring(L, TW2A(path.c_str()));
     lua_settable(L, -3);
     lua_setglobal(L, "package");
     lua_pop(L, 1);
@@ -62,13 +62,42 @@ bool loadModules()
 
     for (int j = 0, je = files.size(); j < je; ++j)
     {
-        WideToAnsi w2a(files[j].c_str());
+        TW2A w2a(files[j].c_str());
         if (luaL_dofile(L, w2a))
         {
-            tstring error(L"Ошибка при загрузке модуля: ");
+            tstring error(L"Ошибка при загрузке модуля: '");
             error.append(files[j]);
-            pluginLog(error);
+            error.append(L"' - ");
+            error.append(luaT_towstring(L, -1));
+            pluginOut(error.c_str());
         }
     }
     return true;
+}
+
+std::vector<lua_ref> m_unload_functions;
+void unloadModules()
+{
+    int last = m_unload_functions.size()-1;
+    for (int i=last;i>=0;--i)
+    {
+        m_unload_functions[i].pushValue(L);
+        lua_pcall(L, 0, 0, 0);
+        m_unload_functions[i].unref(L);
+    }
+    m_unload_functions.clear();
+}
+
+int regUnloadFunction(lua_State *L)
+{
+    if (!lua_isfunction(L, -1))
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    lua_ref f;
+    f.createRef(L);
+    m_unload_functions.push_back(f);
+    lua_pushboolean(L, 1);
+    return 1;
 }

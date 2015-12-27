@@ -10,7 +10,16 @@ bool InputVarsAccessor::get(const tstring&name, tstring* value)
 
 void InputVarsAccessor::translateVars(tstring *cmd)
 {
-    tortilla::getVars()->processVars(cmd);
+    tortilla::getVars()->processVars(cmd, false);
+}
+
+bool InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
+{
+    VarProcessor *vp = tortilla::getVars();
+    vp->processVars(&cmd->parameters, false);
+    for (int i=0,e=cmd->parameters_list.size(); i<e; ++i)
+       vp->processVars(&cmd->parameters_list[i], false);
+    return vp->processVars(&cmd->command, false);
 }
 
 void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
@@ -22,8 +31,9 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
 
     tstring result;
     int pos = 0;
-    ParamsHelper values(*cmd);
-    for (int i = 0, e = values.getSize(); i < e; ++i)
+    ParamsHelper values(*cmd, ParamsHelper::DEFAULT);
+    int values_count = values.getSize();
+    for (int i = 0; i < values_count; ++i)
     {
         result.append(cmd->substr(pos, values.getFirst(i) - pos));
         int id = values.getId(i);
@@ -33,6 +43,10 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
     }
     result.append(cmd->substr(pos));
     cmd->swap(result);
+    if (values_count == 0)
+    {
+        params->doNoValues(cmd);
+    }
 }
 
 InputPlainCommands::InputPlainCommands() {}
@@ -76,6 +90,11 @@ void InputTemplateCommands::extract(InputPlainCommands* cmds)
         cmd.append(at(i).srccmd);
         cmds->push_back(cmd);
     }
+}
+
+int InputTemplateCommands::size() const
+{
+    return base::size();
 }
 
 void InputTemplateCommands::makeTemplates()
@@ -127,8 +146,6 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
             InputTranslateParameters tp;
             tp.doit(params, &t);
         }
-        InputVarsAccessor va;
-        va.translateVars(&t);       //translate vars in template
 
         pos = t.find(L" ");
         if (pos == -1) {
@@ -216,7 +233,7 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
             {
                 if (stack == 0 && *p == L'}')
                 {
-                    cmd.append(bracket_begin+1, p-bracket_begin-1);                    
+                    cmd.append(bracket_begin+1, p-bracket_begin-1);
                     break;
                 }
                 else
@@ -310,17 +327,25 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
     {
         if (!isbracket(p))
             { p++; continue; }
-        // check space before open bracket
+        // check space or bracket before open bracket
         if (!bracket_begin)
         {
-            if (p != b0 && p[-1] != ' ')
-                { p++; continue; }
+            if (p != b0)
+            {
+                const tchar* p1 = p-1;
+                if (!iscloseorspace(p1) )
+                    { p++; continue; }
+            }
         }
         // check space after close bracket
         else
         {
-            if (*p != '{' && p+1 != e && p[1] != ' ' && p[1] != _params.separator)
-                { p++; continue; }
+            if (*p != '{' && p+1 != e)
+            {
+                const tchar* p1 = p+1;
+                if (!isopenorspace(p1) && *p1 != _params.separator)
+                    { p++; continue; }
+            }
         }
 
         if (stack.empty())
@@ -465,3 +490,12 @@ bool InputTemplateCommands::isbracket(const tchar *p) const
     return (wcschr(L"{}\"'", *p)) ? true : false;
 }
 
+bool InputTemplateCommands::isopenorspace(const tchar *p) const
+{
+    return (wcschr(L"{ \"'", *p)) ? true : false;
+}
+
+bool InputTemplateCommands::iscloseorspace(const tchar *p) const
+{
+    return (wcschr(L"} \"'", *p)) ? true : false;
+}

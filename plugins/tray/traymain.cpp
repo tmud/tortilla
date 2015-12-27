@@ -48,7 +48,7 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const u8string& msg, bool from_queue)
+bool TrayMainObject::showMessage(const std::wstring& msg, bool from_queue)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
@@ -169,7 +169,7 @@ void TrayMainObject::tryShowQueue()
 {
     while (!isHeightLimited() && !m_queue.empty())
     {
-        u8string msg(*m_queue.begin());
+        std::wstring msg(*m_queue.begin());
         m_queue.pop_front();
         showMessage(msg, true);
     }

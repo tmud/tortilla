@@ -31,6 +31,16 @@ void MudView::accLastString(parseData *parse_data)
     int last = m_strings.size() - 1;
     MudViewString *last_string = m_strings[last];
     MudViewString *string = parse_data->strings[0];
+
+    bool space_in_prompt = false;
+    if (last_string->prompt && string->blocks.size() == 1)
+    {
+        const tstring &tmp = string->blocks[0].string;
+        if (tmp.empty() || tmp.find_first_not_of(L' ') == -1)
+            space_in_prompt = true;
+    }
+
+    if (!space_in_prompt) {
     if (last_string->prompt && last_string->gamecmd)
         return;
     if (string->gamecmd && !last_string->prompt)
@@ -41,7 +51,8 @@ void MudView::accLastString(parseData *parse_data)
     {
         MudViewStringBlock empty;
         last_string->blocks.push_back(empty);
-    }
+    }}
+
     last_string->moveBlocks(string);
     delete string;
     parse_data->strings[0] = last_string;
@@ -65,7 +76,6 @@ void MudView::addText(parseData* parse_data)
     calcStringsSizes(parse_data->strings);
     int count = parse_data->strings.size();
     pushText(parse_data);
-    checkLimit();
 
     if (m_use_softscrolling) {
         if (m_start_softscroll == -1)
@@ -73,6 +83,13 @@ void MudView::addText(parseData* parse_data)
         return;
     }
 
+    if (isDragMode())
+    {
+        updateScrollbar(m_last_visible_line);
+        return;
+    }
+
+    checkLimit();
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
@@ -89,25 +106,34 @@ void MudView::updateSoftScrolling()
 {
     if (!m_use_softscrolling || m_start_softscroll == -1)
         return;
+    if (isDragMode())
+    {
+       updateScrollbar(m_last_visible_line);
+       return;
+    }
 
     int last_string = getLastString();
+    int new_visible_line = last_string;
     if (m_last_visible_line != last_string)
-    {        
-        int new_visible_line = last_string;
+    {
         int count = last_string - m_last_visible_line;
-        if (count > 8)
-            new_visible_line = m_last_visible_line + 8;
-        else if (count > 5)
-            new_visible_line = m_last_visible_line + 5;
-        else if (count > 3)
-            new_visible_line = m_last_visible_line + 3;
-
-        if (new_visible_line == last_string) 
-            stopSoftScroll();
-
-        updateScrollbar(new_visible_line);
-        Invalidate(FALSE);
+        int p = min((count / 10)+1 , 3);
+        if (count >= (m_lines_count * 2))
+            new_visible_line = last_string - m_lines_count;
+        else if (count > p*3)
+            new_visible_line = m_last_visible_line + p*3;
+        else if (count > p*2)
+            new_visible_line = m_last_visible_line + p*2;
+        else if (count > p)
+            new_visible_line = m_last_visible_line + p;
     }
+    if (new_visible_line == last_string)
+    {
+        stopSoftScroll();
+        checkLimit();
+    }
+    updateScrollbar(new_visible_line);
+    Invalidate(FALSE);
 }
 
 void MudView::setSoftScrollingMode(bool mode)
@@ -196,10 +222,13 @@ MudViewString* MudView::getString(int idx) const
 void MudView::updateProps()
 {
     if (m_strings.empty())
+    {
+        Invalidate(FALSE);
         return;
+    }
     calcStringsSizes(m_strings);
     initRenderParams();
-    Invalidate();
+    Invalidate(FALSE);
 }
 
 void MudView::removeDropped(parseData* parse_data)
@@ -781,4 +810,9 @@ void MudView::stopSoftScroll()
 bool MudView::inSoftScrolling() const
 {
     return (m_start_softscroll == -1) ? false : true;
+}
+
+bool MudView::isDragMode() const
+{
+    return (drag_begin == -1) ? false : true;
 }

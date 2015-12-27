@@ -4,6 +4,7 @@
 
 typedef int (WINAPI *plugin_open)(lua_State *L);
 extern luaT_State L;
+extern wchar_t* plugin_buffer();
 Plugin* _cp = NULL; // current plugin in lua methods
 
 #include "pluginSupport.h"
@@ -19,9 +20,10 @@ bool Plugin::isPlugin(const wchar_t* fname)
 
 bool Plugin::loadPlugin(const wchar_t* fname)
 {
-    const wchar_t *e = wcsrchr(fname, L'.');
-    if (!e)
+    if (isAlreadyLoaded(fname))
         return false;
+    const wchar_t *e = wcsrchr(fname, L'.');
+    if (!e) return false;
     bool result = false;
     tstring ext(e+1);
     if (ext == L"lua") 
@@ -47,13 +49,13 @@ void Plugin::unloadPlugin()
 bool Plugin::reloadPlugin()
 {
     if (file.empty())
-        return false;    
+        return false;
     const wchar_t* fname = file.c_str();
     bool result = false;
     const wchar_t *e = wcsrchr(fname, L'.');
     if (!e) return false;
     tstring ext(e+1);
-    if (ext == L"lua") 
+    if (ext == L"lua")
         result = loadLuaPlugin(fname);
     else if (ext == L"dll")
         result = loadDllPlugin(fname);
@@ -129,10 +131,11 @@ bool Plugin::runMethod(const char* method, int args, int results, bool *not_supp
     if (lua_pcall(L, args, results, 0))
     {
         // error in call
+        TA2W m(method);
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(method, lua_tostring(L, -1));
+            pluginError(m, luaT_towstring(L, -1));
         else
-            pluginError(method, "неизвестная ошибка");
+            pluginError(m, L"неизвестная ошибка");
         _cp = old;
         lua_settop(L, 0);
         return false;
@@ -221,11 +224,7 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
     const wchar_t *ext = wcsrchr(fname, L'.');
     filename.assign(fname, ext - fname);
     module = TW2A(filename.c_str());
-
-    lua_getglobal(L, module.c_str());
-    bool loaded = lua_istable(L, -1);
-    lua_pop(L, 1);
-
+    bool loaded = isLoadedPlugin(filename.c_str());
     if (loaded)
     {
         getparam("name", &name);
@@ -234,5 +233,30 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
         if (name.empty() || version.empty())
             loaded = false;
     }
+    return loaded;
+}
+
+bool Plugin::isAlreadyLoaded(const wchar_t* filename)
+{
+    const wchar_t *e = wcsrchr(filename, L'.');
+    if (!e) return false;
+    tstring module_name(filename, e);
+    tstring ext(e+1);
+    if (isLoadedPlugin(module_name.c_str()))
+    {
+        swprintf(plugin_buffer(), L"Плагин %s не загружен, так как уже загружен %s.%s. Конфликт имен файлов.", filename, 
+            module_name.c_str(), ext == L"lua" ? L"dll" : L"lua");
+        pluginOut(plugin_buffer());
+        return true;
+    }    
+    return false;
+}
+
+bool Plugin::isLoadedPlugin(const wchar_t* module_name)
+{
+    TW2A name(module_name);
+    lua_getglobal(L, name);
+    bool loaded = lua_istable(L, -1);
+    lua_pop(L, 1);
     return loaded;
 }

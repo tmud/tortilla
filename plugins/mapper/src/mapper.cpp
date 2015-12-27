@@ -11,9 +11,9 @@ Mapper::~Mapper()
     autodel<Zone> z(m_zones);
 }
 
-void Mapper::processNetworkData(const wchar_t* text, int text_len)
+void Mapper::processNetworkData(const char* text, int text_len)
 {
-    RoomData room;
+   /* RoomData room;
     if (!m_processor.processNetworkData(text, text_len, &room))
     {
         if (m_prompt.processNetworkData(text, text_len))
@@ -71,7 +71,7 @@ void Mapper::processNetworkData(const wchar_t* text, int text_len)
     m_viewpos.room = croom;
     m_viewpos.level = croom->level;
     redrawPosition();
-    m_pCurrentRoom = new_room;
+    m_pCurrentRoom = new_room;*/
 }
 
 void Mapper::processCmd(const wchar_t* text, int text_len)

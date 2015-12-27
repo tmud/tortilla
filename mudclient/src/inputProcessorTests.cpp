@@ -36,6 +36,9 @@ public:
             params->push_back(param4);
         }}
     }
+    void doNoValues(tstring* cmd) const
+    {
+    }
 };
 
 bool InputCommandTemplateUnitTest::test1(const tstring& str, int n, ...)

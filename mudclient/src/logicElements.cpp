@@ -15,6 +15,12 @@ void CompareData::reinit()
        fullstr.append(vb[i].string);
 }
 
+void CompareData::fullinit()
+{
+    start = 0;
+    reinit();
+}
+
 void CompareData::del(CompareRange& range)
 {
     if (!cut(range))
@@ -113,13 +119,20 @@ int CompareData::findpos(int pos, int d)
 class AliasParameters : public InputParameters
 {
     const InputCommand *m_pCmd;
+    bool m_process_not_values;
 public:
-    AliasParameters(const InputCommand *cmd) : m_pCmd(cmd) {}
+    AliasParameters(const InputCommand *cmd, bool process_not_values) : m_pCmd(cmd), m_process_not_values(process_not_values) {}
     void getParameters(std::vector<tstring>* params) const
     {
-        params->push_back(L"");
+        if (!m_pCmd->srcparameters.empty())
+            params->push_back(m_pCmd->srcparameters.substr(1));
         const std::vector<tstring>&p = m_pCmd->parameters_list;
         params->insert(params->end(), p.begin(), p.end());
+    }
+    void doNoValues(tstring* cmd) const 
+    {
+        if (m_process_not_values)
+            cmd->append(m_pCmd->srcparameters);
     }
 };
 
@@ -138,7 +151,7 @@ bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
     }
     else if (cmd->command.compare(m_key))
         return false;
-    AliasParameters ap(cmd);
+    AliasParameters ap(cmd, m_cmds.size() == 1);
     m_cmds.makeCommands(newcmds, &ap);
 
     const tstring& alias = cmd->alias.empty() ? cmd->srccmd : cmd->alias;
@@ -169,6 +182,8 @@ public:
     ActionParameters(const CompareObject* co) : m_pCompareObject(co) { assert(m_pCompareObject); }
     void getParameters(std::vector<tstring>* params) const {
         m_pCompareObject->getParameters(params);
+    }
+    void doNoValues(tstring* cmd) const {
     }
 };
 
@@ -281,7 +296,11 @@ bool Gag::processing(CompareData& data)
             return false;
     }
 
-    data.del(range);
+    int len = data.fullstr.length();
+    if (range.begin == 0 && range.end == len)
+        data.string->dropped = true;
+    else
+        data.del(range);
     data.start = range.end+1;
     return true;
 }
