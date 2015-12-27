@@ -35,6 +35,7 @@ xcopy ..\modules\bass_fx.dll tortilla\modules /Y
 xcopy ..\modules\lbass.dll tortilla\modules /Y
 xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y
+xcopy ..\modules\voice.dll tortilla\modules /Y
 
 xcopy ..\plugins\jmc3import.dll tortilla\plugins /Y
 xcopy ..\plugins\tray.dll tortilla\plugins /Y
@@ -49,6 +50,7 @@ xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
 xcopy ..\plugins\historyfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\colorgamecmd.lua tortilla\plugins /Y
 xcopy ..\plugins\bell.lua tortilla\plugins /Y
+xcopy ..\plugins\voice.lua tortilla\plugins /Y
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y

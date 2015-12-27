@@ -73,5 +73,6 @@
     <plugin key="sound.dll" value="1"/>
     <plugin key="bell.lua" value="1"/>
     <plugin key="send.lua" value="1"/>
+    <plugin key="voice.lua" value="0"/>
   </plugins>
 </profile>
