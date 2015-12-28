@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98d11"
+#define TORTILLA_VERSION L"0.98b16"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -28,7 +28,7 @@
 #include <atldlgs.h>
 #include <atlctrlw.h>
 #include <atlmisc.h>
-#include <atlcrack.h>
+//#include <atlcrack.h>
 
 #include "resource.h"
 
@@ -67,6 +67,7 @@ typedef unsigned int uint;
 
 #define OUTPUT_WINDOWS 6
 #define TIMERS_COUNT 10
+#define MAINWND_CLASS_NAME L"TortillaMudClient"
 
 // only for debug (debuging text formatting)
 #ifdef _DEBUG

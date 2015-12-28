@@ -527,32 +527,33 @@ void Network::init_mccp()
 
 bool Network::process_mccp()
 {
-    if (m_mccp_data.getSize() == 0)
-        return true;
-    m_pMccpStream->next_in = (Bytef*)m_mccp_data.getData();
-    m_pMccpStream->avail_in = m_mccp_data.getSize();
-    m_pMccpStream->next_out = (Bytef*)m_mccp_buffer.getData();
-    m_pMccpStream->avail_out = m_mccp_buffer.getSize();
-
-    int error = inflate(m_pMccpStream, Z_NO_FLUSH);
-    if (error != Z_OK && error != Z_STREAM_END)
-         return false;
-
-    int size = m_mccp_buffer.getSize() - m_pMccpStream->avail_out;
-    m_input_data.write(m_mccp_buffer.getData(), size);
-    m_totalDecompressed += size;
-
-    int processed = m_mccp_data.getSize() - m_pMccpStream->avail_in;
-    m_mccp_data.truncate(processed);
-
-    if (error == Z_STREAM_END)
+    while (m_mccp_data.getSize() > 0)
     {
-        int final_block = m_pMccpStream->avail_in;
-        m_input_data.write(m_pMccpStream->next_in, final_block);
-        m_mccp_data.truncate(final_block);
-        close_mccp();
-        init_mccp();
-        m_totalDecompressed += final_block;
+        m_pMccpStream->next_in = (Bytef*)m_mccp_data.getData();
+        m_pMccpStream->avail_in = m_mccp_data.getSize();
+        m_pMccpStream->next_out = (Bytef*)m_mccp_buffer.getData();
+        m_pMccpStream->avail_out = m_mccp_buffer.getSize();
+
+        int error = inflate(m_pMccpStream, Z_NO_FLUSH);
+        if (error != Z_OK && error != Z_STREAM_END)
+             return false;
+
+        int size = m_mccp_buffer.getSize() - m_pMccpStream->avail_out;
+        m_input_data.write(m_mccp_buffer.getData(), size);
+        m_totalDecompressed += size;
+
+        int processed = m_mccp_data.getSize() - m_pMccpStream->avail_in;
+        m_mccp_data.truncate(processed);
+
+        if (error == Z_STREAM_END)
+        {
+            int final_block = m_pMccpStream->avail_in;
+            m_input_data.write(m_pMccpStream->next_in, final_block);
+            m_mccp_data.truncate(final_block);
+            close_mccp();
+            init_mccp();
+            m_totalDecompressed += final_block;
+        }
     }
     return true;
 }

@@ -15,4 +15,5 @@ PropertiesManager* getPropertiesManager();
 PluginsManager* getPluginsManager();
 lua_State* getLua();
 VarProcessor* getVars();
+bool isPropertiesOpen();
 } // namespace tortilla

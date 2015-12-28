@@ -24,5 +24,5 @@ public:
     bool run(const tstring& script, tstring* error);
 
 private:
-    lua_State* L;   
+    lua_State* L;
 };

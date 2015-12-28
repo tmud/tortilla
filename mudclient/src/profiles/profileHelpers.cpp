@@ -142,13 +142,13 @@ bool ProfilesGroupList::copyProfileFile(const tstring& group, const tstring &src
 
 bool ProfilesGroupList::createEmptyProfileFile(const tstring& group, const tstring& profile)
 {
-    xml::node p("profile");
+    xml::node p(L"profile");
     tstring dst(L"profiles\\"); dst.append(profile); dst.append(L".xml");
     ProfilePath ph(group, dst);
     DWORD a = GetFileAttributes(ph);
     bool result = true;
     if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY)) {}
-    else { result = p.save(TW2U(ph)); }
+    else { result = p.save(ph); }
     p.deletenode();
     if (result)
         result = createSettingsFile(group, profile);
@@ -157,11 +157,11 @@ bool ProfilesGroupList::createEmptyProfileFile(const tstring& group, const tstri
 
 bool ProfilesGroupList::createSettingsFile(const tstring& group, const tstring& profile)
 {
-    xml::node f("settings");
-    xml::node n(f.createsubnode("profile"));
+    xml::node f(L"settings");
+    xml::node n(f.createsubnode(L"profile"));
     ProfilePath ph(group, L"settings.xml");
-    n.settext(TW2U(profile.c_str()));
-    bool result = f.save(TW2U(ph));
+    n.settext(profile.c_str());
+    bool result = f.save(ph);
     f.deletenode();
     return result;
 }

@@ -3,9 +3,10 @@
 #define DEFAULT_CMD_HISTORY_SIZE 30
 #define DEFAULT_VIEW_HISTORY_SIZE 5000
 #define MIN_CMD_HISTORY_SIZE 10
-#define MAX_CMD_HISTORY_SIZE 50
+#define MAX_CMD_HISTORY_SIZE 500
 #define MIN_VIEW_HISTORY_SIZE 1000
-#define MAX_VIEW_HISTORY_SIZE 30000
+#define MAX_VIEW_HISTORY_SIZE 300000
+#define TOTAL_MAX_VIEW_HISTORY_SIZE 500000
 
 struct PropertiesHighlight
 {
@@ -119,6 +120,13 @@ public:
     {
         for (int i=0,e=m_values.size(); i<e; ++i)
             if (m_values[i].key == key) { return i; } 
+        return -1;
+    }
+
+    int find(const tstring& key, const tstring& group)
+    {
+        for (int i = 0, e = m_values.size(); i < e; ++i)
+            if (m_values[i].key == key && m_values[i].group == group ) { return i; } 
         return -1;
     }
 
@@ -273,7 +281,7 @@ private:
 
 struct OutputWindow
 {
-    OutputWindow() : side(0), lastside(0)
+    OutputWindow() : side(DOCK_FLOAT), lastside(DOCK_FLOAT)
     {
         pos.left = pos.right = pos.top = pos.bottom = 0;
         size.cx = size.cy = 0;
@@ -283,6 +291,13 @@ struct OutputWindow
         lastside = side = DOCK_FLOAT;
         size = { width, height };
         pos = { x, y, x + width, y + height };
+    }
+    void initVisible(bool visible)
+    {
+        if (!visible)
+            side = DOCK_HIDDEN;
+        else
+            side = DOCK_FLOAT;
     }
 
     tstring name;

@@ -211,7 +211,7 @@ MudViewHandler* MudGameView::getHandler(int view)
     return NULL;
 }
 
-void MudGameView::OnSearchEnter(const MudCommandBarCommands& lines)
+/*void MudGameView::OnSearchEnter(const MudCommandBarCommands& lines)
 {
     int x = 1;
-}
+}*/

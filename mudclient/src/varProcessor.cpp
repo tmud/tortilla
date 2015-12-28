@@ -16,7 +16,7 @@ public:
         citerator it = m_specvars.find(var);
         return (it == m_specvars.end()) ? true : false;
     }
-    bool processVars(tstring *p, const PropertiesValues &vars, bool strong_mode);
+    bool processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result);
     bool getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const;
     bool setVar(PropertiesValues &vars, const tstring& var, const tstring& value);
     bool delVar(PropertiesValues &vars, const tstring& var);
@@ -34,14 +34,14 @@ bool VarProcessor::canSetVar(const tstring& var)
     return vars_processor.canset(var);
 }
 
-bool VarProcessor::processVars(tstring *p)
+bool VarProcessor::processVars(tstring *p, bool vars_absent_result)
 {
-    return vars_processor.processVars(p, getVars(), false);
+    return vars_processor.processVars(p, getVars(), false, vars_absent_result);
 }
 
-bool VarProcessor::processVarsStrong(tstring *p)
+bool VarProcessor::processVarsStrong(tstring *p, bool vars_absent_result)
 {
-    return vars_processor.processVars(p, getVars(), true);
+    return vars_processor.processVars(p, getVars(), true, vars_absent_result);
 }
 
 bool VarProcessor::getVar(const tstring& var, tstring *value)
@@ -75,14 +75,14 @@ VarProcessorImpl::VarProcessorImpl()
     m_vars_regexp.setRegExp(L"\\$[0-9a-zA-Z_]+", true);
 }
 
-bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode)
+bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result)
 {
     m_vars_regexp.findAllMatches(*p);
     if (m_vars_regexp.getSize() == 0)
-        return true;
+        return vars_absent_result;
 
-    tstring newparam(p->substr(0, m_vars_regexp.getFirst(0)));
-    for (int i = 0, e = m_vars_regexp.getSize() - 1; i <= e; ++i)
+    tstring newparam(p->substr(0, m_vars_regexp.getFirst(1)));
+    for (int i=1, e=m_vars_regexp.getSize()-1; i<=e; ++i)
     {
         tstring tmp, var;
         m_vars_regexp.getString(i, &tmp);

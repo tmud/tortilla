@@ -205,6 +205,16 @@ Plugin* PluginsManager::findPlugin(HWND view)
     return NULL;
 }
 
+Plugin* PluginsManager::findPlugin(const tstring& name)
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        if (!name.compare(m_plugins[i]->get(Plugin::FILENAME)))
+           return m_plugins[i];
+    }
+    return NULL;
+}
+
 void PluginsManager::updateProps()
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
@@ -230,19 +240,19 @@ void PluginsManager::processGameCmd(InputCommand* cmd)
     std::vector<tstring> p;
     p.push_back(cmd->command);
     p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
-    tstring plugin_name;
-    PluginsManager::TableMethodResult result = (cmd->system) ? doPluginsTableMethod("syscmd", &p, &plugin_name) : doPluginsTableMethod("gamecmd", &p, &plugin_name);
+    tstring error_msg;
+    PluginsManager::TableMethodResult result = (cmd->system) ? doPluginsTableMethod("syscmd", &p, &error_msg) : doPluginsTableMethod("gamecmd", &p, &error_msg);
     if (result == TM_PROCESSED)
         concatCommand(p, cmd->system, cmd);
     if (result == TM_DROPPED)
     {
         cmd->dropped = true;
-        if (!plugin_name.empty())
+        if (!error_msg.empty())
         {
             tstring src(cmd->srccmd);
             src.append(cmd->parameters);
-            swprintf(plugin_buffer(), L"'%s': Команда обработана: %s", plugin_name.c_str(), src.c_str());
-            pluginLog(plugin_buffer());
+            swprintf(plugin_buffer(), L"%s (%s)", error_msg.c_str(), src.c_str());
+            pluginOut(plugin_buffer());
         }
     }
 }
@@ -264,6 +274,81 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
         }
         lua_settop(L, 0);
     }
+}
+
+bool PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
+{
+    int i = start_string; int last = parse_data.strings.size() - 1;
+
+    MudViewString *s = parse_data.strings[i];
+    CompareData cd(s);
+    bool incomplstr = (i==last && !parse_data.last_finished);
+
+    bool processed = false;
+    bool wait = false;
+    for (int j=0, je=m_plugins.size(); j<je; ++j)
+    {
+        Plugin *p = m_plugins[j];
+        if (!p->state())
+            continue;
+        std::vector<PluginsTrigger*>& vt = p->triggers;
+        if (vt.empty())
+            continue;
+        for (int k=0,ke=vt.size();k<ke;++k)
+        {
+            PluginsTrigger *t = vt[k];
+            if (!t->isEnabled())
+                continue;
+            if (!t->compare(0, cd, incomplstr))
+                continue;
+            if (t->getLen() == 1)
+            {
+                processed = true;
+                pe->triggers.push_back(t);
+                continue;
+            }
+            int count = last+1;
+            if (t->getLen() > count)
+            {
+                processed = true;
+                wait = true;
+                pe->triggers.clear();
+                break;
+            }
+            // compare next strings
+            bool compared = true;
+            for (int q=1, qe=t->getLen(); q<qe; ++q )
+            {
+                int si = start_string + q;
+                MudViewString *s2 = parse_data.strings[si];
+                CompareData cd2(s);
+                bool incomplstr2 = (si==last && !parse_data.last_finished);
+                if (!t->compare(q, cd2, incomplstr2))
+                  { compared = false;  break; }
+            }
+            if (compared)
+            {
+                processed = true;
+                pe->triggers.push_back(t);               
+            }
+        }
+        if (wait) break;
+    }
+
+    if (processed)
+    {
+        if (!wait)
+            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        parseData &not_processed = pe->data;
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = start_string + (wait) ? 0 : 1;   // если wait то оставляет строчку срабатывания на обработку в след. круг
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+    }
+
+    return processed;
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)
@@ -407,7 +492,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется string|nil", i);
+            turnoffPlugin(L"Неверный тип полученного значения. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
@@ -433,7 +518,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     return true;
 }
 
-PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* plugin_name)
+PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg)
 {
     WideToUtf8 w2u;
     lua_newtable(L);
@@ -451,10 +536,10 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
         bool not_supported = false;
-        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1)) )
+        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil|boolean", i);
+            turnoffPlugin(L"Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -472,8 +557,6 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
             result = TM_PROCESSED;
         if (lua_isnil(L, -1)) 
         {
-            if (plugin_name)
-                plugin_name->assign(p->get(Plugin::FILE));
             result = TM_DROPPED;
             break;
         }
@@ -482,6 +565,17 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
             int res = lua_toboolean(L, -1);
             result = (!res) ? TM_DROPPED : TM_NOTPROCESSED;
             break;
+        }
+        if (lua_isstring(L, -1))
+        {
+            result = TM_DROPPED;
+            if (error_msg)
+            {
+                tstring msg(TU2W (lua_tostring(L,-1)));
+                swprintf(plugin_buffer(), L"'%s': %s", p->get(Plugin::FILE), msg.c_str() );
+                error_msg->assign( plugin_buffer() );
+            }
+             break;
         }
     }
     if (lua_istable(L, -1) && result == TM_PROCESSED)
@@ -504,7 +598,7 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
     return result;
 }
 
-void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
+void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
@@ -512,7 +606,7 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     _cp = p;
     if (error)
         pluginError(error);
-    pluginError("Плагин отключен!");
+    pluginError(L"Плагин отключен!");
     p->setOn(false);
     _cp = old;
     PluginsDataValues &modules = tortilla::getProperties()->plugins;

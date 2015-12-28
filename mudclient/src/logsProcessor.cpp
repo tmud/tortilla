@@ -252,21 +252,21 @@ void LogsProcessor::prepare(int id)
             SetFilePointer(l->hfile, 0, NULL, FILE_BEGIN);
             SetEndOfFile(l->hfile);
         }
-        std::string tu;
+        tstring tu;
         {
-            tstring t(m_propData->title);
+            tu.assign(m_propData->title);
             SYSTEMTIME tm;
             GetSystemTime(&tm);
-            WCHAR buffer[16];
+            tchar buffer[32];
             swprintf(buffer, L" - %d %s %d", tm.wDay, month[tm.wMonth], tm.wYear);
-            t.append(buffer); tu.append((const char*)W2U(t));
+            tu.append(buffer);
         }
         
         char *buffer = m_buffer.getData();
         std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>");
-        header.append(tu);
+        header.append(TW2U(tu.c_str()));
         header.append("</title>\r\n</head>\r\n<style type=\"text/css\">\r\n");
-        W2U font(m_propData->font_name);
+        TW2U font(m_propData->font_name.c_str());
         sprintf(buffer, "body{ background-color: %s; color: %s; font-size: %dpt; font-weight: %d; font-family: %s }\r\n", 
             color(m_propData->bkgnd), color2(m_palette->getColor(7)), m_propData->font_heigth, m_propData->font_bold, (const char*)font);
         header.append(buffer);
