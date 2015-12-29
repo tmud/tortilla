@@ -29,7 +29,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     CDockingWindow m_dock;
     int m_barHeight;
     MudCommandBar m_bar;
-    FindDlg m_find_dlg;
+    FindView m_find_view;
     MudView m_history;
     MudView m_view;
     CSplitterWindowExT<false, 3, 1> m_hSplitter;
@@ -308,9 +308,8 @@ public:
         return (ctx) ? ctx->hwndFloated : NULL;
     }
 
-    void setFixedSize(PluginsView *v, int width, int height)
+    void setFixedSize(HWND hwnd, int width, int height)
     {
-        HWND hwnd = v->m_hWnd;
         DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
         if (!ctx) return;
         if (width <= 0 || height <= 0)
@@ -393,18 +392,16 @@ private:
         m_parent.MoveWindow(&m_propData->main_window);
 
         // create find panel
-        m_find_dlg.Create(m_dock);
-        m_find_dlg.SetWindowText(L"Поиск");
-        RECT fpos; m_find_dlg.GetClientRect(&fpos);
+        m_find_view.Create(m_dock);
+        m_find_view.SetWindowText(L"Поиск");
+        RECT fpos; m_find_view.GetClientRect(&fpos);
         RECT &p = m_propData->find_window;
         p.right = p.left + fpos.right;
         p.bottom = p.top + fpos.bottom;
-        m_dock.AddWindow(m_find_dlg);
+        m_dock.AddWindow(m_find_view);
+
         if (m_propData->find_window_visible)
-        {
-            loadFindWindowPos();
-            m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
-        }
+            showFindView();
 
         // create docking output windows
         for (int i=0; i < OUTPUT_WINDOWS; ++i)
@@ -820,28 +817,39 @@ private:
         return 0;
     }
 
+    void showFindView()
+    {
+        const RECT& p = m_propData->find_window;
+        setFixedSize(m_find_view, p.right - p.left, p.bottom - p.top);
+        m_dock.FloatWindow(m_find_view, p);
+        m_propData->find_window_visible = 1;
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
+    }
+
+    void hideFindView()
+    {
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_view);
+        m_propData->find_window = ctx->rcWindow;
+        m_dock.HideWindow(m_find_view);
+        m_propData->find_window_visible = 0;
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
+    }
+
     LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
     {
-        int &v = m_propData->find_window_visible;
-        if (v)
-        {
-            DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
-            m_propData->find_window = ctx->rcWindow;
-            m_dock.HideWindow(m_find_dlg);
-            v = 0;
-        }
-        else
-        {
-            m_dock.FloatWindow(m_find_dlg, m_propData->find_window);
-            v = 1;
-        }
-        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, v);
+        if (m_propData->find_window_visible) { hideFindView(); }
+        else { showFindView(); }
         return 0;
     }
 
     LRESULT OnCloseWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         HWND wnd = (HWND)wparam;
+        if (wnd == m_find_view)
+        {
+            hideFindView();
+            return 0;
+        }
         for (int i = 0, e = m_plugins_views.size(); i < e; ++i)
         {
             HWND hwnd = *m_plugins_views[i];
@@ -1202,15 +1210,9 @@ private:
 
     void saveFindWindowPos()
     {
-        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_view);
         m_propData->find_window = ctx->rcWindow;
         m_propData->find_window_visible = (ctx->Side == DOCK_FLOAT) ? 1 : 0;    
-    }
-
-    void loadFindWindowPos()
-    {
-        const RECT& p = m_propData->find_window;
-        m_dock.FloatWindow(m_find_dlg, p);
     }
 
     void saveClientWindowPos()

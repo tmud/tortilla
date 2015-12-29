@@ -199,7 +199,7 @@ int window_setFixedSize(lua_State *L)
     if (luaT_check(L, 3, LUAT_WINDOW, LUA_TNUMBER, LUA_TNUMBER))
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
-        _wndMain.m_gameview.setFixedSize(v, lua_tointeger(L, 2), lua_tointeger(L, 3));
+        _wndMain.m_gameview.setFixedSize(*v, lua_tointeger(L, 2), lua_tointeger(L, 3));
         return 0;
     }
     return pluginInvArgs(L, L"window:setFixedSize");
