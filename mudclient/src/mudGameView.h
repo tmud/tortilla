@@ -6,6 +6,7 @@
 #include "network/network.h"
 #include "mudView.h"
 #include "mudCommandBar.h"
+#include "findDlg.h"
 #include "logicProcessor.h"
 
 #include "plugins/pluginsApi.h"
@@ -28,6 +29,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     CDockingWindow m_dock;
     int m_barHeight;
     MudCommandBar m_bar;
+    FindDlg m_find_dlg;
     MudView m_history;
     MudView m_view;
     CSplitterWindowExT<false, 3, 1> m_hSplitter;
@@ -105,10 +107,8 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-           /* if (m_bar.getMode() == MudCommandBar::SEARCH)
-                m_bar.setMode(MudCommandBar::DEFAULT);
-            else
-                m_bar.setMode(MudCommandBar::SEARCH);*/
+            BOOL b = FALSE;
+            OnViewFind(0,0,0,b);
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
@@ -363,6 +363,7 @@ private:
         COMMAND_ID_HANDLER(ID_NEWWORLD, OnNewWorld)
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
+        COMMAND_ID_HANDLER(ID_VIEW_FIND, OnViewFind)
         MESSAGE_HANDLER(WM_DOCK_PANE_CLOSE, OnCloseWindow)
         MESSAGE_HANDLER(WM_DOCK_FOCUS, OnBarSetFocus)
         COMMAND_ID_HANDLER(ID_PLUGINS, OnPlugins)
@@ -390,6 +391,20 @@ private:
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
 
         m_parent.MoveWindow(&m_propData->main_window);
+
+        // create find panel
+        m_find_dlg.Create(m_dock);
+        m_find_dlg.SetWindowText(L"Поиск");
+        RECT fpos; m_find_dlg.GetClientRect(&fpos);
+        RECT &p = m_propData->find_window;
+        p.right = p.left + fpos.right;
+        p.bottom = p.top + fpos.bottom;
+        m_dock.AddWindow(m_find_dlg);
+        if (m_propData->find_window_visible)
+        {
+            loadFindWindowPos();
+            m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
+        }
 
         // create docking output windows
         for (int i=0; i < OUTPUT_WINDOWS; ++i)
@@ -459,6 +474,7 @@ private:
     LRESULT OnParentClose(UINT, WPARAM, LPARAM lparam, BOOL&bHandled)
     {
         saveClientWindowPos();
+        saveFindWindowPos();
         unloadPlugins();
         bHandled = FALSE;
         return 0;
@@ -724,15 +740,6 @@ private:
 
     LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        /*if (m_bar.getMode() == MudCommandBar::SEARCH)
-        {
-            if (cmds.empty())
-                 m_bar.setMode(MudCommandBar::DEFAULT);
-            else
-                 OnSearchEnter(cmds);
-            return 0;
-        }*/
-
         tstring cmd;
         m_bar.getCommand(&cmd);
         processUserCommand(cmd, true);
@@ -810,6 +817,25 @@ private:
         bool new_state = !isWindowShown(wnd);
         showWindowEx(wnd, new_state);
         setCmdBarFocus();
+        return 0;
+    }
+
+    LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
+    {
+        int &v = m_propData->find_window_visible;
+        if (v)
+        {
+            DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
+            m_propData->find_window = ctx->rcWindow;
+            m_dock.HideWindow(m_find_dlg);
+            v = 0;
+        }
+        else
+        {
+            m_dock.FloatWindow(m_find_dlg, m_propData->find_window);
+            v = 1;
+        }
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, v);
         return 0;
     }
 
@@ -1174,6 +1200,19 @@ private:
         m_history.setViewString(vs);
     }
 
+    void saveFindWindowPos()
+    {
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
+        m_propData->find_window = ctx->rcWindow;
+        m_propData->find_window_visible = (ctx->Side == DOCK_FLOAT) ? 1 : 0;    
+    }
+
+    void loadFindWindowPos()
+    {
+        const RECT& p = m_propData->find_window;
+        m_dock.FloatWindow(m_find_dlg, p);
+    }
+
     void saveClientWindowPos()
     {
         m_propData->windows.clear();
@@ -1294,5 +1333,4 @@ private:
 
     void setOscColor(int index, COLORREF color);
     void resetOscColors();
-    //void OnSearchEnter(const MudCommandBarCommands& lines);
 };
