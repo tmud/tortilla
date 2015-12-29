@@ -2,89 +2,102 @@
 
 class SharedMemoryHandler
 {
-public: 
-    virtual void onInitSharedMemory() = 0;         // called for initializaion purposes (for first process)
+public:
+    virtual void onInitSharedMemory(void* buffer, size_t size) = 0;         // called for initializaion purposes (for first process)
 };
 
 class SharedMemory
 {
-    SharedMemoryHandler* m_pHandler;
+    class MutexAutolocker
+    {
+        HANDLE m_mutex;
+    public:
+        MutexAutolocker(HANDLE h) : m_mutex(h) { WaitForSingleObject(m_mutex, INFINITE); }
+        ~MutexAutolocker() { ReleaseMutex(m_mutex); }
+    };
+
+    class Autocleaner 
+    {
+        SharedMemory* m_psm;
+    public:
+        Autocleaner(SharedMemory* sm) : m_psm(sm) {}
+        ~Autocleaner() { if (m_psm) m_psm->close(); }
+        void disable() { m_psm = NULL; }
+    };
+    friend class Autocleaner;
+
     HANDLE m_map_file;
     void*  m_pbuf;
-    unsigned int m_size;
+    size_t m_size;
+    size_t m_datasize;
     HANDLE m_mutex;
-    HANDLE m_init_event;
     HANDLE m_change_event;
 
 public:
-    SharedMemory() : m_pHandler(NULL), m_map_file(NULL), m_pbuf(NULL), m_size(0), m_mutex(NULL), m_init_event(NULL), m_change_event(NULL) {}
+    SharedMemory() : m_map_file(NULL), m_pbuf(NULL), m_size(0), m_datasize(0), m_mutex(NULL), m_change_event(NULL) {}
     ~SharedMemory() { close(); }    
-    bool open(SharedMemoryHandler* handler, const wchar_t* global_name, unsigned int size)
+    bool create(SharedMemoryHandler* handler, const wchar_t* global_name, size_t size)
     {
          assert(handler && global_name && size > 0);
-         m_pHandler = handler;
-         bool first_open = false;
-         m_map_file = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, global_name);
-         if (!m_map_file)
-         {
-             m_map_file = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, global_name); 
-             if (!m_map_file)
-                return close();
-             first_open = true;
-         }
-         m_pbuf = MapViewOfFile(m_map_file, FILE_MAP_ALL_ACCESS, 0, 0, size);
-         if (!m_pbuf)
-             return close();
 
          std::wstring mutex_name(global_name);
          mutex_name.append(L"_mutex");
          m_mutex = CreateMutex(NULL, FALSE, mutex_name.c_str());
          if (!m_mutex)
-             return close();
+             return false;
 
-         std::wstring initevent_name(global_name);
-         initevent_name.append(L"_initevent");
-         m_init_event = CreateEvent(NULL, TRUE, FALSE, initevent_name.c_str() );
-         if (!m_init_event)
-             return close();
+         Autocleaner ac(this);
+         MutexAutolocker al(m_mutex);
 
-         std::wstring changeevent_name(global_name);
-         changeevent_name.append(L"_changeevent");
-         m_change_event = CreateEvent(NULL, FALSE, FALSE, changeevent_name.c_str() );
+         std::wstring event_name(global_name);
+         event_name.append(L"_event");
+         m_change_event = CreateEvent(NULL, TRUE, FALSE, event_name.c_str());
          if (!m_change_event)
-             return close();
+             return false;
 
-         m_size = size;
+         bool first_open = false;
+         m_map_file = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, global_name);
+         if (!m_map_file)
+         {
+             m_map_file = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size, global_name);
+             if (!m_map_file)
+                return false;
+             first_open = true;
+         }
+         m_pbuf = MapViewOfFile(m_map_file, FILE_MAP_ALL_ACCESS, 0, 0, size);
+         if (!m_pbuf)
+             return false;
          if (first_open)
-         {
-             m_pHandler->onInitSharedMemory();
-             SetEvent(m_init_event);
-         }
-         else
-         {
-             WaitForSingleObject(m_init_event, INFINITE);
-         }
+             handler->onInitSharedMemory(m_pbuf, size);
+         m_size = size;
+         ac.disable();
          return true;
    }
 
-   unsigned int size() const {
-       return m_size;
+   bool write(void *data, size_t datalen)
+   {
+        if (datalen > m_size)
+            return false;
+        MutexAutolocker al(m_mutex);
+        memcpy(m_pbuf, data, datalen);
+        m_datasize = datalen;
+        return true;
+   }
+
+   bool read(void* buffer, size_t bufferlen)
+   {
+        if (bufferlen < m_datasize)
+            return false;
+        MutexAutolocker al(m_mutex);
+        memcpy(buffer, m_pbuf, m_datasize);
+        return true;   
+   }
+
+   size_t size() const {
+       return m_datasize;
    }
  
-   void lock() {
-        WaitForSingleObject(m_mutex, INFINITE); 
-   }
-
-   void unlock() {
-        ReleaseMutex(m_mutex);
-   }
-
-   void* ptr() {
-       return m_pbuf;
-   }
-
-   void sendChangeEvent()
-   {
+   void sendChangeEvent() {
         SetEvent(m_change_event);
    }
 
@@ -95,14 +108,11 @@ public:
    }
 
 private:   
-    bool close()
+    void close()
     {
         if (m_change_event)
             CloseHandle(m_change_event);
-        m_change_event = NULL;
-        if (m_init_event)
-            CloseHandle(m_init_event);
-        m_init_event = NULL;
+        m_change_event = NULL;     
         if (m_mutex)
             CloseHandle(m_mutex);
         m_mutex = NULL;
@@ -112,6 +122,5 @@ private:
         if (m_map_file)
             CloseHandle(m_map_file);
         m_map_file = NULL;
-        return false;
     }
 };
