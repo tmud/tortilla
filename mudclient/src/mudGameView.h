@@ -107,8 +107,7 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-            BOOL b = FALSE;
-            OnViewFind(0,0,0,b);
+			showFindView(true);
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
@@ -399,14 +398,15 @@ private:
         p.right = p.left + fpos.right;
         p.bottom = p.top + fpos.bottom;
         m_dock.AddWindow(m_find_view);
-
-        if (m_propData->find_window_visible)
-            showFindView();
+        m_find_view.setWindowName(0, L"Главное окно");
+        m_find_view.selectWindow(0);
 
         // create docking output windows
         for (int i=0; i < OUTPUT_WINDOWS; ++i)
         {
             const OutputWindow& w =  m_propData->windows[i];
+            m_find_view.setWindowName(i+1,w.name);
+
             MudView *v = new MudView(&m_propElements);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
             int menu_id = i+ID_WINDOW_1;
@@ -426,6 +426,10 @@ private:
             else if (w.side == DOCK_FLOAT)
                 m_dock.FloatWindow(*v, w.pos);
         }
+
+        // show find window if required
+        if (m_propData->find_window_visible)
+            showFindView(false);
 
         m_handlers.push_back( new MudViewHandler(&m_view, &m_history) );
         for (int i=0; i<OUTPUT_WINDOWS; ++i)
@@ -817,13 +821,19 @@ private:
         return 0;
     }
 
-    void showFindView()
+    void showFindView(bool set_focus)
     {
-        const RECT& p = m_propData->find_window;
-        setFixedSize(m_find_view, p.right - p.left, p.bottom - p.top);
-        m_dock.FloatWindow(m_find_view, p);
-        m_propData->find_window_visible = 1;
-        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_view);
+        if (ctx->Side == DOCK_HIDDEN)
+        {
+            const RECT& p = m_propData->find_window;
+            setFixedSize(m_find_view, p.right - p.left, p.bottom - p.top);
+            m_dock.FloatWindow(m_find_view, p);
+            m_propData->find_window_visible = 1;
+            m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
+        }
+        if (set_focus)
+            m_find_view.setFocus();
     }
 
     void hideFindView()
@@ -838,7 +848,7 @@ private:
     LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
     {
         if (m_propData->find_window_visible) { hideFindView(); }
-        else { showFindView(); }
+        else { showFindView(true); }
         return 0;
     }
 
