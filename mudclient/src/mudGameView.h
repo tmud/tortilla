@@ -83,6 +83,46 @@ public:
             if (processKey(pMsg->wParam))
                 return TRUE;
         }
+
+        if (m_find_view.processMsg(pMsg))
+        {
+            if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
+               SetFocus();
+            if (msg == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+            {
+                tstring text;
+                m_find_view.getTextToSearch(&text);
+                int view = m_find_view.getSelectedWindow();
+                if (!text.empty())
+                {
+                    bool shift = (GetKeyState(VK_SHIFT) < 0);
+                    int dt = (shift) ? -1 : 1;
+                    if (view == 0)
+                    {
+                        int vs = m_history.getSelectedText();
+                        int new_vs = m_history.findAndSelectText(vs, dt, text);
+                        if (new_vs != -1)
+                        {
+                           int count = m_history.getStringsCount();
+                           int delta = m_history.getStringsOnDisplay() / 2;  // center on the screen
+                           int center_vs = new_vs + delta;                   // пробуем поставить по центру
+                           if (center_vs < count)
+                               new_vs = center_vs;
+                           BOOL hv = m_history.IsWindowVisible();
+                           if (!hv) {
+                              showHistory(new_vs, 0);
+                           }
+                        }
+                    }
+                    else
+                    {
+                        //m_views[view-1]
+                    }
+                }
+            }
+            return TRUE;
+        }
+
         if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
         {
             if (m_history.IsWindowVisible())
@@ -679,8 +719,6 @@ private:
         if (id == 1)
         {
             m_processor.processTick();
-            if (m_history.IsWindowVisible() && m_history.isLastString())
-                closeHistory();
             m_plugins.processTick();
         }
         else if (id == 2)
@@ -899,6 +937,15 @@ private:
                 visible_string -= 1;
             else
                 visible_string += 1;
+            if (vkey == VK_DOWN)
+            {
+                int next_last = view.getLastString() + 1;
+                if (next_last == visible_string)
+                {
+                    closeHistory();
+                    return true;
+                }
+            }
             view.setViewString(visible_string);
             return true;
         }
@@ -921,6 +968,15 @@ private:
                 visible_string -= page;
             else
                 visible_string += page;
+            if (vkey == VK_NEXT)
+            {
+                int next_last = view.getLastString() + 1;
+                if (visible_string >= next_last)
+                {
+                    closeHistory();
+                    return true;
+                }
+            }
             view.setViewString(visible_string);
             return true;
         }

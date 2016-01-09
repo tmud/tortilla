@@ -23,7 +23,57 @@ public:
     void selectWindow(int index) {
         m_wnd.SetCurSel(index);
     }
+    BOOL processMsg(MSG* pMsg)
+    {
+        if (pMsg->message == WM_KEYDOWN)
+        {
+            WPARAM key = pMsg->wParam;
+            if (key == VK_ESCAPE && focused())
+            {
+                /*if (m_text.GetWindowTextLength() != 0)
+                {
+                    m_text.SetWindowText(L"");
+                    return FALSE;
+                }*/
+                return TRUE;
+            }
+            if (key == VK_RETURN && focused())
+                return TRUE;
+            if (key == VK_TAB)
+            {
+                HWND focus = GetFocus();
+                if (focus == m_text)
+                    m_wnd.SetFocus();
+                if (focus == m_wnd)
+                    m_text.SetFocus();
+                return FALSE;
+            }
+            if (key >= '0' && key <= '0'+OUTPUT_WINDOWS && focused() && checkKeysState(false, true, false))
+            {
+                int index = key - '0';
+                m_wnd.SetCurSel(index);
+            }
+        }
+        return FALSE;
+    }
+    int  getSelectedWindow() { 
+        int index = m_wnd.GetCurSel();
+        return index;
+    }
+    void getTextToSearch(tstring* text) {
+        int len = m_text.GetWindowTextLength();
+        wchar_t *buffer = new wchar_t[len+1];
+        m_text.GetWindowText(buffer, len+1);
+        text->assign(buffer);
+        delete []buffer;
+    }
 private:
+    bool focused()
+    {
+        HWND focus = GetFocus();
+        return (focus == m_text || focus == m_wnd) ? true : false;    
+    }
+
     BEGIN_MSG_MAP(FindDlg)
       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
     END_MSG_MAP()
@@ -43,6 +93,9 @@ public:
     void setFocus() { PostMessage(WM_USER); }
     void setWindowName(int index, const tstring& name) { m_dlg.setWindowName(index, name); }
     void selectWindow(int index) { m_dlg.selectWindow(index); }
+    BOOL processMsg(MSG* pMsg) { return m_dlg.processMsg(pMsg); }
+    int  getSelectedWindow() { return m_dlg.getSelectedWindow(); }
+    void getTextToSearch(tstring* text) { m_dlg.getTextToSearch(text); }
 private:
     BEGIN_MSG_MAP(PluginsView)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
