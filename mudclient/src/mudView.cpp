@@ -905,12 +905,12 @@ int MudView::findAndSelectText(int from, int direction, const tstring& text)
     return -1;
 }
 
-int MudView::getSelectedText()
+int MudView::getCurrentFindString()
 {
     return m_find_string_index;
 }
 
-void MudView::clearSelectedText()
+void MudView::clearFind()
 {
     m_find_string_index = m_find_start_pos = m_find_end_pos = -1;    
 }

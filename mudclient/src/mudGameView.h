@@ -30,6 +30,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     int m_barHeight;
     MudCommandBar m_bar;
     FindView m_find_view;
+    int m_last_find_view;
     MudView m_history;
     MudView m_view;
     CSplitterWindowExT<false, 3, 1> m_hSplitter;
@@ -54,13 +55,13 @@ private:
     void onLoadProfile();
     void onNewWorld();
     void loadPlugins();
-    void unloadPlugins();
+    void unloadPlugins();  
 
 public:
     DECLARE_WND_CLASS(NULL)
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
-        m_barHeight(32), m_bar(m_propData),
+        m_barHeight(32), m_bar(m_propData), m_last_find_view(-1),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
@@ -89,37 +90,7 @@ public:
             if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
                SetFocus();
             if (msg == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
-            {
-                tstring text;
-                m_find_view.getTextToSearch(&text);
-                int view = m_find_view.getSelectedWindow();
-                if (!text.empty())
-                {
-                    bool shift = (GetKeyState(VK_SHIFT) < 0);
-                    int dt = (shift) ? -1 : 1;
-                    if (view == 0)
-                    {
-                        int vs = m_history.getSelectedText();
-                        int new_vs = m_history.findAndSelectText(vs, dt, text);
-                        if (new_vs != -1)
-                        {
-                           int count = m_history.getStringsCount();
-                           int delta = m_history.getStringsOnDisplay() / 2;  // center on the screen
-                           int center_vs = new_vs + delta;                   // пробуем поставить по центру
-                           if (center_vs < count)
-                               new_vs = center_vs;
-                           BOOL hv = m_history.IsWindowVisible();
-                           if (!hv) {
-                              showHistory(new_vs, 0);
-                           }
-                        }
-                    }
-                    else
-                    {
-                        //m_views[view-1]
-                    }
-                }
-            }
+               findText();
             return TRUE;
         }
 
@@ -147,7 +118,8 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-			showFindView(true);
+            if (m_propData->find_window_visible && m_find_view.isFocused()) { hideFindView(); }
+            else { showFindView(true); }
             return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
@@ -368,6 +340,9 @@ public:
     void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
     void showView(int view, bool show) { showWindow(view, show); }
     bool isViewVisible(int view) { return isWindowVisible(view); }
+
+    void findText();
+    void showFindText(int view, int string);
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }

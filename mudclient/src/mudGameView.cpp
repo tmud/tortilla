@@ -211,7 +211,51 @@ MudViewHandler* MudGameView::getHandler(int view)
     return NULL;
 }
 
-/*void MudGameView::OnSearchEnter(const MudCommandBarCommands& lines)
+void MudGameView::findText()
 {
-    int x = 1;
-}*/
+    tstring text;
+    m_find_view.getTextToSearch(&text);
+    if (text.empty())
+        return;
+    int view = m_find_view.getSelectedWindow();
+    bool shift = (GetKeyState(VK_SHIFT) < 0);
+    int find_direction = (shift) ? -1 : 1;
+    MudView *v = (view == 0) ? &m_history : m_views[view - 1];
+    int current_find = v->getCurrentFindString();
+    int new_find = v->findAndSelectText(current_find, find_direction, text);
+    if (new_find == -1)
+    {
+       // not found
+       if (current_find == -1)
+          return;
+    }
+    // found / not found with last found
+
+    // clear find in last find window (if it another window)
+    if (m_last_find_view != view && m_last_find_view != -1)
+    {
+        MudView *lf = (m_last_find_view == 0) ? &m_history : m_views[m_last_find_view - 1];
+        lf->clearFind();
+        m_last_find_view = -1;
+        if (new_find == -1)
+            return;
+    }
+   
+    /*int count = m_history.getStringsCount();
+    int delta = m_history.getStringsOnDisplay() / 2;  // center on the screen
+    int center_vs = new_vs + delta;                   // пробуем поставить по центру
+    if (center_vs < count)
+        new_vs = center_vs;
+    */
+
+    if (view == 0 && !m_history.IsWindowVisible())
+    {
+       showHistory(new_find, 0);
+    }
+}
+
+void MudGameView::showFindText(int view, int string)
+{
+    //todo del
+}
+

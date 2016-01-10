@@ -49,8 +49,8 @@ public:
     bool inSoftScrolling() const;
     bool isDragMode() const;
     int  findAndSelectText(int from, int direction, const tstring& text);
-    int  getSelectedText();
-    void clearSelectedText();
+    int  getCurrentFindString();
+    void clearFind();
 
 private:
 	BEGIN_MSG_MAP(MudView)

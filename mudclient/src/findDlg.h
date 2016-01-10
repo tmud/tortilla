@@ -67,13 +67,12 @@ public:
         text->assign(buffer);
         delete []buffer;
     }
-private:
     bool focused()
     {
         HWND focus = GetFocus();
         return (focus == m_text || focus == m_wnd) ? true : false;    
     }
-
+private:
     BEGIN_MSG_MAP(FindDlg)
       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
     END_MSG_MAP()
@@ -91,6 +90,7 @@ class FindView : public CWindowImpl<FindView>
 public:
     DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND + 1)
     void setFocus() { PostMessage(WM_USER); }
+    bool isFocused() { return m_dlg.focused(); }
     void setWindowName(int index, const tstring& name) { m_dlg.setWindowName(index, name); }
     void selectWindow(int index) { m_dlg.selectWindow(index); }
     BOOL processMsg(MSG* pMsg) { return m_dlg.processMsg(pMsg); }
