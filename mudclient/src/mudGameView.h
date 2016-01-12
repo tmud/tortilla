@@ -342,7 +342,6 @@ public:
     bool isViewVisible(int view) { return isWindowVisible(view); }
 
     void findText();
-    void showFindText(int view, int string);
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }

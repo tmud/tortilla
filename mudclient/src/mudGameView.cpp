@@ -240,22 +240,17 @@ void MudGameView::findText()
         if (new_find == -1)
             return;
     }
-   
-    /*int count = m_history.getStringsCount();
+    if (new_find == -1)
+        new_find = current_find;
+
+    int count = m_history.getStringsCount();
     int delta = m_history.getStringsOnDisplay() / 2;  // center on the screen
-    int center_vs = new_vs + delta;                   // пробуем поставить по центру
+    int center_vs = new_find + delta;                 // пробуем поставить по центру
     if (center_vs < count)
-        new_vs = center_vs;
-    */
+        new_find = center_vs;
 
     if (view == 0 && !m_history.IsWindowVisible())
     {
        showHistory(new_find, 0);
     }
 }
-
-void MudGameView::showFindText(int view, int string)
-{
-    //todo del
-}
-
