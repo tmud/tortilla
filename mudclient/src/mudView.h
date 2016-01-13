@@ -94,7 +94,7 @@ private:
     void removeDropped(parseData* parse_data);
     void calcStringsSizes(mudViewStrings& pds);
     void renderView();
-    void renderString(CDC* dc, MudViewString *s, int left_x, int bottom_y, int index);    
+    void renderString(CDC* dc, MudViewString *s, int left_x, int bottom_y, int index);
     void initRenderParams();
     void updateScrollbar(int new_visible_line);
     void setScrollbar(DWORD position);

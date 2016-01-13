@@ -878,8 +878,10 @@ int MudView::findAndSelectText(int from, int direction, const tstring& text)
         return -1;
     if (direction != -1 && direction != 1)
         return -1;
-    if (from == -1)
+    if (from == -1 && direction > 0)
         from = 0;
+    else
+        from = from + direction;
     if (from < 0)
         return -1;
     int count = m_strings.size();
@@ -912,5 +914,6 @@ int MudView::getCurrentFindString()
 
 void MudView::clearFind()
 {
-    m_find_string_index = m_find_start_pos = m_find_end_pos = -1;    
+    m_find_string_index = m_find_start_pos = m_find_end_pos = -1;
+    Invalidate(FALSE);
 }

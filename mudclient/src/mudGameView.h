@@ -855,6 +855,13 @@ private:
         m_dock.HideWindow(m_find_view);
         m_propData->find_window_visible = 0;
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
+        if (m_last_find_view == 0)
+            m_history.clearFind();
+        else if (m_last_find_view > 0) {
+            MudView *v = m_views[m_last_find_view-1];
+            v->clearFind();
+        }
+        m_last_find_view = -1;
     }
 
     LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
@@ -1224,7 +1231,12 @@ private:
     void closeHistory()
     {
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-        m_history.truncateStrings(m_propData->view_history_size);
+        if (m_last_find_view == 0)
+        {
+            m_history.clearFind();
+            m_last_find_view = -1;
+        }
+        m_history.truncateStrings(m_propData->view_history_size);        
     }
 
     void showHistory(int vs, int dt)

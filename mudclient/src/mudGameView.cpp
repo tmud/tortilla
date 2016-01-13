@@ -230,7 +230,6 @@ void MudGameView::findText()
           return;
     }
     // found / not found with last found
-
     // clear find in last find window (if it another window)
     if (m_last_find_view != view && m_last_find_view != -1)
     {
@@ -243,14 +242,16 @@ void MudGameView::findText()
     if (new_find == -1)
         new_find = current_find;
 
+    if (view == 0 && !m_history.IsWindowVisible())
+        showHistory(new_find, 0);
+
     int count = m_history.getStringsCount();
     int delta = m_history.getStringsOnDisplay() / 2;  // center on the screen
-    int center_vs = new_find + delta;                 // пробуем поставить по центру
+    int center_vs = new_find + delta;                 // пробуем найденную строку поставить по центру
     if (center_vs < count)
         new_find = center_vs;
-
-    if (view == 0 && !m_history.IsWindowVisible())
-    {
-       showHistory(new_find, 0);
-    }
+    else
+        new_find = count-1;        
+    v->setViewString(new_find);
+    m_last_find_view = view;
 }
