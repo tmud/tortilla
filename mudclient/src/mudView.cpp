@@ -880,27 +880,40 @@ int MudView::findAndSelectText(int from, int direction, const tstring& text)
         return -1;
     if (from == -1 && direction > 0)
         from = 0;
-    else
-        from = from + direction;
     if (from < 0)
         return -1;
     int count = m_strings.size();
     if (from >= count)
         return -1;
 
+    int start = m_find_start_pos;
     int i = from;
     int end = (direction==1) ? count : -1;
     while (i != end)
     {
         tstring str;
         m_strings[i]->getText(&str);
-        size_t pos = str.find(text);
+        size_t pos = -1;
+        if (direction == 1)
+        {
+           size_t start_pos = (start==-1) ? 0 : start+text.length();
+           pos = str.find(text, start_pos);
+        }
+        else
+        {
+           tstring p( (start>=0) ? str.substr(0, start) : str);
+           pos = p.rfind(text);
+        }
         if (pos != -1)
         {
             m_find_string_index = i;
             m_find_start_pos = pos;
             m_find_end_pos = pos + text.size() - 1;
             return i;
+        }
+        else
+        {
+            start = -1;
         }
         i = i + direction;
     }
