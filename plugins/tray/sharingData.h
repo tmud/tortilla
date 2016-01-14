@@ -68,8 +68,9 @@ struct SharingDataMessage
     int showtime;
     RECT windowpos;
 
-    void serialize(Serialize &s) const
+    void serialize(DataQueue &d) const
     {
+        Serialize s(d);
         int strings = textlines.size();
         s.write(strings);
         for (int i=0; i<strings; ++i)
@@ -80,8 +81,9 @@ struct SharingDataMessage
         s.write(windowpos);
     }
 
-    bool deserialize(Serialize &s)
+    bool deserialize(DataQueue &d)
     {
+        Serialize s(d);
         int strings = 0;
         if (!s.read(strings) || strings <= 0)
             return false;
@@ -99,7 +101,7 @@ struct SharingDataMessage
 };
 
 enum SharingCommands {
-    SC_NONE = 0, SC_ADDMESSAGE, SC_REGTRAY, SC_UNREGTRAY
+    SC_NONE = 0, SC_MESSAGE, SC_REGTRAY, SC_UNREGTRAY
 };
 
 struct SharingCommand
@@ -108,14 +110,16 @@ struct SharingCommand
     int command;
     MemoryBuffer command_data;
     
-    void serialize(Serialize &s) const
+    void serialize(DataQueue &d) const
     {
+        Serialize s(d);
         s.write(command);
         s.write(command_data);
     }
 
-    bool deserialize(Serialize &s)
+    bool deserialize(DataQueue &d)
     {
+        Serialize s(d);
         if (!s.read(command) || !s.read(command_data))
             return false;
         return true;
@@ -126,11 +130,10 @@ struct AddMessageCommand : public SharingCommand
 {
     AddMessageCommand(const SharingDataMessage& msg)
     {
-        command = SC_ADDMESSAGE;
+        command = SC_MESSAGE;
         DataQueue d;
         d.setBufferSize(256);
-        Serialize s(d);
-        msg.serialize(s);
+        msg.serialize(d);
         command_data.alloc(d.getSize());
         memcpy(command_data.getData(), d.getData(), d.getSize());
     }
@@ -172,22 +175,24 @@ struct SharingData
     SharingData() {}
     ~SharingData() { clear(); }
 
-    void serialize(Serialize &s)
+    void serialize(DataQueue &d)
     {
+        Serialize s(d);
         s.write(main_tray_id);
         s.write(new_tray_id);
         int wc = windows.size();
         s.write(wc);
         for (int i=0; i<wc; ++i)
-            windows[i]->serialize(s);
+            windows[i]->serialize(d);
         int cc = commands.size();
         s.write(cc);
         for (int i=0; i<cc; ++i)
-            commands[i]->serialize(s);
+            commands[i]->serialize(d);
     }
 
-    bool deserialize(Serialize &s)
+    bool deserialize(DataQueue &d)
     {
+        Serialize s(d);
         clear();
         if (!s.read(main_tray_id) || !s.read(new_tray_id)) 
             return false;
@@ -197,7 +202,7 @@ struct SharingData
         for (int i=0; i<wc; ++i)
         {
             SharingDataMessage* wnd = new SharingDataMessage;
-            if (!wnd->deserialize(s))
+            if (!wnd->deserialize(d))
                 { delete wnd; return false; }
             windows.push_back(wnd);
         }
@@ -207,7 +212,7 @@ struct SharingData
         for (int i=0; i<cc; ++i)
         {
             SharingCommand* cmd = new SharingCommand;
-            if (!cmd->deserialize(s))
+            if (!cmd->deserialize(d))
                 { delete cmd; return false; }
             commands.push_back(cmd);
         }
