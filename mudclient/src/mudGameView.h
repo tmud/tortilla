@@ -551,6 +551,9 @@ private:
             if (PtInRect(&rc, pt))
             {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
+                bool last = m_history.isLastString();
+                if (last)
+                    closeHistory();
                 return 0;
             }
         }
