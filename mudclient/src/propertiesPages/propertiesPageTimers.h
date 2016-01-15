@@ -70,6 +70,7 @@ private:
         m_filterMode = m_filter.GetCheck() ? true : false;
         loadValues();
         update();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 
@@ -81,6 +82,7 @@ private:
         {
             m_currentGroup = group;
             updateCurrentItem();
+            m_state_helper.setCanSaveState();
             return 0;
         }
         tstring old = m_currentGroup;
@@ -91,6 +93,7 @@ private:
         m_currentGroup = group;
         loadValues();
         update();
+        m_state_helper.setCanSaveState();
         return 0;
     }
 

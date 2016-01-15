@@ -2,8 +2,9 @@
 
 #include "plugin.h"
 #include "msdp/msdpNetwork.h"
+#include "pluginsTriggersHandler.h"
 
-class PluginsManager
+class PluginsManager : public PluginsTriggersHandler
 {
    PluginsList m_plugins;
    tstring m_profile;
@@ -17,6 +18,7 @@ public:
     void unloadPlugins();
     bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
+    Plugin* findPlugin(const tstring& name);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);
@@ -34,12 +36,13 @@ public:
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
+    bool processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe);
     void concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
     enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };
-    TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* plugin_name);
+    TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg);
     void doPluginsMethod(const char* method, int args);
-    void turnoffPlugin(const char* error, int plugin_index);
+    void turnoffPlugin(const tchar* error, int plugin_index);
     void terminatePlugin(Plugin* p);
 };

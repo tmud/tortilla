@@ -29,19 +29,35 @@ bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
     return false;
 }
 
-void LogicHelper::processActions(parseData *parse_data, InputCommands* newcmds)
+bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipelineElement *pe)
 {
-    for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
+    int j = index; int je = parse_data->strings.size()-1;
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->gamecmd || s->system) continue;
+        if (s->dropped) return false;
+
         bool incomplstr = (j==je && !parse_data->last_finished);
-        CompareData cd(s);
-        for (int i=0,e=m_actions.size(); i<e; ++i)
+        bool processed = false;
+        for (int i=0, e=m_actions.size(); i<e; ++i)
         {
-            if (m_actions[i]->processing(cd, incomplstr, newcmds))
-               break;
+           CompareData cd(s);
+           if (m_actions[i]->processing(cd, incomplstr, &pe->commands))
+              processed = true;
+           if (s->dropped) break;
         }
+
+        if (processed)
+        {
+            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+            parseData &not_processed = pe->data;
+            not_processed.last_finished = parse_data->last_finished;
+            parse_data->last_finished = true;
+            not_processed.update_prev_string = false;
+            int from = j+1;
+            not_processed.strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
+            parse_data->strings.resize(from);
+        }
+        return processed;
     }
 }
 
@@ -50,12 +66,12 @@ void LogicHelper::processSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->gamecmd || s->system) continue;
+        if (s->dropped) continue;
         bool incomplstr = (j==je && !parse_data->last_finished);
         if (incomplstr) continue;
-        CompareData cd(s);
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
+            CompareData cd(s);
             while (m_subs[i]->processing(cd))
                 cd.reinit();
         }
@@ -67,12 +83,12 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->gamecmd || s->system) continue;
+        if (s->dropped) continue;
         bool incomplstr = (j == je && !parse_data->last_finished);
         if (incomplstr) continue;
-        CompareData cd(s);
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
         {
+            CompareData cd(s);
             while (m_antisubs[i]->processing(cd))
                 cd.reinit();
         }
@@ -84,14 +100,17 @@ void LogicHelper::processGags(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->gamecmd || s->system) continue;
+        if (s->dropped) continue;
         bool incomplstr = (j == je && !parse_data->last_finished);
         if (incomplstr) continue;
-        CompareData cd(s);
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
+            CompareData cd(s);
             while (m_gags[i]->processing(cd))
-                cd.reinit();
+            {
+                if (s->dropped) break;
+                cd.fullinit();
+            }
         }
     }
 }
@@ -100,9 +119,11 @@ void LogicHelper::processHighlights(parseData *parse_data)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
-        CompareData cd(parse_data->strings[j]);
         for (int i=0,e=m_highlights.size(); i<e; ++i)
         {
+            MudViewString *s = parse_data->strings[j];
+            if (s->dropped) continue;
+            CompareData cd(s);
             while (m_highlights[i]->processing(cd))
                 cd.reinit();  // restart highlight
         }
@@ -138,9 +159,9 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
-     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
+     if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
-         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         if (isInt(p1) && isInt(p2))
          {
              int n1 = _wtoi(p1.c_str());
              int n2 = _wtoi(p2.c_str());
@@ -176,9 +197,9 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
 
-     if (tortilla::getVars()->processVarsStrong(&p1) && tortilla::getVars()->processVarsStrong(&p2))
+     if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
-         if (isOnlyDigits(p1) && isOnlyDigits(p2))
+         if (isInt(p1) && isInt(p2))
          {
              int r = 0;
              int n1 = _wtoi(p1.c_str());

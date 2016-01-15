@@ -10,6 +10,7 @@ class CompareData
 public:
     CompareData(MudViewString *s);
     void reinit();
+    void fullinit();
     void del(CompareRange& range);
     int  fold(CompareRange& range);
     bool cut(CompareRange& range); // distinguish in individual blocks

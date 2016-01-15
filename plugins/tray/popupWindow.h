@@ -104,9 +104,9 @@ public:
         return (IsWindow()) ? true : false;    
     }
 
-    void setText(const u8string& text)
+    void setText(const std::wstring& text)
     {
-        m_text.assign( TU2W(text.c_str()) );
+        m_text.assign( text );
         calcDCSize();
     }
     const SIZE& getSize() const

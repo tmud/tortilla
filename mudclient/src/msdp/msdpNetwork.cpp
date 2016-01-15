@@ -5,7 +5,6 @@
 #include "msdpNetwork.h"
 
 extern luaT_State L;
-//extern PluginsManager* _plugins_manager;
 extern Plugin* _cp;
 
 MsdpNetwork::MsdpNetwork() : m_state(false)
@@ -69,7 +68,7 @@ void MsdpNetwork::translate(DataQueue *msdp)
             m_state = true;
             msdp->truncate(3);
             send_varval("CLIENT_NAME", "TORTILLA");
-            send_varval("CLIENT_VERSION", W2U(TORTILLA_VERSION));
+            send_varval("CLIENT_VERSION", TW2U(TORTILLA_VERSION));
             tortilla::getPluginsManager()->processPluginsMethod("msdpon", 0);
         }
         else if (cmd == DONT)
@@ -364,10 +363,11 @@ bool msdp_isoff()
    return (!getMsdp()->state()) ? true : false;
 }
 
-int msdpOffError(lua_State *L, const utf8* fname) 
+int msdpOffError(lua_State *L, const char* fname) 
 {
-    u8string error(fname);
-    error.append(":MSDP is off");
+    TA2W f(fname);
+    tstring error(f);
+    error.append(L":MSDP is off");
     return pluginError(error.c_str()); 
 }
 
@@ -381,10 +381,10 @@ int msdp_list(lua_State *L)
         getMsdp()->send_varval("LIST", lua_tostring(L, 1));
         return 0;
     }
-    return pluginInvArgs(L, "msdp.list");
+    return pluginInvArgs(L, L"msdp.list");
 }
 
-int msdp_multi_command(lua_State *L, const utf8* cmd, const utf8* cmdname)
+int msdp_multi_command(lua_State *L, const char* cmd, const char* cmdname)
 {
     if (msdp_isoff())
         return msdpOffError(L, cmdname);
@@ -399,7 +399,7 @@ int msdp_multi_command(lua_State *L, const utf8* cmd, const utf8* cmdname)
             while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
             {
                 if (!lua_isstring(L, -1))
-                    pluginInvArgs(L, cmdname);
+                    pluginInvArgs(L, TA2W(cmdname));
                 vals.push_back(lua_tostring(L, -1));
                 lua_pop(L, 1);
             }
@@ -412,7 +412,7 @@ int msdp_multi_command(lua_State *L, const utf8* cmd, const utf8* cmdname)
             getMsdp()->send_varvals(cmd, vals);
         return 0;
     }
-    return pluginInvArgs(L, cmdname);
+    return pluginInvArgs(L, TA2W(cmdname));
 }
 
 int msdp_reset(lua_State *L)

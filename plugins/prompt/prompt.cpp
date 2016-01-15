@@ -3,30 +3,30 @@
 
 int get_name(lua_State *L)
 {
-    lua_pushstring(L, "Фильтр строки приглашения (prompt)");
+    luaT_pushwstring(L, L"Фильтр строки приглашения (prompt)");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    lua_pushstring(L, "Фильтрует(отбрасывает) prompt-строку, если она идет подряд без изменений.\r\nПлагин позволяет не забивать окно мада строками prompt, если используются\r\nтриггеры с командой #drop.");
+    luaT_pushwstring(L, L"Фильтрует(отбрасывает) prompt-строку, если она идет подряд без изменений.\r\nПлагин позволяет не забивать окно мада строками prompt, если используются\r\nтриггеры с командой #drop.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "-");
+    luaT_pushwstring(L, L"1.01");
     return 1;
 }
 
-u8string last_prompt;
+std::wstring last_prompt;
 void checkDoublePrompt(luaT_ViewData &vd)
 {
     int strings_count = vd.size();
     if (strings_count == 0) return;
 
     std::vector<int> empty;
-    u8string text;
+    std::wstring text;
     for (int i = 1; i <= strings_count; ++i)
     {
         vd.select(i);
@@ -53,7 +53,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
             vd.getPrompt(&last_prompt);
             continue;
         }
-        u8string prompt;
+        std::wstring prompt;
         vd.getPrompt(&prompt);
         if (prompt == last_prompt)
         {

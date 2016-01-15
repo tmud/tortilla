@@ -2,7 +2,7 @@
 
 #define ROOM_DIRS_COUNT 6
 enum RoomDir { RD_NORTH=0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN };
-extern const utf8* RoomDirName[];
+extern const wchar_t* RoomDirName[];
 struct Room;
 class RoomsLevel;
 class Zone;

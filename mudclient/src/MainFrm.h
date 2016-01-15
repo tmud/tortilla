@@ -5,13 +5,20 @@
 #include "plugins/pluginsApi.h"
 #include "aboutdlg.h"
 
+template <class T> // stub for DECLARE_FRAME_WND_CLASS macro (without stub not working)
+class ATL_NO_VTABLE CCommonFrameImpl : public CMessageMap {
+    BEGIN_MSG_MAP(CCommonFrameImpl<T>)
+    END_MSG_MAP()
+};
+
 class CMainFrame : public CFrameWindowImpl<CMainFrame>,
-    public CUpdateUI<CMainFrame>, public CMessageFilter, public CIdleHandler
+    public CUpdateUI<CMainFrame>, public CMessageFilter, public CIdleHandler,
+    public CCommonFrameImpl<CMainFrame>
 {
 public:
     ToolbarEx<CMainFrame> m_toolBar;
     MudGameView m_gameview;
-    DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
+    DECLARE_FRAME_WND_CLASS(MAINWND_CLASS_NAME, IDR_MAINFRAME)
     CMainFrame() {}
 
 public:
@@ -54,6 +61,7 @@ private:
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
+        CHAIN_MSG_MAP(CCommonFrameImpl<CMainFrame>)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
@@ -146,7 +154,7 @@ private:
 
     LRESULT OnCheckUpdates(WORD, WORD, HWND, BOOL&)
     {
-        openURL(L"https://github.com/tmud/tortilla/releases");
+        openURL(L"http://tmud.github.io");
         return 0;
     }
 
