@@ -567,16 +567,21 @@ private:
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
         NetworkEvent event = m_network.translateEvent(lparam);
-        /*if (event == NE_NEWDATA)
+        if (event == NE_NEWDATA)
         {
-            MsdpNetwork *msdp = m_plugins.getMsdp();
+            m_plugins.processMsdp(m_network.receiveMsdp());
+            DataQueue data;
+            m_plugins.getMsdpData(&data);
+            if (data.getSize() > 0)
+                m_network.sendplain((tbyte*)data.getData(), data.getSize());
+
+            /*MsdpNetwork *msdp = m_plugins.getMsdp();
             msdp->processReceived(m_network.receiveMsdp());
+            m_plugins.processReceived(&m_network);*/
 
-
-            m_plugins.processReceived(&m_network);
-
-            DataQueue* data = m_network.receive();
-            int text_len = data->getSize();
+            if (!m_network.receive(&data))
+                return 0;
+            int text_len = data.getSize();
             if (text_len == 0)
                 return 0;
 
@@ -627,7 +632,7 @@ private:
             m_network.disconnect();
             m_processor.processNetworkMccpError();
             m_plugins.processDisconnectEvent();
-        }*/
+        }
         return 0;
     }
 
@@ -665,7 +670,7 @@ private:
         else if (id == 2)
         {
             m_processor.processStackTick();
-            m_plugins.processToSend(&m_network);
+            //m_plugins.processToSend(&m_network); //todo
             m_view.updateSoftScrolling();
             for (int i=0,e=m_views.size();i<e;++i)
               m_views[i]->updateSoftScrolling();

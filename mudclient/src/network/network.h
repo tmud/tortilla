@@ -1,7 +1,7 @@
 #pragma once
 
 #include "zlib.h"
-#include "common/tempThread.h"
+#include "../common/tempThread.h"
 
 #ifdef _DEBUG
 #define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
@@ -118,7 +118,7 @@ public:
 private:
     bool send_ex(const tbyte* data, int len);
     int  read_data();
-    int  write_socket();
+    //int  write_socket();
 
     int  processing_data(const tbyte* buffer, int len, bool *error);
     void init_mccp();
@@ -139,7 +139,7 @@ private:
     DataQueue m_input_data;                 // accamulated data from network
     DataQueue m_receive_data;               // ready to receive by app
     
-    DataQueue m_output_buffer;              // buffer to acc output data
+    DataQueue m_output_buffer;              // buffer to accumulate output data
     
     DataQueue m_send_data;                  // data for send to server
     DataQueue m_msdp_data;                  // data of msdp protocol

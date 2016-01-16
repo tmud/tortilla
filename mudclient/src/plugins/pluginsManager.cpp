@@ -613,10 +613,22 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     modules[plugin_index].state = 0;
 }
 
-void PluginsManager::processToSend(Network* network)
+void PluginsManager::processMsdp(DataQueue *msdp_data)
 {
-    m_msdp_network.sendExist(network);
+    m_msdp_network.processReceived(msdp_data);
 }
+
+void PluginsManager::getMsdpData(DataQueue *msdp_data)
+{
+    m_msdp_network.getSendData(msdp_data);
+}
+
+/*void PluginsManager::processToSend(Network* network)
+{
+    DataQueue msdp_data;
+    m_msdp_network.getSendData(&msdp_data);    
+    network->send((tbyte*)msdp_data.getData(), msdp_data.getSize());
+}*/
 
 void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {

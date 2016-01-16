@@ -21,16 +21,12 @@ void MsdpNetwork::processReceived(DataQueue *msdp_data)
 {
     if (msdp_data->getSize() > 0)
         translate(msdp_data);
-    sendExist(network);
 }
 
-void MsdpNetwork::sendExist(Network *network)
+void MsdpNetwork::getSendData(DataQueue *msdp_data)
 {
-    if (m_to_send.getSize() > 0)
-    {
-        network->sendplain((const tbyte*)m_to_send.getData(), m_to_send.getSize());
-        m_to_send.clear();
-    }
+    msdp_data->write(m_to_send.getData(), m_to_send.getSize());
+    m_to_send.clear();
 }
 
 void MsdpNetwork::translate(DataQueue *msdp)

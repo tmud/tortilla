@@ -31,9 +31,12 @@ public:
     void processPluginsMethod(const char* method, int args);
     void processPluginMethod(Plugin *p, char* method, int args);
     
-    void processToSend(Network* network);
+    //void processToSend(Network* network);
     
-    MsdpNetwork* getMsdp() { return &m_msdp_network; }
+    //MsdpNetwork* getMsdp() { return &m_msdp_network; }
+    void processMsdp(DataQueue *msdp_data);
+    void getMsdpData(DataQueue *msdp_data);
+
 
 private:
     bool processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe);

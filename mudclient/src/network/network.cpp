@@ -346,20 +346,26 @@ bool Network::send(const tbyte* data, int len)
 
 bool Network::sendplain(const tbyte* data, int len)
 {
+    assert(data && len >= 0);
+    if (len < 0)
+        return false;
     return m_connection.send(data, len);
 }
 
 bool Network::receive(DataQueue* data)
 {
-    int result = read_data();
+    /*int result = read_data();
     if (result == -1)
         return NE_ERROR;
     if (result == -2)
         return NE_ERROR_MCCP;
-    return (result != 0) ? NE_NEWDATA : NE_NOEVENT;
+    return (result != 0) ? NE_NEWDATA : NE_NOEVENT;*/
 
-
-    return m_connection.receive(data);
+    MemoryBuffer mb; //todo
+    bool result = m_connection.receive(&mb);
+    if (result)
+      data->write(mb.getData(), mb.getSize());
+    return result;
 }
 
 DataQueue* Network::receiveMsdp()
@@ -440,7 +446,7 @@ int Network::read_data()
     return 1;
 }
 
-int Network::write_socket()
+/*int Network::write_socket()
 {
     if (m_send_data.getSize() == 0)
          return 0;
@@ -456,17 +462,18 @@ int Network::write_socket()
 
     m_send_data.truncate(sent);
     return sent;
-}
+}*/
 
 bool Network::send_ex(const tbyte* data, int len)
 {
-    assert(data && len >= 0);
+    return sendplain(data, len);
+    /*assert(data && len >= 0);
     if (len < 0)
         return false;
     if (len > 0)
         m_send_data.write(data, len);
     int sent = write_socket();
-    return (sent == -1) ? false : true;
+    return (sent == -1) ? false : true;*/
 }
 
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
@@ -735,7 +742,7 @@ void Network::init_msdp()
 
 void Network::close_msdp()
 {
-    if (m_connection.) 
+    if (m_connection.connected()) 
     {
         tbyte turnoff[3] = { IAC, DONT, MSDP };
         m_msdp_data.write(turnoff, 3);
