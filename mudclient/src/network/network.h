@@ -55,7 +55,7 @@ enum NetworkEvent
     NE_DISCONNECT,
     NE_ERROR_CONNECT,
     NE_ERROR,
-   // NE_ERROR_MCCP
+    NE_ERROR_MCCP
 };
 
 struct NetworkConnectData
@@ -69,17 +69,18 @@ struct NetworkConnectData
 class NetworkConnection : private TempThread
 {
 public:
-    NetworkConnection();
+    NetworkConnection(int receive_buffer);
     ~NetworkConnection();
     void connect(const NetworkConnectData& cdata);
-    bool connected() const;
+    bool connected();
     void disconnect();
-    bool send(const tbyte* data, int len);
-    bool receive(MemoryBuffer *data);
-private:
+    void send(const tbyte* data, int len);
+    int  receive(MemoryBuffer *data);
+private:    
     void threadProc();
     void sendEvent(NetworkEvent e);
     NetworkConnectData m_connection;    
+    CriticalSection m_cs_connect;
     CriticalSection m_cs_send;
     CriticalSection m_cs_receive;
     DataQueue m_send_data;
@@ -100,32 +101,25 @@ class Network
 {
 public:
     Network();
-    ~Network();    
-  
+    ~Network();
     NetworkEvent translateEvent(LPARAM event);
     void connect(const NetworkConnectData& data);
     void disconnect();
-
-    bool send(const tbyte* data, int len);
-    bool sendplain(const tbyte* data, int len); // send data directly
-    bool receive(DataQueue* data);
-    DataQueue* receiveMsdp();
-    
+    void send(const tbyte* data, int len);      // send with iacs processing
+    void sendplain(const tbyte* data, int len); // send data directly
+    DataQueue& received();
+    DataQueue& receivedMsdp();
     void getMccpStatus(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
     void setUtf8Encoding(bool flag);
-
 private:
-    bool send_ex(const tbyte* data, int len);
     int  read_data();
-    //int  write_socket();
-
     int  processing_data(const tbyte* buffer, int len, bool *error);
     void init_mccp();
     bool process_mccp();
     void close_mccp();
     void init_mtts();
-    bool process_mtts();
+    void process_mtts();
     void close_mtts();
     void init_msdp();
     void process_msdp(const tbyte* buffer, int len);
@@ -137,11 +131,9 @@ private:
     DataQueue m_mccp_data;                  // accamulated MCCP data from network
     MemoryBuffer m_mccp_buffer;             // to decompress MCCP data   
     DataQueue m_input_data;                 // accamulated data from network
-    DataQueue m_receive_data;               // ready to receive by app
+    DataQueue m_receive_data;               // ready to get by app
     
     DataQueue m_output_buffer;              // buffer to accumulate output data
-    
-    DataQueue m_send_data;                  // data for send to server
     DataQueue m_msdp_data;                  // data of msdp protocol
 
     z_stream *m_pMccpStream;

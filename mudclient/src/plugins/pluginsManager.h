@@ -29,14 +29,8 @@ public:
     void processDisconnectEvent();
     void processTick();
     void processPluginsMethod(const char* method, int args);
-    void processPluginMethod(Plugin *p, char* method, int args);
-    
-    //void processToSend(Network* network);
-    
-    //MsdpNetwork* getMsdp() { return &m_msdp_network; }
-    void processMsdp(DataQueue *msdp_data);
-    void getMsdpData(DataQueue *msdp_data);
-
+    void processPluginMethod(Plugin *p, char* method, int args);   
+    MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
     bool processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe);

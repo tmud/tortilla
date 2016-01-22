@@ -49,9 +49,9 @@ void OutputTelnetOption(const void *data, const char* label)
 }
 #endif
 
-NetworkConnection::NetworkConnection() : m_connected(false)
+NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false)
 {
-    m_recive_buffer.alloc(1024);
+    m_recive_buffer.alloc(receive_buffer);
 }
 
 NetworkConnection::~NetworkConnection()
@@ -68,11 +68,6 @@ void NetworkConnection::connect(const NetworkConnectData& cdata)
         return sendEvent(NE_ERROR);
 }
 
-bool NetworkConnection::connected() const
-{
-    return m_connected;
-}
-
 void NetworkConnection::disconnect()
 {
     if (!connected())
@@ -80,33 +75,41 @@ void NetworkConnection::disconnect()
     stop();
     wait();
     m_send_data.clear();
-    m_receive_data.clear();    
+    m_receive_data.clear();
     m_connected = false;
 }
 
-bool NetworkConnection::send(const tbyte* data, int len)
+void NetworkConnection::send(const tbyte* data, int len)
 {
+    assert(data && len > 0);
+    if (!data || len <= 0)
+        return;
     if (!connected())
-        return false;
+        { return sendEvent(NE_ERROR_CONNECT); }
     CSectionLock lock(m_cs_send);
     m_send_data.write(data, len);
-    return true;
 }
 
-bool NetworkConnection::receive(MemoryBuffer *data)
+int NetworkConnection::receive(MemoryBuffer *data)
 {
+    assert(data);
     if (!connected())
-        return false;
+        { sendEvent(NE_ERROR_CONNECT); return 0; }
     CSectionLock lock(m_cs_receive);
-    data->alloc(m_receive_data.getSize());
-    memcpy(data->getData(), m_receive_data.getData(), m_receive_data.getSize());
+    data->copy(m_receive_data.getData(), m_receive_data.getSize());
     m_receive_data.clear();
-    return true;
+    return data->getSize();
 }
 
 void NetworkConnection::sendEvent(NetworkEvent e)
 {
     PostMessage(m_connection.wndToNotify, m_connection.notifyMsg, 0, (LPARAM)e);
+}
+
+bool NetworkConnection::connected()
+{
+    CSectionLock lock(m_cs_connect);
+    return m_connected;
 }
 
 void NetworkConnection::threadProc()
@@ -176,7 +179,11 @@ void NetworkConnection::threadProc()
             return;
         }*/
     }
-    m_connected = true;
+
+    {
+        CSectionLock lock(m_cs_connect);
+        m_connected = true;
+    }
     sendEvent(NE_CONNECT);    
 
     fd_set set;
@@ -192,8 +199,11 @@ void NetworkConnection::threadProc()
         int n = ::select(0, &set, NULL, NULL, &tv);
         if (n == SOCKET_ERROR)
         {
+            {
+                CSectionLock lock(m_cs_connect);
+                m_connected = false;
+            }
             sendEvent(NE_ERROR);
-            m_connected = false;
             break;
         }
 
@@ -238,10 +248,10 @@ void NetworkConnection::threadProc()
     shutdown(sock, 2);
 }
 
-Network::Network() : m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
+Network::Network() : m_connection(2048), m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
 m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
 {
-    //m_input_buffer.alloc(1024);
+    m_input_buffer.alloc(2048);
     m_mccp_buffer.alloc(8192);
     m_output_buffer.setBufferSize(1024);
 }
@@ -266,7 +276,6 @@ void Network::disconnect()
     m_input_data.clear();
     m_receive_data.clear();
     m_output_buffer.clear();
-    m_send_data.clear();
 
     m_totalReaded = 0;
     m_totalDecompressed = 0;
@@ -274,52 +283,20 @@ void Network::disconnect()
 
 NetworkEvent Network::translateEvent(LPARAM event)
 {
-    NetworkEvent e = (NetworkEvent)event;
-   /* if (e == NE_NEWDATA)
+    NetworkEvent ne = (NetworkEvent)event;
+    if (ne == NE_NEWDATA)
     {
-        read_data();        
-    }*/
-    return e;
-
-    /*
-    WORD error = WSAGETSELECTERROR(msg_lparam);
-    if (error)
-    {   if (error == WSAECONNREFUSED || error == WSAETIMEDOUT)
-            return NE_ERROR_CONNECT;
-        if (error == WSAECONNABORTED)
-            return NE_DISCONNECT;
-        return NE_ERROR;
+        int result = read_data();
+        if (result == -1)
+            return NE_ERROR;
+        if (result == -2)
+            return NE_ERROR_MCCP;
+        return (result != 0) ? NE_NEWDATA : NE_NOEVENT;    
     }
-
-    WORD event = WSAGETSELECTEVENT(msg_lparam);
-    if (event == FD_READ)
-    {
-       
-    }
-    else if (event == FD_WRITE)
-    {
-        return (write_socket() == -1) ? NE_ERROR : NE_NOEVENT;
-    }
-    else if (event == FD_CLOSE)
-    {
-        return NE_DISCONNECT;
-    }
-    else if (event == FD_CONNECT)
-    {
-        return NE_CONNECT;
-    }
-    else if (event ==FD_ADDRESS_LIST_CHANGE )
-    {
-        MessageBox(NULL, L"Address list change", L"network", MB_OK);
-    }
-    else if (event ==FD_ROUTING_INTERFACE_CHANGE )
-    {
-        MessageBox(NULL, L"Routing interface change", L"network", MB_OK);
-    }*/
-    return NE_NOEVENT;
+    return ne;
 }
 
-bool Network::send(const tbyte* data, int len)
+void Network::send(const tbyte* data, int len)
 {
     const tbyte *b = data;
     const tbyte *e = b + len;
@@ -338,39 +315,24 @@ bool Network::send(const tbyte* data, int len)
     }
     if (b != e)
         m_output_buffer.write(b, e-b);
-
-    bool result = m_connection.send((tbyte*)m_output_buffer.getData(), m_output_buffer.getSize());
+    m_connection.send((tbyte*)m_output_buffer.getData(), m_output_buffer.getSize());
     m_output_buffer.clear();
-    return result;
 }
 
-bool Network::sendplain(const tbyte* data, int len)
+void Network::sendplain(const tbyte* data, int len)
 {
     assert(data && len >= 0);
-    if (len < 0)
-        return false;
-    return m_connection.send(data, len);
+    m_connection.send(data, len);
 }
 
-bool Network::receive(DataQueue* data)
+DataQueue& Network::received()
 {
-    /*int result = read_data();
-    if (result == -1)
-        return NE_ERROR;
-    if (result == -2)
-        return NE_ERROR_MCCP;
-    return (result != 0) ? NE_NEWDATA : NE_NOEVENT;*/
-
-    MemoryBuffer mb; //todo
-    bool result = m_connection.receive(&mb);
-    if (result)
-      data->write(mb.getData(), mb.getSize());
-    return result;
+    return m_receive_data;
 }
 
-DataQueue* Network::receiveMsdp()
+DataQueue& Network::receivedMsdp()
 {
-    return &m_msdp_data;
+    return m_msdp_data;
 }
 
 int Network::read_data()
@@ -378,22 +340,6 @@ int Network::read_data()
     if (!m_connection.receive(&m_input_buffer))
         return -1;
     int readed = m_input_buffer.getSize();
-
-/*        WSABUF buffer;
-        buffer.buf = m_input_buffer.getData();
-        buffer.len = m_input_buffer.getSize();
-
-        DWORD flags = 0;
-        DWORD readed = 0;
-
-        if (WSARecv(sock, &buffer, 1, &readed, &flags, NULL, NULL) == SOCKET_ERROR)
-        {
-            if (WSAGetLastError() != WSAEWOULDBLOCK)
-                return -1;
-        }
-        if (readed == 0)
-            break;*/
-
     m_totalReaded += readed;
     if (!m_mccp_on)
     {
@@ -446,36 +392,6 @@ int Network::read_data()
     return 1;
 }
 
-/*int Network::write_socket()
-{
-    if (m_send_data.getSize() == 0)
-         return 0;
-
-    WSABUF buffer;
-    buffer.buf = (char*)m_send_data.getData();
-    buffer.len = m_send_data.getSize();
-
-    DWORD flags = 0;
-    DWORD sent = 0;
-    if (WSASend(sock, &buffer, 1, &sent, flags, NULL, NULL) == SOCKET_ERROR)
-        return -1;
-
-    m_send_data.truncate(sent);
-    return sent;
-}*/
-
-bool Network::send_ex(const tbyte* data, int len)
-{
-    return sendplain(data, len);
-    /*assert(data && len >= 0);
-    if (len < 0)
-        return false;
-    if (len > 0)
-        m_send_data.write(data, len);
-    int sent = write_socket();
-    return (sent == -1) ? false : true;*/
-}
-
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
 {
     const tbyte* b = buffer;
@@ -514,16 +430,14 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         if (e[1] == TTYPE)
         {
             tbyte support[3] = { IAC, WILL, e[1] };
-            if (!send_ex(support, 3))
-                {  *error = true; return 0; }
+            sendplain(support, 3);
             init_mtts();
         }
         else
         {
             // report, what client don't support other Telnet options
             tbyte not_support[3] = { IAC, WONT, e[1] };
-            if (!send_ex(not_support, 3))
-                {  *error = true; return 0; }
+            sendplain(not_support, 3);
         }
         return -3;
     }
@@ -543,22 +457,19 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         {
             tbyte flag = (m_pMccpStream) ? DO : DONT;
             tbyte support[3] = { IAC, flag, e[1] };
-            if (!send_ex(support, 3))
-               { *error = true; return 0; }
+            sendplain(support, 3);
         }
         else if (e[1] == MSDP)
         {
             tbyte support[3] = { IAC, DO, e[1] };
-            if (!send_ex(support, 3))
-               { *error = true; return 0; }
+            sendplain(support, 3);
             init_msdp();
         }
         else
         {
             // report, what client don't support other Telnet options
             tbyte not_support[3] = { IAC, DONT, e[1] };
-            if (!send_ex(not_support, 3))
-                { *error = true; return 0; }
+            sendplain(not_support, 3);
         }
         return -3;
     }
@@ -615,8 +526,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (e[0] == SB && e[1] == TTYPE && e[2] == TTYPE_SEND && e[3] == IAC && e[4] == SE)
     {
-        if (!process_mtts())
-             { *error = true; return 0; }
+        process_mtts();
         return -6;
     }
 
@@ -706,10 +616,10 @@ void Network::close_mtts()
 }
 
 // ref: http://tintin.sourceforge.net/mtts/
-bool Network::process_mtts()
+void Network::process_mtts()
 {
     if (m_mtts_step == -1) 
-        return true;
+        return;
     std::string str("MTTS 41");
     if (m_mtts_step == 0)
         str.assign("TORTILLA");
@@ -728,9 +638,8 @@ bool Network::process_mtts()
     memcpy(&tosend[4], str.c_str(), str.length());
     tosend[len-2] = IAC;
     tosend[len-1] = SE;
-    bool result = send_ex(tosend, len);
+    sendplain(tosend, len);
     delete tosend;
-    return result;
 }
 
 void Network::init_msdp()
@@ -742,7 +651,7 @@ void Network::init_msdp()
 
 void Network::close_msdp()
 {
-    if (m_connection.connected()) 
+    if (m_connection.connected())
     {
         tbyte turnoff[3] = { IAC, DONT, MSDP };
         m_msdp_data.write(turnoff, 3);

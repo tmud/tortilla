@@ -34,6 +34,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
 
     NetworkConnectData m_networkData;
     Network m_network;
+    DataQueue m_network_queue;
     HotkeyTable m_hotkeyTable;
     LogicProcessor m_processor;
     std::vector<MudView*> m_views;
@@ -58,7 +59,7 @@ public:
     DECLARE_WND_CLASS(NULL)
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
-        m_barHeight(32), m_bar(m_propData),
+        m_barHeight(32), m_bar(m_propData), m_network_queue(2048),
         m_view(&m_propElements), m_history(&m_propElements),
         m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
@@ -569,18 +570,18 @@ private:
         NetworkEvent event = m_network.translateEvent(lparam);
         if (event == NE_NEWDATA)
         {
-            m_plugins.processMsdp(m_network.receiveMsdp());
-            DataQueue data;
-            m_plugins.getMsdpData(&data);
+            // msdp data
+            MsdpNetwork* msdp = m_plugins.getMsdp();
+            msdp->translateReceived(m_network.receivedMsdp());
+            DataQueue& data = msdp->getSendData();
             if (data.getSize() > 0)
+            { 
                 m_network.sendplain((tbyte*)data.getData(), data.getSize());
+                data.clear();
+            }
 
-            /*MsdpNetwork *msdp = m_plugins.getMsdp();
-            msdp->processReceived(m_network.receiveMsdp());
-            m_plugins.processReceived(&m_network);*/
-
-            if (!m_network.receive(&data))
-                return 0;
+            // game data
+            data = m_network.received();
             int text_len = data.getSize();
             if (text_len == 0)
                 return 0;
@@ -591,43 +592,44 @@ private:
             if (m_codepage == CPWIN)
             {
                 AnsiToWideConverter a2wc;
-                a2wc.convert(&wide, (char*)data->getData(), text_len);
+                a2wc.convert(&wide, (char*)data.getData(), text_len);
             }
             else
             {
                 Utf8ToWideConverter u2w;
-                u2w.convert(&wide, (char*)data->getData(), text_len);
+                u2w.convert(&wide, (char*)data.getData(), text_len);
             }
-            data->truncate(text_len);
+            //data.truncate(text_len);
+            data.clear();
 
             m_plugins.processStreamData(&wide);
             const WCHAR* processeddata = (const WCHAR*)wide.getData();
             m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
-        else if (result == NE_CONNECT)
+        else if (event == NE_CONNECT)
         {
             m_processor.processNetworkConnect();
             m_plugins.processConnectEvent();
         }
-        else if (result == NE_DISCONNECT)
+        else if (event == NE_DISCONNECT)
         {
             m_network.disconnect();
             m_processor.processNetworkDisconnect();
             m_plugins.processDisconnectEvent();
         }
-        else if (result == NE_ERROR)
+        else if (event == NE_ERROR)
         {
             m_network.disconnect();
             m_processor.processNetworkError();
             m_plugins.processDisconnectEvent();
         }
-        else if (result == NE_ERROR_CONNECT)
+        else if (event == NE_ERROR_CONNECT)
         {
             m_network.disconnect();
             m_processor.processNetworkConnectError();
             m_plugins.processDisconnectEvent();
         }
-        else if (result == NE_ERROR_MCCP)
+        else if (event == NE_ERROR_MCCP)
         {
             m_network.disconnect();
             m_processor.processNetworkMccpError();
