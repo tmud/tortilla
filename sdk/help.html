@@ -554,6 +554,7 @@ local t = {...} -- правильное написание
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
 <div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
+<div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
 <div class="cmd">void getPrompt(std::Wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
@@ -1203,6 +1204,7 @@ render:rect(r2)
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
 <div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt-строка.
+<div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
 <div class="cmd">string getPrompt()</div> - содежимое prompt-строки (без игровых команд).
 <div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных блоков).
 <div class="cmd">int  getTextLen()</div> - длина полного текста строки.

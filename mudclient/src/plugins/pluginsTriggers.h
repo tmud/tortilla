@@ -2,14 +2,14 @@
 
 class PluginsTriggerString
 {
-    MudViewString *s;
+    tstring md5;
     std::vector<tstring> m_params;
 public:
-    PluginsTriggerString(MudViewString *ps, const CompareObject& co) : s(ps) {
-        assert(s);
+    PluginsTriggerString(const CompareObject& co, const CompareData& cd) {
+        cd.string->getMd5(&md5);
         co.getParameters(&m_params);
     }
-    MudViewString* string() const { return s; }
+    //MudViewString* string() const { return s; }
 
     int getParamsCount() const {
         int count = m_params.size();
@@ -37,16 +37,19 @@ class PluginsTrigger
 public:
     PluginsTrigger();
     ~PluginsTrigger();
-    bool init(lua_State *pl, Plugin *pp);
+    bool init(lua_State *pl); //, Plugin *pp);
+    void reset();
     void enable(bool enable);
     bool isEnabled() const;
     int  getLen() const;
-    bool compare(int index, const CompareData& cd, bool incompl_flag);    
+    bool compare(const CompareData& cd, bool incompl_flag);
     void run();
 private:
     lua_State *L;
-    Plugin *p;
     std::vector<CompareObject> m_compare_objects;
+    std::vector<PluginsTriggerString*> m_strings;
     lua_ref m_trigger_func_ref;
+    int m_current_compare_pos;
     bool m_enabled;
+    bool m_triggered;
 };

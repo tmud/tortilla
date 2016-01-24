@@ -4,20 +4,21 @@
 #include "accessors.h"
 extern Plugin* _cp;
 
-PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_enabled(false)
+PluginsTrigger::PluginsTrigger() : L(NULL), m_current_compare_pos(0), m_enabled(false), m_triggered(false)
 {
 }
 
 PluginsTrigger::~PluginsTrigger()
 {
-    m_enabled = false;
+    reset();
     m_trigger_func_ref.unref(L);
 }
 
-bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
+bool PluginsTrigger::init(lua_State *pl) //, Plugin *pp)
 {
-    assert(pl && pp);
-    L = pl; p = pp;
+    assert(pl); // && pp);
+    L = pl; 
+    //p = pp;
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
         luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
@@ -41,8 +42,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
                 lua_pop(L, 1);
             }
             m_compare_objects.resize(keys.size());
-            for (int i=0,e=keys.size();i<e;++i)
-            {
+            for (int i=0,e=keys.size();i<e;++i) {
                 m_compare_objects[i].init(keys[i], true);
             }
         }
@@ -52,9 +52,19 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
     return false;
 }
 
+void PluginsTrigger::reset()
+{
+    m_current_compare_pos = 0;
+    std::for_each(m_strings.begin(), m_strings.end(), [](PluginsTriggerString* pts) {delete pts;} );
+    m_strings.clear();
+    m_triggered = false;
+}
+
 void PluginsTrigger::enable(bool enable)
 {
-    m_enabled = enable;
+    if (enable != m_enabled)
+        reset();
+    m_enabled = enable;    
 }
 
 bool PluginsTrigger::isEnabled() const
@@ -67,17 +77,45 @@ int PluginsTrigger::getLen() const
     return m_compare_objects.size();
 }
 
-bool PluginsTrigger::compare(int index, const CompareData& cd, bool incompl_flag)
+bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
 {
-    CompareObject &co = m_compare_objects[index];
-    if (incompl_flag && co.isFullstrReq())
+    if (!m_enabled)
         return false;
-    return co.compare(cd.fullstr);
+    if (m_triggered)
+        reset();
+    bool result = false;
+    CompareObject &co = m_compare_objects[m_current_compare_pos];
+    if (incompl_flag && co.isFullstrReq()) {
+        // not compared / full string req.
+    }
+    else {
+        result = co.compare(cd.fullstr);
+    }
+    if (result)
+    {
+        PluginsTriggerString *pts = new PluginsTriggerString(co, cd);
+        m_strings.push_back(pts);
+        int last = m_compare_objects.size() - 1;
+        if (m_current_compare_pos == last)
+        {
+            m_triggered = true;
+            return true;
+        }
+        m_current_compare_pos++;
+        return false;
+    }
+
+    if (m_current_compare_pos > 0)
+    {
+        reset();
+        return compare(cd, incompl_flag);
+    }
+    return false;
 }
 
 void PluginsTrigger::run()
 {
-    /* m_trigger_func_ref.pushValue(L);
+    /*m_trigger_func_ref.pushValue(L);
 
     PluginsTriggerString vs(cd.string, m_compare);
     luaT_pushobject(L, &vs, LUAT_VIEWSTRING);
@@ -89,6 +127,7 @@ void PluginsTrigger::run()
             pluginError(L"trigger", L"неизвестная ошибка");
         lua_settop(L, 0);
     }*/
+    reset();
 }
 
 int trigger_create(lua_State *L)
@@ -96,7 +135,7 @@ int trigger_create(lua_State *L)
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION))
     {
         PluginsTrigger *t = new PluginsTrigger();
-        if (!t->init(L, _cp))
+        if (!t->init(L))
             { delete t; }
         else
         {
@@ -130,7 +169,7 @@ int trigger_disable(lua_State *L)
     return pluginInvArgs(L, L"trigger:disable");
 }
 
-void reg_mt_trigger_string(lua_State *L);
+//void reg_mt_trigger_string(lua_State *L);
 void reg_mt_trigger(lua_State *L)
 {
     lua_register(L, "createTrigger", trigger_create);
@@ -139,10 +178,10 @@ void reg_mt_trigger(lua_State *L)
     regFunction(L, "disable", trigger_disable);
     regIndexMt(L);
     lua_pop(L, 1);
-    reg_mt_trigger_string(L);
+    //reg_mt_trigger_string(L);
 }
 
-int ts_getBlocksCount(lua_State *L)
+/*int ts_getBlocksCount(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWSTRING))
     {
@@ -479,4 +518,4 @@ void reg_mt_trigger_string(lua_State *L)
     regFunction(L, "set", ts_set);
     regIndexMt(L);
     lua_pop(L, 1);
-}
+}*/

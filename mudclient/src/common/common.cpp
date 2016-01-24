@@ -261,6 +261,19 @@ bool checkKeysState(bool shift, bool ctrl, bool alt)
     return (ctrl == ctrl_key && alt_key == alt && shift_key == shift) ? true : false;
 }
 
+void MD5::update(const tstring& str)
+{
+    TW2U s(str.c_str());
+    crc.update(s);
+}
+
+tstring MD5::getCRC()
+{
+    std::string crc(crc.digest().hex_str_value());
+    TU2W c(crc.c_str());
+    return tstring(c);
+}
+
 Separator::Separator(const tstring& str)
 {
     if (str.empty())

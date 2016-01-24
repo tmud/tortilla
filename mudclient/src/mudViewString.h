@@ -127,6 +127,14 @@ struct MudViewString
        text->assign(tmp.substr(0, prompt));
    }
 
+   void getMd5(tstring *crc) const
+   {
+       MD5 md5;
+       for (int i=0,e=blocks.size(); i<e; ++i)
+           md5.update(blocks[i].string);
+       crc->assign(md5.getCRC());
+   }
+
    MudViewString* divideString(int pos)
    {
        MudViewString *s = new MudViewString;
