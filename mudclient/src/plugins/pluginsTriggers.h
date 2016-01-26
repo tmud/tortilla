@@ -1,34 +1,12 @@
 #pragma once
 
-class PluginsTriggerString
+struct triggerParseData
 {
-    tstring md5;
-    std::vector<tstring> m_params;
-public:
-    PluginsTriggerString(const CompareObject& co, const CompareData& cd) {
-        cd.string->getMd5(&md5);
-        co.getParameters(&m_params);
-    }
-    //MudViewString* string() const { return s; }
-
-    int getParamsCount() const {
-        int count = m_params.size();
-        return (count > 0) ? count-1 : 0;
-    }
-    bool getParam(int index, tstring* p) {
-        int count = m_params.size();
-        if (index > 0 && index < count)
-        {
-            p->assign(m_params[index]);
-            return true;
-        }
-        return false;
-    }
-    bool getCompared(tstring *p) {
-        if (m_params.empty()) 
-            return false;
-        p->assign(m_params[0]);
-        return true;
+    std::vector<tstring> params;
+    tstring crc;
+    void clear() {
+        params.clear();
+        crc.clear();
     }
 };
 
@@ -37,7 +15,7 @@ class PluginsTrigger
 public:
     PluginsTrigger();
     ~PluginsTrigger();
-    bool init(lua_State *pl); //, Plugin *pp);
+    bool init(lua_State *pl, Plugin *pp);
     void reset();
     void enable(bool enable);
     bool isEnabled() const;
@@ -46,8 +24,10 @@ public:
     void run();
 private:
     lua_State *L;
+    Plugin* p;
     std::vector<CompareObject> m_compare_objects;
-    std::vector<PluginsTriggerString*> m_strings;
+    parseData m_parseData;
+    std::vector<triggerParseData*> m_triggerParseData;
     lua_ref m_trigger_func_ref;
     int m_current_compare_pos;
     bool m_enabled;

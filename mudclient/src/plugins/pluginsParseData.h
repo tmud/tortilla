@@ -19,6 +19,11 @@ struct PluginViewString
     }
 };
 
+struct PluginTriggerString
+{
+    std::vector<u8string> params;
+};
+
 class PluginsParseData
 {
 public:

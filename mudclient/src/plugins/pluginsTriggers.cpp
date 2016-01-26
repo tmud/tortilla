@@ -1,24 +1,26 @@
 #include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsTriggers.h"
+#include "pluginsParseData.h"
 #include "accessors.h"
 extern Plugin* _cp;
 
-PluginsTrigger::PluginsTrigger() : L(NULL), m_current_compare_pos(0), m_enabled(false), m_triggered(false)
+PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_current_compare_pos(0), m_enabled(false), m_triggered(false)
 {
 }
 
 PluginsTrigger::~PluginsTrigger()
 {
-    reset();
+    m_parseData.strings.clear();
+    std::for_each(m_triggerParseData.begin(), m_triggerParseData.end(), [](triggerParseData* tpd) { delete tpd;} );
     m_trigger_func_ref.unref(L);
 }
 
-bool PluginsTrigger::init(lua_State *pl) //, Plugin *pp)
+bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
 {
-    assert(pl); // && pp);
+    assert(pl && pp);
     L = pl; 
-    //p = pp;
+    p = pp;
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
         luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
@@ -46,6 +48,9 @@ bool PluginsTrigger::init(lua_State *pl) //, Plugin *pp)
                 m_compare_objects[i].init(keys[i], true);
             }
         }
+        int count = m_compare_objects.size();
+        m_triggerParseData.resize(count, NULL);
+        for (int i=0;i<count;++i) { m_triggerParseData[i] = new triggerParseData;  } 
         m_enabled = true;
         return true;
     }
@@ -55,8 +60,10 @@ bool PluginsTrigger::init(lua_State *pl) //, Plugin *pp)
 void PluginsTrigger::reset()
 {
     m_current_compare_pos = 0;
-    std::for_each(m_strings.begin(), m_strings.end(), [](PluginsTriggerString* pts) {delete pts;} );
-    m_strings.clear();
+    m_parseData.strings.clear();
+    m_parseData.update_prev_string = false;
+    m_parseData.last_finished = true;
+    std::for_each(m_triggerParseData.begin(), m_triggerParseData.end(), [](triggerParseData* tpd) {tpd->clear();} );
     m_triggered = false;
 }
 
@@ -64,7 +71,7 @@ void PluginsTrigger::enable(bool enable)
 {
     if (enable != m_enabled)
         reset();
-    m_enabled = enable;    
+    m_enabled = enable;
 }
 
 bool PluginsTrigger::isEnabled() const
@@ -93,8 +100,13 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
     }
     if (result)
     {
-        PluginsTriggerString *pts = new PluginsTriggerString(co, cd);
-        m_strings.push_back(pts);
+        m_parseData.strings.push_back(cd.string);
+        m_parseData.last_finished = !incompl_flag;
+
+        triggerParseData* tpd = m_triggerParseData[m_current_compare_pos];
+        co.getParameters(&tpd->params);
+        cd.string->getMd5(&tpd->crc);
+
         int last = m_compare_objects.size() - 1;
         if (m_current_compare_pos == last)
         {
@@ -115,18 +127,22 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
 
 void PluginsTrigger::run()
 {
-    /*m_trigger_func_ref.pushValue(L);
+    m_trigger_func_ref.pushValue(L);
 
-    PluginsTriggerString vs(cd.string, m_compare);
-    luaT_pushobject(L, &vs, LUAT_VIEWSTRING);
+    PluginsParseData ppd(&m_parseData);
+    luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
+    Plugin *oldcp = _cp;
+    _cp = p;
     if (lua_pcall(L, 1, 0, 0))
     {
+        //error
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(L"trigger", luaT_towstring(L, -1));
+            pluginError(luaT_towstring(L, -1));
         else
-            pluginError(L"trigger", L"неизвестная ошибка");
+            pluginError(L"неизвестная ошибка");
         lua_settop(L, 0);
-    }*/
+    }
+    _cp = oldcp;
     reset();
 }
 
@@ -135,7 +151,7 @@ int trigger_create(lua_State *L)
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION))
     {
         PluginsTrigger *t = new PluginsTrigger();
-        if (!t->init(L))
+        if (!t->init(L, _cp))
             { delete t; }
         else
         {

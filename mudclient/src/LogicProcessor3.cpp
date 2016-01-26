@@ -366,7 +366,9 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     bool skip_actions = (flags & SKIP_ACTIONS);
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        bool triggered = luatriggers->processTriggers(parse_data, j, pe);
+        bool triggered = false;
+        if (!skip_actions)
+            triggered = luatriggers->processTriggers(parse_data, j, pe);
         bool actions = false;
         if (!skip_actions) {
             actions = m_helper.processActions(&parse_data, j, pe);

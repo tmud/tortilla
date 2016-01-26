@@ -15,6 +15,7 @@ function luatrigger.version()
 end
 
 local function event(v)
+  v:select(1)
   log("Сработал lua-триггер: "..v:getText())
   --print("Сработал lua-триггер: ")
 end
