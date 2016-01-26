@@ -259,7 +259,7 @@ void PluginsManager::processGameCmd(InputCommand* cmd)
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
 {
-    PluginsParseData pdata(data);
+    PluginsParseData pdata(data, NULL);
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];

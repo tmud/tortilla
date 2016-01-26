@@ -28,10 +28,11 @@ class PluginsParseData
 {
 public:
     parseData *pdata;
+    triggerParseData *tdata;
     std::vector<PluginViewString*> plugins_strings;
     int selected;
 public:
-    PluginsParseData(parseData *data) : pdata(data), selected(-1) { convert(); }
+    PluginsParseData(parseData *data, triggerParseData *trdata) : pdata(data), tdata(trdata), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
@@ -146,6 +147,28 @@ public:
     bool isselected() const
     {
         return (selected >= 0 && selected < size()) ? true : false;
+    }
+
+    int get_params()
+    {
+        if (!tdata) 
+            return 0;
+        return tdata->size();
+    }
+
+    bool get_parameter(int index, tstring* param)
+    {
+        if (selected >= 0 && selected < get_params())
+        {
+            triggerParseDataString *s = tdata->at(selected);
+            int count = s->params.size();
+            if (index >= 0 && index < count)
+            {
+                param->assign(s->params[index]);
+                return true;
+            }
+        }
+        return false;
     }
 
 private:

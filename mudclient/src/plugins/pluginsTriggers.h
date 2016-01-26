@@ -1,6 +1,6 @@
 #pragma once
 
-struct triggerParseData
+struct triggerParseDataString
 {
     std::vector<tstring> params;
     tstring crc;
@@ -9,6 +9,7 @@ struct triggerParseData
         crc.clear();
     }
 };
+typedef std::vector<triggerParseDataString*> triggerParseData;
 
 class PluginsTrigger
 {
@@ -27,7 +28,7 @@ private:
     Plugin* p;
     std::vector<CompareObject> m_compare_objects;
     parseData m_parseData;
-    std::vector<triggerParseData*> m_triggerParseData;
+    triggerParseData m_triggerParseData;
     lua_ref m_trigger_func_ref;
     int m_current_compare_pos;
     bool m_enabled;

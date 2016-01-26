@@ -883,6 +883,33 @@ int vd_isPrev(lua_State *L)
     return pluginInvArgs(L, L"viewdata:isPrev");
 }
 
+int vd_parameters(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);        
+        lua_pushinteger(L, pdata->get_params());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:parameters");
+}
+
+int vd_getParameter(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        tstring param;
+        if (pdata->get_parameter(index, &param))
+            luaT_pushwstring(L, param.c_str());
+        else
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:getParameter");
+}
+
 void reg_mt_viewdata(lua_State *L)
 {
     init_vdtypes();
@@ -916,6 +943,8 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "setPrev", vd_setPrev);
     regFunction(L, "isNext", vd_isNext);
     regFunction(L, "isPrev", vd_isPrev);
+    regFunction(L, "parameters", vd_parameters);
+    regFunction(L, "getParameter", vd_getParameter);
     regIndexMt(L);
     lua_pop(L, 1);
 }

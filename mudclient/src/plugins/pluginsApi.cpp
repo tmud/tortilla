@@ -839,7 +839,7 @@ int updateView(lua_State *L)
             mudViewStrings& src = h->get();
             pd.strings.swap(src);
             {
-                PluginsParseData ppd(&pd);
+                PluginsParseData ppd(&pd, NULL);
                 lua_insert(L, -2);
                 lua_pop(L, 1);
                 luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
