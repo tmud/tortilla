@@ -16,10 +16,25 @@ end
 
 local function event(v)
   v:select(1)
-  log("Сработал lua-триггер: "..v:getText())
-  --print("Сработал lua-триггер: ")
+  print("cyan", "Сработал lua-триггер: "..v:getText())
+  local count = v:parameters()
+  print("cyan", "Параметры: "..count)
+  if count > 0 then
+    local p = ''
+    for i=1,count do
+	  if i~=1 then p = p..'|' end
+	  p = p .. v:getParameter(i)
+	end
+	p = p .. "|"..tostring(v:isChanged())
+	print("cyan", p)
+  end
 end
 
 function luatrigger.init()
+  createTrigger("%1) Windows(%2)", event)
   createTrigger("Using keytable", event)
+  createTrigger({"Based On %1", "DikuMUD %1"}, event)  
+
+  createTrigger({"", "Включена поддержка"}, event)
+  
 end

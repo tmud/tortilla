@@ -29,7 +29,8 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
         {
             m_compare_objects.resize(1);
             tstring key(luaT_towstring(L, 1));
-            m_compare_objects[0].init(key, true);
+            if (!m_compare_objects[0].init(key, true))
+                return false;
         }
         else
         {
@@ -43,9 +44,19 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
                 keys.push_back(key);
                 lua_pop(L, 1);
             }
-            m_compare_objects.resize(keys.size());
+            bool all_empty = true;
             for (int i=0,e=keys.size();i<e;++i) {
-                m_compare_objects[i].init(keys[i], true);
+                if (!keys[i].empty()) { all_empty = false; break; }
+            }
+            if (all_empty) 
+                return false;
+            m_compare_objects.resize(keys.size());
+            for (int i=0,e=keys.size();i<e;++i) 
+            {
+                tstring k = keys[i];
+                if (k.empty()) { k.assign(L"%%"); }
+                if (!m_compare_objects[i].init(k, true))
+                    return false;
             }
         }
         int count = m_compare_objects.size();
@@ -129,7 +140,7 @@ void PluginsTrigger::run()
 {
     m_trigger_func_ref.pushValue(L);
 
-    PluginsParseData ppd(&m_parseData, NULL);
+    PluginsParseData ppd(&m_parseData, &m_triggerParseData);
     luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
     Plugin *oldcp = _cp;
     _cp = p;
@@ -148,7 +159,8 @@ void PluginsTrigger::run()
 
 int trigger_create(lua_State *L)
 {
-    if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION))
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
+        luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
         PluginsTrigger *t = new PluginsTrigger();
         if (!t->init(L, _cp))
@@ -185,12 +197,24 @@ int trigger_disable(lua_State *L)
     return pluginInvArgs(L, L"trigger:disable");
 }
 
+int trigger_isEnabled(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_TRIGGER))
+    {
+        PluginsTrigger *t = (PluginsTrigger*)luaT_toobject(L, 1);
+        lua_pushboolean(L, t->isEnabled() ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"trigger:isEnabled");
+}
+
 void reg_mt_trigger(lua_State *L)
 {
     lua_register(L, "createTrigger", trigger_create);
     luaL_newmetatable(L, "trigger");
     regFunction(L, "enable", trigger_enable);
     regFunction(L, "disable", trigger_disable);
+    regFunction(L, "isEnabled", trigger_isEnabled);
     regIndexMt(L);
     lua_pop(L, 1);
 }

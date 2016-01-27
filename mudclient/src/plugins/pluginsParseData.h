@@ -153,22 +153,41 @@ public:
     {
         if (!tdata) 
             return 0;
-        return tdata->size();
+        if (isselected())
+        {
+            triggerParseDataString *s = tdata->at(selected);
+            return s->params.size();
+        }
+        return 0;
     }
 
     bool get_parameter(int index, tstring* param)
     {
-        if (selected >= 0 && selected < get_params())
+        if (isselected())
         {
             triggerParseDataString *s = tdata->at(selected);
             int count = s->params.size();
-            if (index >= 0 && index < count)
+            if (index >= 1 && index <= count)
             {
-                param->assign(s->params[index]);
+                param->assign(s->params[index-1]);
                 return true;
             }
         }
         return false;
+    }
+
+    enum StringChanged { ISC_UNKNOWN = 0, ISC_NOTCHANGED, ISC_CHANGED };
+    StringChanged is_changed()
+    {
+        if (tdata && isselected())
+        {
+            MudViewString*s = getselected();
+            triggerParseDataString *ts = tdata->at(selected);
+            tstring md5;
+            s->getMd5(&md5);
+            return (md5 == ts->crc) ? ISC_NOTCHANGED : ISC_CHANGED;
+        }
+        return ISC_UNKNOWN;
     }
 
 private:
