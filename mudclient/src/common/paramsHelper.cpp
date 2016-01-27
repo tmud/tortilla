@@ -1,6 +1,28 @@
 #include "stdafx.h"
 #include "paramsHelper.h"
 
+ParamsTester::ParamsTester()
+{
+    pcre.setRegExp(L"(?:%[0-9%]){1}", true);
+    pcre2.setRegExp(L"\\$$", true);
+}
+
+bool ParamsTester::is_regexp(const tstring& key)
+{
+    pcre.find(key);
+    if (pcre.getSize() == 0)
+    {
+       return true;
+    }
+    return false;
+}
+
+bool ParamsTester::is_endline(const tstring& key)
+{
+    pcre2.find(key);
+    return (pcre2.getSize() == 0) ? true : false;
+}
+
 ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1)
 {
     pcre.setRegExp( (mode & DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}");

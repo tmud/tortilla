@@ -36,5 +36,5 @@ function luatrigger.init()
   createTrigger({"Based On %1", "DikuMUD %1"}, event)  
 
   createTrigger({"", "Включена поддержка"}, event)
-  
+  createTrigger({"По вопросам (.*)", ""}, event)
 end

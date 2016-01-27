@@ -208,6 +208,8 @@ private:
             }
             plugins_strings.push_back(dst);
         }
+        if (!strings.empty())
+            selected = 0; // select first string
     }
 
     void convert_back()
