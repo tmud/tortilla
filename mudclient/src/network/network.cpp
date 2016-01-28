@@ -187,15 +187,21 @@ void NetworkConnection::threadProc()
     sendEvent(NE_CONNECT);    
 
     fd_set set;
-    FD_ZERO(&set);
-    FD_SET(sock, &set);
-
+ 
     timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 100;
 
-    while (!needStop())
+    while (true)
     {
+        if (needStop())
+        {
+            sendEvent(NE_DISCONNECT);
+            break;
+        }
+
+        FD_ZERO(&set);
+        FD_SET(sock, &set);
         int n = ::select(0, &set, NULL, NULL, &tv);
         if (n == SOCKET_ERROR)
         {
@@ -230,22 +236,24 @@ void NetworkConnection::threadProc()
                  sendEvent(NE_NEWDATA);
         }
 
-        // send exist data
-        if (m_send_data.getSize() > 0)
+        // send data
         {
             CSectionLock lock(m_cs_send);
-            //OUTPUT_BYTES(m_send_data.getData(), sended, 32, "sended to net");
-            int sended = ::send(sock, (const char*)m_send_data.getData(), m_send_data.getSize(), 0);
-            if (sended == SOCKET_ERROR)
+            if (m_send_data.getSize() > 0)
             {
-                sendEvent(NE_DISCONNECT);
-                break;
-            }            
-            m_send_data.truncate(sended);
+                //OUTPUT_BYTES(m_send_data.getData(), sended, 32, "sended to net");
+                int sended = ::send(sock, (const char*)m_send_data.getData(), m_send_data.getSize(), 0);
+                if (sended == SOCKET_ERROR)
+                {
+                    sendEvent(NE_DISCONNECT);
+                    break;
+                }
+                m_send_data.truncate(sended);
+            }
         }
     }
-    FD_CLR(sock, &set);
     shutdown(sock, 2);
+    closesocket(sock);
 }
 
 Network::Network() : m_connection(2048), m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
