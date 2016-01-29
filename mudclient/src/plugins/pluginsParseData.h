@@ -19,14 +19,20 @@ struct PluginViewString
     }
 };
 
+struct PluginTriggerString
+{
+    std::vector<u8string> params;
+};
+
 class PluginsParseData
 {
 public:
     parseData *pdata;
+    triggerParseData *tdata;
     std::vector<PluginViewString*> plugins_strings;
     int selected;
 public:
-    PluginsParseData(parseData *data) : pdata(data), selected(-1) { convert(); }
+    PluginsParseData(parseData *data, triggerParseData *trdata) : pdata(data), tdata(trdata), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
@@ -143,6 +149,47 @@ public:
         return (selected >= 0 && selected < size()) ? true : false;
     }
 
+    int get_params()
+    {
+        if (!tdata) 
+            return 0;
+        if (isselected())
+        {
+            triggerParseDataString *s = tdata->at(selected);
+            return s->params.size();
+        }
+        return 0;
+    }
+
+    bool get_parameter(int index, tstring* param)
+    {
+        if (isselected())
+        {
+            triggerParseDataString *s = tdata->at(selected);
+            int count = s->params.size();
+            if (index >= 1 && index <= count)
+            {
+                param->assign(s->params[index-1]);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    enum StringChanged { ISC_UNKNOWN = 0, ISC_NOTCHANGED, ISC_CHANGED };
+    StringChanged is_changed()
+    {
+        if (tdata && isselected())
+        {
+            MudViewString*s = getselected();
+            triggerParseDataString *ts = tdata->at(selected);
+            tstring md5;
+            s->getMd5(&md5);
+            return (md5 == ts->crc) ? ISC_NOTCHANGED : ISC_CHANGED;
+        }
+        return ISC_UNKNOWN;
+    }
+
 private:
     void convert()
     {
@@ -161,6 +208,8 @@ private:
             }
             plugins_strings.push_back(dst);
         }
+        if (!strings.empty())
+            selected = 0; // select first string
     }
 
     void convert_back()

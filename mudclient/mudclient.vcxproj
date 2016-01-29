@@ -151,6 +151,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\AboutDlg.h" />
     <ClInclude Include="src\accessors.h" />
     <ClInclude Include="src\common\criticalSection.h" />
+    <ClInclude Include="src\common\md5.h" />
     <ClInclude Include="src\common\replaceColor.h" />
     <ClInclude Include="src\common\tokenizer.h" />
     <ClInclude Include="src\common\toolbarEx.h" />
@@ -225,6 +226,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
     <ClCompile Include="src\AboutDlg.cpp" />
     <ClCompile Include="src\accessors.cpp" />
+    <ClCompile Include="src\common\md5.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
     <ClCompile Include="src\helpManager.cpp" />

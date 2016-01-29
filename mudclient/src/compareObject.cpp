@@ -2,7 +2,7 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
-CompareObject::CompareObject() : m_fullstr_req(true) {}
+CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false) {}
 CompareObject::~CompareObject() {}
 
 bool CompareObject::init(const tstring& key, bool endline_mode)
@@ -11,11 +11,20 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
         return false;
 
     m_key = key;
-
-    tstring regexp;
-    createCheckPcre(key, endline_mode, &regexp);
-    checkVars(&regexp);
-    bool result = m_pcre.setRegExp(regexp, true);
+    bool result = false;
+    if (key.at(0) == L'$')      // regexp marker
+    {
+       result = m_pcre.setRegExp(key.substr(1), true);
+       if (result)
+           m_std_regexp = true;
+    }
+    else
+    {
+       tstring regexp;
+       createCheckPcre(key, endline_mode, &regexp);
+       checkVars(&regexp);
+       result = m_pcre.setRegExp(regexp, true);
+    }
     assert(result);
     return result;
 }
@@ -58,6 +67,15 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     assert(params);
     std::vector<tstring> &p = *params;
     if (m_pcre.getSize() == 0)  { p.clear(); return; }
+
+    if (m_std_regexp)
+    {
+        int count = m_pcre.getSize();
+        p.resize(count);
+        for (int i=0; i<count; ++i)
+            m_pcre.getString(i, &p[i]);
+        return;
+    }
 
     ParamsHelper keys(m_key, ParamsHelper::BLOCK_DOUBLEID);
     int maxid = keys.getMaxId()+1;

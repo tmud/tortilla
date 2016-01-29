@@ -46,17 +46,6 @@ bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipeline
            if (s->dropped) break;
         }
 
-        if (processed)
-        {
-            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-            parseData &not_processed = pe->data;
-            not_processed.last_finished = parse_data->last_finished;
-            parse_data->last_finished = true;
-            not_processed.update_prev_string = false;
-            int from = j+1;
-            not_processed.strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
-            parse_data->strings.resize(from);
-        }
         return processed;
     }
 }

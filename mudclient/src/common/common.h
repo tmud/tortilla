@@ -37,6 +37,16 @@ void u8string_substr(u8string *str, int from, int len);
 
 bool checkKeysState(bool shift, bool ctrl, bool alt);
 
+#include "md5.h"
+class MD5
+{
+public:
+    void update(const tstring& str);
+    tstring getCRC();
+private:
+    md5 crc;
+};
+
 class Separator
 {
 public:

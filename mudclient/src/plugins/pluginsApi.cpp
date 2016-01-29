@@ -43,6 +43,7 @@ void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
 const tchar* unknown_plugin_name = L"?плагин?";
 //const tchar* unknown_plugin() { return _extra_plugin_name.empty() ? unknown_plugin_name : _extra_plugin_name.c_str(); }
 const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : unknown_plugin_name; }
+int plugin_lualine(lua_State *L) { lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar); return ar.currentline; }
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
@@ -50,7 +51,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
     int n = lua_gettop(L);
-    swprintf(plugin_buffer(), L"'%s'.%s: %s(%d): ", plugin_name(), fname, p.c_str(), n);
+    swprintf(plugin_buffer(), L"'%s'.%s:%d: %s(%d): ", plugin_name(), fname, plugin_lualine(L), p.c_str(), n);
     tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
@@ -839,7 +840,7 @@ int updateView(lua_State *L)
             mudViewStrings& src = h->get();
             pd.strings.swap(src);
             {
-                PluginsParseData ppd(&pd);
+                PluginsParseData ppd(&pd, NULL);
                 lua_insert(L, -2);
                 lua_pop(L, 1);
                 luaT_pushobject(L, &ppd, LUAT_VIEWDATA);

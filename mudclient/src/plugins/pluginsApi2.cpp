@@ -312,6 +312,19 @@ int vd_isPrompt(lua_State *L)
     return pluginInvArgs(L, L"viewdata:isPrompt");
 }
 
+int vd_isDropped(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString* s = pdata->getselected();
+        int state = (s && s->dropped) ? 1 : 0;
+        lua_pushboolean(L, state);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:isDropped");
+}
+
 int vd_getPrompt(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -870,6 +883,48 @@ int vd_isPrev(lua_State *L)
     return pluginInvArgs(L, L"viewdata:isPrev");
 }
 
+int vd_parameters(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);        
+        lua_pushinteger(L, pdata->get_params());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:parameters");
+}
+
+int vd_getParameter(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        tstring param;
+        if (pdata->get_parameter(index, &param))
+            luaT_pushwstring(L, param.c_str());
+        else
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:getParameter");
+}
+
+int vd_isChanged(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        PluginsParseData::StringChanged sc = pdata->is_changed();
+        if (sc == PluginsParseData::ISC_UNKNOWN)
+            lua_pushnil(L);
+        else
+            lua_pushboolean(L, sc==PluginsParseData::ISC_NOTCHANGED ? 0 : 1);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:isChanged");
+}
+
 void reg_mt_viewdata(lua_State *L)
 {
     init_vdtypes();
@@ -882,6 +937,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "isGameCmd", vd_isGameCmd);
     regFunction(L, "isSystem", vd_isSystem);
     regFunction(L, "isPrompt", vd_isPrompt);
+    regFunction(L, "isDropped", vd_isDropped);
     regFunction(L, "getPrompt", vd_getPrompt);
     regFunction(L, "getText", vd_getText);
     regFunction(L, "getTextLen", vd_getTextLen);
@@ -902,6 +958,9 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "setPrev", vd_setPrev);
     regFunction(L, "isNext", vd_isNext);
     regFunction(L, "isPrev", vd_isPrev);
+    regFunction(L, "parameters", vd_parameters);
+    regFunction(L, "getParameter", vd_getParameter);
+    regFunction(L, "isChanged", vd_isChanged);
     regIndexMt(L);
     lua_pop(L, 1);
 }
