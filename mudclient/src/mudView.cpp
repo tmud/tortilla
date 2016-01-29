@@ -65,7 +65,7 @@ int MudView::getStringsCount() const
     return m_strings.size();
 }
 
-void MudView::addText(parseData* parse_data)
+void MudView::addText(parseData* parse_data, parseData *copy_data)
 {
     if (parse_data->strings.empty())
         return;
@@ -74,7 +74,20 @@ void MudView::addText(parseData* parse_data)
 
     removeDropped(parse_data);
     calcStringsSizes(parse_data->strings);
-    int count = parse_data->strings.size();
+    if (copy_data)
+    {
+        copy_data->update_prev_string = parse_data->update_prev_string;
+        copy_data->last_finished = parse_data->last_finished;
+        parseDataStrings &s = parse_data->strings;
+        int count = s.size();
+        copy_data->strings.resize(count);
+        for (int i=0;i<count;++i)
+        {
+            MudViewString *hs = new MudViewString;
+            hs->copy(s[i]);
+            copy_data->strings[i] = hs;
+        }
+    }
     pushText(parse_data);
 
     if (m_use_softscrolling) {

@@ -26,7 +26,7 @@ public:
     MudView(PropertiesElements *elements);
     ~MudView();
     void accLastString(parseData *parse_data);
-    void addText(parseData* parse_data);
+    void addText(parseData* parse_data, parseData *copy_data);
     void pushText(parseData* parse_data);
     void clearText();
     void truncateStrings(int maxcount);

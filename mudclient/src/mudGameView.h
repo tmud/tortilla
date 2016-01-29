@@ -962,33 +962,11 @@ private:
             int vs = m_view.getViewString();
             bool last = m_view.isLastString();
             bool last_updated = m_view.isLastStringUpdated();
-            int count = parse_data->strings.size();
-            int max_count = m_propData->view_history_size;
-            if (count > max_count)
-            {
-                int tomove = count - max_count;
-                parseData history;
-                history.update_prev_string = parse_data->update_prev_string;
-                parse_data->update_prev_string = false;
-                parseDataStrings &s = parse_data->strings;
-                parseDataStrings &d = history.strings;
-                d.insert(d.begin(), s.begin(), s.begin()+tomove);
-                s.erase(s.begin(), s.begin()+tomove);
-                count = max_count;
-            }
-
-            bool in_soft_scrolling = m_view.inSoftScrolling();
-            m_view.addText(parse_data);
-
+  
             parseData history;
-            int from = m_view.getStringsCount() - count;
-            for (int i=0;i<count;++i)
-            {
-               MudViewString *s = m_view.getString(from+i);
-               MudViewString *hs = new MudViewString;
-               hs->copy(s);
-               history.strings.push_back(hs);
-            }
+            bool in_soft_scrolling = m_view.inSoftScrolling();
+            m_view.addText(parse_data, &history);
+
             if (last_updated)
                 m_history.deleteLastString();
             m_history.pushText(&history);
@@ -1020,15 +998,15 @@ private:
             }
             else if (history_visible)
             {
-                //int vs = m_history.getViewString();
-                //m_history.setViewString(vs);
+                int vs = m_history.getViewString();
+                m_history.setViewString(vs);
             }
             return;
         }
         if (view >= 1 && view <= OUTPUT_WINDOWS)
         {
             MudView* v = m_views[view-1];
-            v->addText(parse_data);
+            v->addText(parse_data, NULL);
         }
     }
 
