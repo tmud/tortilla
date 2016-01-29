@@ -265,7 +265,10 @@ private:
         if (key == VK_DOWN)
         {
             if (m_history_index == -1)
+            {
                 clear();
+                clearHistory();
+            }
             else
                 onHistoryDown();
         }
