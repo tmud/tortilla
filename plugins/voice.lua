@@ -68,7 +68,7 @@ end
 
 function voice.syscmd(t)
   local c = t[1]
-  if c == 'voice' and #t > 1 then
+  if c == 'voice' then
     local op = t[2]
     if op == 'speak' then
       if not current_voice then
