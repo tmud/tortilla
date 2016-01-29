@@ -4,7 +4,6 @@
 
 CompareObject::CompareObject() : m_fullstr_req(true) {}
 CompareObject::~CompareObject() {}
-ParamsTester CompareObject::m_regexp_tester;
 
 bool CompareObject::init(const tstring& key, bool endline_mode)
 {
@@ -13,24 +12,16 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
 
     m_key = key;
     bool result = false;
-    if (!m_regexp_tester.is_regexp(key))
+    if (key.at(0) == L'$')      // regexp marker
+    {
+       result = m_pcre.setRegExp(key.substr(1), true);
+    }
+    else
     {
        tstring regexp;
        createCheckPcre(key, endline_mode, &regexp);
        checkVars(&regexp);
        result = m_pcre.setRegExp(regexp, true);
-    }
-    else
-    {
-       if (!m_regexp_tester.is_endline(key))
-       {
-           m_fullstr_req = false;
-           int len = key.size()-1;
-           result = m_pcre.setRegExp(key.substr(0,len), true);
-       }
-       else {
-        result = m_pcre.setRegExp(key, true);
-       }
     }
     assert(result);
     return result;

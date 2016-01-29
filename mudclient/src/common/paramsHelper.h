@@ -1,14 +1,5 @@
 #pragma once
 
-class ParamsTester
-{
-    Pcre16 pcre, pcre2;
-public:
-    ParamsTester();
-    bool is_regexp(const tstring& key);
-    bool is_endline(const tstring& key);
-};
-
 class ParamsHelper
 {
 public:

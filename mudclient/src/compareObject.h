@@ -27,5 +27,4 @@ private:
     tstring m_str;
     std::vector<tstring> m_vars_pcre_parts;
     bool m_fullstr_req;
-    static ParamsTester m_regexp_tester;
 };

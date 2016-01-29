@@ -11,6 +11,35 @@ void getWindowText(HWND handle, std::wstring *string)
     string->assign(buffer);
 }
 
+bool sendToClipboard(HWND owner, const std::wstring& text)
+{
+    if (!OpenClipboard(owner))
+        return false;
+
+    if (!EmptyClipboard())
+    {
+        CloseClipboard();
+        return false;
+    }
+
+    SIZE_T size = (text.length() + 1) * sizeof(WCHAR);
+    HGLOBAL hGlob = GlobalAlloc(GMEM_FIXED, size);
+    if (!hGlob)
+    {
+        CloseClipboard();
+        return false;
+    }
+
+    WCHAR* buffer = (WCHAR*)GlobalLock(hGlob);
+    wcscpy(buffer, text.c_str());
+    GlobalUnlock(hGlob);
+    bool result = (SetClipboardData(CF_UNICODETEXT, hGlob) == NULL) ? false : true;
+    CloseClipboard();
+    if (!result)
+        GlobalFree(hGlob);
+    return result;
+}
+
 LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
 class CalcWindowDlg : public CDialogImpl<CalcWindowDlg>
 {
@@ -47,6 +76,7 @@ private:
     BEGIN_MSG_MAP(CalcWindowDlg)
       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDlg)
       MESSAGE_HANDLER(WM_DESTROY, OnDestroyDlg)
+      COMMAND_ID_HANDLER(IDC_BUTTON_COPY, OnCopyToBuffer)
       COMMAND_HANDLER(IDC_EDIT_REGEXP, EN_CHANGE, OnEditChanged)
       COMMAND_HANDLER(IDC_EDIT_TESTSTRING, EN_CHANGE, OnEditChanged)
     END_MSG_MAP()
@@ -65,6 +95,15 @@ private:
         UnhookWindowsHookEx(m_hHook);
         return 0;
     }
+    LRESULT OnCopyToBuffer(WORD, WORD, HWND, BOOL&)
+    {
+        std::wstring regexp;
+        getWindowText(m_regexp, &regexp);
+        regexp.insert(0, L"$");
+        sendToClipboard(m_hWnd, regexp);
+        return 0;
+    }
+
     LRESULT OnEditChanged(WORD, WORD, HWND, BOOL&)
     {
         update();
@@ -103,7 +142,7 @@ private:
                 m_pcre.get(i, &tmp);
 
                 WCHAR buffer[16];
-                wsprintf(buffer, L"%d:[", i);
+                wsprintf(buffer, L"%%%d=[", i);
                 result.append(buffer);
                 result.append(tmp);
                 result.append(L"]\r\n");

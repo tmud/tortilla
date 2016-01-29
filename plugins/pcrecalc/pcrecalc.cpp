@@ -16,7 +16,9 @@ int get_name(lua_State *L)
 
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Плагин предназначен для написания и проверки регулярных выражений.");
+    luaT_pushwstring(L, L"Плагин предназначен для написания и проверки регулярных выражений для триггеров.\r\n"
+        L"Регулярное выражение применяется к тестовой строке и выводится результат.\r\n"
+        L"Пересчет происходит на каждое изменение регулярного выражения или тестовой строки.");
     return 1;
 }
 
@@ -28,7 +30,7 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
-    if (m_parent_window.create(L, L"Калькулятор PCRE", 200, 300, true))
+    if (m_parent_window.create(L, L"Калькулятор PCRE", 200, 300))
     {
         m_calc_window.Create(m_parent_window.hwnd());
         CWindow sd(m_calc_window.m_hWnd);
@@ -36,14 +38,14 @@ int init(lua_State *L)
         m_parent_window.attach(sd);
         m_parent_window.setFixedSize(rc.right, rc.bottom);
         base::addMenu(L, L"Плагины/Калькулятор PCRE...", 1);
+
+        if (m_parent_window.isVisible())
+        {
+            base::checkMenu(L, 1);
+        }
     }
     return 0;
 }
-
-/*int release(lua_State *L)
-{
-    return 0;
-}*/
 
 int menucmd(lua_State *L)
 {
@@ -86,7 +88,6 @@ static const luaL_Reg pcrecalc_methods[] =
     { "description", get_description },
     { "version", get_version },
     { "init", init },
-    //{ "release", release },
     { "menucmd", menucmd },
     { "closewindow", closewindow },
     { NULL, NULL }
