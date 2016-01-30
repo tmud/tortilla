@@ -416,6 +416,7 @@ struct PropertiesData
     {
         initDefaultColorsAndFont();
         initMainWindow();
+        initFindWindow();
     }
 
     PropertiesValues aliases;
@@ -487,6 +488,9 @@ struct PropertiesData
     int  display_height;
     std::vector<OutputWindow> windows;
 
+    RECT find_window;
+    int  find_window_visible;
+
     tstring title;        // name of main window (dont need to save)
 
     void initDefaultColorsAndFont()
@@ -534,6 +538,15 @@ struct PropertiesData
         main_window.top  = (primary_height - height) / 2;
         main_window.right = main_window.left + width;
         main_window.bottom = main_window.top + height;
+    }
+
+    void initFindWindow()
+    {
+        find_window.left = 200;
+        find_window.top = 100;
+        find_window.right = find_window.left;
+        find_window.bottom = find_window.top;
+        find_window_visible = 0;
     }
 
     void initAllDefault()

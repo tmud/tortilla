@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98beta5"
+#define TORTILLA_VERSION L"0.98b18"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -28,6 +28,7 @@
 #include <atldlgs.h>
 #include <atlctrlw.h>
 #include <atlmisc.h>
+//#include <atlcrack.h>
 
 #include "resource.h"
 

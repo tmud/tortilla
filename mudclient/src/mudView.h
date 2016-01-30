@@ -21,6 +21,9 @@ class MudView : public CWindowImpl<MudView>
     std::vector<int> m_drag_beginline_len;
     std::vector<int> m_drag_endline_len;
 
+    int m_find_string_index;
+    int m_find_start_pos, m_find_end_pos;
+
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
     MudView(PropertiesElements *elements);
@@ -45,6 +48,9 @@ public:
     void setSoftScrollingMode(bool mode);
     bool inSoftScrolling() const;
     bool isDragMode() const;
+    int  findAndSelectText(int from, int direction, const tstring& text);
+    int  getCurrentFindString();
+    void clearFind();
 
 private:
 	BEGIN_MSG_MAP(MudView)
@@ -105,8 +111,9 @@ private:
     enum dragline { BEGINLINE = 0, ENDLINE };
     int   calcDragSym(int x, dragline type) const;
     void  calcDragLine(int line, dragline type);
-    void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
-    void  stopSoftScroll();    
+    void  calcDragArray(MudViewString* s, std::vector<int> &ld);   
+    void renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
+    void stopSoftScroll();
 };
 
 class MudViewHandler

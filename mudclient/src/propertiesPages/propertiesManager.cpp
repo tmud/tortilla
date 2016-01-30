@@ -159,7 +159,23 @@ bool PropertiesManager::loadProfileData()
             m_propData.display_height != GetSystemMetrics(SM_CYVIRTUALSCREEN))
         {
             m_propData.initMainWindow();
+            m_propData.initFindWindow();
             default_window = true;
+        }
+    }
+
+    xml::request fw(sd, L"findwindow");
+    if (fw.size())
+    {
+        xml::node w = fw[0];
+        if (!w.get(L"visible", &m_propData.find_window_visible) || !loadRECT(w, &m_propData.find_window))
+        {
+            m_propData.initFindWindow();
+        }
+        else
+        {
+            if (m_propData.find_window_visible != 1)
+                m_propData.find_window_visible = 0;
         }
     }
 
@@ -300,6 +316,10 @@ bool PropertiesManager::saveProfileData()
     mw.set(L"width", m_propData.display_width);
     mw.set(L"height", m_propData.display_height);
     mw.set(L"fullscreen", m_propData.main_window_fullscreen);
+
+    xml::node fw = sd.createsubnode(L"findwindow");
+    saveRECT(fw, m_propData.find_window);
+    fw.set(L"visible", m_propData.find_window_visible);
 
     xml::node plugins = sd.createsubnode(L"plugins");
     for (int i = 0, e = m_propData.plugins.size(); i < e; ++i)
