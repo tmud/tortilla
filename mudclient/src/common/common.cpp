@@ -171,12 +171,16 @@ void tstring_trimsymbols(tstring *str, const tstring& symbols)
 
 void tstring_toupper(tstring *str)
 {
-    std::transform(str->begin(), str->end(), str->begin(), ::toupper);
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::toupper), &ct));
 }
 
 void tstring_tolower(tstring *str)
 {
-    std::transform(str->begin(), str->end(), str->begin(), ::tolower);
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::tolower), &ct));
 }
 
 void tstring_replace(tstring *str, const tstring& what, const tstring& forr)

@@ -332,7 +332,8 @@ struct DragParamsChecker
         }
         return false;
     }
-    int left, right, start_sym, end_sym;
+private:
+    int &left, &right, &start_sym, &end_sym;
 };
 
 void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, int index)
@@ -899,6 +900,9 @@ int MudView::findAndSelectText(int from, int direction, const tstring& text)
     if (from >= count)
         return -1;
 
+    tstring ltext(text);
+    tstring_tolower(&ltext);
+
     int start = m_find_start_pos;
     int i = from;
     int end = (direction==1) ? count : -1;
@@ -906,22 +910,23 @@ int MudView::findAndSelectText(int from, int direction, const tstring& text)
     {
         tstring str;
         m_strings[i]->getText(&str);
+        tstring_tolower(&str);
         size_t pos = -1;
         if (direction == 1)
         {
-           size_t start_pos = (start==-1) ? 0 : start+text.length();
-           pos = str.find(text, start_pos);
+           size_t start_pos = (start==-1) ? 0 : start+ltext.length();
+           pos = str.find(ltext, start_pos);
         }
         else
         {
            tstring p( (start>=0) ? str.substr(0, start) : str);
-           pos = p.rfind(text);
+           pos = p.rfind(ltext);
         }
         if (pos != -1)
         {
             m_find_string_index = i;
             m_find_start_pos = pos;
-            m_find_end_pos = pos + text.size() - 1;
+            m_find_end_pos = pos + ltext.size() - 1;
             return i;
         }
         else

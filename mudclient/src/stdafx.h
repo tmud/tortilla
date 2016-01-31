@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98b18"
+#define TORTILLA_VERSION L"0.98b19"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -41,6 +41,7 @@
 #include <algorithm>
 #include <set>
 #include <deque>
+#include <functional>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;

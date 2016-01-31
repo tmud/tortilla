@@ -499,7 +499,7 @@ BEGIN
     POPUP "Вид"
     BEGIN
         MENUITEM "&Панель инструментов",        ID_VIEW_TOOLBAR
-        MENUITEM "Панель поиска...\tCtrl+F",    ID_VIEW_FIND
+        MENUITEM "Поиск...\tCtrl+F",            ID_VIEW_FIND
         MENUITEM SEPARATOR
         MENUITEM "Окно &1",                     ID_WINDOW_1
         MENUITEM "Окно &2",                     ID_WINDOW_2
