@@ -214,10 +214,10 @@ MudViewHandler* MudGameView::getHandler(int view)
 void MudGameView::findText()
 {
     tstring text;
-    m_find_view.getTextToSearch(&text);
+    m_find_dlg.getTextToSearch(&text);
     if (text.empty())
         return;
-    int view = m_find_view.getSelectedWindow();
+    int view = m_find_dlg.getSelectedWindow();
     bool shift = (GetKeyState(VK_SHIFT) < 0);
     int find_direction = (shift) ? -1 : 1;
     MudView *v = (view == 0) ? &m_history : m_views[view - 1];

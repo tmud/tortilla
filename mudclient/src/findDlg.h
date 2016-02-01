@@ -1,9 +1,13 @@
 #pragma once
 
+//LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam);
 class FindDlg : public CDialogImpl<FindDlg>
 {
+    HHOOK m_hHook;
     CEdit m_text;
     CComboBox m_wnd;
+    CButton m_find_end_begin;
+    CButton m_find_begin_end;
 public:
     enum { IDD = IDD_FIND };
     void setFocus() { m_text.SetFocus(); }
@@ -39,7 +43,7 @@ public:
             }
             if (key == VK_RETURN && focused())
                 return TRUE;
-            if (key == VK_TAB)
+            /*if (key == VK_TAB)
             {
                 HWND focus = GetFocus();
                 if (focus == m_text)
@@ -47,7 +51,7 @@ public:
                 if (focus == m_wnd)
                     m_text.SetFocus();
                 return FALSE;
-            }
+            }*/
             if (key >= '0' && key <= '0'+OUTPUT_WINDOWS && focused() && checkKeysState(false, true, false))
             {
                 int index = key - '0';
@@ -72,19 +76,52 @@ public:
         HWND focus = GetFocus();
         return (focus == m_text || focus == m_wnd) ? true : false;    
     }
+
+    /*LRESULT HookGetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
+    {
+        LPMSG lpMsg = (LPMSG)lParam;
+        if (nCode >= 0 && PM_REMOVE == wParam)
+        {
+            // Don't translate non-input events.
+            if ((lpMsg->message >= WM_KEYFIRST && lpMsg->message <= WM_KEYLAST))
+            {
+                if (IsDialogMessage(lpMsg))
+                {
+                    // The value returned from this hookproc is ignored, 
+                    // and it cannot be used to tell Windows the message has been handled.
+                    // To avoid further processing, convert the message to WM_NULL 
+                    // before returning.
+                    lpMsg->message = WM_NULL;
+                    lpMsg->lParam = 0;
+                    lpMsg->wParam = 0;
+                }
+            }
+        }
+        return CallNextHookEx(m_hHook, nCode, wParam, lParam);
+    }*/
+
 private:
     BEGIN_MSG_MAP(FindDlg)
       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+      MESSAGE_HANDLER(WM_DESTROY, OnDestroyDlg)
     END_MSG_MAP()
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
     {
+       //m_hHook = SetWindowsHookEx( WH_GETMESSAGE, GetMsgProc,  NULL, GetCurrentThreadId() );
        m_text.Attach(GetDlgItem(IDC_EDIT_FINDTEXT));
        m_wnd.Attach(GetDlgItem(IDC_COMBO_FINDWINDOW));
+       m_find_end_begin.Attach(GetDlgItem(IDC_RADIO_END_BEGIN));
+       m_find_begin_end.Attach(GetDlgItem(IDC_RADIO_BEGIN_END));
        return 0;
+    }
+    LRESULT OnDestroyDlg(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        //UnhookWindowsHookEx(m_hHook);
+        return 0;
     }
 };
 
-class FindView : public CWindowImpl<FindView>
+/*class FindView : public CWindowImpl<FindView>
 {
     FindDlg m_dlg;
 public:
@@ -125,3 +162,4 @@ private:
         return 0;
     }
 };
+*/

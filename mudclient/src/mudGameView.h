@@ -29,7 +29,8 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     CDockingWindow m_dock;
     int m_barHeight;
     MudCommandBar m_bar;
-    FindView m_find_view;
+    //FindView m_find_view;
+    FindDlg m_find_dlg;
     int m_last_find_view;
     MudView m_history;
     MudView m_view;
@@ -85,7 +86,7 @@ public:
                 return TRUE;
         }
 
-        if (m_find_view.processMsg(pMsg))
+        if (m_find_dlg.processMsg(pMsg))
         {
             if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
                SetFocus();
@@ -118,7 +119,7 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-            if (m_propData->find_window_visible && m_find_view.isFocused()) { hideFindView(); }
+            if (m_propData->find_window_visible && m_find_dlg.focused()) { hideFindView(); }
             else { showFindView(true); }
             return TRUE;
         }
@@ -405,21 +406,24 @@ private:
         m_parent.MoveWindow(&m_propData->main_window);
 
         // create find panel
-        m_find_view.Create(m_dock);
-        m_find_view.SetWindowText(L"Поиск");
-        RECT fpos; m_find_view.GetClientRect(&fpos);
+        m_find_dlg.Create(m_dock);
+        m_find_dlg.SetWindowText(L"Поиск");
+        RECT fpos; m_find_dlg.GetClientRect(&fpos);
+
+
         RECT &p = m_propData->find_window;
         p.right = p.left + fpos.right;
         p.bottom = p.top + fpos.bottom;
-        m_dock.AddWindow(m_find_view);
-        m_find_view.setWindowName(0, L"Главное окно");
-        m_find_view.selectWindow(0);
+        m_dock.AddWindow(m_find_dlg);
+        m_find_dlg.setWindowName(0, L"Главное окно");
+        m_find_dlg.selectWindow(0);
+       // setFixedSize(m_find_dlg, fpos.right, fpos.bottom);
 
         // create docking output windows
         for (int i=0; i < OUTPUT_WINDOWS; ++i)
         {
             const OutputWindow& w =  m_propData->windows[i];
-            m_find_view.setWindowName(i+1,w.name);
+            m_find_dlg.setWindowName(i+1,w.name);
 
             MudView *v = new MudView(&m_propElements);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
@@ -838,24 +842,24 @@ private:
 
     void showFindView(bool set_focus)
     {
-        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_view);
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         if (ctx->Side == DOCK_HIDDEN)
         {
             const RECT& p = m_propData->find_window;
-            setFixedSize(m_find_view, p.right - p.left, p.bottom - p.top);
-            m_dock.FloatWindow(m_find_view, p);
+            setFixedSize(m_find_dlg, p.right, p.bottom); // - p.left, p.bottom - p.top);
+            m_dock.FloatWindow(m_find_dlg, p);
             m_propData->find_window_visible = 1;
             m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
         }
         if (set_focus)
-            m_find_view.setFocus();
+            m_find_dlg.setFocus();
     }
 
     void hideFindView()
     {
-        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_view);
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         m_propData->find_window = ctx->rcWindow;
-        m_dock.HideWindow(m_find_view);
+        m_dock.HideWindow(m_find_dlg);
         m_propData->find_window_visible = 0;
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)
@@ -877,7 +881,7 @@ private:
     LRESULT OnCloseWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         HWND wnd = (HWND)wparam;
-        if (wnd == m_find_view)
+        if (wnd == m_find_dlg)
         {
             hideFindView();
             return 0;
@@ -1243,7 +1247,7 @@ private:
 
     void saveFindWindowPos()
     {
-        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_view);
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         m_propData->find_window = ctx->rcWindow;
         m_propData->find_window_visible = (ctx->Side == DOCK_FLOAT) ? 1 : 0;    
     }
