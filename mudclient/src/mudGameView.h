@@ -29,7 +29,6 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     CDockingWindow m_dock;
     int m_barHeight;
     MudCommandBar m_bar;
-    //FindView m_find_view;
     FindDlg m_find_dlg;
     int m_last_find_view;
     MudView m_history;
@@ -320,6 +319,12 @@ public:
         return (ctx) ? ctx->hwndFloated : NULL;
     }
 
+    void addWindowBorder(int &width, int &height)
+    {
+        width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
+        height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+    }
+
     void setFixedSize(HWND hwnd, int width, int height)
     {
         DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
@@ -328,8 +333,7 @@ public:
             return;
         CWindow p(ctx->hwndFloated);
         if (!p.IsWindow()) return;
-        width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
-        height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+        addWindowBorder(width, height);
         RECT pos = ctx->rcWindow;
         pos.right = pos.left + width - 1;
         pos.bottom = pos.top + height - 1;
@@ -409,15 +413,14 @@ private:
         m_find_dlg.Create(m_dock);
         m_find_dlg.SetWindowText(L"Поиск");
         RECT fpos; m_find_dlg.GetClientRect(&fpos);
-
-
+        int width = fpos.right; int height = fpos.bottom;
+        addWindowBorder(width, height);
         RECT &p = m_propData->find_window;
-        p.right = p.left + fpos.right;
-        p.bottom = p.top + fpos.bottom;
+        p.right = p.left + width;
+        p.bottom = p.top + height;
         m_dock.AddWindow(m_find_dlg);
         m_find_dlg.setWindowName(0, L"Главное окно");
         m_find_dlg.selectWindow(0);
-       // setFixedSize(m_find_dlg, fpos.right, fpos.bottom);
 
         // create docking output windows
         for (int i=0; i < OUTPUT_WINDOWS; ++i)

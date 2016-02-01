@@ -37,6 +37,9 @@ void u8string_substr(u8string *str, int from, int len);
 
 bool checkKeysState(bool shift, bool ctrl, bool alt);
 
+void createWindowHook(HWND wnd);
+void deleteWindowHook(HWND wnd);
+
 #include "md5.h"
 class MD5
 {
