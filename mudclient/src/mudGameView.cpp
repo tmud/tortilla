@@ -140,7 +140,7 @@ void MudGameView::onNewWorld()
         {
             msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
             loadPlugins();
-            loadClientWindowPos();            
+            loadClientWindowPos();
             return;
         }
 
@@ -219,7 +219,8 @@ void MudGameView::findText()
         return;
     int view = m_find_dlg.getSelectedWindow();
     bool shift = (GetKeyState(VK_SHIFT) < 0);
-    int find_direction = (shift) ? -1 : 1;
+    int find_direction = m_find_dlg.getDirection() * ((shift) ? -1 : 1);
+
     MudView *v = (view == 0) ? &m_history : m_views[view - 1];
     int current_find = v->getCurrentFindString();
     int new_find = v->findAndSelectText(current_find, find_direction, text);
@@ -251,7 +252,7 @@ void MudGameView::findText()
     if (center_vs < count)
         new_find = center_vs;
     else
-        new_find = count-1;        
+        new_find = count-1;
     v->setViewString(new_find);
     m_last_find_view = view;
 }

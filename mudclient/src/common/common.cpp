@@ -451,7 +451,7 @@ bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring*
 }
 
 
-typedef std::set<HWND> THWNDCollection;
+typedef std::map<HWND, UINT> THWNDCollection;
 HHOOK m_hHook = NULL;
 THWNDCollection m_aWindows;
 
@@ -475,23 +475,30 @@ LRESULT CALLBACK GetMessageProc(int nCode, WPARAM wParam, LPARAM lParam)
     // and accelerator processing
     LPMSG lpMsg = (LPMSG)lParam;
 
-    // check if there is a menu active
-    HWND hMenuWnd = NULL;
-    EnumWindows(MyEnumProc, (LPARAM)&hMenuWnd);
-
     // If this is a keystrokes message, pass it to IsDialogMessage for tab
     // and accelerator processing
-    if (hMenuWnd == NULL && (nCode >= 0) && PM_REMOVE == wParam &&
+    if ((nCode >= 0) && PM_REMOVE == wParam &&
         (lpMsg->message >= WM_KEYFIRST && lpMsg->message <= WM_KEYLAST))
     {
-        HWND hWnd, hActiveWindow = GetActiveWindow();
+         // check if there is a menu active
+        HWND hMenuWnd = NULL;
+        EnumWindows(MyEnumProc, (LPARAM)&hMenuWnd);
+        if (hMenuWnd == NULL) {
+        HWND hWnd = NULL; HWND hActiveWindow = GetActiveWindow();
         THWNDCollection::iterator it = m_aWindows.begin();
         // check each window we manage to see if the message is meant for them
         while (it != m_aWindows.end())
         {
-            hWnd = *it;
+            hWnd = it->first;
             if (::IsWindow(hWnd) && ::IsDialogMessage(hWnd, lpMsg))
             {
+                if (it->second)
+                {
+                    LRESULT result = SendMessage(hWnd, it->second, 0, lParam);
+                    if (result) {  break; //processed
+                    }
+                }
+
                 // The value returned from this hookproc is ignored, and it cannot
                 // be used to tell Windows the message has been handled. To avoid
                 // further processing, convert the message to WM_NULL before
@@ -503,7 +510,7 @@ LRESULT CALLBACK GetMessageProc(int nCode, WPARAM wParam, LPARAM lParam)
                 break;
             }
             it++;
-        }
+        }}
     }
 
     // Passes the hook information to the next hook procedure in
@@ -511,7 +518,7 @@ LRESULT CALLBACK GetMessageProc(int nCode, WPARAM wParam, LPARAM lParam)
     return ::CallNextHookEx(m_hHook, nCode, wParam, lParam);
 }
 
-void createWindowHook(HWND hWnd)
+void createWindowHook(HWND hWnd, UINT test_msg)
 {
     // make sure the hook is installed
     if (m_hHook == NULL)
@@ -522,8 +529,7 @@ void createWindowHook(HWND hWnd)
             return;
     }
     // add the window to our list of managed windows
-    if (m_aWindows.find(hWnd) == m_aWindows.end())
-        m_aWindows.insert(hWnd);
+    m_aWindows[hWnd] = test_msg;
 }
 
 void deleteWindowHook(HWND hWnd)

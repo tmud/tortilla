@@ -29,7 +29,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     CDockingWindow m_dock;
     int m_barHeight;
     MudCommandBar m_bar;
-    FindDlg m_find_dlg;
+    FindView m_find_dlg;
     int m_last_find_view;
     MudView m_history;
     MudView m_view;
@@ -1153,6 +1153,7 @@ private:
         v->SetWindowText(name.c_str());
         int menu_id = view-1+ID_WINDOW_1;
         m_parent.SendMessage(WM_USER+1, menu_id, (WPARAM)name.c_str());
+        m_find_dlg.setWindowName(view, name);
     }
 
     void showWindowEx(HWND wnd, bool show)
