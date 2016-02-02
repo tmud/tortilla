@@ -758,6 +758,10 @@ private:
         tcmds.init(cmds, p);
         tcmds.extract(&cmds);
         m_plugins.processBarCmds(&cmds);
+
+        InputRepeatCommands repeats;
+        repeats.process(&cmds, p.prefix);
+
         m_processor.processUserCommand(cmds);
     }
 

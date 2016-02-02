@@ -47,6 +47,52 @@ public:
     }
 };
 
+class InputRepeatCommands
+{
+public:
+    void process(InputPlainCommands* cmds, tchar prefix)
+    {
+        std::vector<tstring> *pc = cmds->ptr();
+        for (int i=0,e=pc->size();i<e;++i)
+        {
+           tstring result;
+           int count = check(pc->at(i), prefix, &result);
+           if (count > 0 && count <= 100)
+           {
+               int rec = check(result, prefix, NULL);
+               if (rec >= 0)
+                   break;
+               std::vector<tstring> tmp(count, result);
+               pc->erase(pc->begin()+i);
+               pc->insert(pc->begin()+i, tmp.begin(), tmp.end());
+               e = pc->size();
+               i = i + count;
+           }
+        }
+    }
+private:
+    int check(const tstring& cmd, tchar prefix, tstring* result)
+    {
+        if (cmd.empty() || cmd[0] != prefix)
+            return -1;
+        size_t pos = cmd.find(L' ');
+        if (pos == -1) return -1;
+        tstring tmp(cmd.substr(1, pos - 1));
+        int count = 0;
+        if (w2int(tmp, &count))
+        {
+            tmp.assign(cmd.substr(pos));
+            tstring_trimleft(&tmp);
+            if (result)
+                result->assign(tmp);
+            if (tmp.empty())
+                return (count == 0) ? 0 : -1;
+            return count;
+        }
+        return -1;
+    }
+};
+
 struct InputTemplateParameters
 {
     tchar separator;
