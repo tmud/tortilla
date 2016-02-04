@@ -268,6 +268,12 @@
     <ClInclude Include="src\plugins\pluginsTriggersHandler.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\common\md5.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\findDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -398,6 +404,9 @@
     </ClCompile>
     <ClCompile Include="src\highlightHelper.cpp">
       <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\md5.cpp">
+      <Filter>Libs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

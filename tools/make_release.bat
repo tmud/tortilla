@@ -51,6 +51,7 @@ xcopy ..\plugins\historyfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\colorgamecmd.lua tortilla\plugins /Y
 xcopy ..\plugins\bell.lua tortilla\plugins /Y
 xcopy ..\plugins\voice.lua tortilla\plugins /Y
+xcopy ..\plugins\pcrecalc.dll tortilla\plugins /Y
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y

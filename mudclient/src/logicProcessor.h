@@ -13,7 +13,7 @@ class LogicProcessorHost
 public:
     virtual void connectToNetwork(const tstring& address, int port) = 0;
     virtual void disconnectFromNetwork() = 0;
-    virtual void sendToNetwork(const tstring& data) = 0;    
+    virtual void sendToNetwork(const tstring& data) = 0;
     virtual MudViewString* getLastString(int view) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
@@ -78,6 +78,7 @@ class LogicProcessor : public LogicProcessorMethods
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
     LogicPipeline m_pipeline;
+    InputPlainCommands m_repeat_commands;
 
 public:
     LogicProcessor(LogicProcessorHost *host);

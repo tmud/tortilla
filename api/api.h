@@ -96,8 +96,7 @@ public:
 #define LUAT_PCRE       108
 #define LUAT_IMAGE      109
 #define LUAT_TRIGGER    110
-#define LUAT_VIEWSTRING 111
-#define LUAT_LAST       111
+#define LUAT_LAST       110
 
 class luaT_towstring 
 {
@@ -453,6 +452,11 @@ public:
     bool isPrompt()
     {
         runcmd("isPrompt");
+        return boolresult();
+    }
+    bool isDropped()
+    {
+        runcmd("isDropped");
         return boolresult();
     }
     void getPrompt(std::wstring *str)

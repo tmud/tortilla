@@ -340,6 +340,19 @@ BEGIN
     LTEXT           "Имя персонажа:",IDC_STATIC,8,117,56,8
 END
 
+IDD_FIND DIALOGEX 0, 0, 256, 63
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_FINDTEXT,62,7,187,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO_FINDWINDOW,61,24,148,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "От конца к началу",IDC_RADIO_END_BEGIN,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,61,42,97,8
+    CONTROL         "От начала к концу",IDC_RADIO_BEGIN_END,"Button",BS_AUTORADIOBUTTON,61,51,97,8
+    LTEXT           "Искать:",IDC_STATIC,7,8,30,8
+    LTEXT           "Место поиска:",IDC_STATIC,7,26,50,8
+    LTEXT           "Направление:",IDC_STATIC,7,43,48,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -457,6 +470,13 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 147
     END
+
+    IDD_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -481,6 +501,7 @@ BEGIN
     POPUP "Вид"
     BEGIN
         MENUITEM "&Панель инструментов",        ID_VIEW_TOOLBAR
+        MENUITEM "Поиск...\tCtrl+F",            ID_VIEW_FIND
         MENUITEM SEPARATOR
         MENUITEM "Окно &1",                     ID_WINDOW_1
         MENUITEM "Окно &2",                     ID_WINDOW_2
