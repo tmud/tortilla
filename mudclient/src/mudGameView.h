@@ -617,6 +617,16 @@ private:
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
         NetworkEvent event = m_network.translateEvent(lparam);
+
+        tstring val;
+        int2w(event, &val);
+        tstring x(L"EVENT : ");
+        x.append(val);
+        x.append(L"\r\n");
+
+        OutputDebugString(x.c_str()); //todo
+
+
         if (event == NE_NEWDATA)
         {
             // msdp data
@@ -632,10 +642,17 @@ private:
             // game data
             data = m_network.received();
             int text_len = data.getSize();
+
+            int2w(text_len, &val);
+            tstring x(L"RECEIVED : ");
+            x.append(val);
+            x.append(L"\r\n");
+            OutputDebugString(x.c_str()); //todo
+
             if (text_len == 0)
                 return 0;
 
-            //OUTPUT_BYTES(data->getData(), text_len, text_len, "DATA");
+            OUTPUT_BYTES(data.getData(), text_len, text_len, "DATA");
 
             MemoryBuffer wide;
             if (m_codepage == CPWIN)
@@ -652,8 +669,8 @@ private:
             data.clear();
 
             m_plugins.processStreamData(&wide);
-            const WCHAR* processeddata = (const WCHAR*)wide.getData();
-            m_processor.processNetworkData(processeddata, wcslen(processeddata));
+            //const WCHAR* processeddata = (const WCHAR*)wide.getData();
+            //m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
         else if (event == NE_CONNECT)
         {
