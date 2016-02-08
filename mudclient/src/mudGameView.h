@@ -617,42 +617,26 @@ private:
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
         NetworkEvent event = m_network.translateEvent(lparam);
-
-        tstring val;
-        int2w(event, &val);
-        tstring x(L"EVENT : ");
-        x.append(val);
-        x.append(L"\r\n");
-
-        OutputDebugString(x.c_str()); //todo
-
-
         if (event == NE_NEWDATA)
         {
             // msdp data
             MsdpNetwork* msdp = m_plugins.getMsdp();
             msdp->translateReceived(m_network.receivedMsdp());
-            DataQueue& data = msdp->getSendData();
-            if (data.getSize() > 0)
-            { 
-                m_network.sendplain((tbyte*)data.getData(), data.getSize());
-                data.clear();
+            DataQueue& md = msdp->getSendData();
+            if (md.getSize() > 0)
+            {
+                m_network.sendplain((tbyte*)md.getData(), md.getSize());
+                md.clear();
             }
 
             // game data
-            data = m_network.received();
+            DataQueue &data = m_network.received();
             int text_len = data.getSize();
-
-            int2w(text_len, &val);
-            tstring x(L"RECEIVED : ");
-            x.append(val);
-            x.append(L"\r\n");
-            OutputDebugString(x.c_str()); //todo
 
             if (text_len == 0)
                 return 0;
 
-            OUTPUT_BYTES(data.getData(), text_len, text_len, "DATA");
+            //OUTPUT_BYTES(data.getData(), text_len, text_len, "DATA");
 
             MemoryBuffer wide;
             if (m_codepage == CPWIN)
@@ -669,8 +653,8 @@ private:
             data.clear();
 
             m_plugins.processStreamData(&wide);
-            //const WCHAR* processeddata = (const WCHAR*)wide.getData();
-            //m_processor.processNetworkData(processeddata, wcslen(processeddata));
+            const WCHAR* processeddata = (const WCHAR*)wide.getData();
+            m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
         else if (event == NE_CONNECT)
         {
@@ -736,7 +720,6 @@ private:
         else if (id == 2)
         {
             m_processor.processStackTick();
-            //m_plugins.processToSend(&m_network); //todo
             m_view.updateSoftScrolling();
             for (int i=0,e=m_views.size();i<e;++i)
               m_views[i]->updateSoftScrolling();

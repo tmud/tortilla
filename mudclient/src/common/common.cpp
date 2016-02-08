@@ -210,8 +210,7 @@ int utf8_getbinlen(const utf8* str, int symbol)
         {
             int sym_len = 2;
             if ((c & 0xf0) == 0xe0) sym_len = 3;
-            else if ((c & 0xf8) == 0xf0) sym_len = 4;
-            else if (c >= 0xf8) break;         // error
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;            
             p += sym_len;
             symbol--;
         }

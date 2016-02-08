@@ -4,7 +4,7 @@
 #include "propertiesPages/propertiesData.h"
 #include "palette256.h"
 
-class LogsProcessor : private TempThread
+class LogsProcessor : private TempThread<false>
 {
 public:
     LogsProcessor();
@@ -20,7 +20,7 @@ private:
     void threadProc();
     void closeAllLogs();
     void saveAll();
-    void prepare(int id);    
+    void prepare(int id);
     void write(HANDLE file, const std::string &data);
     void closeReqLogs();
     void convertString(MudViewString* str, std::string* out);

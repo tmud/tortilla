@@ -125,8 +125,13 @@ void NetworkConnection::threadProc()
         SOCKET socket;
     public:
         autoclose(SOCKET s) : socket(s) {}
-        ~autoclose() { if (socket != INVALID_SOCKET) closesocket(socket); socket = INVALID_SOCKET; }
-    } ac(sock);
+        ~autoclose() {
+            if (socket != INVALID_SOCKET) { shutdown(socket, 2); closesocket(socket); }
+            socket = INVALID_SOCKET; 
+        }
+    };
+
+    autoclose ac(sock);
 
     // connecting
     sockaddr_in peer;
@@ -173,11 +178,6 @@ void NetworkConnection::threadProc()
     {
         sendEvent(NE_ERROR_CONNECT);
         return;
-        /*if (WSAGetLastError() != WSAEWOULDBLOCK)
-        {
-            sendEvent(NE_ERROR_CONNECT);
-            return;
-        }*/
     }
 
     {
@@ -187,7 +187,7 @@ void NetworkConnection::threadProc()
     sendEvent(NE_CONNECT);    
 
     fd_set set;
- 
+
     timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 100;
@@ -241,19 +241,17 @@ void NetworkConnection::threadProc()
             CSectionLock lock(m_cs_send);
             if (m_send_data.getSize() > 0)
             {
-                //OUTPUT_BYTES(m_send_data.getData(), sended, 32, "sended to net");
                 int sended = ::send(sock, (const char*)m_send_data.getData(), m_send_data.getSize(), 0);
                 if (sended == SOCKET_ERROR)
                 {
                     sendEvent(NE_DISCONNECT);
                     break;
                 }
+                //OUTPUT_BYTES(m_send_data.getData(), sended, 32, "sended to net");
                 m_send_data.truncate(sended);
             }
         }
     }
-    shutdown(sock, 2);
-    closesocket(sock);
 }
 
 Network::Network() : m_connection(2048), m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
@@ -270,6 +268,7 @@ Network::~Network()
 
 void Network::connect(const NetworkConnectData& data)
 {
+    init_mccp();
     m_connection.connect(data);
 }
 
@@ -487,7 +486,6 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         OUTPUT_OPTION(&e[1], "IAC WONT");
         if (e[1] == COMPRESS || e[1] == COMPRESS2)
         {
-            close_mccp();
             init_mccp();
         }
         if (e[1] == MSDP)
@@ -551,6 +549,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
 void Network::init_mccp()
 {
+    close_mccp();
     z_stream *zs = new z_stream();
     zs->next_in    =  NULL;
     zs->avail_in   =  0;
@@ -595,7 +594,6 @@ bool Network::process_mccp()
             int final_block = m_pMccpStream->avail_in;
             m_input_data.write(m_pMccpStream->next_in, final_block);
             m_mccp_data.truncate(final_block);
-            close_mccp();
             init_mccp();
             m_totalDecompressed += final_block;
         }

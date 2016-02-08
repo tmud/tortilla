@@ -66,7 +66,7 @@ struct NetworkConnectData
     UINT notifyMsg;
 };
 
-class NetworkConnection : private TempThread
+class NetworkConnection : private TempThread<false>
 {
 public:
     NetworkConnection(int receive_buffer);
@@ -76,10 +76,10 @@ public:
     void disconnect();
     void send(const tbyte* data, int len);
     int  receive(MemoryBuffer *data);
-private:    
+private:
     void threadProc();
     void sendEvent(NetworkEvent e);
-    NetworkConnectData m_connection;    
+    NetworkConnectData m_connection;
     CriticalSection m_cs_connect;
     CriticalSection m_cs_send;
     CriticalSection m_cs_receive;
@@ -132,7 +132,7 @@ private:
     MemoryBuffer m_mccp_buffer;             // to decompress MCCP data   
     DataQueue m_input_data;                 // accamulated data from network
     DataQueue m_receive_data;               // ready to get by app
-    
+
     DataQueue m_output_buffer;              // buffer to accumulate output data
     DataQueue m_msdp_data;                  // data of msdp protocol
 
