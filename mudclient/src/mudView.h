@@ -29,7 +29,7 @@ public:
     MudView(PropertiesElements *elements);
     ~MudView();
     void accLastString(parseData *parse_data);
-    void addText(parseData* parse_data, parseData *copy_data);
+    void addText(parseData* parse_data, parseData *copy_data, int *limited_strings = NULL);
     void pushText(parseData* parse_data);
     void clearText();
     void truncateStrings(int maxcount);
@@ -99,7 +99,7 @@ private:
     void updateScrollbar(int new_visible_line);
     void setScrollbar(DWORD position);
     void mouseWheel(WORD position);
-    void checkLimit();
+    int  checkLimit();
     void deleteBeginStrings(int count_from_begin);
     void startDraging();
     void stopDraging();

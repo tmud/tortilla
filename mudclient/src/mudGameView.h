@@ -1084,7 +1084,9 @@ private:
   
             parseData history;
             bool in_soft_scrolling = m_view.inSoftScrolling();
-            m_view.addText(parse_data, &history);
+            int limited = 0;
+            m_view.addText(parse_data, &history, &limited);
+            vs = vs - limited;
 
             if (last_updated)
                 m_history.deleteLastString();

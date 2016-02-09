@@ -66,7 +66,7 @@ int MudView::getStringsCount() const
     return m_strings.size();
 }
 
-void MudView::addText(parseData* parse_data, parseData *copy_data)
+void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_strings)
 {
     if (parse_data->strings.empty())
         return;
@@ -103,7 +103,9 @@ void MudView::addText(parseData* parse_data, parseData *copy_data)
         return;
     }
 
-    checkLimit();
+    int limited = checkLimit();
+    if (limited_strings)
+        *limited_strings = limited;
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
@@ -616,14 +618,16 @@ void MudView::mouseWheel(WORD position)
     Invalidate();
 }
 
-void MudView::checkLimit()
+int MudView::checkLimit()
 {
     int size = m_strings.size();
     if (size > propElements->propData->view_history_size)
     {
         size = size - propElements->propData->view_history_size;
         deleteBeginStrings(size);
+        return size;
     }
+    return 0;
 }
 
 void MudView::deleteBeginStrings(int count_from_begin)
