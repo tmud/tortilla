@@ -23,10 +23,10 @@ public:
         int wide_len = (len == -1) ? wcslen(wide) : len;
         convert(wide, wide_len);
     }
-    int convert(const wchar_t *wide, int wide_len)
+    void convert(const wchar_t *wide, int wide_len)
     {
         WideToUtf8Converter con;
-        return con.convert(&m_convertBuffer, wide, wide_len);
+        con.convert(&m_convertBuffer, wide, wide_len);
     }
     operator const char* () 
     {
@@ -45,14 +45,12 @@ class Utf8ToWideConverter
 {
 public:
     int convert(MemoryBuffer *output, const char *utf8, int utf8_len)
-    {        
+    {
         if (utf8_len > 0)
         {
             int len = u8string_testbin(utf8, utf8_len);
             if (len != utf8_len)
-            {
-                int x = 1; //todo
-            }
+                utf8_len = len;
         }
 
         int symbols_count = MultiByteToWideChar(CP_UTF8, 0, utf8, utf8_len, NULL, 0);
@@ -61,15 +59,14 @@ public:
         wchar_t* buffer = (wchar_t*)output->getData();
         MultiByteToWideChar(CP_UTF8, 0, utf8, utf8_len, buffer, buffer_required);
         buffer[symbols_count] = 0;
-        return symbols_count;
+        return utf8_len;
     }
 private:
-    typedef char utf8;
-    int u8string_testbin(const utf8* str, int len)
+    int u8string_testbin(const char* str, int len)
     {
         int strlen = 0;
-        const utf8* p = str;
-        const utf8* e = p + len;
+        const char* p = str;
+        const char* e = p + len;
         while (p != e)
         {
             int sym_len = 0;
@@ -103,10 +100,10 @@ public:
     {
         convert(utf8, -1);
     }
-    int convert(const char *utf8, int utf8_len = -1)
+    void convert(const char *utf8, int utf8_len = -1)
     {
         Utf8ToWideConverter con;
-        return con.convert(&m_convertBuffer, utf8, utf8_len);
+        con.convert(&m_convertBuffer, utf8, utf8_len);
     }
     operator const wchar_t* () const
     {

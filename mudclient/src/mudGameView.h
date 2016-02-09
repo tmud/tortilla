@@ -643,14 +643,14 @@ private:
             {
                 AnsiToWideConverter a2wc;
                 a2wc.convert(&wide, (char*)data.getData(), text_len);
+                data.clear();
             }
             else
             {
                 Utf8ToWideConverter u2w;
-                u2w.convert(&wide, (char*)data.getData(), text_len);
+                int converted = u2w.convert(&wide, (char*)data.getData(), text_len);
+                data.truncate(converted);
             }
-            //data.truncate(text_len);
-            data.clear();
 
             m_plugins.processStreamData(&wide);
             const WCHAR* processeddata = (const WCHAR*)wide.getData();
