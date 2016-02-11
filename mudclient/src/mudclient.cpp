@@ -56,7 +56,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lp
     initWinDbg();
 
 #ifdef _DEBUG
+#ifndef VLD
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#endif
 #endif
 
     HRESULT hRes = ::CoInitialize(NULL);

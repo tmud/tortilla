@@ -14,10 +14,17 @@
 #define _WIN32_IE	0x0501
 #define _RICHEDIT_VER	0x0200
 
+// Visual Studio Leak Detector
+//#define VLD
+
 #ifdef _DEBUG
+#ifndef VLD
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+#else
+#include "vld.h"
+#endif
 #endif
 
 #include <atlbase.h>

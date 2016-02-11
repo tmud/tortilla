@@ -94,7 +94,7 @@ int NetworkConnection::receive(MemoryBuffer *data)
 {
     assert(data);
     if (!connected())
-        { sendEvent(NE_ERROR_CONNECT); return 0; }
+        { sendEvent(NE_ERROR_CONNECT); return -1; }
     CSectionLock lock(m_cs_receive);
     data->copy(m_receive_data.getData(), m_receive_data.getSize());
     m_receive_data.clear();
@@ -184,7 +184,7 @@ void NetworkConnection::threadProc()
         CSectionLock lock(m_cs_connect);
         m_connected = true;
     }
-    sendEvent(NE_CONNECT);    
+    sendEvent(NE_CONNECT);
 
     fd_set set;
 
@@ -234,6 +234,11 @@ void NetworkConnection::threadProc()
              }
              if (received > 0)
                  sendEvent(NE_NEWDATA);
+             if (received == 0)
+             {
+                sendEvent(NE_DISCONNECT);
+                break;
+             }
         }
 
         // send data
@@ -264,6 +269,7 @@ m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(fals
 
 Network::~Network()
 {
+    disconnect();
 }
 
 void Network::connect(const NetworkConnectData& data)
@@ -298,7 +304,7 @@ NetworkEvent Network::translateEvent(LPARAM event)
             return NE_ERROR;
         if (result == -2)
             return NE_ERROR_MCCP;
-        return (result != 0) ? NE_NEWDATA : NE_NOEVENT;    
+        return (result != 0) ? NE_NEWDATA : NE_NOEVENT;
     }
     return ne;
 }
@@ -344,14 +350,14 @@ DataQueue& Network::receivedMsdp()
 
 int Network::read_data()
 {
-    if (!m_connection.receive(&m_input_buffer))
+    if (m_connection.receive(&m_input_buffer) < 0)
         return -1;
     int readed = m_input_buffer.getSize();
+    if (readed == 0)
+        return 0;
     m_totalReaded += readed;
     if (!m_mccp_on)
     {
-        if (readed == 0)
-            return 0;
         m_input_data.write(m_input_buffer.getData(), readed);
         m_totalDecompressed += readed;
     }

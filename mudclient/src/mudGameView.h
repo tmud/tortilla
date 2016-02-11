@@ -964,7 +964,8 @@ private:
                 return true;
             }
 
-            MudView &view = (m_history.IsWindowVisible()) ? m_history : m_view;
+            BOOL hv = m_history.IsWindowVisible();
+            MudView &view = (hv) ? m_history : m_view;
             int visible_string = view.getViewString();
             int page = view.getStringsOnDisplay();
             if (vkey == VK_PRIOR)
@@ -976,8 +977,12 @@ private:
                 int next_last = view.getLastString() + 1;
                 if (visible_string >= next_last)
                 {
-                    closeHistory();
-                    return true;
+                    if (hv)
+                    {
+                        closeHistory();
+                        return true;
+                    }
+                    visible_string = next_last;
                 }
             }
             view.setViewString(visible_string);
