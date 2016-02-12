@@ -20,7 +20,7 @@ private:
     bool read(void *p, unsigned int size);
 
 private:
-    void onInitSharedMemory(siz)
+    void onInitSharedMemory(void* buffer, size_t size)
     {
         m_shared_memory.lock();
         memset(m_shared_memory.ptr(), 0, m_shared_memory.size());

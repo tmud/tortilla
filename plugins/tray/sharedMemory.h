@@ -60,7 +60,7 @@ public:
 
          std::wstring event_name(global_name);
          event_name.append(L"_event");
-         m_change_event = CreateEvent(NULL, FALSE, FALSE, event_name.c_str());
+         m_change_event = CreateEvent(NULL, TRUE, FALSE, event_name.c_str());
          if (!m_change_event)
              return false;
 
@@ -68,7 +68,7 @@ public:
          m_map_file = OpenFileMapping(FILE_MAP_ALL_ACCESS, FALSE, global_name);
          if (!m_map_file)
          {
-             int header_size = sizeof(size_t) * 2;
+             size_t header_size = sizeof(size_t) * 2;
              m_map_file = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, size+header_size, global_name);
              if (!m_map_file)
                 return false;

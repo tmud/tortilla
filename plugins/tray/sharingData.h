@@ -100,6 +100,14 @@ struct SharingDataMessage
     }
 };
 
+struct SharingDataApps
+{
+    SharingDataApps() {}
+    std::wstring appid;
+
+};
+
+
 enum SharingCommands {
     SC_NONE = 0, SC_MESSAGE, SC_REGTRAY, SC_UNREGTRAY
 };
