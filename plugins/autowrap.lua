@@ -15,7 +15,7 @@ function autowrap.name()
 end
 
 function autowrap.version()
-  return '1.02'
+  return '1.03'
 end
 
 function autowrap.description()
@@ -82,7 +82,7 @@ local function divall(v, maxlen)
   local i,size = 1,v:size()
   while i <= size do
     v:select(i)
-    if v:getTextLen() > maxlen then
+    if not v:isDropped() and v:getTextLen() > maxlen then
       div(v, maxlen)
       size = v:size()
     end

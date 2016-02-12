@@ -9,13 +9,15 @@ int get_name(lua_State *L)
 
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Фильтрует(отбрасывает) prompt-строку, если она идет подряд без изменений.\r\nПлагин позволяет не забивать окно мада строками prompt, если используются\r\nтриггеры с командой #drop.");
+    luaT_pushwstring(L, L"Фильтрует(отбрасывает) prompt-строку, если она идет подряд без изменений.\r\n"
+        L"Плагин позволяет не забивать окно мада строками prompt, если используются триггеры\r\n"
+        L"с командой #drop, а также различные фильтры, которые убирают целиком строку.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.01");
+    luaT_pushwstring(L, L"1.02");
     return 1;
 }
 
@@ -30,6 +32,8 @@ void checkDoublePrompt(luaT_ViewData &vd)
     for (int i = 1; i <= strings_count; ++i)
     {
         vd.select(i);
+        vd.getText(&text);
+
         if (vd.isGameCmd())
         {
             last_prompt.clear();
@@ -37,6 +41,11 @@ void checkDoublePrompt(luaT_ViewData &vd)
             continue; 
         }
         vd.getText(&text);
+        if (vd.isDropped())
+        {
+            empty.push_back(i);
+            continue;
+        }
         if (text.empty())
         {
             empty.push_back(i);
@@ -64,6 +73,12 @@ void checkDoublePrompt(luaT_ViewData &vd)
                 vd.deleteString();
             }
             strings_count = vd.size();
+            if (strings_count == 2)
+            {
+                int x = 1;
+            }
+            if (!strings_count)
+                break;
             i = empty[0];
             empty.clear();
         }
