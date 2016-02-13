@@ -21,47 +21,166 @@ int get_version(lua_State *L)
     return 1;
 }
 
+
+//std::wstring last_string;
 std::wstring last_prompt;
+int empty_counter = 0;
+/*
+void saveLastString(luaT_ViewData &vd)
+{
+    if (vd.isLast())
+        last_string.clear();
+    else
+    {
+        int strings_count = vd.size();
+        vd.select(strings_count);
+        if (vd.isDropped()) 
+          last_string.clear();
+        else {
+          std::wstring text;
+          vd.getText(&text);
+          last_string.append(text);
+        }
+    }
+}
+
+void clearLastString()
+{
+    last_string.clear();
+}
+*/
+int insertEmpty(luaT_ViewData &vd)
+{
+    int inserted = empty_counter;
+    while (empty_counter > 0)
+    {
+       vd.insertString();
+       empty_counter--;        
+    }
+    last_prompt.clear();
+    return inserted;
+}
+
+void clearEmpty()
+{
+    empty_counter = 0;
+    last_prompt.clear();
+}
+
+//------------------------------------------------------------------------
 void checkDoublePrompt(luaT_ViewData &vd)
 {
     int strings_count = vd.size();
-    if (strings_count == 0) return;
+    if (strings_count == 0)
+        return;
 
-    std::vector<int> empty;
     std::wstring text;
+    std::vector<int> not_empty;
+    int dropped = 0;
     for (int i = 1; i <= strings_count; ++i)
     {
         vd.select(i);
+        if (vd.isDropped())
+         {
+             dropped++;
+             continue;
+        }
+        if (vd.isGameCmd())
+            { not_empty.push_back(i); continue; }
+        if ((i == 1 && vd.isFirst()) || 
+           (i == strings_count && !vd.isLast()))
+            { not_empty.push_back(i); continue; }
         vd.getText(&text);
+        if (!text.empty()) 
+            { not_empty.push_back(i); }
+    }
+
+    if (not_empty.empty())                // all vd strings are empty
+    {
+        // count empty strings
+        empty_counter += (strings_count - dropped);
+        // delete all strings from vd
+        for (int j=strings_count; j >= 1; --j)
+        {
+            vd.select(j);
+            vd.deleteString();
+        }
+        return;
+    }
+
+    // check not empty
+    for (int i=0,e=not_empty.size();i<e;++i)
+    {
+        vd.select(not_empty[i]);
+        if (vd.isPrompt())
+        {
+            if (last_prompt.empty())
+            {
+                vd.getPrompt(&last_prompt);            
+            }
+            
+
+        }
+    }
+
+
+
+    /*
+    for (int i = 1; i <= strings_count; ++i)
+    {
+        vd.select(i);
+        if (vd.isDropped())
+            continue;
 
         if (vd.isGameCmd())
         {
-            last_prompt.clear();
-            empty.clear();
-            continue; 
-        }
-        vd.getText(&text);
-        if (vd.isDropped())
-        {
-            empty.push_back(i);
+            if (i == 1 && vd.isFirst())
+            {
+              clearEmpty();
+              continue;
+            }
+            int count = insertEmpty(vd);
+            strings_count += count;
+            i = i + count;
             continue;
+        }       
+
+        if (i == strings_count && !vd.isLast())
+        {
+            break;
+        }
+
+        if (i == 1 && vd.isFirst()) {
+           vd.getText(&text);
+           last_string.append(text);
+           text.swap(last_string);     // text with first full string
+           last_string.clear();
+        } else {
+           vd.getText(&text);
         }
         if (text.empty())
         {
-            empty.push_back(i);
+            empty_counter++;
+            vd.deleteString();
+            strings_count = vd.size();
+            i = i - 1;
             continue;
         }
+
         if (!vd.isPrompt())
         {
-            last_prompt.clear();
-            empty.clear();
+            int count = insertEmpty(vd);
+            strings_count = vd.size();
+            i = i + count;
             continue;
         }
         if (last_prompt.empty())
         {
             vd.getPrompt(&last_prompt);
+
             continue;
         }
+
         std::wstring prompt;
         vd.getPrompt(&prompt);
         if (prompt == last_prompt)
@@ -72,11 +191,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
                 vd.select(empty[j]);
                 vd.deleteString();
             }
-            strings_count = vd.size();
-            if (strings_count == 2)
-            {
-                int x = 1;
-            }
+            strings_count = vd.size();           
             if (!strings_count)
                 break;
             i = empty[0];
@@ -88,6 +203,19 @@ void checkDoublePrompt(luaT_ViewData &vd)
             empty.clear();
         }
     }
+
+    if (vd.isLast())
+        last_string.clear();
+    else
+    {
+        vd.select(strings_count);
+        if (vd.isDropped()) 
+          last_string.clear();
+        else {
+          vd.getText(&text);
+          last_string.append(text);
+        }
+    }*/
 }
 
 int afterstr(lua_State *L)
@@ -102,12 +230,20 @@ int afterstr(lua_State *L)
     return 0;
 }
 
+int disconnect(lua_State *L)
+{
+    clearEmpty();
+    //clearLastString();
+    return 0;
+}
+
 static const luaL_Reg prompt_methods[] =
 {
     { "name", get_name },
     { "description", get_description },
     { "version", get_version },
     { "after", afterstr },
+    { "disconnect", disconnect },
     { NULL, NULL }
 };
 

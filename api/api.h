@@ -537,10 +537,25 @@ public:
         luaT_run(L, "createString", "obb", system, gamecmd);
         return boolresult();
     }
+    bool insertString()
+    {
+        runcmd("insertString");
+        return boolresult();
+    }
+    bool insertString(bool system, bool gamecmd)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "insertString", "obb", system, gamecmd);
+        return boolresult();
+    }
     bool deleteString()
     {
         runcmd("deleteString");
         return boolresult();
+    }
+    void deleteAllStrings()
+    {
+        runcmd("deleteAllStrings");
     }
     bool find(Pcre *p)
     {

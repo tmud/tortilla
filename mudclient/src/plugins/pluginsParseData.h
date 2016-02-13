@@ -95,22 +95,36 @@ public:
                 ss[selected-1]->next = s->next;
             delete s;
             ss.erase(ss.begin() + selected);
+            if (tdata)
+                tdata->markDeleted(selected);
             if (selected == 0)
                 pdata->update_prev_string = false;
+            if (ss.empty() || selected == last)
+                pdata->last_finished = true;
         }
         selected = -1;
     }
 
-    void insert_new_string(bool gamecmd, bool system)
+    void deleteall()
+    {
+        std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) {delete s;});
+        plugins_strings.clear();
+        pdata->clear();
+        if (tdata)
+            tdata->markDeletedAll();
+        selected = -1;
+    }
+
+    void insert_new_string(bool gamecmd, bool system, int delta)
     {
         if (isselected())
         {
-            plugins_strings.insert(plugins_strings.begin() + selected + 1, new PluginViewString);
+            plugins_strings.insert(plugins_strings.begin() + selected + delta, new PluginViewString);
             parseDataStrings &ss = pdata->strings;
             MudViewString *s = new MudViewString;
             s->gamecmd = gamecmd;
             s->system = system;
-            ss.insert(ss.begin() + selected + 1, s);
+            ss.insert(ss.begin() + selected + delta, s);
         }
     }
 
@@ -151,28 +165,15 @@ public:
 
     int get_params()
     {
-        if (!tdata) 
-            return 0;
-        if (isselected())
-        {
-            triggerParseDataString *s = tdata->at(selected);
-            return s->params.size();
-        }
+        if (tdata && isselected())
+            return tdata->getParameters(selected);
         return 0;
     }
 
     bool get_parameter(int index, tstring* param)
     {
-        if (isselected())
-        {
-            triggerParseDataString *s = tdata->at(selected);
-            int count = s->params.size();
-            if (index >= 1 && index <= count)
-            {
-                param->assign(s->params[index-1]);
-                return true;
-            }
-        }
+        if (tdata && isselected())
+            return tdata->getParameter(selected, index, param);
         return false;
     }
 
@@ -182,10 +183,10 @@ public:
         if (tdata && isselected())
         {
             MudViewString*s = getselected();
-            triggerParseDataString *ts = tdata->at(selected);
-            tstring md5;
+            tstring md5, crc;
             s->getMd5(&md5);
-            return (md5 == ts->crc) ? ISC_NOTCHANGED : ISC_CHANGED;
+            tdata->getCRC(selected, &crc);
+            return (md5 == crc) ? ISC_NOTCHANGED : ISC_CHANGED;
         }
         return ISC_UNKNOWN;
     }

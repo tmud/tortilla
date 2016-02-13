@@ -12,7 +12,6 @@ PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_current_compare_pos(0), m
 PluginsTrigger::~PluginsTrigger()
 {
     m_parseData.strings.clear();
-    std::for_each(m_triggerParseData.begin(), m_triggerParseData.end(), [](triggerParseDataString* tpd) { delete tpd;} );
     m_trigger_func_ref.unref(L);
 }
 
@@ -60,8 +59,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
             }
         }
         int count = m_compare_objects.size();
-        m_triggerParseData.resize(count, NULL);
-        for (int i=0;i<count;++i) { m_triggerParseData[i] = new triggerParseDataString;  } 
+        m_triggerParseData.init(count);
         m_enabled = true;
         return true;
     }
@@ -74,7 +72,7 @@ void PluginsTrigger::reset()
     m_parseData.strings.clear();
     m_parseData.update_prev_string = false;
     m_parseData.last_finished = true;
-    std::for_each(m_triggerParseData.begin(), m_triggerParseData.end(), [](triggerParseDataString* tpd) {tpd->clear();} );
+    m_triggerParseData.reset();
     m_triggered = false;
 }
 
@@ -114,7 +112,7 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
         m_parseData.strings.push_back(cd.string);
         m_parseData.last_finished = !incompl_flag;
 
-        triggerParseDataString* tpd = m_triggerParseData[m_current_compare_pos];
+        triggerParseDataString* tpd = m_triggerParseData.get(m_current_compare_pos);
         co.getParameters(&tpd->params);
         cd.string->getMd5(&tpd->crc);
 

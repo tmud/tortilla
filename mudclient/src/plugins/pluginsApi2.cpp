@@ -711,7 +711,7 @@ int vd_deleteAllBlocks(lua_State *L)
     return pluginInvArgs(L, L"viewdata:deleteAllBlocks");
 }
 
-int vd_createString(lua_State *L)
+int vd_createStringEx(lua_State *L, const tchar* f, int delta)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA) || luaT_check(L, 3, LUAT_VIEWDATA, LUA_TBOOLEAN, LUA_TBOOLEAN))
     {
@@ -724,13 +724,23 @@ int vd_createString(lua_State *L)
         }
         if (pdata->getselected_pvs())
         {
-            pdata->insert_new_string(gamecmd, system);
+            pdata->insert_new_string(gamecmd, system, delta);
             ok = true;
         }
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
-    return pluginInvArgs(L, L"viewdata:createString");
+    return pluginInvArgs(L, f);
+}
+
+int vd_createString(lua_State *L)
+{
+    return vd_createStringEx(L, L"viewdata:createString", 1);
+}
+
+int vd_insertString(lua_State *L)
+{
+    return vd_createStringEx(L, L"viewdata:insertString", 0);
 }
 
 int vd_deleteString(lua_State *L)
@@ -748,6 +758,17 @@ int vd_deleteString(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, L"viewdata:deleteString");
+}
+
+int vd_deleteAllStrings(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+         pdata->deleteall();
+         return 0;
+    }
+    return pluginInvArgs(L, L"viewdata:deleteAllStrings");
 }
 
 int vd_find(lua_State *L)
@@ -951,7 +972,9 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteAllBlocks", vd_deleteAllBlocks);
     regFunction(L, "copyBlock", vd_copyBlock);
     regFunction(L, "deleteString", vd_deleteString);
+    regFunction(L, "deleteAllStrings", vd_deleteAllStrings);
     regFunction(L, "createString", vd_createString);
+    regFunction(L, "insertString", vd_insertString);
     regFunction(L, "find", vd_find);
     regFunction(L, "getBlockPos", vd_getBlockPos);
     regFunction(L, "setNext", vd_setNext);
