@@ -88,6 +88,10 @@ void MudView::addText(parseData* parse_data, parseData *copy_data)
             copy_data->strings[i] = hs;
         }
     }
+
+    if (parse_data->strings.empty())
+        return;
+
     pushText(parse_data);
 
     if (m_use_softscrolling) {

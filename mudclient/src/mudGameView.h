@@ -962,13 +962,15 @@ private:
             int vs = m_view.getViewString();
             bool last = m_view.isLastString();
             bool last_updated = m_view.isLastStringUpdated();
-  
+
             parseData history;
             bool in_soft_scrolling = m_view.inSoftScrolling();
             m_view.addText(parse_data, &history);
 
             if (last_updated)
                 m_history.deleteLastString();
+            if (history.strings.empty())
+                return;
             m_history.pushText(&history);
 
             checkHistorySize();
