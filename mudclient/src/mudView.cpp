@@ -70,8 +70,6 @@ void MudView::addText(parseData* parse_data, parseData *copy_data)
     if (parse_data->strings.empty())
         return;
 
-    m_last_string_updated = false;
-
     removeDropped(parse_data);
     calcStringsSizes(parse_data->strings);
     if (copy_data)
@@ -92,6 +90,7 @@ void MudView::addText(parseData* parse_data, parseData *copy_data)
     if (parse_data->strings.empty())
         return;
 
+    m_last_string_updated = false;
     pushText(parse_data);
 
     if (m_use_softscrolling) {
