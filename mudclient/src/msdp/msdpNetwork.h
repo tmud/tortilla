@@ -6,9 +6,9 @@ class MsdpNetwork
 public:
     MsdpNetwork();
     ~MsdpNetwork();
-    bool state() const { return m_state; }
-    void processReceived(Network *network);
-    void sendExist(Network *network);
+    bool state() const { return m_state; }    
+    void translateReceived(DataQueue& msdp_data);
+    DataQueue& getSendData();
     void send_varval(const utf8* var, const utf8* val);
     void send_varvals(const utf8* var, const std::vector<u8string>& vals);
     void report(Plugin* p, std::vector<u8string> *report);
@@ -19,7 +19,7 @@ public:
     void unloadPlugins();
 
 private:
-    void translate(DataQueue *msdp);
+    void translate(DataQueue& msdp);
     void send_begin();
     void send_end();
     void send_param(tbyte param, const char* param_text);
@@ -30,7 +30,6 @@ private:
     };
     bool process_var(cursor& c);
     bool process_val(cursor& c);
-
     void releaseReports();
 
 private:

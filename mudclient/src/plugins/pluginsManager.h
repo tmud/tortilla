@@ -29,9 +29,7 @@ public:
     void processDisconnectEvent();
     void processTick();
     void processPluginsMethod(const char* method, int args);
-    void processPluginMethod(Plugin *p, char* method, int args);
-    void processReceived(Network *network);
-    void processToSend(Network* network);
+    void processPluginMethod(Plugin *p, char* method, int args);   
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:

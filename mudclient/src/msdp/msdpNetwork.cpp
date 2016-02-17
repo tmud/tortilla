@@ -17,27 +17,21 @@ MsdpNetwork::~MsdpNetwork()
     releaseReports();
 }
 
-void MsdpNetwork::processReceived(Network *network)
+void MsdpNetwork::translateReceived(DataQueue& msdp_data)
 {
-    DataQueue *msdp_data = network->receive_msdp();
-    if (msdp_data->getSize() > 0)
+    if (msdp_data.getSize() > 0)
         translate(msdp_data);
-    sendExist(network);
 }
 
-void MsdpNetwork::sendExist(Network *network)
+DataQueue& MsdpNetwork::getSendData()
 {
-    if (m_to_send.getSize() > 0)
-    {
-        network->sendplain((const tbyte*)m_to_send.getData(), m_to_send.getSize());
-        m_to_send.clear();
-    }
+    return m_to_send;
 }
 
-void MsdpNetwork::translate(DataQueue *msdp)
+void MsdpNetwork::translate(DataQueue& msdp)
 {
-    const tbyte* data = (const tbyte*)msdp->getData();
-    int len = msdp->getSize();
+    const tbyte* data = (const tbyte*)msdp.getData();
+    int len = msdp.getSize();
     //OUTPUT_BYTES(data, len, len, "MSDP");
 
     while (len > 0)
@@ -45,7 +39,7 @@ void MsdpNetwork::translate(DataQueue *msdp)
         if (len < 3 || data[0] != IAC || data[2] != MSDP)
         {
             assert(false);
-            msdp->clear();
+            msdp.clear();
             return;
         }
 
@@ -62,12 +56,12 @@ void MsdpNetwork::translate(DataQueue *msdp)
                     break;
                 }
             }
-            msdp->truncate(len);
+            msdp.truncate(len);
         }
         else if (cmd == DO)
         {
             m_state = true;
-            msdp->truncate(3);
+            msdp.truncate(3);
             send_varval("CLIENT_NAME", "TORTILLA");
             send_varval("CLIENT_VERSION", TW2U(TORTILLA_VERSION));
             tortilla::getPluginsManager()->processPluginsMethod("msdpon", 0);
@@ -75,18 +69,18 @@ void MsdpNetwork::translate(DataQueue *msdp)
         else if (cmd == DONT)
         {
             m_state = false;
-            msdp->truncate(3);
+            msdp.truncate(3);
             tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
             releaseReports();
         }
         else
         {
             assert(false);
-            msdp->clear();
+            msdp.clear();
             return;
         }
-        data = (const tbyte*)msdp->getData();
-        len = msdp->getSize();
+        data = (const tbyte*)msdp.getData();
+        len = msdp.getSize();
     }
 }
 

@@ -271,6 +271,9 @@
     <ClInclude Include="src\common\md5.h">
       <Filter>Libs</Filter>
     </ClInclude>
+    <ClInclude Include="src\findDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">

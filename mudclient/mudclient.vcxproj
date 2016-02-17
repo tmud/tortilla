@@ -156,6 +156,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\common\tokenizer.h" />
     <ClInclude Include="src\common\toolbarEx.h" />
     <ClInclude Include="src\compareObject.h" />
+    <ClInclude Include="src\findDlg.h" />
     <ClInclude Include="src\helpManager.h" />
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />

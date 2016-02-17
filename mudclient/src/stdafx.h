@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98beta5"
+#define TORTILLA_VERSION L"0.98b23"
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -14,10 +14,17 @@
 #define _WIN32_IE	0x0501
 #define _RICHEDIT_VER	0x0200
 
+// Visual Studio Leak Detector
+//#define VLD
+
 #ifdef _DEBUG
+#ifndef VLD
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+#else
+#include "vld.h"
+#endif
 #endif
 
 #include <atlbase.h>
@@ -28,6 +35,7 @@
 #include <atldlgs.h>
 #include <atlctrlw.h>
 #include <atlmisc.h>
+//#include <atlcrack.h>
 
 #include "resource.h"
 
@@ -40,6 +48,7 @@
 #include <algorithm>
 #include <set>
 #include <deque>
+#include <functional>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;

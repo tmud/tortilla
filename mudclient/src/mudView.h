@@ -21,12 +21,15 @@ class MudView : public CWindowImpl<MudView>
     std::vector<int> m_drag_beginline_len;
     std::vector<int> m_drag_endline_len;
 
+    int m_find_string_index;
+    int m_find_start_pos, m_find_end_pos;
+
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
     MudView(PropertiesElements *elements);
     ~MudView();
     void accLastString(parseData *parse_data);
-    void addText(parseData* parse_data, parseData *copy_data);
+    void addText(parseData* parse_data, parseData *copy_data, int *limited_strings = NULL);
     void pushText(parseData* parse_data);
     void clearText();
     void truncateStrings(int maxcount);
@@ -45,6 +48,9 @@ public:
     void setSoftScrollingMode(bool mode);
     bool inSoftScrolling() const;
     bool isDragMode() const;
+    int  findAndSelectText(int from, int direction, const tstring& text);
+    int  getCurrentFindString();
+    void clearFind();
 
 private:
 	BEGIN_MSG_MAP(MudView)
@@ -93,7 +99,7 @@ private:
     void updateScrollbar(int new_visible_line);
     void setScrollbar(DWORD position);
     void mouseWheel(WORD position);
-    void checkLimit();
+    int  checkLimit();
     void deleteBeginStrings(int count_from_begin);
     void startDraging();
     void stopDraging();
@@ -105,8 +111,9 @@ private:
     enum dragline { BEGINLINE = 0, ENDLINE };
     int   calcDragSym(int x, dragline type) const;
     void  calcDragLine(int line, dragline type);
-    void  renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
-    void  stopSoftScroll();    
+    void  calcDragArray(MudViewString* s, std::vector<int> &ld);   
+    void renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
+    void stopSoftScroll();
 };
 
 class MudViewHandler

@@ -2,7 +2,7 @@
 
 #include "common/tempThread.h"
 
-class BeepTasks : public TempThread
+class BeepTasks : public TempThread<true>
 {
     CRITICAL_SECTION m_cs;
     typedef std::pair<DWORD,DWORD> beep_data;
@@ -16,7 +16,7 @@ public:
        run(); 
     }
     ~BeepTasks() 
-    { 
+    {
         stop();
         wait();
         CloseHandle(m_event);

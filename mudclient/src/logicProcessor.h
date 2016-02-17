@@ -78,6 +78,7 @@ class LogicProcessor : public LogicProcessorMethods
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
     LogicPipeline m_pipeline;
+    InputPlainCommands m_repeat_commands;
 
 public:
     LogicProcessor(LogicProcessorHost *host);

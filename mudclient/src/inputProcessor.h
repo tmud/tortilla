@@ -45,6 +45,12 @@ public:
     std::vector<tstring>* ptr() {
         return this;
     }
+    void repeat(size_t count, const tstring& cmd) {
+        size_t start = base::size();
+        base::resize(start + count);
+        for (size_t i=0; i<count; ++i)
+           at(start+i) = cmd;
+    }
 };
 
 struct InputTemplateParameters
@@ -130,6 +136,7 @@ private:
     bool isbracket(const tchar *p) const;
     bool isopenorspace(const tchar *p) const;
     bool iscloseorspace(const tchar *p) const;
+    bool isbracketorspace(const tchar *p) const;
 };
 
 class InputCommandVarsProcessor

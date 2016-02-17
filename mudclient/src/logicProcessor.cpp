@@ -29,6 +29,12 @@ void LogicProcessor::processTick()
         }
         processCommands(wait_cmds);
     }
+    if (!m_repeat_commands.empty())
+    {
+        processCommands(m_repeat_commands);
+        m_repeat_commands.clear();
+    }
+
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -117,7 +123,32 @@ void LogicProcessor::runCommands(InputCommands& cmds)
         }
 
         if (cmd->system)
+        {
+            // check repeat commands
+            if (isOnlyDigits( cmd->command))
+            {
+                int repeats = 0;
+                w2int(cmd->command, &repeats);
+                tstring newcmd;
+                std::vector<tstring>& pl = cmd->parameters_list;
+                for (int i=0,e=pl.size(); i<e; ++i)
+                {
+                    if (i!=0) newcmd.append(L" ");
+                    newcmd.append(pl[i]);
+                }
+                if (repeats == 0 && newcmd.empty())
+                {
+                    m_repeat_commands.clear();
+                    return;
+                }
+                if (repeats > 0 && repeats <= 100)
+                {
+                    m_repeat_commands.repeat(repeats, newcmd);
+                    return;
+                }
+            }
             processSystemCommand(cmd); //it is system command for client
+        }
         else
             processGameCommand(cmd);   // it is game command
     }

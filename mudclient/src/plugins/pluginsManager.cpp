@@ -658,16 +658,6 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     modules[plugin_index].state = 0;
 }
 
-void PluginsManager::processReceived(Network *network)
-{
-    m_msdp_network.processReceived(network);
-}
-
-void PluginsManager::processToSend(Network* network)
-{
-    m_msdp_network.sendExist(network);
-}
-
 void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {
     if (parts.empty())
