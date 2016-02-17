@@ -63,6 +63,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
             continue;
         }
         todelete.clear();
+        last_prompt.clear();
     }
 /*
         static int k = 0;
@@ -94,7 +95,7 @@ void checkDoublePrompt(luaT_ViewData &vd)
     {
         if (todelete.size() == strings_count)
         {
-            vd.deleteAllStrings();        
+            vd.deleteAllStrings();
         }
         else
         {
