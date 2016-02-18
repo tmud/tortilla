@@ -68,11 +68,11 @@ int MudView::getStringsCount() const
 
 void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_strings)
 {
+    removeDropped(parse_data);
     if (parse_data->strings.empty())
         return;
-
-    removeDropped(parse_data);
     calcStringsSizes(parse_data->strings);
+
     if (copy_data)
     {
         copy_data->update_prev_string = parse_data->update_prev_string;
@@ -87,9 +87,6 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
             copy_data->strings[i] = hs;
         }
     }
-
-    if (parse_data->strings.empty())
-        return;
 
     m_last_string_updated = false;
     pushText(parse_data);
@@ -253,6 +250,8 @@ void MudView::updateProps()
 void MudView::removeDropped(parseData* parse_data)
 {
     parseDataStrings &pds = parse_data->strings;
+    if (pds.empty())
+        return;
     for (int i=pds.size()-1; i>=0; --i)
     {
         MudViewString *string = pds[i];

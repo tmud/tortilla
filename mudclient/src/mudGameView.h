@@ -1092,11 +1092,11 @@ private:
             int limited = 0;
             m_view.addText(parse_data, &history, &limited);
             vs = vs - limited;
+            if (history.strings.empty())
+                return;
 
             if (last_updated)
                 m_history.deleteLastString();
-            if (history.strings.empty())
-                return;
             m_history.pushText(&history);
 
             checkHistorySize();
