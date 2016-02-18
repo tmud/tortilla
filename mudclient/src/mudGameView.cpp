@@ -246,9 +246,9 @@ void MudGameView::findText()
     if (view == 0 && !m_history.IsWindowVisible())
         showHistory(new_find, 0);
 
-    int count = m_history.getStringsCount();
-    int delta = m_history.getStringsOnDisplay() / 2;  // center on the screen
-    int center_vs = new_find + delta;                 // пробуем найденную строку поставить по центру
+    int count = v->getStringsCount();
+    int delta = v->getStringsOnDisplay() / 2;  // center on the screen
+    int center_vs = new_find + delta;          // пробуем найденную строку поставить по центру
     if (center_vs < count)
         new_find = center_vs;
     else
