@@ -11,20 +11,29 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
         return false;
 
     m_key = key;
-    bool result = false;
     if (key.at(0) == L'$')      // regexp marker
     {
-       result = m_pcre.setRegExp(key.substr(1), true);
-       if (result)
-           m_std_regexp = true;
+       ParamsHelper ph(key, ParamsHelper::DETECT_ANYID);
+       if (ph.getSize() == 0)
+       {
+           const tchar *k = key.c_str();
+           //.*,[^, +,]+
+           if (wcsstr(k, L".*") || wcsstr(k, L" +") || wcsstr(k, L"]+") || wcsstr(k, L"[^"))
+           {
+               if (m_pcre.setRegExp(key.substr(1), true))
+               {
+                   m_std_regexp = true;
+                   return true;
+               }
+           }
+       }
     }
-    else
-    {
-       tstring regexp;
-       createCheckPcre(key, endline_mode, &regexp);
-       checkVars(&regexp);
-       result = m_pcre.setRegExp(regexp, true);
-    }
+
+    tstring regexp;
+    createCheckPcre(key, endline_mode, &regexp);
+    checkVars(&regexp);
+    bool result = m_pcre.setRegExp(regexp, true);
+
     assert(result);
     return result;
 }
