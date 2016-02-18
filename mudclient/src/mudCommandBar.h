@@ -103,6 +103,11 @@ public:
             if (h[last] == cmd)
                 return;
         }
+
+        // remove doubles
+        std::vector<tstring>::iterator it = std::find(h.begin(), h.end(), cmd);
+        if (it != h.end())
+            h.erase(it);
         h.push_back(cmd);
 
         int size = h.size();
