@@ -5,7 +5,8 @@
 
 LogicHelper::LogicHelper()
 {
-     m_if_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|!=|<|>|<=|>=) *('.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
+     //m_if_regexp.setRegExp(L"^(.*?|'.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|==|!=|<|>|<=|>=) *(.*?|'.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
+     m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<|>|<=|>=) *([^ =~!<>]*)$", true);
      m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
 }
 
@@ -154,7 +155,7 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
          {
              int n1 = _wtoi(p1.c_str());
              int n2 = _wtoi(p2.c_str());
-             if (n1 == n2 && (cond == L"=" || cond == L"<=" || cond == L">="))
+             if (n1 == n2 && (cond == L"=" || cond == L"==" || cond == L"<=" || cond == L">="))
                  return LogicHelper::IF_SUCCESS;
              if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!="))
                  return LogicHelper::IF_SUCCESS;
