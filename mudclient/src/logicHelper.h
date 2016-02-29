@@ -147,6 +147,7 @@ private:
     LogicWrapperTimers m_timers;
     Pcre16 m_if_regexp;
     Pcre16 m_math_regexp;
+    Pcre16 m_params_regexp;
     Ticker m_ticker;
 };
 

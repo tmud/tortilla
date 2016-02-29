@@ -5,9 +5,9 @@
 
 LogicHelper::LogicHelper()
 {
-     //m_if_regexp.setRegExp(L"^(.*?|'.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|==|!=|<|>|<=|>=) *(.*?|'.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
-     m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<|>|<=|>=) *([^ =~!<>]*)$", true);
-     m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
+     m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<|>|<=|>=) *([^ =~!<>]*)$", true);     
+     m_math_regexp.setRegExp(L"^([^+-/*]*) *([+-/*]) *([^+-/*]*)$", true);
+     m_params_regexp.setRegExp(L"['{\"]?(.*['}\"]?[^'}\"])", true);
 }
 
 bool LogicHelper::processAliases(const InputCommand* cmd, InputCommands* newcmds)
@@ -149,6 +149,23 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
+     // check brackets in parameters - get params without brackets
+     if (!p1.empty()) {
+     m_params_regexp.find(p1);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::IF_ERROR;
+     m_params_regexp.getString(1, &p1);
+     tstring_trim(&p1);
+     }
+
+     if (!p2.empty()) {
+     m_params_regexp.find(p2);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::IF_ERROR;
+     m_params_regexp.getString(1, &p2);
+     tstring_trim(&p1);
+     }
+
      if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
          if (isInt(p1) && isInt(p2))
@@ -157,9 +174,9 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
              int n2 = _wtoi(p2.c_str());
              if (n1 == n2 && (cond == L"=" || cond == L"==" || cond == L"<=" || cond == L">="))
                  return LogicHelper::IF_SUCCESS;
-             if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!="))
+             if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!=" || cond == L"!="))
                  return LogicHelper::IF_SUCCESS;
-             if (n1 > n2 && (cond == L">" || cond == L">=" || cond == L"!="))
+             if (n1 > n2 && (cond == L">" || cond == L">=" || cond == L"!=" || cond == L"!="))
                  return LogicHelper::IF_SUCCESS;
           }
           else
@@ -186,6 +203,23 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(1, &p1);  //1st parameter
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
+
+      // check brackets in parameters - get params without brackets
+     if (!p1.empty()) {
+     m_params_regexp.find(p1);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::MATH_ERROR;
+     m_params_regexp.getString(1, &p1);
+     tstring_trim(&p1);
+     }
+
+     if (!p2.empty()) {
+     m_params_regexp.find(p2);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::MATH_ERROR;
+     m_params_regexp.getString(1, &p2);
+     tstring_trim(&p2);
+     }
 
      if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {

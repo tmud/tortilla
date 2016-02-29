@@ -24,7 +24,7 @@ public:
     bool isNumber(int index) const { const tstring& p = cmd->parameters_list[index]; return isItNumber(p); }
     double toNumber(int index) const { const tstring& p = cmd->parameters_list[index]; double v = 0; w2double(p, &v); return v; }
     void invalidargs() { error(L"Некорректный набор параметров."); }
-    void invalidoperation() { error(L"Некорректная операция."); }
+    void invalidoperation() { error(L"Невозможно вычислить."); }
     void invalidvars() { error(L"Используются неизвестные переменные."); }
     void blockedbyprops() { error(L"Команда не выполнена (открыто окно настроек)."); }
 private:
