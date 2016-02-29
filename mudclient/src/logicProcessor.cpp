@@ -105,21 +105,27 @@ void LogicProcessor::runCommands(InputCommands& cmds)
     if (!processAliases(cmds))
         return;
     InputCommandVarsProcessor vp;
+    InputCommandsVarsFilter vf;
     int i=0,e=cmds.size();
     for (; i<e; ++i)
     {
         InputCommand *cmd = cmds[i];
-        while (vp.makeCommand(cmd))
+        if (!vf.checkFilter(cmd))
         {
-            // found $var in cmd name -> run aliases again
-            cmds.remove(i);
-            InputCommands alias;
-            alias.push_back(cmd);
-            bool result = processAliases(alias);
-            cmds.insert(i, alias);
-            e = cmds.size();
-            cmd = cmds[i];
-            if (!result) return;
+          while (vp.makeCommand(cmd))
+          {
+             // found $var in cmd name -> run aliases again
+             cmds.remove(i);
+             InputCommands alias;
+             alias.push_back(cmd);
+             bool result = processAliases(alias);
+             cmds.insert(i, alias);
+             e = cmds.size();
+             cmd = cmds[i];
+             if (!result) return;
+             if (vf.checkFilter(cmd))
+                 break;
+          }
         }
 
         if (cmd->system)

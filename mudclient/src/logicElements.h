@@ -30,7 +30,7 @@ public:
     Alias(const property_value& v, const InputTemplateParameters& p);
     bool processing(const InputCommand *cmd, InputCommands *newcmds);
 private:
-    tstring m_key;
+    CompareObject m_compare;
     InputTemplateCommands m_cmds;
 };
 

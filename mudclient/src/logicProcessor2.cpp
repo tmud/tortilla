@@ -40,8 +40,7 @@ LogicProcessor* g_lprocessor = NULL;
 //------------------------------------------------------------------
 void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring main_cmd(cmd->srccmd.substr(1)); // not cmd->command! -> block #__xxx commands ( _ - space)
-
+    tstring main_cmd(cmd->command);
     tstring error;
     typedef std::map<tstring, syscmd_fun>::iterator iterator;
     typedef std::vector<tstring>::iterator piterator;
@@ -132,6 +131,12 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
     if (!error.empty())
     {
+        tstring fullcmd;
+        fullcmd.append(cmd->srccmd);
+        if (!hide_cmd)
+            fullcmd.append(cmd->srcparameters);
+        syscmdLog(fullcmd);
+
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");

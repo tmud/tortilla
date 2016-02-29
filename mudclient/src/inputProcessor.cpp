@@ -13,6 +13,46 @@ void InputVarsAccessor::translateVars(tstring *cmd)
     tortilla::getVars()->processVars(cmd, false);
 }
 
+bool InputCommandsVarsFilter::checkFilter(InputCommand *cmd)
+{
+    if (!cmd->system)
+        return false;
+    const tstring& c = cmd->command;
+    if (!c.compare(L"action"))
+        return true;
+    if (!c.compare(L"alias"))
+        return true;
+    if (!c.compare(L"sub"))
+        return true;
+    if (!c.compare(L"highlight"))
+        return true;
+    if (!c.compare(L"hotkey"))
+        return true;
+    if (!c.compare(L"unaction"))
+        return true;
+    if (!c.compare(L"unalias"))
+        return true;
+    if (!c.compare(L"unsub"))
+        return true;
+    if (!c.compare(L"unhighlight"))
+        return true;
+    if (!c.compare(L"unhotkey"))
+        return true;
+    if (!c.compare(L"gag"))
+        return true;
+    if (!c.compare(L"ungag"))
+        return true;
+    if (!c.compare(L"antisub"))
+        return true;
+    if (!c.compare(L"unantisub"))
+        return true;
+    if (!c.compare(L"timer"))
+        return true;
+    if (!c.compare(L"untimer"))
+        return true;
+    return false;
+}
+
 bool InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
 {
     VarProcessor *vp = tortilla::getVars();

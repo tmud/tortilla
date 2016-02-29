@@ -139,6 +139,12 @@ private:
     bool isbracketorspace(const tchar *p) const;
 };
 
+class InputCommandsVarsFilter
+{
+public:
+    bool checkFilter(InputCommand *cmd);
+};
+
 class InputCommandVarsProcessor
 {
 public:
@@ -154,7 +160,6 @@ class InputCommandTemplateUnitTest
         const tstring& cmd, int n, ...);
 public:
     static void run();
-    
 };
 #define RUN_INPUTPROCESSOR_TESTS InputCommandTemplateUnitTest::run();
 #else
