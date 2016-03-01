@@ -190,15 +190,27 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
 
     struct autoclose { HANDLE h;  
         autoclose(HANDLE file) : h(file) {}
-        ~autoclose() { CloseHandle(h); }
-    } _ac(hfile);
+        ~autoclose() { close(); }
+        void close() { if (h != INVALID_HANDLE_VALUE) { CloseHandle(h); h = INVALID_HANDLE_VALUE; }  }
+    } ac(hfile);
 
     DWORD high = 0;
     DWORD size = GetFileSize(hfile, &high);
     if (high != 0 || size < 3)
         return false;
+    ac.close();
 
-    DWORD readed = 0;
+    if (luaL_loadfile(L, TW2A(plugin_file.c_str())))
+    {
+        Utf8ToWide e(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        pluginLoadError(e, fname);
+        return false;
+    }
+    return initLoadedPlugin(fname);
+
+
+    /*DWORD readed = 0;
     MemoryBuffer script(size+1);
     if (ReadFile(hfile, script.getData(), size, &readed, NULL))
     {
@@ -215,7 +227,7 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
         }
         return initLoadedPlugin(fname);
     }
-    return false;
+    return false;*/
 }
 
 bool Plugin::initLoadedPlugin(const wchar_t* fname)
