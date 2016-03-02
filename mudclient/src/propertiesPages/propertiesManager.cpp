@@ -577,8 +577,10 @@ bool PropertiesManager::loadRECT(xml::node n, RECT *rc)
         !n.get(L"bottom", &bottom))
         return false;
 
-    RECT pos = { left, top, right, bottom };
-    *rc = pos;
+    rc->left = left;
+    rc->right = right;
+    rc->top = top;
+    rc->bottom = bottom;
     return true;
 }
 

@@ -124,6 +124,7 @@ private:
 class FindView : public CWindowImpl<FindView>
 {
     FindDlg m_dlg;
+    SIZE m_size;
 public:
     DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND + 1)
     void setFocus() { m_dlg.setFocus(); }
@@ -134,6 +135,7 @@ public:
     int  getSelectedWindow() { return m_dlg.getSelectedWindow(); }
     void getTextToSearch(tstring* text) { m_dlg.getTextToSearch(text); }
     int  getDirection() {  return m_dlg.getDirection(); }
+    SIZE getSize() { return m_size; }
 private:
     BEGIN_MSG_MAP(PluginsView)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -145,6 +147,8 @@ private:
         RECT rc; m_dlg.GetClientRect(&rc);
         MoveWindow(&rc);
         m_dlg.ShowWindow(SW_SHOWNOACTIVATE);
+        m_size.cx = rc.right;
+        m_size.cy = rc.bottom;
         return 0;
     }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)

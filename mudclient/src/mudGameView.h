@@ -413,12 +413,6 @@ private:
         // create find panel
         m_find_dlg.Create(m_dock);
         m_find_dlg.SetWindowText(L"Поиск");
-        RECT fpos; m_find_dlg.GetClientRect(&fpos);
-        int width = fpos.right; int height = fpos.bottom;
-        addWindowBorder(width, height);
-        RECT &p = m_propData->find_window;
-        p.right = p.left + width;
-        p.bottom = p.top + height;
         m_dock.AddWindow(m_find_dlg);
         m_find_dlg.setWindowName(0, L"Главное окно");
         m_find_dlg.selectWindow(0);
@@ -860,12 +854,17 @@ private:
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         if (ctx->Side == DOCK_HIDDEN)
         {
-            const RECT& p = m_propData->find_window;
+            RECT& p = m_propData->find_window;
+            SIZE sz =  m_find_dlg.getSize(); 
+            int w = 0; int h = 0;
+            addWindowBorder(w, h);
+            p.right = p.left + sz.cx + w;
+            p.bottom = p.top + sz.cy + h;
             setFixedSize(m_find_dlg, p.right, p.bottom); // - p.left, p.bottom - p.top);
             m_dock.FloatWindow(m_find_dlg, p);
-            m_propData->find_window_visible = 1;
-            m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
         }
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
+        m_propData->find_window_visible = 1;
         if (set_focus)
             m_find_dlg.setFocus();
     }
@@ -873,7 +872,7 @@ private:
     void hideFindView()
     {
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
-        m_propData->find_window = ctx->rcWindow;
+        //m_propData->find_window = ctx->rcWindow;
         m_dock.HideWindow(m_find_dlg);
         m_propData->find_window_visible = 0;
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
@@ -1298,6 +1297,7 @@ private:
         m_parent.GetWindowPlacement(&wp);
         m_propData->main_window = wp.rcNormalPosition;
         m_propData->main_window_fullscreen = (wp.showCmd == SW_SHOWMAXIMIZED) ? 1 : 0;
+        saveFindWindowPos();
     }
 
     void loadClientWindowPos()
@@ -1371,7 +1371,13 @@ private:
             ctx->sizeFloat = w.size;
             ctx->bKeepSize = false;
         }
+
+        // find window
+        int state = m_propData->find_window_visible;
+        hideFindView();
         m_dock.UpdatePanes();
+        if (state)
+            showFindView(false);
     }
 
     void savePluginWindowPos(HWND wnd = NULL)
