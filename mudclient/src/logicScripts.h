@@ -4,10 +4,21 @@
 #include "highlightHelper.h"
 
 class TestControl
-{    
+{
 public:
     virtual bool checkPattern(tstring* param) = 0;
     virtual bool checkText(tstring* param) = 0;
+};
+
+class AliasTestControl : public TestControl
+{
+public:
+    bool checkPattern(tstring* param) {
+        if (param->find(L" ") != tstring::npos)
+            return false;
+        return true;
+    }
+    bool checkText(tstring* param) { return true; }
 };
 
 class HotkeyTestControl : public TestControl
@@ -250,9 +261,9 @@ public:
             else
               swprintf(buffer, buffer_len, L"%s {%s} [%s]", label.c_str(), pattern.c_str(), p->c_str(1));
             helper->tmcLog(buffer);
-          
+
             int index = (n==1) ? values->find(pattern) : values->find(pattern, p->at(1));
-            
+
            if (index != -1)
            {
                const property_value& v = values->get(index);

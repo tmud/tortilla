@@ -229,8 +229,9 @@ IMPL(alias)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
+    AliasTestControl control;
     int update = script.process(p, &pdata->aliases, &pdata->groups,
-        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph);
+        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph, &control);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 

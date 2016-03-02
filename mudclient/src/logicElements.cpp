@@ -138,7 +138,7 @@ public:
 
 Alias::Alias(const property_value& v, const InputTemplateParameters& p)
 {
-    m_compare.init(v.key, true);
+    m_compare.initOnlyVars(v.key);
     InputPlainCommands plain(v.value);
     m_cmds.init(plain, p);
     m_cmds.makeTemplates();

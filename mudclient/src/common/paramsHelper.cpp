@@ -3,7 +3,7 @@
 
 ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1)
 {
-    pcre.setRegExp( (mode & DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}");
+    pcre.setRegExp( (mode & DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}", true);
     pcre.findAllMatches(param);
     for (int i=1,e=pcre.getSize(); i<e; ++i)
     {
