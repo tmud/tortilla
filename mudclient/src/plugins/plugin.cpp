@@ -284,11 +284,11 @@ bool Plugin::isAlreadyLoaded(const wchar_t* filename)
     tstring ext(e+1);
     if (isLoadedPlugin(module_name.c_str()))
     {
-        swprintf(plugin_buffer(), L"Плагин %s не загружен, так как уже загружен %s.%s. Конфликт имен файлов.", filename, 
-            module_name.c_str(), ext == L"lua" ? L"dll" : L"lua");
+        swprintf(plugin_buffer(), L"Плагин %s не загружен, так как место _G['%s'] занято модулем или другим плагином.", filename, 
+            module_name.c_str());
         pluginOut(plugin_buffer());
         return true;
-    }    
+    }
     return false;
 }
 
