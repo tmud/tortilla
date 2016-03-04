@@ -18,7 +18,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.02");
+    luaT_pushwstring(L, L"1.03");
     return 1;
 }
 
@@ -139,6 +139,5 @@ static const luaL_Reg prompt_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, prompt_methods);
-    lua_setglobal(L, "prompt");
-    return 0;
+    return 1;
 }

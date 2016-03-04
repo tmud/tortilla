@@ -1,7 +1,7 @@
 ﻿-- luatrigger
 -- Плагин для Tortilla mud client
 
-luatrigger = {}
+local luatrigger = {}
 function luatrigger.name() 
     return 'Lua Trigger'
 end
@@ -38,3 +38,5 @@ function luatrigger.init()
   createTrigger({"", "Включена поддержка"}, event)
   createTrigger({"По вопросам (.*)", ""}, event)
 end
+
+return luatrigger

@@ -3,7 +3,7 @@
 -- Список команд, которые нужно блокировать
 local cmds_list_for_block = {'с','ю','з','в','вв','вн' }
 
-historyfilter = {}
+local historyfilter = {}
 function historyfilter.name() 
     return 'Фильтр истории команд'
 end
@@ -29,3 +29,5 @@ for i = 1,#cmds_list_for_block do
 end
 return true
 end
+
+return historyfilter

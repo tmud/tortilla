@@ -1,7 +1,7 @@
 ﻿-- send
 -- Плагин для Tortilla mud client
 
-send = {}
+local send = {}
 function send.name()
   return 'Команды в другие Tortilla'
 end
@@ -43,3 +43,5 @@ function send.syscmd(t)
   end
   return t
 end
+
+return send

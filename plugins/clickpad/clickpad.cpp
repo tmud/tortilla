@@ -37,7 +37,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.01");
+    luaT_pushwstring(L, L"1.02");
     return 1;
 }
 
@@ -264,8 +264,7 @@ int WINAPI plugin_open(lua_State *L)
 {
     pL = L;
     luaL_newlib(L, clickpad_methods);
-    lua_setglobal(L, "clickpad");
-    return 0;
+    return 1;
 }
 
 void processGameCommand(const std::wstring& cmd, bool template_cmd)

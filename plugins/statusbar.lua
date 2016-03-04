@@ -20,7 +20,7 @@ exp1 = {r=240,g=240,b=240},
 exp2 = {r=128,g=128,b=128}
 }
 
-statusbar = {}
+local statusbar = {}
 function statusbar.name()
     return 'Гистограммы здоровья, маны, энергии, опыта'
 end
@@ -33,7 +33,7 @@ return 'Плагин отображает информацию о здоровь
 end
 
 function statusbar.version()
-    return '1.07'
+    return '1.08'
 end
 
 local objs = {}
@@ -332,3 +332,5 @@ function statusbar.init()
   values = {}
   connect = props.connected()
 end
+
+return statusbar

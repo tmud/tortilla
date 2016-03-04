@@ -1,7 +1,7 @@
 ﻿-- testmisc
 -- Плагин для Tortilla mud client
 
-testmisc = {}
+local testmisc = {}
 function testmisc.name()
   return 'Тесты команд и скриптов'
 end
@@ -31,3 +31,5 @@ function testmisc.syscmd(t)
   end
   return t
 end
+
+return testmisc
