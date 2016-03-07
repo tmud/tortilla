@@ -88,6 +88,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
+    bool fullcmd_loged = false;
     if (error.empty())
     {
         cmd->command.assign(main_cmd);
@@ -98,6 +99,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             fullcmd.append(cmd->parameters);
 
         syscmdLog(fullcmd);
+        fullcmd_loged = true;
 
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
@@ -131,11 +133,14 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
     if (!error.empty())
     {
-        tstring fullcmd;
-        fullcmd.append(cmd->srccmd);
-        if (!hide_cmd)
-            fullcmd.append(cmd->srcparameters);
-        syscmdLog(fullcmd);
+        if (!fullcmd_loged)
+        {
+            tstring fullcmd;
+            fullcmd.append(cmd->srccmd);
+            if (!hide_cmd)
+                fullcmd.append(cmd->srcparameters);
+            syscmdLog(fullcmd);
+        }
 
         tstring msg(L"Ошибка: ");
         msg.append(error);
