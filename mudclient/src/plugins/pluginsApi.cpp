@@ -51,7 +51,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
     int n = lua_gettop(L);
-    swprintf(plugin_buffer(), L"'%s'.%s:%d: %s(%d): ", plugin_name(), fname, plugin_lualine(L), p.c_str(), n);
+    swprintf(plugin_buffer(), L"'%s': %s:%d: %s(%d): ", plugin_name(), fname, plugin_lualine(L), p.c_str(), n);
     tstring log(plugin_buffer());
     for (int i = 1; i <= n; ++i)
     {
