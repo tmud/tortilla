@@ -1,8 +1,8 @@
 ﻿-- voice
 -- Плагин для Tortilla mud client
 
-voice = {}
-function voice.name() 
+local voice = {}
+function voice.name()
   return 'Синтезатор речи'
 end
 
@@ -20,7 +20,7 @@ function voice.description()
 end
 
 function voice.version()
-    return '1.0'
+    return '1.01'
 end
 
 local function isnumber(s)
@@ -150,3 +150,5 @@ function voice.syscmd(t)
   end
   return t
 end
+
+return voice

@@ -3,7 +3,7 @@
 
 local text_color = 6
 
-inveq = {}
+local inveq = {}
 function inveq.name() 
     return 'Инвентарь и экипировка'
 end
@@ -35,5 +35,7 @@ function inveq.init()
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(text_color))
   r:select(props.currentFont())
-  img = r:createImage("plugins/1.png")
+  --img = r:createImage("plugins/1.png")
 end
+
+return inveq

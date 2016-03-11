@@ -23,7 +23,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.0dev");
+    luaT_pushwstring(L, L"1.01");
     return 1;
 }
 
@@ -221,8 +221,7 @@ static const luaL_Reg mapper_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, mapper_methods);
-    lua_setglobal(L, "mapper");
-    return 0;
+    return 1;
 }
 
 CAppModule _Module;

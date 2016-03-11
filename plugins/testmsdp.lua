@@ -1,7 +1,7 @@
 ﻿-- testmsdp
 -- Плагин Tortilla mud client
 
-testmsdp = {}
+local testmsdp = {}
 function testmsdp.name() 
     return 'Тестовый плагин MSDP'
 end
@@ -60,3 +60,5 @@ function testmsdp.msdp(t)
     end
     dump_table('', t)
 end
+
+return testmsdp

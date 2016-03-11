@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.10");
+    luaT_pushwstring(L, L"1.11");
     return 1;
 }
 
@@ -202,8 +202,7 @@ static const luaL_Reg tray_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, tray_methods);
-    lua_setglobal(L, "tray");
-    return 0;
+    return 1;
 }
 
 CAppModule _Module;

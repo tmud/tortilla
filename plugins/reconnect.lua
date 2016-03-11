@@ -4,7 +4,7 @@
 -- Количество попыток переподключения (0 - бесконечное количество)
 local max_count = 10
 
-reconnect = {}
+local reconnect = {}
 function reconnect.name() 
     return 'Автореконнект'
 end
@@ -20,7 +20,7 @@ function reconnect.description()
 end
 
 function reconnect.version()
-    return '1.04'
+    return '1.05'
 end
 
 local connected = false
@@ -85,3 +85,5 @@ function reconnect.getaddress()
     port = nil
   end
 end
+
+return reconnect

@@ -9,13 +9,13 @@ local autowrap_maxlen_main = -1
 -- Максимально допустимая длина строк для output-окон
 local autowrap_maxlen_out = -1
 
-autowrap = {}
+local autowrap = {}
 function autowrap.name()
   return 'Автоперенос строк'
 end
 
 function autowrap.version()
-  return '1.03'
+  return '1.04'
 end
 
 function autowrap.description()
@@ -178,3 +178,5 @@ function autowrap.syscmd(t)
     updateView(window, function(v) update_view(v,newlen) end)
     return nil
 end
+
+return autowrap

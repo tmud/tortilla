@@ -7,7 +7,7 @@ local position = "bottom"
 -- Количество панелей. Чем больше панелей, тем меньше информации вмещает каждая панель
 local count = 7
 
-status = {}
+local status = {}
 function status.name()
     return 'Панель статусов'
 end
@@ -23,7 +23,7 @@ function status.description()
 end
 
 function status.version()
-    return '1.0'
+    return '1.01'
 end
 
 local r
@@ -94,3 +94,5 @@ function status.init()
   r:select(props.currentFont())
   addCommand('status')
 end
+
+return status

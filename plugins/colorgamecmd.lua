@@ -3,7 +3,7 @@
 -- Цвет из палитры клиента (0-255)
 local color = 3
 
-colorgamecmd = {}
+local colorgamecmd = {}
 function colorgamecmd.name() 
     return 'Подсветка игровых и системных команд'
 end
@@ -13,7 +13,7 @@ return 'Плагин изменяет цвет игровых и системн�
 end
 
 function colorgamecmd.version()
-    return '-'
+    return '1.0'
 end
 
 function colorgamecmd.after(window, v)
@@ -26,3 +26,5 @@ if window ~= 0 then return end
     end
   end
 end
+
+return colorgamecmd

@@ -1,7 +1,7 @@
 ﻿-- bell
 -- Плагин для Tortilla mud client
 
-bell = {}
+local bell = {}
 function bell.name() 
     return 'Озвучивание символа bell'
 end
@@ -11,7 +11,7 @@ return 'Плагин проигрывает короткий звук, если 
 end
 
 function bell.version()
-    return '1.01'
+    return '1.02'
 end
 
 function bell.streamdata(s)
@@ -30,3 +30,5 @@ function bell.streamdata(s)
   end
   return s
 end
+
+return bell

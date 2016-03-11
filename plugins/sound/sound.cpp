@@ -42,7 +42,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.01");
+    luaT_pushwstring(L, L"1.02");
     return 1;
 }
 
@@ -144,6 +144,5 @@ static const luaL_Reg sound_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, sound_methods);
-    lua_setglobal(L, "sound");
-    return 0;
+    return 1;
 }
