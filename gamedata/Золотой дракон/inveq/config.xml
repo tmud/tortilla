@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <colors>
+    <header value="80"/>
+    <tegs value="150"/>
+    <equipment value="180"/>
+    <inventory value="180"/>
+  </colors>
+  <slots>
+    <array index="1" value="head"/>
+    <array index="2" value="eyes"/>
+    <array index="3" value="lear"/>
+    <array index="4" value="rear"/>
+    <array index="5" value="neck"/>
+    <array index="6" value="chest"/>
+    <array index="7" value="body"/>
+    <array index="8" value="shoulders"/>
+    <array index="9" value="waist"/>
+    <array index="10" value="hands"/>
+    <array index="11" value="lwrist"/>
+    <array index="12" value="rwrist"/>
+    <array index="13" value="brushes"/>
+    <array index="14" value="lfinger"/>
+    <array index="15" value="rfinger"/>
+    <array index="16" value="legs"/>
+    <array index="17" value="boots"/>
+    <array index="18" value="shield"/>
+    <array index="19" value="lhand"/>
+    <array index="20" value="rhand"/>
+    <array index="21" value="eyes"/>
+    <array index="22" value="light"/>	
+  </slots>
+  <names>
+    <head value="Голова"/>
+    <eyes value="Глаза"/>
+    <lear value="Ухо"/>
+    <rear value="Ухо"/>
+    <neck value="Шея"/>
+    <chest value="Грудь"/>
+    <body value="Тело"/>
+    <shoulders value="Плечи"/>
+    <waist value="Талия"/>
+    <hands value="Руки"/>
+    <lwrist value="Запястье"/>
+    <rwrist value="Запястье"/>
+    <brushes value="Кисти"/>
+    <lfinger value="Палец"/>
+    <rfinger value="Палец"/>
+    <legs value="Ноги"/>
+    <boots value="Обувь"/>
+    <shield value="Щит"/>
+    <lhand value="Левая"/>
+    <rhand value="Правая"/>
+    <light value="Свет"/>
+  </names>
+  <dress>
+    <head value="Вы надели %1 на голову."/>
+    <body value="Вы надели %1 на тело."/>
+  </dress>
+  <undress>
+    <all value="Вы прекратили использовать %1."/>
+  </undress>
+</plugindata>
