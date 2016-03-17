@@ -58,7 +58,7 @@ end
 
 function inveq.init()
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
-  local p = createPanel("right", 300)
+  local p = createPanel("right", 250)
   r = p:setRender(inveq.render)
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
