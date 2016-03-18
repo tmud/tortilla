@@ -3,7 +3,7 @@
 
 local inveq = {}
 
-local colors, slots, names, inventory, equipment
+local colors, slots, inventory, equipment
 local working = false
 local delta_eq = 0
 
@@ -38,9 +38,9 @@ function inveq.render()
   setTextColor(colors.header)
   r:print(x, y, 'Экипировка:')
   y = y + h
-  for k,v in ipairs(slots) do
+  for k,s in ipairs(slots) do
     setTextColor(colors.tegs)
-    r:print(x, y, names[v]..": ")
+    r:print(x, y, s.name..": ")
     local eq = equipment[k]
     if eq then setTextColor(colors.equipment) r:print(x+delta_eq, y, eq) end
     y = y + h
@@ -63,7 +63,7 @@ function inveq.init()
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
   working = false
-  local t = loadTable("config.xml")
+  local t = loadTable("config.lua")
   if not t then return end
   if istable(t.colors) then
     for k,v in pairs(t.colors) do
@@ -76,14 +76,16 @@ function inveq.init()
     end
   end
   if istable(t.slots) and istable(t.dress) and istable(t.undress) then
-    slots = t.slots
-    names = {}
-    if istable(t.names) then names = t.names end
+    slots = {}
+    for _,s in ipairs(t.slots) do
+      if s.id then
+        if not s.name then s.name = s.id end
+        slots[#slots+1] = s
+      end
+    end
     local maxw = 0
-    for _,v in ipairs(slots) do
-      local text = names[v]
-      if not text then text = v names[v] = v end
-      local w = r:textWidth(text)
+    for _,s in ipairs(slots) do
+      local w = r:textWidth(s.name)
       if w > maxw then maxw = w end
     end
     delta_eq = maxw + 20

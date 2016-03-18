@@ -2,7 +2,7 @@
 -- Плагин для Tortilla mud client
 
 local affects = {}
-local colors = { header = 180 }
+local colors = { header = 80 }
 local working = false
 
 function affects.name()

@@ -110,6 +110,13 @@ void pluginLoadError(const tchar* msg, const tchar *plugin_fname)
     swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", plugin_fname, msg);
     pluginLogOut(plugin_buffer());
 }
+
+void pluginSaveError(const tchar* msg, const tchar *plugin_fname)
+{
+    swprintf(plugin_buffer(), L"'%s': Ошибка записи! %s", plugin_fname, msg);
+    pluginLogOut(plugin_buffer());
+}
+
 //---------------------------------------------------------------------
 int pluginName(lua_State *L)
 {
@@ -466,28 +473,64 @@ int getParent(lua_State *L)
     return pluginInvArgs(L, L"getParent");
 }
 
+int loadTableLua(lua_State* L, const tstring& filename)
+{
+    const tchar* fname = filename.c_str();
+    if (luaL_loadfile(L, TW2A(fname)))
+    {
+        Utf8ToWide e(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        pluginLoadError(e, fname);
+        return false;
+    }
+    // make empty eviroment and call script in them
+    lua_newtable(L);
+    lua_insert(L, -2);
+    lua_pushvalue(L, -2);
+    lua_setupvalue(L, -2, 1); 
+    if (lua_pcall(L, 0, 0, 0))
+    {
+        Utf8ToWide e(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        pluginLoadError(e, fname);
+        return false;
+    }
+    return 1;
+}
+
 int loadTable(lua_State *L)
 {
     EXTRA_CP;
     if (!_cp || !luaT_check(L, 1, LUA_TSTRING))
-        return pluginInvArgs(L, L"loadData");
+        return pluginInvArgs(L, L"loadTable");
 
-    PropertiesManager *pmanager = tortilla::getPropertiesManager();
     tstring filename(luaT_towstring(L, 1));
+    lua_pop(L, 1);
+
+    PropertiesManager *pmanager = tortilla::getPropertiesManager();    
     ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
     filename.assign(pp);
 
     DWORD fa = GetFileAttributes(filename.c_str());
     if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)
         return 0;
+
+    tstring ext;
+    size_t pos = filename.rfind(L".");
+    if (pos != -1)
+        ext.assign(filename.substr(pos+1));
+    if (ext != L"xml")
+    {
+        return loadTableLua(L, filename);
+    }
+
     xml::node doc;
     if (!doc.load(pp) )
     {
        swprintf(plugin_buffer(), L"Ошибка чтения: %s", filename);
-       pluginError(L"loadData", plugin_buffer());
+       pluginError(L"loadTable", plugin_buffer());
        return 0;
     }
-    lua_pop(L, 1);
 
     struct el { el(xml::node n, int l) : node(n), level(l) {} xml::node node; int level; };
     std::vector<el> stack;
@@ -563,10 +606,23 @@ int saveTable(lua_State *L)
 {
     EXTRA_CP;
     if (!_cp || !luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
-        return pluginInvArgs(L, L"saveData");
+        return pluginInvArgs(L, L"saveTable");
 
     tstring filename(luaT_towstring(L, 2));
     lua_pop(L, 1);
+
+    PropertiesManager *pmanager = tortilla::getPropertiesManager();
+    ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
+    const wchar_t *filepath = pp;
+
+    int result = 0;
+    ProfileDirHelper dh;
+    if (!dh.makeDirEx(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename))
+    {
+       swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
+       pluginError(L"saveTable", plugin_buffer());
+       return 0;
+    }
 
     // recursive cycles in table
     struct saveDataNode
@@ -670,66 +726,127 @@ int saveTable(lua_State *L)
         }}
     }
 
-    // make xml
-    xml::node root(current->name.c_str());
-    typedef std::pair<saveDataNode*, xml::node> _xmlstack;
-    std::vector<_xmlstack> xmlstack;
-    xmlstack.push_back(_xmlstack(current, root));
-
-    int index = 0;
-    while (index < (int)xmlstack.size())
+    tstring ext;
+    size_t pos = filename.rfind(L".");
+    if (pos != -1)
+        ext.assign(filename.substr(pos+1));
+    if (ext != L"xml")
     {
-        _xmlstack &v = xmlstack[index++];
-        xml::node node = v.second;
-        std::vector<saveDataNode::value>&a = v.first->attributes;
-        for (int i = 0, e = a.size(); i < e; ++i)
+        // make lua file
+        class recorder {
+            tstring tabs;
+            const int tabs_size = 2;
+        public:
+            tstring r;
+            recorder() { r.reserve(4096); }
+            void endline() { r.append(L",/r/n"); }
+            void key(const tstring& k) { r.append(tabs); r.append(k); r.append(L"="); }
+            void value(const tstring& v) {
+                if (isItNumber(v)) r.append(v);
+                else {  tchar b[2] = { L'"', 0 }; if (v.find(L"\"") != tstring::npos) { b[0] = L'\''; }
+                        r.append(b); r.append(v); r.append(b);
+                        endline();
+                }
+            }
+            void incspaces() { tabs.append(L' ', tabs_size); }
+            void decspaces() { size_t len = tabs.size(); if (len >= tabs_size) tabs.resize(len-tabs_size); }
+        } data;
+
+        /*todo std::vector<saveDataNode*> stack;
+        stack.push_back(current);
+
+        int index = 0;
+        while (index < (int)stack.size())
         {
-            xml::node attr = node.createsubnode(a[i].first.c_str());
-            attr.set(L"value", a[i].second.c_str());
+            saveDataNode* n = stack[index++];
+            saveDataNode::tarray &ta = n->array;
+            saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
+            for(; it!=it_end; ++it)
+            {
+                data.append(tabs);
+                tstring& v = it->second;
+                if (isItNumber(v))
+                    data.append(it->second);
+                else {
+                    data.append(L"\"");  //todo check "
+                    data.append(it->second);
+                    data.append(L"\"");
+                }
+                data.append(L",\r\n");
+            }
+            std::vector<saveDataNode::value>&a = n->attributes;
+            for (int i = 0, e = a.size(); i < e; ++i)
+            {
+                data.append(tabs);
+                data.append(a[i].first);
+                data.append(L"=");
+                data.append(a[i].second);
+
+                xml::node attr = node.createsubnode(a[i].first.c_str());
+                attr.set(L"value", a[i].second.c_str());
+            }
+            
+            std::vector<saveDataNode*>&n = v.first->childnodes;
+            for (int i = 0, e = n.size(); i < e; ++i)
+            {
+                xml::node new_node = node.createsubnode(n[i]->name.c_str());
+                xmlstack.push_back(_xmlstack(n[i], new_node));
+            }
         }
-        saveDataNode::tarray &ta = v.first->array;
-        saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
-        for(; it!=it_end; ++it)
-        {
-            xml::node arr = node.createsubnode(L"array");
-            arr.set(L"index", it->first);
-            arr.set(L"value", it->second.c_str());
-        }
-        std::vector<saveDataNode*>&n = v.first->childnodes;
-        for (int i = 0, e = n.size(); i < e; ++i)
-        {
-            xml::node new_node = node.createsubnode(n[i]->name.c_str());
-            xmlstack.push_back(_xmlstack(n[i], new_node));
-        }
+        stack.clear();*/
     }
-    xmlstack.clear();
+    else
+    {
+        // make xml
+        xml::node root(current->name.c_str());
+        typedef std::pair<saveDataNode*, xml::node> _xmlstack;
+        std::vector<_xmlstack> xmlstack;
+        xmlstack.push_back(_xmlstack(current, root));
+
+        int index = 0;
+        while (index < (int)xmlstack.size())
+        {
+            _xmlstack &v = xmlstack[index++];
+            xml::node node = v.second;
+            std::vector<saveDataNode::value>&a = v.first->attributes;
+            for (int i = 0, e = a.size(); i < e; ++i)
+            {
+                xml::node attr = node.createsubnode(a[i].first.c_str());
+                attr.set(L"value", a[i].second.c_str());
+            }
+            saveDataNode::tarray &ta = v.first->array;
+            saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
+            for(; it!=it_end; ++it)
+            {
+                xml::node arr = node.createsubnode(L"array");
+                arr.set(L"index", it->first);
+                arr.set(L"value", it->second.c_str());
+            }
+            std::vector<saveDataNode*>&n = v.first->childnodes;
+            for (int i = 0, e = n.size(); i < e; ++i)
+            {
+                xml::node new_node = node.createsubnode(n[i]->name.c_str());
+                xmlstack.push_back(_xmlstack(n[i], new_node));
+            }
+        }
+        xmlstack.clear();
+        result = root.save(filepath);
+        root.deletenode();
+    }
 
     // delete temporary datalist
     for (int i = 0, e = list.size(); i < e; ++i)
        delete list[i];
     list.clear();
 
-    // save xml
-    PropertiesManager *pmanager = tortilla::getPropertiesManager();
-    ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
-    const wchar_t *filepath = pp;
-
-    int result = 0;
-    ProfileDirHelper dh;
-    if (dh.makeDirEx(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename))
-    {
-        result = root.save(filepath);
-    }
-
     if (incorrect_data)
-        pluginError(L"saveData", L"Неверные данные в исходных данных.");
+        pluginError(L"saveTable", L"Неверные данные в исходных данных.");
 
     if (!result)
     {
        swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
-       pluginError(L"saveData", plugin_buffer());
+       pluginError(L"saveTable", plugin_buffer());
     }
-    root.deletenode();
     return 0;
 }
 //----------------------------------------------------------------------------

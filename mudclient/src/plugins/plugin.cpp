@@ -188,22 +188,6 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
     tstring plugin_file(L"plugins\\");
     plugin_file.append(fname);
 
-    /*HANDLE hfile = CreateFile(plugin_file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hfile == INVALID_HANDLE_VALUE)
-        return false;
-
-   struct autoclose { HANDLE h;  
-        autoclose(HANDLE file) : h(file) {}
-        ~autoclose() { close(); }
-        void close() { if (h != INVALID_HANDLE_VALUE) { CloseHandle(h); h = INVALID_HANDLE_VALUE; }  }
-    } ac(hfile);
-
-    DWORD high = 0;
-    DWORD size = GetFileSize(hfile, &high);
-    if (high != 0 || size < 3)
-        return false;
-    ac.close();*/
-
     if (luaL_loadfile(L, TW2A(plugin_file.c_str())))
     {
         Utf8ToWide e(lua_tostring(L, -1));
@@ -217,28 +201,8 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
         lua_pop(L, 1);
         pluginLoadError(e, fname);
         return false;
-    }
-    luaT_showLuaStack(L, L"ssd");
+    }    
     return initLoadedPlugin(fname);
-
-    /*DWORD readed = 0;
-    MemoryBuffer script(size+1);
-    if (ReadFile(hfile, script.getData(), size, &readed, NULL))
-    {
-        unsigned char *p = (unsigned char *)script.getData();
-        p[size] = 0;                                      // set EOF
-        if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) // check BOM
-            p = p + 3;
-        if (luaL_dostring(L, (const char*)p))
-        {
-            Utf8ToWide e(lua_tostring(L, -1));
-            lua_pop(L, 1);
-            pluginLoadError(e, fname);
-            return false;
-        }
-        return initLoadedPlugin(fname);
-    }
-    return false;*/
 }
 
 bool Plugin::initLoadedPlugin(const wchar_t* fname)

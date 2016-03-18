@@ -50,6 +50,5 @@ static const luaL_Reg plugin_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, plugin_methods);
-    lua_setglobal(L, "plugin");
-    return 0;
+    return 1;
 }
