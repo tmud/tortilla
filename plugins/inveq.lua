@@ -65,9 +65,9 @@ function inveq.init()
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
   working = false
-  local t = loadTable("config.lua")
+  local t = loadTable("test.xml")
   if not t then return end
-  saveTable(t, "test.xml")
+  saveTable(t, "test2.xml")
   
   
   if istable(t.colors) then

@@ -679,12 +679,14 @@ int saveTable(lua_State *L)
     // recursive cycles in table
     struct saveDataNode
     {
+        saveDataNode() : index(0) {}
         typedef std::pair<tstring,bool> value_with_type;
         typedef std::pair<tstring, value_with_type> value;
         typedef std::map<int, value_with_type> tarray;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
         tstring name;
+        int index;
         tarray array;
     };
 
@@ -738,7 +740,7 @@ int saveTable(lua_State *L)
             {
                 saveDataNode* new_node = new saveDataNode();
                 if (key_type == LUA_TNUMBER) {
-                    //todo new_node->name = current->name;
+                    new_node->index = lua_tointeger(L, -2);
                 }
                 else
                     new_node->name = luaT_towstring(L, -2);
@@ -876,7 +878,13 @@ int saveTable(lua_State *L)
             std::vector<saveDataNode*>&n = v.first->childnodes;
             for (int i = 0, e = n.size(); i < e; ++i)
             {
-                xml::node new_node = node.createsubnode(n[i]->name.c_str());
+                tstring name(n[i]->name); bool index = false;
+                if (name.empty() && n[i]->index > 0) {
+                    name = L"array"; index = true;
+                }
+                xml::node new_node = node.createsubnode(name.c_str());
+                if (index)
+                    new_node.set(L"index", n[i]->index);
                 xmlstack.push_back(_xmlstack(n[i], new_node));
             }
         }
