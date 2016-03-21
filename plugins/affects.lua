@@ -23,14 +23,16 @@ end
 
 function affects.render()
   local x, y = 4, 4
+  local h = r:fontHeight()
   if not working then
     setTextColor(colors.header)
+	r:print(x, y, 'Аффекты на персонаже')
+	y = y + h
     r:print(x, y, 'Ошибка в настройках')
     return
-  end  
-  local h = r:fontHeight()
+  end    
   setTextColor(colors.header)
-  r:print(x, y, 'Экипировка:')
+  r:print(x, y, 'Аффекты:')
 end
 
 function affects.init()

@@ -29,12 +29,14 @@ end
 
 function inveq.render()
   local x, y = 4, 4
+  local h = r:fontHeight()
   if not working then
     setTextColor(colors.header)
+	r:print(x, y, 'Инвентарь и экипировка')
+	y = y + h
     r:print(x, y, 'Ошибка в настройках')
     return
-  end  
-  local h = r:fontHeight()
+  end
   setTextColor(colors.header)
   r:print(x, y, 'Экипировка:')
   y = y + h
@@ -65,6 +67,9 @@ function inveq.init()
   working = false
   local t = loadTable("config.lua")
   if not t then return end
+  saveTable(t, "test.xml")
+  
+  
   if istable(t.colors) then
     for k,v in pairs(t.colors) do
       local color = tonumber(v)

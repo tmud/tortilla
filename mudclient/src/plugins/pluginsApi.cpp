@@ -602,6 +602,58 @@ int loadTable(lua_State *L)
    return 1;
 }
 
+ // make lua file
+class LuaRecorder
+{
+    tstring tabs;
+    const size_t tabs_size = 2;
+    tstring r;
+    bool first_param, first_open;
+    int brackets_layer;
+public:
+    LuaRecorder() : first_param(true), first_open(false), brackets_layer(0) { r.reserve(4096);  }
+    const tstring& result() const { return r; }
+    void key(const tstring& k) {
+        if (!first_param) endvar();
+        addtabs(); r.append(k); r.append(L"="); }
+    void value(const tstring& v, bool itstring) {
+         if (!itstring) {  r.append(v); }
+         else {  tchar b[2] = { L'"', 0 }; if (v.find(L"\"") != tstring::npos) { b[0] = L'\''; }
+                 r.append(b); r.append(v); r.append(b);
+         }
+         first_param = false;
+    }
+    void openbracket(const tstring& name) {
+        if (brackets_layer++ == 0) return;
+        if (first_open)
+        {
+            if (brackets_layer == 2)
+                endline();
+            else
+                endvar();
+        }
+        first_open = false;
+        first_param = true;
+        addtabs();
+        if (!name.empty()) { r.append(name); r.append(L" = "); }
+        r.append(L"{"); endline();
+        tabs.append(tabs_size, L' ');
+    }
+    void closebracket() {
+        if (--brackets_layer == 0) return;
+        first_open = true;
+        size_t len = tabs.size(); 
+        if (len >= tabs_size) tabs.resize(len-tabs_size); 
+        endline();
+        addtabs();
+        r.append(L"}");
+     }
+private:
+    void endvar() { r.append(L","); endline(); }
+    void endline() { r.append(L"\r\n"); }    
+    void addtabs() { r.append(tabs); }    
+};
+
 int saveTable(lua_State *L)
 {
     EXTRA_CP;
@@ -627,8 +679,9 @@ int saveTable(lua_State *L)
     // recursive cycles in table
     struct saveDataNode
     {
-        typedef std::pair<tstring, tstring> value;
-        typedef std::map<int, tstring> tarray;
+        typedef std::pair<tstring,bool> value_with_type;
+        typedef std::pair<tstring, value_with_type> value;
+        typedef std::map<int, value_with_type> tarray;
         std::vector<value> attributes;
         std::vector<saveDataNode*> childnodes;
         tstring name;
@@ -660,10 +713,11 @@ int saveTable(lua_State *L)
             }
             if (key_type == LUA_TNUMBER)
             {
-                if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING)
+                if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING || value_type == LUA_TBOOLEAN)
                 {
                     int index = lua_tointeger(L, -2);
-                    current->array[index] = luaT_towstring(L, -1);
+                    tstring v(luaT_towstring(L, -1));
+                    current->array[index] = saveDataNode::value_with_type(v, (value_type == LUA_TSTRING));
                     lua_pop(L, 1);
                     continue;
                 }
@@ -677,13 +731,15 @@ int saveTable(lua_State *L)
             {
                 tstring a(luaT_towstring(L, -2));
                 tstring b(luaT_towstring(L, -1));
-                current->attributes.push_back( saveDataNode::value( a, b) );
+                saveDataNode::value_with_type v(b, (value_type == LUA_TSTRING));
+                current->attributes.push_back( saveDataNode::value( a, v ) );
             }
             else if (value_type == LUA_TTABLE)
             {
                 saveDataNode* new_node = new saveDataNode();
-                if (key_type == LUA_TNUMBER)
-                    new_node->name = current->name;
+                if (key_type == LUA_TNUMBER) {
+                    //todo new_node->name = current->name;
+                }
                 else
                     new_node->name = luaT_towstring(L, -2);
                 current->childnodes.push_back(new_node);
@@ -732,68 +788,59 @@ int saveTable(lua_State *L)
         ext.assign(filename.substr(pos+1));
     if (ext != L"xml")
     {
-        // make lua file
-        class recorder {
-            tstring tabs;
-            const int tabs_size = 2;
-        public:
-            tstring r;
-            recorder() { r.reserve(4096); }
-            void endline() { r.append(L",/r/n"); }
-            void key(const tstring& k) { r.append(tabs); r.append(k); r.append(L"="); }
-            void value(const tstring& v) {
-                if (isItNumber(v)) r.append(v);
-                else {  tchar b[2] = { L'"', 0 }; if (v.find(L"\"") != tstring::npos) { b[0] = L'\''; }
-                        r.append(b); r.append(v); r.append(b);
-                        endline();
-                }
-            }
-            void incspaces() { tabs.append(L' ', tabs_size); }
-            void decspaces() { size_t len = tabs.size(); if (len >= tabs_size) tabs.resize(len-tabs_size); }
-        } data;
-
-        /*todo std::vector<saveDataNode*> stack;
-        stack.push_back(current);
+       LuaRecorder lr;
+       std::vector<saveDataNode*> stack;
+       stack.push_back(current);
 
         int index = 0;
         while (index < (int)stack.size())
         {
             saveDataNode* n = stack[index++];
-            saveDataNode::tarray &ta = n->array;
-            saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
-            for(; it!=it_end; ++it)
-            {
-                data.append(tabs);
-                tstring& v = it->second;
-                if (isItNumber(v))
-                    data.append(it->second);
-                else {
-                    data.append(L"\"");  //todo check "
-                    data.append(it->second);
-                    data.append(L"\"");
-                }
-                data.append(L",\r\n");
+            if (!n) {
+                lr.closebracket();
+                continue;
             }
-            std::vector<saveDataNode::value>&a = n->attributes;
-            for (int i = 0, e = a.size(); i < e; ++i)
-            {
-                data.append(tabs);
-                data.append(a[i].first);
-                data.append(L"=");
-                data.append(a[i].second);
+            lr.openbracket(n->name);
 
-                xml::node attr = node.createsubnode(a[i].first.c_str());
-                attr.set(L"value", a[i].second.c_str());
-            }
-            
-            std::vector<saveDataNode*>&n = v.first->childnodes;
-            for (int i = 0, e = n.size(); i < e; ++i)
+            // save numeric indexes
+            saveDataNode::tarray &ta = n->array;            
+            saveDataNode::tarray::const_iterator it = ta.begin(), it_end = ta.end();
+            for(; it!=it_end; ++it)
+                lr.value(it->second.first, it->second.second);
+
+            // save named values
+            std::vector<saveDataNode::value>::const_iterator at = n->attributes.begin(), at_end = n->attributes.end();
+            for (;at != at_end; ++at)
             {
-                xml::node new_node = node.createsubnode(n[i]->name.c_str());
-                xmlstack.push_back(_xmlstack(n[i], new_node));
+                lr.key(at->first);
+                lr.value(at->second.first, at->second.second);
+            }
+            // save subtables -> push in stack
+            if (n->childnodes.empty())
+            {
+                lr.closebracket();
+            }
+            else 
+            {
+                std::vector<saveDataNode*>::const_iterator ct = n->childnodes.begin(), ct_end = n->childnodes.end();
+                stack.insert(stack.begin()+index, ct, ct_end);
+                size_t last = index+n->childnodes.size();
+                stack.insert(stack.begin()+last, NULL);
             }
         }
-        stack.clear();*/
+        HANDLE hFile = CreateFile(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {            
+            DWORD written = 0;
+            unsigned char bom[3] = { 0xef, 0xbb, 0xbf };
+            if (WriteFile(hFile, bom, 3, &written, NULL) && written == 3)
+            {
+                written = 0;
+                TW2U data(lr.result().c_str());
+                const utf8* r = data; DWORD len = strlen(r);
+                if (WriteFile(hFile, r, len, &written, NULL) && written == len) { result = 1; }
+            }
+            CloseHandle(hFile);
+        }
     }
     else
     {
@@ -812,7 +859,9 @@ int saveTable(lua_State *L)
             for (int i = 0, e = a.size(); i < e; ++i)
             {
                 xml::node attr = node.createsubnode(a[i].first.c_str());
-                attr.set(L"value", a[i].second.c_str());
+                attr.set(L"value", a[i].second.first.c_str());
+                if (!a[i].second.second)
+                    attr.set(L"native", 1);
             }
             saveDataNode::tarray &ta = v.first->array;
             saveDataNode::tarray::iterator it = ta.begin(), it_end = ta.end();
@@ -820,7 +869,9 @@ int saveTable(lua_State *L)
             {
                 xml::node arr = node.createsubnode(L"array");
                 arr.set(L"index", it->first);
-                arr.set(L"value", it->second.c_str());
+                arr.set(L"value", it->second.first.c_str());
+                if (!it->second.second)
+                    arr.set(L"native", 1);
             }
             std::vector<saveDataNode*>&n = v.first->childnodes;
             for (int i = 0, e = n.size(); i < e; ++i)
@@ -829,7 +880,6 @@ int saveTable(lua_State *L)
                 xmlstack.push_back(_xmlstack(n[i], new_node));
             }
         }
-        xmlstack.clear();
         result = root.save(filepath);
         root.deletenode();
     }
