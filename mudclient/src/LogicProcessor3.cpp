@@ -1,12 +1,39 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "logicProcessor.h"
 
 void LogicProcessor::processStackTick()
 {
+    if (!m_plugins_log_cache.empty())
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        if (!pdata->plugins_logs)
+        {
+            m_plugins_log_cache.clear();
+            return;
+        }
+        int window = pdata->plugins_logs_window;
+        MudViewString *last = m_pHost->getLastString(window);
+        if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
+            { /*skip*/ }
+        else
+        {
+            m_plugins_log_blocked = true;
+            std::vector<tstring> tmp;
+            tmp.swap(m_plugins_log_cache);
+            for (int i=0,e=tmp.size(); i<e; ++i){
+                tstring &t = tmp[i];
+                processIncoming(t.c_str(), t.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+            }
+            tmp.clear();
+            m_plugins_log_blocked = false;
+        }
+    }
+
     if (m_prompt_mode == OFF)
         return;
     MudViewString *last = m_pHost->getLastString(0);
-    if (last && !last->prompt && !last->gamecmd && !last->system)
+    if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
             return;
     printStack(FROM_TIMER);
 }
@@ -16,7 +43,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (window == 0 && m_prompt_mode != OFF && flags & (GAME_LOG | GAME_CMD) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
-       if (last && !last->prompt && !last->gamecmd && !last->system)
+       if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
        {
            // в стек, если нельзя сразу добавить команды в окно (нет prompt/gamecmd, возможно это разрыв текста).
            stack_el e;
@@ -33,12 +60,25 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
     if (window == 0)
-        m_parser.parse(text, text_len, true, &parse_data);
+    {
+        MudViewParserOscPalette palette;
+        m_parser.parse(text, text_len, true, &parse_data, &palette);
+
+        // Работа с OSC палитрой
+        if (palette.reset_colors)
+            m_pHost->resetOscColors();
+        else if (!palette.colors.empty())
+        {
+            MudViewParserOscPalette::colors_iterator it  = palette.colors.begin(), it_end = palette.colors.end();
+            for (;it!=it_end;++it)
+                m_pHost->setOscColor(it->first, it->second);
+        }
+    }
     else
     {
         // используем отдельный parser для дополнительных окон,
         // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
-        m_parser2.parse(text, text_len, false, &parse_data);
+        m_parser2.parse(text, text_len, false, &parse_data, NULL);
     }
 
     if (flags & GAME_CMD)
@@ -54,6 +94,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parseDataStrings& ps = parse_data.strings;
         for (int i = 0, e = ps.size(); i < e; ++i)
             ps[i]->system = true;
+        parse_data.update_prev_string = false;
     }
 
 #ifdef MARKERS_IN_VIEW       // для отладки
@@ -94,10 +135,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     }
 #endif
 
-    if (flags & GAME_LOG)
-        parse_data.update_prev_string = false;
-
-    // accumulate last string in one
     m_pHost->accLastString(window, &parse_data);
 
     // попытка вставки стека по ходу данных, если это обычные данные
@@ -111,7 +148,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     if (!(flags & GAME_CMD))
     {
         ColorsCollector pc;
-        pc.process(&parse_data);
+        pc.process(&parse_data.strings);
     }
     printIncoming(parse_data, flags, window);
 }
@@ -119,16 +156,16 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
-    const int max_lines_without_prompt = 20;
+    const int max_lines_without_prompt = 30;
     bool p_exist = false;
     int last_game_cmd = -1;
-    bool use_template = propData->recognize_prompt ? true : false;
+    PropertiesData *pdata = tortilla::getProperties();
     for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
     {
         MudViewString *s = parse_data.strings[i];
         if (s->prompt) { p_exist = true; }
-        if (s->gamecmd || s->prompt || s->system) { last_game_cmd = i; continue; }
-        if (use_template)
+        if (s->gamecmd || s->prompt || s->system || s->triggered) { last_game_cmd = i; continue; }
+        if (pdata->recognize_prompt)
         {
             // recognize prompt string via template
             tstring text;  s->getText(&text);
@@ -137,17 +174,14 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
             {
                 s->setPrompt(m_prompt_pcre.getLast(0));
                 last_game_cmd = i;
+                m_prompt_counter = 0;
+                m_prompt_mode = USER;
                 p_exist = true;
             }
         }
     }
 
-    if (p_exist)
-    {
-       m_prompt_counter = 0;
-       m_prompt_mode = USER;
-    }
-    else
+    if (!p_exist)
     {
        if (m_prompt_mode == USER)
        {
@@ -157,17 +191,17 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        }
 
        // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
-       // параллельно делим строку по promt если находим
+       // параллельно делим строку по prompt если находим
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
            last_game_cmd = -1;
-           parseDataStrings tmp;       // временный буфер           
+           parseDataStrings tmp;       // временный буфер
            for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
            {
                int last = tmp.size();
                MudViewString *s = parse_data.strings[i];
                tmp.push_back(s);
-               if (s->gamecmd || s->system) { last_game_cmd = last; continue; }
+               if (s->gamecmd || s->system || s->triggered) { last_game_cmd = last; continue; }
 
                tstring text; s->getText(&text);
                m_univ_prompt_pcre.find(text);
@@ -243,7 +277,7 @@ void LogicProcessor::printStack(int flags)
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
-        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags);
+        processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags, 0);
     }
     m_incoming_stack.clear();
 }
@@ -266,7 +300,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
             pd.update_prev_string = true;
             pd.last_finished = true;
             pd.strings.push_back(s);
-            printParseData(pd, flags | SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_SUBS, window);
+            pipelineParseData(pd, flags | SKIP_ACTIONS | SKIP_HIGHLIGHTS | SKIP_SUBS, window);
             pd.strings.clear();
         }
     }
@@ -274,33 +308,85 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
     if (pds.empty())
         return;
 
-    int last = pds.size() - 1;
-    MudViewString *s = pds[last];
-    if (!s->prompt && !s->gamecmd && !s->system)
+    if (window == 0)
     {
-        pds.pop_back();
-        printParseData(parse_data, flags, window);
-
-        // last string not finished
-        parseData pd;
-        pd.strings.push_back(s);
-        printParseData(pd, flags | SKIP_SUBS, window);
-        return;
-    }    
-    printParseData(parse_data, flags, window);
+        int last = pds.size() - 1;
+        MudViewString *s = pds[last];
+        if (!s->prompt && !s->gamecmd && !s->system && !s->triggered)
+        {
+            // last string not finished (игровой текст, не промпт, не команда и не лог)
+            parse_data.last_finished = false;
+#ifdef MARKERS_IN_VIEW
+            std::vector<MudViewStringBlock> &b = s->blocks;
+            for (int i = 0, e = b.size(); i < e; ++i)
+                b[i].params.blink_status = 1;
+#endif
+        }
+    }
+    pipelineParseData(parse_data, flags, window);
 }
 
-void LogicProcessor::printParseData(parseData& parse_data, int flags, int window)
+void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int window)
 {
+    LogicPipelineElement *e = m_pipeline.createElement();
+    printParseData(parse_data, flags, window, e);
+    while (!e->triggers.empty() || !e->commands.empty())
+    {
+        if (!e->triggers.empty())
+        {
+            // выполняем функции lua триггеров
+            for (int i=0,si=e->triggers.size();i<si;++i)
+                e->triggers[i]->run();
+        }
+        if (!e->commands.empty())
+        {
+            // выполняем команды actions триггеров
+            runCommands(e->commands);
+        }
+        LogicPipelineElement *e2 = m_pipeline.createElement();
+        printParseData(e->data, flags|SKIP_PLUGINS_BEFORE, window, e2);
+        m_pipeline.freeElement(e);
+        e = e2;
+    }
+    m_pipeline.freeElement(e);
+}
+
+void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
+{
+    // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
+    m_plugins_log_tocache = true;
+
     // final step for data
     // preprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    if (!(flags & SKIP_PLUGINS_BEFORE))
         m_pHost->preprocessText(window, &parse_data);
 
-    // array for new cmds from actions
-    std::vector<tstring> new_cmds;
-    if (!(flags & SKIP_ACTIONS))
-        m_helper.processActions(&parse_data, &new_cmds);
+    // process lua triggers and actions
+    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
+    bool skip_actions = (flags & SKIP_ACTIONS);
+    for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
+    {
+        bool triggered = false;
+        if (!skip_actions)
+            triggered = luatriggers->processTriggers(parse_data, j, pe);
+        bool actions = false;
+        if (!skip_actions) {
+            actions = m_helper.processActions(&parse_data, j, pe);
+        }
+        if (triggered || actions)
+        {
+            MudViewString *s = parse_data.strings[j];
+            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+            parseData &not_processed = pe->data;
+            not_processed.last_finished = parse_data.last_finished;
+            parse_data.last_finished = true;
+            not_processed.update_prev_string = false;
+            int from = j + 1;
+            not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+            parse_data.strings.resize(from);
+            break;
+        }
+    }
 
     if (!(flags & SKIP_SUBS))
     {
@@ -313,20 +399,13 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_helper.processHighlights(&parse_data);
 
     // postprocess data via plugins
-    if (!(flags & SKIP_PLUGINS))
+    if (!(flags & SKIP_PLUGINS_AFTER))
         m_pHost->postprocessText(window, &parse_data);
-    
-    if (flags & SKIP_PLUGINS)
-    {
-        StringsWrapper wrapper(130);
-        wrapper.process(&parse_data);
-    }
+
+    m_plugins_log_tocache = false;
 
     int log = m_wlogs[window];
     if (log != -1)
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
-
-    for (int i = 0, e = new_cmds.size(); i < e; ++i) // process actions' result
-        processCommand(new_cmds[i]);
 }

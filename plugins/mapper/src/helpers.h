@@ -4,17 +4,15 @@ class RoomHelper
 {
 public:
     RoomHelper(Room *room) : m_room(room) {}
-   /* bool isExplored(RoomDir dir)
+    bool isExplored(RoomDir dir)
     {
-        RoomExit &re = m_room->dirs[dir];
-
-        /*Room *r = m_room->dirs[dir].next_room;
-        if (r && samezone(m_room, r))
+        Room *r = m_room->dirs[dir].next_room;
+        if (r && sameZone(m_room, r))
             return true;
         return false;
-    }*/
+    }
 
-    /*bool isCycled()
+    bool isCycled()
     {
         bool result = false;
 
@@ -27,9 +25,9 @@ public:
             for (int j = RD_NORTH; j <= RD_DOWN; ++j)
             {
                Room *next = r->dirs[j].next_room;
-               if (!next || !samezone(r, next))
+               if (!next || !sameZone(r, next))
                    continue;
-
+               
                if (next->special == 0)
                {
                    next->special = r->special + 1;
@@ -51,7 +49,7 @@ public:
 
     // check isCycle first !!!
     void getSubZone(RoomDir dir, std::vector<Room*> *subzone)
-    {
+    {        
         Room *next = m_room->dirs[dir].next_room;
         if (!next) 
             return;
@@ -66,7 +64,7 @@ public:
             for (int j = RD_NORTH; j <= RD_DOWN; ++j)
             {
                 Room *next = r->dirs[j].next_room;
-                if (!next || !samezone(r, next))
+                if (!next || !sameZone(r, next))
                     continue;
 
                 if (next->special == 0)
@@ -76,25 +74,18 @@ public:
                     continue;
                 }
             }
-        } 
+        }
 
         for (int i = 0, e = rooms.size(); i < e; ++i)
             rooms[i]->special = 0;
         m_room->special = 0;
         subzone->swap(rooms);
-    }
-
-    bool isSameZone(Room *another_room) const
-    {
-        return samezone(m_room, another_room);
-    }
+    }     
 
 private:
-    bool samezone(Room *r1, Room *r2) const
+    bool sameZone(Room *r1, Room *r2)
     {
-        RoomsArea *a1 = r1->level->getArea();
-        RoomsArea *a2 = r2->level->getArea();
-        return (a1->getZone() == a2->getZone()) ? true : false;
-    }*/
+        return (r1->level->getZone() == r2->level->getZone()) ? true : false;
+    }
     Room* m_room;
 };

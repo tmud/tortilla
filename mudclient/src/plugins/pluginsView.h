@@ -13,7 +13,7 @@ public:
     DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND + 1)
     PluginsView(Plugin *p) : m_child_window(NULL), m_plugin(p), m_render(NULL), m_render_error(false) {}
     ~PluginsView() { delete m_render; }
-    const wchar_t* getPluginName() const;
+    Plugin* getPlugin() const { return m_plugin; }
 
     void attachChild(HWND wnd)
     {
@@ -25,9 +25,10 @@ public:
 
     PluginsViewRender* setRender(lua_State *L)
     {
-        delete m_render;
-        int render_id = reg_pview_render(L);
-        m_render = new PluginsViewRender(L, render_id, m_hWnd);
+        if (m_render)
+            { delete m_render; m_render = NULL; }
+        if (lua_isfunction(L, -1))
+            m_render = new PluginsViewRender(L, m_hWnd);
         return m_render;
     }
 
@@ -87,6 +88,5 @@ private:
         return 0;
     }
 private:
-    int  reg_pview_render(lua_State* L);
     bool render();
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 class ColorExampleWindow :  public CWindowImpl<ColorExampleWindow, CWindow>
-{      
+{
     PropertiesData *propData;
     LOGFONT m_logfont;
     CBrush m_backgroundBrush;
@@ -45,6 +45,15 @@ public:
         }
     }
 
+    void onResetOscColors()
+    {
+        if (msgBox(GetParent(), IDS_RESET_OSC_CONFIRM, MB_YESNO | MB_ICONQUESTION) == IDYES)
+        {
+            propData->resetOSCColors();
+            Invalidate();
+        }
+    }
+
     void onSelectFont()
     {
         LOGFONT lf = m_logfont;
@@ -68,19 +77,19 @@ private:
        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBknd)
        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
        MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
-       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnMouseClick)       
+       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnMouseClick)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
     {
-        initFont();        
+        initFont();
         initBackground();
         initBase();
         return 0;
     }
 
     LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL&)
-    {        
+    {
         RECT pos;
         GetClientRect(&pos);
         CPaintDC dc(m_hWnd);
@@ -91,8 +100,7 @@ private:
         mdc.SetBkColor(propData->bkgnd);
         for (int i=0; i<16; ++i)
         {
-            COLORREF color = propData->colors[i];
-            mdc.SetTextColor(color);
+            mdc.SetTextColor(getColor(i));
             mdc.DrawText(m_labels[i].text.c_str(), m_labels[i].text.length(), &m_labels[i].pos, 
                 DT_CENTER|DT_SINGLELINE|DT_VCENTER);
         }
@@ -127,7 +135,7 @@ private:
             tme.hwndTrack = m_hWnd;
             TrackMouseEvent(&tme);
             m_mouseleave = true;
-        }        
+        }
 
         POINT pt = { GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam) };
         int index = -1;
@@ -155,18 +163,25 @@ private:
             return 0;
 
         int item = m_selectedItem;
-        COLORREF color = propData->colors[item];
+        COLORREF color = getColor(item);
         CColorDialog dlg(color, CC_FULLOPEN, m_hWnd);
         if (dlg.DoModal() == IDOK)
         {
             color = dlg.GetColor();
             propData->colors[item] = color;
+            propData->osc_flags[item] = 0;
+            ::PostMessage(GetParent(), WM_USER, 0, 0);
             Invalidate();
-        }    
+        }
         return 0;
     }
-       
+
 private:
+    COLORREF getColor(int item)
+    {
+        return propData->osc_flags[item] ? propData->osc_colors[item] : propData->colors[item];
+    }
+
     void initBackground()
     {
         COLORREF bkgnd = propData->bkgnd;
@@ -182,7 +197,7 @@ private:
 
     void initFont()
     {
-        propData->initLogFont(m_hWnd, &m_logfont);        
+        propData->initLogFont(m_hWnd, &m_logfont);
         if (!m_font.IsNull())
             m_font.DeleteObject();
         m_font.CreateFontIndirect(&m_logfont);
@@ -197,7 +212,7 @@ private:
             L"Угольный", L"Ярко Красный", L"Ярко Зеленый", L"Желтый", L"Ярко синий", L"Розовый", L"Ярко голубой", L"Белый"
         };
         CDC dc(GetDC());
-        HFONT oldfont = dc.SelectFont(m_font);        
+        HFONT oldfont = dc.SelectFont(m_font);
         for (int i=0; i<16; ++i)
         {
             label new_label;
@@ -257,6 +272,7 @@ class PropertyColors :  public CDialogImpl<PropertyColors>
     PropertiesData *propData;
     ColorExampleWindow m_colors;
     CBevelLine m_bl1, m_bl2;
+    CButton m_reset_osc;
 
 public:
     enum { IDD = IDD_PROPERTY_COLORS_FONT };
@@ -264,16 +280,19 @@ public:
 
 private:
     BEGIN_MSG_MAP(PropertyColors)
-       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)       
+       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
        COMMAND_ID_HANDLER(IDC_BUTTON_BKGND_COLOR, OnBackgroundColor)
        COMMAND_ID_HANDLER(IDC_BUTTON_COLOR_RESET, OnResetColors)
        COMMAND_ID_HANDLER(IDC_BUTTON_FONT, OnSelectFont)
+       COMMAND_ID_HANDLER(IDC_BUTTON_COLOR_RESETOSC, OnResetOscColors)
+       MESSAGE_HANDLER(WM_USER, OnChangedOscColor)
     END_MSG_MAP()
-    
+
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
+        m_reset_osc.Attach(GetDlgItem(IDC_BUTTON_COLOR_RESETOSC));
 
         RECT pos;
         CStatic colorspos(GetDlgItem(IDC_STATIC_COLORS_WINDOW));
@@ -281,6 +300,23 @@ private:
         ScreenToClient(&pos);
         colorspos.ShowWindow(SW_HIDE);
         m_colors.Create(m_hWnd, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
+
+        setResetOscButtonState();
+        return 0;
+    }
+
+    void setResetOscButtonState()
+    {
+        BOOL osc_enable = FALSE;
+        for (int i=0; i<16; ++i) {
+            if (propData->osc_flags[i]) { osc_enable = TRUE; break; }
+        }
+        m_reset_osc.EnableWindow(osc_enable);
+    }
+
+    LRESULT OnChangedOscColor(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        setResetOscButtonState();
         return 0;
     }
 
@@ -296,9 +332,15 @@ private:
         return 0;
     }
 
+    LRESULT OnResetOscColors(WORD, WORD, HWND, BOOL&)
+    {
+        m_colors.onResetOscColors();
+        return 0;
+    }
+
     LRESULT OnSelectFont(WORD, WORD, HWND, BOOL&)
     {
         m_colors.onSelectFont();
         return 0;
-    }    
+    }
 };

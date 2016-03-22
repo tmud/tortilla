@@ -113,7 +113,7 @@ void LogsProcessor::closeAllLogs()
         log *l = m_logs[i];
         if (l)
             l->close = true;
-    }
+    }  
 }
 
 void LogsProcessor::threadProc()
@@ -140,13 +140,13 @@ void LogsProcessor::threadProc()
         saveAll();
         closeReqLogs();
     }
-
+    
     {
         CSectionLock _lock(m_cs);
         if (!m_msgs.empty())    
             m_msgs.swap(m_towrite);
     }
-    saveAll();
+    saveAll();    
     closeReqLogs();
 }
 
@@ -166,7 +166,7 @@ void LogsProcessor::saveAll()
         for (int j=i; j<e; ++j)
         {
             msg &m = m_towrite[j];
-            if (m.log != id) continue;
+            if (m.log != id) continue;                
             m.log = -1;
             std::string out;
             convertString(m.str, &out);
@@ -180,7 +180,7 @@ void LogsProcessor::saveAll()
         MudViewString *s = m_towrite[i].str;
         m_free.push_back(s);
     }
-    m_towrite.clear();
+    m_towrite.clear();    
 }
 
 void LogsProcessor::prepare(int id)
@@ -207,7 +207,7 @@ void LogsProcessor::prepare(int id)
             DWORD readed = 0;
             if (!ReadFile(l->hfile, p, toread, &readed, NULL) || toread != readed)
                 { result = false; break; }
-            size -= toread;
+            size -= toread;            
             toread += inbuffer;
 
             // find teg in data
@@ -233,7 +233,7 @@ void LogsProcessor::prepare(int id)
             inbuffer = teg_len;
             memcpy(buffer, buffer+(toread-teg_len), teg_len);
         }
-
+        
         if (fileptr == -1)
             result = false;
         else
@@ -243,7 +243,7 @@ void LogsProcessor::prepare(int id)
             write(l->hfile, "<pre>\r\n");
         }
     }
-
+    
     if (l->newlog || !result)
     {
         l->newlog = false;
@@ -252,21 +252,21 @@ void LogsProcessor::prepare(int id)
             SetFilePointer(l->hfile, 0, NULL, FILE_BEGIN);
             SetEndOfFile(l->hfile);
         }
-        std::string tu;
+        tstring tu;
         {
-            tstring t(m_propData->title);
+            tu.assign(m_propData->title);
             SYSTEMTIME tm;
             GetSystemTime(&tm);
-            WCHAR buffer[16];
+            tchar buffer[32];
             swprintf(buffer, L" - %d %s %d", tm.wDay, month[tm.wMonth], tm.wYear);
-            t.append(buffer); tu.append((const char*)W2U(t));
+            tu.append(buffer);
         }
-
+        
         char *buffer = m_buffer.getData();
         std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>");
-        header.append(tu);
+        header.append(TW2U(tu.c_str()));
         header.append("</title>\r\n</head>\r\n<style type=\"text/css\">\r\n");
-        W2U font(m_propData->font_name);
+        TW2U font(m_propData->font_name.c_str());
         sprintf(buffer, "body{ background-color: %s; color: %s; font-size: %dpt; font-weight: %d; font-family: %s }\r\n", 
             color(m_propData->bkgnd), color2(m_palette->getColor(7)), m_propData->font_heigth, m_propData->font_bold, (const char*)font);
         header.append(buffer);
@@ -294,7 +294,7 @@ void LogsProcessor::closeReqLogs()
     CSectionLock _lock(m_cs_logs);
     for (int i=0,e=m_logs.size(); i<e; ++i)
     {
-        log *l = m_logs[i];
+        log *l = m_logs[i];       
         if (l && l->close)
         {
             if (l->opened)
@@ -307,7 +307,7 @@ void LogsProcessor::closeReqLogs()
             CloseHandle(l->hfile);
             m_logs[i] = NULL;
             delete l;
-        }
+        }        
     }
 }
 

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "mapperRoomRender.h"
 #include "maskDC.h"
-#include "helpers.h"
 
 MapperRoomRender::MapperRoomRender(int room_size, int corridor_size) : m_size(room_size), m_csize(corridor_size), m_plist(NULL)
 {
@@ -201,7 +200,7 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
    else
      fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->color);
 
-   if (m_plist && r->icon > 0)
+   if (r->icon > 0)
    {
        int icons_count = m_plist->GetImageCount();
        if (r->icon <= icons_count)
@@ -367,10 +366,10 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
        {
            fillWhite(x+1,y+1,de-1,de-1);
        }
-      /* else if (!r->dirs[RD_UP].next_room) // unknown room
+       else if (!r->dirs[RD_UP].next_room) // unknown room
        {
            fillBlack(x+1,y+1,de-1,de-1);
-       }*/
+       }
        if (anotherZone(r, RD_UP))
        {
            fillExit(x+1,y+1,de-1,de-1);
@@ -400,10 +399,10 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
        {
            fillWhite(x,y,-de+1,-de+1);
        }       
-       /*else if (!r->dirs[RD_DOWN].next_room) // unknown room
+       else if (!r->dirs[RD_DOWN].next_room) // unknown room
        {
           fillBlack(x,y,-de+1,-de+1); 
-       }*/
+       }
        if (anotherZone(r, RD_DOWN)) 
        {
            fillExit(x,y,-de+1,-de+1);
@@ -419,12 +418,10 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
 
 bool MapperRoomRender::anotherZone(Room* r, int dir)
 {
-    /*Room *r2 = r->dirs[dir].next_room;
+    Room *r2 = r->dirs[dir].next_room;
     if (!r2)
         return false;
-    RoomHelper rh(r);
-    return (rh.isSameZone(r2)) ? false : true;*/
-    return false;
+    return (r->level->getZone() == r2->level->getZone()) ? false : true;
 }
 
 void MapperRoomRender::renderRect(int x, int y, int dx, int dy)

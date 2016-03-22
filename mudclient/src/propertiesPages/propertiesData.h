@@ -1,11 +1,12 @@
 #pragma once
 
-#define DEFAULT_CMD_HISTORY_SIZE 20
-#define DEFAULT_VIEW_HISTORY_SIZE 1000
+#define DEFAULT_CMD_HISTORY_SIZE 30
+#define DEFAULT_VIEW_HISTORY_SIZE 5000
 #define MIN_CMD_HISTORY_SIZE 10
-#define MIN_VIEW_HISTORY_SIZE 100
 #define MAX_CMD_HISTORY_SIZE 500
-#define MAX_VIEW_HISTORY_SIZE 30000
+#define MIN_VIEW_HISTORY_SIZE 1000
+#define MAX_VIEW_HISTORY_SIZE 300000
+#define TOTAL_MAX_VIEW_HISTORY_SIZE 500000
 
 struct PropertiesHighlight
 {
@@ -46,13 +47,13 @@ private:
     {
         int pos = str.find(label);
         if (pos == -1)
-            return false;        
+            return false;
         int pos2 = str.find(L"]", pos);
         if (pos2 == -1)
             return false;
         pos += label.length();
         tstring tmp(str.substr(pos, pos2-pos));
-        swscanf(tmp.c_str(), L"%d,%d,%d", &v->a, &v->b, &v->c);      
+        swscanf(tmp.c_str(), L"%d,%d,%d", &v->a, &v->b, &v->c);
         return true;
     }
     bool checkColor(const value& v, COLORREF *clr)
@@ -69,7 +70,7 @@ private:
 struct PropertiesTimer
 {
     void convertToString(tstring *value) const
-    {        
+    {
         value->assign(timer);
         value->append(L";");
         value->append(cmd);
@@ -82,11 +83,23 @@ struct PropertiesTimer
         if (pos != tstring::npos)
         {
            timer.assign(str.substr(0, pos));
-           if (isOnlyDigits(timer))
+           if (isItNumber(timer))
+           {
+               double delay = 0;
+               w2double(timer, &delay);
+               setTimer(delay);
                cmd.assign(str.substr(pos+1));
+           }
            else
                timer.assign(L"0");
         }
+    }
+    void setTimer(double timer_delay)
+    {
+        if (timer_delay <= 0) timer_delay = 0;
+        if (timer_delay >= 1000.0f) timer_delay = 999.9f;
+        bool mod = (getMod(timer_delay) >= 0.09f) ? true : false;
+        double2w(timer_delay, (mod) ? 1 : 0, &timer);
     }
 
     tstring timer;
@@ -110,6 +123,13 @@ public:
         return -1;
     }
 
+    int find(const tstring& key, const tstring& group)
+    {
+        for (int i = 0, e = m_values.size(); i < e; ++i)
+            if (m_values[i].key == key && m_values[i].group == group ) { return i; } 
+        return -1;
+    }
+
     void add(int index, const tstring& key, const T& value, const tstring& group)
     {
         el data; data.key = key; data.value = value; data.group = group;
@@ -128,8 +148,8 @@ public:
     void del(int index)
     {
         int size = m_values.size();
-        if (index >= 0 && index < size)        
-            m_values.erase(m_values.begin() + index);        
+        if (index >= 0 && index < size)
+            m_values.erase(m_values.begin() + index);
         else
            { assert(false); }
     }
@@ -175,7 +195,7 @@ public:
     {
         return m_values.size();
     }
-    
+
     void clear()
     {
         m_values.clear();
@@ -208,7 +228,7 @@ public:
     }
 
     void add(int index, const tstring& key)
-    {        
+    {
         if (index == -1)
             m_values.push_back(key);
         else
@@ -224,8 +244,8 @@ public:
     void del(int index)
     {
         int size = m_values.size();
-        if (index >= 0 && index < size)        
-            m_values.erase(m_values.begin() + index);        
+        if (index >= 0 && index < size)
+            m_values.erase(m_values.begin() + index);
         else
            { assert(false); }
     }
@@ -244,7 +264,7 @@ public:
     {
         return m_values.size();
     }
-    
+
     void clear()
     {
         m_values.clear();
@@ -261,7 +281,7 @@ private:
 
 struct OutputWindow
 {
-    OutputWindow() : side(0), lastside(0)
+    OutputWindow() : side(DOCK_FLOAT), lastside(DOCK_FLOAT)
     {
         pos.left = pos.right = pos.top = pos.bottom = 0;
         size.cx = size.cy = 0;
@@ -269,8 +289,15 @@ struct OutputWindow
     void initDefaultPos(int x, int y, int width, int height)
     {
         lastside = side = DOCK_FLOAT;
-        size = { width, height };        
+        size = { width, height };
         pos = { x, y, x + width, y + height };
+    }
+    void initVisible(bool visible)
+    {
+        if (!visible)
+            side = DOCK_HIDDEN;
+        else
+            side = DOCK_FLOAT;
     }
 
     tstring name;
@@ -300,7 +327,7 @@ struct PluginData
         int windows_count = windows.size();
         int x = 100 + windows_count * 50;
         int y = 250 + windows_count * 50;
-        w->initDefaultPos(x, y, width, height);                        
+        w->initDefaultPos(x, y, width, height);
     }
 
     bool findWindow(const tstring& window_name, OutputWindow *w)
@@ -319,10 +346,10 @@ struct PluginData
 
 struct PluginsDataValues : public std::vector<PluginData>
 {
-    void saveWindowPos(const tstring& plugin_name, const OutputWindow&  w)
+    void saveWindowPos(const tstring& plugin_filename, const OutputWindow&  w)
     {
         for (int i = 0, e = size(); i < e; ++i) {
-        if (plugin_name == at(i).name) 
+        if (plugin_filename == at(i).name) 
         {
             PluginData &p = at(i);
             int index = -1;
@@ -337,16 +364,59 @@ struct PluginsDataValues : public std::vector<PluginData>
     }
 };
 
+struct PropertiesDlgPageState
+{
+    PropertiesDlgPageState() : item(-1), topitem(-1), filtermode(false), cansave(false) {}
+    int item;
+    int topitem;
+    bool filtermode;
+    bool cansave;
+    tstring group;
+};
+
+struct PropertiesDlgData
+{
+    PropertiesDlgData() : current_page(0) {}
+    void clear()
+    {
+        current_page = 0;
+        pages.clear();
+    }
+    void deleteGroup(const tstring& name)
+    {
+        for (int i=0,e=pages.size();i<e;++i)
+        {
+            PropertiesDlgPageState& s = pages[i];
+            if (s.group == name)
+                { s.item = -1; s.topitem = -1; s.filtermode = false; s.group.clear(); }
+        }
+    }
+    void renameGroup(const tstring& oldname, const tstring& newname)
+    {
+        for (int i=0,e=pages.size();i<e;++i)
+        {
+            PropertiesDlgPageState& s = pages[i];
+            if (s.group == oldname)
+                s.group = newname;
+        }
+    }
+public:
+    int current_page;
+    std::vector<PropertiesDlgPageState> pages;
+};
+
 struct PropertiesData
 {
     PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
-       , show_system_commands(1), clear_bar(1), disable_ya(0)
-       , history_tab(0), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
+       , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
+       , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
+       , soft_scroll(0)
     {
         initDefaultColorsAndFont();
         initMainWindow();
+        initFindWindow();
     }
 
     PropertiesValues aliases;
@@ -360,14 +430,15 @@ struct PropertiesData
     PropertiesValues timers;
     PropertiesValues variables;
     PropertiesList   tabwords;
-    PropertiesList   tabwords_commands;   
+    PropertiesList   tabwords_commands;
     PluginsDataValues plugins;
+    PropertiesDlgData dlg;
 
     struct message_data { 
     message_data() { initDefault();  }
     void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
     int actions;
-    int aliases;    
+    int aliases;
     int subs;
     int hotkeys;
     int highlights;
@@ -384,6 +455,8 @@ struct PropertiesData
     tstring  codepage;
 
     COLORREF colors[16];
+    COLORREF osc_colors[16];
+    tbyte    osc_flags[16];
     COLORREF bkgnd;
     tstring  font_name;
     int      font_heigth;
@@ -398,6 +471,7 @@ struct PropertiesData
     int      show_system_commands;
     int      clear_bar;
     int      disable_ya;
+    int      disable_osc;
     int      history_tab;
     int      timers_on;
     int      plugins_logs;
@@ -406,11 +480,16 @@ struct PropertiesData
     int      recognize_prompt;
     tstring  recognize_prompt_template;
 
+    int      soft_scroll;
+
     RECT main_window;
     int  main_window_fullscreen;
     int  display_width;
     int  display_height;
     std::vector<OutputWindow> windows;
+
+    RECT find_window;
+    int  find_window_visible;
 
     tstring title;        // name of main window (dont need to save)
 
@@ -421,7 +500,7 @@ struct PropertiesData
         colors[1] = RGB(128, 0, 0);
         colors[2] = RGB(0, 128, 0);
         colors[3] = RGB(128, 128, 0);
-        colors[4] = RGB(0, 0, 255);
+        colors[4] = RGB(0, 64, 128);
         colors[5] = RGB(128, 0, 128);
         colors[6] = RGB(0, 128, 128);
         colors[7] = RGB(192, 192, 192);
@@ -429,22 +508,20 @@ struct PropertiesData
         colors[9] = RGB(255, 0, 0);
         colors[10] = RGB(0, 255, 0);
         colors[11] = RGB(255, 255, 0);
-        colors[12] = RGB(64, 64, 255);
+        colors[12] = RGB(0, 128, 255);
         colors[13] = RGB(255, 0, 255);
         colors[14] = RGB(0, 255, 255);
-        colors[15] = RGB(255, 255, 255);        
+        colors[15] = RGB(255, 255, 255);
+        resetOSCColors();
         font_heigth = 10;
         font_italic = 0;
-        if (isVistaOrHigher()) 
-        {
-            font_name.assign(L"Consolas");   // Consolas more pretty font (exist only Vista+)
-            font_bold = FW_BOLD;
-        }
-        else
-        {
-            font_name.assign(L"Fixedsys" );
-            font_bold = FW_NORMAL;
-        }        
+        font_name.assign(L"Fixedsys");
+        font_bold = FW_NORMAL;
+    }
+
+    void resetOSCColors()
+    {
+        for (int i = 0; i < 16; ++i) { osc_colors[i] = 0; osc_flags[i] = 0; }
     }
 
     void initMainWindow()
@@ -461,6 +538,15 @@ struct PropertiesData
         main_window.top  = (primary_height - height) / 2;
         main_window.right = main_window.left + width;
         main_window.bottom = main_window.top + height;
+    }
+
+    void initFindWindow()
+    {
+        find_window.left = 200;
+        find_window.top = 100;
+        find_window.right = find_window.left;
+        find_window.bottom = find_window.top;
+        find_window_visible = 0;
     }
 
     void initAllDefault()
@@ -483,6 +569,7 @@ struct PropertiesData
         initPlugins();
         recognize_prompt = 0;
         recognize_prompt_template.clear();
+        dlg.clear();
     }
 
     void initPlugins()
@@ -497,7 +584,7 @@ struct PropertiesData
         f->lfHeight = -MulDiv(font_heigth, GetDeviceCaps(GetDC(hwnd), LOGPIXELSY), 72);
         f->lfWidth = 0;
         f->lfEscapement = 0;
-        f->lfOrientation = 0;        
+        f->lfOrientation = 0;
         f->lfWeight = font_bold;
         f->lfItalic = font_italic ? 1 : 0;
         f->lfUnderline = 0;
@@ -518,6 +605,7 @@ struct PropertiesData
 
     void deleteGroup(const tstring& name)
     {
+        dlg.deleteGroup(name);
         delGroupInArray(name, &aliases);
         delGroupInArray(name, &actions);
         delGroupInArray(name, &subs);
@@ -537,6 +625,7 @@ struct PropertiesData
 
     void renameGroup(const tstring& oldname, const tstring& newname)
     {
+        dlg.renameGroup(oldname, newname);
         renGroupInArray(oldname, newname, &aliases);
         renGroupInArray(oldname, newname, &actions);
         renGroupInArray(oldname, newname, &subs);
@@ -550,7 +639,7 @@ struct PropertiesData
             property_value &g = groups.getw(i);
             if (g.key == oldname){
                 g.key = newname; break;
-            }        
+            }
         }
     }
 
@@ -580,7 +669,7 @@ private:
         {
             const property_value &v = values->get(i);
             if (v.group == name)
-                values->del(i);            
+                values->del(i);
         }
     }
 
@@ -621,7 +710,7 @@ private:
         windows.clear();
         for (int i=0; i<OUTPUT_WINDOWS; ++i) 
         {
-            OutputWindow w;      
+            OutputWindow w;
             w.size.cx = 350; w.size.cy = 200;
             int d = (i+1) * 70;
             RECT defpos = { d, d, d+w.size.cx, d+w.size.cy };

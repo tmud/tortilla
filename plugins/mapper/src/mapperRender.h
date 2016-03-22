@@ -6,34 +6,33 @@
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
-    Room *m_room;
-    //RoomsLevel *m_level;
+    CBrush m_background;
+    ViewMapPosition viewpos;
+    MapperRoomRender rr;
+    
+    struct room_pos { 
+    room_pos() : x(-1), y(-1) {}
+    bool valid() const { return (x >= 0) ? true : false; }
+    int x,y; };
 
     int m_hscroll_pos;
-    int m_hscroll_size;
+    int m_hscroll_size;    
     int m_vscroll_pos;
-    int m_vscroll_size;
+    int m_vscroll_size;        
     bool m_hscroll_flag;
     bool m_vscroll_flag;
     int  m_left, m_right, m_top, m_bottom;
     bool m_block_center;
 
-    int m_cursor;
-
     bool m_track_mouse;
 
-    CBrush m_background;
     CMenuXP m_menu;
     CImageList m_icons;
-    MapperRoomRender rr;
     Room *m_menu_tracked_room;
 
 public:
     MapperRender();
-    void setCurrentRoom(Room *room);    
-    void lostPosition();
-    void setPossibleRooms(const std::vector<Room*>& rooms);
-    //void setCurrentLevel(RoomsLevel *level);
+    void roomChanged(const ViewMapPosition& pos);
 
 private:
 	BEGIN_MSG_MAP(MapperRender)
@@ -69,6 +68,7 @@ private:
         m_menu.DrawItem((LPDRAWITEMSTRUCT)lparam);
         return 0;
     }
+
     LRESULT OnMenuCommand(UINT, WPARAM wparam, LPARAM, BOOL& bHandled)
     {
         if (!runMenuPoint(LOWORD(wparam)))
@@ -77,16 +77,9 @@ private:
     }
 
 private:
-//    void renderMap(RoomsLevel* rlevel, int x, int y);
-//    void renderLevel(RoomsLevel* level, int dx, int dy, int type);
-
-    struct room_pos {
-        room_pos() : x(-1), y(-1) {}
-        bool valid() const { return (x >= 0) ? true : false; }
-        int x, y;
-    };
-    //room_pos findRoomPos(Room* room);
-
+    void renderMap(RoomsLevel* rlevel, int x, int y);
+    void renderLevel(RoomsLevel* level, int dx, int dy, int type);
+    room_pos findRoomPos(Room* room);
     Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();

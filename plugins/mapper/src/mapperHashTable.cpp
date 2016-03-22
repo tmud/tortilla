@@ -1,5 +1,4 @@
 #include "stdafx.h"
-#include "mapperObjects.h"
 #include "mapperHashTable.h"
 
 MapperHashTable::MapperHashTable()
@@ -10,7 +9,7 @@ MapperHashTable::~MapperHashTable()
 {
     iterator it = rooms.begin(), it_end = rooms.end();
     for(; it!=it_end; ++it)
-        it->second.destroy();
+        it->second.destroy();        
 }
 
 void MapperHashTable::addRoom(Room* room)
@@ -50,11 +49,26 @@ void MapperHashTable::findRooms(const RoomData& room, std::vector<Room*> *vr)
     iterator it = rooms.find(room.hash);
     if (it == rooms.end())
         return;
+    if (!room.dhash)        // get all rooms
+    {
+        hash_element &tmp = it->second;
+        vr->push_back(tmp.room);
+        hash_element *p = tmp.next;
+        for (; p; p=p->next) {
+            vr->push_back(p->room);
+        }
+        return;
+    }
 
-    // get all rooms
+    // get only rooms with same dhash
     hash_element &tmp = it->second;
-    vr->push_back(tmp.room);
+    if (tmp.room->roomdata.dhash == room.dhash)
+        vr->push_back(tmp.room);
+
     hash_element *p = tmp.next;
-    for (; p; p=p->next)     
-       vr->push_back(p->room);
+    for (; p; p=p->next)
+    {
+        if (p->room->roomdata.dhash == room.dhash)
+            vr->push_back(p->room);
+    }
 }

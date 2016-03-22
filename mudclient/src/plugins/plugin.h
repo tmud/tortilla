@@ -4,6 +4,7 @@
 #include "../propertiesPages/propertiesData.h"
 #include "../logicProcessor.h"
 #include "pluginsView.h"
+#include "pluginsTriggers.h"
 
 class Plugin
 {
@@ -44,11 +45,14 @@ public:
     std::vector<int> buttons;
     std::vector<tstring> toolbars;
     std::vector<tstring> commands;
+    std::vector<PluginsTrigger*> triggers;
 
 private:
     bool loadDllPlugin(const wchar_t* fname);
     bool loadLuaPlugin(const wchar_t* fname);
     bool initLoadedPlugin(const wchar_t* fname);
+    bool isAlreadyLoaded(const wchar_t* filename);
+    bool isLoadedPlugin(const wchar_t* module_name);
     void getparam(const char* state, tstring* value);
 
 private:

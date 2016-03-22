@@ -23,7 +23,6 @@ hr { border: 1px dashed; color: #909090; }
 <body link="#3366cc" alink="#ff0000" vlink="#3366cc">
 <a name="top"></a>
 <center><h1>Tortilla SDK<br></h1></center>
-
 <h2>Содержание</h2>
 <ul>
 <li><a href="#description">Описание, состав SDK</a></li>
@@ -34,6 +33,7 @@ hr { border: 1px dashed; color: #909090; }
 <li><a href="#pluginsapi">Функции взаимодействия клиента с плагином, API плагина</a></li>
 <li><a href="#clientapi">Функции взаимодействия плагина с клиентом, API клиента</a></li>
 <li><a href="#strings">Cтроки, ньюансы работы в Lua</a></li>
+<li><a href="#triggers">Триггеры на Lua</a></li>
 <li><a href="#decoda">Decoda</a></li>
 </ul>
 
@@ -149,8 +149,7 @@ Decoda - это среда разработки и отладки на <div clas
 Плагин должен реализовать точно такую же функцию, только с именем <div class="m">plugin_open</div>, чтобы клиент смог его подключить. Список функций которые должны реализовать плагин 
 представлены в разделе <a href="#pluginsapi">API для плагинов</a>. В SDK также есть пример плагина на <div class="m">С++</div>, в котором представлены аспекты уже для плагинов.<br><br>
 Следующий аспект, который нужно учесть - это кодировка текстовых строк в плагинах и модулях. Это <div class="m">UTF8 !</div> То есть Lua объекты типа string - это строка 
-символов в кодировке UTF8. В SDK это решается за счет макроса который включает поддержку этой кодировки в Visual Studio (данный макрос работает только там). При наличии 
-этого макроса все ANSI строки в исходных текстах компилируются как UTF8. В <div class="m">API</div> есть вспомогательные функции для работы с кодировками, см. <a href="#api">функции API</a>.
+символов в кодировке UTF8. В <div class="m">API</div> есть вспомогательные функции для работы с кодировками, см. <a href="#api">функции API</a>.
 
 <a name="devlua"></a>
 <h2>Разработка на Lua</h2>
@@ -171,8 +170,8 @@ end
 Это объявление пустой таблицы - с именем модуля. Таблица в <div class="m">Lua</div> является основным элементом в языке и используется в том числе для модулей. Далее идут функции модуля 
 и его переменные. И это все! Все что требуется, это написать реализацию модуля. (PS. Синтакис исходного кода модуля не обязательно должен быть похожим на пример. В языке <div class="m">Lua</div> 
 довольно широкие вариации написания кода. Читайте документацию к языку.)<br><br>
-Однако, чтобы на <div class="m">Lua</div> можно чтото сделать, базовые возможности уже должны быть реализованы. Это делается за счет других модулей. Если имеющихся возможностей не будет хватать, 
-то их придется предварительно реализовать на <div class="m">С++</div> или взять готовый модуль из интернета. Модуль использует другой модуль - это принцип, который заложен в данный клиент, и
+Однако, чтобы на <div class="m">Lua</div> можно было что-то сделать, базовые возможности уже должны быть реализованы. Это делается за счет других модулей. Если имеющихся возможностей не будет хватать, 
+то их придется предварительно реализовать на <div class="m">C/С++</div> или взять готовый модуль из интернета. Модуль использует другой модуль - это принцип, который заложен в данный клиент, и
 его нужно использовать. Это дает возможность для быстрого развития самого клиента.<br><br>
 Написание плагинов не сложнее, чем написание модулей. Код плагина будет выглядеть примерно так:<br>
 <pre><div class="ee">plugin = {}
@@ -246,29 +245,43 @@ local t = {...} -- правильное написание
 Функция должна возвратить версию плагина.
 <hr>
 <h3>Используемые функции плагина</h3>
-Эти функции можно использовать при необходимости. Функции будут вызываться, если они реализованы в плагине.
+Эти функции можно использовать при необходимости. Функции будут вызываться, если они объявлены в плагине.
 <a name="init"></a>
-<h4>init()</h4>
+<h4>void init()</h4>
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается в момент загрузки плагина. Предназначена для того, чтобы плагин настроил все необходимое для своей работы (например добавил пункт меню, см. <a href="#clientapi">API клиента</a>).
 <hr>
 <a name="release"></a>
-<h4>release()</h4>
+<h4>void release()</h4>
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается в момент выгрузки плагина из клиента и памяти компьютера. Предназначена для того, чтобы плагин сохранил все данные и освободил ресурсы. 
 Пункты меню и кнопки панели управления удалять не нужно (удаляются автоматически клиентом).
 <hr>
+<a name="activated"></a>
+<h4>void activated()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается когда окно клиента становиться активным, т.е. основным окном, с которым работает игрок. Чтобы узнать текущее состояние 
+клиента, нужно использовать метод <div class="cmd">props.activated</div>. См. <a href="#props" class="cmd">props</a>.
+<hr>
+<a name="deactivated"></a>
+<h4>void deactivated()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается когда окно клиента перестает быть активным, например сворачивается, т.е. игрок теперь работает с другой программой. 
+Текущее состояние клиента можно узнать с помощью <div class="cmd">props.activated</div>.
+<hr>
 <a name="menucmd"></a>
-<h4>menucmd(int id)</h4>
+<h4>void menucmd(int id)</h4>
 <div class="m">Параметры: id - целочисленное число</div><br>
 <div class="m">Результат: нет<br></div><br>
 Клиент вызывает данную функцию, когда пользователь выбирает пункт меню или нажимает кнопку на панели управления, которые относятся к плагину.
 В качестве id возвращается идентификатор, который использовался при создании пункта меню или кнопки.
 <hr>
 <a name="closewindow"></a>
-<h4>closewindow(int hwnd)</h4>
+<h4>void closewindow(int hwnd)</h4>
 <div class="m">Параметры: hwnd - дескриптор окна</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается в момент закрытия окна плагина (если плагин создает окна, по клику на крестике окна плагина). 
@@ -301,9 +314,10 @@ local t = {...} -- правильное написание
 <div class="e">Приоритетная функция</div><br>
 <div class="m">Параметры: cmd - команда</div><br>
 <div class="m">Результат: true/false<br></div><br>
-Функция предназначена для работы с историей команд клиента. Данная функция вызывается для каждой команды, которую вводит пользователь (после <a href="#barcmd" class="cmd">#barcmd</a>). 
+Функция предназначена для работы с историей команд клиента. Данная функция вызывается для каждой команды, которую вводит пользователь. 
 В качестве результата она должна вернуть булевское значение, которое означает <div class="m">false</div> - не записывать команду в историю клиента, <div class="m">true</div> - 
-команду нужно записать. Клиент прекращает дальнейший вызов данной функции у плагинов, если возращается <div class="m">false</div>.
+команду нужно записать. Клиент прекращает дальнейший вызов данной функции у плагинов, если возращается <div class="m">false</div>. 
+Сюда не попадают команды, при многострочной вставки из буфера обмена. Команда вызывается до команды <a href="#barcmd" class="cmd">#barcmd</a>).
 <hr>
 <a name="gamecmd"></a>
 <h4>table gamecmd(table сmd)</h4>
@@ -311,7 +325,8 @@ local t = {...} -- правильное написание
 <div class="m">Параметры: cmd - таблица с игровой командой и параметрами</div><br>
 <div class="m">Результат: table - игровая команда + параметры, nil - команду отбросить<br></div><br>
 Функция предназначена для работы с игровыми командами игрока (которые будут отправлены на мад-сервер). Сюда попадают все игровые команды, которые вводятся игроком или как результат работы триггеров. 
-Плагин может, при необходимости изменить команду, или даже ее отбросить. Функция должна вернуть исходную таблицу, если плагин не изменяет команду, или новую версию команды (nil если отбросить).
+Плагин может, при необходимости изменить команду, или даже ее отбросить. Функция должна вернуть исходную таблицу (или true), если плагин не изменяет команду, или новую версию команды (nil, false или string если отбросить). 
+Если использовать string, то будет выведена данная строка в лог плагинов, эту возможность можно использовать для вывода ошибки. 
 В функцию попадает только одна команда, уже после всех обработок клиентом и готовая к отправке на сервер. 
 В таблице команда находится под индексом 1. С индекса 2 начинаются параметры. Если нужно узнать количество элементов в таблице, можно выполнить операцию #t или lua_len.<br>
 Если нужно предварительно обрабатывать команды, которые вводит пользователь, см. <a href="#barcmd" class="cmd">#barcmd</a>
@@ -323,7 +338,8 @@ local t = {...} -- правильное написание
 <div class="m">Параметры: cmd - таблица со системной командой и параметрами</div><br>
 <div class="m">Результат: table - системная команда + параметры, nil - команду отбросить<br></div><br>
 Функция предназначена для работы с системными командами (команды клиента, которые начинаются с символа #). Сюда попадают все системные команды, которые вводятся игроком или как результат работы триггеров. 
-Плагин может, при необходимости изменить команду, или даже ее отбросить. Функция должна вернуть исходную таблицу, если плагин не изменяет команду, или новую версию команды (nil если отбросить). 
+Плагин может, при необходимости изменить команду, или даже ее отбросить. Функция должна вернуть исходную таблицу (или true), если плагин не изменяет команду, или новую версию команды (nil, false или string если отбросить). 
+Если использовать string, то будет выведена данная строка в лог плагинов, эту возможность можно использовать для вывода ошибки. 
 Команда попадает в метод без ведущего символа системной команды #. В функцию попадает только одна команда, уже после всех обработок клиентом и готовая к выполнению клиентом. 
 В таблице команда находится под индексом 1. С индекса 2 начинаются параметры. Если нужно узнать количество элементов в таблице, можно выполнить операцию #t или lua_len.<br>
 Если нужно предварительно обрабатывать команды, которые вводит пользователь, см. <a href="#barcmd" class="cmd">#barcmd</a>
@@ -335,9 +351,11 @@ local t = {...} -- правильное написание
 <div class="m">Параметры: view - индекс окна, data - объект-массив, со строками</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция предназначена для работы с данными, которые приходят от мад-сервера в виде массива строк (клиент уже сформировал набор строк). Метод вызывается ДО (before) вызова обработчиков 
-триггеров, подсветок, замен и других элементов. Он может использоватся как фильтр (удалять или заменять строки, менять цвет) или работать без изменения строк. 
+триггиров, подсветок, замен и других элементов. Он может использоватся как фильтр (удалять или заменять строки, менять цвет) или работать без изменения строк. 
 В качестве первого параметра - индекс окна, для которого предназначен массив строк ( 0 - это главное окно мад-клиента, 1 и больше - это output окна клиента). 
-В качестве второго параметра выступает специальный объект-массив, с помощью которого можно работать с массивом строк.
+В качестве второго параметра выступает специальный объект-массив, с помощью которого можно работать с массивом строк. 
+<div class="m">Важно!</div> В этом методе нужно аккуратно пользоваться функцией <a href="#log" class="cmd">log</a>, так как данная строка вновь попадет в эту функцию, при следующей итерации. 
+Для избежания бесконечного цикла, клиент отключает функцию log в момент обработки строк, попавших из log в предыдущей итерации.
 <br>См.также: <a href="#viewdata" class="cmd">viewdata</a>, <a href="#cppviewdata" class="cmd">viewdata в С++</a>.
 <hr>
 <a name="after"></a>
@@ -345,8 +363,10 @@ local t = {...} -- правильное написание
 <div class="e">Приоритетная функция</div><br>
 <div class="m">Параметры: view - индекс окна, data - объект-массив, со строками</div><br>
 <div class="m">Результат: нет<br></div><br>
-Функция идентична команде <a href="#before" class="cmd">before</a>, только она работает ПОСЛЕ (after) обработчиков триггеров, подсветок, замен и др. элементов. После этого метода 
-строки попадают в главное окно мада или output-окно.
+Функция идентична команде <a href="#before" class="cmd">before</a>, только она работает ПОСЛЕ (after) обработчиков триггиров, подсветок, замен и др. элементов. После этого метода 
+строки попадают в главное окно мада или output-окно. 
+<div class="m">Важно!</div> В этом методе нужно аккуратно пользоваться функцией <a href="#log" class="cmd">log</a>, так как данная строка вновь попадет в эту функцию, при следующей итерации. 
+Для избежания бесконечного цикла, клиент отключает функцию log в момент обработки строк, попавших из log в предыдущей итерации.
 <br>См.также: <a href="#viewdata" class="cmd">viewdata</a>, <a href="#cppviewdata" class="cmd">viewdata в С++</a>.
 <hr>
 <a name="connect"></a>
@@ -361,6 +381,46 @@ local t = {...} -- правильное написание
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается, когда клиент теряет соединение с мадом.
 <hr>
+<a name="msdp"></a>
+<h4>void msdp(table data)</h4>
+<div class="m">Параметры: data - таблица с данными протокола MSDP.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается клиентом, когда от сервера получены данные по протоколу MSDP. Данные передаются в виде таблицы Lua 
+(в виде ключ-переменная + значение в виде строк). В качестве значений могут быть пустые строки и таблицы. Таблица используется 
+в случае, если получены msdp-массив или msdp-таблица. Для msdp-массива используются цифровые индексы 1+, для msdp-таблицы строковые ключи 
+со значениями. Сам стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
+<hr>
+<a name="msdpon"></a>
+<h4>void msdpon()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается клиентом, когда установлено соединение по протоколу MSDP. После вызова этого метода можно вызывать функции для 
+работы с протоколом. Cм. <a href="#luamsdp" class="cmd">lua msdp</a>, <a href="#cppmsdp" class="cmd">luaT_Msdp</a>. Далее все данные будут поступать 
+через функцию <a href="#msdp" class="cmd">msdp</a>.
+<hr>
+<a name="msdpoff"></a>
+<h4>void msdpoff()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция вызывается клиентом, когда соединение по протоколу MSDP закрылось. Тут можно произвести сброс плагина.
+См. <a href="#msdpon" class="cmd">msdpon</a>.
+<hr>
+<a name="propsblocked"></a>
+<h4>void propsblocked()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для оповещения плагинов, о том, что было открыто окно настроек. Используется для разрешения проблемы конфликта, если 
+триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>запрещает</b> изменять триггеры до прихода события <a href="#propsupdated" class="cmd">propsupdated</a>.<br>
+См. <a href="#props" class="cmd">isPropertiesOpen</a>.
+<hr>
+<a name="propsupdated"></a>
+<h4>void propsupdated()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для оповещения плагинов, о том, что окно настроек было закрыто. Используется для разрешения проблемы конфликта, если 
+триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>снимает запрет</b> на изменение триггеров.
+См. <a href="#propsblocked" class="cmd">propsblocked</a>, <a href="#props" class="cmd">isPropertiesOpen</a>.
+<hr>
 <a name="clientapi"></a>
 <h2>Функции взаимодействия плагина с клиентом, API клиента</h2>
 <div class="m">API клиента</div> делиться на 2 части:
@@ -372,23 +432,21 @@ local t = {...} -- правильное написание
 <h3>API клиента C++</h3>
 Все необходимое API для разработки плагинов находится в <div class="m">api.h</div>, его можно открыть и посмотеть подробно. В этом разделе 
 представлено описание содержимого данного файла. Другой файл <div class="m">base.h</div> подключает <div class="m">API Lua</div> 
-и с этой частью можно познакомиться в документации к языку.<br><br>
-В плагинах используется кодировка <div class="m">UTF8</div>, обратите внимание! Это достигается за счет макроса в файле <div class="m">base.h</div>. 
-Все ansi-строки в исходных текстах, при наличии макроса, компилируются как UTF8. Данный макрос работает только в Visual Studio.
+и с этой частью можно познакомиться в документации к языку.
 <hr>
-<h4>bool  luaT_check(lua_State *L, int n, ...);</h4>
+<h4>bool luaT_check(lua_State *L, int n, ...);</h4>
 <div class="m">Параметры: n - количество параметров, ... - параметры</div><br>
 <div class="m">Результат: true/false<br></div><br>
 Функция проверяет состояние стека Lua машины на соответствие параметрам. Нужно указать количество параметров и их типы. Функция 
 предназначена для выбора нужной ветки кода в зависимости от параметров в С++ обработчиках вызовов со стороны Lua.
 <hr>
-<h4>bool  luaT_run(lua_State *L, const utf8* func, const utf8* op, ...);</h4>
+<h4>bool luaT_run(lua_State *L, const char* func, const char* op, ...);</h4>
 <div class="m">Параметры: func - название функции для запуска, op - количество и число параметров, ... - параметры</div><br>
 <div class="m">Результат: true/false<br></div><br>
 Функция запускает Lua-функцию с заданным именем. Следующий параметр определяет количество и число параметров (одна буква - один параметр):
 <ul>
 <li>d - целое число (int)</li>
-<li>s - строка (utf8)</li>
+<li>s - строка (wchar_t*)</li>
 <li>u - беззнаковое целое число (unsigned int)</li>
 <li>o - объект или таблица, данный символ может быть только в первой позиции, сам объект/таблицу нужно предварительно поместить в стек через luaT_pushobject. 
 Вызов метода идет в ООП режиме, когда в качестве первого параметра передается сам объект (в Lua это вызов функции через двоеточие).</li>
@@ -396,7 +454,7 @@ local t = {...} -- правильное написание
 </ul>
 Далее, после строки с типом и числом параметров, идут сами параметры.
 <hr>
-<h4>int luaT_error(lua_State *L, const utf8* error_message);</h4>
+<h4>int luaT_error(lua_State *L, const wchar_t* error_message);</h4>
 <div class="m">Параметры: error_message - сообщение об ошибке</div><br>
 <div class="m">Результат: число - значение с числом параметров на стеке, предназначено для передачи в Lua<br></div><br>
 Функция предназначена для завершения какой-либо другой функции, в случае ошибки. Сообщение об ошибке передается в клиент, где и отображается.<br>
@@ -408,11 +466,6 @@ local t = {...} -- правильное написание
   ...
 }
 </div></pre>
-<hr>
-<h4>void luaT_log(lua_State *L, const utf8* log_message);</h4>
-<div class="m">Параметры: log_message - сообщение для пользователя</div><br>
-<div class="m">Результат: нет<br></div><br>
-Функция предназначена для вывода логов в окно клиента. В настройках клиента указывается окно в которое нужно их выводить.
 <h3>API клиента Lua</h3>
 <hr>
 <h4>void* luaT_toobject(lua_State* L, int index);</h4>
@@ -451,20 +504,24 @@ local t = {...} -- правильное написание
 возможностей в клиент (см. <a href="#render" class="cmd">render</a>).
 <br>
 <pre>
-<div class="cmd">bool create(lua_State *pL, const utf8* caption, int width, int height)</div> - создание окна-контейера, с заданными 
+<div class="cmd">bool create(lua_State *pL, const wchar_t* caption, int width, int height)</div> - создание окна-контейера, с заданными 
 размерами и заголовком.
 <div class="cmd">HWND hwnd()</div> - получение дескриптора окна.
+<div class="cmd">HWND floathwnd()</div> - получение дескриптора самого базового окна с рамкой и заголовком.
 <div class="cmd">void hide()</div> - скрыть окно.
 <div class="cmd">void show()</div> - показать окно.
 <div class="cmd">bool isVisible()</div> - проверка видимо окно или нет.
-<div class="cmd">void dock(const utf8* side)</div> - заставляет окно пристыковаться к нужной стороне клиента. 
-Возможные варианты: 'left', 'right', 'top', 'bottom'.
+<div class="cmd">void dock(const wchar_t* side)</div> - заставляет окно пристыковаться к нужной стороне клиента. 
+Возможные варианты: 'left', 'right', 'top', 'bottom'. Допускается перечисление нескольких вариантов через запятую.
 <div class="cmd">void undock()</div> - окно открепляется от окна клиента.
-<div class="cmd">void block(const utf8* side)</div> - блокировка возможности прикрепить окно к определенной стороне. 
+<div class="cmd">void block(const wchar_t* side)</div> - блокировка возможности прикрепить окно к определенной стороне. 
 Возможные варианты: 'left', 'right', 'top', 'bottom', 'float'. Вариант 'float' означает, что окно не может быть 
-плавающим и всегда должно быть пристыкованным.
+плавающим и всегда должно быть пристыкованным. Допускается перечисление нескольких вариантов через запятую.
 <div class="cmd">void attach(HWND child)</div> - подключение своего окна внутрь дополнительного окна. Дополнительное окно выступает 
 в качестве контейнера.
+<div class="cmd">void setFixedSize(int width, int height)</div> - Установка и фиксация размер окна. Изменить размер такого окна 
+с помощью мышки будет невозможно.
+<div class="cmd">SIZE getSize()</div> - получение размера окна.
 </pre>
 См. также <a href="#luatpanel" class="cmd">luaT_panel</a>.
 <hr>
@@ -476,7 +533,7 @@ local t = {...} -- правильное написание
 В дополнительное окно можно подключить свое окно (использовать как контейнер), а можно рисовать (только из Lua-скриптов) с помощью встроенных 
 возможностей в клиент (см. <a href="#render" class="cmd">render</a>).
 <pre>
-<div class="cmd">bool create(lua_State *pL, const utf8* side, int size)</div> - создание панели. Нужно указать сторону, где будет 
+<div class="cmd">bool create(lua_State *pL, const wchar_t* side, int size)</div> - создание панели. Нужно указать сторону, где будет 
 располагаться панель и ее размер в пикселях. Вариант значения <div class="cmd">side</div> - 'left', 'right', 'top', 'bottom'.
 <div class="cmd">void attach(HWND child)</div> - подключение своего окна внутрь панели. Панель выступает в качестве контейнера.
 <div class="cmd">HWND hwnd()</div> - получение дескриптора окна панели.</div>
@@ -485,8 +542,8 @@ local t = {...} -- правильное написание
 <hr>
 <a name="cppviewdata"></a>
 <h4>class luaT_ViewData</h4>
-Класс предназначен для манипуляции со строками, которые плагин получает от клиента. Используется при работе с методами <a href="#before" class="cmd">before</a> и 
-<a href="#after" class="cmd">after</a>. В Lua есть подобный интерфейс <a href="#viewdata" class="cmd">viewdata</a>
+Класс предназначен для манипуляции со строками, которые плагин получает от клиента. Используется при работе с методами <a href="#before" class="cmd">before</a>,  
+<a href="#after" class="cmd">after</a>, <a href="#updateView" class="cmd">updateView</a>. В Lua есть подобный интерфейс <a href="#viewdata" class="cmd">viewdata</a>
 <br><div class="m">Внимание!</div> Все индексы начинаются с 1, а не с 0, т.е рабочий диапозон индексов [1..n]. Решение связано с интеграцией с языком Lua.
 <pre>
 <div class="cmd">void init(lua_State *pL, void *viewdata)</div> - инициализация.
@@ -496,22 +553,33 @@ local t = {...} -- правильное написание
 <div class="cmd">bool isFirst()</div> - первая строка является продолжением последней строки (завершение предыдущей строки).
 <div class="cmd">bool isLast()</div> - последняя строка является завершенной, ее продолжения в следующей коллекции не будет.
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
+<div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
-<div class="cmd">void getPrompt(u8string *str)</div> - возвращает prompt-строку (без возможных команд в строке).
-<div class="cmd">void getText(u8string* str)</div> - полный текст строки (без учета расцветки).
+<div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
+<div class="cmd">void getPrompt(std::Wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
+<div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
-<div class="cmd">void getHash(u8string* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
+<div class="cmd">void getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество отдельных блоков в текущей строке.
 <div class="cmd">bool get(int block, int param, unsigned int *value)</div> - значение параметра блока текущей строки. Допустимые значения параметра:
 <div class="m">TEXTCOLOR</div>, <div class="m">BKGCOLOR</div>, <div class="m">UNDERLINE</div>, <div class="m">ITALIC</div>, <div class="m">BLINK</div>, <div class="m">REVERSE</div>, <div class="m">EXTTEXTCOLOR</div>, <div class="m">EXTBKGCOLOR</div>.
 <div class="cmd">bool set(int block, int param, unsigned int value)</div> - устанавливает значение параметра блока текущей строки.
-<div class="cmd">void getBlockText(int block, u8string* str)</div> - текст блока текущей строки.
-<div class="cmd">bool setBlockText(int block, const utf8* text)</div> - задает новый текст блоку текущей строки.
+<div class="cmd">void getBlockText(int block, std::wstring* str)</div> - текст блока текущей строки.
+<div class="cmd">bool setBlockText(int block, const wchar_t* text)</div> - задает новый текст блоку текущей строки.
 <div class="cmd">bool copyBlock(int block, int dst_string, int dst_block)</div> - копирует заданный блок текущей строки в другую строку.
 <div class="cmd">bool deleteBlock(int block)</div> - удаляет блок текущей строки.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
 <div class="cmd">bool createString()</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней.
+<div class="cmd">bool createString(bool system, bool gamecmd)</div> - новая строка. Параметры задают соответствующие флаги новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет текущую строку.
+<div class="cmd">bool find(Pcre* p[, int from])</div> - ищет строку по регулярному выражению. Если строка найдена, то она становиться текущей.
+Можно указать с какой строки нужно начинать поиск.
+<div class="cmd">bool getBlockPos(int abspos, int *res_block, int *res_pos)</div> - возвращает номер блока и позицию в блоке для текущей 
+строки по номеру символа во всей строке (полная строка). Предназначена для работы совместно с функцией <div class="cmd">luaT_ViewData::getText</div>.
+<div class="cmd">void setNext(bool next)</div> - используется в механизме деления строк. Устанавливает/снимает флаг, что следующая строка часть текущей.
+<div class="cmd">void setPrev(bool prev)</div> - Предыдущая строка часть текущей (механизм деления строк).
+<div class="cmd">bool isNext()</div> - проверка флага, что следующая строка часть текущей (механизм деления строк).
+<div class="cmd">bool isPrev()</div> - проверка флага, что предыдущая строка часть текущей (механизм деления строк).
 </pre>
 <hr>
 <a name="cppactobj"></a>
@@ -536,15 +604,49 @@ local t = {...} -- правильное написание
 <div class="cmd">luaT_ActiveObjects(lua_State *pL, const char* type)</div> - инициализация (конструктор), возможные типы см. выше.
 <div class="cmd">int  size()</div> - количество элементов.
 <div class="cmd">bool select(int index)</div> - выбор нужного элемента по индексу.
-<div class="cmd">bool add(const utf8* key, const utf8* value, const utf8* group)</div> - добавление нового элемента.
+<div class="cmd">bool add(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - добавление нового элемента. Если элемент существует, 
+то выходит с ошибкой.
+<div class="cmd">bool replace(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - заменяет текущий элемент. Если элемент не существует, 
+то добавляет новый.
 <div class="cmd">bool del()</div> - удаление текущего элемента.
 <div class="cmd">int  getIndex()</div> - получение позиции текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - переместить текущий элемент в нужную позицию.
-<div class="cmd">bool get(int param, u8string* value)</div> - получить параметр текущего элемента. Возможные варианты параметра:
+<div class="cmd">bool get(int param, std::wstring* value)</div> - получить параметр текущего элемента. Возможные варианты параметра:
 <div class="m">KEY</div>, <div class="m">VALUE</div>, <div class="m">GROUP</div>.
-<div class="cmd">bool set(int param, const utf8* value)</div> - установка нужного параметра у текущего элемента.
+<div class="cmd">bool set(int param, const wchar_t* value)</div> - установка нужного параметра у текущего элемента.
 <div class="cmd">bool update()</div> - применить все изменения. Только после вызова этого оператора все изменения вступят в силу.
 </pre>
+<hr>
+<a name="cppprops"></a>
+<h4>class luaT_Props</h4>
+Класс предназначен для получения текущих настроек клиента. в Lua есть такой же набор методов в объекте <a href="#props" class="cmd">props</a>.<br>
+Методы класса:
+<pre>
+<div class="cmd">COLORREF paletteColor(int index)</div> - цвет из палитры клиента. Возможные значения индекса от 0 до 255.
+<div class="cmd">COLORREF backgroundColor()</div> - цвет фона всех окон клиента.
+<div class="cmd">void cmdPrefix(std::wstring* str)</div> - получение префикса системной команды клиента.
+<div class="cmd">void cmdSeparator(std::wstring* str)</div> - получение разделителя команд клиента.
+<div class="cmd">void serverHost(std::wstring* str)</div> - адрес сервера, куда подключен клиент (пустая строка, если нет подключения).
+<div class="cmd">void serverPort(std::wstring* str)</div> - адрес порта подключения (пустая строка, если нет подключения).
+<div class="cmd">bool connected()</div> - признак, что клиент подключен к маду.
+<div class="cmd">HFONT currentFont()</div> - хэндл текущего шрифта клиента.
+<div class="cmd">bool activated()</div> - признак, что окно клиента активно и игрок работает с ним.
+<div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
+<div class="cmd">int pluginsLogWindow()</div> - номер окна, куда выводятся логи плагинов. Если вывод логов отключен возвращается -1.
+</pre>
+<hr>
+<a name="cppmsdp"></a>
+<h4>class luaT_Msdp</h4>
+Класс предназначен для работы с протоколом MSDP. Методы класса отправляют серверу управялющие команды протокола. Данные поступают через 
+метод <a href="#msdp" class="cmd">msdp</a> плагина. Стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
+<pre>
+<div class="cmd">void list(const std::wstring&amp; listname)</div> - получение списка переменных заданной категории(списка).
+<div class="cmd">void send(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - однократное получение текущих значений переменных.
+<div class="cmd">void reset(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - сброс переменных в исходное состояние.
+<div class="cmd">void report(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - подписка на оповещение об изменении переменных.
+<div class="cmd">void unreport(const std::vector&lt;std::wstring&gt;&amp; vars)</div> - отписка от оповещения.
+</pre>
+См. также <a href="#luamsdp" class="cmd">msdp</a>.
 <hr>
 <h4>Преобразование кодировок</h4>
 В <div class="m">API</div> клиента есть методы для переобразования текста между различными кодировками.<br>
@@ -569,32 +671,32 @@ u8string x( TW2U(L"строка") );
 <h4>class xml::node</h4>
 Класс представляет собой обертку вокруг методов работы с вершиной <div class="m">XML</div> документа.
 <pre>
-<div class="cmd">node(const utf8* rootnode)</div> - создание нового документа с заданным именем корнего узла
+<div class="cmd">node(const wchar_t* rootnode)</div> - создание нового документа с заданным именем корнего узла
 <div class="cmd">node(xnode xml_node)</div> - подключение обертки к вершине
-<div class="cmd">bool load(const utf8 *filename)</div> - загрузка в вершину xml-файла
-<div class="cmd">bool save(const utf8 *filename)</div> - запись вершины в xml-файл
+<div class="cmd">bool load(const wchar_t *filename)</div> - загрузка в вершину xml-файла
+<div class="cmd">bool save(const wchar_t *filename)</div> - запись вершины в xml-файл
 <div class="cmd">void deletenode()</div> - удалить вершину.
-<div class="cmd">void getname(u8string *name)</div> - имя вершины.
-<div class="cmd">bool get(const utf8* attribute, u8string* value)</div> - атрибут вершины.
-<div class="cmd">bool get(const utf8* attribute, int* value)</div> - атрибут вершины в виде числа.
-<div class="cmd">bool get(const utf8* attribute, std::wstring* value)</div> - атрибут вершины в виде строки UTF16.
-<div class="cmd">void set(const utf8* attribute, const utf8* value)</div> - задать атрибут.
-<div class="cmd">void set(const utf8* attribute, int value)</div> - задать атрибут в виде числа.
-<div class="cmd">void set(const utf8* attribute, const std::wstring& value)</div> - задать атрибут в виде строки UTF16.
-<div class="cmd">void gettext(u8string *text)</div> - текст вершины.
-<div class="cmd">void settext(const utf8* text)</div> - задать текст вершины.
-<div class="cmd">xml::node createsubnode(const utf8* name)</div> - создать дочернюю вершину.
+<div class="cmd">void getname(std::wstring *name)</div> - имя вершины.
+<div class="cmd">bool get(const wchar_t* attribute, std::wstring* value)</div> - атрибут вершины.
+<div class="cmd">bool get(const wchar_t* attribute, int* value)</div> - атрибут вершины в виде числа.
+<div class="cmd">bool get(const wchar_t* attribute, std::wstring* value)</div> - атрибут вершины в виде строки UTF16.
+<div class="cmd">void set(const wchar_t* attribute, const wchar_t* value)</div> - задать атрибут.
+<div class="cmd">void set(const wchar_t* attribute, int value)</div> - задать атрибут в виде числа.
+<div class="cmd">void set(const wchar_t* attribute, const std::wstring& value)</div> - задать атрибут в виде строки UTF16.
+<div class="cmd">void gettext(std::wstring *text)</div> - текст вершины.
+<div class="cmd">void settext(const wchar_t* text)</div> - задать текст вершины.
+<div class="cmd">xml::node createsubnode(const wchar_t* name)</div> - создать дочернюю вершину.
 <div class="cmd">int  size()</div> - количество атрибутов у вершины.
-<div class="cmd">bool getattrname(int index, u8string* value)</div> - имя атрибута по индексу.
-<div class="cmd">bool getattrvalue(int index, u8string* value)</div> - значение атрибута по индексу.
-<div class="cmd">bool move(const utf8* path)</div> - переместить вершину в другую позицию по заданному пути.
-<div class="cmd">bool create(const utf8* path)</div> - создать вершину по заданному пути.
+<div class="cmd">bool getattrname(int index, std::wstring* value)</div> - имя атрибута по индексу.
+<div class="cmd">bool getattrvalue(int index, std::wstring* value)</div> - значение атрибута по индексу.
+<div class="cmd">bool move(const wchar_t* path)</div> - переместить вершину в другую позицию по заданному пути.
+<div class="cmd">bool create(const wchar_t* path)</div> - создать вершину по заданному пути.
 </pre>
 <h4>class xml::request</h4>
 Класс позволяет делать выборку нужных вершин по выражению. Похоже на запрос к базе данных.
 <pre>
-<div class="cmd">request(xnode node, const utf8 *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
-<div class="cmd">request(xml::node& node, const utf8 *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
+<div class="cmd">request(xnode node, const wchar_t *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
+<div class="cmd">request(xml::node& node, const wchar_t *request_string)</div> - выбрать нужные дочерние вершины у текущей вершины по выражению.
 <div class="cmd">int  size()</div> - количество вершин в выборке.
 <div class="cmd">bool empty()</div> - проверка, что выборка пустая.
 <div class="cmd">xml::node operator[](int node_index)</div> - получить вершину выборки по индексу.
@@ -609,9 +711,9 @@ u8string x( TW2U(L"строка") );
 Методы <div class="cmd">first</div>, <div class="cmd">last</div>, <div class="cmd">size</div> используются для работы с такими скобками. См. документацию 
 по PCRE.
 <pre>
-<div class="cmd">bool init(const utf8* _rgxp)</div> - инициализация регулярным выражением.
-<div class="cmd">bool find(const utf8* string)</div> - поиск в строке по регулярному выражению.
-<div class="cmd">bool findall(const utf8* string)</div> - поиск всех подстрок в строке по регулярному выражению.
+<div class="cmd">bool init(const wchar_t* _rgxp)</div> - инициализация регулярным выражением.
+<div class="cmd">bool find(const wchar_t* string)</div> - поиск в строке по регулярному выражению.
+<div class="cmd">bool findall(const wchar_t* string)</div> - поиск всех подстрок в строке по регулярному выражению.
 <div class="cmd">int  size()</div> - количество найденных параметров в круглых скобках + 1 (совпадение по всему регулярному выражению). 
 <div class="m">Замечание:</div> Если поиск производился методом <div class="cmd">find</div>, то по индексу <div class="m">0</div> будут получены границы совпадения 
 всего регулярного выражения, а с индекса <div class="m">1</div> начнутся совпадения для круглых скобок <div class="m">'()'</div>. Если поиск производился 
@@ -621,8 +723,24 @@ u8string x( TW2U(L"строка") );
 совпадение по регулярному выражению.
 <div class="cmd">int  last(int index)</div> - конечная позиция в строке (индекс символа+1), на котором заканчивается совпадение 
 по регулярному выражению.
-<div class="cmd">void getstring(int index, u8string *str)</div> - получить строку, которая находится в границах по заданному индексу.
+<div class="cmd">void getstring(int index, std::wstring *str)</div> - получить строку, которая находится в границах по заданному индексу.
 </pre>
+<hr>
+<a name="imagecpp"></a>
+<h4>Работа с изображениями</h4>
+В <div class="m">API</div> клиента есть возможность работы с изображениями. Это загрузка изображений и их отрисовка на экране клиента или 
+окнах плагинов.<br> Поддерживаются <div class="m">png</div>, <div class="m">jpg</div>, <div class="m">bmp</div>, <div class="m">gif</div> и <div class="m">ico</div> форматы. 
+См. также <a href="#image" class="cmd">image</a>, <a href="#render" class="cmd">render</a>.
+<h4>class Image</h4>
+<pre>
+<div class="cmd">bool load(const wchar_t* file, int option)</div> - загрузка изображения из файла. Параметр option - размер иконки(для *.ico), номер кадра(для *.gif).
+Изображения остальных форматов игнорируют данный параметр (рекомендуется указывать 0).
+<div class="cmd">bool cut(const Image&amp; from, int x, int y, int w, int h)</div> - создание изображения путем вырезания части из другого изображения.
+<div class="cmd">void unload()</div> - удаление(выгрузка из памяти) изображения.
+<div class="cmd">int width()</div> - ширина изображения в пикселях.
+<div class="cmd">int height()</div> - высота изображения в пикселях.
+<div class="cmd">void render(HDC dc, int x, int y)</div> - рисование картинки на контексте, с заданными координатами.
+<div class="cmd">void render(HDC dc, int x, int y, int w, int h)</div> - рисование картинки, с авторастяжкой на заданный прямоугольник.</pre>
 <hr>
 <a name="luaapi"></a>
 <h3>API клиента Lua</h3>
@@ -643,17 +761,31 @@ u8string x( TW2U(L"строка") );
 Через метод <a href="#syscmd" class="cmd">syscmd</a> плагин может реализовать функционал команды. Данная функция расчитана на 
 использовании в методе <a href="#init" class="cmd">init</a>. Системная команда автоматически удаляется, в момент выгрузки плагина.
 <hr>
+<a name="runCommand"></a>
 <h4>void runCommand(string cmd)</h4>
 <div class="m">Параметры: cmd - игровая или системная команда</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция выполняет команду (или набор команд), если бы ее ввел человек. Для получения символов перфикса системной команды и разделителя, используйте 
 команды <div class="cmd">props.cmdPrefix</div> и <div class="cmd">props.cmdSeparator()</div>. См. <a href="#props" class="cmd">props</a>
 <hr>
-<h4>void addMenu(string path, int id, int pos)</h4>
-<div class="m">Параметры: path - путь, id - идентификатор, pos - позиция</div><br>
+<h4>void setCommand(string cmd)</h4>
+<div class="m">Параметры: cmd - игровая или системная команда</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция копирует команду (или набор команд) в командную строку клиента (старое содержимое командной строки пропадает). Запуск на выполнение не производится.<br>
+См. <a href="#runCommand" class="cmd">runCommand</a>.
+<hr>
+<h4>void sendCommand(string window, string cmd [, ...])</h4>
+<div class="m">Параметры: window - имя игрового профиля или nil, cmd - игровая или системная команда, набор команд.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция пересылает команду (или набор команд) в другой экземпляр клиента Tortilla. В параметре window нужно указать имя игрового профиля нужного клиента (отображается в заголовке окна). 
+Можно в качестве имени окна указать пустую строку или nil, тогда команда будет отправлена всем экземплярам клиента, включая текущий.
+<hr>
+<h4>void addMenu(string path, int id[, int pos][, int bmp])</h4>
+<div class="m">Параметры: path - путь, id - идентификатор, pos - позиция (необязательный параметр), bmp - иконка пункта меню (необязательный параметр)</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция добавляет в меню клиента новый пункт меню. Параметр path определяет метоположение пункта меню. Последнее слова в пути - это название пунка меню. 
-id - идентификатор, который будет передан в функцию <a href="#menucmd" class="cmd">menucmd</a>, pos - местоположение пункта меню относительно других. 
+id - идентификатор, который будет передан в функцию <a href="#menucmd" class="cmd">menucmd</a>, pos - местоположение пункта меню относительно других, если 
+позиция не задана, то пункт меню добавляется в конец основного меню, bmp - идентификатор иконки для пункта меню, он загружается из ресурсов dll-файла плагина. 
 Пункт меню автоматически удаляется при выгрузке плагина, функция расчитана на использование в методе <a href="#init" class="cmd">init</a>.<br>
 Пример:
 <pre><div class="ee">function plugin.init()
@@ -716,20 +848,39 @@ id - идентификатор, который будет передан в ф�
 <div class="m">Параметры: file - относительный путь к файлу</div><br>
 <div class="m">Результат: полный путь к файлу<br></div><br>
 Функция расчитывает полный путь к файлу по его относительному пути.<br>
-Функция использует текущее имя группы профилей (мир), чтобы плагин мог работать с разными профилями.
+Функция использует текущее имя группы профилей (мир) и имя плагина, чтобы плагин мог работать с разными профилями.<br>
+Это файл для сохранения настроек плагина для всех персонажей в текущем мире(сервере).
+<hr>
+<h4>string getProfilePath()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: полный путь к файлу<br></div><br>
+Функция расчитывает полный путь к файлу по имени группы профилей(мир), имени текущего профиля(персонаж), а также имени плагина.<br>
+Возвращает путь к файлу - это индивидуальный файл плагина для текущего персонажа в текущем мире(сервере).
+</div></pre>
+<hr>
+<h4>string getResource(string file)</h4>
+<div class="m">Параметры: file - относительный путь к файлу</div><br>
+<div class="m">Результат: полный путь к файлу<br></div><br>
+Функция расчитывает полный путь к файлу-ресурсу по его относительному пути.<br>
+Этот вариант функции предназначен для плагинов, у которых есть общие файлы для всех мадов. Функция использует имя плагина, 
+но не использует имя мада, т.е. это предназначено для общих файлов, для всех мадов. Все ресурсы лежат в папке resources.
 <hr>
 <h4>string getProfile()</h4>
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: имя текущего профиля (персонажа)<br></div><br>
 Функция возвращает имя текущего профиля (персонажа).<br>
-Пример получения полного пути к файлу, в зависимости от группы профилей(мир) и имени текущего профиля(персонаж):
-<pre><div class="ee">local path = getPath(getProfile()..".xml")
 </div></pre>
 <hr>
 <h4>HWND getParent()</h4>
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: хэндл окна клиента<br></div><br>
 Функция возвращает идентификатор - хэндл окна мад клиента в Windows. Используется для работы с окнами в плагинах с интерфейсом.
+<hr>
+<h4>void flashWindow()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция заставляет мигать окно клиента в панели задач, для привлечения к себе внимания. Может использоваться для сигнализации 
+о событиях, когда клиент не является текущим окном. 
 <hr>
 <h4>void saveTable(table t, string file)</h4>
 <div class="m">Параметры: t - таблица для сохранения, file - имя файла</div><br>
@@ -752,11 +903,12 @@ id - идентификатор, который будет передан в ф�
 <pre><div class="ee">local t = loadTable(getProfile()..".xml")</pre>
 <hr>
 <a name="createwindow"></a>
-<h4>window createWindow(string title, [int width, int height])</h4>
-<div class="m">Параметры: title - заголовок окна, width,height - ширина и высота окна</div><br>
+<h4>window createWindow(string title [,int width, int height] [,bool visible])</h4>
+<div class="m">Параметры: title - заголовок окна, width,height - ширина и высота окна, visible - видимость окна</div><br>
 <div class="m">Результат: объект окно (window)<br></div><br>
 Функция создает дополнительное окно (для отображения любой информации) - <a href="#window" class="cmd">window</a>. В качестве 
-параметров - заголовок окна и размеры окна (ширина и высота).
+параметров - заголовок окна и размеры окна (ширина и высота). Плюс дополнительный параметр - видимость окна после его создания. 
+Если параметр visible не задан, то окно загружает свое последнее состояние после закрытия программы.
 <hr>
 <a name="createpanel"></a>
 <h4>panel createPanel(string side, int size)</h4>
@@ -771,12 +923,63 @@ id - идентификатор, который будет передан в ф�
 <div class="m">Результат: объект регулярки (pcre)<br></div><br>
 Создает регулярное выражение <a href="#pcre" class="cmd">pcre</a> по строке. Возвращает <div class="m">nil</div>, если указана некорректная строка.
 <hr>
+<a name="updateview"></a>
+<h4>void updateView(int view, function f)</h4>
+<div class="m">Параметры: view - номер окна, которое нужно обработать. f - функция обработчик.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Данная функция предназначена для чтения/изменения строк мад окон клиента. view = 0 - главное окна клиента, 1-6 - output окна. 
+В данную функцию нужно передать функцию обработчик, куда будет передан объект <a href="#viewdata" class="cmd">viewdata</a> нужного окна. 
+Прототип функции : <div class="m">void handler(viewdata)</div>.<br>
+<div class="cmd">Внимание!</div> Данная функция ресурсоемкая и зависит от количества имеющихся строк в нужном окне клиента, т.е. может работать с 
+заметными задержками.
+<hr>
+<a name="isViewVisible"></a>
+<h4>bool isViewVisible(int view)</h4>
+<div class="m">Параметры: view - номер окна.</div><br>
+<div class="m">Результат: bool - статус видимости окна<br></div><br>
+Возвращает статус окна - видимо/не видимо. Работает только с output-окнами(значения 1-6).
+<hr>
+<a name="showView"></a>
+<h4>void showView(int view)</h4>
+<div class="m">Параметры: view - номер окна.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Включает отображение output-окна, если оно было скрыто. Работает только с output-окнами(значения 1-6).
+<hr>
+<a name="hideView"></a>
+<h4>void hideView(int view)</h4>
+<div class="m">Параметры: view - номер окна.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Скрывает output-окно, если оно отображалось. Работает только с output-окнами(значения 1-6).
+<hr>
+<a name="getViewSize"></a>
+<h4>int,int getViewSize(int view)</h4>
+<div class="m">Параметры: view - номер окна.</div><br>
+<div class="m">Результат: ширина и высота<br></div><br>
+Функция рассчитывает ширину и высоту заданного окна в символах. Высота рассчитывается точно, ширина приблизительно (из-за разной ширины шрифта).
+<hr>
+<a name="log"></a>
 <h4>void log(string message [,string messsage2, ...])</h4>
 <div class="m">Параметры: message, message2 и т.д. - текст сообщения</div><br>
 <div class="m">Результат: нет<br></div><br>
-Функция предназначена для вывода строки в окно клиента в качестве логов. Окно для вывода строки указывается в настройках клиента.
+Функция предназначена для вывода строки с логами в окно клиента. Окно для вывода строки указывается в общих настройках клиента. Это отдельный канал вывода 
+текстовой информации из плагинов и предназначен для целей их отладки. Это канал для системных сообщений плагинов.
 Функция поддерживает любое количество параметров (в этом случае они соединяются в одну общую строку). 
 Поддерживаются числа, строки, булевые выражения.
+<hr>
+<a name="print"></a>
+<h4>void print(string message [,string messsage2, ...])</h4>
+<div class="m">Параметры: message, message2 и т.д. - текст сообщения</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция предназначена для вывода строки в главное окно клиента. Это аналог команды клиента <div class="cmd">#output</div>. 
+Поддерживается возможность задать цвет текста (см. описание к команде). Функция предназначена для вывода игровой информации в клиент. 
+Она поддерживает любое количество параметров (в этом случае они соединяются в одну общую строку). Поддерживаются числа, строки, булевые выражения.
+<hr>
+<a name="vprint"></a>
+<h4>void vprint(int view, string message [,string messsage2, ...])</h4>
+<div class="m">Параметры: view - номер окна, message, message2 и т.д. - текст сообщения</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция предназначена для вывода строки в окно клиента (не только главное). Это аналог команды клиента <div class="cmd">#woutput</div>. 
+Функция является полным аналогом команды  <div class="cmd">print</div>, только дает возможность указать окно клиента, куда нужно выводить строку. 
 <hr>
 <h4>void terminate([string message [,string messsage2, ...]])</h4>
 <div class="m">Параметры: message и т.д. - текст сообщения. Необязательный параметр.</div><br>
@@ -786,26 +989,79 @@ id - идентификатор, который будет передан в ф�
 Функция поддерживает любое количество параметров (в этом случае они соединяются в одну общую строку). 
 Поддерживаются числа, строки, булевые выражения. Окно для вывода указывается в настройках клиента.
 <hr>
+<h4>void pluginName(string name)</h4>
+<div class="m">Параметры: name - имя плагина для следующего вызова.</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для вызова методов api клиента из плагинов. Она должна использоваться только из внутренних методов клиента 
+(это все методы плагина, короме тех, которых вызывает клиент - init, release и т.д.). Нужно указать имя плагина(модуля) в качестве параметра, 
+чтобы клиент знал от чьего имени идет вызов. Действует на один последующий вызов. Признаком того, что не указан плагин при вызове - строчка
+<div class="m">?плагин?</div> в логах о работе плагинов.
+<hr>
+<h4>bool regUnloadFunction(function f)</h4>
+<div class="m">Параметры: f - функция Lua.</div><br>
+<div class="m">Результат: bool<br></div><br>
+Функция используется в механизме выгрузки модулей. С ее помощью можно зарегистрировать функцию, которая будет вызвана клиентом при его закрытии. 
+Данная возможность предназначена для некоторых модулей, предъявляющих особые требования в своей работе и должна использоваться только в Lua-скриптах 
+загрузки модулей. Возвращает true, если функция успешно зарегистрирована.
+<hr>
+<h4>СOLORREF,COLORREF translateColors(string s)</h4>
+<div class="m">Параметры: s - строка.</div><br>
+<div class="m">Результат: COLORREF*2<br></div><br>
+Функция транслирует текстовую строку в цвет текста (первое значение) и цвет фона. Строка должна быть в формате <a href="#color" class="cmd">colors</a>.
+Если преобразование не удалось, возвращается nil.
+<hr>
+<a name="createTrigger"></a>
+<h4>trigger createTrigger(string trigger_string|table trigger_strings, function f)</h4>
+<div class="m">Параметры: trigger_string или trigger_strings - текстовая строка или таблица строк триггера. f - функция обработчик.</div><br>
+<div class="m">Результат: trigger - объект триггера, с помощью которого можно им управлять.<br></div><br>
+Функция создает Lua-триггер. Можно создавать как однострочные, так и многострочные триггеры. Для многострочных триггеров все нужные строки задаются 
+в виде таблицы строк. Необходимо указать функцию, которая будет вызвана, при срабатывании триггера. В данную функцию будет передан объект 
+<a href="#viewdata" class="cmd">viewdata</a> с набором всех строк мада, на которых произошло срабатывание.<br>
+Пример:
+<div class="ee">
+<pre>
+local function in_trigger1(v)
+-- v - это объект viewdata со строками мада
+...
+end
+
+local function in_trigger2(v)
+...
+end
+
+-- вызывается при загрузке плагина
+function plugin.init()
+  createTrigger("%1 приш%2 с %3", in_trigger1 )
+  createTrigger( {"%1 оглушил %2.", "%1 упал%2 на пол."}, in_trigger2 )
+end
+</pre>
+</div><br>
+Тут создаются 2 триггера. Один - однострочный, другой - многострочный. При срабатывании триггера будет вызвана функция, указаная втрорым параметром. 
+В функцию будет передан <a href="#viewdata" class="cmd">viewdata</a> со строками. Через этот объект можно делать изменения в тексте, цвете текста, а также получить параметры 
+%1,%2 и т.д. из нужной строки триггера.
+Подробнее про триггеры <a href="#triggers">тут</a>.
+<hr>
 <a name="window"></a>
 <h4>window</h4>
 Дополнительное окно создается с помощью функции <a href="#createwindow" class="cmd">createWindow</a>. Lua объект <div class="cmd">window</div> является тем же интерфейсом, 
 что и <a href="#luatwindow" class="cmd">luaT_window</a> на стороне С++. Дополнительные окна - плавающие окна, с возможностью пристыковаться 
 к границе главного окна клиента.
 <pre>
-<!--- <div class="cmd">void attach(HWND child)</div> - подключение своего окна в контейнер (дополнительное окно).
-<div class="cmd">HWND hwnd()</div> - возвращает хэндл окна клиента. -->
 <div class="cmd">void dock(string side)</div> - заставляет окно пристыковаться к нужной стороне клиента. 
-Возможные варианты: 'left', 'right', 'top', 'bottom'.
+Возможные варианты: 'left', 'right', 'top', 'bottom'. Допускается перечисление нескольких вариантов через запятую.
 <div class="cmd">void undock()</div> - окно открепляется от окна клиента.
-<div class="cmd">void block(string side)</div> - блокировка возможности прикрепить окно к определенной стороне. 
+<div class="cmd">void block(string side)</div> - блокировка возможности прикрепить окно к определенной стороне.
 Возможные варианты: 'left', 'right', 'top', 'bottom', 'float'. Вариант 'float' означает, что окно не может быть 
-плавающим и всегда должно быть пристыкованным.
+плавающим и всегда должно быть пристыкованным. Допускается перечисление нескольких вариантов через запятую.
 <div class="cmd">void show()</div> - отображает окно.
 <div class="cmd">void hide()</div> - скрывает окно.
 <div class="cmd">bool isVisible()</div> - возвращает статус видимо окно или нет.
 <div class="cmd">render setRender(function f)</div> - возвращает объект, с помощью которого можно будет рисовать. Не работает, если окно используется 
 как контейнер. В качестве параметра выступает функция, которая будет вызываться клиентом в момент перерисовки окна. 
 В ней следует использовать объект render, который был получен в данной функции. см. <a href="#render" class="cmd">render</a>.
+<div class="cmd">void setFixedSize(int width, int height)</div> - Установка и фиксация размер окна. Изменить размер такого окна 
+с помощью мышки будет невозможно.
+<div class="cmd">int, int getSize()</div> - получение размера окна (ширина и высота).
 </pre>
 <hr>
 <a name="panel"></a>
@@ -862,6 +1118,15 @@ render:setBackground{ r=10,g=20,b=30 }
 </ul>
 Пример:<div class="ee">local font = createFont{name='tahoma', height=9}</div>
 
+<div class="cmd">image createImage(string path [,int param])</div> - загрузка картинки. Поддерживаются форматы: <div class="m">png</div>, <div class="m">bmp</div>, <div class="m">jpg</div>, <div class="m">gif</div>, <div class="m">ico</div>.
+Дополнительный (необязательный) параметр используется <div class="m">gif</div> - номер кадра, и <div class="m">ico</div> - размер иконки, который нужно загрузить. 
+Если параметр не указан, загружается первый кадр/иконка в файле.
+В пути к файлу можно использовать как прямую косую черту '/', так и обратную '\\' (требуется удвоенное количество).
+<div class="cmd">void drawImage(image, x, y [, w, h])</div> 
+<div class="cmd">void drawImage(image, table rect)</div> - рисование картинки. Требуется указать координаты для рисования и если необходимо размер.
+Если указан размер, то картинке будет растянута на заданный прямоугольник. Размер можно указать с помощью высоты и ширины, или
+указав прямоугольник в виде таблицы. О формате таблицы см. функцию <div class="cmd">render:rect</div>.
+
 <div class="cmd">void select(pen|brush|font)</div> - установка пера, кисти или шрифта, как текущих для рисования.
 <div class="cmd">void rect(table rect)</div> - рисование прямоугольника текущем пером.
 
@@ -873,19 +1138,35 @@ render:setBackground{ r=10,g=20,b=30 }
 вариант left, top, right, bottom соответственно.
 </ul>Примеры:<div class="ee">local r = { left=10, right=20, top=10, bottom=20 }
 render:solidRect{ x=10, y=20, width=10, height=10 }
+render:solidRect{ x=20, y=30, width=10, height=10, color={r=20} }
 local r2 = { 10, 20, 40, 50 }
 render:rect(r2)
 </div>
-<div class="cmd">void solidRect(table rect)</div> - рисование закрашенного прямоугольника. Используется текущая кисть. Формат rect см. выше
+<div class="cmd">void solidRect(table rect)</div> - рисование закрашенного прямоугольника. Используется текущая кисть. Формат rect см. выше. Можно указать 
+цвет сплошной заливки, с помощью параметра <a class="cmd" href="#color">color</a>. Пример смотрите выше.
 <div class="cmd">void print(int x, int y, string text)</div> - печать текста по заданным координатам. Используется текущий шрифт и цвет <div class="cmd">textColor</div>.
+<div class="cmd">void print(table rect, string text)</div> - печать текста в заданном прямоугольнике по центру. Используется текущий шрифт и цвет <div class="cmd">textColor</div>. 
+Текст обрезается, если он не вписывается в заданный прямоугольник.
 <div class="cmd">void update()</div> - сообщить окну, что нужно перерисовать содержимое.
 <div class="cmd">int fontHeight()</div> - возвращает высоту текущего шрифта в пикселях.
 <div class="cmd">int textWidth(string text)</div> - возвращает ширину текста в пикселях (для расчета используется текущий шрифт).
 </pre>
 <hr>
+<a name="image"></a>
+<h4>image</h4>
+Объект представляет собой изображение-картинку, которое загруженно методом <div class="cmd">createImage</div> (см. <a href="#render" class="cmd">render</a>).<br>
+Для объектов доступны следующие методы:
+<pre>
+<div class="cmd">int width()</div> - ширина изображения в пикселях.
+<div class="cmd">int height()</div> - высота изображения в пикселях.
+<div class="cmd">image cut(image, table rect)</div> - создание нового изображения, путем вырезания из другого. (см.  <div class="cmd">render:rect</div>).
+</pre>
+Для рисования предназначен: <div class="cmd">render:drawImage</div>. См. также <a href="#imagecpp" class="cmd">class Image</a>.
+<hr>
 <a name="props"></a>
 <h4>props</h4>
-Данный набор функции предназначен для получения текущих настроек клиента. Через эти методы настройки изменить нельзя.
+Данный набор функции предназначен для получения текущих настроек клиента. С помощью данных методов настройки изменить нельзя. В С++ есть 
+аналогичный набор методов: <a href="#cppprops" class="cmd">luaT_Props</a>.
 <pre>
 <div class="cmd">uint paletteColor(int index)</div> - цвет из палитры клиента по индексу. Допустимые значения индекса от 0 до 255.
 Пример получения цвета текста с индексом 7 (цвет по умолчанию):
@@ -897,6 +1178,9 @@ render:rect(r2)
 <div class="cmd">string serverHost()</div> - возвращает адрес сервера, к которому подключен клиент или nil, если нет подключения.
 <div class="cmd">string serverPort()</div> - возвращает порт сервера или nil, если нет подключения.
 <div class="cmd">bool connected()</div> - возвращает признак наличия подключения.
+<div class="cmd">bool activated()</div> -  признак, что окно клиента активно и игрок работает с ним.
+<div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
+<div class="cmd">false|int pluginsLogWindow()</div> - возращает номер окна, куда выводится лог плагинов. Если вывод логов отключен, то возвращается false.
 </pre>
 <hr>
 <a name="luaactobj"></a>
@@ -926,7 +1210,9 @@ render:rect(r2)
 Возможные варианты атрибута: 'key', 'value', 'group'.
 <div class="cmd">string get(string type)</div> - возвращает значения атрибута. Если атрибут неверный, возвращается nul.
 <div class="cmd">bool add(string key[ ,string value, string group])</div> - добавляет новый элемент. Если не указана группа, то 
-элемент добавляется в первую группу.
+элемент добавляется в первую группу. Если элемент существует, то происходит ошибка и добавление не происходит.
+<div class="cmd">bool replace(string key[ ,string value, string group])</div> - заменяет текущий элемент. Если элемент не 
+существует, то он добавляется.
 <div class="cmd">bool delete()</div> - удаляет текущий элемент.
 <div class="cmd">int  getIndex()</div> - возвращает индекс-приоритет текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - установка текущего приоритета у текущего элемента.
@@ -937,8 +1223,9 @@ render:rect(r2)
 <hr>
 <a name="viewdata"></a>
 <h4>viewdata</h4>
-Объект, который не является глобальным, используется при работе с методами <a href="#before" class="cmd">before</a> и 
-<a href="#after" class="cmd">after</a>. Он предназначен для манипуляции со строками, которые плагин получает от клиента 
+Объект, который не является глобальным, используется при работе с методами <a href="#before" class="cmd">before</a>, 
+<a href="#after" class="cmd">after</a>, <a href="#updateView" class="cmd">updateView</a>, <a href="#triggers" class="cmd">Lua-триггерами</a>. 
+Он предназначен для манипуляции со строками, которые плагин получает от клиента 
 через эти методы. В C++ есть подобный интерфейс <a href="#cppviewdata" class="cmd">luaT_ViewData</a>.
 <br><div class="m">Внимание!</div> Все индексы начинаются с 1, а не с 0, как это принято в языке Lua.
 <pre>
@@ -948,9 +1235,11 @@ render:rect(r2)
 <div class="cmd">bool isFirst()</div> - возвращает признак, что первая строка - это продолжение последней строки прошлой коллекции.
 <div class="cmd">bool isLast()</div> - последняя строка является завершенной, ее продолжения в следующей коллекции не будет.
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
+<div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt-строка.
+<div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
 <div class="cmd">string getPrompt()</div> - содежимое prompt-строки (без игровых команд).
-<div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных частей).
+<div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных блоков).
 <div class="cmd">int  getTextLen()</div> - длина полного текста строки.
 <div class="cmd">string getHash()</div> - хэш строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество блоков в текущей строке.
@@ -962,12 +1251,43 @@ render:rect(r2)
 <div class="cmd">bool copyBlock(int block, int dst_string, int dst_block)</div> - копирует заданный блок текущей строки в другую строку.
 <div class="cmd">bool deleteBlock(int index)</div> - удаляет блок.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
-<div class="cmd">bool createString()</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней.
+<div class="cmd">bool createString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней. 
+Необязательные параметры system, gamecmd - задают соответствующие флаги для новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет строку.
 <div class="cmd">bool find(pcre regexp [,int from])</div> - ищет в массиве строк <div class="cmd">viewdata</div> строку, которая совпадает с регулярным выражением. 
 Если поиск удался, то найденная строка становится текущей. Параметр from - необязательный, можно указать с какой 
 строки начинать поиск. См. также <a href="#pcre" class="cmd">pcre</a>.
+<div class="cmd">int,int getBlockPos(int symbol)</div> - возвращает номер блока и позицию в блоке для текущей строки по номеру символа во всей строке (полная строка).
+Если не может рассчитать, то возвращает nil,nil. Предназначена для работы совместно с функцией <div class="cmd">viewdata.getText</div>.
+<div class="cmd">void setNext(bool next)</div> - используется в механизме деления строк. Устанавливает/снимает флаг, что следующая строка часть текущей.
+<div class="cmd">void setPrev(bool prev)</div> - Предыдущая строка часть текущей (механизм деления строк).
+<div class="cmd">bool isNext()</div> - проверка флага, что следующая строка часть текущей (механизм деления строк).
+<div class="cmd">bool isPrev()</div> - проверка флага, что предыдущая строка часть текущей (механизм деления строк).<br>
+Функции, которые работают только в обработчиках Lua-триггеров.
+<div class="cmd">int  parameters()</div> - количество параметров для текущей строки в Lua-триггере.
+<div class="cmd">string getParameter(int index)</div> - возращает значение параметра %0,%1 и т.д (по значению index) для текущей строки в 
+Lua-триггере. Если вернуть значение невозможно (неправильный индекс или это не Lua-триггер), то результат функции nil.
+Под индексом %0 - полная строка на которую сработал триггер (если %0 не используется в триггере).
+<div class="cmd">bool isChanged()</div> - флаг-признак, что строка была изменена. Т.к. триггеры на Lua могут изменять строки, то возможно, 
+что строка на которую сработал триггер уже изменилась в другом триггере.
+Подробнее про Lua-триггеры <a href="#triggers">тут</a>.
 </pre>
+<hr>
+<a name="luamsdp"></a>
+<h4>msdp</h4>
+Объект предназначен для управления протоколом MSDP из плагина. Все данные по протоколу плагин будет получать через свой метод <a href="#msdp" class="cmd">msdp</a>. 
+Сам стандарт протокола можно прочитать тут: <a href="http://tintin.sourceforge.net/msdp/" target="_blank">MSDP</a>.
+
+<pre>
+<div class="cmd">void list(string listname)</div> - запрос на получение списка команд/переменных нужной категории из числа поддерживаемых сервером. 
+Чтобы получить список поддерживаемых категорий следует вызвать с параметром "LISTS" (см. станадрт протокола).
+<div class="cmd">void send(string var|table vars)</div> - запрос на однократное получение текущих значений требуемых переменных. В качестве параметра - 
+строка с именем переменной или таблица со списком переменных.
+<div class="cmd">void reset(string var|table vars)</div> - запрос на сброс значений требуемых переменных в исходное состояние.
+<div class="cmd">void report(string var|table vars)</div> - подписывание на оповещение сервером об изменении значений нужных переменных.
+<div class="cmd">void unreport(string var|table vars)</div> - отказ об оповещения сервером об изменении значений переменных.
+</pre>
+См. также <a href="#cppmsdp" class="cmd">luaT_Msdp</a>.
 <hr>
 <a name="pcre"></a>
 <h4>pcre</h4>
@@ -1024,24 +1344,107 @@ local l = s:len() -- l = 17
 local s1 = s:substr(3) -- s1 = "Мад"
 local s2 = s:substr(5, 8) -- s2 = "отличная"
 </div>
+<div class="cmd">int strstr(string what [,int from])</div> - ищет подстроку в строке. Можно указать с какого символа нужно искать.
+<div class="cmd">table strall(string what)</div> - ищет все вхождения подстроки в строке. Возвращает таблицу индексов с которых начинается 
+заданная подстрока (nil - ничего не найдено).
+</pre>
+<hr>
+<a name="triggers"></a>
+<h2>Триггеры на Lua</h2>
+В клиенте есть возможность создавать игровые триггеры на Lua. Если классические триггеры (actions, subs и др.) при срабатывании на заданной строке выполняли набор нужных игровых 
+команд, то Lua-триггеры запускают на выполнение Lua-функцию. Это дает безграничные возможности по автоматизации игрового процесса, т.к. тут подключается вся мощь целого языка 
+программирования.<br><br>
+Триггер создается функцией <a href="#createTrigger" class="cmd">createTrigger</a>. Триггер создается активным (enabled).<br>
+Пример:
+<div class="ee">
+<pre>
+local function in_trigger1(v)
+-- v - это объект viewdata со строками мада
+...
+end
+
+local function in_trigger2(v)
+...
+end
+
+-- вызывается при загрузке плагина
+local t1,t2
+function plugin.init()
+  t1 = createTrigger("%1 приш%2 с %3", in_trigger1 )
+  t2 = createTrigger( {"%1 оглушил %2.", "%1 упал%2 на пол."}, in_trigger2 )
+  createTrigger({"", "%1 улетел на %2"}, in_trigger2 )
+
+  -- можно использовать регулярки, нужно вначале нужно писать $, как признак регулярки
+  -- сам символ $ в регулярном выражении не учавствует
+  createTrigger("$(.*) прилете(?:ла|л|ли) с (.*)", in_trigger1)
+end
+
+local function some_function()
+...
+  t1:disable()
+...
+  if x then t1:enable() end
+...
+  if t2:isEnabled() then ... end
+end
+</pre>
+</div><br>
+Результатом функции <div class="cmd">createTrigger</div> - является объект <a href="#trigger" class="cmd">trigger</a>. Через который можно управлять триггером (включать/отключать).
+Клиент позволяет создавать однострочные и многострочные триггеры. Многострочные триггеры задаются через таблицу строк.<br><br>
+При создании триггера необходимо указать функцию, которая будет вызвана при срабатывании триггера. Для нескольких триггеров можно использовать одну и ту же функцию.<br><br>
+При срабатывании триггера в функцию-обработчик будет передан объект <a href="#viewdata" class="cmd">viewdata</a> с набором всех строк мада, на которых произошло срабатывание. 
+Через данный объект можно изменять строки, менять им цвет, полностью отбрасывать. Также можно получить значения переменных %1 и т.д. для каждой строки триггера.<br>
+Для работы с параметрами Lua-триггера есть следующие функции:
+<ul>
+<li><div class="cmd">viewdata:parameters()</div> - количество параметров %x. Возвращает максимальное значение %x в строке триггера.</li>
+<li><div class="cmd">viewdata:getParameter(int index)</div> - значение параметра %x. index - от 0 до последнего %x в строке триггера. В параметр %0 попадает вся строка, на 
+которую сработал триггер, при условии, что %0 не используется в триггере.</li>
+<li><div class="cmd">viewdata:isChanged()</div> - флаг, что строка изменилась. Строка могла измениться в другом триггере, и если текущий триггер тоже изменяет строку, то нужно 
+учитывать тот факт, что строка может быть уже другой.</li>
+<li><div class="cmd">viewdata:select(int index)</div> - нужно предварительно выбрать нужную строку, с которой планируется работать.
+</ul>
+В многострочных триггерах допускается задавать пустые строчки (но не все). В таком случае - это означает любая строка на данной позиции.<br><br>
+Также можно использовать полноценные регулярные выражения PCRE. Клиент различает регулярное выражение и обычную строку триггера по наличию вначале регулярного 
+выражения символа '$'. Символ $ в регулярном выражении не учавствует(на данной позиции он не имеет смысла).<br><br>
+При написании регулярок в переменные %x будут попадать значения круглых скобок по правилам PCRE. Для тестирования регулярок есть плагин калькулятора PCRE.<br><br>
+Все это дает возможость создавать триггеры практически любой сложности. Триггеры автоматически выгружаются вместе с плагином.
+<a name="trigger"></a>
+<h4>trigger</h4>
+Объект, который создается функцией <a href="#createTrigger" class="cmd">createTrigger</a> и позволяет управлять работой триггера.
+<pre>
+<div class="cmd">void disable()</div> - выключить триггер. Триггер перестанет срабатывать.
+<div class="cmd">void enable()</div> - включить триггер. Триггер начнет срабатывать на строки, заданные при создании триггера.
+<div class="cmd">bool isEnabled()</div> - текущее состояние триггера.
 </pre>
 <hr>
 <a name="decoda"></a>
 <h2>Decoda</h2>
 <div class="m">Decoda</div> - является средой разработки для языка Lua. Она очень хорошо интегрируется и работает вместе с мад-клиентом. Она позволяет писать и отлаживать 
 Lua-скрипты как отдельно, так и параллельно с Visual Studio. Decoda входит в SDK.<br><br>
-Для работы с Decoda ее нужно настроить, для этого в окне <div class="m">Project\Settings</div> нужно выставить правильно настройки:
+Для работы с Decoda ее нужно настроить, для этого в окне <div class="m">Debug\Project Debug Settings</div> нужно выставить правильно настройки:
 <ul>
 <li><div class="m">Command</div> - это полный путь к exe мад клиента.</li> 
 <li><div class="m">Command Arguments</div> - пустое поле.</li> 
-<li><div class="m">Working Diectory</div> - полный путь к папке, где находится мад-клиент.</li> 
+<li><div class="m">Working Diectory</div> - полный путь к папке, где находится мад-клиент, должен совпадать с путем в поле Command, автоматом подставляется, при 
+изменении поля Command.</li> 
 <li><div class="m">Symbols Directory</div> - пустое поле.</li>
 </ul>
-После этого можно загружать в Decoda lua-файлы и отлаживать их. Decoda будет запускать для этого мад-клиент. Главное, чтобы клиент загружал те же файлы, 
-которые отслеживаются Decoda.<br>
-Комбинации клавиш в Decoda подобны комбинации в Visual Studio, что достаточно удобно.<br><br>
-Нудобством Decoda является то, что она не поддерживает файлы в кодировке UTF8. В этих строках пишутся иероглифы. Планируется исправить этот 
-недочет и выпустить новую версию Decoda.
+После этого можно добавлять в Decoda lua-файлы с плагинами и отлаживать их. Decoda будет сама запускать для этого мад-клиент и отслеживать загружаемые lua-файлы.<br><br>
+Порядок работы в Decoda следующий:<br>
+
+1. Настроить Decoda для работы с мад-клиентом, как описано выше.<br>
+2. Создать новый Lua-файл <div class="m">File\Add New File</div> или загрузить существующий из папки клиента <div class="m">File\Add Existing File</div>, который нужно написать и отладить.<br>
+3. Можно сохранить настройки проекта и список файлов <div class="m">File\Save Project</div>, чтобы не повторять пункты 1 и 2.<br>
+4. Можно запустить отладку <div class="m">Debug\Start Debugging</div>. После этого запуститься клиент, клиент загрузить Lua-файлы, Decoda отследить это и
+в окне проекта появится список загруженных файлов в клиент.<br>
+5. В окне Decoda появится папка <div class="m">Debug Temporary Files</div>, куда добаяться файлы, которые загрузил клиент, но не были добавлены в проект в п.2<br>
+6. Можно ставить точки остановки <div class="m">Debug\Toggle Breakpoint</div> и когда клиент дойдет до данной строки - отладчик прервет управление и можно будет 
+отлаживаться, выполнять код построчно, смотреть значения переменных и т.д.<br>
+7. При остановке отладки <div class="m">Debug\Stop Debugging</div> клиент будет закрываться.<br>
+<div class="cmd">ВАЖНО!!!</div> В настройках клиента отлаживаемый плагин должен загружатся, иначе точки остановки срабатывать не будут!
+
+<br><br>PS. Комбинации клавиш в Decoda подобны комбинации в Visual Studio, поэтому если вы работали в студии, то будет удобно.<br>
+Данная версия Decoda была заточена под клиент для удобной работы. Сделана поддержка кодировки utf8.<br>
 <hr>
 <br><br><br>
 </body></html>

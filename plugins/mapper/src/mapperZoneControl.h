@@ -2,27 +2,29 @@
 
 #include "editListBox.h"
 
-class MapperZoneControl : public CDialogImpl<MapperZoneControl>
+class MappeZoneControl : public CDialogImpl<MappeZoneControl>
 {
     CEditListBox m_list;
     RECT rc_list;
-    //std::vector<Zone*> zones;
+    std::vector<Zone*> zones;
     HWND m_parent;
     UINT m_msg;
 
 public:
     enum { IDD = IDD_MAPPER_ZONES };
-    MapperZoneControl() : m_parent(NULL), m_msg(0)
+    MappeZoneControl() : m_parent(NULL), m_msg(0)
     {
     }
-
-    /*void zoneChanged(Zone *newzone)
+    
+    void roomChanged(const ViewMapPosition& pos)
     {
-        if (!newzone)
+        if (!pos.level)
         {
             m_list.SelectItem(-1);
             return;
         }
+
+        Zone *newzone = pos.level->getZone();
         int current_zone = m_list.GetCurSel();
         if (current_zone == -1 || zones[current_zone] != newzone)
         {
@@ -39,9 +41,10 @@ public:
         int index = findZone(zone);
         if (index == -1)
         {
-            const tstring& name = zone->getName();
+            ZoneParams zp;
+            zone->getParams(&zp);
             index = m_list.GetItemCount();
-            m_list.InsertItem(index, name.c_str());
+            m_list.InsertItem(index, zp.name.c_str());
             zones.push_back(zone);
         }
         if (selection == -1)
@@ -52,7 +55,8 @@ public:
     Zone* getCurrentZone()
     {
         int id = m_list.GetCurSel();
-        return (id == -1) ? NULL : zones[id];
+        if (id == -1) return NULL;
+        return zones[id];
     }
 
     void setNotifications(HWND wnd, UINT msg)
@@ -60,19 +64,21 @@ public:
         m_parent = wnd;
         m_msg = msg;
     }
+
 private:
     int findZone(Zone *zone) 
     {
-        const tstring& name = zone->getName();
+        ZoneParams zp;
+        zone->getParams(&zp);
         for (int i = 0, e = m_list.GetItemCount(); i<e; ++i)
         {
             tstring text;
             getItemText(i, &text);
-            if (!name.compare(text))
+            if (!zp.name.compare(text))
                 return i;
         }
         return -1;
-    }*/
+    }
 
     void getItemText(int item, tstring* text)
     {
@@ -119,14 +125,14 @@ private:
 
     LRESULT OnSelectItem(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (::IsWindow(m_parent) && m_msg)
+        if (::IsWindow(m_parent))
             ::SendMessage(m_parent, m_msg, 0, 0);
         return 0;
     }
 
     LRESULT OnChanged(int, LPNMHDR pnmh, BOOL&)
     {
-        /*NMEDITLIST *list = (NMEDITLIST*)pnmh;
+        NMEDITLIST *list = (NMEDITLIST*)pnmh;
         int item = list->iIndex;
         tstring text;
         getItemText(item, &text);
@@ -143,13 +149,14 @@ private:
         if (conflict)
         {
             MessageBox(L"Зона с таким именем уже существует!", L"Ошибка", MB_OK | MB_ICONERROR);
-            const tstring& name = zones[item]->getName();
-            m_list.SetItemText(item, name.c_str());
+            ZoneParams zp;
+            zones[item]->getParams(&zp);
+            m_list.SetItemText(item, zp.name.c_str());
         }
         else
         {
             zones[item]->setName(text);
-        }*/
+        }
         return 0;
     }
 };

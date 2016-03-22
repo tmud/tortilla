@@ -1,12 +1,29 @@
 #pragma once
 
 #include "splitterEx.h"
+#include "mapperObjects.h"
 #include "mapperProcessor.h"
+#include "mapperPrompt.h"
+#include "mapperRender.h"
+#include "mapperHashTable.h"
 #include "mapperToolbar.h"
 #include "mapperZoneControl.h"
+#include "mapperRoomsCache.h"
 
-class Mapper : public CWindowImpl<Mapper>, public MapperActions
+class Mapper : public CWindowImpl<Mapper>
 {
+public:
+    Mapper(PropertiesMapper *props);
+    ~Mapper();
+    void processNetworkData(const char* text, int text_len);
+    void processCmd(const wchar_t* text, int text_len);
+    void updateProps();
+    void saveMaps(lua_State *L);
+    void loadMaps(lua_State *L);
+
+    // operations
+    void newZone(Room *room, RoomDir dir);
+
 private:
     BEGIN_MSG_MAP(Mapper)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -15,6 +32,7 @@ private:
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
       MESSAGE_HANDLER(WM_USER, OnUser)
     END_MSG_MAP()
+
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { m_hWnd = NULL; return 0; }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
@@ -24,22 +42,38 @@ private:
     void onSize();
     void onZoneChanged();
 
-private: // actions from processor
-    void setCurrentRoom(Room *room) 
-    {
-   /*     m_view.setCurrentRoom(room);
-        Zone *zone = room->level->getArea()->getZone();
-        m_zones_control.zoneChanged(zone);*/
-    }    
-    /*void lostPosition() { m_view.setCurrentRoom(NULL); }
-    void setPossibleRooms(const std::vector<Room*>& rooms) {}
-    void addNewZone(Zone *zone) { m_zones_control.addNewZone(zone); }*/
-
 private:
-    //void setCurrentLevel(RoomsLevel *level) {}
+    Zone* addNewZone();
+    Room* findRoomCached(const RoomData& room);
+    Room* findRoom(const RoomData& room);
+    Room* addNewRoom(const RoomData& room);
+    Room* createNewRoom(const RoomData& room);
+    void  deleteRoom(Room* room);
+    void  changeLevelOrZone(Room *old, Room* curr);
+    void  checkExits(Room *room);
+    int   revertDir(int dir);
+    void  popDir();
+    Room* getNextRoom(Room *room, int dir);
+    void  redrawPosition();
+
+private: // Elements on the screen
+    PropertiesMapper *m_propsData;
+
     MapperToolbar m_toolbar;
-    CSplitterWindowExT<true, 1, 3> m_vSplitter;
-    MapperZoneControl m_zones_control;
+    CSplitterWindowExT<true, 1, 4> m_vSplitter;
+    MappeZoneControl m_zones_control;
     MapperRender m_view;
     int m_toolbar_height;
+
+    MapperProcessor m_processor;
+    MapperPrompt m_prompt;
+    MapperHashTable m_table;
+    MapperRoomsCache m_cache;
+
+    std::vector<int> m_path;
+    int m_lastDir;
+    Room *m_pCurrentRoom;
+    std::vector<Zone*> m_zones;
+    RoomCursor m_rpos;
+    ViewMapPosition m_viewpos;
 };

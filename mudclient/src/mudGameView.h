@@ -1,12 +1,12 @@
 #pragma once
-
+#include "accessors.h"
 #include "propertiesPages/propertiesDlg.h"
-#include "propertiesPages/propertiesManager.h"
 #include "profiles/profileDlgs.h"
 
 #include "network/network.h"
 #include "mudView.h"
 #include "mudCommandBar.h"
+#include "findDlg.h"
 #include "logicProcessor.h"
 
 #include "plugins/pluginsApi.h"
@@ -14,6 +14,7 @@
 #include "plugins/pluginsManager.h"
 
 #include "AboutDlg.h"
+#include "helpManager.h"
 
 #define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
 
@@ -28,18 +29,25 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
     CDockingWindow m_dock;
     int m_barHeight;
     MudCommandBar m_bar;
+    FindView m_find_dlg;
+    int m_last_find_view;
     MudView m_history;
     MudView m_view;
     CSplitterWindowExT<false, 3, 1> m_hSplitter;
 
     NetworkConnectData m_networkData;
     Network m_network;
+    DataQueue m_network_queue;
     HotkeyTable m_hotkeyTable;
     LogicProcessor m_processor;
     std::vector<MudView*> m_views;
     std::vector<PluginsView*> m_plugins_views;
     PluginsManager m_plugins;
     int m_codepage;
+    bool m_activated;
+    bool m_settings_mode;
+    bool m_drag_flag;
+    std::vector<MudViewHandler*> m_handlers;
 
 private:
     void onStart();
@@ -54,10 +62,9 @@ public:
     DECLARE_WND_CLASS(NULL)
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
-        m_barHeight(32), m_bar(m_propData),
+        m_barHeight(32), m_bar(m_propData), m_last_find_view(-1), m_network_queue(2048),
         m_view(&m_propElements), m_history(&m_propElements),
-        m_processor(m_propData, this), m_plugins(m_propData), 
-        m_codepage(CPWIN)
+        m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
     }
 
@@ -78,13 +85,43 @@ public:
             if (processKey(pMsg->wParam))
                 return TRUE;
         }
+
+        if (m_find_dlg.processMsg(pMsg))
+        {
+            if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
+               SetFocus();
+            if (msg == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
+               findText();
+            return TRUE;
+        }
+
         if (msg == WM_KEYDOWN && pMsg->wParam == VK_ESCAPE)
         {
-            if (m_history.IsWindowVisible())                
+            if (m_history.IsWindowVisible())
             {
                 closeHistory();
                 return TRUE;
             }
+            int last = m_view.getLastString();
+            if (last != m_view.getViewString())
+            {
+                m_view.setViewString(last);
+                return TRUE;
+            }
+        }
+        if (msg == WM_KEYDOWN  && pMsg->wParam == VK_F12 && checkKeysState(true, false, false))
+        {
+            // Shift+F12 - hot key for settings
+            BOOL b = FALSE;
+            OnSettings(0,0,0,b);
+            return TRUE;
+        }
+        if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
+        {
+            // Ctrl+F - search mode
+            if (m_propData->find_window_visible && m_find_dlg.focused()) { hideFindView(); }
+            else { showFindView(true); }
+            return TRUE;
         }
         if (m_bar.PreTranslateMessage(pMsg))
             return TRUE;
@@ -118,10 +155,20 @@ public:
         return dock;
     }
 
+    bool activated() const
+    {
+        return m_activated;
+    }
+
+    bool isPropertiesOpen() const
+    {
+        return m_settings_mode;
+    }
+
     PluginsView* createPanel(const PanelWindow& w, Plugin* p)
     {
         PluginsView *v = new PluginsView(p);
-        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD|WS_VISIBLE);
+        v->Create(m_dock, rcDefault, L"", WS_DEFCHILD);
         int dt = (w.side == DOCK_LEFT || w.side == DOCK_RIGHT) ? GetSystemMetrics(SM_CXEDGE) : GetSystemMetrics(SM_CYEDGE);
         m_dock.m_panels.AddWindow(*v, w.side, w.size+dt);
         return v;
@@ -138,7 +185,7 @@ public:
     PluginsView* createDockPane(const OutputWindow& w, Plugin* p)
     {
         PluginsView *v = new PluginsView(p);
-        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, WS_EX_STATICEDGE);
+        v->Create(m_dock, rcDefault, w.name.c_str(), WS_DEFCHILD, 0);
         m_dock.AddWindow(*v);
         if (IsDocked(w.side))
         {
@@ -162,7 +209,7 @@ public:
         m_plugins_views.push_back(v);
         return v;
     }
-    
+
     void deleteDockPane(PluginsView *v)
     {
         HWND hwnd = v->m_hWnd;
@@ -246,17 +293,61 @@ public:
         }
     }
 
+    bool isDockPaneVisible(PluginsView* v)
+    {
+       return m_dock.IsVisible(v->m_hWnd) ? true : false;
+    }
+
     void hideDockPane(PluginsView* v)
     {
-        HWND hwnd = v->m_hWnd;
-        m_dock.HideWindow(hwnd);
+        m_dock.HideWindow(v->m_hWnd);
     }
 
     void showDockPane(PluginsView* v)
     {
-        HWND hwnd = v->m_hWnd;
-        m_dock.ShowWindow(hwnd);
+        m_dock.ShowWindow(v->m_hWnd);
     }
+
+    SIZE getDockPaneSize(PluginsView *v)
+    {
+        return m_dock.GetWindowSize(v->m_hWnd);
+    }
+
+    HWND getFloatingWnd(PluginsView* v)
+    {
+        HWND hwnd = v->m_hWnd;
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        return (ctx) ? ctx->hwndFloated : NULL;
+    }
+
+    void addWindowBorder(int &width, int &height)
+    {
+        width += (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXBORDER)) * 2;
+        height += (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYBORDER)) * 2 + GetSystemMetrics(SM_CYSMCAPTION);
+    }
+
+    void setFixedSize(HWND hwnd, int width, int height)
+    {
+        DOCKCONTEXT *ctx = m_dock._GetContext(hwnd);
+        if (!ctx) return;
+        if (width <= 0 || height <= 0)
+            return;
+        CWindow p(ctx->hwndFloated);
+        if (!p.IsWindow()) return;
+        addWindowBorder(width, height);
+        RECT pos = ctx->rcWindow;
+        pos.right = pos.left + width - 1;
+        pos.bottom = pos.top + height - 1;
+        ctx->bBlockFloatingResizeBox = true;
+        ctx->dwFlags |= DCK_NOLEFT|DCK_NORIGHT|DCK_NOTOP|DCK_NOBOTTOM;
+        p.MoveWindow(&pos);
+    }
+
+    void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
+    void showView(int view, bool show) { showWindow(view, show); }
+    bool isViewVisible(int view) { return isWindowVisible(view); }
+
+    void findText();
 
     LogicProcessorMethods *getMethods() { return &m_processor; }
     PropertiesData *getPropData() { return m_propData;  }
@@ -266,7 +357,7 @@ public:
     PluginsManager* getPluginsManager() { return &m_plugins; }
     int convertSideFromString(const wchar_t* side) { return m_dock.GetSideByString(side); }
     const NetworkConnectData* getConnectData() { return &m_networkData; }
-
+    MudViewHandler* getHandler(int view);
 
 private:
     BEGIN_MSG_MAP(MudGameView)
@@ -278,9 +369,10 @@ private:
         MESSAGE_HANDLER(WM_USER+1, OnNetwork)
         MESSAGE_HANDLER(WM_USER+2, OnFullScreen)
         MESSAGE_HANDLER(WM_USER+3, OnShowWelcome)
-        MESSAGE_HANDLER(WM_USER+4, OnSetFocus)
+        MESSAGE_HANDLER(WM_USER+4, OnBarSetFocus)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
     ALT_MSG_MAP(1)  // retranslated from MainFrame
+        MESSAGE_HANDLER(WM_COPYDATA, OnCopyData)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnWheel)
@@ -289,10 +381,13 @@ private:
         COMMAND_ID_HANDLER(ID_NEWWORLD, OnNewWorld)
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
+        COMMAND_ID_HANDLER(ID_VIEW_FIND, OnViewFind)
         MESSAGE_HANDLER(WM_DOCK_PANE_CLOSE, OnCloseWindow)
-        MESSAGE_HANDLER(WM_DOCK_FOCUS, OnSetFocus)
+        MESSAGE_HANDLER(WM_DOCK_FOCUS, OnBarSetFocus)
         COMMAND_ID_HANDLER(ID_PLUGINS, OnPlugins)
         COMMAND_RANGE_HANDLER(PLUGING_MENUID_START, PLUGING_MENUID_END, OnPluginMenuCmd)
+		MESSAGE_HANDLER(WM_ACTIVATEAPP, OnActivateApp)
+        CHAIN_MSG_MAP_ALT_MEMBER(m_dock, 1) // processing some system messages
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM lparam, BOOL& bHandled)
@@ -315,10 +410,19 @@ private:
 
         m_parent.MoveWindow(&m_propData->main_window);
 
+        // create find panel
+        m_find_dlg.Create(m_dock);
+        m_find_dlg.SetWindowText(L"Поиск");
+        m_dock.AddWindow(m_find_dlg);
+        m_find_dlg.setWindowName(0, L"Главное окно");
+        m_find_dlg.selectWindow(0);
+
         // create docking output windows
         for (int i=0; i < OUTPUT_WINDOWS; ++i)
         {
             const OutputWindow& w =  m_propData->windows[i];
+            m_find_dlg.setWindowName(i+1,w.name);
+
             MudView *v = new MudView(&m_propElements);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
             int menu_id = i+ID_WINDOW_1;
@@ -326,21 +430,24 @@ private:
                 m_parent.SendMessage(WM_USER, menu_id, 1);
             m_parent.SendMessage(WM_USER+1, menu_id, (WPARAM)w.name.c_str());
 
-            v->Create(m_dock, rcDefault, w.name.c_str(), style, WS_EX_CLIENTEDGE);
+            v->Create(m_dock, rcDefault, w.name.c_str(), style, 0);
             m_views.push_back(v);
             m_dock.AddWindow(*v);
             if (IsDocked(w.side))
             {
                 m_dock.DockWindow(*v, w.side);
-                int size = IsDockedVertically(w.side) ? w.pos.right : w.pos.bottom;
+                int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
                 m_dock.SetPaneSize(w.side, size);
             }
             else if (w.side == DOCK_FLOAT)
-            {
                 m_dock.FloatWindow(*v, w.pos);
-            }
         }
 
+        // show find window if required
+        if (m_propData->find_window_visible)
+            showFindView(false);
+
+        m_handlers.push_back( new MudViewHandler(&m_view, &m_history) );
         for (int i=0; i<OUTPUT_WINDOWS; ++i)
         {
             MudView *v = m_views[i];
@@ -349,6 +456,7 @@ private:
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
             ctx->LastSide = w.lastside;
+            m_handlers.push_back(new MudViewHandler(v, NULL));
         }
 
         m_dock.SortPanes();
@@ -357,14 +465,11 @@ private:
         if (m_propData->main_window_fullscreen)
             PostMessage(WM_USER+2);
 
-        if (m_propElements.global.welcome)
-        {
-            m_propElements.global.welcome = 0;
-            PostMessage(WM_USER + 3);
-        }
+        if (m_manager.isFirstStartup())
+            PostMessage(WM_USER+3);
 
         SetTimer(1, 200);
-        SetTimer(2, 50);
+        SetTimer(2, 40);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -378,15 +483,15 @@ private:
 
     LRESULT OnShowWelcome(UINT, WPARAM, LPARAM, BOOL&)
     {
-        CWelcomeDlg dlg;
-        dlg.DoModal();
+        // show help
+        openHelp(m_parent, L"");
         return 0;
     }
 
     LRESULT OnParentClose(UINT, WPARAM, LPARAM lparam, BOOL&bHandled)
     {
         saveClientWindowPos();
-        savePluginWindowPos();
+        saveFindWindowPos();
         unloadPlugins();
         bHandled = FALSE;
         return 0;
@@ -399,11 +504,13 @@ private:
 
         KillTimer(2);
         KillTimer(1);
+        std::for_each(m_handlers.begin(), m_handlers.end(), [](MudViewHandler *obj){ delete obj; });        
         for (int i=0,e=m_views.size(); i<e; ++i)
             delete m_views[i];
         for (int i = 0, e = m_plugins_views.size(); i<e; ++i)
             delete m_plugins_views[i];
         onClose();
+        unloadModules();
         return 0;
     }
 
@@ -446,6 +553,9 @@ private:
             if (PtInRect(&rc, pt))
             {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
+                bool last = m_history.isLastString();
+                if (last)
+                    closeHistory();
                 return 0;
             }
         }
@@ -457,9 +567,28 @@ private:
         return 0;
     }
 
+    void setCmdBarFocus()
+    {
+        PostMessage(WM_USER+4);
+    }
+
     LRESULT OnSetFocus(UINT, WPARAM, LPARAM, BOOL&)
     {
+        setCmdBarFocus();
+        return 0;
+    }
+
+    LRESULT OnBarSetFocus(UINT, WPARAM, LPARAM, BOOL&bHandled)
+    {
         m_bar.setFocus();
+        return 0;
+    }
+
+    LRESULT OnActivateApp(UINT, WPARAM wparam, LPARAM, BOOL&bHandled)
+    {
+        m_activated = (wparam) ? true : false;
+        m_plugins.processPluginsMethod(m_activated ? "activated" : "deactivated", 0);
+        bHandled = FALSE;
         return 0;
     }
 
@@ -481,55 +610,70 @@ private:
 
     LRESULT OnNetwork(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
-        NetworkEvents result = m_network.processMsg(lparam);
-        if (result == NE_NEWDATA)
+        NetworkEvent event = m_network.translateEvent(lparam);
+        if (event == NE_NEWDATA)
         {
-            DataQueue* data = m_network.receive();
-            int text_len = data->getSize();
+            // msdp data
+            MsdpNetwork* msdp = m_plugins.getMsdp();
+            msdp->translateReceived(m_network.receivedMsdp());
+            DataQueue& md = msdp->getSendData();
+            if (md.getSize() > 0)
+            {
+                m_network.sendplain((tbyte*)md.getData(), md.getSize());
+                md.clear();
+            }
+
+            // game data
+            DataQueue &data = m_network.received();
+            int text_len = data.getSize();
+
             if (text_len == 0)
                 return 0;
+
+            //OUTPUT_BYTES(data.getData(), text_len, text_len, "DATA");
 
             MemoryBuffer wide;
             if (m_codepage == CPWIN)
             {
                 AnsiToWideConverter a2wc;
-                a2wc.convert(&wide, (char*)data->getData(), text_len);
+                a2wc.convert(&wide, (char*)data.getData(), text_len);
+                data.clear();
             }
             else
             {
                 Utf8ToWideConverter u2w;
-                u2w.convert(&wide, (char*)data->getData(), text_len);
+                int converted = u2w.convert(&wide, (char*)data.getData(), text_len);
+                data.truncate(converted);
             }
-            data->truncate(text_len);
 
             m_plugins.processStreamData(&wide);
             const WCHAR* processeddata = (const WCHAR*)wide.getData();
             m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
-        else if (result == NE_CONNECT)
+        else if (event == NE_CONNECT)
         {
             m_processor.processNetworkConnect();
             m_plugins.processConnectEvent();
         }
-        else if (result == NE_DISCONNECT)
+        else if (event == NE_DISCONNECT)
         {
             m_network.disconnect();
             m_processor.processNetworkDisconnect();
             m_plugins.processDisconnectEvent();
         }
-        else if (result == NE_ERROR)
+        else if (event == NE_ERROR)
         {
             m_network.disconnect();
             m_processor.processNetworkError();
             m_plugins.processDisconnectEvent();
         }
-        else if (result == NE_ERROR_CONNECT)
+        else if (event == NE_ERROR_CONNECT)
         {
             m_network.disconnect();
             m_processor.processNetworkConnectError();
             m_plugins.processDisconnectEvent();
         }
-        else if (result == NE_ERROR_MCCP)
+        else if (event == NE_ERROR_MCCP)
         {
             m_network.disconnect();
             m_processor.processNetworkMccpError();
@@ -565,32 +709,87 @@ private:
         if (id == 1)
         {
             m_processor.processTick();
-            if (m_history.IsWindowVisible() && m_history.isLastString())
-                closeHistory();
             m_plugins.processTick();
         }
         else if (id == 2)
         {
             m_processor.processStackTick();
+            m_view.updateSoftScrolling();
+            for (int i=0,e=m_views.size();i<e;++i)
+              m_views[i]->updateSoftScrolling();
         }
         return 0;
+    }
+
+    void processUserCommand(const tstring& cmd, bool process_history)
+    {
+        InputPlainCommands cmds(cmd);
+        int count = cmds.size();
+        if (count > 1)
+        {
+            int last = cmd.size() - 1;
+            if (last > 0)
+            {
+                tchar last_char = cmd.at(last);
+                if (last_char != L'\r' && last_char != L'\n')
+                {
+                    int last_cmd = cmds.size() - 1;
+                    m_bar.setText(cmds[last_cmd], -1, false);
+                    cmds.erase(last_cmd);
+                }
+            }
+        }
+        else if (count == 1)
+        {
+            if (process_history) {
+            InputPlainCommands history;
+            m_plugins.processHistoryCmds(cmds, &history);
+            for (int i=0,e=history.size(); i<e; ++i)
+                m_bar.addToHistory(history[i]);
+            }
+        }
+        else
+        {
+            assert(false);
+            return;
+        }
+
+        InputTemplateParameters p;
+        p.prefix = m_propData->cmd_prefix;
+        p.separator = m_propData->cmd_separator;
+
+        // разбиваем команду на подкомманды для обработки в barcmd
+        InputTemplateCommands tcmds;
+        tcmds.init(cmds, p);
+        tcmds.extract(&cmds);
+        m_plugins.processBarCmds(&cmds);
+
+        m_processor.processUserCommand(cmds);
     }
 
     LRESULT OnUserCommand(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         tstring cmd;
         m_bar.getCommand(&cmd);
-        m_plugins.processBarCmd(&cmd);
-        tstring history(cmd);
-        m_plugins.processHistoryCmd(&history);
-        m_bar.addToHistory(history);
-        m_processor.processCommand(cmd);
+        processUserCommand(cmd, true);
+        return 0;
+    }
+
+    LRESULT OnCopyData(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
+    {
+        tstring window, cmd;
+        if (readCommandToWindow(wparam, lparam, &window, &cmd))
+        {
+            PropertiesManager *pmanager = tortilla::getPropertiesManager();
+            if (window.empty() || window == pmanager->getProfileName())
+                processUserCommand(cmd, false);
+        }
         return 0;
     }
 
     void initCommandBar()
     {
-        m_barHeight = m_propElements.font_height + 4;
+        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - доп. высота, чтобы Пуск не наезжал на буквы когда окно максимизировано
         m_bar.setParams(m_barHeight, m_propElements.standard_font);
         m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);
@@ -617,6 +816,9 @@ private:
 
     LRESULT OnSettings(WORD, WORD, HWND, BOOL&)
     {
+        m_settings_mode = true;
+        m_plugins.processPluginsMethod("propsblocked", 0);
+
         PropertiesData& data = *m_manager.getConfig();
         PropertiesData tmp(data);
         PropertiesDlg propDlg(&tmp);
@@ -627,6 +829,12 @@ private:
             if (!m_manager.saveProfile())
                 msgBox(m_hWnd, IDS_ERROR_SAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
         }
+        else
+        {
+            data.dlg = tmp.dlg;
+        }
+        m_settings_mode = false;
+        m_plugins.processPluginsMethod("propsupdated", 0);
         return 0;
     }
 
@@ -641,9 +849,57 @@ private:
         return 0;
     }
 
+    void showFindView(bool set_focus)
+    {
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
+        if (ctx->Side == DOCK_HIDDEN)
+        {
+            RECT& p = m_propData->find_window;
+            SIZE sz =  m_find_dlg.getSize(); 
+            int w = 0; int h = 0;
+            addWindowBorder(w, h);
+            p.right = p.left + sz.cx + w;
+            p.bottom = p.top + sz.cy + h;
+            setFixedSize(m_find_dlg, p.right, p.bottom); // - p.left, p.bottom - p.top);
+            m_dock.FloatWindow(m_find_dlg, p);
+        }
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
+        m_propData->find_window_visible = 1;
+        if (set_focus)
+            m_find_dlg.setFocus();
+    }
+
+    void hideFindView()
+    {
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
+        //m_propData->find_window = ctx->rcWindow;
+        m_dock.HideWindow(m_find_dlg);
+        m_propData->find_window_visible = 0;
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
+        if (m_last_find_view == 0)
+            m_history.clearFind();
+        else if (m_last_find_view > 0) {
+            MudView *v = m_views[m_last_find_view-1];
+            v->clearFind();
+        }
+        m_last_find_view = -1;
+    }
+
+    LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
+    {
+        if (m_propData->find_window_visible) { hideFindView(); }
+        else { showFindView(true); }
+        return 0;
+    }
+
     LRESULT OnCloseWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         HWND wnd = (HWND)wparam;
+        if (wnd == m_find_dlg)
+        {
+            hideFindView();
+            return 0;
+        }
         for (int i = 0, e = m_plugins_views.size(); i < e; ++i)
         {
             HWND hwnd = *m_plugins_views[i];
@@ -665,15 +921,69 @@ private:
 
     bool processKey(int vkey)
     {
+        if ((vkey == VK_UP || vkey == VK_DOWN) && checkKeysState(false, true, false))
+        {
+            BOOL hv = m_history.IsWindowVisible();
+            if (vkey == VK_UP && !hv)
+            {
+                int vs = m_view.getViewString();
+                if (vs > 1)
+                    showHistory(vs-1, 1);
+                return true;
+            }
+            if (vkey == VK_DOWN && !hv)
+                return true;
+            MudView &view = m_history;
+            int visible_string = view.getViewString();
+            if (vkey == VK_UP)
+                visible_string -= 1;
+            else
+                visible_string += 1;
+            if (vkey == VK_DOWN)
+            {
+                int next_last = view.getLastString() + 1;
+                if (next_last == visible_string)
+                {
+                    closeHistory();
+                    return true;
+                }
+            }
+            view.setViewString(visible_string);
+            return true;
+        }
+
         if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
         {
-            MudView &view = (m_history.IsWindowVisible()) ? m_history : m_view;
+            if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
+            {
+                int vs = m_view.getViewString();
+                int page = m_view.getStringsOnDisplay();
+                if (vs > page)
+                    showHistory(vs-page, -1);
+                return true;
+            }
+
+            BOOL hv = m_history.IsWindowVisible();
+            MudView &view = (hv) ? m_history : m_view;
             int visible_string = view.getViewString();
             int page = view.getStringsOnDisplay();
             if (vkey == VK_PRIOR)
                 visible_string -= page;
             else
                 visible_string += page;
+            if (vkey == VK_NEXT)
+            {
+                int next_last = view.getLastString() + 1;
+                if (visible_string >= next_last)
+                {
+                    if (hv)
+                    {
+                        closeHistory();
+                        return true;
+                    }
+                    visible_string = next_last;
+                }
+            }
             view.setViewString(visible_string);
             return true;
         }
@@ -685,6 +995,7 @@ private:
        m_propElements.updateProps(m_hWnd);
        initCommandBar();
        m_view.updateProps();
+       m_view.setSoftScrollingMode(m_propData->soft_scroll ? true : false);
        m_history.updateProps();
        for (int i=0,e=m_views.size(); i<e; ++i)
            m_views[i]->updateProps();
@@ -694,6 +1005,7 @@ private:
        m_plugins.updateProps();
        if (m_propData->codepage == L"utf8") m_codepage = CPUTF8;
        else m_codepage = CPWIN;
+       m_network.setUtf8Encoding(m_codepage == CPUTF8 ? true : false);
     }
 
     void updateTitle()
@@ -720,13 +1032,7 @@ private:
         m_networkData.port = port;
         m_networkData.notifyMsg = WM_USER+1;
         m_networkData.wndToNotify = m_hWnd;
-        if (!m_network.connect(m_networkData))
-            m_processor.processNetworkConnectError();
-    }
-
-    void setCmdBarFocus()
-    {
-        PostMessage(WM_USER + 4);
+        m_network.connect(m_networkData);
     }
 
     MudViewString* getLastString(int view)
@@ -765,38 +1071,59 @@ private:
         m_plugins.processViewData("after", view, parse_data);
     }
 
+    PluginsTriggersHandler* getPluginsTriggers() 
+    {
+        return &m_plugins;
+    }
+
     void addText(int view, parseData* parse_data)
     {
         if (parse_data->strings.empty())
             return;
         if (view == 0)
         {
-            bool last = m_view.isLastString();
             int vs = m_view.getViewString();
-            m_view.addText(parse_data, &m_history);
+            bool last = m_view.isLastString();
+            bool last_updated = m_view.isLastStringUpdated();
+
+            parseData history;
+            bool in_soft_scrolling = m_view.inSoftScrolling();
+            int limited = 0;
+            m_view.addText(parse_data, &history, &limited);
+            vs = vs - limited;
+            if (history.strings.empty())
+                return;
+
+            if (last_updated)
+                m_history.deleteLastString();
+            m_history.pushText(&history);
+
             checkHistorySize();
-
-            if (!m_history.IsWindowVisible() && !last)
+            bool history_visible = m_history.IsWindowVisible() ? true : false;
+            bool soft_scroll = m_propData->soft_scroll ? true : false;
+            if (!history_visible && !last)
             {
-                CDC dc(m_view.GetDC());
-                HFONT current_font = dc.SelectFont(m_propElements.standard_font);
-                SIZE sz = {0,0};
-                GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
-                dc.SelectFont(current_font);
-
-                RECT rc; m_hSplitter.GetClientRect(&rc);
-                int lines0 = rc.bottom / sz.cy;
-                int dy0 = rc.bottom - (lines0 * sz.cy);
-                int curpos = m_hSplitter.GetSplitterPos();
-                int lines = curpos / sz.cy;
-                curpos = dy0 + (lines * sz.cy);
-                vs = vs - (lines0 - lines) + (m_history.getLastString() - m_view.getLastString());
-
-                m_hSplitter.SetSplitterPos(curpos);
-                m_hSplitter.SetSinglePaneMode(SPLIT_PANE_NONE);
-                m_history.setViewString(vs);
+                if (!soft_scroll || !in_soft_scrolling)
+                {
+                    bool skip_history = false;
+                    if (m_view.isDragMode())
+                    {
+                        m_drag_flag = true;
+                        return;
+                    }
+                    else
+                    {
+                        if (m_drag_flag) { m_drag_flag = false; skip_history = true; }
+                    }
+                    if (!skip_history)
+                        showHistory(vs, 1);
+                    if (soft_scroll || skip_history) {
+                      int last = m_view.getLastString();
+                      m_view.setViewString(last);
+                    }
+                }
             }
-            else
+            else if (history_visible)
             {
                 int vs = m_history.getViewString();
                 m_history.setViewString(vs);
@@ -806,7 +1133,7 @@ private:
         if (view >= 1 && view <= OUTPUT_WINDOWS)
         {
             MudView* v = m_views[view-1];
-            v->addText(parse_data);
+            v->addText(parse_data, NULL);
         }
     }
 
@@ -830,6 +1157,13 @@ private:
         showWindowEx(*m_views[view-1], show);
     }
 
+    bool isWindowVisible(int view)
+    {
+        assert(view >=1 && view <= OUTPUT_WINDOWS);
+        MudView* v = m_views[view-1];
+        return isWindowShown(*v);
+    }
+
     void setWindowName(int view, const tstring& name)
     {
         assert(view >=1 && view <= OUTPUT_WINDOWS);
@@ -838,6 +1172,7 @@ private:
         v->SetWindowText(name.c_str());
         int menu_id = view-1+ID_WINDOW_1;
         m_parent.SendMessage(WM_USER+1, menu_id, (WPARAM)name.c_str());
+        m_find_dlg.setWindowName(view, name);
     }
 
     void showWindowEx(HWND wnd, bool show)
@@ -875,7 +1210,7 @@ private:
 
     void getMccpStatus(MccpStatus *status)
     {
-        m_network.getMccpRatio(status);
+        m_network.getMccpStatus(status);
     }
 
     HWND getMainWindow()
@@ -883,7 +1218,7 @@ private:
         return m_parent;
     }
 
-    void preprocessGameCmd(tstring* cmd);
+    void preprocessCommand(InputCommand* cmd);
 
     void checkHistorySize()
     {
@@ -894,8 +1229,8 @@ private:
         {
             int count = m_history.getLastString();
             int maxcount = (hs*3);
-            if (maxcount > MAX_VIEW_HISTORY_SIZE) 
-                    maxcount = MAX_VIEW_HISTORY_SIZE;
+            if (maxcount > TOTAL_MAX_VIEW_HISTORY_SIZE)
+                maxcount = TOTAL_MAX_VIEW_HISTORY_SIZE;
             if (count > maxcount)
                 closeHistory();
         }
@@ -904,7 +1239,40 @@ private:
     void closeHistory()
     {
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
-        m_history.truncateStrings(m_propData->view_history_size);
+        if (m_last_find_view == 0)
+        {
+            m_history.clearFind();
+            m_last_find_view = -1;
+        }
+        m_history.truncateStrings(m_propData->view_history_size);        
+    }
+
+    void showHistory(int vs, int dt)
+    {
+        CDC dc(m_view.GetDC());
+        HFONT current_font = dc.SelectFont(m_propElements.standard_font);
+        SIZE sz = { 0, 0 };
+        GetTextExtentPoint32(dc, L"W", 1, &sz);         // sz.cy = height of font
+        dc.SelectFont(current_font);
+
+        RECT rc; m_hSplitter.GetClientRect(&rc);
+        int lines0 = rc.bottom / sz.cy;
+        int dy0 = rc.bottom - (lines0 * sz.cy);
+        int curpos = m_hSplitter.GetSplitterPos();
+        int lines = curpos / sz.cy;
+        curpos = dy0 + (lines * sz.cy);
+        vs = vs - (lines0 - lines) * dt + (m_history.getLastString() - m_view.getLastString());
+
+        m_hSplitter.SetSplitterPos(curpos);
+        m_hSplitter.SetSinglePaneMode(SPLIT_PANE_NONE);
+        m_history.setViewString(vs);
+    }
+
+    void saveFindWindowPos()
+    {
+        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
+        m_propData->find_window = ctx->rcWindow;
+        m_propData->find_window_visible = (ctx->Side == DOCK_FLOAT) ? 1 : 0;    
     }
 
     void saveClientWindowPos()
@@ -929,6 +1297,7 @@ private:
         m_parent.GetWindowPlacement(&wp);
         m_propData->main_window = wp.rcNormalPosition;
         m_propData->main_window_fullscreen = (wp.showCmd == SW_SHOWMAXIMIZED) ? 1 : 0;
+        saveFindWindowPos();
     }
 
     void loadClientWindowPos()
@@ -942,29 +1311,73 @@ private:
                 m_dock._UnFloatWindow(ctx);
             else if (IsDocked(ctx->Side))
                 m_dock._UnDockWindow(ctx);
+        }
 
-            const OutputWindow& w = m_propData->windows[i];
-            if (IsDocked(w.side))
+        // order for creating windows
+        std::vector<int> sides = { DOCK_TOP, DOCK_BOTTOM, DOCK_LEFT, DOCK_RIGHT, DOCK_FLOAT, DOCK_HIDDEN };
+
+        // recreate docking output windows
+        for (int j=0,je=sides.size(); j<je; ++j)
+        {
+            typedef std::pair<int,int> wd;
+            std::vector<wd> wds;
+            for (int i=0; i < OUTPUT_WINDOWS; ++i)
             {
-                m_dock.DockWindow(*v, w.side);
-                int size = IsDockedVertically(w.side) ? w.pos.right : w.pos.bottom;
-                m_dock.SetPaneSize(w.side, size);
-                m_parent.SendMessage(WM_USER, menu_id, 1);
+                const OutputWindow& w =  m_propData->windows[i];
+                if (w.side == sides[j]) {
+                  wd d; d.first = i; d.second = 0;
+                  if (IsDockedVertically(w.side)) d.second = w.pos.top;
+                  if (IsDockedHorizontally(w.side)) d.second = w.pos.left;
+                  wds.push_back(d);
+                }
             }
-            else if (w.side == DOCK_FLOAT)
+            struct { bool operator() (const wd& i,const wd& j) { return (i.second<j.second);}} comparator;
+            std::sort(wds.begin(), wds.end(), comparator);
+
+            for (int i=0,e=wds.size(); i<e; ++i)
             {
-                m_dock.FloatWindow(*v, w.pos);
-                m_parent.SendMessage(WM_USER, menu_id, 1);
+                int index = wds[i].first;
+                MudView *v = m_views[index];
+                const OutputWindow& w = m_propData->windows[index];
+
+                int menu_id = index + ID_WINDOW_1;
+                if (IsDocked(w.side))
+                {
+                    m_dock.DockWindow(*v, w.side);
+                    int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
+                    int border = IsDockedVertically(w.side) ? m_dock.m_sizeBorder.cx : m_dock.m_sizeBorder.cy;
+                    m_dock.SetPaneSize(w.side, size+border*2);
+                    m_parent.SendMessage(WM_USER, menu_id, 1);
+                }
+                else if (w.side == DOCK_FLOAT)
+                {
+                    m_dock.FloatWindow(*v, w.pos);
+                    m_parent.SendMessage(WM_USER, menu_id, 1);
+                }
+                else
+                {
+                    m_parent.SendMessage(WM_USER, menu_id, 0);
+                }
             }
-            else
-            {
-                m_parent.SendMessage(WM_USER, menu_id, 0);
-            }
+        }
+        for (int i = 0; i<OUTPUT_WINDOWS; ++i)
+        {
+            MudView *v = m_views[i];
+            DOCKCONTEXT *ctx = m_dock._GetContext(*v);
+            const OutputWindow& w =  m_propData->windows[i];
+            ctx->Side = w.side;
+            ctx->LastSide = w.lastside;
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
-            ctx->LastSide = w.lastside;
+            ctx->bKeepSize = false;
         }
-        m_dock.SortPanes();
+
+        // find window
+        int state = m_propData->find_window_visible;
+        hideFindView();
+        m_dock.UpdatePanes();
+        if (state)
+            showFindView(false);
     }
 
     void savePluginWindowPos(HWND wnd = NULL)
@@ -981,8 +1394,12 @@ private:
                 w.lastside = ctx->LastSide;
                 w.pos = ctx->rcWindow;
                 w.size = ctx->sizeFloat;
-                m_propData->plugins.saveWindowPos(v->getPluginName(), w);
+                Plugin *p = v->getPlugin();
+                m_propData->plugins.saveWindowPos(p->get(Plugin::FILE), w);
             }
         }
     }
+
+    void setOscColor(int index, COLORREF color);
+    void resetOscColors();
 };

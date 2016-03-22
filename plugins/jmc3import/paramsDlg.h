@@ -11,15 +11,18 @@ public:
 class ParamsDialog : public CDialogImpl<ParamsDialog>
 {
 public:
+    ParamsDialog() : rewrite_mode(false) {}
     enum { IDD = IDD_IMPORT_PARAMS };
-    std::vector<u8string> strings;
-    u8string cmdsymbol;
-    u8string separator;
+    std::vector<std::wstring> strings;
+    std::wstring cmdsymbol;
+    std::wstring separator;
+    bool rewrite_mode;
 
 private:
     CEdit m_filepath, m_cmdsymbol, m_separator;
     CButton m_ok, m_browse;
     CStatic m_error_msg;
+    CButton m_rewrite;
     CFont m_error_font;
 
     BEGIN_MSG_MAP(ParamsDialog)
@@ -36,7 +39,8 @@ private:
         m_separator.Attach(GetDlgItem(IDC_EDIT_CMDSEPARATOR));
         m_browse.Attach(GetDlgItem(IDC_BUTTON_BROWSE));
         m_ok.Attach(GetDlgItem(IDOK));
-        m_error_msg.Attach(GetDlgItem(IDC_STATIC_ERROR));                
+        m_error_msg.Attach(GetDlgItem(IDC_STATIC_ERROR));
+        m_rewrite.Attach(GetDlgItem(IDC_CHECK_REWRITE));
         LOGFONT logfont;
         CFontHandle f(m_error_msg.GetFont());
         f.GetLogFont(&logfont);
@@ -66,13 +70,15 @@ private:
             m_error_msg.SetWindowText(error.c_str());
             return 0;
         }
+
         //get cmd symbol
-        std::map<u8string, int> counter;
-        typedef std::map<u8string, int>::iterator iterator;
+        std::map<std::wstring, int> counter;
+        typedef std::map<std::wstring, int>::iterator iterator;
         for (int i=0,e=strings.size(); i<e; ++i)
         {
-            u8string symbol(strings[i].substr(0, 1));
-            int pos = strspn(symbol.c_str(), "#$%&*!@~`:;'");
+            std::wstring wstr( strings[i].c_str() );
+            std::wstring symbol( wstr.substr(0, 1) );
+            int pos = wcsspn(symbol.c_str(), L"#$%&*!@~`:;'№^|\\/_=.,");
             if (pos != symbol.length()) 
                 continue;
             iterator it = counter.find(symbol);
@@ -81,7 +87,7 @@ private:
             else
                 it->second++;
         }
-        u8string maxsymbol; int maxsize = 0;
+        std::wstring maxsymbol; int maxsize = 0;
         iterator it = counter.begin(), it_end = counter.end();
         for (; it != it_end; ++it) {
             if (it->second > maxsize) { maxsize = it->second; maxsymbol = it->first; }
@@ -93,7 +99,7 @@ private:
             return 0;
         }
         enableControls(TRUE);
-        m_cmdsymbol.SetWindowText(TU2W(maxsymbol.c_str()));
+        m_cmdsymbol.SetWindowText(maxsymbol.c_str());
         m_separator.SetWindowText(L";");
         setDlgFocus(m_ok);
         return 0;
@@ -103,9 +109,10 @@ private:
     {
         wchar_t buffer[4];
         m_cmdsymbol.GetWindowText(buffer, 2);
-        cmdsymbol.assign(TW2U(buffer));
+        cmdsymbol.assign(buffer);
         m_separator.GetWindowText(buffer, 2);
-        separator.assign(TW2U(buffer));
+        separator.assign(buffer);
+        rewrite_mode = (m_rewrite.GetCheck() == BST_CHECKED) ? true : false;
         EndDialog(IDOK);
         return 0;
     }
@@ -154,7 +161,7 @@ private:
 
         DWORD high = 0;
         DWORD size = GetFileSize(hfile, &high);
-        if (high != 0 || size > (128 * 1024))
+        if (high != 0 || size > (512 * 1024))
         {
             error->assign(L"Файл слишком большого размера!");
             return false; 
@@ -193,8 +200,8 @@ private:
             if (s.empty())
                 continue;
             TA2W wide(s.c_str());
-            TW2U u8str(wide);
-            strings.push_back(u8string(u8str));
+            std::wstring w(wide);
+            strings.push_back(w);
         }
         return true;
     }

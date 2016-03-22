@@ -5,13 +5,20 @@
 #include "plugins/pluginsApi.h"
 #include "aboutdlg.h"
 
+template <class T> // stub for DECLARE_FRAME_WND_CLASS macro (without stub not working)
+class ATL_NO_VTABLE CCommonFrameImpl : public CMessageMap {
+    BEGIN_MSG_MAP(CCommonFrameImpl<T>)
+    END_MSG_MAP()
+};
+
 class CMainFrame : public CFrameWindowImpl<CMainFrame>,
-    public CUpdateUI<CMainFrame>, public CMessageFilter, public CIdleHandler
+    public CUpdateUI<CMainFrame>, public CMessageFilter, public CIdleHandler,
+    public CCommonFrameImpl<CMainFrame>
 {
 public:
     ToolbarEx<CMainFrame> m_toolBar;
     MudGameView m_gameview;
-    DECLARE_FRAME_WND_CLASS(NULL, IDR_MAINFRAME)
+    DECLARE_FRAME_WND_CLASS(MAINWND_CLASS_NAME, IDR_MAINFRAME)
     CMainFrame() {}
 
 public:
@@ -23,6 +30,7 @@ public:
         UPDATE_ELEMENT(ID_WINDOW_4, UPDUI_MENUPOPUP)
         UPDATE_ELEMENT(ID_WINDOW_5, UPDUI_MENUPOPUP)
         UPDATE_ELEMENT(ID_WINDOW_6, UPDUI_MENUPOPUP)
+        UPDATE_ELEMENT(ID_VIEW_FIND, UPDUI_MENUPOPUP)
     END_UPDATE_UI_MAP()
 
 private:
@@ -30,7 +38,7 @@ private:
     {
         if (m_gameview.PreTranslateMessage(pMsg))
            return TRUE;
-        return CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg);        
+        return CFrameWindowImpl<CMainFrame>::PreTranslateMessage(pMsg);
     }
 
     virtual BOOL OnIdle()
@@ -54,6 +62,7 @@ private:
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
         CHAIN_MSG_MAP(CFrameWindowImpl<CMainFrame>)
+        CHAIN_MSG_MAP(CCommonFrameImpl<CMainFrame>)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
@@ -94,7 +103,7 @@ private:
     }
 
     LRESULT OnClose(UINT, WPARAM, LPARAM, BOOL& bHandled)
-    {        
+    {
         bHandled = FALSE;
         return 0;
     }
@@ -123,7 +132,7 @@ private:
     {
         UISetCheck(wparam, lparam);
         return 0;
-    }    
+    }
 
     LRESULT OnSetMenuText(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
     {
@@ -146,10 +155,10 @@ private:
 
     LRESULT OnCheckUpdates(WORD, WORD, HWND, BOOL&)
     {
-        openURL(L"https://github.com/tmud/tortilla/releases");
+        openURL(L"http://tmud.github.io");
         return 0;
     }
-   
+
     LRESULT OnAppAbout(WORD, WORD, HWND, BOOL&)
     {
         CWelcomeDlg dlg;

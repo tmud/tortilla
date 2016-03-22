@@ -1,32 +1,30 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "pluginsApi.h"
 #include "api/api.h"
-#include "../MainFrm.h"
-extern CMainFrame _wndMain;
-extern PropertiesData* _pdata;
 extern Plugin* _cp;
 
-void pluginFormatByType(lua_State* L, int index, u8string *buf)
+void pluginFormatByType(lua_State* L, int index, tstring *buf)
 {
     int i = index;
     int type = lua_type(L, i);
-    utf8 dbuf[32];
+    tchar dbuf[32];
     buf->clear();
 
     switch (type)
     {
     case LUA_TNIL:
-        buf->append("[nil]");
+        buf->append(L"[nil]");
         break;
     case LUA_TNUMBER:
-        sprintf(dbuf, "%d", lua_tointeger(L, i));
+        swprintf(dbuf, L"%d", lua_tointeger(L, i));
         buf->append(dbuf);
         break;
     case LUA_TBOOLEAN:
-        buf->append( (lua_toboolean(L, i) == 0) ? "[false]" : "[true]" );
+        buf->append( (lua_toboolean(L, i) == 0) ? L"[false]" : L"[true]" );
         break;
     case LUA_TSTRING:
-        buf->append(lua_tostring(L, i));
+        buf->append(luaT_towstring(L, i));
         break;
     /*case LUA_TUSERDATA:
     case LUA_TLIGHTUSERDATA:
@@ -34,18 +32,19 @@ void pluginFormatByType(lua_State* L, int index, u8string *buf)
     case LUA_TTHREAD:
     case LUA_TTABLE:*/
     default:
-        buf->append("[?]");
+        buf->append(L"[?]");
         break;
     }
 }
 
 PluginData& find_plugin()
 {
+    PropertiesData *pdata = tortilla::getProperties();
     tstring plugin_name(_cp->get(Plugin::FILE));
     int index = -1;
-    for (int i = 0, e = _pdata->plugins.size(); i < e; ++i)
+    for (int i = 0, e = pdata->plugins.size(); i < e; ++i)
     {
-        const PluginData &p = _pdata->plugins[i];
+        const PluginData &p = pdata->plugins[i];
         if (p.name == plugin_name)
         {
             index = i; break;
@@ -56,8 +55,8 @@ PluginData& find_plugin()
         PluginData pd;
         pd.name = plugin_name;
         pd.state = _cp->state() ? 1 : 0;
-        _pdata->plugins.push_back(pd);
-        index = _pdata->plugins.size() - 1;
+        pdata->plugins.push_back(pd);
+        index = pdata->plugins.size() - 1;
     }
-    return _pdata->plugins[index];
+    return pdata->plugins[index];
 }

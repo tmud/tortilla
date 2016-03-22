@@ -1,19 +1,22 @@
 #include "stdafx.h"
+#include "accessors.h"
 #include "pluginsManager.h"
 #include "pluginsDlg.h"
 #include "pluginsApi.h"
 #include "api/api.h"
 #include "pluginsParseData.h"
+#include "inputProcessor.h"
 extern luaT_State L;
 extern Plugin* _cp;
+extern wchar_t* plugin_buffer();
 
-PluginsManager::PluginsManager(PropertiesData *props) : m_propData(props)
-{ 
+PluginsManager::PluginsManager() : m_plugins_loaded(false)
+{
 }
 
 PluginsManager::~PluginsManager() 
 {
-     autodel<Plugin> _z(m_plugins);
+    autodel<Plugin> _z(m_plugins);
 }
 
 void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
@@ -21,10 +24,11 @@ void PluginsManager::loadPlugins(const tstring& group, const tstring& profile)
     tstring tmp(group);
     tmp.append(profile);
     bool profile_changed = (tmp == m_profile) ? false : true;
-    if (!profile_changed)
+    if (!profile_changed && m_plugins_loaded)
         return;
     m_profile = tmp;
     initPlugins();
+    m_msdp_network.loadPlugins();
 }
 
 void PluginsManager::initPlugins()
@@ -74,7 +78,7 @@ void PluginsManager::initPlugins()
     }
     files.clear();
 
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
     for (int i = 0, e = modules.size(); i < e; ++i)
     {
@@ -108,12 +112,15 @@ void PluginsManager::initPlugins()
         new_plugins[i]->setOn(state);
     }
     m_plugins.swap(new_plugins);
+    m_plugins_loaded = true;
 }
 
 void PluginsManager::unloadPlugins()
 {
+    m_msdp_network.unloadPlugins();
     for(int i=0,e=m_plugins.size(); i<e; ++i)
         m_plugins[i]->unloadPlugin();
+    m_plugins_loaded = false;
 }
 
 bool PluginsManager::pluginsPropsDlg()
@@ -140,8 +147,12 @@ bool PluginsManager::pluginsPropsDlg()
 
     // turn off plugins first
     for (int i = 0, e = turn_off.size(); i < e; ++i)
-        turn_off[i]->unloadPlugin();
- 
+    {
+        Plugin *p = turn_off[i];
+        m_msdp_network.unloadPlugin(p);
+        p->unloadPlugin();
+    }
+
     // turn on new plugins
     for (int i=0,e=turn_on.size(); i<e; ++i)
     {
@@ -153,9 +164,13 @@ bool PluginsManager::pluginsPropsDlg()
             error.append(L"'. Плагин работать не будет.");
             tmcLog(error.c_str());
        }
+       else
+       {
+           m_msdp_network.loadPlugin(p);
+       }
     }
 
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
     for (int i=0,e=m_plugins.size(); i<e; ++i)
     {
@@ -190,6 +205,16 @@ Plugin* PluginsManager::findPlugin(HWND view)
     return NULL;
 }
 
+Plugin* PluginsManager::findPlugin(const tstring& name)
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        if (!name.compare(m_plugins[i]->get(Plugin::FILENAME)))
+           return m_plugins[i];
+    }
+    return NULL;
+}
+
 void PluginsManager::updateProps()
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
@@ -210,40 +235,31 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
     }
 }
 
-void PluginsManager::processGameCmd(tstring* cmd)
+void PluginsManager::processGameCmd(InputCommand* cmd)
 {
-    bool syscmd = (!cmd->empty() && cmd->at(0) == m_propData->cmd_prefix);
-
-    InputCommand icmd(*cmd);
-    std::vector<tstring> &p = icmd.parameters_list;
-    p.insert(p.begin(), (syscmd) ? icmd.command.substr(1) : icmd.command);
-    if (syscmd)
+    std::vector<tstring> p;
+    p.push_back(cmd->command);
+    p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
+    tstring error_msg;
+    PluginsManager::TableMethodResult result = (cmd->system) ? doPluginsTableMethod("syscmd", &p, &error_msg) : doPluginsTableMethod("gamecmd", &p, &error_msg);
+    if (result == TM_PROCESSED)
+        concatCommand(p, cmd->system, cmd);
+    if (result == TM_DROPPED)
     {
-        if (doPluginsTableMethod("syscmd", &p))
+        cmd->dropped = true;
+        if (!error_msg.empty())
         {
-            if (p.empty())
-                cmd->clear();
-            else
-            {
-                tchar prefix[2] = { m_propData->cmd_prefix, 0 };
-                cmd->assign(prefix);
-                for (int i=0,e=p.size();i<e;++i)
-                    cmd->append(p[i]);
-            }
+            tstring src(cmd->srccmd);
+            src.append(cmd->parameters);
+            swprintf(plugin_buffer(), L"%s (%s)", error_msg.c_str(), src.c_str());
+            pluginOut(plugin_buffer());
         }
-        return;
-    }
-    if (doPluginsTableMethod("gamecmd", &p))
-    {
-        cmd->clear();
-        for (int i = 0, e = p.size(); i < e; ++i)
-            cmd->append(p[i]);
     }
 }
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
 {
-    PluginsParseData pdata(data);
+    PluginsParseData pdata(data, NULL);
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
@@ -260,68 +276,188 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-void PluginsManager::processBarCmd(tstring *cmd)
+bool PluginsManager::processTriggers(parseData& parse_data, int string, LogicPipelineElement* pe)
 {
-    if (cmd->empty())
-        return;
-    tchar separator[2] = { m_propData->cmd_separator, 0 };
-    Tokenizer t(cmd->c_str(), separator);
-    std::vector<tstring> cmds;
-    t.moveto(&cmds);    
-    if (doPluginsTableMethod("barcmd", &cmds))
+    int i = string; int last = parse_data.strings.size() - 1;
+    MudViewString *s = parse_data.strings[i];
+    CompareData cd(s);
+    bool incomplstr = (i == last && !parse_data.last_finished);
+
+    bool processed = false;
+    for (int j = 0, je = m_plugins.size(); j < je; ++j)
     {
-        cmd->clear();
-        for (int i = 0, e = cmds.size(); i < e; ++i)
+        Plugin *p = m_plugins[j];
+        if (!p->state())
+            continue;
+        std::vector<PluginsTrigger*>& vt = p->triggers;
+        if (vt.empty())
+            continue;
+        for (int k = 0, ke = vt.size(); k < ke; ++k)
         {
-            if (i != 0) cmd->append(separator);
-            cmd->append(cmds[i]);
+            PluginsTrigger *t = vt[k];
+            if (t->compare(cd, incomplstr))
+            {
+                pe->triggers.push_back(t);
+                // проверка всех триггеров на эту строку
+                processed = true;
+            }
         }
     }
+
+    /*if (processed)
+    {
+        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        parseData &not_processed = pe->data;
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = string+1;
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+    }*/
+
+    return processed;
+
+    /*int i = start_string; int last = parse_data.strings.size() - 1;
+
+    MudViewString *s = parse_data.strings[i];
+    CompareData cd(s);
+    bool incomplstr = (i==last && !parse_data.last_finished);
+
+    bool processed = false;
+    //bool wait = false;
+    for (int j=0, je=m_plugins.size(); j<je; ++j)
+    {
+        Plugin *p = m_plugins[j];
+        if (!p->state())
+            continue;
+        std::vector<PluginsTrigger*>& vt = p->triggers;
+        if (vt.empty())
+            continue;
+        for (int k=0,ke=vt.size();k<ke;++k)
+        {
+            PluginsTrigger *t = vt[k];
+            if (!t->isEnabled())
+                continue;
+            if (t->compare(0, cd, incomplstr))
+            {
+                processed = true;
+                break;
+            }
+
+            if (t->getLen() == 1)
+            {
+                processed = true;
+                pe->triggers.push_back(t);
+                continue;
+            }
+            int count = last+1;
+            if (t->getLen() > count)
+            {
+                processed = true;
+                wait = true;
+                pe->triggers.clear();
+                break;
+            }
+            // compare next strings
+            bool compared = true;
+            for (int q=1, qe=t->getLen(); q<qe; ++q )
+            {
+                int si = start_string + q;
+                MudViewString *s2 = parse_data.strings[si];
+                CompareData cd2(s);
+                bool incomplstr2 = (si==last && !parse_data.last_finished);
+                if (!t->compare(q, cd2, incomplstr2))
+                  { compared = false;  break; }
+            }
+            if (compared)
+            {
+                processed = true;
+                pe->triggers.push_back(t);
+            }
+        }
+        //if (wait) break;
+        if (processed) break;
+    }
+
+    if (processed)
+    {
+        if (!wait)
+            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        parseData &not_processed = pe->data;
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = start_string;
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+    }
+
+    return processed;*/
 }
 
-void PluginsManager::processHistoryCmd(tstring *cmd)
+void PluginsManager::processBarCmds(InputPlainCommands* cmds)
 {
-    if (cmd->empty())
+    assert(cmds);
+    if (cmds->empty())
         return;
+    doPluginsTableMethod("barcmd", cmds->ptr(), NULL);
+}
+
+void PluginsManager::processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history)
+{
+    assert(history);
+    if (cmds.empty())
+        return;
+
     const char* method = "historycmd";
-    WideToUtf8 w2u(cmd->c_str());
-    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    WideToUtf8 w2u;
+    for (int j = 0, je = cmds.size(); j<je; ++j) 
     {
-        Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
-        lua_pushstring(L, w2u);
-        if (!p->runMethod(method, 1, 1))
+        tstring cmd(cmds[j]);
+        if (cmd.empty())
+            continue;
+        for (int i = 0, e = m_plugins.size(); i < e; ++i)
         {
-            // restart plugins
-            turnoffPlugin(NULL, i);
-            lua_settop(L, 0);
-            i = 0;
-        }
-        else
-        {
-            if (lua_isboolean(L, -1))
+            Plugin *p = m_plugins[i];
+            if (!p->state()) continue;
+            w2u.convert(cmd.c_str(), cmd.length());
+            lua_pushstring(L, w2u);
+            if (!p->runMethod(method, 1, 1))
             {
-                int r = lua_toboolean(L, -1);
-                if (!r) 
-                {
-                    cmd->clear();
-                    lua_pop(L, 1);
-                    break; 
-                }
+                // restart plugins
+                turnoffPlugin(NULL, i);
+                lua_settop(L, 0);
+                i = 0;
             }
-            lua_pop(L, 1);
+            else
+            {
+                if (lua_isboolean(L, -1))
+                {
+                    int r = lua_toboolean(L, -1);
+                    if (!r) 
+                    {
+                        cmd.clear();
+                        lua_pop(L, 1);
+                        break; 
+                    }
+                }
+                lua_pop(L, 1);
+            }
         }
+        if (!cmd.empty())
+            history->push_back(cmd);
     }
 }
 
 void PluginsManager::processConnectEvent()
 {
-    doPluginsMethod("connect");
+    doPluginsMethod("connect", 0);
 }
 
 void PluginsManager::processDisconnectEvent()
 {
-    doPluginsMethod("disconnect");
+    doPluginsMethod("disconnect", 0);
 }
 
 void PluginsManager::processTick()
@@ -331,6 +467,28 @@ void PluginsManager::processTick()
         Plugin *p = m_plugins[i];
         if (p->state() && p->isErrorState())
             turnoffPlugin(NULL, i);
+    }
+}
+
+void PluginsManager::processPluginsMethod(const char* method, int args)
+{
+     doPluginsMethod(method, args);
+}
+
+void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
+{
+    if (!p->state())
+        return;
+    if (!p->runMethod(method, args, 0))
+    {
+        int index = -1;
+        for (int i = 0, e = m_plugins.size(); i < e; ++i)
+        {
+            if (m_plugins[i] == p) { index = i; break;}
+        }
+        if (index != -1)
+            turnoffPlugin(NULL, index);
+        lua_settop(L, 0);
     }
 }
 
@@ -345,18 +503,18 @@ void PluginsManager::terminatePlugin(Plugin* p)
     p->setOn(false);
     if (index != -1)
     {
-        PluginsDataValues &modules = m_propData->plugins;
+        PluginsDataValues &modules = tortilla::getProperties()->plugins;
         modules[index].state = 0;
     }
 }
 
-void PluginsManager::doPluginsMethod(const char* method)
+void PluginsManager::doPluginsMethod(const char* method, int args)
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
-        if (!p->runMethod(method, 0, 0))
+        if (!p->runMethod(method, args, 0))
         {
             // restart plugins
             turnoffPlugin(NULL, i);
@@ -379,7 +537,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется string|nil", i);
+            turnoffPlugin(L"Неверный тип полученного значения. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
@@ -405,7 +563,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     return true;
 }
 
-bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table)
+PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg)
 {
     WideToUtf8 w2u;
     lua_newtable(L);
@@ -417,16 +575,16 @@ bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstrin
         lua_pushstring(L, w2u);
         lua_settable(L, -3);
     }
-    bool processed = false;
+    TableMethodResult result = TM_NOTPROCESSED;
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
         if (!p->state()) continue;
         bool not_supported = false;
-        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1)) )
+        if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin("Неверный тип полученного значения. Требуется table|nil", i);
+            turnoffPlugin(L"Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -438,40 +596,54 @@ bool PluginsManager::doPluginsTableMethod(const char* method, std::vector<tstrin
                 lua_settable(L, -3);
             }
             i = 0;
-            processed = false;
+            result = TM_NOTPROCESSED;
         }
         if (!not_supported)
-            processed = true;
-        if (lua_isnil(L, -1))
-            break;
-    }
-    if (lua_istable(L, -1))
-    {
-        if (processed)
+            result = TM_PROCESSED;
+        if (lua_isnil(L, -1)) 
         {
-            lua_len(L, -1);
-            int len = lua_tointeger(L, -1);
-            lua_pop(L, 1);
-            Utf8ToWide u2w;
-            table->clear();
-            for (int i = 0; i < len; ++i)
-            {
-                lua_pushinteger(L, i + 1);
-                lua_gettable(L, -2);
-                u2w.convert(lua_tostring(L, -1));
-                lua_pop(L, 1);
-                table->push_back(tstring(u2w));
-            }
+            result = TM_DROPPED;
+            break;
         }
+        if (lua_isboolean(L, -1))
+        {
+            int res = lua_toboolean(L, -1);
+            result = (!res) ? TM_DROPPED : TM_NOTPROCESSED;
+            break;
+        }
+        if (lua_isstring(L, -1))
+        {
+            result = TM_DROPPED;
+            if (error_msg)
+            {
+                tstring msg(TU2W (lua_tostring(L,-1)));
+                swprintf(plugin_buffer(), L"'%s': %s", p->get(Plugin::FILE), msg.c_str() );
+                error_msg->assign( plugin_buffer() );
+            }
+             break;
+        }
+    }
+    if (lua_istable(L, -1) && result == TM_PROCESSED)
+    {
+        lua_len(L, -1);
+        int len = lua_tointeger(L, -1);
         lua_pop(L, 1);
-        return processed;
+        Utf8ToWide u2w;
+        table->clear();
+        for (int i = 0; i < len; ++i)
+        {
+            lua_pushinteger(L, i + 1);
+            lua_gettable(L, -2);
+            u2w.convert(lua_tostring(L, -1));
+            lua_pop(L, 1);
+            table->push_back(tstring(u2w));
+        }
     }
     lua_pop(L, 1);
-    table->clear();
-    return false;
+    return result;
 }
 
-void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
+void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
@@ -479,9 +651,56 @@ void PluginsManager::turnoffPlugin(const char* error, int plugin_index)
     _cp = p;
     if (error)
         pluginError(error);
-    pluginError("Плагин отключен!");
+    pluginError(L"Плагин отключен!");
     p->setOn(false);
     _cp = old;
-    PluginsDataValues &modules = m_propData->plugins;
+    PluginsDataValues &modules = tortilla::getProperties()->plugins;
     modules[plugin_index].state = 0;
+}
+
+void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
+{
+    if (parts.empty())
+        return;
+
+    tstring newcmd(parts[0]);
+    if (newcmd != cmd->command)
+    {
+        cmd->changed = true;
+        cmd->command.assign(newcmd);
+    }
+    if (cmd->parameters_list.size() != parts.size()-1)
+        cmd->changed = true;
+    else
+    {
+        for (int i=1,e=parts.size();i<e;++i)
+            if (cmd->parameters_list[i-1] != parts[i]) { cmd->changed = true; break; }
+    }
+    if (!cmd->changed)
+        return;
+
+    cmd->parameters_list.clear();
+    tstring symbols(L"{}\"' ");
+    tstring params;
+    for (int i=1,e=parts.size();i<e;++i)
+    {
+        const tstring& s = parts[i];
+        cmd->parameters_list.push_back(s);
+        if (i != 1)
+            params.append(L" ");
+        if (!system)
+            params.append(s);
+        else
+        {
+            if (!isExistSymbols(s, symbols))
+                params.append(s);
+            else
+            {
+                params.append(L"{");
+                params.append(s);
+                params.append(L"}");
+            }
+        }
+    }
+    cmd->parameters.assign(params);
 }

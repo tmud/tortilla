@@ -43,11 +43,13 @@
     <LinkIncremental>true</LinkIncremental>
     <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
     <OutDir>$(SolutionDir)plugins\</OutDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)plugins\</OutDir>
     <IntDir>$(SolutionDir)$(Configuration)\$(ProjectName)\</IntDir>
+    <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -98,6 +100,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\libs\common\autodel.h" />
     <ClInclude Include="..\..\libs\common\crc32.h" />
     <ClInclude Include="..\..\libs\common\dataQueue.h" />
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
@@ -109,8 +112,10 @@
     <ClInclude Include="src\mapperHashTable.h" />
     <ClInclude Include="src\mapperObjects.h" />
     <ClInclude Include="src\mapperProcessor.h" />
+    <ClInclude Include="src\mapperPrompt.h" />
     <ClInclude Include="src\mapperRender.h" />
     <ClInclude Include="src\mapperRoomRender.h" />
+    <ClInclude Include="src\mapperRoomsCache.h" />
     <ClInclude Include="src\mapperSettings.h" />
     <ClInclude Include="src\mapperToolbar.h" />
     <ClInclude Include="src\mapperZoneControl.h" />
@@ -121,9 +126,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
     <ClCompile Include="src\mapper.cpp" />
+    <ClCompile Include="src\mapper2.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
     <ClCompile Include="src\mapperObjects.cpp" />
     <ClCompile Include="src\mapperProcessor.cpp" />
+    <ClCompile Include="src\mapperPrompt.cpp" />
     <ClCompile Include="src\mapperRender.cpp" />
     <ClCompile Include="src\mapperRoomRender.cpp" />
     <ClCompile Include="src\mapper_export.cpp" />

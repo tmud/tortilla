@@ -15,9 +15,6 @@
     <Filter Include="External Common Libs">
       <UniqueIdentifier>{7b1716d7-0314-4260-a05e-4eaaa492bf96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Support Files">
-      <UniqueIdentifier>{56d4ad89-82dd-4e79-aad7-c5a2a64d1b46}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="res\resource.h">
@@ -35,10 +32,16 @@
     <ClInclude Include="src\mapperSettings.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\mapperRoomsCache.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\mapperRoomRender.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapperRender.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mapperPrompt.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapperProcessor.h">
@@ -56,6 +59,9 @@
     <ClInclude Include="src\stdafx.h">
       <Filter>Main Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\libs\common\autodel.h">
+      <Filter>External Common Libs</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\libs\common\crc32.h">
       <Filter>External Common Libs</Filter>
     </ClInclude>
@@ -65,17 +71,17 @@
     <ClInclude Include="..\..\libs\common\memoryBuffer.h">
       <Filter>External Common Libs</Filter>
     </ClInclude>
+    <ClInclude Include="src\MenuXP.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\editListBox.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="src\helpers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\mudclient\src\palette256.h">
       <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\editListBox.h">
-      <Filter>Support Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\MenuXP.h">
-      <Filter>Support Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -83,6 +89,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapperRender.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapperPrompt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapperProcessor.cpp">
@@ -107,7 +116,10 @@
       <Filter>External Common Libs</Filter>
     </ClCompile>
     <ClCompile Include="src\MenuXP.cpp">
-      <Filter>Support Files</Filter>
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapper2.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

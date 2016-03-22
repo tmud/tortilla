@@ -17,7 +17,7 @@ struct MudViewStringParams
         ext_bkg_color = 0;
     }
 
-    bool operator==(const MudViewStringParams& p) const
+    bool operator==(const MudViewStringParams& p)
     {
         if (intensive_status == p.intensive_status &&
             underline_status == p.underline_status &&
@@ -62,35 +62,35 @@ struct MudViewStringBlock
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false), system(false), prompt(0) {}
+   MudViewString() : dropped(false), gamecmd(false), system(false), triggered(false), prompt(0), next(false), prev(false) {}
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
-       bytes.append(src->bytes);
        gamecmd |= src->gamecmd;
        system |= src->system;
-       if (!prompt)
-            prompt = src->prompt;
+       triggered |= src->triggered;
+       if (prompt || src->prompt)
+            prompt = getTextLen();
        src->clear();
    }
 
    void clear()
    {
        blocks.clear();
-       bytes.clear();
        dropped = false;
        gamecmd = false;
        system = false;
+       triggered = false;
        prompt = 0;
    }
 
    void copy(MudViewString* src)
    {
        blocks.assign(src->blocks.begin(), src->blocks.end());
-       bytes.assign(src->bytes);
        dropped = false;
        gamecmd = src->gamecmd;
        system = src->system;
+       triggered = src->triggered;
        prompt = src->prompt;
    }
 
@@ -127,6 +127,14 @@ struct MudViewString
        text->assign(tmp.substr(0, prompt));
    }
 
+   void getMd5(tstring *crc) const
+   {
+       MD5 md5;
+       for (int i=0,e=blocks.size(); i<e; ++i)
+           md5.update(blocks[i].string);
+       crc->assign(md5.getCRC());
+   }
+
    MudViewString* divideString(int pos)
    {
        MudViewString *s = new MudViewString;
@@ -151,11 +159,15 @@ struct MudViewString
        }
        return s;
    }
-
+   
    std::vector<MudViewStringBlock> blocks;  // all string blocks
-   tstring bytes;                           // all stream data bytes parsed from
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd
    bool system;                             // flag - system cmd / log
-   int  prompt;                             // prompt-string, index of last symbol of prompt   
+   bool triggered;                          // flag - string triggered, after that string can insert another strings
+   int  prompt;                             // prompt-string, index of last symbol of prompt
+   bool next;                               // flag - next string in MudView is part of that string
+   bool prev;                               // flag - prev string in MudView is part of that string
 };
+
+typedef std::vector<MudViewString*> mudViewStrings;

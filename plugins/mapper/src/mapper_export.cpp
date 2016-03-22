@@ -8,82 +8,78 @@ bool map_active = false;
 PropertiesMapper m_props;
 luaT_window m_parent_window;
 Mapper* m_mapper_window = NULL;
-MapperProcessor* m_mapper_processor = NULL;
 //-------------------------------------------------------------------------
 int get_name(lua_State *L) 
 {
-    lua_pushstring(L, "Карта(map)");
+    luaT_pushwstring(L, L"Карта(map)");
     return 1;
 }
 
 int get_description(lua_State *L) 
 {
-    lua_pushstring(L, "Отображает схему комнат и выходов. Показывает местоположение игрока.\r\nПредназначен для мадов со стандартными 6 выходами.");
+    luaT_pushwstring(L, L"Отображает схему комнат и выходов. Показывает местоположение игрока.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    lua_pushstring(L, "0.01 alpha");
+    luaT_pushwstring(L, L"1.01");
     return 1;
 }
 
 int init(lua_State *L)
 {
-    luaT_run(L, "addMenu", "sddd", "Карта/Окно с картой", 1, 2, IDB_MAP);
-    luaT_run(L, "addMenu", "s", "Карта/-");
-    luaT_run(L, "addMenu", "sdd", "Карта/Настройка карты...", 2, 2);
-    luaT_run(L, "addButton", "dds", IDB_MAP, 2, "Настройка карты");
+    luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
+    luaT_run(L, "addMenu", "s", L"Карта/-");
+    luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
+    luaT_run(L, "addButton", "dds", IDB_MAP, 2, L"Настройка карты");
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
+    tstring path;
+    base::getPath(L, L"config.xml", &path);
 
     m_props.initAllDefault();
 
     xml::node ld;
     if (ld.load(path.c_str()))
     {
-        ld.get("darkroom/label", &m_props.dark_room);
-        ld.get("name/begin", &m_props.begin_name);
-        ld.get("name/end", &m_props.end_name);
-        ld.get("key/begin", &m_props.begin_key);
-        ld.get("key/end", &m_props.end_key);
-        ld.get("descr/begin", &m_props.begin_descr);
-        ld.get("descr/end", &m_props.end_descr);
-        ld.get("exits/begin", &m_props.begin_exits);
-        ld.get("exits/end", &m_props.end_exits);
-        ld.get("prompt/begin", &m_props.begin_prompt);
-        ld.get("prompt/end", &m_props.end_prompt);
-        
-        if (ld.move("dirs"))
+        ld.get(L"darkroom/label", &m_props.dark_room);
+        ld.get(L"name/begin", &m_props.begin_name);
+        ld.get(L"name/end", &m_props.end_name);
+        ld.get(L"descr/begin", &m_props.begin_descr);
+        ld.get(L"descr/end", &m_props.end_descr);
+        ld.get(L"exits/begin", &m_props.begin_exits);
+        ld.get(L"exits/end", &m_props.end_exits);
+        ld.get(L"prompt/begin", &m_props.begin_prompt);
+        ld.get(L"prompt/end", &m_props.end_prompt);
+
+        if (ld.move(L"dirs"))
         {
-            ld.get("north", &m_props.north_exit);
-            ld.get("south", &m_props.south_exit);
-            ld.get("west", &m_props.west_exit);
-            ld.get("east", &m_props.east_exit);
-            ld.get("up", &m_props.up_exit);
-            ld.get("down", &m_props.down_exit);
+            ld.get(L"north", &m_props.north_exit);
+            ld.get(L"south", &m_props.south_exit);
+            ld.get(L"west", &m_props.west_exit);
+            ld.get(L"east", &m_props.east_exit);
+            ld.get(L"up", &m_props.up_exit);
+            ld.get(L"down", &m_props.down_exit);
         }
-        if (ld.move("/cmds"))
+        if (ld.move(L"/cmds"))
         {
-            ld.get("north", &m_props.north_cmd);
-            ld.get("south", &m_props.south_cmd);
-            ld.get("west", &m_props.west_cmd);
-            ld.get("east", &m_props.east_cmd);
-            ld.get("up", &m_props.up_cmd);
-            ld.get("down", &m_props.down_cmd);
+            ld.get(L"north", &m_props.north_cmd);
+            ld.get(L"south", &m_props.south_cmd);
+            ld.get(L"west", &m_props.west_cmd);
+            ld.get(L"east", &m_props.east_cmd);
+            ld.get(L"up", &m_props.up_cmd);
+            ld.get(L"down", &m_props.down_cmd);
         }
     }
     ld.deletenode();
 
-	if (!m_parent_window.create(L, "Карта", 400, 400))
-		return luaT_error(L, "Не удалось создать окно для карты");
+	if (!m_parent_window.create(L, L"Карта", 400, 400))
+		return luaT_error(L, L"Не удалось создать окно для карты");
 
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isVisible();
 
-    m_mapper_window = new Mapper();
+    m_mapper_window = new Mapper(&m_props);
     RECT rc; ::GetClientRect(parent, &rc);
     if (rc.right == 0) rc.right = 400; // requeires for splitter inside map window (if parent window hidden)
     HWND res = m_mapper_window->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);  
@@ -92,51 +88,50 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    m_mapper_processor = new MapperProcessor(&m_props);
-    m_mapper_processor->setCallback(m_mapper_window);
-    m_mapper_processor->updateProps();
-    /*m_mapper_processor->loadMaps(L);
-    m_mapper_processor->selectDefault();*/
+    m_mapper_window->loadMaps(L);
     return 0;
 }
 
 int release(lua_State *L)
 {
-    //m_mapper_processor->saveMaps(L);
-    xml::node s("mapper");
-    s.set("darkroom/label", m_props.dark_room);
-    s.set("name/begin", m_props.begin_name);
-    s.set("name/end", m_props.end_name);
-    s.set("key/begin", m_props.begin_key);
-    s.set("key/end", m_props.end_key);
-    s.set("descr/begin", m_props.begin_descr);
-    s.set("descr/end", m_props.end_descr);
-    s.set("exits/begin", m_props.begin_exits);
-    s.set("exits/end", m_props.end_exits);
-    s.set("prompt/begin", m_props.begin_prompt);
-    s.set("prompt/end", m_props.end_prompt);
-    s.create("dirs");
-    s.set("north", m_props.north_exit);
-    s.set("south", m_props.south_exit);
-    s.set("west", m_props.west_exit);
-    s.set("east", m_props.east_exit);
-    s.set("up", m_props.up_exit);
-    s.set("down", m_props.down_exit);
-    s.create("/cmds");
-    s.set("north", m_props.north_cmd);
-    s.set("south", m_props.south_cmd);
-    s.set("west", m_props.west_cmd);
-    s.set("east", m_props.east_cmd);
-    s.set("up", m_props.up_cmd);
-    s.set("down", m_props.down_cmd);
-    s.move("/");
+    m_mapper_window->saveMaps(L);
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    u8string path(lua_tostring(L, -1));
-    lua_pop(L, 1);
+    xml::node s(L"mapper");
+    s.set(L"darkroom/label", m_props.dark_room);
+    s.set(L"name/begin", m_props.begin_name);
+    s.set(L"name/end", m_props.end_name);
+    s.set(L"descr/begin", m_props.begin_descr);
+    s.set(L"descr/end", m_props.end_descr);
+    s.set(L"exits/begin", m_props.begin_exits);
+    s.set(L"exits/end", m_props.end_exits);
+    s.set(L"prompt/begin", m_props.begin_prompt);
+    s.set(L"prompt/end", m_props.end_prompt);
+    s.create(L"dirs");
+    s.set(L"north", m_props.north_exit);
+    s.set(L"south", m_props.south_exit);
+    s.set(L"west", m_props.west_exit);
+    s.set(L"east", m_props.east_exit);
+    s.set(L"up", m_props.up_exit);
+    s.set(L"down", m_props.down_exit);
+    s.create(L"/cmds");
+    s.set(L"north", m_props.north_cmd);
+    s.set(L"south", m_props.south_cmd);
+    s.set(L"west", m_props.west_cmd);
+    s.set(L"east", m_props.east_cmd);
+    s.set(L"up", m_props.up_cmd);
+    s.set(L"down", m_props.down_cmd);
+    s.move(L"/");
+
+    tstring path;
+    base::getPath(L, L"config.xml", &path);
 
     if (!s.save(path.c_str()))
-       return luaT_error(L, "Ошибка записи настроек карты: config.xml");
+    {
+        s.deletenode();
+        tstring error(L"Ошибка записи настроек карты: ");
+        error.append(path);
+        return luaT_error(L, error.c_str());
+    }
     s.deletenode();
     return 0;
 }
@@ -154,7 +149,7 @@ int menucmd(lua_State *L)
         if (ms.DoModal() == IDOK)
         {
             m_props = props;
-            m_mapper_processor->updateProps();
+            m_mapper_window->updateProps();
         }
     }
     if (id == 1)
@@ -192,29 +187,19 @@ int stream(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        u8string stream(lua_tostring(L, 1));
-        m_mapper_processor->processNetworkData(stream);
+        std::string stream ( lua_tostring(L, -1) );
+        m_mapper_window->processNetworkData(stream.c_str(), stream.length());
     }
     return 1;
 }
 
 int gamecmd(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TTABLE))
+    if (luaT_check(L, 1, LUA_TSTRING))
     {
-        lua_len(L, 1);
-        int len = lua_tointeger(L, -1);
-        lua_pop(L, 1);
-        if (len == 1)
-        {
-            u8string cmd;
-            lua_pushinteger(L, 1);
-            lua_gettable(L, -2);
-            if (lua_isstring(L, -1))
-                cmd.assign(lua_tostring(L, -1));
-            lua_pop(L, 1);
-            m_mapper_processor->processCmd(cmd);
-        }        
+        const char *cmd = lua_tostring(L, -1);
+        const wchar_t *wcmd = TU2W(cmd);
+        m_mapper_window->processCmd(wcmd, wcslen(wcmd));
     }
     return 1;
 }
@@ -236,8 +221,7 @@ static const luaL_Reg mapper_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, mapper_methods);
-    lua_setglobal(L, "mapper");
-    return 0;
+    return 1;
 }
 
 CAppModule _Module;
@@ -249,9 +233,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
         _Module.Init(NULL, hModule);
         break;
     case DLL_PROCESS_DETACH:
-        delete m_mapper_processor;
         delete m_mapper_window;
-        _Module.Term();
+        _Module.Term();        
         break;
     }
     return TRUE;

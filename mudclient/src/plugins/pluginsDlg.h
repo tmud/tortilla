@@ -69,7 +69,7 @@ private:
         m_list.addColumn(L"Состояние", 15);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle()|LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT);
         m_list.supportDoubleClick();
-        
+
         for (int i=0,e=plugins_list->size(); i<e; ++i)
         {
             Plugin *p = plugins_list->at(i);
@@ -80,11 +80,13 @@ private:
             m_list.addItem(pos, 3, state[i] ? L"Вкл" : L"Выкл");
         }
 
+        CenterWindow(GetParent());
+
         m_onoff.EnableWindow(FALSE);
         m_prior_down.EnableWindow(FALSE);
         m_prior_up.EnableWindow(FALSE);
 
-        CenterWindow(GetParent());
+        m_list.SetFocus();
         return 0;
     }
 
@@ -105,7 +107,7 @@ private:
             if (item_selected != 0)
                 m_prior_up.EnableWindow(TRUE);
             if (item_selected != last)
-                m_prior_down.EnableWindow(TRUE);            
+                m_prior_down.EnableWindow(TRUE);
             Plugin *p = plugins_list->at(item_selected);
             m_description.SetWindowText(p->get(Plugin::DESCRIPTION));
         }
@@ -117,7 +119,7 @@ private:
         switchItemOnOff();
         return 0;
     }
-    
+
     LRESULT OnOnOff(WORD, WORD wID, HWND, BOOL&)
     {
         switchItemOnOff();
@@ -140,7 +142,7 @@ private:
         int last = m_list.GetItemCount() - 1;
         if (item_selected != last) {
             m_list.SelectItem(-1);
-            swapItems(item_selected, item_selected+1);            
+            swapItems(item_selected, item_selected+1);
             m_list.SelectItem(item_selected+1);
             SetFocus();
         }
@@ -152,13 +154,13 @@ private:
         int item_selected = m_list.GetSelectedIndex();
         if (item_selected != 0) {
             m_list.SelectItem(-1);
-            swapItems(item_selected, item_selected-1);            
+            swapItems(item_selected, item_selected-1);
             m_list.SelectItem(item_selected-1);
             SetFocus();
         }
         return 0;
     }
-    
+
     LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
 	{
 		EndDialog(wID);

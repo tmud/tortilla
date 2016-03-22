@@ -10,8 +10,10 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CButton m_show_system_cmds;
     CButton m_clear_bar;
     CButton m_disable_ya;
+    CButton m_disable_osc;
     CButton m_history_tab;
     CButton m_plugins_logs;
+    CButton m_soft_scroll;
     CEdit   m_plugins_logs_window;
     CComboBox m_codepage;
     CButton m_prompt_iacga;
@@ -30,13 +32,15 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_SHOW_SYSTEM_CMDS, OnShowSysCmds)
         COMMAND_ID_HANDLER(IDC_CHECK_CLEAR_BAR, OnClearBar)
         COMMAND_ID_HANDLER(IDC_CHECK_DISABLE_DOUBLE_YA, OnDisableYa)
+        COMMAND_ID_HANDLER(IDC_CHECK_DISABLE_OSC, OnDisableOsc)
         COMMAND_ID_HANDLER(IDC_CHECK_HISTORYTAB, OnHistoryTab)
         COMMAND_ID_HANDLER(IDC_CHECK_PLUGINSLOGS, OnPluginsLogs)
+        COMMAND_ID_HANDLER(IDC_CHECK_SOFTSCROLL, OnSoftScroll)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
         COMMAND_HANDLER(IDC_COMBO_CODEPAGE, CBN_SELCHANGE, OnCodePage)
         COMMAND_ID_HANDLER(IDC_RADIO_PROMT_GA, OnPromptGA)
         COMMAND_ID_HANDLER(IDC_RADIO_PROMT_PCRE, OnPromptPcre)
-        COMMAND_HANDLER(IDC_EDIT_PROMPT_PCRE, EN_KILLFOCUS, OnPromptTemplate)
+        COMMAND_HANDLER(IDC_EDIT_PROMPT_PCRE, EN_KILLFOCUS, OnPromptTemplate)        
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -44,16 +48,18 @@ private:
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_history_size.Attach(GetDlgItem(IDC_EDIT_VIEW_HISTORY));
-        m_history_size.SetLimitText(5);
+        m_history_size.SetLimitText(6);
         m_cmd_size.Attach(GetDlgItem(IDC_EDIT_CMD_HISTORY));
         m_cmd_size.SetLimitText(3);
         m_show_system_cmds.Attach(GetDlgItem(IDC_CHECK_SHOW_SYSTEM_CMDS));
         m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));        
         m_history_tab.Attach(GetDlgItem(IDC_CHECK_HISTORYTAB));
         m_disable_ya.Attach(GetDlgItem(IDC_CHECK_DISABLE_DOUBLE_YA));
+        m_disable_osc.Attach(GetDlgItem(IDC_CHECK_DISABLE_OSC));
         m_plugins_logs.Attach(GetDlgItem(IDC_CHECK_PLUGINSLOGS));
         m_plugins_logs_window.Attach(GetDlgItem(IDC_EDIT_PLUGINSLOGS));
         m_plugins_logs_window.SetLimitText(1);
+        m_soft_scroll.Attach(GetDlgItem(IDC_CHECK_SOFTSCROLL));
 
         m_prompt_iacga.Attach(GetDlgItem(IDC_RADIO_PROMT_GA));
         m_prompt_pcre.Attach(GetDlgItem(IDC_RADIO_PROMT_PCRE));
@@ -85,8 +91,10 @@ private:
         m_show_system_cmds.SetCheck(propData->show_system_commands ? BST_CHECKED : BST_UNCHECKED);
         m_clear_bar.SetCheck(propData->clear_bar ? BST_CHECKED : BST_UNCHECKED);
         m_history_tab.SetCheck(propData->history_tab ? BST_CHECKED : BST_UNCHECKED);
-        m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);        
+        m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);
+        m_disable_osc.SetCheck(propData->disable_osc ? BST_CHECKED : BST_UNCHECKED);
         m_plugins_logs.SetCheck(propData->plugins_logs ? BST_CHECKED : BST_UNCHECKED);
+        m_soft_scroll.SetCheck(propData->soft_scroll ? BST_CHECKED : BST_UNCHECKED);
         _itow(propData->plugins_logs_window, buffer, 10);
         m_plugins_logs_window.SetWindowText(buffer);
         if (!propData->plugins_logs)
@@ -153,10 +161,24 @@ private:
         return 0;
     }
 
+    LRESULT OnDisableOsc(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_disable_osc.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->disable_osc = state;
+        return 0;
+    }
+
     LRESULT OnHistoryTab(WORD, WORD, HWND, BOOL&)
     {
         int state = (m_history_tab.GetCheck() == BST_CHECKED) ? 1 : 0;
         propData->history_tab = state;
+        return 0;
+    }
+
+    LRESULT OnSoftScroll(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_soft_scroll.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->soft_scroll = state;
         return 0;
     }
 
@@ -218,7 +240,7 @@ private:
         getWindowText(m_prompt_pcre_template, &text);
         propData->recognize_prompt_template = text;
         if (text.empty())
-        {            
+        {
             m_prompt_iacga.SetCheck(BST_CHECKED);
             m_prompt_pcre.SetCheck(BST_UNCHECKED);
             propData->recognize_prompt = 0;

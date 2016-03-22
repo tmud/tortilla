@@ -20,12 +20,18 @@ void loadString(UINT id, tstring* string)
     string->assign(buffer);
 }
 
+int msgBox(HWND parent, const tstring& msg, UINT options)
+{
+    tstring title_text;
+    loadString(IDR_MAINFRAME, &title_text);
+    return MessageBox(parent, msg.c_str(), title_text.c_str(), options);
+}
+
 int msgBox(HWND parent, UINT msg, UINT options)
 {
-    tstring msg_text, title_text;
+    tstring msg_text;
     loadString(msg, &msg_text);
-    loadString(IDR_MAINFRAME, &title_text);
-    return MessageBox(parent, msg_text.c_str(), title_text.c_str(), options);
+    return msgBox(parent, msg_text, options);
 }
 
 void getWindowText(HWND handle, tstring *string)
@@ -37,35 +43,81 @@ void getWindowText(HWND handle, tstring *string)
     string->assign(buffer);
 }
 
-bool isOnlySymbolsA(const std::string& str, const std::string& symbols)
-{
-   int pos = strspn(str.c_str(), symbols.c_str());
-   return (pos != str.length()) ? false : true;
-}
-
-bool isOnlyDigitsA(const std::string& str)
-{
-    return isOnlySymbolsA(str, "0123456789");
-}
-
 bool isOnlyDigits(const tstring& str)
 {
-   int pos = wcsspn(str.c_str(), L"0123456789");
-   return (pos != str.length()) ? false : true;
+   if (str.empty()) return false;
+   return isOnlySymbols(str, L"0123456789");
+}
+
+bool isInt(const tstring& str)
+{
+   if (str.empty()) return false;
+   const tchar* p = str.c_str();
+   int len = str.length();
+   if (*p == L'-') { p++; len--;}
+   return (wcsspn(p, L"0123456789") != len) ? false : true;
+}
+
+bool isItNumber(const tstring& str)
+{
+     if (str.empty()) return false;
+     const tchar* p = str.c_str();
+     int len = str.length();
+     if (*p == L'-') { p++; len--;}
+     return (wcsspn(p, L"e0123456789.,") != len) ? false : true;
 }
 
 bool isOnlySpaces(const tstring& str)
 {
-   int pos = wcsspn(str.c_str(), L" ");
-   return (pos != str.length()) ? false : true;
+   return isOnlySymbols(str, L" ");
 }
 
-bool a2int(const std::string& str, int *value)
+bool isOnlySymbols(const tstring& str, const tstring& symbols)
 {
-    if (!isOnlyDigitsA(str))
+    int pos = wcsspn(str.c_str(), symbols.c_str());
+    return (pos != str.length()) ? false : true;
+}
+
+bool isOnlyFilnameSymbols(const tstring& str)
+{
+    int pos = wcscspn(str.c_str(), L"?*/\\|:\"<>");
+    return (pos != str.length()) ? false : true;
+}
+
+bool w2int(const tstring& str, int *value)
+{
+    if (!isInt(str))
         return false;
-    *value = atoi(str.c_str());
+    *value = _wtoi(str.c_str());
     return true;
+}
+void int2w(int value, tstring* str)
+{
+    wchar_t buffer[16];
+    swprintf(buffer, L"%d", value);
+    str->assign(buffer);
+}
+
+bool w2double(const tstring& str, double *value)
+{
+    if (!isItNumber(str))
+        return false;
+    *value = _wtof(str.c_str());
+    return false;
+}
+
+void double2w(double value, int precision, tstring* str)
+{
+    wchar_t buffer1[16], buffer2[16];
+    swprintf(buffer1, L"%%.%df", precision);
+    swprintf(buffer2, buffer1, value);
+    str->assign(buffer2);
+}
+
+double getMod(double value)
+{
+    double ord = 0;
+    return modf(value, &ord);
 }
 
 bool isExistSymbols(const tstring& str, const tstring& symbols)
@@ -119,12 +171,16 @@ void tstring_trimsymbols(tstring *str, const tstring& symbols)
 
 void tstring_toupper(tstring *str)
 {
-    std::transform(str->begin(), str->end(), str->begin(), ::toupper);
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::toupper), &ct));
 }
 
 void tstring_tolower(tstring *str)
 {
-    std::transform(str->begin(), str->end(), str->begin(), ::tolower);
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::tolower), &ct));
 }
 
 void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
@@ -139,7 +195,7 @@ void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
 
 bool tstring_cmpl(const tstring& str, const WCHAR* lstr)
 {
-    return (wcsncmp(str.c_str(), lstr, wcslen(lstr)) == 0) ? true : false;    
+    return (wcsncmp(str.c_str(), lstr, wcslen(lstr)) == 0) ? true : false;
 }
 
 int utf8_getbinlen(const utf8* str, int symbol)
@@ -154,8 +210,7 @@ int utf8_getbinlen(const utf8* str, int symbol)
         {
             int sym_len = 2;
             if ((c & 0xf0) == 0xe0) sym_len = 3;
-            else if ((c & 0xf8) == 0xf0) sym_len = 4;
-            else if (c >= 0xf8) break;         // error
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;            
             p += sym_len;
             symbol--;
         }
@@ -199,6 +254,27 @@ void u8string_substr(u8string *str, int from, int len)
     len = utf8_getbinlen(str->c_str(), from + len);
     u8string res(str->substr(from, len));
     str->swap(res);
+}
+
+bool checkKeysState(bool shift, bool ctrl, bool alt)
+{
+    if ((GetKeyState(VK_SHIFT) < 0) != shift) return false;
+    if ((GetKeyState(VK_CONTROL) < 0) != ctrl) return false;
+    if ((GetKeyState(VK_MENU) < 0) != alt) return false;
+    return true;
+}
+
+void MD5::update(const tstring& str)
+{
+    TW2U s(str.c_str());
+    crc.update(s);
+}
+
+tstring MD5::getCRC()
+{
+    std::string crc(crc.digest().hex_str_value());
+    TU2W c(crc.c_str());
+    return tstring(c);
 }
 
 Separator::Separator(const tstring& str)
@@ -262,18 +338,18 @@ bool sendToClipboard(HWND owner, const tstring& text)
     HGLOBAL hGlob = GlobalAlloc(GMEM_FIXED, size);
     if (!hGlob)
     {
-        CloseClipboard();   
+        CloseClipboard();
         return false;
     }
 
     WCHAR* buffer = (WCHAR*)GlobalLock(hGlob);
     wcscpy(buffer, text.c_str());
     GlobalUnlock(hGlob);
-    bool result = (SetClipboardData(CF_UNICODETEXT, hGlob) == NULL) ? false : true;        
+    bool result = (SetClipboardData(CF_UNICODETEXT, hGlob) == NULL) ? false : true;
     CloseClipboard();
     if (!result)
         GlobalFree(hGlob);
-    return result;    
+    return result;
 }
 
 bool getFromClipboard(HWND owner, tstring* text)
@@ -295,4 +371,172 @@ bool getFromClipboard(HWND owner, tstring* text)
     }
     CloseClipboard();
     return result;
+}
+
+const int maxClassLen = 128;
+tchar className[maxClassLen];
+std::vector<HWND> clients;
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM)
+{
+   if (GetClassName(hwnd,className,maxClassLen))
+   {
+       if (!wcscmp(className, MAINWND_CLASS_NAME))
+           clients.push_back(hwnd);
+   }
+   return TRUE;
+}
+
+void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd)
+{
+    EnumWindows(EnumWindowsProc, 0);
+    int window_size = window.size();
+    int cmd_size = cmd.size();
+
+    int buffer_len = (window_size + cmd_size + 2)*sizeof(tchar) + 2*sizeof(int);
+    unsigned char* buffer = new unsigned char[buffer_len];
+    unsigned char* p = buffer;
+
+    int tocopy = sizeof(int);
+    memcpy(p, &window_size,tocopy); p += tocopy;
+    tocopy = (window_size+1)*sizeof(tchar);
+    memcpy(p, window.c_str(), tocopy); p += tocopy;
+    tocopy = sizeof(int);
+    memcpy(p, &cmd_size,tocopy); p += tocopy;
+    tocopy = (cmd_size+1)*sizeof(tchar);
+    memcpy(p, cmd.c_str(),tocopy); p += tocopy;
+
+    COPYDATASTRUCT cd;
+    cd.dwData = 0x55aa;
+    cd.cbData = buffer_len;
+    cd.lpData = buffer;
+
+    for (int i=0,e=clients.size(); i<e;++i)
+        SendMessage(clients[i], WM_COPYDATA, (WPARAM)owner, (LPARAM)&cd);
+    delete []buffer;
+    clients.clear();
+}
+
+bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring* cmd)
+{
+    assert(window && cmd);
+    COPYDATASTRUCT* cd = (COPYDATASTRUCT*)lparam;
+    if (cd->dwData != 0x55aa)
+        return false;
+    if (cd->cbData == 0)
+        return false;
+    int len = cd->cbData;
+    unsigned char *p = (unsigned char *)cd->lpData;
+    int window_size = 0; int cmd_size = 0;
+
+    int tocopy = sizeof(int);
+    if (tocopy > len) return false;
+    memcpy(&window_size, p, tocopy); p += tocopy; len -= tocopy;
+    if (window_size < 0) return false;
+
+    tocopy = (window_size+1)*sizeof(tchar);
+    if (tocopy > len) return false;
+    window->assign((const tchar*)p); p += tocopy; len -= tocopy;
+
+    tocopy = sizeof(int);
+    if (tocopy > len) return false;
+    memcpy(&cmd_size, p, tocopy); p += tocopy; len -= tocopy;
+    if (cmd_size < 0) return false;
+
+    tocopy = (cmd_size+1)*sizeof(tchar);
+    if (tocopy > len) return false;
+    cmd->assign((const tchar*)p); p += tocopy; len -= tocopy;
+
+    return (len == 0) ? true : false;
+}
+
+
+typedef std::map<HWND, UINT> THWNDCollection;
+HHOOK m_hHook = NULL;
+THWNDCollection m_aWindows;
+
+BOOL CALLBACK MyEnumProc(HWND hwnd, LPARAM lParam)
+{
+    TCHAR buf[16];
+    GetClassName(hwnd, buf, sizeof(buf) / sizeof(TCHAR));
+    if (_tcsncmp(buf, _T("#32768"), 6) == 0) { // special classname for menus
+        *((HWND*)lParam) = hwnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+// Hook procedure for WH_GETMESSAGE hook type.
+// This function is more or less a combination of MSDN KB articles
+// Q187988 and Q216503. See MSDN for additional details
+LRESULT CALLBACK GetMessageProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    // If this is a keystrokes message, pass it to IsDialogMessage for tab
+    // and accelerator processing
+    LPMSG lpMsg = (LPMSG)lParam;
+
+    // If this is a keystrokes message, pass it to IsDialogMessage for tab
+    // and accelerator processing
+    if ((nCode >= 0) && PM_REMOVE == wParam &&
+        (lpMsg->message >= WM_KEYFIRST && lpMsg->message <= WM_KEYLAST))
+    {
+         // check if there is a menu active
+        HWND hMenuWnd = NULL;
+        EnumWindows(MyEnumProc, (LPARAM)&hMenuWnd);
+        if (hMenuWnd == NULL) {
+        HWND hWnd = NULL; HWND hActiveWindow = GetActiveWindow();
+        THWNDCollection::iterator it = m_aWindows.begin();
+        // check each window we manage to see if the message is meant for them
+        while (it != m_aWindows.end())
+        {
+            hWnd = it->first;
+            if (::IsWindow(hWnd) && ::IsDialogMessage(hWnd, lpMsg))
+            {
+                if (it->second)
+                {
+                    LRESULT result = SendMessage(hWnd, it->second, 0, lParam);
+                    if (result) {  break; //processed
+                    }
+                }
+
+                // The value returned from this hookproc is ignored, and it cannot
+                // be used to tell Windows the message has been handled. To avoid
+                // further processing, convert the message to WM_NULL before
+                // returning.
+                lpMsg->hwnd = NULL;
+                lpMsg->message = WM_NULL;
+                lpMsg->lParam = 0L;
+                lpMsg->wParam = 0;
+                break;
+            }
+            it++;
+        }}
+    }
+
+    // Passes the hook information to the next hook procedure in
+    // the current hook chain.
+    return ::CallNextHookEx(m_hHook, nCode, wParam, lParam);
+}
+
+void createWindowHook(HWND hWnd, UINT test_msg)
+{
+    // make sure the hook is installed
+    if (m_hHook == NULL)
+    {
+        m_hHook = ::SetWindowsHookEx(WH_GETMESSAGE, GetMessageProc, NULL, GetCurrentThreadId());
+        // is the hook set?
+        if (m_hHook == NULL)
+            return;
+    }
+    // add the window to our list of managed windows
+    m_aWindows[hWnd] = test_msg;
+}
+
+void deleteWindowHook(HWND hWnd)
+{
+    m_aWindows.erase(hWnd);
+    if (m_aWindows.empty() && m_hHook)
+    {
+        ::UnhookWindowsHookEx(m_hHook);
+        m_hHook = NULL;
+    }
 }

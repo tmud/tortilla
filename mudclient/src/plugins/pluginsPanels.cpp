@@ -14,7 +14,7 @@ int createpanel(lua_State *L)
     {
         PanelWindow w;
         w.size = lua_tointeger(L, 2);
-        w.side = _wndMain.m_gameview.convertSideFromString(TU2W(lua_tostring(L, 1)));
+        w.side = _wndMain.m_gameview.convertSideFromString(luaT_towstring(L, 1));
         if (IsDocked(w.side))
         {
             PluginsView *window = _wndMain.m_gameview.createPanel(w, _cp);
@@ -24,7 +24,7 @@ int createpanel(lua_State *L)
             return 1;
         }
     }
-    return pluginInvArgs(L, "createPanel");
+    return pluginInvArgs(L, L"createPanel");
 }
 
 int pn_attach(lua_State *L)
@@ -36,7 +36,7 @@ int pn_attach(lua_State *L)
         v->attachChild(child);
         return 0;
     }
-    return pluginInvArgs(L, "panel.attach");
+    return pluginInvArgs(L, L"panel:attach");
 }
 
 int pn_setRender(lua_State *L)
@@ -53,7 +53,7 @@ int pn_setRender(lua_State *L)
         }
         return 1;
     }
-    return pluginInvArgs(L, "panel.setRender");
+    return pluginInvArgs(L, L"panel:setRender");
 }
 
 int pn_hwnd(lua_State *L)
@@ -65,7 +65,7 @@ int pn_hwnd(lua_State *L)
         lua_pushunsigned(L, (unsigned int)wnd);
         return 1;
     }
-    return pluginInvArgs(L, "panel.hwnd");
+    return pluginInvArgs(L, L"panel:hwnd");
 }
 
 void reg_mt_panels(lua_State *L)

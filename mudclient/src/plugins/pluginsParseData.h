@@ -19,14 +19,20 @@ struct PluginViewString
     }
 };
 
+struct PluginTriggerString
+{
+    std::vector<u8string> params;
+};
+
 class PluginsParseData
 {
 public:
     parseData *pdata;
+    triggerParseData *tdata;
     std::vector<PluginViewString*> plugins_strings;
     int selected;
 public:
-    PluginsParseData(parseData *data) : pdata(data), selected(-1) { convert(); }
+    PluginsParseData(parseData *data, triggerParseData *trdata) : pdata(data), tdata(trdata), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
@@ -81,21 +87,44 @@ public:
             delete plugins_strings[selected];
             plugins_strings.erase(plugins_strings.begin() + selected);
             parseDataStrings &ss = pdata->strings;
-            delete ss[selected];
+            MudViewString *s = ss[selected];
+            int last = ss.size() - 1;
+            if (selected != last)
+                ss[selected+1]->prev = s->prev;
+            if (selected != 0)
+                ss[selected-1]->next = s->next;
+            delete s;
             ss.erase(ss.begin() + selected);
+            if (tdata)
+                tdata->markDeleted(selected);
             if (selected == 0)
                 pdata->update_prev_string = false;
+            if (ss.empty() || selected == last)
+                pdata->last_finished = true;
         }
         selected = -1;
     }
 
-    void insert_new_string()
+    void deleteall()
+    {
+        std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) {delete s;});
+        plugins_strings.clear();
+        pdata->clear();
+        if (tdata)
+            tdata->markDeletedAll();
+        selected = -1;
+    }
+
+    void insert_new_string(bool gamecmd, bool system, int delta)
     {
         if (isselected())
         {
-            plugins_strings.insert(plugins_strings.begin() + selected + 1, new PluginViewString);
+            plugins_strings.insert(plugins_strings.begin() + selected + delta, new PluginViewString);
             parseDataStrings &ss = pdata->strings;
-            ss.insert(ss.begin() + selected + 1, new MudViewString);
+            MudViewString *s = new MudViewString;
+            s->gamecmd = gamecmd;
+            s->system = system;
+            ss.insert(ss.begin() + selected + delta, s);
         }
     }
 
@@ -134,6 +163,34 @@ public:
         return (selected >= 0 && selected < size()) ? true : false;
     }
 
+    int get_params()
+    {
+        if (tdata && isselected())
+            return tdata->getParameters(selected);
+        return 0;
+    }
+
+    bool get_parameter(int index, tstring* param)
+    {
+        if (tdata && isselected())
+            return tdata->getParameter(selected, index, param);
+        return false;
+    }
+
+    enum StringChanged { ISC_UNKNOWN = 0, ISC_NOTCHANGED, ISC_CHANGED };
+    StringChanged is_changed()
+    {
+        if (tdata && isselected())
+        {
+            MudViewString*s = getselected();
+            tstring md5, crc;
+            s->getMd5(&md5);
+            tdata->getCRC(selected, &crc);
+            return (md5 == crc) ? ISC_NOTCHANGED : ISC_CHANGED;
+        }
+        return ISC_UNKNOWN;
+    }
+
 private:
     void convert()
     {
@@ -152,6 +209,8 @@ private:
             }
             plugins_strings.push_back(dst);
         }
+        if (!strings.empty())
+            selected = 0; // select first string
     }
 
     void convert_back()

@@ -1,28 +1,73 @@
 @echo off
 
-set modules=modules\system.dll
-set plugins=plugins\prompt.dll plugins\jmc3import.dll plugins\historyfilter.lua plugins\autowrap.lua plugins\statusbar.lua plugins\reconnect.lua plugins\colorgamecmd.lua
+set windbg=0
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
 set sdk="sdk_%ver%.zip"
 
-del *.zip > nul
-copy ..\Release\tortilla.exe .\ > nul
-copy ..\Release\lua.dll .\ > nul
-copy ..\Release\api.dll .\ > nul
-copy ..\mudclient\changelog.txt .\ > nul
+set prod=Release
+if %windbg% == 1 set prod=Debug
 
-7za.exe a -tzip %filename% tortilla.exe lua.dll api.dll changelog.txt gamedata\* -xr!.gitignore
-del tortilla.exe lua.dll api.dll changelog.txt > nul
+del *.zip /q
+
+md tortilla
+cd tortilla
+md gamedata
+md help
+md modules
+md plugins
+md resources
+cd resources
+md sound
 cd ..
-tools\7za.exe a -r -tzip tools\%filename% help\* %plugins% %modules% -xr!.gitignore
-tools\7za.exe a -tzip tools\%sdk% sdk\* -xr!.gitignore
-cd tools
-mkdir tortilla
-7za.exe x -tzip -otortilla %filename%
-del %filename%
-7za.exe a -tzip %filename% tortilla\*
-rd /s /q tortilla
-echo Finished.
+cd ..
+
+md sdk
+
+xcopy gamedata\*.* tortilla\gamedata /E /Y
+xcopy ..\help\*.* tortilla\help /Y
+
+xcopy ..\modules\system.dll tortilla\modules /Y
+xcopy ..\modules\rnd.dll tortilla\modules /Y
+xcopy ..\modules\bass.dll tortilla\modules /Y
+xcopy ..\modules\bass_fx.dll tortilla\modules /Y
+xcopy ..\modules\lbass.dll tortilla\modules /Y
+xcopy ..\modules\modules.lua tortilla\modules /Y
+xcopy ..\modules\soundplayer.lua tortilla\modules /Y
+xcopy ..\modules\voice.dll tortilla\modules /Y
+
+xcopy ..\plugins\jmc3import.dll tortilla\plugins /Y
+xcopy ..\plugins\tray.dll tortilla\plugins /Y
+xcopy ..\plugins\prompt.dll tortilla\plugins /Y
+xcopy ..\plugins\clickpad.dll tortilla\plugins /Y
+xcopy ..\plugins\sound.dll tortilla\plugins /Y
+xcopy ..\plugins\send.lua tortilla\plugins /Y
+xcopy ..\plugins\status.lua tortilla\plugins /Y
+xcopy ..\plugins\statusbar.lua tortilla\plugins /Y
+xcopy ..\plugins\autowrap.lua tortilla\plugins /Y
+xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
+xcopy ..\plugins\historyfilter.lua tortilla\plugins /Y
+xcopy ..\plugins\colorgamecmd.lua tortilla\plugins /Y
+xcopy ..\plugins\bell.lua tortilla\plugins /Y
+xcopy ..\plugins\voice.lua tortilla\plugins /Y
+xcopy ..\plugins\pcrecalc.dll tortilla\plugins /Y
+xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
+
+xcopy ..\%prod%\tortilla.exe tortilla /Y
+xcopy ..\%prod%\api.dll tortilla /Y
+xcopy ..\%prod%\lua.dll tortilla /Y
+if %windbg% == 1 xcopy windbg\dbghelp.dll tortilla /Y
+xcopy ..\mudclient\readme.txt tortilla /Y
+xcopy ..\mudclient\changelog.txt tortilla /Y
+
+xcopy ..\sdk\*.* sdk /E /Y
+xcopy ..\modules\modules.txt sdk /Y
+
+7za.exe a -tzip %filename% tortilla
+7za.exe a -tzip %sdk% sdk -xr!.gitignore
+
+rd tortilla /s /q
+rd sdk /s /q
+
 pause

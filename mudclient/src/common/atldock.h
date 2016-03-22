@@ -66,6 +66,7 @@
 
 // Docking position helpers
 inline bool IsDockedVertically(short Side) { return (Side == DOCK_LEFT) || (Side == DOCK_RIGHT); };
+inline bool IsDockedHorizontally(short Side) { return (Side == DOCK_TOP) || (Side == DOCK_BOTTOM); };
 inline bool IsDocked(short Side) { return (Side == DOCK_TOP) || (Side == DOCK_BOTTOM) || (Side == DOCK_LEFT) || (Side == DOCK_RIGHT); };
 inline bool IsFloating(short Side) { return Side == DOCK_FLOAT; };
 #define DOCK_INFO_CHILD 0x1000
@@ -104,7 +105,7 @@ struct DOCKCONTEXT
    HWND hwndDocked;   // The docked pane
    HWND hwndFloated;  // The floating pane
    HWND hwndChild;    // The view window
-   HWND hwndOrigPrnt; // The original parent window
+   HWND hwndOrigPrnt; // The original parent window   
    short Side;        // Dock state
    short LastSide;    // Last dock state
    RECT rcWindow;     // Preferred window size
@@ -112,6 +113,9 @@ struct DOCKCONTEXT
    HWND hwndRoot;     // Main dock window
    DWORD dwFlags;     // Extra flags
    bool bKeepSize;    // Recommend using current size and avoid rescale
+   bool bNcActivate;  // Helpful flags to sync floating window header with main window
+   bool bUseNcActivate;
+   bool bBlockFloatingResizeBox;
 };
 
 typedef CSimpleValArray<DOCKCONTEXT*> CDockMap;
@@ -222,7 +226,7 @@ public:
          }
          switch( msg.message ) {
          case WM_LBUTTONUP:
-         {  
+         {
             CancelTracking();
             if( m_bDragging ) pT->OnEndDrag(); else pT->OnEndResize();
             return true;
@@ -244,7 +248,7 @@ public:
          case WM_LBUTTONDOWN:
          case WM_RBUTTONDOWN:
             CancelTracking();
-            return false;      
+            return false;
          default:
             // Just dispatch rest of the messages
             ::DispatchMessage(&msg);
@@ -329,7 +333,7 @@ template<class T> HCURSOR CSplitterBar<T>::s_hHorizCursor = NULL;
 ///////////////////////////////////////////////////////
 // CFloatingWindow
 
-typedef CWinTraits<WS_OVERLAPPED|WS_CAPTION|WS_THICKFRAME|WS_SYSMENU, WS_EX_TOOLWINDOW|WS_EX_WINDOWEDGE> CFloatWinTraits;
+typedef CWinTraits<WS_OVERLAPPED|WS_CAPTION|WS_THICKFRAME|WS_SYSMENU, WS_EX_TOOLWINDOW> CFloatWinTraits;
 
 template< class T, class TBase = CWindow, class TWinTraits = CFloatWinTraits >
 class ATL_NO_VTABLE CFloatingWindowImpl : 
@@ -340,7 +344,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_DBLCLKS, NULL)
 
    typedef CFloatingWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CFloatingWindowImpl)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
       MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -353,13 +357,14 @@ public:
       MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnLeftButtonDown)
       MESSAGE_HANDLER(WM_NCRBUTTONDOWN, OnRightButtonDown)
       MESSAGE_HANDLER(WM_NCLBUTTONDBLCLK, OnButtonDblClick)
+      MESSAGE_HANDLER(WM_NCHITTEST, OnNcHittest)
    END_MSG_MAP()
 
    DOCKCONTEXT* m_pCtx;
 
    CFloatingWindowImpl(DOCKCONTEXT* pCtx) :
       m_pCtx(pCtx)
-   { 
+   {
    }
 
    HWND Create(HWND hWndParent, RECT& rcPos, LPCTSTR szWindowName = NULL,
@@ -390,9 +395,22 @@ public:
       return 0;
    }
 
-   LRESULT OnNcActivate(UINT uMsg, WPARAM, LPARAM lParam, BOOL&)
+   LRESULT OnNcHittest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
    {
-      return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
+       LRESULT lresult = DefWindowProc(uMsg, wParam, lParam);
+       if (m_pCtx->bBlockFloatingResizeBox && lresult >= HTLEFT && lresult <= HTBOTTOMRIGHT)
+           return HTCAPTION;
+       return lresult;
+   }
+
+   LRESULT OnNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
+   {
+       if (!m_pCtx->bUseNcActivate)
+           return DefWindowProc(uMsg, IsWindowEnabled(), lParam);
+       if (m_pCtx->bNcActivate)
+           return DefWindowProc(uMsg, TRUE, lParam);
+       bHandled = FALSE;
+       return 0;
    }
 
    LRESULT OnLeftButtonDown(UINT, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -534,7 +552,7 @@ class ATL_NO_VTABLE CDockingPaneChildWindowImpl :
 public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, NULL)
    typedef CDockingPaneChildWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingPaneChildWindowImpl)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -758,7 +776,7 @@ public:
       bool bVertical = IsDockedVertically(m_pCtx->Side);
 
       // Reposition splitter and gripper bars
-      RECT rect;   
+      RECT rect;
       GetClientRect(&rect);
       if( bVertical ) {
          int nGap = 0;
@@ -843,7 +861,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, COLOR_WINDOW)
 
    typedef CDockingPaneWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingPaneWindowImpl)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
@@ -1197,7 +1215,7 @@ public:
    DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW|CS_VREDRAW|CS_DBLCLKS, NULL)
 
    typedef CDockingWindowImpl< T , TBase, TWinTraits > thisClass;
-   
+
    BEGIN_MSG_MAP(CDockingWindowImpl)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
       MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -1212,6 +1230,11 @@ public:
       MESSAGE_HANDLER(WM_DOCK_UPDATELAYOUT, OnSize)
       MESSAGE_HANDLER(WM_DOCK_REPOSITIONWINDOW, OnRepositionWindow)
       MESSAGE_HANDLER(WM_DOCK_CLIENT_CLOSE, OnClientClose)
+   ALT_MSG_MAP(1)   //call this map for sync main window/tools captions
+      MESSAGE_HANDLER(WM_SHOWWINDOW, OnMainShowWindow)
+      MESSAGE_HANDLER(WM_NCACTIVATE, OnMainNcActivate)
+      MESSAGE_HANDLER(WM_ACTIVATEAPP, OnMainActivateApp)
+      MESSAGE_HANDLER(WM_ACTIVATE, OnMainActivate)
    END_MSG_MAP()
 
    TPaneWindow m_panes[4];  // The 4 panel windows (one for each side)
@@ -1221,7 +1244,9 @@ public:
    int  m_barHeight;
    DWORD m_dwExtStyle;      // Optional styles
    SIZE m_sizeBorder;       // Size of window borders
-   
+   bool m_used_activated_mode;
+   bool m_activated;
+
    class SimpleWindowApi
    {
        struct TSimpleWindowParams
@@ -1332,7 +1357,8 @@ public:
        HWND m_dock;
    } m_panels;
 
-   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0)
+   CDockingWindowImpl() : m_hwndClient(NULL), m_hwndBar(NULL), m_barHeight(0), m_dwExtStyle(0), 
+       m_used_activated_mode(false), m_activated(false)
    {}
 
    // Operations
@@ -1345,15 +1371,15 @@ public:
 
    void SetStatusBar(HWND hWnd)
    {
-	   ATLASSERT(::IsWindow(hWnd));
-	   ATLASSERT(::GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD);
-	   m_hwndBar = hWnd;
-	   m_barHeight = 0;
+       ATLASSERT(::IsWindow(hWnd));
+       ATLASSERT(::GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD);
+       m_hwndBar = hWnd;
+       m_barHeight = 0;
    }
 
    void SetStatusBarHeight(int height)
    {
-	   m_barHeight = height;
+       m_barHeight = height;
        T* pT = static_cast<T*>(this);
        pT->UpdateLayout();
    }
@@ -1374,7 +1400,7 @@ public:
    BOOL IsDockPane(HWND hWnd) const
    {
       ATLASSERT(::IsWindow(hWnd));
-      for( int i = 0; i < m_map.GetSize(); i++ ) if( m_map[i]->hwndChild == hWnd ) return TRUE;      
+      for( int i = 0; i < m_map.GetSize(); i++ ) if( m_map[i]->hwndChild == hWnd ) return TRUE;
       return FALSE;
    }
 
@@ -1418,6 +1444,9 @@ public:
       wndFloat->Create(m_hWnd, rcDefault, szCaption);
       ATLASSERT(::IsWindow(wndFloat->m_hWnd));
       ctx->hwndFloated = *wndFloat;
+      ctx->bNcActivate = m_activated;
+      ctx->bUseNcActivate = m_used_activated_mode;
+      ctx->bBlockFloatingResizeBox = false;
 
       ::SetParent(ctx->hwndChild, ctx->hwndDocked);
 
@@ -1473,6 +1502,15 @@ public:
       return pT->_FloatWindow(pCtx);
    }
 
+   BOOL IsVisible(HWND hWnd)
+   {
+       T* pT = static_cast<T*>(this);
+       DOCKCONTEXT* pCtx = _GetContext(hWnd);
+       ATLASSERT(pCtx);
+       if (pCtx == NULL) return FALSE;
+       return (pCtx->Side == DOCK_HIDDEN) ? FALSE : TRUE;
+   }
+
    BOOL HideWindow(HWND hWnd)
    {
       T* pT = static_cast<T*>(this);
@@ -1499,6 +1537,23 @@ public:
       return pT->_FloatWindow(pCtx);
    }
 
+   SIZE GetWindowSize(HWND hWnd)
+   {
+       T* pT = static_cast<T*>(this);
+       DOCKCONTEXT* pCtx = _GetContext(hWnd);
+       ATLASSERT(pCtx);
+       SIZE result = { 0, 0};
+       if (pCtx == NULL) return result;
+       short side = pCtx->Side;
+       if (side == DOCK_HIDDEN)
+           side = pCtx->LastSide;
+       if (IsFloating(side))
+           return pCtx->sizeFloat;
+       result.cx = pCtx->rcWindow.right;
+       result.cy = pCtx->rcWindow.bottom;
+       return result;
+   }
+
    void SetWindowName(HWND hWnd, const TCHAR *name)
    {
        DOCKCONTEXT* pCtx = _GetContext(hWnd);
@@ -1520,7 +1575,8 @@ public:
    {
       ATLASSERT(IsDocked(Side));
       int cy = m_panes[Side].m_cy;
-      if( cy == 0 ) cy = m_panes[Side].m_cyOld;
+      if( cy == 0 ) 
+        cy = m_panes[Side].m_cyOld;
       return cy;
    }
 
@@ -1584,13 +1640,65 @@ public:
          if( ::IsWindow(m_map[i]->hwndFloated) ) ::DestroyWindow(m_map[i]->hwndFloated);
       }
       for( i = 0; i < m_map.GetSize(); i++ ) {
-		 delete m_map[i];
+        delete m_map[i];
       }
       for( i = 0; i < 4; i++ ) {
-		 m_panes[i].m_map.RemoveAll();
-	  }
+        m_panes[i].m_map.RemoveAll();
+      }
       m_map.RemoveAll();
       return 0;
+   }
+
+   void syncNcActivateState(bool state)
+   {
+       m_activated = state;
+       for (int i = 0; i < m_map.GetSize(); i++)
+       {
+           DOCKCONTEXT *pCtx = m_map[i];
+           pCtx->bNcActivate = state;
+           HWND floated_wnd = pCtx->hwndFloated;
+           if (::IsWindowVisible(floated_wnd))
+           {
+               SendMessage(floated_wnd, WM_NCACTIVATE, state ? TRUE : FALSE, 0);
+           }
+       }
+   }
+
+   LRESULT OnMainShowWindow(UINT, WPARAM, LPARAM, BOOL&bHandled)
+   {
+       for (int i = 0; i < m_map.GetSize(); i++)
+           m_map[i]->bUseNcActivate = true;
+       m_used_activated_mode = true;
+       syncNcActivateState(true);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainNcActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL&bHandled)
+   {
+       if (m_used_activated_mode)
+           return ::DefWindowProc(GetParent(), uMsg, m_activated, 0);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainActivate(UINT, WPARAM wParam, LPARAM, BOOL&bHandled)
+   {
+       if (m_used_activated_mode && HIWORD(wParam) == 0)
+           syncNcActivateState(true);
+       bHandled = FALSE;
+       return 0;
+   }
+
+   LRESULT OnMainActivateApp(UINT, WPARAM wParam, LPARAM, BOOL&bHandled)
+   {
+       if (m_used_activated_mode)
+       {
+           syncNcActivateState(wParam ? true : false);
+           SendMessage(GetParent(), WM_NCACTIVATE, wParam, 0);
+       }
+       bHandled = FALSE;
+       return 0;
    }
 
    LRESULT OnEraseBackground(UINT, WPARAM, LPARAM, BOOL&)
@@ -1679,7 +1787,7 @@ public:
       for( int i = 0; i < 4; i++ ) 
       {
          if( pTI->pCtx->dwFlags & (1<<i) )
-			 continue; // DCK_NOxxx flag?
+            continue; // DCK_NOxxx flag?
 
          RECT dc;             // docking check area for mouse
          if( m_panes[i].m_cy == 0 ) 
@@ -1689,35 +1797,35 @@ public:
             switch( m_panes[i].m_Side )
             {
                 case DOCK_LEFT:
-				case DOCK_RIGHT:
-				{
-					if (isUsedStatusBar())
-						rc.bottom -= m_barHeight;
+                case DOCK_RIGHT:
+                {
+                    if (isUsedStatusBar())
+                        rc.bottom -= m_barHeight;
                     m_panels.recalcIntPos(rc);
 
-					LONG top = rc.top; LONG bottom = rc.bottom;
+                    LONG top = rc.top; LONG bottom = rc.bottom;
                     rc.top = rc.top + m_panes[DOCK_TOP].m_cy;
                     rc.bottom = rc.bottom - m_panes[DOCK_BOTTOM].m_cy;
-					short curSide = pTI->pCtx->Side;
-					if (curSide == DOCK_TOP || curSide == DOCK_BOTTOM)
-					{
-						int count = 0;
-						for (int i = 0; i < m_map.GetSize(); i++)
-						{
-							if (m_map[i]->Side == curSide) count++;
-						}
-						if (count == 1)
-						{
-							if (curSide == DOCK_TOP) rc.top = top;
-							else rc.bottom = bottom;
-						}
-					}
-				}
+                    short curSide = pTI->pCtx->Side;
+                    if (curSide == DOCK_TOP || curSide == DOCK_BOTTOM)
+                    {
+                        int count = 0;
+                        for (int i = 0; i < m_map.GetSize(); i++)
+                        {
+                            if (m_map[i]->Side == curSide) count++;
+                        }
+                        if (count == 1)
+                        {
+                            if (curSide == DOCK_TOP) rc.top = top;
+                            else rc.bottom = bottom;
+                        }
+                    }
+                }
                 break;
-				case DOCK_TOP:
-				case DOCK_BOTTOM:
-					if (isUsedStatusBar())
-						rc.bottom -= m_barHeight;
+                case DOCK_TOP:
+                case DOCK_BOTTOM:
+                    if (isUsedStatusBar())
+                        rc.bottom -= m_barHeight;
                     m_panels.recalcIntPos(rc);
                 break;
             };
@@ -1827,13 +1935,13 @@ public:
       RECT rect;
       GetClientRect(&rect);
 
-	  if (isUsedStatusBar())
-	  {
-		  RECT bar(rect);
-		  bar.top = bar.bottom - m_barHeight;
-		  ::SetWindowPos(m_hwndBar, NULL, bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top, SWP_NOZORDER | SWP_NOACTIVATE);
-		  rect.bottom -= m_barHeight;
-	  }
+      if (isUsedStatusBar())
+      {
+        RECT bar(rect);
+        bar.top = bar.bottom - m_barHeight;
+        ::SetWindowPos(m_hwndBar, NULL, bar.left, bar.top, bar.right - bar.left, bar.bottom - bar.top, SWP_NOZORDER | SWP_NOACTIVATE);
+        rect.bottom -= m_barHeight;
+      }
 
       m_panels.movePanels(rect);
 
@@ -1980,6 +2088,14 @@ public:
       m_panes[DOCK_RIGHT].SortWindows();
    }
 
+   void UpdatePanes()
+   {
+      m_panes[DOCK_TOP].SendMessage(WM_DOCK_UPDATELAYOUT);
+      m_panes[DOCK_BOTTOM].SendMessage(WM_DOCK_UPDATELAYOUT);
+      m_panes[DOCK_LEFT].SendMessage(WM_DOCK_UPDATELAYOUT);
+      m_panes[DOCK_RIGHT].SendMessage(WM_DOCK_UPDATELAYOUT);
+   }
+
    void GetLimitRect(RECT *rc)
    {
      GetWindowRect(rc);
@@ -2055,11 +2171,10 @@ public:
    }
 
 private:
-	bool isUsedStatusBar() const
-	{
-		return (m_barHeight > 0 && ::IsWindow(m_hwndBar) && ::IsWindowVisible(m_hWnd)) ? true : false;
-	}
-
+    bool isUsedStatusBar() const
+    {
+        return (m_barHeight > 0 && ::IsWindow(m_hwndBar) && ::IsWindowVisible(m_hWnd)) ? true : false;
+    }
 };
 
 class CDockingWindow : public CDockingWindowImpl<CDockingWindow>

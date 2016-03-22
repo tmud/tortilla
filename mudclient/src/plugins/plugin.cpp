@@ -4,6 +4,7 @@
 
 typedef int (WINAPI *plugin_open)(lua_State *L);
 extern luaT_State L;
+extern wchar_t* plugin_buffer();
 Plugin* _cp = NULL; // current plugin in lua methods
 
 #include "pluginSupport.h"
@@ -19,9 +20,10 @@ bool Plugin::isPlugin(const wchar_t* fname)
 
 bool Plugin::loadPlugin(const wchar_t* fname)
 {
-    const wchar_t *e = wcsrchr(fname, L'.');
-    if (!e)
+    if (isAlreadyLoaded(fname))
         return false;
+    const wchar_t *e = wcsrchr(fname, L'.');
+    if (!e) return false;
     bool result = false;
     tstring ext(e+1);
     if (ext == L"lua") 
@@ -47,13 +49,13 @@ void Plugin::unloadPlugin()
 bool Plugin::reloadPlugin()
 {
     if (file.empty())
-        return false;    
+        return false;
     const wchar_t* fname = file.c_str();
     bool result = false;
     const wchar_t *e = wcsrchr(fname, L'.');
     if (!e) return false;
     tstring ext(e+1);
-    if (ext == L"lua") 
+    if (ext == L"lua")
         result = loadLuaPlugin(fname);
     else if (ext == L"dll")
         result = loadDllPlugin(fname);
@@ -129,10 +131,11 @@ bool Plugin::runMethod(const char* method, int args, int results, bool *not_supp
     if (lua_pcall(L, args, results, 0))
     {
         // error in call
+        TA2W m(method);
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(method, lua_tostring(L, -1));
+            pluginError(m, luaT_towstring(L, -1));
         else
-            pluginError(method, "неизвестная ошибка");
+            pluginError(m, L"неизвестная ошибка");
         _cp = old;
         lua_settop(L, 0);
         return false;
@@ -155,7 +158,11 @@ void Plugin::getparam(const char* state, tstring* value)
 
 bool Plugin::loadDllPlugin(const wchar_t* fname)
 {
-    tstring plugin_file(L"plugins\\");
+    tchar path[MAX_PATH+1];
+    GetCurrentDirectory(MAX_PATH, path);
+
+    tstring plugin_file(path);
+    plugin_file.append(L"\\plugins\\");
     plugin_file.append(fname);
 
     HMODULE hmod = LoadLibrary(plugin_file.c_str());
@@ -166,7 +173,7 @@ bool Plugin::loadDllPlugin(const wchar_t* fname)
     plugin_open popen = (plugin_open)GetProcAddress(hmod, "plugin_open");
     if (popen)
     {
-        popen(L);
+        int res = (popen)(L);
         loaded = initLoadedPlugin(fname);
         if (loaded)
             hModule = hmod;
@@ -181,21 +188,40 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
     tstring plugin_file(L"plugins\\");
     plugin_file.append(fname);
 
-    HANDLE hfile = CreateFile(plugin_file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    /*HANDLE hfile = CreateFile(plugin_file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     if (hfile == INVALID_HANDLE_VALUE)
         return false;
 
-    struct autoclose { HANDLE h;  
+   struct autoclose { HANDLE h;  
         autoclose(HANDLE file) : h(file) {}
-        ~autoclose() { CloseHandle(h); }
-    } _ac(hfile);
+        ~autoclose() { close(); }
+        void close() { if (h != INVALID_HANDLE_VALUE) { CloseHandle(h); h = INVALID_HANDLE_VALUE; }  }
+    } ac(hfile);
 
     DWORD high = 0;
     DWORD size = GetFileSize(hfile, &high);
     if (high != 0 || size < 3)
         return false;
+    ac.close();*/
 
-    DWORD readed = 0;
+    if (luaL_loadfile(L, TW2A(plugin_file.c_str())))
+    {
+        Utf8ToWide e(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        pluginLoadError(e, fname);
+        return false;
+    }
+    if (lua_pcall(L, 0, 1, 0))
+    {
+        Utf8ToWide e(lua_tostring(L, -1));
+        lua_pop(L, 1);
+        pluginLoadError(e, fname);
+        return false;
+    }
+    luaT_showLuaStack(L, L"ssd");
+    return initLoadedPlugin(fname);
+
+    /*DWORD readed = 0;
     MemoryBuffer script(size+1);
     if (ReadFile(hfile, script.getData(), size, &readed, NULL))
     {
@@ -212,7 +238,7 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
         }
         return initLoadedPlugin(fname);
     }
-    return false;
+    return false;*/
 }
 
 bool Plugin::initLoadedPlugin(const wchar_t* fname)
@@ -222,10 +248,18 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
     filename.assign(fname, ext - fname);
     module = TW2A(filename.c_str());
 
-    lua_getglobal(L, module.c_str());
-    bool loaded = lua_istable(L, -1);
-    lua_pop(L, 1);
+    if (!lua_istable(L, -1))
+    {
+        lua_pop(L, 1);
+        lua_pushnil(L);
+        lua_setglobal(L, module.c_str());
+        pluginLoadError(L"plugin_open() did not return a table.", fname);
+        return false;
+    }
 
+    lua_setglobal(L, module.c_str());
+
+    bool loaded = isLoadedPlugin(filename.c_str());
     if (loaded)
     {
         getparam("name", &name);
@@ -234,5 +268,35 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
         if (name.empty() || version.empty())
             loaded = false;
     }
+    if (!loaded)
+    {
+        lua_pushnil(L);
+        lua_setglobal(L,module.c_str());
+    }
+    return loaded;
+}
+
+bool Plugin::isAlreadyLoaded(const wchar_t* filename)
+{
+    const wchar_t *e = wcsrchr(filename, L'.');
+    if (!e) return false;
+    tstring module_name(filename, e);
+    tstring ext(e+1);
+    if (isLoadedPlugin(module_name.c_str()))
+    {
+        swprintf(plugin_buffer(), L"Плагин %s не загружен, так как место _G['%s'] занято модулем или другим плагином.", filename, 
+            module_name.c_str());
+        pluginOut(plugin_buffer());
+        return true;
+    }
+    return false;
+}
+
+bool Plugin::isLoadedPlugin(const wchar_t* module_name)
+{
+    TW2A name(module_name);
+    lua_getglobal(L, name);
+    bool loaded = lua_istable(L, -1);
+    lua_pop(L, 1);
     return loaded;
 }

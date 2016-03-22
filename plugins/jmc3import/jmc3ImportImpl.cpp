@@ -3,32 +3,18 @@
 #include "../mudclient/src/common/selectFileDlg.h"
 #include "paramsDlg.h"
 
-void trim(u8string *str)
-{
-    int pos = strspn(str->c_str(), " ");
-    if (pos != 0)
-        str->assign(str->substr(pos));
-    if (str->empty())
-        return;
-    int last = str->size() - 1;
-    pos = last;
-    while (str->at(pos) == ' ')
-        pos--;
-    if (pos != last)
-        str->assign(str->substr(0, pos + 1));
-}
-
 Jmc3Import::Jmc3Import(lua_State *pL) : m_aliases(pL, "aliases"), m_actions(pL, "actions"), m_subs(pL, "subs"), m_antisubs(pL, "antisubs"),
-m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups")
+m_highlights(pL, "highlights"), m_hotkeys(pL, "hotkeys"), m_gags(pL, "gags"), m_vars(pL, "vars"), m_groups(pL, "groups"), rewrite_mode(false)
 {
     L = pL;
     initPcre();
+    initSeparateCmdsPcre();
     initCmdSymbols();
     initLegacy();
 }
 Jmc3Import::~Jmc3Import() {}
 
-bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
+bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<std::wstring>* errors)
 {
     m_parent = parent_for_dlgs;
     ParamsDialog params;
@@ -36,8 +22,13 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         return false;
     jmc_cmdsymbol = params.cmdsymbol;
     jmc_separator = params.separator;
+    rewrite_mode = params.rewrite_mode;
 
-    std::vector<u8string> &v = params.strings;
+    HCURSOR cursor = SetCursor(LoadCursor(NULL, MAKEINTRESOURCE(IDC_WAIT)));
+
+    std::vector<std::wstring> &v = params.strings;
+
+    std::vector<std::wstring> disabled_groups;
 
     // get jmc cmd prefix
     for (int i=0,e=v.size(); i<e; ++i)
@@ -45,52 +36,76 @@ bool Jmc3Import::import(HWND parent_for_dlgs, std::vector<u8string>* errors)
         base.find(v[i].c_str());
         if (!base.size())
             continue;
-        u8string cmdsymbol;
+        std::wstring cmdsymbol;
         base.get(1, &cmdsymbol);
         if (cmdsymbol != params.cmdsymbol)
             continue;
 
-        u8string c, p;
+        std::wstring c, p;
         base.get(2, &c);          // command
         base.get(3, &p);          // params
 
         param.findall(p.c_str());
         if (!param.size())        //simple options
+        {
+            if (c == L"group" && disable_group.find(p.c_str()) )
+            {
+                std::wstring group;
+                disable_group.get(1, &group);
+                disabled_groups.push_back(group);            
+            }
             continue;
+        }
 
         bool result = true;
-        if (c == "action")
+        if (c == L"action")
             result = processAction();
-        else if (c == "alias")
+        else if (c == L"alias")
             result = processAlias();
-        else if (c == "substitute")
+        else if (c == L"substitute")
             result = processSubs();
-        else if (c == "antisubstitute")
+        else if (c == L"antisubstitute")
             result = processAntisub();
-        else if (c == "highlight")
+        else if (c == L"highlight")
             result = processHighlight();
-        else if (c == "hot")
+        else if (c == L"hot")
             result = processHotkey();
-        else if (c == "gag")
+        else if (c == L"gag")
             result = processGags();
-        else if (c == "variable")
+        else if (c == L"variable")
             result = processVariable();
         if (!result && errors)
             errors->push_back(v[i]);
+    }    
+    for (int i=0,e=disabled_groups.size(); i<e; ++i)
+    {
+        for (int j=1,je=m_groups.size(); j<=je; ++j)
+        {
+            m_groups.select(j);
+            std::wstring group;
+            m_groups.get(luaT_ActiveObjects::KEY, &group);
+            if (group == disabled_groups[i])
+            {
+                m_groups.set(luaT_ActiveObjects::VALUE, L"0");
+                break;
+            }
+        }
     }
+
+    SetCursor(cursor);
 
     // update all elements, through updating groups
     m_groups.update();
     return true;
 }
 
-bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
+bool Jmc3Import::parseParams(int min, int max, std::vector<std::wstring> *params)
 {
     int n = param.size()-1;
     if (n < min || n > max) return false;
     for (int i=1; i<=n; i++)
     {
-        u8string t;
+        std::wstring t;
         param.get(i, &t);
         int l = t.size()-2;
         if (l <= 0)
@@ -103,135 +118,175 @@ bool Jmc3Import::parseParams(int min, int max, std::vector<u8string> *params)
 
 bool Jmc3Import::processAlias()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(3, 3, &p))
         return false;
     convert(&p[1]);
-    return m_aliases.add(p[0].c_str(), p[1].c_str(), p[2].c_str());
+    return(rewrite_mode) ? m_aliases.replace(p[0].c_str(), p[1].c_str(), p[2].c_str()) :
+     m_aliases.add(p[0].c_str(), p[1].c_str(), p[2].c_str());
 }
 
 bool Jmc3Import::processAction()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(4, 4, &p))
         return false;
     convert(&p[1]);
-    return m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
+    replaceDoubles(&p[0]);
+    return (rewrite_mode) ? m_actions.replace(p[0].c_str(), p[1].c_str(), p[3].c_str()) :
+        m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
 }
 
 bool Jmc3Import::processSubs()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(2, 2, &p))
         return false;
-    return m_subs.add(p[0].c_str(), p[1].c_str(), "default");
+    replaceDoubles(&p[0]);
+    return (rewrite_mode) ? m_subs.replace(p[0].c_str(), p[1].c_str(), L"default") :
+        m_subs.add(p[0].c_str(), p[1].c_str(), L"default");
 }
 
 bool Jmc3Import::processAntisub()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
-    return m_antisubs.add(p[0].c_str(), NULL, "default");
+    replaceParams(&p[0]);
+    return (rewrite_mode) ? m_antisubs.replace(p[0].c_str(), NULL, L"default") :
+        m_antisubs.add(p[0].c_str(), NULL, L"default");
 }
 
 bool Jmc3Import::processHotkey()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(2, 3, &p)) 
         return false;
-    u8string group("default");
+    std::wstring group(L"default");
     int ps = p.size();
     if (ps == 3)
         group = p[2];
     convert(&p[1]);
-    return m_hotkeys.add(p[0].c_str(), p[1].c_str(), group.c_str());
+    return (rewrite_mode) ? m_hotkeys.replace(p[0].c_str(), p[1].c_str(), group.c_str()) :
+        m_hotkeys.add(p[0].c_str(), p[1].c_str(), group.c_str());
 }
 
 bool Jmc3Import::processGags()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
-    return m_gags.add(p[0].c_str(), NULL, "default");
+    replaceParams(&p[0]);
+    return (rewrite_mode) ? m_gags.replace(p[0].c_str(), NULL, L"default") :
+        m_gags.add(p[0].c_str(), NULL, L"default");
 }
 
 bool Jmc3Import::processHighlight()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(3, 3, &p))
         return false;
-    return m_highlights.add(p[1].c_str(), p[0].c_str(), p[2].c_str());
+    replaceParams(&p[1]);
+    return (rewrite_mode) ? m_highlights.replace(p[1].c_str(), p[0].c_str(), p[2].c_str()) :
+        m_highlights.add(p[1].c_str(), p[0].c_str(), p[2].c_str());
 }
 
 bool Jmc3Import::processVariable()
 {
-    std::vector<u8string> p;
+    std::vector<std::wstring> p;
     if (!parseParams(2, 2, &p)) 
         return false;
-    return m_vars.add(p[0].c_str(), p[1].c_str(), NULL);
+    return (rewrite_mode) ?  m_vars.replace(p[0].c_str(), p[1].c_str(), NULL) :
+        m_vars.add(p[0].c_str(), p[1].c_str(), NULL);
 }
 
-bool Jmc3Import::convert(u8string *str)
+bool Jmc3Import::convert(std::wstring *str)
 {
-    std::vector<u8string> cmds;
-    if (!param.findall(str->c_str()))
+    std::vector<std::wstring> cmds;
+    bool params_exists = param.findall(str->c_str());
+    Pcre find_separators;
+    std::wstring regexp(L"\\");
+    regexp.append(jmc_separator);
+    find_separators.init(regexp.c_str());
+    if (!find_separators.findall(str->c_str()))
         cmds.push_back(*str);
     else
     {
-        Pcre find_separators;
-        u8string regexp("\\");
-        regexp.append(jmc_separator);
-        find_separators.init(regexp.c_str());
-        if (!find_separators.findall(str->c_str()))
-            cmds.push_back(*str);
-        else
+        std::vector<int> pos;
+        for (int i=1, e=find_separators.size(); i < e; ++i)
         {
-            std::vector<int> pos;
-            for (int i=1, e=find_separators.size(); i < e; ++i)
+            int sep_pos = find_separators.first(i);
+            bool inside = false;
+            if (params_exists)
             {
-                int sep_pos = find_separators.first(i);
-                bool inside = false;
                 for (int j=1, je = param.size(); j < je; ++j)
                 {
                     if (sep_pos >= param.first(j) && sep_pos < param.last(j))
                         { inside = true; break; }
                 }
-                if (!inside)
-                    pos.push_back(sep_pos);
             }
-            int startpos = 0;
-            for (int i=0, e=pos.size(); i<e; ++i)
-            {
-                cmds.push_back(str->substr(startpos, pos[i] - startpos));
-                startpos = pos[i] + 1;
-            }
-            cmds.push_back(str->substr(startpos));
+            if (!inside)
+                pos.push_back(sep_pos);
         }
+        int startpos = 0;
+        for (int i=0, e=pos.size(); i<e; ++i)
+        {
+            std::wstring cmd(str->substr(startpos, pos[i] - startpos));
+            wstring_helper t(cmd); t.trim();
+            fixSeparateCmd(&cmd);
+            if (!cmd.empty())
+                cmds.push_back(cmd);
+            startpos = pos[i] + 1;
+        }
+        std::wstring cmd(str->substr(startpos));
+        wstring_helper t(cmd); t.trim();
+        fixSeparateCmd(&cmd);
+        if (!cmd.empty())
+            cmds.push_back(cmd);
     }
 
     str->clear();
-    u8string default_cmdsymbol("#");
+    std::wstring default_cmdsymbol(L"#");
+
+    // support import #wait command
+    std::wstring waitcmd(jmc_cmdsymbol);
+    waitcmd.append(L"wait");
+    int last = cmds.size()-1;
+    for (int i=last; i>=0; --i)
+    {
+        std::wstring &cmd = cmds[i];
+        if (cmd.find(waitcmd) != -1 && i != last)
+        {
+            cmd.append(L" {");
+            cmd.append(cmds[i+1]);
+            cmd.append(L"}");
+            cmds.erase(cmds.begin()+(i+1));
+            last = cmds.size()-1;
+        }
+    }
+
     for (int i=0, e=cmds.size(); i<e; ++i)
     {
         if (i != 0)
             str->append(separator);
 
-        u8string &s = cmds[i];
-        trim(&s);
+        std::wstring s(cmds[i]);
+        wstring_helper t(s); t.trim();
         replaceLegacy(&s);
-        utf8 p[2] = { s.at(0), 0 };
-        if (jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) // not command
-             str->append(s);
+        wchar_t tmp[2] = { s.at(0), 0 };
+        std::wstring p(tmp);
+
+        if (jmc_cmdsymbol.compare(p) && default_cmdsymbol.compare(p)) 
+             str->append(s);        // it game command
         else
         {
-            u8string new_cmd(cmdsymbol);
+            std::wstring new_cmd(cmdsymbol);
             if (!ifcmd.find(s.c_str())) 
             {
                 if (!base.find(s.c_str()))
-                    new_cmd.append(s.substr(1));
+                    new_cmd.append(s.substr(p.length()));
                 else {
-                u8string curr_cmd;
+                std::wstring curr_cmd;
                 base.get(2, &curr_cmd);
                 replaceCommand(&curr_cmd);
                 new_cmd.append(curr_cmd);
@@ -242,17 +297,18 @@ bool Jmc3Import::convert(u8string *str)
             { // if command -> recursive process
               if (!param.findall(s.c_str()) || param.size() != 3)
                   return false;
-              u8string if_cmds;
+              std::wstring if_cmds;
               param.get(2, &if_cmds);
               int right_index = param.first(2);
               int len = if_cmds.length() - 2;
               if_cmds.assign(if_cmds.substr(1, len));
               if (!convert(&if_cmds))
                   return false;
-              new_cmd.append(s.substr(1, right_index-1));
-              new_cmd.append("{");
+              int pos = p.length(); // postition after prefix
+              new_cmd.append(s.substr(pos, right_index-pos));
+              new_cmd.append(L"{");
               new_cmd.append(if_cmds);
-              new_cmd.append("}");
+              new_cmd.append(L"}");
             }
             str->append(new_cmd);
         }
@@ -260,60 +316,182 @@ bool Jmc3Import::convert(u8string *str)
     return true;
 }
 
-void Jmc3Import::replaceLegacy(u8string *legacy)
+void Jmc3Import::replaceDoubles(std::wstring* str)
+{
+    params.findall(str->c_str());
+    if (params.size() == 0)
+        return;
+    std::vector<int> ids;
+    int maxid = -1;
+    for (int i = 1, e = params.size(); i<e; ++i)
+    {
+        int pos = params.first(i) + 1;
+        wchar_t symbol = str->at(pos);
+        int id = symbol - L'0';
+        ids.push_back(id);
+        if (id > maxid)
+            maxid = id;
+    }
+    if (maxid == -1) return;
+
+    std::vector<int> indexes(maxid + 1, 0);
+    for (int i = ids.size() - 1; i >= 0; --i)
+    {
+        int index = ids[i];
+        if (index == -1) continue;
+        if (indexes[index] != 0)
+            ids[i] = -1;
+        indexes[index]++;
+    }
+
+    std::wstring result;
+    int pos = 0;
+    for (int i = 1, e = params.size(); i < e; ++i)
+    {
+        int id = ids[i-1];
+        result.append(str->substr(pos, params.first(i) - pos));
+        if (id == -1)
+            result.append(L"%%");
+        else
+        {
+            std::wstring tmp;
+            params.get(i, &tmp);
+            result.append(tmp);
+        }
+        pos = params.last(i);
+    }
+    result.append(str->substr(pos));
+    str->swap(result);
+}
+
+void Jmc3Import::replaceParams(std::wstring* str)
+{
+    params.findall(str->c_str());
+    if (params.size() == 0)
+        return;
+    std::wstring result;
+    int pos = 0;
+    for (int i=1, e=params.size(); i<e; ++i)
+    {
+        result.append(str->substr(pos, params.first(i) - pos));
+        result.append(L"%%");
+        pos = params.last(i);
+    }
+    result.append(str->substr(pos));
+    str->swap(result);
+}
+
+void Jmc3Import::replaceLegacy(std::wstring *legacy)
 {
     iterator it = m_legacy.begin(), it_end = m_legacy.end();
     for (; it!=it_end; ++it)
     {
         int pos = legacy->find(it->first);
-        if (pos == -1)
-            continue;
-        u8string newstr(legacy->substr(0, pos));
-        newstr.append(it->second);
-        pos = pos + it->first.length();
-        newstr.append(legacy->substr(pos));
-        legacy->swap(newstr);
+        while (pos != -1)
+        {         
+            std::wstring newstr(legacy->substr(0, pos));
+            newstr.append(it->second);
+            pos = pos + it->first.length();
+            newstr.append(legacy->substr(pos));
+            legacy->swap(newstr);
+            pos = legacy->find(it->first);
+        }
     }
 }
 
-void Jmc3Import::replaceCommand(u8string *cmd)
+void Jmc3Import::replaceCommand(std::wstring *cmd)
 {
-     iterator it = m_commands.find(*cmd);
-     if (it != m_commands.end())
-         cmd->assign(it->second);
+    if (cmd->length() < 3)
+        return;
+     iterator it = m_commands.begin(), it_end = m_commands.end();
+     for (;it!=it_end;++it)
+     {
+         const std::wstring& key = it->first;
+         if (!wcsncmp(key.c_str(), cmd->c_str(), cmd->length()))
+         {
+            cmd->assign(it->second);
+            return;
+         }
+     }
 }
 
 void Jmc3Import::initLegacy()
 {
-    std::map<u8string, u8string>& l = m_legacy;
-    l["%%"] = "%";
-    l = m_commands;
-    l["daa"] = "hide";
-    l["restorewindow"] = "showwindow";
-    l["showme"] = "output";
-    l["substitute"] = "sub";
-    l["antisubstitute"] = "antisub";
-    l["unantisubstitute"] = "unantisub";
-    l["tabadd"] = "tab";
-    l["tabdel"] = "untab";
-    l["variable"] = "var";    
+    std::map<std::wstring, std::wstring>& l = m_legacy;
+    l[L"%%"] = L"%";
+    std::map<std::wstring, std::wstring>& c = m_commands;
+    c[L"daa"] = L"hide";
+    c[L"restorewindow"] = L"showwindow";
+    c[L"showme"] = L"out";
+    c[L"substitute"] = L"sub";
+    c[L"antisubstitute"] = L"antisub";
+    c[L"unantisubstitute"] = L"unantisub";
+    c[L"tabadd"] = L"tab";
+    c[L"tabdel"] = L"untab";
+    c[L"variable"] = L"var";
+    c[L"output"] = L"wout 1";
 }
 
 void Jmc3Import::initPcre()
 {
-    base.init("^(\\W)(.*?) +(.*) *");
-    param.init("\\{((?:(?>[^{}]+)|(?R))*)\\}");
-    ifcmd.init("^.if .*");
+    base.init(L"^(\\W)(.*?) +(.*) *");
+    param.init(L"\\{((?:(?>[^{}]+)|(?R))*)\\}");
+    ifcmd.init(L"^.if .*");
+    disable_group.init(L"disable (.*)");
+    params.init(L"(%[0-9]){1}");
 }
 
 void Jmc3Import::initCmdSymbols()
 {
-    lua_getglobal(L, "props");
-    luaT_run(L, "cmdPrefix", "t");
-    cmdsymbol.assign(lua_tostring(L, -1));
-    lua_pop(L, 1);
-    lua_getglobal(L, "props");
-    luaT_run(L, "cmdSeparator", "t");
-    separator.assign(lua_tostring(L, -1));
-    lua_pop(L, 1);
+    luaT_Props p(L);
+    p.cmdPrefix(&cmdsymbol);
+    p.cmdSeparator(&separator);
+}
+
+void Jmc3Import::fixSeparateCmd(std::wstring* cmd)
+{
+    fixHotkeysBrackets(cmd);
+    fixStatusCmd(cmd);
+}
+
+void Jmc3Import::initSeparateCmdsPcre()
+{
+    hotkey_pcre.init(L".hotk?e?y? +([^ ]+) +([^{\'\"].*)");
+    status_pcre.init(L".status +{?([0-9]+)}? +(.*)");
+}
+
+void Jmc3Import::fixHotkeysBrackets(std::wstring* cmd)
+{
+    if (hotkey_pcre.find(cmd->c_str()))
+    {
+        cmd->assign(cmdsymbol);
+        cmd->append(L"hot ");
+        std::wstring p;
+        hotkey_pcre.get(1, &p);
+        cmd->append(p);
+        cmd->append(L" {");
+        hotkey_pcre.get(2, &p);
+        cmd->append(p);
+        cmd->append(L"}");
+    }
+}
+
+void Jmc3Import::fixStatusCmd(std::wstring* cmd)
+{
+    if (status_pcre.find(cmd->c_str()))
+    {
+        std::wstring index, params;
+        status_pcre.get(1, &index);
+        status_pcre.get(2, &params);        
+        if (param.findall(params.c_str()))
+        {
+            cmd->assign(cmdsymbol);
+            cmd->append(L"status ");
+            cmd->append(index);
+            cmd->append(L" ");
+            std::wstring cmd_string;
+            param.get(1, &cmd_string);
+            cmd->append(cmd_string);
+        }
+    }
 }

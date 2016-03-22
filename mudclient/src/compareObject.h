@@ -7,29 +7,27 @@ struct CompareRange
     int end;
 };
 
-class CompareVar
-{
-public:
-    virtual bool get(const tstring& var, tstring* value) const = 0;
-};
-
 class CompareObject
 {
 public:
-    CompareObject(); 
+    CompareObject();
     ~CompareObject();
-    bool init(const tstring& key);
-    bool checkToCompare(const tstring& str, const CompareVar* object);
-    void getParameters(std::vector<tstring>* params) const;
+    bool init(const tstring& key, bool endline_mode);
+    bool initOnlyVars(const tstring& key);
+    bool compare(const tstring& str);
     void getRange(CompareRange *range) const;
+    void getParameters(std::vector<tstring>* params) const;
+    bool isFullstrReq() const;
+private:
+    void createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template);
+    void checkVars(tstring *pcre_template);
+    void maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow);
 
 private:
-    void createCheckPcre(const tstring& key, tstring *prce_template);
-    void checkVars(tstring *pcre_template);
-    
-private:
-    Pcre16  m_pcre;    
+    Pcre16  m_pcre;
     tstring m_key;
     tstring m_str;
     std::vector<tstring> m_vars_pcre_parts;
+    bool m_fullstr_req;
+    bool m_std_regexp;
 };

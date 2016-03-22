@@ -3,7 +3,7 @@
 #include "profiles/profilesPath.h"
 #include "profiles/profileHelpers.h"
 
-PropertiesManager::PropertiesManager()
+PropertiesManager::PropertiesManager() : m_first_startup(false)
 {
 }
 
@@ -16,8 +16,9 @@ bool PropertiesManager::init()
     ProfilesGroupList groups;
     if (!groups.init())
         return false;
+    m_first_startup = groups.isFirstStartUp();
     int last = groups.getLast();
-    groups.getName(last, &m_configName);   
+    groups.getName(last, &m_configName);
     return true;
 }
 
@@ -37,14 +38,14 @@ bool PropertiesManager::loadSettings()
     if (!loadFromFile(sd, L"settings.xml"))
         return false;
 
-    std::string profile;
-    xml::request r(sd, "profile");
-    if (r.size() != 0)          
+    tstring profile;
+    xml::request r(sd, L"profile");
+    if (r.size() != 0)
         r[0].gettext(&profile);
     if (profile.empty())
         return false;
 
-    m_profileName.assign( Utf8ToWide(profile.c_str()) );
+    m_profileName.assign( profile );
     sd.deletenode();
     return true;
 }
@@ -56,17 +57,13 @@ bool PropertiesManager::loadHistory()
     if (!loadFromFile(hd, L"history.xml"))
         return false;
 
-    Utf8ToWide u2w;
-    xml::request r(hd, "cmd");
+    xml::request r(hd, L"cmd");
     for (int i=0,e=r.size(); i<e; ++i)
     {
-        std::string cmd;
+        tstring cmd;
         r[i].gettext(&cmd);
         if (!cmd.empty())
-        {
-            u2w.convert(cmd.c_str(), cmd.length());
-            m_propData.cmd_history.push_back(tstring(u2w));
-        }
+           m_propData.cmd_history.push_back(cmd);
         if (i>MAX_CMD_HISTORY_SIZE)
             break;
     }
@@ -84,89 +81,106 @@ bool PropertiesManager::loadProfileData()
     xml::node sd;
     if (!loadFromFile(sd, profile))
         return false;
-    
-    loadValue(sd, "viewsize", MIN_VIEW_HISTORY_SIZE, MAX_VIEW_HISTORY_SIZE, &m_propData.view_history_size);
-    loadValue(sd, "cmdsize", MIN_CMD_HISTORY_SIZE, MAX_CMD_HISTORY_SIZE, &m_propData.cmd_history_size);
-    loadValue(sd, "systemcmds", 0, 1, &m_propData.show_system_commands);
-    loadValue(sd, "clearbar", 0, 1, &m_propData.clear_bar);
-    loadValue(sd, "disableya", 0, 1, &m_propData.disable_ya);
-    loadValue(sd, "historytab", 0, 1, &m_propData.history_tab);
-    loadValue(sd, "timersf", 0, 1, &m_propData.timers_on);
-    loadValue(sd, "plogs", 0, 1, &m_propData.plugins_logs);
-    loadValue(sd, "plogswnd", 0, OUTPUT_WINDOWS, &m_propData.plugins_logs_window);
+
+    loadValue(sd, L"viewsize", MIN_VIEW_HISTORY_SIZE, MAX_VIEW_HISTORY_SIZE, &m_propData.view_history_size);
+    loadValue(sd, L"cmdsize", MIN_CMD_HISTORY_SIZE, MAX_CMD_HISTORY_SIZE, &m_propData.cmd_history_size);
+    loadValue(sd, L"systemcmds", 0, 1, &m_propData.show_system_commands);
+    loadValue(sd, L"clearbar", 0, 1, &m_propData.clear_bar);
+    loadValue(sd, L"disableya", 0, 1, &m_propData.disable_ya);
+    loadValue(sd, L"disableosc", 0, 1, &m_propData.disable_osc);
+    loadValue(sd, L"historytab", 0, 1, &m_propData.history_tab);
+    loadValue(sd, L"plogs", 0, 1, &m_propData.plugins_logs);
+    loadValue(sd, L"plogswnd", 0, OUTPUT_WINDOWS, &m_propData.plugins_logs_window);
+    loadValue(sd, L"softscroll", 0, 1, &m_propData.soft_scroll);
     tstring cp;
-    loadString(sd, "codepage", &cp);
+    loadString(sd, L"codepage", &cp);
     if (cp != L"win" && cp != L"utf8")
         cp = L"win";
     m_propData.codepage = cp;
-    loadValue(sd, "prompt", 0, 1, &m_propData.recognize_prompt);
-    loadString(sd, "ptemplate", &m_propData.recognize_prompt_template);
+    loadValue(sd, L"prompt", 0, 1, &m_propData.recognize_prompt);
+    loadString(sd, L"ptemplate", &m_propData.recognize_prompt_template);
     if (m_propData.recognize_prompt_template.empty())
         m_propData.recognize_prompt = 0;
 
-    xml::request colors(sd, "colors/color");
+    xml::request colors(sd, L"colors/color");
     for (int i=0,e=colors.size(); i<e; ++i)
     {
-        std::string name; COLORREF clr;
+        tstring name; COLORREF clr;
         if (loadRgbColor(colors[i], &name, &clr))
         {
-            if (name == "background")
+            if (name == L"background")
                 m_propData.bkgnd = clr;
             else  
             {
                 int id = 0;
-                if (a2int(name, &id) && id >= 0 && id <= 15)
+                if (w2int(name, &id) && id >= 0 && id <= 15)
                     m_propData.colors[id] = clr;
             }
         }
     }
 
-    xml::request font(sd, "font");
+    xml::request font(sd, L"font");
     if (font.size())
     {
         xml::node f = font[0];
-        f.get("italic", &m_propData.font_italic);
-        f.get("bold", &m_propData.font_bold);
-        f.get("heigth", &m_propData.font_heigth);
-        std::string font_name;
-        f.get("name", &font_name);
+        f.get(L"italic", &m_propData.font_italic);
+        f.get(L"bold", &m_propData.font_bold);
+        f.get(L"height", &m_propData.font_heigth);
+        tstring font_name;
+        f.get(L"name", &font_name);
         if (!font_name.empty())
-            m_propData.font_name = Utf8ToWide(font_name.c_str());
+            m_propData.font_name = font_name;
     }
 
-    loadArray(sd, "groups/group", true, false, &m_propData.groups);
+    loadArray(sd, L"groups/group", true, false, &m_propData.groups);
     m_propData.addDefaultGroup();
-    loadArray(sd, "actions/action", true, true, &m_propData.actions);
-    loadArray(sd, "aliases/alias", true, true, &m_propData.aliases);
-    loadArray(sd, "hotkeys/hotkey", true, true, &m_propData.hotkeys);
-    loadArray(sd, "subs/sub", true, true, &m_propData.subs);
-    loadArray(sd, "asubs/asub", false, true, &m_propData.antisubs);
-    loadArray(sd, "gags/gag", false, true, &m_propData.gags);
-    loadArray(sd, "highlights/highlight", true, true, &m_propData.highlights);
-    loadArray(sd, "timers/timer", true, true, &m_propData.timers);
-    loadList(sd, "tabwords/tabword", &m_propData.tabwords);
-    loadArray(sd, "variables/var", true, false, &m_propData.variables);
+    loadArray(sd, L"actions/action", true, true, &m_propData.actions);
+    loadArray(sd, L"aliases/alias", true, true, &m_propData.aliases);
+    loadArray(sd, L"hotkeys/hotkey", true, true, &m_propData.hotkeys);
+    loadArray(sd, L"subs/sub", true, true, &m_propData.subs);
+    loadArray(sd, L"asubs/asub", false, true, &m_propData.antisubs);
+    loadArray(sd, L"gags/gag", false, true, &m_propData.gags);
+    loadArray(sd, L"highlights/highlight", true, true, &m_propData.highlights);
+    loadArray(sd, L"timers/timer", true, true, &m_propData.timers);
+    loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
+    loadArray(sd, L"variables/var", true, false, &m_propData.variables);
     m_propData.plugins.clear();
-     
+
     bool default_window = false;
-    xml::request mw(sd, "mainwindow");
+    xml::request mw(sd, L"mainwindow");
     if (mw.size())
     {
         xml::node w = mw[0];
-        w.get("width", &m_propData.display_width);
-        w.get("height", &m_propData.display_height);
-        w.get("fullscreen", &m_propData.main_window_fullscreen);
+        w.get(L"width", &m_propData.display_width);
+        w.get(L"height", &m_propData.display_height);
+        w.get(L"fullscreen", &m_propData.main_window_fullscreen);
         if (!loadRECT(w, &m_propData.main_window) ||
             m_propData.display_width != GetSystemMetrics(SM_CXVIRTUALSCREEN) || 
             m_propData.display_height != GetSystemMetrics(SM_CYVIRTUALSCREEN))
         {
             m_propData.initMainWindow();
+            m_propData.initFindWindow();
             default_window = true;
         }
     }
-        
-    xml::request cw(sd, "windows/window");
-    int e = cw.size();    
+
+    xml::request fw(sd, L"findwindow");
+    if (fw.size())
+    {
+        xml::node w = fw[0];
+        if (!w.get(L"visible", &m_propData.find_window_visible) || !loadRECT(w, &m_propData.find_window))
+        {
+            m_propData.initFindWindow();
+        }
+        else
+        {
+            if (m_propData.find_window_visible != 1)
+                m_propData.find_window_visible = 0;
+        }
+    }
+
+    xml::request cw(sd, L"windows/window");
+    int e = cw.size();
     for (int i=0; i<OUTPUT_WINDOWS; ++i) 
     {
         OutputWindow w;
@@ -179,21 +193,22 @@ bool PropertiesManager::loadProfileData()
     }
 
     // load plugins and windows
-    xml::request pp(sd, "plugins/plugin");
+    xml::request pp(sd, L"plugins/plugin");
     for (int i = 0, e = pp.size(); i < e; ++i)
     {
-        std::string name; int value = 0;
+        tstring name; int value = 0;
         xml::node pn = pp[i];
-        pn.get("key", &name);
-        pn.get("value", &value);
+        pn.get(L"key", &name);
+        pn.get(L"value", &value);
         if (!name.empty())
         {
-            PluginData pd; pd.name = U2W(name);
+            PluginData pd;
+            pd.name = name;
             pd.state = (value == 1) ? 1 : 0;
             if (!default_window)
             {
                 OutputWindow w;
-                xml::request wp(pn, "windows/window");
+                xml::request wp(pn, L"windows/window");
                 for (int j = 0, je = wp.size(); j < je; ++j)
                 {
                     if (loadWindow(wp[j], &w))
@@ -204,22 +219,22 @@ bool PropertiesManager::loadProfileData()
         }
     }
 
-    xml::request msrq(sd, "messages");
+    xml::request msrq(sd, L"messages");
     if (msrq.size() == 1)
     {
         xml::node ms(msrq[0]);
         PropertiesData::message_data& d = m_propData.messages;
-        loadValue(ms, "actions", 0, 1, &d.actions);
-        loadValue(ms, "aliases", 0, 1, &d.aliases);
-        loadValue(ms, "subs", 0, 1, &d.subs);
-        loadValue(ms, "antisubs", 0, 1, &d.antisubs);
-        loadValue(ms, "hotkeys", 0, 1, &d.hotkeys);
-        loadValue(ms, "highlights", 0, 1, &d.highlights);
-        loadValue(ms, "gags", 0, 1, &d.gags);
-        loadValue(ms, "groups", 0, 1, &d.groups);
-        loadValue(ms, "vars", 0, 1, &d.variables);
-        loadValue(ms, "timers", 0, 1, &d.timers);
-        loadValue(ms, "tabwords", 0, 1, &d.tabwords);
+        loadValue(ms, L"actions", 0, 1, &d.actions);
+        loadValue(ms, L"aliases", 0, 1, &d.aliases);
+        loadValue(ms, L"subs", 0, 1, &d.subs);
+        loadValue(ms, L"antisubs", 0, 1, &d.antisubs);
+        loadValue(ms, L"hotkeys", 0, 1, &d.hotkeys);
+        loadValue(ms, L"highlights", 0, 1, &d.highlights);
+        loadValue(ms, L"gags", 0, 1, &d.gags);
+        loadValue(ms, L"groups", 0, 1, &d.groups);
+        loadValue(ms, L"vars", 0, 1, &d.variables);
+        loadValue(ms, L"timers", 0, 1, &d.timers);
+        loadValue(ms, L"tabwords", 0, 1, &d.tabwords);
     }
 
     sd.deletenode();
@@ -239,100 +254,102 @@ bool PropertiesManager::saveProfile()
 
 bool PropertiesManager::saveProfileData()
 {
-    xml::node sd("profile");
+    xml::node sd(L"profile");
 
-    saveValue(sd, "viewsize", m_propData.view_history_size);
-    saveValue(sd, "cmdsize", m_propData.cmd_history_size);
-    saveValue(sd, "systemcmds", m_propData.show_system_commands);
-    saveValue(sd, "clearbar", m_propData.clear_bar);
-    saveValue(sd, "disableya", m_propData.disable_ya);
-    saveValue(sd, "historytab", m_propData.history_tab);
-    saveValue(sd, "timersf", m_propData.timers_on);
-    saveValue(sd, "plogs", m_propData.plugins_logs);
-    saveValue(sd, "plogswnd", m_propData.plugins_logs_window);
-    saveString(sd, "codepage", m_propData.codepage);
-    saveValue(sd, "prompt", m_propData.recognize_prompt);
-    saveString(sd, "ptemplate", m_propData.recognize_prompt_template);
+    saveValue(sd, L"viewsize", m_propData.view_history_size);
+    saveValue(sd, L"cmdsize", m_propData.cmd_history_size);
+    saveValue(sd, L"systemcmds", m_propData.show_system_commands);
+    saveValue(sd, L"clearbar", m_propData.clear_bar);
+    saveValue(sd, L"disableya", m_propData.disable_ya);
+    saveValue(sd, L"disableosc", m_propData.disable_osc);
+    saveValue(sd, L"historytab", m_propData.history_tab);
+    saveValue(sd, L"plogs", m_propData.plugins_logs);
+    saveValue(sd, L"plogswnd", m_propData.plugins_logs_window);
+    saveValue(sd, L"softscroll", m_propData.soft_scroll);
+    saveString(sd, L"codepage", m_propData.codepage);
+    saveValue(sd, L"prompt", m_propData.recognize_prompt);
+    saveString(sd, L"ptemplate", m_propData.recognize_prompt_template);
 
-    xml::node c = sd.createsubnode("colors");
-    saveRgbColor(c, "background", m_propData.bkgnd);
+    xml::node c = sd.createsubnode(L"colors");
+    saveRgbColor(c, L"background", m_propData.bkgnd);
     for (int i=0; i<16; ++i) {
-         char buffer[4];
-         itoa(i, buffer, 10);
+         tstring buffer;
+         int2w(i, &buffer);
          saveRgbColor(c, buffer, m_propData.colors[i]);
     }
 
-    xml::node f = sd.createsubnode("font");
-    f.set("italic", m_propData.font_italic);
-    f.set("bold", m_propData.font_bold);
-    f.set("heigth", m_propData.font_heigth);
-    WideToUtf8 font_name(m_propData.font_name.c_str());
-    f.set("name", font_name);
+    xml::node f = sd.createsubnode(L"font");
+    f.set(L"italic", m_propData.font_italic);
+    f.set(L"bold", m_propData.font_bold);
+    f.set(L"height", m_propData.font_heigth);
+    f.set(L"name", m_propData.font_name);
 
-    xml::node actions = sd.createsubnode("actions");
-    saveArray(actions, "action", m_propData.actions);
-    xml::node aliases = sd.createsubnode("aliases");
-    saveArray(aliases, "alias", m_propData.aliases);
-    xml::node hotkeys = sd.createsubnode("hotkeys");
-    saveArray(hotkeys, "hotkey", m_propData.hotkeys);
-    xml::node subs = sd.createsubnode("subs");
-    saveArray(subs, "sub", m_propData.subs);
-    xml::node asubs = sd.createsubnode("asubs");
-    saveArray(asubs, "asub", m_propData.antisubs);
-    xml::node gags = sd.createsubnode("gags");
-    saveArray(gags, "gag", m_propData.gags);
-    xml::node hl = sd.createsubnode("highlights");
-    saveArray(hl, "highlight", m_propData.highlights);
-    xml::node timers = sd.createsubnode("timers");
-    saveArray(timers, "timer", m_propData.timers);
-    xml::node groups = sd.createsubnode("groups");
-    saveArray(groups, "group", m_propData.groups);
-    xml::node tabwords = sd.createsubnode("tabwords");
-    saveList(tabwords, "tabword", m_propData.tabwords);
-    xml::node vars = sd.createsubnode("variables");
-    saveArray(vars, "var", m_propData.variables);
-    
-    xml::node windows = sd.createsubnode("windows");
+    xml::node actions = sd.createsubnode(L"actions");
+    saveArray(actions, L"action", m_propData.actions);
+    xml::node aliases = sd.createsubnode(L"aliases");
+    saveArray(aliases, L"alias", m_propData.aliases);
+    xml::node hotkeys = sd.createsubnode(L"hotkeys");
+    saveArray(hotkeys, L"hotkey", m_propData.hotkeys);
+    xml::node subs = sd.createsubnode(L"subs");
+    saveArray(subs, L"sub", m_propData.subs);
+    xml::node asubs = sd.createsubnode(L"asubs");
+    saveArray(asubs, L"asub", m_propData.antisubs);
+    xml::node gags = sd.createsubnode(L"gags");
+    saveArray(gags, L"gag", m_propData.gags);
+    xml::node hl = sd.createsubnode(L"highlights");
+    saveArray(hl, L"highlight", m_propData.highlights);
+    xml::node timers = sd.createsubnode(L"timers");
+    saveArray(timers, L"timer", m_propData.timers);
+    xml::node groups = sd.createsubnode(L"groups");
+    saveArray(groups, L"group", m_propData.groups);
+    xml::node tabwords = sd.createsubnode(L"tabwords");
+    saveList(tabwords, L"tabword", m_propData.tabwords);
+    xml::node vars = sd.createsubnode(L"variables");
+    saveArray(vars, L"var", m_propData.variables);
+
+    xml::node windows = sd.createsubnode(L"windows");
     for (int i=0,e=m_propData.windows.size(); i<e; ++i)
         saveWindow(windows, m_propData.windows[i]);
 
-    xml::node mw = sd.createsubnode("mainwindow");
+    xml::node mw = sd.createsubnode(L"mainwindow");
     saveRECT(mw, m_propData.main_window);
-    mw.set("width", m_propData.display_width);
-    mw.set("height", m_propData.display_height);
-    mw.set("fullscreen", m_propData.main_window_fullscreen);
+    mw.set(L"width", m_propData.display_width);
+    mw.set(L"height", m_propData.display_height);
+    mw.set(L"fullscreen", m_propData.main_window_fullscreen);
 
-    WideToUtf8 w2u;
-    xml::node plugins = sd.createsubnode("plugins");
+    xml::node fw = sd.createsubnode(L"findwindow");
+    saveRECT(fw, m_propData.find_window);
+    fw.set(L"visible", m_propData.find_window_visible);
+
+    xml::node plugins = sd.createsubnode(L"plugins");
     for (int i = 0, e = m_propData.plugins.size(); i < e; ++i)
     {
         const PluginData &pd = m_propData.plugins[i];
-        xml::node pn = plugins.createsubnode("plugin");
-        w2u.convert(pd.name.c_str(), pd.name.length());
-        pn.set("key", w2u);
-        pn.set("value", pd.state == 0 ? 0 : 1);
+        xml::node pn = plugins.createsubnode(L"plugin");
+        pn.set(L"key", pd.name);
+        pn.set(L"value", pd.state == 0 ? 0 : 1);
         if (!pd.windows.empty())
         {
-            xml::node pw = pn.createsubnode("windows");
+            xml::node pw = pn.createsubnode(L"windows");
             for (int j = 0, je = pd.windows.size(); j < je; ++j)
                 saveWindow(pw, pd.windows[j]);
         }
     }
 
-    xml::node ms = sd.createsubnode("messages");
+    xml::node ms = sd.createsubnode(L"messages");
     PropertiesData::message_data& d = m_propData.messages;
-    saveValue(ms, "actions", d.actions);
-    saveValue(ms, "aliases", d.aliases);
-    saveValue(ms, "subs", d.subs);
-    saveValue(ms, "antisubs", d.antisubs);
-    saveValue(ms, "hotkeys", d.hotkeys);
-    saveValue(ms, "highlights", d.highlights);
-    saveValue(ms, "gags", d.gags);
-    saveValue(ms, "groups", d.groups);
-    saveValue(ms, "vars", d.variables);
-    saveValue(ms, "timers", d.timers);
-    saveValue(ms, "tabwords", d.tabwords);
-    
+    saveValue(ms, L"actions", d.actions);
+    saveValue(ms, L"aliases", d.aliases);
+    saveValue(ms, L"subs", d.subs);
+    saveValue(ms, L"antisubs", d.antisubs);
+    saveValue(ms, L"hotkeys", d.hotkeys);
+    saveValue(ms, L"highlights", d.highlights);
+    saveValue(ms, L"gags", d.gags);
+    saveValue(ms, L"groups", d.groups);
+    saveValue(ms, L"vars", d.variables);
+    saveValue(ms, L"timers", d.timers);
+    saveValue(ms, L"tabwords", d.tabwords);
+
     tstring config(L"profiles\\");
     config.append(m_profileName);
     config.append(L".xml");
@@ -348,13 +365,11 @@ bool PropertiesManager::saveHistory()
     if (h.empty())
         return true;
 
-    xml::node hd("history");
-    WideToUtf8 w2u;
+    xml::node hd(L"history");
     for (int i=0, e=h.size(); i<e; ++i) 
     {
-        xml::node n = hd.createsubnode("cmd");
-        w2u.convert(h[i].c_str(), h[i].length());
-        n.settext(w2u);
+        xml::node n = hd.createsubnode(L"cmd");
+        n.settext(h[i].c_str());
     }
     bool result = saveToFile(hd, L"history.xml");
     hd.deletenode();
@@ -363,10 +378,9 @@ bool PropertiesManager::saveHistory()
 
 bool PropertiesManager::saveSettings()
 {
-    xml::node sd("settings");
-    xml::node n = sd.createsubnode("profile");
-    WideToUtf8 pname(m_profileName.c_str());
-    n.settext(pname);
+    xml::node sd(L"settings");
+    xml::node n = sd.createsubnode(L"profile");
+    n.settext(m_profileName.c_str());
     bool result = saveToFile(sd, L"settings.xml");
     sd.deletenode();
     return result;
@@ -374,18 +388,18 @@ bool PropertiesManager::saveSettings()
 //----------------------------------------------------------------------------
 bool PropertiesManager::loadWindow(xml::node parent, OutputWindow* w)
 {
-    if (!parent.get("side", &w->side))
+    if (!parent.get(L"side", &w->side))
        w->side = DOCK_FLOAT;
-    if (!parent.get("lastside", &w->lastside))
+    if (!parent.get(L"lastside", &w->lastside))
        w->lastside = DOCK_FLOAT;
-    std::string name;
-    if (loadRECT(parent, &w->pos) && parent.get("name", &name))
+    tstring name;
+    if (loadRECT(parent, &w->pos) && parent.get(L"name", &name))
     {
-        w->name = U2W(name.c_str());
+        w->name = name;
         int width = 0; int height = 0;
-        if (!parent.get("width", &width))
+        if (!parent.get(L"width", &width))
             width = w->pos.right-w->pos.left;
-        if (!parent.get("height", &height))
+        if (!parent.get(L"height", &height))
             height = w->pos.bottom-w->pos.top;
         w->size.cx = width; w->size.cy = height;
         return true;
@@ -395,113 +409,97 @@ bool PropertiesManager::loadWindow(xml::node parent, OutputWindow* w)
 
 void PropertiesManager::saveWindow(xml::node parent, const OutputWindow& w)
 {
-    WideToUtf8 w2u;
-    w2u.convert(w.name.c_str(), w.name.length());
-    xml::node xw = parent.createsubnode("window");
-    xw.set("name", w2u );
+    xml::node xw = parent.createsubnode(L"window");
+    xw.set(L"name", w.name.c_str() );
     saveRECT(xw, w.pos);
-    xw.set("side", w.side);
-    xw.set("lastside", w.lastside);
-    xw.set("width", w.size.cx);
-    xw.set("height", w.size.cy);
+    xw.set(L"side", w.side);
+    xw.set(L"lastside", w.lastside);
+    xw.set(L"width", w.size.cx);
+    xw.set(L"height", w.size.cy);
 }
 //----------------------------------------------------------------------------
-void PropertiesManager::loadArray(xml::node parent, const std::string& name, bool values_req, bool groups_req, PropertiesValues* values)
+void PropertiesManager::loadArray(xml::node parent, const tstring& name, bool values_req, bool groups_req, PropertiesValues* values)
 {
     xml::request r(parent, name.c_str());
-    Utf8ToWide u2w;
     for (int i=0,e=r.size(); i<e; ++i)
     {
-        std::string key, val, grp;
-        if (r[i].get("key", &key) && !key.empty())
+        tstring key, val, grp;
+        if (r[i].get(L"key", &key) && !key.empty())
         {
-            u2w.convert(key.c_str(), key.length());
-            tstring _key(u2w);
-            if (values->exist(_key)) 
-                continue;            
             if (values_req)
             {
-                bool value_exists = r[i].get("value", &val);
+                bool value_exists = r[i].get(L"value", &val);
                 if (!value_exists || val.empty())
                     continue;
             }
             if (groups_req)
             {
-                bool group_exists = r[i].get("group", &grp);
+                bool group_exists = r[i].get(L"group", &grp);
                 if (!group_exists || grp.empty())
                     continue;
             }
-
-            u2w.convert(val.c_str(), val.length());
-            tstring value(u2w);
-            u2w.convert(grp.c_str(), grp.length());
-            tstring group(u2w);           
-            values->add(-1, _key, value, group);
+            if (values->exist(key)) 
+            {
+                if (!groups_req)
+                    continue;
+                int exist = values->find(key);
+                const property_value&data = values->get(exist);
+                if (data.group == grp)
+                    continue;
+            }
+            values->add(-1, key, val, grp);
         }
     }
 }
 
-void PropertiesManager::saveArray(xml::node parent, const std::string& name, const PropertiesValues& values)
+void PropertiesManager::saveArray(xml::node parent, const tstring& name, const PropertiesValues& values)
 {
-    WideToUtf8 w2u;
     for (int i=0,e=values.size(); i<e; ++i)
     {
         const property_value &data = values.get(i);
         xml::node data_node = parent.createsubnode(name.c_str());
-        w2u.convert(data.key.c_str(), data.key.length());
-        data_node.set("key", w2u);
+        data_node.set(L"key", data.key.c_str());
         if (!data.value.empty())
-        {
-            w2u.convert(data.value.c_str(), data.value.length());
-            data_node.set("value", w2u);
-        }
+            data_node.set(L"value", data.value.c_str());
         if (!data.group.empty())
-        {
-            w2u.convert(data.group.c_str(), data.group.length());
-            data_node.set("group", w2u);
-        }
+            data_node.set(L"group", data.group.c_str());
     }
 }
 //----------------------------------------------------------------------------
-void PropertiesManager::loadList(xml::node parent, const std::string& name, PropertiesList* values)
+void PropertiesManager::loadList(xml::node parent, const tstring& name, PropertiesList* values)
 {
     xml::request r(parent, name.c_str());
-    Utf8ToWide u2w;
     for (int i=0,e=r.size(); i<e; ++i)
     {
-        std::string val;
-        if (r[i].get("value", &val) && !val.empty())
+        tstring val;
+        if (r[i].get(L"value", &val) && !val.empty())
         {
-            u2w.convert(val.c_str(), val.length());
-            tstring _val(u2w);
-            if (values->exist(_val)) 
-                continue;                        
-            values->add(-1, _val);
+            if (values->exist(val)) 
+                continue;
+            values->add(-1, val);
         }
     }
 }
 
-void PropertiesManager::saveList(xml::node parent, const std::string& name, const PropertiesList& values)
+void PropertiesManager::saveList(xml::node parent, const tstring& name, const PropertiesList& values)
 {
-    WideToUtf8 w2u;
     for (int i=0,e=values.size(); i<e; ++i)
     {
         const tstring &val = values.get(i);
         xml::node data_node = parent.createsubnode(name.c_str());
-        w2u.convert(val.c_str(), val.length());
-        data_node.set("value", w2u);
+        data_node.set(L"value", val.c_str());
     }
 }
 //----------------------------------------------------------------------------
-bool PropertiesManager::loadValue(xml::node parent, const std::string& name, int min, int max, int *value)
+bool PropertiesManager::loadValue(xml::node parent, const tstring& name, int min, int max, int *value)
 {
     xml::request r(parent, name.c_str());
     if (r.size() == 0)
         return false;
     int v = 0;
-    if (!r[0].get("value", &v))
+    if (!r[0].get(L"value", &v))
         return false;
-    
+
     if (v < min)
         v = min;
     if (v > max)
@@ -510,89 +508,88 @@ bool PropertiesManager::loadValue(xml::node parent, const std::string& name, int
     return true;
 }
 
-void PropertiesManager::saveValue(xml::node parent, const std::string& name, int value)
+void PropertiesManager::saveValue(xml::node parent, const tstring& name, int value)
 {
     xml::node n = parent.createsubnode(name.c_str());
-    n.set("value", value);
+    n.set(L"value", value);
 }
 
-bool PropertiesManager::loadString(xml::node parent, const std::string& name, tstring* value)
+bool PropertiesManager::loadString(xml::node parent, const tstring& name, tstring* value)
 {
      xml::request r(parent, name.c_str());
      if (r.size() == 0)
          return false;
-     std::string v;
-     if (!r[0].get("value", &v))
+     tstring v;
+     if (!r[0].get(L"value", &v))
          return false;
-
-     U2W u2w(v);
-     value->assign(u2w);
+     value->assign(v);
      return true;
 }
 
-void PropertiesManager::saveString(xml::node parent, const std::string& name, const tstring& value)
+void PropertiesManager::saveString(xml::node parent, const tstring& name, const tstring& value)
 {
-    W2U w2u(value);
     xml::node n = parent.createsubnode(name.c_str());
-    n.set("value", w2u);
+    n.set(L"value", value);
 }
 
-bool PropertiesManager::loadRgbColor(xml::node n, std::string* name, COLORREF* color)
+bool PropertiesManager::loadRgbColor(xml::node n, tstring* name, COLORREF* color)
 {
-    std::string cn;
-    if (!n.get("id", &cn))
+    tstring cn;
+    if (!n.get(L"id", &cn))
         return false;
     int r=0; int g=0; int b=0;
-    if (!n.get("r", &r) ||
-        !n.get("g", &g) ||
-        !n.get("b", &b)
-       ) return false;        
+    if (!n.get(L"r", &r) ||
+        !n.get(L"g", &g) ||
+        !n.get(L"b", &b)
+       ) return false;
     name->assign(cn);
     *color = RGB(r,g,b);
     return true;
 }
 
-void PropertiesManager::saveRgbColor(xml::node parent, const std::string& name, COLORREF color)
+void PropertiesManager::saveRgbColor(xml::node parent, const tstring& name, COLORREF color)
 {
-    xml::node n = parent.createsubnode("color");
-    n.set("id", name.c_str());
-    n.set("r", GetRValue(color));
-    n.set("g", GetGValue(color));
-    n.set("b", GetBValue(color));    
+    xml::node n = parent.createsubnode(L"color");
+    n.set(L"id", name.c_str());
+    n.set(L"r", GetRValue(color));
+    n.set(L"g", GetGValue(color));
+    n.set(L"b", GetBValue(color));    
 }
 
 bool PropertiesManager::loadFromFile(xml::node& node, const tstring& file)
 {
-    WideToUtf8 config( ProfilePath(m_configName, file) );
-    return (node.load(config)) ? true : false;        
+    ProfilePath config(m_configName, file);
+    return (node.load(config)) ? true : false;
 }
 
 bool PropertiesManager::saveToFile(xml::node node, const tstring& file)
 {
-    WideToUtf8 config(ProfilePath(m_configName, file));
+    ProfilePath config(m_configName, file);
     return (node.save(config)) ? true : false;
 }
 
 bool PropertiesManager::loadRECT(xml::node n, RECT *rc)
 {
     int left = 0; int right = 0; int top = 0; int bottom = 0;
-    if (!n.get("left", &left) ||
-        !n.get("right", &right) ||
-        !n.get("top", &top) ||
-        !n.get("bottom", &bottom))
+    if (!n.get(L"left", &left) ||
+        !n.get(L"right", &right) ||
+        !n.get(L"top", &top) ||
+        !n.get(L"bottom", &bottom))
         return false;
-    
-    RECT pos = { left, top, right, bottom };
-    *rc = pos;
+
+    rc->left = left;
+    rc->right = right;
+    rc->top = top;
+    rc->bottom = bottom;
     return true;
 }
 
 void PropertiesManager::saveRECT(xml::node n, const RECT &rc)
 {
-    n.set("left", rc.left);
-    n.set("right", rc.right);
-    n.set("top", rc.top);
-    n.set("bottom", rc.bottom);
+    n.set(L"left", rc.left);
+    n.set(L"right", rc.right);
+    n.set(L"top", rc.top);
+    n.set(L"bottom", rc.bottom);
 }
 //----------------------------------------------------------------------------
 bool PropertiesManager::createNewProfile(const tstring& name)

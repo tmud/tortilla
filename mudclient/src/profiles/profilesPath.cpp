@@ -1,9 +1,8 @@
 #include "stdafx.h"
 #include "profilesPath.h"
 
-ProfilesListHelper::ProfilesListHelper()
+ProfilesDirsListHelper::ProfilesDirsListHelper()
 {
-    std::vector<tstring> dirs;
     WIN32_FIND_DATA fd;
     memset(&fd, 0, sizeof(WIN32_FIND_DATA));
     HANDLE file = FindFirstFile(L"gamedata\\*.*", &fd);
@@ -18,15 +17,6 @@ ProfilesListHelper::ProfilesListHelper()
             }
         } while (::FindNextFile(file, &fd));
         ::FindClose(file);
-    }
-    for (int i = 0, e = dirs.size(); i < e; ++i)
-    {
-        tstring f(L"gamedata\\"); f.append(dirs[i]); f.append(L"\\settings.xml");
-        DWORD a = GetFileAttributes(f.c_str());
-        if (a != INVALID_FILE_ATTRIBUTES && !(a&FILE_ATTRIBUTE_DIRECTORY))
-        {
-            profiles.push_back(dirs[i]);
-        }
     }
 }
 

@@ -57,11 +57,12 @@ private:
             m_group_idx = last;
             updateProfilesList();
         }
-        m_ok.EnableWindow(FALSE);
         CenterWindow(GetParent());
+        m_ok.EnableWindow(FALSE);
+        m_groups_list.SetFocus();
         return 0;
     }
-        
+
     LRESULT OnOk(WORD, WORD, HWND, BOOL&)
 	{
         int idx = m_groups_list.GetCurSel();
@@ -94,7 +95,7 @@ private:
 		EndDialog(wID);
 		return 0;
 	}
-    
+
     LRESULT OnGroupChanged(WORD, WORD, HWND, BOOL&)
     {
         int idx = m_groups_list.GetCurSel();
@@ -103,12 +104,12 @@ private:
             m_ok.EnableWindow(FALSE);
             m_group_idx = idx;
             updateProfilesList();
-        }        
+        }
         return 0;
     }
 
     LRESULT OnProfileChanged(WORD, WORD, HWND, BOOL&)
-    {        
+    {
         m_ok.EnableWindow(TRUE);
         return 0;
     }
@@ -130,7 +131,7 @@ private:
         int sel = m_groups_list.GetCurSel();
         if (sel == -1)
             return;
-        
+
         tstring gname = m_groups_name[sel];
         ProfilesList plist;
         plist.init(gname);
@@ -207,11 +208,13 @@ private:
                     continue;
                 m_groups_name.push_back(gname);
                 m_groups_list.AddString(gname.c_str());
-            }                        
+            }
             updateProfilesList();
         }
-        m_ok.EnableWindow(FALSE);
+
         CenterWindow(GetParent());
+        m_ok.EnableWindow(FALSE);
+        m_groups_list.SetFocus();
         return 0;
     }
 
@@ -255,12 +258,12 @@ private:
 
     LRESULT OnProfileChanged(WORD, WORD, HWND, BOOL&)
     {
-        updateOK();        
+        updateOK(); 
         return 0;
     }
 
     LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
-    {       
+    {
         updateOK();
         return 0;
     }
@@ -271,7 +274,7 @@ private:
         int sel = m_groups_list.GetCurSel();
         if (sel == -1 || sel == 0)
             return;
-        
+
         tstring gname = m_groups_name[sel-1];
         ProfilesList plist;
         plist.init(gname);
@@ -285,11 +288,11 @@ private:
 
     void updateOK()
     {
-        BOOL ok_status = FALSE;        
+        BOOL ok_status = FALSE;
         tstring name, profile;
         getWindowText(m_newworld_name, &name);
         getWindowText(m_newworld_profile, &profile);
-        if (!name.empty() && !profile.empty() && !IsExistIncorrectSymbols(name) && !IsExistIncorrectSymbols(profile))
+        if (!name.empty() && !profile.empty() && isOnlyFilnameSymbols(name) && isOnlyFilnameSymbols(profile))
         {
             bool confilcted_name = false;
             for (int i = 0, e = m_groups_name.size(); i < e; ++i)
@@ -347,7 +350,7 @@ private:
         m_list.Attach(GetDlgItem(IDC_LIST_PROFILE_NEW));
         m_name.Attach(GetDlgItem(IDC_EDIT_PROFILE_NEW));
         m_ok.Attach(GetDlgItem(IDOK));
-        
+
         tstring text(L"Создать пустой профиль");
         m_list.AddString(text.c_str());
         m_list.SetCurSel(0);
@@ -356,10 +359,11 @@ private:
         {
             tstring profile;
             m_plist.getName(i, &profile);
-            m_list.AddString(profile.c_str());            
+            m_list.AddString(profile.c_str());
         }
-        m_ok.EnableWindow(FALSE);
         CenterWindow(GetParent());
+        m_ok.EnableWindow(FALSE);
+        m_list.SetFocus();
         return 0;
     }
 
@@ -369,7 +373,7 @@ private:
         getWindowText(m_name, &text);
         BOOL enable_ok = FALSE;
         if (!text.empty())
-        {            
+        {
             enable_ok = TRUE;
             for (int i=0,e=m_plist.getCount(); i<e; ++i)
             {
@@ -380,7 +384,7 @@ private:
             }
             if (enable_ok)
             {
-                if (IsExistIncorrectSymbols(text))
+                if (!isOnlyFilnameSymbols(text))
                     enable_ok = FALSE;
             }
         }
@@ -397,7 +401,7 @@ private:
         EndDialog(IDOK);
         return 0;
     }
-    
+
     LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
 	{
 		EndDialog(wID);

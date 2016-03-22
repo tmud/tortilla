@@ -1,6 +1,6 @@
 #pragma once
 
-class HighlightHelper
+class HighlightHelperImpl
 {
     Pcre16 pcre_colors;
     Pcre16 pcre_rgb;
@@ -8,11 +8,11 @@ class HighlightHelper
     tstring colors;
 
 public:
-    HighlightHelper()
+    HighlightHelperImpl()
     {
-        colors.assign(L"(black|red|green|brown|blue|magenta|cyan|gray|coal|light red|light green|yellow|light blue|purple|light cyan|white|light magenta|light brown|grey)");
-        pcre_colors.setRegExp(colors);
-        pcre_rgb.setRegExp(L"[0-9]+,[0-9]+,[0-9]+");
+        colors.assign(L"(\\bblack\\b|\\bred\\b|\\bgreen\\b|\\bbrown\\b|\\bblue\\b|\\bmagenta\\b|\\bcyan\\b|\\bgray\\b|\\bcoal\\b|\\blight red\\b|\\blight green\\b|\\byellow\\b|\\blight blue\\b|\\bpurple\\b|\\blight cyan\\b|\\bwhite\\b|\\blight magenta\\b|\\blight brown\\b|\\bgrey\\b|\\bcharcoal\\b|\\blight yellow\\b)");
+        pcre_colors.setRegExp(colors, true);
+        pcre_rgb.setRegExp(L"rgb([0-9]+,[0-9]+,[0-9]+)");
         pcre_prefix.setRegExp(L"border|line|italic|b");
     }
 
@@ -30,8 +30,9 @@ public:
         std::vector<tstring> parts(size);
         for (int i=0; i<size; ++i)
         {
-            if (checkPrefix(s[i]) || checkColors(s[i]))
-                parts[i] = s[i];
+            tstring tmp(s[i]);
+            if (checkPrefix(tmp) || checkColors(&tmp))
+                parts[i] = tmp;
             else
                 return false;
         }
@@ -93,10 +94,10 @@ private:
         p.findAllMatches(str);
         if (p.getSize() == 0)
            return;
-        WCHAR* table[16] = { L"0,0,0", L"128,0,0", L"0,128,0", L"128,128,0", L"0,0,128", L"128,0,128", L"0,128,128", L"192,192,192",
-           L"128,128,128", L"255,0,0", L"0,255,0", L"255,255,0", L"0,0,255", L"255,0,255", L"0,255,255", L"255,255,255" };
+        WCHAR* table[16] = { L"64,64,64", L"128,0,0", L"0,128,0", L"128,128,0", L"0,64,128", L"128,0,128", L"0,128,128", L"192,192,192",
+           L"128,128,128", L"255,0,0", L"0,255,0", L"255,255,0", L"0,128,255", L"255,0,255", L"0,255,255", L"255,255,255" };
         tstring name;
-        for (int i=p.getSize()-1; i>=0; --i)
+        for (int i=p.getSize()-1; i>=1; --i)
         {
             p.getString(i, &name);
             int pos = colors.find(name);
@@ -109,18 +110,24 @@ private:
             if (colorid == 16) colorid = 13; // light magenta -> purple
             if (colorid == 17) colorid = 11; // light brown -> yellow
             if (colorid == 18) colorid = 7;  // grey -> gray
+            if (colorid == 19) colorid = 8;  // charcoal -> coal
+            if (colorid == 20) colorid = 11; // light yellow -> yellow
 
             tstring tmp(str.substr(0,p.getFirst(i)));
+            tmp.append(L"rgb");
             tmp.append(table[colorid]);
             tmp.append(str.substr(p.getLast(i)));
             str = tmp;
         }
      }
 
-     bool checkColors(const tstring& str)
+     bool checkColors(tstring* str)
      {
-        pcre_rgb.find(str);
-        return (pcre_rgb.getSize() != 0) ? true : false;
+        pcre_rgb.find(*str);
+        if (pcre_rgb.getSize() == 0)
+            return false;
+        pcre_rgb.getString(1, str);
+        return true;
      }
 
      bool checkPrefix(const tstring& str)
@@ -132,4 +139,11 @@ private:
          int len = str.length();
          return (p.getFirst(0) == 0 && p.getLast(0) == len) ? true : false;
      }
+};
+
+class HighlightHelper
+{
+   static HighlightHelperImpl m_impl;
+public:
+   bool checkText(tstring* param);
 };

@@ -2,17 +2,18 @@
 
 #include "mudViewParser.h"
 #include "logicHelper.h"
-#include "inputProcessor.h"
+#include "logicPipeline.h"
 #include "logsProcessor.h"
-#include "IfProcessor.h"
 #include "network/network.h"
+#include "waitCmds.h"
 
+struct InputCommand;
 class LogicProcessorHost
 {
 public:
     virtual void connectToNetwork(const tstring& address, int port) = 0;
     virtual void disconnectFromNetwork() = 0;
-    virtual void sendToNetwork(const tstring& data) = 0;    
+    virtual void sendToNetwork(const tstring& data) = 0;
     virtual MudViewString* getLastString(int view) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
@@ -23,7 +24,10 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessGameCmd(tstring* cmd) = 0;
+    virtual void preprocessCommand(InputCommand* cmd) = 0;
+    virtual void setOscColor(int index, COLORREF color) = 0;
+    virtual void resetOscColors() = 0;
+    virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
 };
 
 class LogicProcessorMethods
@@ -37,8 +41,9 @@ public:
     virtual bool checkActiveObjectsLog(int type) = 0;
     virtual bool addSystemCommand(const tstring& cmd) = 0;
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
-    virtual void doGameCommand(const tstring& cmd) = 0;
+    virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
+    virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
 };
 
 class parser;
@@ -47,10 +52,8 @@ typedef void(*syscmd_fun)(parser*);
 
 class LogicProcessor : public LogicProcessorMethods
 {
-    PropertiesData *propData;
     LogicProcessorHost *m_pHost;
     MudViewParser m_parser;
-    InputProcessor m_input;
     LogicHelper m_helper; 
     bool m_connecting;
     bool m_connected;
@@ -59,7 +62,6 @@ class LogicProcessor : public LogicProcessorMethods
     int m_wlogs[OUTPUT_WINDOWS+1];
     std::map<tstring, syscmd_fun> m_syscmds;
     std::vector<tstring> m_plugins_cmds;
-    IfProcessor m_ifproc;
     Pcre16 m_prompt_pcre;
     MudViewParser m_parser2;
     struct stack_el {
@@ -71,9 +73,15 @@ class LogicProcessor : public LogicProcessorMethods
     PromptMode m_prompt_mode;
     int  m_prompt_counter;
     Pcre16 m_univ_prompt_pcre;
+    std::vector<tstring> m_plugins_log_cache;
+    bool m_plugins_log_tocache;
+    bool m_plugins_log_blocked;
+    WaitCommands m_waitcmds;
+    LogicPipeline m_pipeline;
+    InputPlainCommands m_repeat_commands;
 
 public:
-    LogicProcessor(PropertiesData *data, LogicProcessorHost *host);
+    LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();
     bool init();
     void processNetworkData(const WCHAR* text, int text_len);
@@ -82,8 +90,9 @@ public:
     void processNetworkConnectError();
     void processNetworkError();
     void processNetworkMccpError();
+    void processUserCommand(const InputPlainCommands& cmds);
+    void processPluginCommand(const tstring& cmd);
     bool processHotkey(const tstring& hotkey);
-    void processCommand(const tstring& cmd);
     void processTick();
     void processStackTick();
     void updateProps();
@@ -94,15 +103,19 @@ public:
     bool checkActiveObjectsLog(int type);
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
-    void doGameCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
-
+    void windowOutput(int window, const std::vector<tstring>& msgs);
 private:
+    void processCommand(const tstring& cmd);
+    void processCommands(const InputPlainCommands& cmds);
+    void runCommands(InputCommands& cmds);
+    bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
-    void processSystemCommand(tstring& cmd);
-    void processGameCommand(tstring& cmd);
-    enum { SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4, SKIP_PLUGINS = 8, GAME_LOG = 16, GAME_CMD = 32, 
-           FROM_STACK = 64, FROM_TIMER = 128 };
+    void processSystemCommand(InputCommand* cmd);
+    void processGameCommand(InputCommand* cmd);
+    enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
+           SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24,
+           GAME_LOG = 32, GAME_CMD = 64, FROM_STACK = 128, FROM_TIMER = 256 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
@@ -110,9 +123,10 @@ private:
     void processNetworkError(const tstring& error);
 
     // Incoming data methods
-    void processIncoming(const WCHAR* text, int text_len, int flags = 0, int window = 0);
+    void processIncoming(const WCHAR* text, int text_len, int flags, int window);
     void printIncoming(parseData& parse_data, int flags, int window);
-    void printParseData(parseData& parse_data, int flags, int window);
+    void pipelineParseData(parseData& parse_data, int flags, int window);
+    void printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
 
@@ -134,6 +148,7 @@ public: // system commands
     DEF(password);
     DEF(hide);
     DEF(highlight);
+    DEF(math);
     DEF(ifop);
     DEF(unhighlight);
     DEF(gag);
@@ -152,6 +167,7 @@ public: // system commands
     DEF(tab);
     DEF(untab);
     DEF(timer);
+    DEF(untimer);
     DEF(hidewindow);
     DEF(showwindow);
     void wlogf_main(int log, const tstring& file, bool newlog);
@@ -165,4 +181,5 @@ public: // system commands
     DEF(wname);
     DEF(var);
     DEF(unvar);
+    DEF(wait);
 };
