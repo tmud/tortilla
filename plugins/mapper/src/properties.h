@@ -11,6 +11,8 @@ struct PropertiesMapper
     tstring end_exits;
     tstring begin_prompt;
     tstring end_prompt;
+    tstring begin_vnum;
+    tstring end_vnum;
 
     tstring north_cmd;
     tstring south_cmd;

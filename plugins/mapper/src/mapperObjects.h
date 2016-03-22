@@ -10,6 +10,7 @@ class Zone;
 struct RoomData
 {
     tstring name;
+    tstring vnum;
     tstring descr;
     tstring exits;
     uint    hash;
@@ -41,8 +42,8 @@ struct RoomData
     void calcHash()
     {
         CRC32 crc;
-        crc.process(name.c_str(), name.length() * sizeof(WCHAR));        
-        crc.process(exits.c_str(), exits.length() * sizeof(WCHAR));
+        crc.process(name.c_str(), name.length() * sizeof(tchar));        
+        crc.process(exits.c_str(), exits.length() * sizeof(tchar));
         hash = crc.getCRC32();
         dhash = 0;
         if (!descr.empty()) 
@@ -54,21 +55,6 @@ struct RoomData
     }
 
     RoomData() : hash(0), dhash(0) {}
-
-#ifdef _DEBUG
-    void printDebugData()
-    {
-        WCHAR buf[16];
-        swprintf(buf, L"0x%x,0x%x\r\n", hash, dhash);
-        OutputDebugString(buf);
-        OutputDebugString(name.c_str());
-        OutputDebugString(L"\r\n");
-        OutputDebugString(descr.c_str());
-        OutputDebugString(L"\r\n");
-        OutputDebugString(exits.c_str());
-        OutputDebugString(L"\r\n");
-    }
-#endif
 };
 
 struct RoomExit

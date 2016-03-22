@@ -106,6 +106,7 @@
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
     <ClInclude Include="..\..\mudclient\src\palette256.h" />
     <ClInclude Include="res\resource.h" />
+    <ClInclude Include="src\debugHelpers.h" />
     <ClInclude Include="src\editListBox.h" />
     <ClInclude Include="src\helpers.h" />
     <ClInclude Include="src\mapper.h" />
@@ -125,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
+    <ClCompile Include="src\debugHelpers.cpp" />
     <ClCompile Include="src\mapper.cpp" />
     <ClCompile Include="src\mapper2.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />

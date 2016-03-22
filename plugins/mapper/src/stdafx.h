@@ -11,6 +11,7 @@
 #include "api/api.h"
 
 typedef std::wstring tstring;
+typedef wchar_t tchar;
 typedef unsigned int uint;
 
 #include <assert.h>

@@ -15,8 +15,8 @@ class Mapper : public CWindowImpl<Mapper>
 public:
     Mapper(PropertiesMapper *props);
     ~Mapper();
-    void processNetworkData(const char* text, int text_len);
-    void processCmd(const wchar_t* text, int text_len);
+    void processNetworkData(const tchar* text, int text_len);
+    void processCmd(const tstring& cmd);
     void updateProps();
     void saveMaps(lua_State *L);
     void loadMaps(lua_State *L);

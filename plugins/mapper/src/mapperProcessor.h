@@ -9,7 +9,7 @@ public:
     MapperKeyElement();
     bool init(const tstring& macro);
     void reset();
-    bool findData(const WCHAR* data, int datalen);
+    bool findData(const tchar* data, int datalen);
 
     void truncate() { key = 0; }
     int  getKey() const { return key; }
@@ -29,11 +29,11 @@ private:
 class MapperDataQueue
 {
 public:
-    void write(const WCHAR* data, int datalen)  {    buffer.write(data, datalen * sizeof(WCHAR));  }
-    void truncate(int datalen) {  buffer.truncate(datalen * sizeof(WCHAR)); }
+    void write(const tchar* data, int datalen)  {    buffer.write(data, datalen * sizeof(tchar));  }
+    void truncate(int datalen) {  buffer.truncate(datalen * sizeof(tchar)); }
     void clear() {  buffer.clear(); }
     int getDataLen() const  {  return buffer.getSize() / sizeof(WCHAR); } 
-    const WCHAR* getData() const { return (WCHAR*)buffer.getData(); }
+    const tchar* getData() const { return (tchar*)buffer.getData(); }
 private:
     DataQueue buffer;
 };
@@ -43,15 +43,17 @@ class MapperProcessor
 public:
     MapperProcessor();
     void updateProps(PropertiesMapper *props);
-    bool processNetworkData(const WCHAR* text, int textlen, RoomData* result);
+    bool processNetworkData(const tchar* text, int textlen, RoomData* result);
 
 private:
-    bool searchData(const WCHAR* data, int datalen, RoomData* result);
+    bool searchData(const tchar* data, int datalen, RoomData* result);
     void checkBufferLimit();
     MapperDataQueue  m_network_buffer;
     MapperKeyElement bn;        // begin name
     MapperKeyElement bn2;
     MapperKeyElement en;        // end name
+    MapperKeyElement bv;        // begin vnum
+    MapperKeyElement ev;        // end vnum
     MapperKeyElement bd;        // begin description
     MapperKeyElement ed;        // end description
     MapperKeyElement be;        // begin exits

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<mapper>
+  <darkroom label=""/>
+  <name begin="\$[1;36m" end="\s["/>
+  <descr begin="\$[0;37m\r\n" end="\r\n\$["/>
+  <exits begin="\sВых:" end="&gt;\s\$"/>
+  <prompt begin="\r\n$[0;" end="\sВых:"/>
+  <vnum begin="\s[" end="]\$[0;"/>
+  <dirs north="С" south="Ю" west="З" east="В" up="^" down="v"/>
+  <cmds north="с" south="ю" west="з" east="в" up="вв" down="вн"/>
+</mapper>

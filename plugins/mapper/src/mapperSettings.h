@@ -4,6 +4,7 @@ class MapperSettings :  public CDialogImpl<MapperSettings>
 {
     PropertiesMapper* propData;
     CEdit m_begin_name, m_end_name, m_begin_descr, m_end_descr, m_begin_exits, m_end_exits;
+    CEdit m_begin_vnum, m_end_vnum;
     CEdit m_north,m_south,m_west,m_east,m_up,m_down;
     CEdit m_ex_north,m_ex_south,m_ex_west,m_ex_east,m_ex_up,m_ex_down;
     CEdit m_dark_room;
@@ -33,6 +34,8 @@ private:
         attach(&m_end_exits, IDC_EDIT_END_EXITS, &propData->end_exits);
         attach(&m_begin_prompt, IDC_EDIT_BEGINPROMPT, &propData->begin_prompt);
         attach(&m_end_prompt, IDC_EDIT_ENDPROMPT, &propData->end_prompt);
+        attach(&m_begin_vnum, IDC_EDIT_BEGIN_VNUM, &propData->begin_vnum);
+        attach(&m_end_vnum, IDC_EDIT_END_VNUM, &propData->end_vnum );
 
         attach(&m_north, IDC_EDIT_CMD_NORTH, &propData->north_cmd);
         attach(&m_south, IDC_EDIT_CMD_SOUTH, &propData->south_cmd);

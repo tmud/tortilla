@@ -83,6 +83,9 @@
     <ClInclude Include="..\..\mudclient\src\palette256.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\debugHelpers.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -120,6 +123,9 @@
     </ClCompile>
     <ClCompile Include="src\mapper2.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debugHelpers.cpp">
+      <Filter>Main Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

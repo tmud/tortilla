@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "mapper.h"
 #include "mapperObjects.h"
+#include "debugHelpers.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), m_lastDir(-1), m_pCurrentRoom(NULL)
 {
@@ -11,13 +12,15 @@ Mapper::~Mapper()
     autodel<Zone> z(m_zones);
 }
 
-void Mapper::processNetworkData(const char* text, int text_len)
+void Mapper::processNetworkData(const tchar* text, int text_len)
 {
-   /* RoomData room;
+    RoomData room;
     if (!m_processor.processNetworkData(text, text_len, &room))
     {
         if (m_prompt.processNetworkData(text, text_len))
             popDir();
+        DEBUGOUT(L"------");
+        DEBUGOUT(L"Не распознано");
         return;
     }
     if (room.descr.empty())
@@ -30,6 +33,12 @@ void Mapper::processNetworkData(const char* text, int text_len)
     }
     room.calcHash();
     popDir();
+
+    DEBUGOUT(L"------");
+    DEBUGOUT(room.name);
+    DEBUGOUT(room.vnum);
+    DEBUGOUT(room.exits);
+    //DEBUGOUT(room.descr);
     
     bool cached = m_cache.isExistRoom(m_pCurrentRoom);
 
@@ -71,12 +80,11 @@ void Mapper::processNetworkData(const char* text, int text_len)
     m_viewpos.room = croom;
     m_viewpos.level = croom->level;
     redrawPosition();
-    m_pCurrentRoom = new_room;*/
+    m_pCurrentRoom = new_room;
 }
 
-void Mapper::processCmd(const wchar_t* text, int text_len)
+void Mapper::processCmd(const tstring& cmd)
 {
-    tstring cmd(text, text_len);
     if (cmd.empty())
         return;
 

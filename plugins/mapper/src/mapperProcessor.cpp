@@ -16,7 +16,7 @@ bool MapperKeyElement::init(const tstring& macro)
 {
     reset();
     keydata.clear();
-    const WCHAR *p = macro.c_str();
+    const tchar *p = macro.c_str();
     bool spec_sym = false;
     for (;*p; ++p)
     {
@@ -29,19 +29,22 @@ bool MapperKeyElement::init(const tstring& macro)
         if (!spec_sym)
            { keydata.append(p, 1); continue; }        
         
-        WCHAR s[2] = { *p, 0};
+        tchar s[2] = { *p, 0};
         switch (*p) {
-        case '$':
+        case L'$':
             s[0] = 0x1b;
         break;
-        case 'n':
+        case L'n':
             s[0] = 0xa;
         break;
-        case 'r':
+        case L'r':
             s[0] = 0xd;
         break;
-        case 's':
+        case L's':
             s[0] = 0x20;
+        break;
+        case L'\\':
+            s[0] = L'\\';
         break;
         }
         keydata.append(s);
@@ -50,13 +53,13 @@ bool MapperKeyElement::init(const tstring& macro)
     return (keydata.empty()) ? false : true;
 }
 
-bool MapperKeyElement::findData(const WCHAR *data, int datalen)
+bool MapperKeyElement::findData(const tchar *data, int datalen)
 {    
     if (keydata.empty())
         return false;
     
-    const WCHAR *data0 = data;
-    WCHAR s = keydata.at(0);
+    const tchar *data0 = data;
+    tchar s = keydata.at(0);
     do
     {
         // find first symbol
@@ -99,14 +102,14 @@ MapperProcessor::MapperProcessor()
 {
 }
 
-bool MapperProcessor::processNetworkData(const WCHAR* text, int textlen, RoomData* result)
+bool MapperProcessor::processNetworkData(const tchar* text, int textlen, RoomData* result)
 {
     // collect network data for parsing
     m_network_buffer.write(text, textlen);
     int datalen = m_network_buffer.getDataLen();
     if (!datalen)
         return false;
-    const WCHAR* data = m_network_buffer.getData();
+    const tchar* data = m_network_buffer.getData();
 
     // 1. find key data of begin name
     if (!bn.isKeyFull())
@@ -129,6 +132,9 @@ bool MapperProcessor::processNetworkData(const WCHAR* text, int textlen, RoomDat
         datalen = m_network_buffer.getDataLen();
     }
     
+    //todo
+    tstring tmp_data(data, datalen);
+
     // 2. now find ee
     bool ee_result = ee.findData(data, datalen);
     if (!ee_result || !ee.isKeyFull())
@@ -163,14 +169,16 @@ bool MapperProcessor::processNetworkData(const WCHAR* text, int textlen, RoomDat
     return r;
 }
 
-bool MapperProcessor::searchData(const WCHAR* data, int datalen, RoomData* result)
+bool MapperProcessor::searchData(const tchar* data, int datalen, RoomData* result)
 {
-    // now we searching all other tags (en,bd,ed,be)
+    // now we searching all other tags (bv,ev,en,bd,ed,be)
     bool a = en.findData(data, datalen);
-    bool b = bd.findData(data, datalen);
-    bool c = ed.findData(data, datalen);
-    bool d = be.findData(data, datalen);
-    if (a && b && c && d)
+    if (a) a = bd.findData(data, datalen);
+    if (a) a = ed.findData(data, datalen);
+    if (a) a = be.findData(data, datalen);
+    if (a) a = bv.findData(data, datalen);
+    if (a) a = ev.findData(data, datalen);
+    if (a)
     {
         int nl = (en.getKey() + 0);
         result->name.assign(data, nl);
@@ -183,6 +191,12 @@ bool MapperProcessor::searchData(const WCHAR* data, int datalen, RoomData* resul
         int e = be.getAfterKey();
         int el = datalen - e;
         result->exits.assign(&data[e], el);
+
+        int v = bv.getAfterKey();
+        int vl = (ev.getKey() - v);
+        if (vl > 0)
+            result->vnum.assign(&data[v], vl);
+
         return true;
     }
     return false;
@@ -202,6 +216,8 @@ void MapperProcessor::updateProps(PropertiesMapper *props)
     bn.init(props->begin_name);
     bn2.init(props->begin_name);
     en.init(props->end_name);
+    bv.init(props->begin_vnum);
+    ev.init(props->end_vnum);
     bd.init(props->begin_descr);
     ed.init(props->end_descr);
     be.init(props->begin_exits);

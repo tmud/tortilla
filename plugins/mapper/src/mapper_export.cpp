@@ -3,6 +3,7 @@
 #include "properties.h"
 #include "mapperSettings.h"
 #include "mapper.h"
+#include "debugHelpers.h"
 
 bool map_active = false;
 PropertiesMapper m_props;
@@ -11,13 +12,16 @@ Mapper* m_mapper_window = NULL;
 //-------------------------------------------------------------------------
 int get_name(lua_State *L) 
 {
-    luaT_pushwstring(L, L"Карта(map)");
+    luaT_pushwstring(L, L"Карта");
     return 1;
 }
 
 int get_description(lua_State *L) 
 {
-    luaT_pushwstring(L, L"Отображает схему комнат и выходов. Показывает местоположение игрока.");
+    luaT_pushwstring(L, L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
+        L"Работает с мадами с 6 стандартными выходами.\r\n"
+        L"Требует для работы VNUM комнаты в блоке между названием и промпт-строкой."
+        );
     return 1;
 }
 
@@ -29,6 +33,7 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
+    DEBUGINIT(L);
     luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
     luaT_run(L, "addMenu", "s", L"Карта/-");
     luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
@@ -51,6 +56,8 @@ int init(lua_State *L)
         ld.get(L"exits/end", &m_props.end_exits);
         ld.get(L"prompt/begin", &m_props.begin_prompt);
         ld.get(L"prompt/end", &m_props.end_prompt);
+        ld.get(L"vnum/begin", &m_props.begin_vnum);
+        ld.get(L"vnum/end", &m_props.end_vnum);
 
         if (ld.move(L"dirs"))
         {
@@ -88,13 +95,13 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    m_mapper_window->loadMaps(L);
+    //todo m_mapper_window->loadMaps(L);
     return 0;
 }
 
 int release(lua_State *L)
 {
-    m_mapper_window->saveMaps(L);
+    //todo m_mapper_window->saveMaps(L);
 
     xml::node s(L"mapper");
     s.set(L"darkroom/label", m_props.dark_room);
@@ -106,6 +113,8 @@ int release(lua_State *L)
     s.set(L"exits/end", m_props.end_exits);
     s.set(L"prompt/begin", m_props.begin_prompt);
     s.set(L"prompt/end", m_props.end_prompt);
+    s.set(L"vnum/begin", m_props.begin_vnum);
+    s.set(L"vnum/end", m_props.end_vnum);
     s.create(L"dirs");
     s.set(L"north", m_props.north_exit);
     s.set(L"south", m_props.south_exit);
@@ -187,7 +196,7 @@ int stream(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
-        std::string stream ( lua_tostring(L, -1) );
+        tstring stream ( luaT_towstring(L, -1) );
         m_mapper_window->processNetworkData(stream.c_str(), stream.length());
     }
     return 1;
@@ -195,11 +204,20 @@ int stream(lua_State *L)
 
 int gamecmd(lua_State *L)
 {
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (luaT_check(L, 1, LUA_TTABLE))
     {
-        const char *cmd = lua_tostring(L, -1);
-        const wchar_t *wcmd = TU2W(cmd);
-        m_mapper_window->processCmd(wcmd, wcslen(wcmd));
+        lua_len(L, -1);
+        int len = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+        if (len > 0)
+        {
+            lua_pushinteger(L, 1);
+            lua_gettable(L, -2);            
+            tstring cmd(luaT_towstring(L, -1));
+            lua_pop(L, 1);
+            luaT_showLuaStack(L, L"D");
+            m_mapper_window->processCmd(cmd);
+        }        
     }
     return 1;
 }
