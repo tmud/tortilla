@@ -32,8 +32,8 @@ function inveq.render()
   local h = r:fontHeight()
   if not working then
     setTextColor(colors.header)
-	r:print(x, y, 'Инвентарь и экипировка')
-	y = y + h
+    r:print(x, y, 'Инвентарь и экипировка')
+    y = y + h
     r:print(x, y, 'Ошибка в настройках')
     return
   end
@@ -53,6 +53,7 @@ function inveq.render()
 end
 
 local function trigger_dress(s, vd)
+  local x = 1
 end
 
 local function trigger_undress(s, vd)
@@ -65,11 +66,8 @@ function inveq.init()
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
   working = false
-  local t = loadTable("test.xml")
+  local t = loadTable("config.lua")
   if not t then return end
-  saveTable(t, "test2.xml")
-  
-  
   if istable(t.colors) then
     for k,v in pairs(t.colors) do
       local color = tonumber(v)
@@ -94,11 +92,10 @@ function inveq.init()
       if w > maxw then maxw = w end
     end
     delta_eq = maxw + 20
-    
-    equipment = { head="Шлем", boots = "Сапоги" }
+    equipment = {}
     inventory = {}
     for k,v in pairs(t.dress) do
-      createTrigger(v, function(vd) trigger_dress(k, vd) end)
+      createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
     end
     for k,v in pairs(t.undress) do
     end

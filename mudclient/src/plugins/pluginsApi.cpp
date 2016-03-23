@@ -560,7 +560,25 @@ int loadTable(lua_State *L)
              lua_pushinteger(L, array_index);
            else
              luaT_pushwstring(L, name.c_str());
-           luaT_pushwstring(L, val.c_str());
+           int native = 0;
+           if (n.get(L"native", &native) && native != 0)
+           {
+               if (val == L"false")
+                   lua_pushboolean(L, 0);
+               else if (val == L"true")
+                   lua_pushboolean(L, 1);
+               else {
+                   bool ok = false;
+                   wstring_to_int number(val.c_str(), &ok);
+                   if (ok)
+                       lua_pushinteger(L, number);
+                   else
+                       luaT_pushwstring(L, val.c_str());
+               }
+           }
+           else {
+            luaT_pushwstring(L, val.c_str());
+           }
            lua_settable(L, -3);
        }
        else
@@ -596,7 +614,10 @@ int loadTable(lua_State *L)
        }
        el s_el2 = stack[p];
        if (s_el2.level < s_el.level)  // pop from stack
-           lua_pop(L, 1);
+       {
+           int pop = s_el.level - s_el2.level;
+           lua_pop(L, pop);
+       }
    }
    doc.deletenode();
    return 1;
@@ -622,6 +643,8 @@ public:
                  r.append(b); r.append(v); r.append(b);
          }
          first_param = false;
+         if (brackets_layer == 1)
+             endline();
     }
     void openbracket(const tstring& name) {
         if (brackets_layer++ == 0) return;
@@ -713,12 +736,15 @@ int saveTable(lua_State *L)
                 incorrect_data = true;
                 continue; 
             }
+            tstring v;
+            if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING) { v.assign(luaT_towstring(L, -1)); }            
+            else if ( value_type == LUA_TBOOLEAN) {  v.assign(lua_toboolean(L, -1) ? L"true" : L"false"); }
+
             if (key_type == LUA_TNUMBER)
             {
                 if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING || value_type == LUA_TBOOLEAN)
                 {
                     int index = lua_tointeger(L, -2);
-                    tstring v(luaT_towstring(L, -1));
                     current->array[index] = saveDataNode::value_with_type(v, (value_type == LUA_TSTRING));
                     lua_pop(L, 1);
                     continue;
@@ -732,9 +758,8 @@ int saveTable(lua_State *L)
             if (value_type == LUA_TNUMBER || value_type == LUA_TSTRING || value_type == LUA_TBOOLEAN)
             {
                 tstring a(luaT_towstring(L, -2));
-                tstring b(luaT_towstring(L, -1));
-                saveDataNode::value_with_type v(b, (value_type == LUA_TSTRING));
-                current->attributes.push_back( saveDataNode::value( a, v ) );
+                saveDataNode::value_with_type b(v, (value_type == LUA_TSTRING));
+                current->attributes.push_back( saveDataNode::value( a, b ) );
             }
             else if (value_type == LUA_TTABLE)
             {
@@ -805,7 +830,7 @@ int saveTable(lua_State *L)
             lr.openbracket(n->name);
 
             // save numeric indexes
-            saveDataNode::tarray &ta = n->array;            
+            saveDataNode::tarray &ta = n->array;
             saveDataNode::tarray::const_iterator it = ta.begin(), it_end = ta.end();
             for(; it!=it_end; ++it)
                 lr.value(it->second.first, it->second.second);
@@ -831,7 +856,7 @@ int saveTable(lua_State *L)
             }
         }
         HANDLE hFile = CreateFile(filepath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {            
+        if (hFile != INVALID_HANDLE_VALUE) {
             DWORD written = 0;
             unsigned char bom[3] = { 0xef, 0xbb, 0xbf };
             if (WriteFile(hFile, bom, 3, &written, NULL) && written == 3)
