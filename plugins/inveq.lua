@@ -95,7 +95,8 @@ function inveq.init()
     equipment = {}
     inventory = {}
     for k,v in pairs(t.dress) do
-      createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
+      local f = createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
+      local x = 1
     end
     for k,v in pairs(t.undress) do
     end

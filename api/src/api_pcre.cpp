@@ -70,3 +70,15 @@ hpcre_string pcre_string(hpcre handle, int index)
     wcscpy((wchar_t*)strbuf_ptr(b), text.c_str());
     return b;
 }
+
+hpcre_string pcre_regexp(hpcre handle)
+{
+    if (!handle) return NULL;
+    Pcre16* h = (Pcre16*)handle;
+    std::wstring regexp;
+    h->getRegexp(&regexp);
+    int len = (regexp.length()+1)*sizeof(wchar_t);
+    strbuf b = strbuf_new(len);
+    wcscpy((wchar_t*)strbuf_ptr(b), regexp.c_str());
+    return b;
+}

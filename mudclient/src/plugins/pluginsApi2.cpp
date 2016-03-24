@@ -946,6 +946,72 @@ int vd_isChanged(lua_State *L)
     return pluginInvArgs(L, L"viewdata:isChanged");
 }
 
+int vd_getKey(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        tstring k;
+        if (!pdata->get_key(&k))
+            lua_pushnil(L);
+        else
+            luaT_pushwstring(L, k.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:isChanged");
+}
+
+int vd_toWatch(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int parameters = pdata->get_params();
+        int size = pdata->size();
+        int selected = pdata->getindex();
+
+        lua_newtable(L);
+        for (int i=1; i<=size; ++i)
+        {
+            pdata->select(i);
+            PluginViewString *s = pdata->getselected_pvs();
+            u8string text;
+            s->getText(&text);
+
+            if (parameters > 0)
+            {
+                lua_newtable(L);
+                lua_pushstring(L, "string");
+                lua_pushstring(L, text.c_str());
+                lua_settable(L, -3);
+                tstring k;
+                pdata->get_key(&k);
+                lua_pushstring(L, "key");
+                luaT_pushwstring(L, k.c_str());
+                lua_settable(L, -3);
+                for (int pi=0; pi<parameters; ++pi)
+                {
+                    tstring p;
+                    pdata->get_parameter(pi, &p);
+                    lua_pushinteger(L, pi);
+                    luaT_pushwstring(L, p.c_str());
+                    lua_settable(L, -3);
+                }
+            }
+            else
+            {
+                lua_pushstring(L, text.c_str());
+            }
+            lua_pushinteger(L, i);
+            lua_insert(L, -2);
+            lua_settable(L, -3);
+        }
+        pdata->select(selected);
+        return 1;
+    }
+    return 0;
+}
+
 void reg_mt_viewdata(lua_State *L)
 {
     init_vdtypes();
@@ -984,6 +1050,8 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "parameters", vd_parameters);
     regFunction(L, "getParameter", vd_getParameter);
     regFunction(L, "isChanged", vd_isChanged);
+    regFunction(L, "getKey", vd_getKey);
+    regFunction(L, "__towatch", vd_toWatch);
     regIndexMt(L);
     lua_pop(L, 1);
 }

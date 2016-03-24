@@ -1008,6 +1008,7 @@ int   pcre_size(hpcre handle);
 int   pcre_first(hpcre handle, int index);
 int   pcre_last(hpcre handle, int index);
 hpcre_string pcre_string(hpcre handle, int index);
+hpcre_string pcre_regexp(hpcre handle);
 
 // pcre helper
 class Pcre
@@ -1033,6 +1034,13 @@ public:
         str->assign((const wchar_t*)strbuf_ptr(s));
         strbuf_destroy(s);
         return true;
+    }
+    void getRegExp(std::wstring *rgxp) { 
+        if (!rgxp) return;
+        hpcre_string s = pcre_regexp(regexp);
+        if (!s) return;
+        rgxp->assign((const wchar_t*)strbuf_ptr(s));
+        strbuf_destroy(s);
     }
 private:
     Pcre(const Pcre& p) {}
