@@ -38,51 +38,56 @@ ParamsBuffer pb;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
+void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
+{
+   tstring& main_cmd(*cmd);
+   typedef std::map<tstring, syscmd_fun>::iterator iterator;
+   typedef std::vector<tstring>::iterator piterator;
+   iterator it = m_syscmds.find(main_cmd);
+   iterator it_end = m_syscmds.end();
+   if (it == it_end)
+   {
+       // команда в системных не найдена - ищем в плагинах
+       piterator p_end = m_plugins_cmds.end();
+       piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+       if (p != p_end)
+           main_cmd.assign(*p);
+       else
+       {
+           //пробуем подобрать по сокращенному имени
+           int len = main_cmd.size();
+           if (len < 3)
+               error->append(L"Ќеизвестна€ команда");
+           else
+           {
+               std::vector<tstring> cmds;
+               for (it = m_syscmds.begin(); it != it_end; ++it)
+               {
+                   if (!it->first.compare(0, len, main_cmd))
+                       cmds.push_back(it->first);
+               }
+               for (p = m_plugins_cmds.begin(); p != p_end; ++p)
+               {
+                   if (!p->compare(0, len, main_cmd))
+                       cmds.push_back(*p);
+               }
+               int count = cmds.size();
+               if (count == 1)
+                   main_cmd.assign(cmds[0]);
+               else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
+               {
+                   error->append(L"”точните команду (варианты): ");
+                   for (int i = 0; i < count; ++i) { if (i != 0) error->append(L", "); error->append(cmds[i]); }
+               }
+           }
+       }
+   }
+}
+
 void LogicProcessor::processSystemCommand(InputCommand* cmd)
 {
-    tstring main_cmd(cmd->command);
-    tstring error;
-    typedef std::map<tstring, syscmd_fun>::iterator iterator;
-    typedef std::vector<tstring>::iterator piterator;
-    iterator it = m_syscmds.find(main_cmd);
-    iterator it_end = m_syscmds.end();
-    if (it == it_end)
-    {
-        // команда в системных не найдена - ищем в плагинах
-        piterator p_end = m_plugins_cmds.end();
-        piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
-        if (p != p_end)
-            main_cmd.assign(*p);
-        else
-        {
-            //пробуем подобрать по сокращенному имени
-            int len = main_cmd.size();
-            if (len < 3)
-                error.append(L"Ќеизвестна€ команда");
-            else
-            {
-                std::vector<tstring> cmds;
-                for (it = m_syscmds.begin(); it != it_end; ++it)
-                {
-                    if (!it->first.compare(0, len, main_cmd))
-                        cmds.push_back(it->first);
-                }
-                for (p = m_plugins_cmds.begin(); p != p_end; ++p)
-                {
-                    if (!p->compare(0, len, main_cmd))
-                        cmds.push_back(*p);
-                }
-                int count = cmds.size();
-                if (count == 1)
-                    main_cmd.assign(cmds[0]);
-                else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
-                {
-                    error.append(L"”точните команду (варианты): ");
-                    for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
-                }
-            }
-        }
-    }
+    tstring error, main_cmd(cmd->command);
+    recognizeSystemCommand(&main_cmd, &error);
 
     PropertiesData *pdata = tortilla::getProperties();
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
@@ -97,37 +102,52 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         fullcmd.append(main_cmd);
         if (!hide_cmd)
             fullcmd.append(cmd->parameters);
-
-        syscmdLog(fullcmd);
-        fullcmd_loged = true;
-
+        
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
 
         if (cmd->changed)
         {
             tstring tmp(L">");
-            tmp.append(prefix);
-            tmp.append(cmd->srccmd);
-            tmp.append(cmd->srcparameters);
+            tmp.append(fullcmd);
             syscmdLog(tmp);
+            tmp.assign(prefix);
+            tmp.append(cmd->command);
+            tmp.append(L" ");
+            tmp.append(cmd->parameters);
+            fullcmd.swap(tmp);
         }
+        syscmdLog(fullcmd);
+        fullcmd_loged = true;
 
         if (cmd->dropped)
             return;
 
-        it = m_syscmds.find(main_cmd);
-        if (it != it_end)
+        if (cmd->changed) 
         {
-            parser p(cmd, &error);
-            it->second(&p);
+            main_cmd.assign(cmd->command);
+            recognizeSystemCommand(&main_cmd, &error);
+            cmd->command.assign(main_cmd);
         }
-        else
+
+        if (error.empty()) 
         {
-            piterator p_end = m_plugins_cmds.end();
-            piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
-            if (p == p_end)
-                error.append(L"Ќеизвестна€ команда");
+            typedef std::map<tstring, syscmd_fun>::iterator iterator;
+            iterator it_end = m_syscmds.end();
+            iterator it = m_syscmds.find(main_cmd);
+            if (it != it_end)
+            {
+                parser p(cmd, &error);
+                it->second(&p);
+            }
+            else
+            {
+                typedef std::vector<tstring>::iterator piterator;
+                piterator p_end = m_plugins_cmds.end();
+                piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+                if (p == p_end)
+                    error.append(L"Ќеизвестна€ команда");
+            }
         }
     }
 
@@ -162,11 +182,21 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
     m_pHost->preprocessCommand(cmd);
+    if (cmd->changed || cmd->dropped)
+    {
+        tstring tmpout(L">");
+        tmpout.append(cmd->srccmd);
+        tmpout.append(cmd->srcparameters);
+        syscmdLog(tmpout);
+    }
     if (cmd->dropped)
         return;
     tchar br[2] = { 0xa, 0 };
     tstring tmp(cmd->command);
+    if (cmd->changed)
+        tmp.append(L" ");
     tmp.append(cmd->parameters);
+   
     tmp.append(br);
     processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
     sendToNetwork(tmp);

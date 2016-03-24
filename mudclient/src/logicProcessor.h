@@ -111,6 +111,7 @@ private:
     void runCommands(InputCommands& cmds);
     bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
+    void recognizeSystemCommand(tstring* cmd, tstring* error);
     void processSystemCommand(InputCommand* cmd);
     void processGameCommand(InputCommand* cmd);
     enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
