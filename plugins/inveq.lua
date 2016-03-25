@@ -2,10 +2,11 @@
 -- Плагин для Tortilla mud client
 
 local inveq = {}
-
-local colors, slots, inventory, equipment
+local colors, slots, inventory
 local working = false
 local delta_eq = 0
+local catch_inv = false
+local begin_inv, empty_inv
 
 function inveq.name()
   return 'Инвентарь и экипировка'
@@ -40,23 +41,92 @@ function inveq.render()
   setTextColor(colors.header)
   r:print(x, y, 'Экипировка:')
   y = y + h
-  for k,s in ipairs(slots) do
+  for _,s in ipairs(slots) do
     setTextColor(colors.tegs)
     r:print(x, y, s.name..": ")
-    local eq = equipment[k]
+    local eq = s.equipment and s.equipment or '?'
     if eq then setTextColor(colors.equipment) r:print(x+delta_eq, y, eq) end
     y = y + h
   end
   y = y + h
   setTextColor(colors.header)
   r:print(x, y, 'Инвентарь:')
+  y = y + h
+  setTextColor(colors.inventory)
+  for _,s in ipairs(inventory) do
+    r:print(x, y, s)
+    y = y + h
+  end
+end
+
+local function geteq(vd)
+  vd:select(1)
+  local p = vd:getParameter(1)
+  return p:lower()
 end
 
 local function trigger_dress(s, vd)
-  local x = 1
+  local slot = slots[s]
+  if not slot then return end
+  local eq = geteq(vd)
+  slot.equipment = eq
+  for k,s in ipairs(inventory) do
+    if eq == s then
+      table.remove(inventory, k); break
+    end
+  end
+  r:update()
 end
 
 local function trigger_undress(s, vd)
+  local p = geteq(vd)
+  for _,s in ipairs(slots) do
+    if s.equipment == p then
+      s.equipment = ""
+      table.insert(inventory, 1, p)
+      r:update()
+      break
+    end
+  end
+end
+
+local function trigger_inventory_in(vd)
+  local p = geteq(vd)
+  table.insert(inventory, 1, p)
+  r:update()
+end
+
+local function trigger_inventory_out(vd)
+  local p = geteq(vd)
+  for k,s in ipairs(inventory) do
+    if p == s then
+      table.remove(inventory, k); break
+    end
+  end
+end
+
+function inveq.before(v, vd)
+  if v ~= 0 then return end
+  if not catch_eq then
+    if begin_inv and vd:find(begin_inv) then
+      catch_eq = true
+      local index,size = vd:getIndex(),vd:size()
+      if index == size then return end
+      vd:select(index+1)
+    end
+  end
+  if not catch_eq then return end
+  inventory = {}
+  local index,size = vd:getIndex(), vd:size()
+  for i=index,size do
+    vd:select(i)
+    if vd:isPrompt() then catch_eq = false; break end
+    local item = vd:getText()
+    if item ~= "" and item ~= empty_inv then
+      inventory[#inventory+1] = item:lower()
+    end
+  end
+  r:update()
 end
 
 function inveq.init()
@@ -79,6 +149,7 @@ function inveq.init()
     end
   end
   if istable(t.slots) and istable(t.dress) and istable(t.undress) then
+    -- собираем список слотов, которые будем отображать
     slots = {}
     for _,s in ipairs(t.slots) do
       if s.id then
@@ -86,71 +157,42 @@ function inveq.init()
         slots[#slots+1] = s
       end
     end
+    -- Делаем мапу по ид слота для быстрого поиска
+    for k,s in ipairs(slots) do
+      slots[s.id] = s
+    end
+    -- Считаем отступ для рисования экипировки после имени слота
     local maxw = 0
     for _,s in ipairs(slots) do
       local w = r:textWidth(s.name)
       if w > maxw then maxw = w end
     end
-    delta_eq = maxw + 20
-    equipment = {}
-    inventory = {}
-    for k,v in pairs(t.dress) do
-      local f = createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
-      local x = 1
+    delta_eq = maxw + 10
+    -- Создаем триггеры на одевание и раздевание
+    for _,v in pairs(t.dress) do
+      if not v.id or slots[v.id] then
+        createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
+      end
     end
-    for k,v in pairs(t.undress) do
+    for _,v in pairs(t.undress) do
+      createTrigger(v.key, function(vd) trigger_undress(v.id, vd) end)
     end
+    -- Инвентарь
+    -- Триггер для начала отлова списка инвентаря
+    empty_inv = t.inventory_empty
+    begin_inv = nil
+    if t.inventory_begin then
+      begin_inv = createPcre(t.inventory_begin)
+    end
+    for _,v in pairs(t.inventory_in) do
+      createTrigger(v, trigger_inventory_in)
+    end
+    for _,v in pairs(t.inventory_out) do
+      createTrigger(v, trigger_inventory_out)
+    end
+    inventory = { "?" }
     working = true
   end
-end
-
---[[function locals()
-  local variables = {}
-  local idx = 1
-  while true do
-    local ln, lv = debug.getlocal(2, idx)
-    if ln ~= nil then
-      variables[ln] = lv
-    else
-      break
-    end
-    idx = 1 + idx
-  end
-  return variables
-end
-
-function upvalues()
-  local variables = {}
-  local idx = 1
-  local func = debug.getinfo(2, "f").func
-  while true do
-    local ln, lv = debug.getupvalue(func, idx)
-    if ln ~= nil then
-      variables[ln] = lv
-    else
-      break
-    end
-    idx = 1 + idx
-  end
-  return variables
-end]]
-
-function inveq.syscmd(t)
-  --t = slots
-  --[[t[1] = 'out'
-  t[2] = 'aaaa'
-  t[3] = 'bbb bbb']]
-  
-  --local x = locals()
-  return t
-end
-
-function inveq.gamecmd(t)
-  --t = slots
-  --[[t[1] = 'out'
-  t[2] = 'aaaa'
-  t[3] = 'bbb bbb']]
-  return t
 end
 
 return inveq

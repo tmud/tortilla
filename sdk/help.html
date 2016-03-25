@@ -1354,6 +1354,13 @@ local s2 = s:substr(5, 8) -- s2 = "отличная"
 <div class="cmd">int strstr(string what [,int from])</div> - ищет подстроку в строке. Можно указать с какого символа нужно искать.
 <div class="cmd">table strall(string what)</div> - ищет все вхождения подстроки в строке. Возвращает таблицу индексов с которых начинается 
 заданная подстрока (nil - ничего не найдено).
+<div class="cmd">string lower()</div> - возвращает новую строку - это текущая строка в нижнем регистре.
+<div class="cmd">string upper()</div> - возвращает новую строку - это текущая строка в верхнем регистре.
+Пример:
+<div class="ee">local s = "Мад отличНая Игра"
+local s1 = s:lower()
+-- s1 = "мад отличная игра"
+</div>
 </pre>
 <hr>
 <a name="triggers"></a>

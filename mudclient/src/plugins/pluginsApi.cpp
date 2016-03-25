@@ -1344,8 +1344,7 @@ int string_substr(lua_State *L)
         lua_pushstring(L, s.c_str());
         return 1;
     }
-    lua_pushnil(L);
-    return 1;
+    return 0;
 }
 
 int string_strstr(lua_State *L)
@@ -1380,8 +1379,7 @@ int string_strstr(lua_State *L)
             return 1;
          }
      }
-     lua_pushnil(L);
-     return 1;
+     return 0;
 }
 
 int string_strall(lua_State *L)
@@ -1416,8 +1414,31 @@ int string_strall(lua_State *L)
          }
          return 1;
      }
-     lua_pushnil(L);
-     return 1;
+     return 0;
+}
+
+int string_lower(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+         tstring s(luaT_towstring(L, 1));
+         tstring_tolower(&s);
+         luaT_pushwstring(L, s.c_str());
+         return 1;
+    }
+    return 0;
+}
+
+int string_upper(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+         tstring s(luaT_towstring(L, 1));
+         tstring_toupper(&s);
+         luaT_pushwstring(L, s.c_str());
+         return 1;
+    }
+    return 0;
 }
 
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
@@ -1429,6 +1450,8 @@ void reg_string(lua_State *L)
     regFunction(L, "substr", string_substr);
     regFunction(L, "strstr", string_strstr);
     regFunction(L, "strall", string_strall);
+    regFunction(L, "lower", string_lower);
+    regFunction(L, "upper", string_upper);
     regIndexMt(L);
 
     // set metatable for lua string type
