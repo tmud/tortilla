@@ -135,14 +135,15 @@ void LogicProcessor::runCommands(InputCommands& cmds)
             {
                 int repeats = 0;
                 w2int(cmd->command, &repeats);
-                tstring newcmd;
-                std::vector<tstring>& pl = cmd->parameters_list;
-                for (int i=0,e=pl.size(); i<e; ++i)
+                tstring newcmd(cmd->parameters);
+                tstring_trimleft(&newcmd);
+                /*std::vector<tstring>& pl = cmd->parameters_list;
+                for (int k=0,ke=pl.size(); k<ke; ++k)
                 {
-                    if (i!=0) newcmd.append(L" ");
-                    newcmd.append(pl[i]);
-                }
-                if (repeats == 0 && newcmd.empty())
+                    if (k!=0) newcmd.append(L" ");
+                    newcmd.append(pl[k]);
+                }*/
+                if (repeats == 0 || newcmd.empty())
                 {
                     m_repeat_commands.clear();
                     return;
@@ -150,6 +151,12 @@ void LogicProcessor::runCommands(InputCommands& cmds)
                 if (repeats > 0 && repeats <= 100)
                 {
                     m_repeat_commands.repeat(repeats, newcmd);
+                    for (int j=i+1;j<e;++j)
+                    {
+                        newcmd.assign(cmds[j]->srccmd);
+                        newcmd.append(cmds[j]->srcparameters);
+                        m_repeat_commands.push_back(newcmd);
+                    }
                     return;
                 }
             }
