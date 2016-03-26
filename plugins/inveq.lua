@@ -25,7 +25,6 @@ local function istable(t)
   return type(t) == 'table'
 end
 
-
 local r
 local function setTextColor(color)
   r:textColor(props.paletteColor(color))
@@ -65,9 +64,16 @@ function inveq.render()
   end
 end
 
-local function geteq(vd)
+-- если ip=true (именительный падеж), то работаем со словарем
+local function geteq(vd, ip)
   vd:select(1)
   local p = vd:getParameter(1)
+  if ip then
+    decllib:add(p)
+  else
+    local eqip = decllib:find(p)
+    if eqip then p = eqip end
+  end
   return p:lfup()
 end
 
@@ -75,10 +81,10 @@ local function similar(s1, s2)
   return decllib:compare(s1, s2)
 end
 
-local function trigger_dress(s, vd)
+local function trigger_dress(s, vd, ip)
   local slot = slots[s]
   if not slot then return end
-  local eq = geteq(vd)
+  local eq = geteq(vd, ip)
   slot.equipment = eq
   for k,s in ipairs(inventory) do
     if similar(eq, s) then
@@ -86,11 +92,6 @@ local function trigger_dress(s, vd)
     end
   end
   update()
-end
-
--- отдельно для именительного падежа
-local function trigger_dress_ip(s, vd)
-  trigger_dress(s, vd)
 end
 
 local function trigger_undress(s, vd)
@@ -105,8 +106,8 @@ local function trigger_undress(s, vd)
   end
 end
 
-local function trigger_inventory_in(vd)
-  local p = geteq(vd)
+local function trigger_inventory_in(vd, ip)
+  local p = geteq(vd, ip)
   table.insert(inventory, 1, p)
   update()
 end
@@ -141,6 +142,7 @@ function inveq.before(v, vd)
     if not vd:isSystem() and not vd:isGameCmd() then 
       local item = vd:getText()
       if item ~= "" and item ~= empty_inv then
+        decllib:add(item)
         inventory[#inventory+1] = item:lfup()
       end
     end
@@ -193,7 +195,7 @@ function inveq.init()
     -- Создаем триггеры на одевание и раздевание
     for _,v in pairs(t.eqcmd) do
       if not v.id or slots[v.id] then
-        createTrigger(v.key, function(vd) trigger_dress_ip(v.id, vd) end)
+        createTrigger(v.key, function(vd) trigger_dress(v.id, vd, true) end)
       end
     end
     for _,v in pairs(t.dress) do
@@ -221,6 +223,11 @@ function inveq.init()
     inventory = { "?" }
     working = true
   end
+end
+
+function inveq:release()
+  decllib:save( getPath("words.lst") )
+  decllib = nil
 end
 
 return inveq

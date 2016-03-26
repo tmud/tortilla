@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <functional>
 
 typedef std::wstring tstring;
 typedef wchar_t tchar;

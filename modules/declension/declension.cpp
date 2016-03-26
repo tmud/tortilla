@@ -1,6 +1,13 @@
 #include "stdafx.h"
 #include "../mudclient/src/common/tokenizer.h"
 
+void tstring_tolower(tstring *str)
+{
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::tolower), &ct));
+}
+
 std::map<lua_State*, int> m_decl_types;
 typedef std::map<lua_State*, int>::iterator iterator;
 int gettype(lua_State *L)
@@ -20,7 +27,9 @@ class Phrase
 public:
     Phrase(const tchar* phrase_in_string) 
     {
-        Tokenizer t(phrase_in_string, L" ");
+        tstring p(phrase_in_string);
+        tstring_tolower(&p);
+        Tokenizer t(p.c_str(), L" ");
         t.trimempty();
         t.swap(words);
     }
@@ -78,14 +87,15 @@ public:
 
     void getFullPhrase(tstring *s) const
     {
+        s->clear();
         for (int i=0,e=words.size();i<e;++i)
         {
             if (i!=0) s->append(L" ");
-            s->append(words[i]);        
-        }    
+            s->append(words[i]);
+        }
     }
 private:
-    std::vector<tstring> words;    
+    std::vector<tstring> words;
 };
 
 class PhrasesList
@@ -114,7 +124,7 @@ public:
                 e = index;
             }
        }
-       m_phrases.insert(m_phrases.begin()+index, p);        
+       m_phrases.insert(m_phrases.begin()+index, p);
        return true;
     }
     bool findPhrase(const Phrase& p, tstring* result)
@@ -126,7 +136,7 @@ public:
             tchar c2 = m_phrases[i]->get(0).at(0);
             if (c == c2) { begin = i; break; }
         }
-        if (begin == -1) return false;        
+        if (begin == -1) return false;
         int end = m_phrases.size();
         for (int i=begin,e=m_phrases.size();i<e;++i)
         {
@@ -145,8 +155,11 @@ public:
     }
     const Phrase* getPhrase(int index) const
     {
-        int size = m_phrases.size();
-        return (index >= 0 && index < size) ? m_phrases[index] : NULL;    
+        return (index >= 0 && index < getPhrasesCount()) ? m_phrases[index] : NULL;    
+    }
+    int getPhrasesCount() const 
+    {
+        return m_phrases.size();
     }
 private:
     std::vector<Phrase*> m_phrases;
@@ -179,7 +192,7 @@ public:
         {
             result = it->second->addPhrase(p);
         }
-        return result;    
+        return result;
     }
     bool findPhrase(const tchar* t, tstring* result) const
     {
@@ -209,7 +222,23 @@ public:
         const Phrase *p2 = it->second->getPhrase(index);
         if (!p2)
             return false;
-        return p.equal(*p2);    
+        return p.equal(*p2);
+    }
+    int maxPhrasesLen() const 
+    {
+        int result = 0;
+        iterator it = m_data.begin(), it_end = m_data.end();
+        for (;it != it_end;++it)
+        {
+            if (it->first > result)
+                result = it->first;
+        }
+        return result;
+    }
+    PhrasesList* getPhrasesList(int index) const 
+    {
+        iterator it = m_data.find(index);
+        return (it != m_data.end()) ? it->second : NULL;
     }
 private:
     std::map<int, PhrasesList*> m_data;
@@ -238,7 +267,7 @@ int declension_find(lua_State *L)
         if (d->findPhrase(luaT_towstring(L, 2), &result_string))
         {
             luaT_pushwstring(L, result_string.c_str());
-            return 1;            
+            return 1;
         }
     }
     return 0;
@@ -251,6 +280,41 @@ int declension_load(lua_State *L)
 
 int declension_save(lua_State *L)
 {
+    if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
+    {
+        bool result = false;
+        tstring filepath(luaT_towstring(L,2));
+        Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
+        HANDLE hFile = CreateFile(filepath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE)
+        {
+            result = true;
+            tstring s; char br[3] = { 13, 10, 0 };
+            for (int i=1,e=d->maxPhrasesLen();i<=e;++i)
+            {
+                PhrasesList *list = d->getPhrasesList(i);
+                if (!list) continue;
+                for (int j=0,je=list->getPhrasesCount();j<je;++j)
+                {
+                    const Phrase *p = list->getPhrase(j);
+                    p->getFullPhrase(&s);
+                    u8string object(TW2U(s.c_str()));
+                    object.append(br);
+                    DWORD written = 0;
+                    DWORD towrite = object.length();
+                    if ( !WriteFile(hFile, object.c_str(), towrite, &written, NULL ) || written != towrite)
+                    {
+                        result = false;
+                        break;
+                    }
+                }
+                if (!result) break;
+            }
+            CloseHandle(hFile);
+        }
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
     return 0;
 }
 
@@ -261,7 +325,7 @@ int declension_clear(lua_State *L)
     {
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
         d->clear();
-        result = 1;       
+        result = 1;
     }
     lua_pushboolean(L, result);
     return 1;
