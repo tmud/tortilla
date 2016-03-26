@@ -1,0 +1,3 @@
+LIBRARY declension
+EXPORTS 
+	luaopen_declension

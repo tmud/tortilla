@@ -1441,6 +1441,24 @@ int string_upper(lua_State *L)
     return 0;
 }
 
+int string_lfup(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+         tstring s(luaT_towstring(L, 1));
+         if (s.empty())
+             return 1;
+         tstring_tolower(&s);
+         tchar first_letter[2] = { s.at(0), 0 };
+         tstring news(first_letter);
+         tstring_toupper(&news);
+         news.append(s.substr(1));
+         luaT_pushwstring(L, news.c_str());
+         return 1;
+    }
+    return 0;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -1452,6 +1470,7 @@ void reg_string(lua_State *L)
     regFunction(L, "strall", string_strall);
     regFunction(L, "lower", string_lower);
     regFunction(L, "upper", string_upper);
+    regFunction(L, "lfup", string_lfup);
     regIndexMt(L);
 
     // set metatable for lua string type

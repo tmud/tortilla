@@ -121,12 +121,13 @@ public:
 };
 
 bool  luaT_check(lua_State *L, int n, ...);
+int   luaT_regtype(lua_State *L, const char* type_name);
+const char* luaT_typename(lua_State* L, int index);
 bool  luaT_run(lua_State *L, const char* func, const char* op, ...);
 int   luaT_error(lua_State *L, const wchar_t* error_message);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
-const char* luaT_typename(lua_State* L, int index);
 bool  luaT_dostring(lua_State *L, const wchar_t* script_text);
 void  luaT_showLuaStack(lua_State* L, const wchar_t* label);
 void  luaT_showTableOnTop(lua_State* L, const wchar_t* label);

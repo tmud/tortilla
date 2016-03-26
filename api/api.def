@@ -26,6 +26,7 @@ EXPORTS
 	xml_get_attr_name
 	xml_get_attr_value
 	luaT_check
+	luaT_regtype
 	luaT_run
 	luaT_error
 	luaT_toobject

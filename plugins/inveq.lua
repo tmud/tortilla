@@ -7,6 +7,7 @@ local working = false
 local delta_eq = 0
 local catch_inv = false
 local begin_inv, empty_inv
+local decllib
 
 function inveq.name()
   return 'Инвентарь и экипировка'
@@ -20,12 +21,17 @@ function inveq.version()
   return '1.0'
 end
 
+local function istable(t)
+  return type(t) == 'table'
+end
+
+
 local r
 local function setTextColor(color)
   r:textColor(props.paletteColor(color))
 end
-local function istable(t)
-  return type(t) == 'table'
+local function update()
+  r:update()
 end
 
 function inveq.render()
@@ -62,7 +68,11 @@ end
 local function geteq(vd)
   vd:select(1)
   local p = vd:getParameter(1)
-  return p:lower()
+  return p:lfup()
+end
+
+local function similar(s1, s2)
+  return decllib:compare(s1, s2)
 end
 
 local function trigger_dress(s, vd)
@@ -71,20 +81,25 @@ local function trigger_dress(s, vd)
   local eq = geteq(vd)
   slot.equipment = eq
   for k,s in ipairs(inventory) do
-    if eq == s then
+    if similar(eq, s) then
       table.remove(inventory, k); break
     end
   end
-  r:update()
+  update()
+end
+
+-- отдельно для именительного падежа
+local function trigger_dress_ip(s, vd)
+  trigger_dress(s, vd)
 end
 
 local function trigger_undress(s, vd)
   local p = geteq(vd)
   for _,s in ipairs(slots) do
-    if s.equipment == p then
+    if similar(p, s.equipment) then
       s.equipment = ""
       table.insert(inventory, 1, p)
-      r:update()
+      update()
       break
     end
   end
@@ -93,14 +108,16 @@ end
 local function trigger_inventory_in(vd)
   local p = geteq(vd)
   table.insert(inventory, 1, p)
-  r:update()
+  update()
 end
 
 local function trigger_inventory_out(vd)
   local p = geteq(vd)
   for k,s in ipairs(inventory) do
-    if p == s then
-      table.remove(inventory, k); break
+    if similar(p, s) then
+      table.remove(inventory, k)
+      update()
+      break
     end
   end
 end
@@ -121,15 +138,20 @@ function inveq.before(v, vd)
   for i=index,size do
     vd:select(i)
     if vd:isPrompt() then catch_eq = false; break end
-    local item = vd:getText()
-    if item ~= "" and item ~= empty_inv then
-      inventory[#inventory+1] = item:lower()
+    if not vd:isSystem() and not vd:isGameCmd() then 
+      local item = vd:getText()
+      if item ~= "" and item ~= empty_inv then
+        inventory[#inventory+1] = item:lfup()
+      end
     end
   end
-  r:update()
+  update()
 end
 
 function inveq.init()
+  -- модуль для работы с падежами
+  decllib = decl.new()
+  if not decllib then return end
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
   local p = createPanel("right", 250)
   r = p:setRender(inveq.render)
@@ -148,8 +170,8 @@ function inveq.init()
       end
     end
   end
-  if istable(t.slots) and istable(t.dress) and istable(t.undress) then
-    -- собираем список слотов, которые будем отображать
+  if istable(t.slots) and istable(t.eqcmd) and istable(t.dress) and istable(t.undress) then
+    -- Cобираем список слотов, которые будем отображать
     slots = {}
     for _,s in ipairs(t.slots) do
       if s.id then
@@ -169,6 +191,11 @@ function inveq.init()
     end
     delta_eq = maxw + 10
     -- Создаем триггеры на одевание и раздевание
+    for _,v in pairs(t.eqcmd) do
+      if not v.id or slots[v.id] then
+        createTrigger(v.key, function(vd) trigger_dress_ip(v.id, vd) end)
+      end
+    end
     for _,v in pairs(t.dress) do
       if not v.id or slots[v.id] then
         createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
@@ -178,12 +205,13 @@ function inveq.init()
       createTrigger(v.key, function(vd) trigger_undress(v.id, vd) end)
     end
     -- Инвентарь
-    -- Триггер для начала отлова списка инвентаря
     empty_inv = t.inventory_empty
+    -- Триггер для отлова списка инвентаря
     begin_inv = nil
     if t.inventory_begin then
       begin_inv = createPcre(t.inventory_begin)
     end
+    -- Триггеры на добавление в инвентарь и удаления из него
     for _,v in pairs(t.inventory_in) do
       createTrigger(v, trigger_inventory_in)
     end
