@@ -15,9 +15,22 @@ bool PropertiesManager::init()
 {
     ProfilesGroupList groups;
     if (!groups.init())
-        return false;
-    m_first_startup = groups.isFirstStartUp();
+    {
+        return false; //todo
+    }
+    m_first_startup = false;
     int last = groups.getLast();
+    if (last == -1)
+    {
+        NewProfileHelper h;
+        if (!h.create(groups))
+            return false;
+        m_first_startup = h.isFirstStartUp();
+        const Profile &p = h.getProfile();
+        m_configName = p.group;
+        m_profileName = p.name;
+        return true;
+    }       
     groups.getName(last, &m_configName);
     return true;
 }
@@ -604,9 +617,16 @@ bool PropertiesManager::createNewProfile(const tstring& name)
 
 bool PropertiesManager::createCopyProfile(const tstring& from, const tstring& name)
 {
-    m_profileName = from;
+    NewProfileHelper h;
+    Profile src, dst;
+    src.group = dst.group = m_configName;
+    src.name = from; dst.name = name;
+    if (!h.copy(src, dst))
+        return false;
+
+    /*m_profileName = from;
     if (!loadProfileData())
-        { m_profileName = name; return false; }
+        { m_profileName = name; return false; }*/    
 
     m_profileName = name;
     m_propData.messages.initDefault();

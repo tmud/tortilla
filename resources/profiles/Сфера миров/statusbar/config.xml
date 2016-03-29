@@ -1,0 +1,70 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <baseparams> 
+    <hp value="H"/>
+    <mn value="M"/>
+    <mv value="V"/>
+    <dsu value="X"/>
+ </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mn value="2"/>
+    <mnid value="r1"/>
+    <mv value="3"/>
+    <mvid value="r1"/>
+    <xp value="1"/>
+    <xpid value="r2"/>
+  </maxparams>
+  <regexp>
+    <r1 value="^Вы имеете [0-9]+\(([0-9]+)\) здоровья, [0-9]+\(([0-9]+)\) маны, [0-9]+\(([0-9]+)\) энергии."/>
+    <r2 value="^Вы набрали ([0-9]+) опыта.*"/>
+  </regexp>
+  <levels>
+    <array index="1" value="0"/>
+    <array index="2" value="30"/>
+    <array index="3" value="55"/>
+    <array index="4" value="103"/>
+    <array index="5" value="193"/>
+    <array index="6" value="359"/>
+    <array index="7" value="667"/>
+    <array index="8" value="1242"/>
+    <array index="9" value="2310"/>
+    <array index="10" value="4297"/>
+    <array index="11" value="7993"/>
+    <array index="12" value="14867"/>
+    <array index="13" value="27654"/>
+    <array index="14" value="51437"/>
+    <array index="15" value="95673"/>
+    <array index="16" value="177951"/>
+    <array index="17" value="330990"/>
+    <array index="18" value="615642"/>
+    <array index="19" value="1145094"/>
+    <array index="20" value="2129875"/>
+    <array index="21" value="3961568"/>
+    <array index="22" value="7368517"/>
+    <array index="23" value="13705443"/>
+    <array index="24" value="25492124"/>
+    <array index="25" value="47415351"/>
+    <array index="26" value="88192553"/>
+    <array index="27" value="164038149"/>
+    <array index="28" value="305110957"/>
+    <array index="29" value="567506380"/>
+    <array index="30" value="1055561867"/>
+    <array index="31" value="1963345073"/>
+    <array index="32" value="3651821836"/>
+    <array index="33" value="6792388616"/>
+    <array index="34" value="12633842826"/>
+    <array index="35" value="23498947658"/>
+    <array index="36" value="43708042644"/>
+    <array index="37" value="81296959318"/>
+    <array index="38" value="151212344331"/>
+    <array index="39" value="281254960457"/>
+    <array index="40" value="523134226450"/>
+    <array index="41" value="973029661198"/>
+    <array index="42" value="1809835169828"/>
+    <array index="43" value="3366293415881"/>
+    <array index="44" value="6261305753539"/>
+    <array index="45" value="11646028701583"/>
+  </levels>
+</plugindata>

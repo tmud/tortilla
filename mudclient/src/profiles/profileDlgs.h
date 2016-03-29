@@ -44,9 +44,8 @@ private:
             {
                 tstring gname;
                 groups.getName(i, &gname);
-                ProfilesList plist;
-                plist.init(gname);
-                if (plist.getCount() == 0)
+                ProfilesList plist(gname);
+                if (plist.profiles.empty())
                     continue;
                 m_groups_name.push_back(gname);
                 m_groups_list.AddString(gname.c_str());
@@ -133,14 +132,9 @@ private:
             return;
 
         tstring gname = m_groups_name[sel];
-        ProfilesList plist;
-        plist.init(gname);
-        for (int i=0,e=plist.getCount(); i<e; ++i)
-        {
-            tstring name;
-            plist.getName(i, &name);
-            m_list.AddString(name.c_str());
-        }
+        ProfilesList plist(gname);
+        for (int i=0,e=plist.profiles.size(); i<e; ++i)
+            m_list.AddString(plist.profiles[i].c_str());
     }
 };
 
@@ -202,9 +196,8 @@ private:
             {
                 tstring gname;
                 groups.getName(i, &gname);
-                ProfilesList plist;
-                plist.init(gname);
-                if (plist.getCount() == 0)
+                ProfilesList plist(gname);
+                if (plist.profiles.empty())
                     continue;
                 m_groups_name.push_back(gname);
                 m_groups_list.AddString(gname.c_str());
@@ -276,14 +269,9 @@ private:
             return;
 
         tstring gname = m_groups_name[sel-1];
-        ProfilesList plist;
-        plist.init(gname);
-        for (int i = 0, e = plist.getCount(); i<e; ++i)
-        {
-            tstring name;
-            plist.getName(i, &name);
-            m_list.AddString(name.c_str());
-        }
+        ProfilesList plist(gname);
+        for (int i = 0, e = plist.profiles.size(); i<e; ++i)
+            m_list.AddString(plist.profiles[i].c_str());
     }
 
     void updateOK()
@@ -355,12 +343,9 @@ private:
         m_list.AddString(text.c_str());
         m_list.SetCurSel(0);
 
-        for (int i=0,e=m_plist.getCount(); i<e; ++i)
-        {
-            tstring profile;
-            m_plist.getName(i, &profile);
-            m_list.AddString(profile.c_str());
-        }
+        for (int i=0,e=m_plist.profiles.size(); i<e; ++i)
+            m_list.AddString(m_plist.profiles[i].c_str());
+
         CenterWindow(GetParent());
         m_ok.EnableWindow(FALSE);
         m_list.SetFocus();
@@ -375,11 +360,9 @@ private:
         if (!text.empty())
         {
             enable_ok = TRUE;
-            for (int i=0,e=m_plist.getCount(); i<e; ++i)
+            for (int i=0,e=m_plist.profiles.size(); i<e; ++i)
             {
-                tstring profile;
-                m_plist.getName(i, &profile);
-                if (profile == text)
+                if (m_plist.profiles[i] == text)
                     { enable_ok = FALSE; break; }
             }
             if (enable_ok)
@@ -397,7 +380,7 @@ private:
         getWindowText(m_name, &m_profile_name);
         int src_index = m_list.GetCurSel();
         if (src_index != 0)
-            m_plist.getName(src_index-1, &m_profile_source);
+            m_profile_source = m_plist.profiles[src_index-1];
         EndDialog(IDOK);
         return 0;
     }
@@ -407,4 +390,157 @@ private:
 		EndDialog(wID);
 		return 0;
 	}
+};
+
+class CStartupWorldDlg : public CDialogImpl<CStartupWorldDlg>
+{
+    CListBox m_list;
+    CButton  m_show_about;
+    CButton  m_ok;
+    CEdit    m_edit_profile_folder, m_edit_profile_name;
+    std::vector<tstring> m_data;
+    int  m_selected_item;
+    bool m_show_help;
+    tstring m_profile_name;
+    tstring m_profile_group;
+    tstring m_source_name;
+    tstring m_sorce_group;
+    bool m_folder_changed;
+
+public:
+    CStartupWorldDlg() : m_selected_item(-1), m_show_help(true), m_folder_changed(false) {}
+    enum { IDD = IDD_STARTUP_WORLD };
+    void setList(const std::vector<tstring>& list)
+    {
+        m_data.assign(list.begin(), list.end());
+    }
+    //int getItem() const { return m_selected_item; }
+    bool getHelpState() const { return m_show_help; }
+    void getProfile(Profile *p) const 
+    {
+        p->group.assign(m_profile_group);
+        p->name.assign(m_profile_name);
+    }
+    void getSourceProfile(Profile *p) const
+    {
+        p->name.assign(m_source_name);
+        p->group.assign(m_sorce_group);
+    }
+private:
+    BEGIN_MSG_MAP(CStartupWorldDlg)
+        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+        MESSAGE_HANDLER(WM_USER+1, OnFocus)
+        COMMAND_ID_HANDLER(IDOK, OnOk)
+        COMMAND_ID_HANDLER(IDCANCEL, OnCancel)
+        COMMAND_HANDLER(IDC_EDIT_STARTUP_FOLDER, EN_CHANGE, OnFolderChanged)
+        COMMAND_HANDLER(IDC_EDIT_STARTUP_PROFILE, EN_CHANGE, OnNameChanged)
+        COMMAND_HANDLER(IDC_LIST_STARTUP_WORLD, LBN_SELCHANGE, OnListItemChanged)
+    END_MSG_MAP()
+
+    void getSeletedGroup(tstring *group)
+    {
+        int idx = m_list.GetCurSel();            
+        int len = m_list.GetTextLen(idx) + 1;
+        MemoryBuffer g(len * sizeof(tchar));
+        tchar *buffer = (tchar*)g.getData();
+        m_list.GetText(idx, buffer);
+        group->assign(buffer);
+    }
+
+    LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        CenterWindow(GetParent());
+        m_list.Attach(GetDlgItem(IDC_LIST_STARTUP_WORLD));
+        m_show_about.Attach(GetDlgItem(IDC_CHECK_OPEN_ABOUT));
+        m_ok.Attach(GetDlgItem(IDOK));
+        m_edit_profile_folder.Attach(GetDlgItem(IDC_EDIT_STARTUP_FOLDER));
+        m_edit_profile_name.Attach(GetDlgItem(IDC_EDIT_STARTUP_PROFILE));
+        m_edit_profile_name.SetWindowText(L"player");
+        m_list.AddString(L"Создать пустой профиль");
+        for (int i=0,e=m_data.size();i<e;++i)
+        {
+            if (m_data[i]==L"mudworld") continue;
+            m_list.AddString(m_data[i].c_str());
+        }
+        m_show_about.SetCheck(BST_CHECKED);
+        PostMessage(WM_USER+1, 0, 0);
+        return TRUE;
+    }
+
+    LRESULT OnOk(WORD, WORD wID, HWND, BOOL&)
+    {
+        m_selected_item = m_list.GetCurSel();
+        if (m_selected_item > 0) {
+            getSeletedGroup(&m_sorce_group);
+        } else {
+            m_sorce_group = L"mudworld";
+        }
+        m_source_name = L"player";            
+        m_show_help = (m_show_about.GetCheck() == BST_CHECKED) ? true : false;
+        getWindowText(m_edit_profile_name, &m_profile_name);
+        getWindowText(m_edit_profile_folder, &m_profile_group);        
+        EndDialog(IDOK);
+        return 0;
+    }
+
+    LRESULT OnCancel(WORD, WORD wID, HWND, BOOL&)
+    {
+        m_sorce_group = L"mudworld";
+        m_source_name = L"player";
+        m_profile_group = m_sorce_group;
+        m_profile_name = m_source_name;
+        EndDialog(IDCANCEL);
+        return 0;
+    }
+
+    LRESULT OnFocus(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_list.SetCurSel(0);
+        m_list.SetFocus();
+        if (!m_folder_changed)
+        {
+            m_edit_profile_folder.SetWindowText(L"mudworld");
+            m_folder_changed = false;
+        }
+        return 0;
+    }
+ 
+    LRESULT OnListItemChanged(WORD, WORD, HWND, BOOL&)
+    {
+        if (!m_folder_changed)
+        {
+            int idx = m_list.GetCurSel();
+            if (idx == 0) {
+               m_edit_profile_folder.SetWindowText(L"mudworld");
+               m_folder_changed = false;
+               return 0;
+            }
+            tstring group;
+            getSeletedGroup(&group);
+            m_edit_profile_folder.SetWindowText(group.c_str());
+            m_folder_changed = false;
+        }
+        return 0;
+    }
+
+    LRESULT OnFolderChanged(WORD, WORD, HWND, BOOL&)
+    {
+        m_folder_changed = true;
+        tstring text;
+        getWindowText(m_edit_profile_folder, &text);
+        tstring_trim(&text);
+        BOOL ok = (!text.empty() && isOnlyFilnameSymbols(text)) ? TRUE : FALSE;
+        m_ok.EnableWindow(ok);
+        return 0;
+    }
+
+    LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
+    {
+        tstring text;
+        getWindowText(m_edit_profile_name, &text);
+        tstring_trim(&text);
+        BOOL ok = (!text.empty() && isOnlyFilnameSymbols(text)) ? TRUE : FALSE;
+        m_ok.EnableWindow(ok);
+        return 0;
+    }
 };

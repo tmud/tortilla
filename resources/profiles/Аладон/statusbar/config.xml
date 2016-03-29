@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <baseparams>
+    <hp value="hp"/>
+    <mn value="m "/>
+    <mv value="mv"/>
+  </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mn value="1"/>
+    <mnid value="r2"/>
+    <mv value="1"/>
+    <mvid value="r3"/>
+    <xp value="1"/>
+    <xpid value="r4"/>
+    <dsu value="2"/>
+    <dsuid value="r4"/>
+ </maxparams>
+  <regexp>
+    <r1 value="^\| Жизнь.*?[0-9]+/([0-9]+)"/>
+    <r2 value="^\| Магия.*?[0-9]+/([0-9]+)"/>
+    <r3 value="^\| Шаги.*?[0-9]+/([0-9]+)"/>
+    <r4 value="^\|.*очков: +([0-9]+) +до уровня: +([0-9]+)"/>
+  </regexp>
+</plugindata>
