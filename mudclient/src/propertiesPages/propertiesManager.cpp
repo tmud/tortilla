@@ -16,6 +16,14 @@ bool PropertiesManager::init()
     ProfilesGroupList groups;
     groups.init();
 
+    for (int i=0,e=groups.getCount(); i<e; ++i)
+    {
+        tstring group;
+        groups.getName(i, &group);
+        ProfilePath pp(group, L"profiles\\player.txml");
+        DeleteFile(pp);    
+    }
+
     m_first_startup = false;
     int last = groups.getLast();
     if (last == -1)
