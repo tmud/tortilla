@@ -14,24 +14,20 @@ PropertiesManager::~PropertiesManager()
 bool PropertiesManager::init()
 {
     ProfilesGroupList groups;
-    if (!groups.init())
-    {
-        return false; //todo
-    }
+    groups.init();
+
     m_first_startup = false;
     int last = groups.getLast();
     if (last == -1)
     {
         NewProfileHelper h;
-        if (!h.create(groups))
+        if (!h.createFromResources(groups))
             return false;
         m_first_startup = h.isFirstStartUp();
-        const Profile &p = h.getProfile();
-        m_configName = p.group;
-        m_profileName = p.name;
+        m_profile =  h.getProfile();
         return true;
-    }       
-    groups.getName(last, &m_configName);
+    }
+    groups.getName(last, &m_profile.group);
     return true;
 }
 
@@ -58,7 +54,7 @@ bool PropertiesManager::loadSettings()
     if (profile.empty())
         return false;
 
-    m_profileName.assign( profile );
+    m_profile.name.assign( profile );
     sd.deletenode();
     return true;
 }
@@ -88,7 +84,7 @@ bool PropertiesManager::loadProfileData()
 {
     m_propData.initAllDefault();
     tstring profile(L"profiles\\");
-    profile.append(m_profileName);
+    profile.append(m_profile.name);
     profile.append(L".xml");
 
     xml::node sd;
@@ -364,7 +360,7 @@ bool PropertiesManager::saveProfileData()
     saveValue(ms, L"tabwords", d.tabwords);
 
     tstring config(L"profiles\\");
-    config.append(m_profileName);
+    config.append(m_profile.name);
     config.append(L".xml");
 
     bool result = saveToFile(sd, config);
@@ -393,7 +389,7 @@ bool PropertiesManager::saveSettings()
 {
     xml::node sd(L"settings");
     xml::node n = sd.createsubnode(L"profile");
-    n.settext(m_profileName.c_str());
+    n.settext(m_profile.name.c_str());
     bool result = saveToFile(sd, L"settings.xml");
     sd.deletenode();
     return result;
@@ -571,13 +567,13 @@ void PropertiesManager::saveRgbColor(xml::node parent, const tstring& name, COLO
 
 bool PropertiesManager::loadFromFile(xml::node& node, const tstring& file)
 {
-    ProfilePath config(m_configName, file);
+    ProfilePath config(m_profile.group, file);
     return (node.load(config)) ? true : false;
 }
 
 bool PropertiesManager::saveToFile(xml::node node, const tstring& file)
 {
-    ProfilePath config(m_configName, file);
+    ProfilePath config(m_profile.group, file);
     return (node.save(config)) ? true : false;
 }
 
@@ -605,40 +601,34 @@ void PropertiesManager::saveRECT(xml::node n, const RECT &rc)
     n.set(L"bottom", rc.bottom);
 }
 //----------------------------------------------------------------------------
-bool PropertiesManager::createNewProfile(const tstring& name)
+bool PropertiesManager::createEmptyProfile(const Profile& profile)
 {
     m_propData.initAllDefault();
-    m_profileName = name;
     m_propData.addDefaultGroup();
+    m_profile = profile;
+    ProfileDirHelper dh;
+    if (!dh.makeDir(m_profile.group, L"profiles"))
+        return false;
     bool result = saveProfileData();
     saveSettings();
     return result;
 }
 
-bool PropertiesManager::createCopyProfile(const tstring& from, const tstring& name)
+bool PropertiesManager::copyProfile(const Profile& src, const Profile& dst)
 {
     NewProfileHelper h;
-    Profile src, dst;
-    src.group = dst.group = m_configName;
-    src.name = from; dst.name = name;
     if (!h.copy(src, dst))
         return false;
-
-    /*m_profileName = from;
-    if (!loadProfileData())
-        { m_profileName = name; return false; }*/    
-
-    m_profileName = name;
-    m_propData.messages.initDefault();
+    m_profile = dst;
+    //m_propData.messages.initDefault();
     bool result = saveProfileData();
     saveSettings();
     return result;
 }
 
-bool PropertiesManager::loadNewProfile(const tstring& group, const tstring& name)
+bool PropertiesManager::loadProfile(const Profile& profile)
 {
-    m_configName = group;
-    m_profileName = name;
+    m_profile = profile;
     if (loadProfileData())
     {
         loadHistory();
@@ -646,32 +636,4 @@ bool PropertiesManager::loadNewProfile(const tstring& group, const tstring& name
         return true;
     }
     return false;
-}
-
-bool PropertiesManager::createNewProfile(const tstring& group, const tstring& name)
-{
-    m_propData.initAllDefault();
-    m_propData.addDefaultGroup();
-    m_configName = group;
-    m_profileName = name;
-    ProfileDirHelper dh;
-    if (!dh.makeDir(m_configName, L"profiles"))
-        return false;
-    bool result = saveProfileData();
-    saveSettings();
-    return result;
-}
-
-bool PropertiesManager::renameProfile(const tstring& group, const tstring& name)
-{
-    m_configName = group;
-    m_profileName = name;
-    m_propData.initPlugins();
-    ProfileDirHelper dh;
-    if (!dh.makeDir(m_configName, L"profiles"))
-        return false;
-    m_propData.messages.initDefault();
-    bool result = saveProfileData();
-    saveSettings();
-    return result;
 }

@@ -15,10 +15,10 @@ public:
    enum { IDD = IDD_LOAD_PROFILE };
    LoadProfileDlg() : m_group_idx(-1) {}
 
-   void getProfiles(tstring *group, tstring *name)
+   void getProfile(Profile *profile)
    {
-       group->assign(m_profile_group);
-       name->assign(m_profile_name);
+       profile->group.assign(m_profile_group);
+       profile->name.assign(m_profile_name);
    }
 
 private:
@@ -32,13 +32,13 @@ private:
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
-	{   
+	{
         m_groups_list.Attach(GetDlgItem(IDC_LIST_PROFILE_GROUP));
         m_list.Attach(GetDlgItem(IDC_LIST_PROFILE));
         m_ok.Attach(GetDlgItem(IDOK));
 
         ProfilesGroupList groups;
-        if (groups.init())
+        groups.init();
         {
             for (int i=0,e=groups.getCount(); i<e; ++i)
             {
@@ -138,12 +138,10 @@ private:
     }
 };
 
-struct NewWorldDlgData
+struct CopyProfileData
 {
-    tstring name;
-    tstring profile;
-    tstring from_name;
-    tstring from_profile;
+    Profile dst;
+    Profile src;
 };
 
 class NewWorldDlg : public CDialogImpl<NewWorldDlg>
@@ -155,15 +153,15 @@ class NewWorldDlg : public CDialogImpl<NewWorldDlg>
     CButton m_ok;
     std::vector<tstring> m_groups_name;
     int m_group_idx;
-    NewWorldDlgData m_nwdata;
+    CopyProfileData m_data;
 
 public:
     enum { IDD = IDD_NEW_WORLD };
     NewWorldDlg() : m_group_idx(-1) {}
 
-    void getData(NewWorldDlgData* data)
+    void getData(CopyProfileData* data)
     {
-        *data = m_nwdata;
+        *data = m_data;
     }
 
 private:
@@ -190,7 +188,7 @@ private:
         m_group_idx = 0;
 
         ProfilesGroupList groups;
-        if (groups.init())
+        groups.init();
         {
             for (int i = 0, e = groups.getCount(); i<e; ++i)
             {
@@ -213,18 +211,18 @@ private:
 
     LRESULT OnOk(WORD, WORD, HWND, BOOL&)
     {
-        getWindowText(m_newworld_name, &m_nwdata.name);
-        getWindowText(m_newworld_profile, &m_nwdata.profile);
+        getWindowText(m_newworld_name, &m_data.dst.group);
+        getWindowText(m_newworld_profile, &m_data.dst.name);
         int group = m_groups_list.GetCurSel();
         if (group != 0)
         {
-            m_nwdata.from_name = m_groups_name[group - 1];
+            m_data.src.group = m_groups_name[group - 1];
             int idx = m_list.GetCurSel();
             int len = m_list.GetTextLen(idx) + 1;
-            MemoryBuffer g(len * sizeof(WCHAR));
-            WCHAR *buffer = (WCHAR*)g.getData();
+            MemoryBuffer g(len * sizeof(tchar));
+            tchar *buffer = (tchar*)g.getData();
             m_list.GetText(idx, buffer);
-            m_nwdata.from_profile = buffer;
+            m_data.src.name = buffer;
         }
         EndDialog(IDOK);
         return 0;
@@ -308,6 +306,7 @@ class NewProfileDlg : public CDialogImpl<NewProfileDlg>
     CEdit m_name;
     ProfilesList m_plist;
     CButton m_ok;
+    tstring m_group;
     tstring m_profile_source;
     tstring m_profile_name;
 
@@ -316,13 +315,16 @@ public:
 
    void loadProfiles(const tstring& group)
    {
+        m_group = group;
         m_plist.init(group);
    }
 
-   void getProfiles(tstring *source, tstring *name)
+   void getProfile(CopyProfileData *profile)
    {
-       source->assign(m_profile_source);
-       name->assign(m_profile_name);
+       profile->src.group = m_group;
+       profile->src.name = m_profile_source;
+       profile->dst.group = m_group;
+       profile->dst.name = m_profile_name;
    }
 
 private:
@@ -416,7 +418,7 @@ public:
     }
     //int getItem() const { return m_selected_item; }
     bool getHelpState() const { return m_show_help; }
-    void getProfile(Profile *p) const 
+    void getProfile(Profile *p) const
     {
         p->group.assign(m_profile_group);
         p->name.assign(m_profile_name);
@@ -439,7 +441,7 @@ private:
 
     void getSeletedGroup(tstring *group)
     {
-        int idx = m_list.GetCurSel();            
+        int idx = m_list.GetCurSel();
         int len = m_list.GetTextLen(idx) + 1;
         MemoryBuffer g(len * sizeof(tchar));
         tchar *buffer = (tchar*)g.getData();
@@ -455,11 +457,11 @@ private:
         m_ok.Attach(GetDlgItem(IDOK));
         m_edit_profile_folder.Attach(GetDlgItem(IDC_EDIT_STARTUP_FOLDER));
         m_edit_profile_name.Attach(GetDlgItem(IDC_EDIT_STARTUP_PROFILE));
-        m_edit_profile_name.SetWindowText(L"player");
+        m_edit_profile_name.SetWindowText(default_profile_name);
         m_list.AddString(L"Создать пустой профиль");
         for (int i=0,e=m_data.size();i<e;++i)
         {
-            if (m_data[i]==L"mudworld") continue;
+            if (m_data[i]==default_profile_folder) continue;
             m_list.AddString(m_data[i].c_str());
         }
         m_show_about.SetCheck(BST_CHECKED);
@@ -473,20 +475,20 @@ private:
         if (m_selected_item > 0) {
             getSeletedGroup(&m_sorce_group);
         } else {
-            m_sorce_group = L"mudworld";
+            m_sorce_group = default_profile_folder;
         }
-        m_source_name = L"player";            
+        m_source_name = default_profile_name;
         m_show_help = (m_show_about.GetCheck() == BST_CHECKED) ? true : false;
         getWindowText(m_edit_profile_name, &m_profile_name);
-        getWindowText(m_edit_profile_folder, &m_profile_group);        
+        getWindowText(m_edit_profile_folder, &m_profile_group);
         EndDialog(IDOK);
         return 0;
     }
 
     LRESULT OnCancel(WORD, WORD wID, HWND, BOOL&)
     {
-        m_sorce_group = L"mudworld";
-        m_source_name = L"player";
+        m_sorce_group = default_profile_folder;
+        m_source_name = default_profile_name;
         m_profile_group = m_sorce_group;
         m_profile_name = m_source_name;
         EndDialog(IDCANCEL);
@@ -499,7 +501,7 @@ private:
         m_list.SetFocus();
         if (!m_folder_changed)
         {
-            m_edit_profile_folder.SetWindowText(L"mudworld");
+            m_edit_profile_folder.SetWindowText(default_profile_folder);
             m_folder_changed = false;
         }
         return 0;
@@ -511,7 +513,7 @@ private:
         {
             int idx = m_list.GetCurSel();
             if (idx == 0) {
-               m_edit_profile_folder.SetWindowText(L"mudworld");
+               m_edit_profile_folder.SetWindowText(default_profile_folder);
                m_folder_changed = false;
                return 0;
             }

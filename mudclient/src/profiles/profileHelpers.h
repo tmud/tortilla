@@ -1,10 +1,5 @@
 #pragma once
-
-struct Profile
-{
-    tstring group;
-    tstring name;
-};
+#include "propertiesPages/propertiesData.h"
 
 class ProfilesGroupList
 {
@@ -12,7 +7,7 @@ class ProfilesGroupList
     int m_last_accessed;
 public:
     ProfilesGroupList();
-    bool init();
+    void init();
     int  getCount() const;
     int  getLast() const;
     void getName(int index, tstring* name) const;
@@ -45,15 +40,13 @@ class NewProfileHelper
     Profile m_created_profile;
 public:
     NewProfileHelper();
-    bool create(const ProfilesGroupList& groups);
+    bool createFromResources(const ProfilesGroupList& groups);
     bool copy(const Profile& src, const Profile& dst);
     bool isFirstStartUp() const { return m_first_startup; }
     const Profile& getProfile() const { return m_created_profile; }
 
-    /*bool initDefaultProfile();
-    bool copyProfileFile(const tstring& group, const tstring &srcfile, const tstring& profile);
-    */
+private:
     bool createSettingsFile(const Profile& profile);
     bool createEmptyProfile(const Profile& profile);
-    bool copyProfile(const Profile& src, const Profile& dst);    
+    bool createFromResource(const Profile& src, const Profile& dst);
 };

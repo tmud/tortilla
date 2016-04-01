@@ -8,6 +8,12 @@
 #define MAX_VIEW_HISTORY_SIZE 300000
 #define TOTAL_MAX_VIEW_HISTORY_SIZE 500000
 
+struct Profile
+{
+    tstring group;
+    tstring name;
+};
+
 struct PropertiesHighlight
 {
     PropertiesHighlight() : textcolor(RGB(192,192,192)), bkgcolor(RGB(0,0,0)),
