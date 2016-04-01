@@ -172,13 +172,29 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
 
 bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
 {
-    ProfilePath pp(src.group, L"");
-    tstring p(pp);
-    FilesList fl(p);
+    ProfilesList srcprofiles;
+
+    tstring srcpath;
+    if (src.name.empty())
+    {
+        tstring path(L"resources\\profiles\\");
+        path.append(src.group);
+        srcpath.assign(path);
+    }
+    else
+    {
+        srcprofiles.init(src.group);
+        std::vector<tstring>& sp = srcprofiles.profiles;
+        sp.erase(std::remove(sp.begin(), sp.end(), src.name), sp.end());
+        ProfilePath pp(src.group, L"");
+        srcpath.assign(pp);
+                
+    }
+    FilesList fl(srcpath);
     tstring path(fl.dirs[0]);
     size_t path_len = path.length()+1;
 
-    if (src.group != dst.group)
+    if (src.group != dst.group || src.name.empty())
     {
         // создаем каталоги в папке назначения
         ProfileDirHelper dh;
@@ -205,8 +221,12 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
         size_t ext_pos = filename.rfind(L".");
         if (ext_pos != tstring::npos)
             name = filename.substr(0, ext_pos);
+        std::vector<tstring>& sp = srcprofiles.profiles;
+        if (std::find(sp.begin(), sp.end(), name) != sp.end()) {
+            continue;
+        }
         bool name_changed = false;
-        if (name == src.name)
+        if (name == src.name || (src.name.empty() && name == default_profile_name))
             { name = dst.name; name_changed = true; }
         if (ext_pos != tstring::npos)
             name.append(filename.substr(ext_pos));

@@ -519,7 +519,7 @@ int loadTable(lua_State *L)
     size_t pos = filename.rfind(L".");
     if (pos != -1)
         ext.assign(filename.substr(pos+1));
-    if (ext != L"xml")
+    if (ext.find(L"xml") == tstring::npos)
     {
         return loadTableLua(L, filename);
     }
@@ -813,7 +813,7 @@ int saveTable(lua_State *L)
     size_t pos = filename.rfind(L".");
     if (pos != -1)
         ext.assign(filename.substr(pos+1));
-    if (ext != L"xml")
+    if (ext.find(L"xml") == tstring::npos)
     {
        LuaRecorder lr;
        std::vector<saveDataNode*> stack;

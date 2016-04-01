@@ -1,5 +1,6 @@
 #pragma once
 #include "profileHelpers.h"
+#include "profilesPath.h"
 
 class LoadProfileDlg : public CDialogImpl<LoadProfileDlg>
 {
@@ -154,16 +155,19 @@ class NewWorldDlg : public CDialogImpl<NewWorldDlg>
     std::vector<tstring> m_groups_name;
     int m_group_idx;
     CopyProfileData m_data;
+    std::vector<tstring> m_templates;
+    bool m_group_name_changed;
 
 public:
     enum { IDD = IDD_NEW_WORLD };
-    NewWorldDlg() : m_group_idx(-1) {}
-
+    NewWorldDlg() : m_group_idx(-1), m_group_name_changed(false)
+    {
+        readTemplates();
+    }
     void getData(CopyProfileData* data)
     {
         *data = m_data;
     }
-
 private:
     BEGIN_MSG_MAP(NewWorldDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
@@ -172,7 +176,7 @@ private:
         COMMAND_HANDLER(IDC_LIST_PROFILE_GROUP, LBN_SELCHANGE, OnGroupChanged)
         COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_SELCHANGE, OnProfileChanged)
         COMMAND_HANDLER(IDC_EDIT_NEWWORLD_NAME, EN_CHANGE, OnNameChanged)
-        COMMAND_HANDLER(IDC_EDIT_NEWWORLD_PROFILE, EN_CHANGE, OnNameChanged)
+        COMMAND_HANDLER(IDC_EDIT_NEWWORLD_PROFILE, EN_CHANGE, OnProfileChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -200,6 +204,15 @@ private:
                 m_groups_name.push_back(gname);
                 m_groups_list.AddString(gname.c_str());
             }
+            for (int i = 0, e = m_templates.size(); i<e; ++i)
+            {
+                const tstring& t = m_templates[i];
+                if (std::find(m_groups_name.begin(), m_groups_name.end(), t) == m_groups_name.end())
+                {
+                    m_groups_name.push_back(t);
+                    m_groups_list.AddString(t.c_str());
+                }
+            }
             updateProfilesList();
         }
 
@@ -216,13 +229,20 @@ private:
         int group = m_groups_list.GetCurSel();
         if (group != 0)
         {
+            int name_index = m_list.GetCurSel();
             m_data.src.group = m_groups_name[group - 1];
+            const tstring &g  = m_data.src.group;
+            bool with_default = (std::find(m_templates.begin(), m_templates.end(), g) != m_templates.end()) ? true : false;
             int idx = m_list.GetCurSel();
             int len = m_list.GetTextLen(idx) + 1;
-            MemoryBuffer g(len * sizeof(tchar));
-            tchar *buffer = (tchar*)g.getData();
+            MemoryBuffer gn(len * sizeof(tchar));
+            tchar *buffer = (tchar*)gn.getData();
             m_list.GetText(idx, buffer);
             m_data.src.name = buffer;
+            if (with_default && idx == 0)
+            {
+                m_data.src.name.clear();
+            }
         }
         EndDialog(IDOK);
         return 0;
@@ -236,6 +256,17 @@ private:
 
     LRESULT OnGroupChanged(WORD, WORD, HWND, BOOL&)
     {
+        if (!m_group_name_changed)
+        {
+            tstring group;
+            int sel = m_groups_list.GetCurSel();
+            if (sel != -1 && sel != 0)
+                m_newworld_name.SetWindowTextW(m_groups_name[sel-1].c_str());
+            else
+                m_newworld_name.SetWindowTextW(L"");
+            m_group_name_changed = false;
+        }
+
         int idx = m_groups_list.GetCurSel();
         if (idx != m_group_idx)
         {
@@ -255,6 +286,7 @@ private:
 
     LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
     {
+        m_group_name_changed = true;
         updateOK();
         return 0;
     }
@@ -265,11 +297,15 @@ private:
         int sel = m_groups_list.GetCurSel();
         if (sel == -1 || sel == 0)
             return;
-
         tstring gname = m_groups_name[sel-1];
+        if (std::find(m_templates.begin(), m_templates.end(), gname) != m_templates.end())
+            m_list.AddString(L"- по умолчанию -");
         ProfilesList plist(gname);
         for (int i = 0, e = plist.profiles.size(); i<e; ++i)
-            m_list.AddString(plist.profiles[i].c_str());
+        {
+            const tstring &p = plist.profiles[i];
+            m_list.AddString(p.c_str());
+        }
     }
 
     void updateOK()
@@ -281,10 +317,10 @@ private:
         if (!name.empty() && !profile.empty() && isOnlyFilnameSymbols(name) && isOnlyFilnameSymbols(profile))
         {
             bool confilcted_name = false;
-            for (int i = 0, e = m_groups_name.size(); i < e; ++i)
+            /*for (int i = 0, e = m_profiles_name.size(); i < e; ++i)
             {
-                if (m_groups_name[i] == name) { confilcted_name = true; break; }
-            }
+                if (m_profiles_name[i] == profile) { confilcted_name = true; break; }
+            }*/
             if (!confilcted_name)
             {
                 int group = m_groups_list.GetCurSel();
@@ -297,6 +333,21 @@ private:
             }
         }
         m_ok.EnableWindow(ok_status);
+    }
+
+    void readTemplates()
+    {
+        ChangeDir cd;
+        if (cd.changeDir(L"resources"))
+        {
+            ProfilesDirsListHelper ph(L"profiles");
+            for (int i=0,e=ph.dirs.size();i<e;++i)
+            {
+                const tstring& d = ph.dirs[i];
+                if (d == default_profile_folder) continue;
+                m_templates.push_back(d);
+            }
+        }
     }
 };
 
