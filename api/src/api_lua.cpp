@@ -32,6 +32,32 @@ void getmetatable(lua_State *L, int type)
     }
 }
 
+const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
+int plugin_lualine(lua_State *L) { lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar); return ar.currentline; }
+int luaT_invargs(lua_State *L, const char* func)
+{
+    /*//tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
+    int n = lua_gettop(L);
+    swprintf(plugin_buffer(), L"'%s': %s:%d: %s(%d): ", plugin_name(), fname, plugin_lualine(L), p.c_str(), n);
+    tstring log(plugin_buffer());
+    for (int i = 1; i <= n; ++i)
+    {
+        int t = lua_type(L, i);
+        if (t >= 0 && t < LUA_NUMTAGS)
+        {
+            tstring type(lua_types_str[t]);
+            if (t == LUA_TUSERDATA)
+                type.assign(TU2W(luaT_typename(L, i)));
+            log.append(type);
+        }
+        else
+            log.append(L"unknown");
+        if (i != n) log.append(L",");
+    }
+    pluginLogOut(log);*/
+    return 0;
+}
+
 int luaT_regtype(lua_State *L, const char* type_name)
 {
     int count = LUAT_LAST - LUAT_WINDOW + 1;

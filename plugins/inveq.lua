@@ -53,7 +53,7 @@ function inveq.render()
     if eq then setTextColor(colors.equipment) r:print(x+delta_eq, y, eq) end
     y = y + h
   end
-  y = y + h
+  y = y + 8
   setTextColor(colors.header)
   r:print(x, y, 'Инвентарь:')
   y = y + h
@@ -154,6 +154,7 @@ function inveq.init()
   -- модуль для работы с падежами
   decllib = decl.new()
   if not decllib then return end
+  decllib:load( getPath("words.lst") )
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
   local p = createPanel("right", 250)
   r = p:setRender(inveq.render)

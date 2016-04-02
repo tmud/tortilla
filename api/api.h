@@ -125,6 +125,7 @@ int   luaT_regtype(lua_State *L, const char* type_name);
 const char* luaT_typename(lua_State* L, int index);
 bool  luaT_run(lua_State *L, const char* func, const char* op, ...);
 int   luaT_error(lua_State *L, const wchar_t* error_message);
+int   luaT_invargs(lua_State *L, const char* func);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
