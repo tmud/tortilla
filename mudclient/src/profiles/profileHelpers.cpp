@@ -172,6 +172,13 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
 
 bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
 {
+    bool dst_group_new = true;
+    {
+        ProfilePath dp(dst.group, L"");
+        if (GetFileAttributes(dp) != INVALID_FILE_ATTRIBUTES)
+            dst_group_new = false;
+    }
+
     ProfilesList srcprofiles;
 
     tstring srcpath;
@@ -222,8 +229,14 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
         if (ext_pos != tstring::npos)
             name = filename.substr(0, ext_pos);
         std::vector<tstring>& sp = srcprofiles.profiles;
+        if (name.empty())   // no name, only extension
+            continue;
         if (std::find(sp.begin(), sp.end(), name) != sp.end()) {
             continue;
+        }
+        if (src.group != dst.group && !dst_group_new) {
+            if (src.name != name)
+                continue;
         }
         bool name_changed = false;
         if (name == src.name || (src.name.empty() && name == default_profile_name))

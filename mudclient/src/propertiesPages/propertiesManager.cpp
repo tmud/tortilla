@@ -627,11 +627,7 @@ bool PropertiesManager::copyProfile(const Profile& src, const Profile& dst)
     NewProfileHelper h;
     if (!h.copy(src, dst))
         return false;
-    m_profile = dst;
-    //m_propData.messages.initDefault();
-    bool result = saveProfileData();
-    saveSettings();
-    return result;
+    return loadProfile(dst);
 }
 
 bool PropertiesManager::loadProfile(const Profile& profile)
