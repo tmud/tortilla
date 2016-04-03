@@ -33,29 +33,49 @@ void getmetatable(lua_State *L, int type)
 }
 
 const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
-int plugin_lualine(lua_State *L) { lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar); return ar.currentline; }
-int luaT_invargs(lua_State *L, const char* func)
+int luaT_push_args(lua_State *L, const char* func)
 {
-    /*//tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
     int n = lua_gettop(L);
-    swprintf(plugin_buffer(), L"'%s': %s:%d: %s(%d): ", plugin_name(), fname, plugin_lualine(L), p.c_str(), n);
-    tstring log(plugin_buffer());
+    lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar);
+    std::wstring log( TA2W(ar.short_src) );
+    log.append(L":");
+    log.append( TA2W(func) );
+    log.append(L":");
+    wchar_t buffer[16];
+    _itow(ar.currentline, buffer, 10);
+    log.append(buffer);
+    log.append(L" (");
+    _itow(n, buffer, 10);
+    log.append(buffer);
+    log.append(L"):");
     for (int i = 1; i <= n; ++i)
     {
         int t = lua_type(L, i);
         if (t >= 0 && t < LUA_NUMTAGS)
         {
-            tstring type(lua_types_str[t]);
+            bool known_user_data = false;
             if (t == LUA_TUSERDATA)
-                type.assign(TU2W(luaT_typename(L, i)));
-            log.append(type);
+            {
+                luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, i);
+                if (o && o->type >= LUAT_WINDOW && o->type <= LUAT_LAST)
+                {
+                    int ti = o->type - LUAT_WINDOW;
+                    TA2W mt(metatables[ti] );
+                    log.append(mt);
+                    known_user_data = true;
+                }
+            }
+            if (!known_user_data)
+                log.append(lua_types_str[t]);
         }
-        else
+        else 
+        {
             log.append(L"unknown");
+        }
         if (i != n) log.append(L",");
     }
-    pluginLogOut(log);*/
-    return 0;
+    luaT_pushwstring(L, log.c_str());
+    return 1;
 }
 
 int luaT_regtype(lua_State *L, const char* type_name)

@@ -2,29 +2,84 @@
 -- Плагин для Tortilla mud client
 
 local inveq = {}
-local colors, slots, inventory
+function inveq.name()
+  return 'Инвентарь и экипировка'
+end
+function inveq.description()
+  return 'Плагин отображает экипировку, которая одета на персонаже и инвентарь\r\nперсонажа в отдельном окне.'
+end
+function inveq.version()
+  return '1.0'
+end
+
+-- база предметов для подбора именительного падежа
+local db = {}
+function db.load()
+  if not db.objects then
+    if not decl then return false end
+    db.objects = decl.new()
+    if not db.objects then return false end
+  end
+  db.objects:load( getPath("words.lst") )
+  return true
+end
+function db.save()
+  if db.objects then 
+    db.objects:save( getPath("words.lst") )
+  end
+end
+function db.destroy()
+  db.objects = nil
+end
+function db.add(object)
+  if db.objects then
+    db.objects:add(object)
+  end
+end
+function db.find(object)
+  if db.objects then
+    return db.objects:find(object)
+  end
+end
+function db.similar(ob1, ob2)
+  if db.objects then
+    return db.objects:compare(s1, s2)
+  end
+end
+
+-- обертка для инвентаря
+local inventory = {}
+function inventory.get()
+  if not inventory.list then return { "?" } end
+  return inventory.list
+end
+function inventory.add(object, ip)
+  if ip then db.add(object) end
+  inventory.list = inventory.list or {}
+  table.insert(inventory.list, 1, object:lfup())
+end
+function inventory.remove(object)
+  if not inventory.list then return end
+  for k,s in ipairs(inventory.list) do
+    if db.similar(object, s) then
+      table.remove(inventory.list, k); break
+    end
+  end
+end
+function inventory.clear()
+  inventory.list = nil
+end
+
+
+local colors, slots
 local working = false
 local delta_eq = 0
 local catch_inv = false
 local begin_inv, empty_inv
 local decllib
+local function istable(t) return type(t) == 'table' end
 
-function inveq.name()
-  return 'Инвентарь и экипировка'
-end
-
-function inveq.description()
-  return 'Плагин отображает экипировку, которая одета на персонаже и инвентарь\r\nперсонажа в отдельном окне.'
-end
-
-function inveq.version()
-  return '1.0'
-end
-
-local function istable(t)
-  return type(t) == 'table'
-end
-
+-- рендер информации экипировки и инвентаря
 local r
 local function setTextColor(color)
   r:textColor(props.paletteColor(color))
@@ -32,7 +87,6 @@ end
 local function update()
   r:update()
 end
-
 function inveq.render()
   local x, y = 4, 4
   local h = r:fontHeight()
@@ -53,12 +107,12 @@ function inveq.render()
     if eq then setTextColor(colors.equipment) r:print(x+delta_eq, y, eq) end
     y = y + h
   end
-  y = y + 8
+  y = y + h
   setTextColor(colors.header)
   r:print(x, y, 'Инвентарь:')
   y = y + h
   setTextColor(colors.inventory)
-  for _,s in ipairs(inventory) do
+  for _,s in ipairs(inventory.get()) do
     r:print(x, y, s)
     y = y + h
   end
@@ -76,53 +130,48 @@ local function geteq(vd, ip)
   end
   return p:lfup()
 end
-
 local function similar(s1, s2)
   return decllib:compare(s1, s2)
 end
 
+-- триггер на одевание
 local function trigger_dress(s, vd, ip)
   local slot = slots[s]
   if not slot then return end
   local eq = geteq(vd, ip)
   slot.equipment = eq
-  for k,s in ipairs(inventory) do
-    if similar(eq, s) then
-      table.remove(inventory, k); break
-    end
-  end
+  inventory.remove(eq)
   update()
 end
 
+-- триггер на раздевание
 local function trigger_undress(s, vd)
   local p = geteq(vd)
   for _,s in ipairs(slots) do
     if similar(p, s.equipment) then
       s.equipment = ""
-      table.insert(inventory, 1, p)
+      inventory.add(p)
       update()
       break
     end
   end
 end
 
+-- триггер на поместить в инвентарь
 local function trigger_inventory_in(vd, ip)
   local p = geteq(vd, ip)
-  table.insert(inventory, 1, p)
+  inventory.add(p)
   update()
 end
 
+-- триггер на убрать из инвентаря
 local function trigger_inventory_out(vd)
   local p = geteq(vd)
-  for k,s in ipairs(inventory) do
-    if similar(p, s) then
-      table.remove(inventory, k)
-      update()
-      break
-    end
-  end
+  inventory.remove(p)
+  update()
 end
 
+-- ловим команду инвентарь
 function inveq.before(v, vd)
   if v ~= 0 then return end
   if not catch_eq then
@@ -134,7 +183,8 @@ function inveq.before(v, vd)
     end
   end
   if not catch_eq then return end
-  inventory = {}
+  
+  inventory.clear()
   local index,size = vd:getIndex(), vd:size()
   for i=index,size do
     vd:select(i)
@@ -142,8 +192,7 @@ function inveq.before(v, vd)
     if not vd:isSystem() and not vd:isGameCmd() then 
       local item = vd:getText()
       if item ~= "" and item ~= empty_inv then
-        decllib:add(item)
-        inventory[#inventory+1] = item:lfup()
+        inventory:add(item, true)
       end
     end
   end
@@ -151,10 +200,7 @@ function inveq.before(v, vd)
 end
 
 function inveq.init()
-  -- модуль для работы с падежами
-  decllib = decl.new()
-  if not decllib then return end
-  decllib:load( getPath("words.lst") )
+  if not db.load() then return end
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
   local p = createPanel("right", 250)
   r = p:setRender(inveq.render)
@@ -221,14 +267,23 @@ function inveq.init()
     for _,v in pairs(t.inventory_out) do
       createTrigger(v, trigger_inventory_out)
     end
-    inventory = { "?" }
+    inventory.clear()
     working = true
   end
 end
 
 function inveq:release()
-  decllib:save( getPath("words.lst") )
-  decllib = nil
+  db.save()
+  db.destroy()
+end
+
+function inveq:disconnect()
+  db.save()
+  for _,s in ipairs(slots) do
+      s.equipment = nil
+  end
+  inventory.clear()
+  update()
 end
 
 return inveq

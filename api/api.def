@@ -29,7 +29,7 @@ EXPORTS
 	luaT_regtype
 	luaT_run
 	luaT_error
-	luaT_invargs
+	luaT_push_args
 	luaT_toobject
 	luaT_pushobject
 	luaT_isobject

@@ -38,36 +38,18 @@ void pluginsMenuCmd(UINT id) { m_idcontrol.runPluginCmd(id); }
 void tmcLog(const tstring& msg) { lp()->tmcLog(msg); }
 void pluginLogOut(const tstring& msg) { lp()->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
-const tchar* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
-const tchar* unknown_plugin_name = L"?плагин?";
-//const tchar* unknown_plugin() { return _extra_plugin_name.empty() ? unknown_plugin_name : _extra_plugin_name.c_str(); }
-const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : unknown_plugin_name; }
-int plugin_lualine(lua_State *L) { lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar); return ar.currentline; }
+const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : L"?плагин?"; }
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
 int pluginInvArgs(lua_State *L, const tchar* fname)
 {
+    luaT_push_args(L, TW2A(fname));
+    tstring error(luaT_towstring(L, -1));
     tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
-    int n = lua_gettop(L);
-    swprintf(plugin_buffer(), L"'%s': %s:%d: %s(%d): ", plugin_name(), fname, plugin_lualine(L), p.c_str(), n);
-    tstring log(plugin_buffer());
-    for (int i = 1; i <= n; ++i)
-    {
-        int t = lua_type(L, i);
-        if (t >= 0 && t < LUA_NUMTAGS)
-        {
-            tstring type(lua_types_str[t]);
-            if (t == LUA_TUSERDATA)
-                type.assign(TU2W(luaT_typename(L, i)));
-            log.append(type);
-        }
-        else
-            log.append(L"unknown");
-        if (i != n) log.append(L",");
-    }
-    pluginLogOut(log);
+    swprintf(plugin_buffer(), L"'%s' %s: %s", plugin_name(), p.c_str(), error.c_str());
+    pluginLogOut(plugin_buffer());
     return 0;
 }
 

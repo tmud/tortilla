@@ -245,6 +245,12 @@ private:
     typedef std::map<int, PhrasesList*>::const_iterator iterator;
 };
 
+int declension_invalidargs(lua_State *L, const char* function_name)
+{
+    luaT_push_args(L, function_name);
+    return lua_error(L);
+}
+
 int declension_add(lua_State *L)
 {
     if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
@@ -254,8 +260,7 @@ int declension_add(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    lua_pushboolean(L, 0);
-    return 1;
+    return declension_invalidargs(L, "add");
 }
 
 int declension_find(lua_State *L)
@@ -269,8 +274,9 @@ int declension_find(lua_State *L)
             luaT_pushwstring(L, result_string.c_str());
             return 1;
         }
+        return 0;
     }
-    return 0;
+    return declension_invalidargs(L, "find");
 }
 
 int declension_load(lua_State *L)
@@ -315,20 +321,18 @@ int declension_save(lua_State *L)
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
-    return 0;
+    return declension_invalidargs(L, "save");
 }
 
 int declension_clear(lua_State *L)
 {
-    int result = 0;
     if (luaT_check(L, 1, gettype(L)))
     {
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
         d->clear();
-        result = 1;
+        return 0;
     }
-    lua_pushboolean(L, result);
-    return 1;
+    return declension_invalidargs(L, "clear");
 }
 
 int declension_compare(lua_State *L)
@@ -341,7 +345,7 @@ int declension_compare(lua_State *L)
       lua_pushboolean(L, result);
       return 1;
    }
-   return 0;
+   return declension_invalidargs(L, "compare");
 }
 
 int declension_check(lua_State *L)
@@ -353,11 +357,11 @@ int declension_check(lua_State *L)
       lua_pushboolean(L, result ? 1 : 0);
       return 1;
    }
-   return 0;
+   return declension_invalidargs(L, "check");
 }
 
 int declension_gc(lua_State *L)
-{ 
+{
     if (luaT_check(L, 1, gettype(L)))
     {
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
@@ -375,6 +379,12 @@ void regFunction(lua_State *L, const char* name, lua_CFunction f)
 
 int declension_new(lua_State *L)
 { 
+    if (lua_gettop(L) != 0)
+    {
+        luaT_push_args(L, "new");
+        return lua_error(L);
+    }
+
     if (!gettype(L))
     {
         int type = luaT_regtype(L, "declension");
@@ -399,7 +409,7 @@ int declension_new(lua_State *L)
         lua_pop(L, 1);
     }
     Dictonary* nd = new Dictonary();
-    luaT_pushobject(L, nd, gettype(L));    
+    luaT_pushobject(L, nd, gettype(L));
     return 1;
 }
 
