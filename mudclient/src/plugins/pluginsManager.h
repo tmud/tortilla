@@ -19,6 +19,7 @@ public:
     bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
     Plugin* findPlugin(const tstring& name);
+    bool setPluginState(const tstring& name, const tstring& state);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
     void processGameCmd(InputCommand* cmd);
@@ -42,4 +43,6 @@ private:
     void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const tchar* error, int plugin_index);
     void terminatePlugin(Plugin* p);
+    bool loadPlugin(Plugin* p);
+    void unloadPlugin(Plugin *p);
 };

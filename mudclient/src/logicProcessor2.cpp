@@ -881,6 +881,17 @@ IMPL(wname)
     }
     p->invalidargs();
 }
+
+IMPL(plugin)
+{
+    int n = p->size();
+    if (n == 2)
+    {
+        if (tortilla::getPluginsManager()->setPluginState(p->at(0), p->at(1)))
+            return;
+    }
+    p->invalidargs();
+}
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
@@ -1380,5 +1391,7 @@ bool LogicProcessor::init()
     regCommand("wlog", wlog);
     regCommand("wlogn", wlogn);
     regCommand("wname", wname);
+
+    regCommand("plugin", plugin);
     return true;
 }

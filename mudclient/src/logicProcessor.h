@@ -183,4 +183,5 @@ public: // system commands
     DEF(var);
     DEF(unvar);
     DEF(wait);
+    DEF(plugin);
 };

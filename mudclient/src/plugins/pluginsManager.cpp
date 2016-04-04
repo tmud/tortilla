@@ -147,28 +147,11 @@ bool PluginsManager::pluginsPropsDlg()
 
     // turn off plugins first
     for (int i = 0, e = turn_off.size(); i < e; ++i)
-    {
-        Plugin *p = turn_off[i];
-        m_msdp_network.unloadPlugin(p);
-        p->unloadPlugin();
-    }
+        unloadPlugin(turn_off[i]);
 
     // turn on new plugins
     for (int i=0,e=turn_on.size(); i<e; ++i)
-    {
-        Plugin *p = turn_on[i];
-        if (!p->reloadPlugin())
-        {
-            tstring error(L"Ошибка при загрузке плагина '");
-            error.append(p->get(Plugin::FILE));
-            error.append(L"'. Плагин работать не будет.");
-            tmcLog(error.c_str());
-       }
-       else
-       {
-           m_msdp_network.loadPlugin(p);
-       }
-    }
+        loadPlugin(turn_on[i]);
 
     PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
@@ -213,6 +196,39 @@ Plugin* PluginsManager::findPlugin(const tstring& name)
            return m_plugins[i];
     }
     return NULL;
+}
+
+bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
+{
+    Plugin *p = findPlugin(name);
+    if (!p)
+    {
+        tstring error(L"Неизвестное имя плагина '");
+        error.append(name);
+        error.append(L"'.");
+        tmcLog(error.c_str());
+        return true;
+    }
+    if (state == L"on" || state == L"1" || state == L"load")
+    {
+        if (!p->state())
+            loadPlugin(p);
+        return true;
+    }
+    if (state == L"off" || state == L"0" || state == L"unload")
+    {
+        if (p->state())
+            unloadPlugin(p);
+        return true;
+    }
+    if (state == L"reload" || state == L"up")
+    {
+        if (p->state())
+            unloadPlugin(p);
+        loadPlugin(p);
+        return true;
+    }
+    return false;
 }
 
 void PluginsManager::updateProps()
@@ -506,6 +522,26 @@ void PluginsManager::terminatePlugin(Plugin* p)
         PluginsDataValues &modules = tortilla::getProperties()->plugins;
         modules[index].state = 0;
     }
+}
+
+bool PluginsManager::loadPlugin(Plugin* p)
+{
+    if (!p->reloadPlugin())
+    {
+        tstring error(L"Ошибка при загрузке плагина '");
+        error.append(p->get(Plugin::FILE));
+        error.append(L"'. Плагин работать не будет.");
+        tmcLog(error.c_str());
+        return false;
+    }
+    m_msdp_network.loadPlugin(p);
+    return true;
+}
+
+void PluginsManager::unloadPlugin(Plugin *p)
+{
+    m_msdp_network.unloadPlugin(p);
+    p->unloadPlugin();
 }
 
 void PluginsManager::doPluginsMethod(const char* method, int args)
