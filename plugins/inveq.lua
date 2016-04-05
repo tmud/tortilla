@@ -47,11 +47,10 @@ function db.similar(ob1, ob2)
   end
 end
 
--- обертка для инвентаря
+-- инвентарь
 local inventory = {}
 function inventory.get()
-  if not inventory.list then return { "?" } end
-  return inventory.list
+  return inventory.list and inventory.list or{ "?" }
 end
 function inventory.add(object, ip)
   if ip then db.add(object) end
@@ -70,14 +69,58 @@ function inventory.clear()
   inventory.list = nil
 end
 
+-- экипировка
+local equipment = {}
+function equipment.addslots(t)
+  local e = {}
+  for _,s in ipairs(t) do
+    if s.id then
+      if not s.name then s.name = s.id end
+      e[#e+1] = s
+    end
+  end
+  equipment.slots = e
+  -- Делаем мапу по ид слота для быстрого поиска
+  local m = {}
+  for k,s in ipairs(e) do
+    m[s.id] = s
+  end
+  equipment.map = m
+end
+-- Считаем отступ для рисования экипировки после имени слота
+function equipment.getwidth()
+  if not equipment.slots then return 0 end
+  local maxw = 0
+  for _,s in ipairs(equipment.slots) do
+    local w = r:textWidth(s.name)
+    if w > maxw then maxw = w end
+  end
+  return maxw
+end
+function equipment.iterator()
+  local i=0
+  return function() i=i+1 return equipment.slots[i] end
+end
+function equipment.add(slot, object, ip)
+end
+function equipment.remove(object)
+  for _,s in ipairs(equipment.slots) do
+    if db.similar(p, s.equipment) then
+      s.equipment = ""
+      
+    end
+  end
+end
 
-local colors, slots
+
+
+
+local colors
 local working = false
 local delta_eq = 0
 local catch_inv = false
 local begin_inv, empty_inv
 local decllib
-local function istable(t) return type(t) == 'table' end
 
 -- рендер информации экипировки и инвентаря
 local r
@@ -100,14 +143,14 @@ function inveq.render()
   setTextColor(colors.header)
   r:print(x, y, 'Экипировка:')
   y = y + h
-  for _,s in ipairs(slots) do
+  --[[for _,s in ipairs(slots) do
     setTextColor(colors.tegs)
     r:print(x, y, s.name..": ")
     local eq = s.equipment and s.equipment or '?'
     if eq then setTextColor(colors.equipment) r:print(x+delta_eq, y, eq) end
     y = y + h
   end
-  y = y + h
+  y = y + h]]
   setTextColor(colors.header)
   r:print(x, y, 'Инвентарь:')
   y = y + h
@@ -130,16 +173,14 @@ local function geteq(vd, ip)
   end
   return p:lfup()
 end
-local function similar(s1, s2)
-  return decllib:compare(s1, s2)
-end
 
 -- триггер на одевание
-local function trigger_dress(s, vd, ip)
+--[[local function trigger_dress(s, vd, ip)
   local slot = slots[s]
   if not slot then return end
   local eq = geteq(vd, ip)
-  slot.equipment = eq
+
+  equipment.add(slot, eq, ip)
   inventory.remove(eq)
   update()
 end
@@ -192,12 +233,13 @@ function inveq.before(v, vd)
     if not vd:isSystem() and not vd:isGameCmd() then 
       local item = vd:getText()
       if item ~= "" and item ~= empty_inv then
-        inventory:add(item, true)
+        inventory.add(item, true)
       end
     end
   end
   update()
 end
+]]
 
 function inveq.init()
   if not db.load() then return end
@@ -209,6 +251,7 @@ function inveq.init()
   working = false
   local t = loadTable("config.lua")
   if not t then return end
+  local function istable(t) return type(t) == 'table' end
   if istable(t.colors) then
     for k,v in pairs(t.colors) do
       local color = tonumber(v)
@@ -221,24 +264,11 @@ function inveq.init()
   end
   if istable(t.slots) and istable(t.eqcmd) and istable(t.dress) and istable(t.undress) then
     -- Cобираем список слотов, которые будем отображать
-    slots = {}
-    for _,s in ipairs(t.slots) do
-      if s.id then
-        if not s.name then s.name = s.id end
-        slots[#slots+1] = s
-      end
-    end
-    -- Делаем мапу по ид слота для быстрого поиска
-    for k,s in ipairs(slots) do
-      slots[s.id] = s
-    end
+    equipment.addslots(t.slots)
     -- Считаем отступ для рисования экипировки после имени слота
-    local maxw = 0
-    for _,s in ipairs(slots) do
-      local w = r:textWidth(s.name)
-      if w > maxw then maxw = w end
-    end
-    delta_eq = maxw + 10
+    delta_eq = equipment.getwidth() + 10
+    
+--[[
     -- Создаем триггеры на одевание и раздевание
     for _,v in pairs(t.eqcmd) do
       if not v.id or slots[v.id] then
@@ -268,22 +298,22 @@ function inveq.init()
       createTrigger(v, trigger_inventory_out)
     end
     inventory.clear()
-    working = true
+    working = true]]
   end
 end
 
-function inveq:release()
-  db.save()
-  db.destroy()
+function inveq.release()
+--  db.save()
+--  db.destroy()
 end
 
-function inveq:disconnect()
-  db.save()
+function inveq.disconnect()
+--[[  db.save()
   for _,s in ipairs(slots) do
       s.equipment = nil
   end
   inventory.clear()
-  update()
+  update() ]]
 end
 
 return inveq
