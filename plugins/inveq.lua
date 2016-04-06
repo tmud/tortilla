@@ -12,6 +12,54 @@ function inveq.version()
   return '1.0'
 end
 
+local initialized = false
+local colors, inventory, equipment
+--local catch_inv = false
+--local begin_inv, empty_inv
+
+-- рендер информации экипировки и инвентаря
+local render_slots_name = true
+local delta_eq = 0
+local r
+local function setTextColor(color)
+  r:textColor(props.paletteColor(color))
+end
+local function update()
+  r:update()
+end
+local function render()
+  local x, y = 4, 4
+  local h = r:fontHeight()
+  if not initialized then
+    setTextColor(colors.header)
+    r:print(x, y, 'Инвентарь и экипировка')
+    y = y + h
+    r:print(x, y, 'Ошибка в настройках плагина')
+    return
+  end
+  setTextColor(colors.header)
+  r:print(x, y, 'Экипировка')
+  y = y + h
+  for s in equipment.iterator() do
+    if render_slots_name then
+      setTextColor(colors.tegs)
+      r:print(x, y, s.name..": ")
+    end
+    setTextColor(colors.equipment)
+    r:print(x+delta_eq, y, s.equipment)
+    y = y + h
+  end
+  y = y + h
+  setTextColor(colors.header)
+  r:print(x, y, 'Инвентарь')
+  y = y + h
+  setTextColor(colors.inventory)
+  for _,s in ipairs(inventory.get()) do
+    r:print(x, y, s)
+    y = y + h
+  end
+end
+
 -- база предметов для подбора именительного падежа
 local db = {}
 function db.load()
@@ -32,12 +80,12 @@ function db.destroy()
   db.objects = nil
 end
 function db.add(object)
-  if db.objects then
+  if object and db.objects then
     db.objects:add(object)
   end
 end
 function db.find(object)
-  if db.objects then
+  if object and db.objects then
     return db.objects:find(object)
   end
 end
@@ -48,12 +96,11 @@ function db.similar(ob1, ob2)
 end
 
 -- инвентарь
-local inventory = {}
+inventory = {}
 function inventory.get()
   return inventory.list and inventory.list or{ "?" }
 end
-function inventory.add(object, ip)
-  if ip then db.add(object) end
+function inventory.add(object)
   inventory.list = inventory.list or {}
   table.insert(inventory.list, 1, object:lfup())
 end
@@ -70,12 +117,13 @@ function inventory.clear()
 end
 
 -- экипировка
-local equipment = {}
-function equipment.addslots(t)
+equipment = {}
+function equipment.initslots(t)
   local e = {}
   for _,s in ipairs(t) do
     if s.id then
       if not s.name then s.name = s.id end
+      s.equipment = "?"
       e[#e+1] = s
     end
   end
@@ -87,168 +135,129 @@ function equipment.addslots(t)
   end
   equipment.map = m
 end
--- Считаем отступ для рисования экипировки после имени слота
-function equipment.getwidth()
-  if not equipment.slots then return 0 end
-  local maxw = 0
-  for _,s in ipairs(equipment.slots) do
-    local w = r:textWidth(s.name)
-    if w > maxw then maxw = w end
-  end
-  return maxw
-end
 function equipment.iterator()
   local i=0
   return function() i=i+1 return equipment.slots[i] end
 end
-function equipment.add(slot, object, ip)
+function equipment.add(slot, object)
+  local s = equipment.map[slot]
+  if s then s.equipment = object end
 end
-function equipment.remove(object)
+function equipment.remove(slot, object)
+  if slot then
+    local s = equipment.map[slot]
+    if s and db.similar(object, s.equipment) then s.equipment = "" end
+    return
+  end
   for _,s in ipairs(equipment.slots) do
-    if db.similar(p, s.equipment) then
+    if db.similar(object, s.equipment) then
       s.equipment = ""
-      
+      break
     end
   end
 end
-
-
-
-
-local colors
-local working = false
-local delta_eq = 0
-local catch_inv = false
-local begin_inv, empty_inv
-local decllib
-
--- рендер информации экипировки и инвентаря
-local r
-local function setTextColor(color)
-  r:textColor(props.paletteColor(color))
-end
-local function update()
-  r:update()
-end
-function inveq.render()
-  local x, y = 4, 4
-  local h = r:fontHeight()
-  if not working then
-    setTextColor(colors.header)
-    r:print(x, y, 'Инвентарь и экипировка')
-    y = y + h
-    r:print(x, y, 'Ошибка в настройках')
-    return
-  end
-  setTextColor(colors.header)
-  r:print(x, y, 'Экипировка:')
-  y = y + h
-  --[[for _,s in ipairs(slots) do
-    setTextColor(colors.tegs)
-    r:print(x, y, s.name..": ")
-    local eq = s.equipment and s.equipment or '?'
-    if eq then setTextColor(colors.equipment) r:print(x+delta_eq, y, eq) end
-    y = y + h
-  end
-  y = y + h]]
-  setTextColor(colors.header)
-  r:print(x, y, 'Инвентарь:')
-  y = y + h
-  setTextColor(colors.inventory)
-  for _,s in ipairs(inventory.get()) do
-    r:print(x, y, s)
-    y = y + h
-  end
+function equipment.is_slot_exist(slot)
+  return equipment.map[slot] and true or false
 end
 
--- если ip=true (именительный падеж), то работаем со словарем
+-- если ip=true (именительный падеж), то добавляем в словарь
 local function geteq(vd, ip)
   vd:select(1)
-  local p = vd:getParameter(1)
+  local eq = vd:getParameter(1)
   if ip then
-    decllib:add(p)
+    db.add(eq)
   else
-    local eqip = decllib:find(p)
-    if eqip then p = eqip end
+    local eqip = db.find(eq)
+    if eqip then eq = eqip end
   end
-  return p:lfup()
+  return eq:lfup()
 end
 
 -- триггер на одевание
---[[local function trigger_dress(s, vd, ip)
-  local slot = slots[s]
-  if not slot then return end
+local function trigger_dress(slot, vd, ip)
   local eq = geteq(vd, ip)
-
-  equipment.add(slot, eq, ip)
+  equipment.add(slot, eq)
   inventory.remove(eq)
   update()
 end
 
 -- триггер на раздевание
-local function trigger_undress(s, vd)
-  local p = geteq(vd)
-  for _,s in ipairs(slots) do
-    if similar(p, s.equipment) then
-      s.equipment = ""
-      inventory.add(p)
-      update()
-      break
-    end
-  end
+local function trigger_undress(slot, vd)
+  local eq = geteq(vd)
+  equipment.remove(slot, eq)
+  inventory.add(eq)
+  update()
 end
 
 -- триггер на поместить в инвентарь
 local function trigger_inventory_in(vd, ip)
-  local p = geteq(vd, ip)
-  inventory.add(p)
+  local eq = geteq(vd, ip)
+  inventory.add(eq)
   update()
 end
 
 -- триггер на убрать из инвентаря
 local function trigger_inventory_out(vd)
-  local p = geteq(vd)
-  inventory.remove(p)
+  local eq = geteq(vd)
+  inventory.remove(eq)
   update()
 end
 
--- ловим команду инвентарь
+-- работа с многострочными триггерами
+local ml = { triggers = {} }
+function ml.add(key, start_func, main_func, func, ip)
+  local t = ml.triggers
+  t[#t+1] = { key = createPcre(key), start = start_func, main = main_func, func = func(), ip = ip }
+end
+function ml.iterator()
+  local i=0
+  return function() i=i+1 return ml.triggers[i] end
+end
+
+local function trigger_equipment(slot, object)
+  equipment.add(slot, object)
+end
+
+-- ловим многострочные триггеры тут
 function inveq.before(v, vd)
   if v ~= 0 then return end
-  if not catch_eq then
-    if begin_inv and vd:find(begin_inv) then
-      catch_eq = true
-      local index,size = vd:getIndex(),vd:size()
-      if index == size then return end
-      vd:select(index+1)
+  if not ml.catch then
+    for t in ml.iterator() do
+      if vd:find(t.key) then
+        ml.catch = t
+        if t.start_func then t.start_func() end
+        local index,size = vd:getIndex(),vd:size()
+        if index == size then return end
+        vd:select(index+1)
+      end
     end
   end
-  if not catch_eq then return end
-  
-  inventory.clear()
+  if not ml.catch then return end
+  local t = ml.catch
   local index,size = vd:getIndex(), vd:size()
   for i=index,size do
     vd:select(i)
-    if vd:isPrompt() then catch_eq = false; break end
+    if vd:isPrompt() then ml.catch = nil; break end
     if not vd:isSystem() and not vd:isGameCmd() then 
       local item = vd:getText()
-      if item ~= "" and item ~= empty_inv then
-        inventory.add(item, true)
+      if item ~= "" then
+        local object, slot = t.func(item)
+        if t.ip then db:add(object) end
+        t.main_func(slot, object)
       end
     end
   end
   update()
 end
-]]
 
 function inveq.init()
+  initialized = false
   if not db.load() then return end
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
   local p = createPanel("right", 250)
-  r = p:setRender(inveq.render)
+  r = p:setRender(render)
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
-  working = false
   local t = loadTable("config.lua")
   if not t then return end
   local function istable(t) return type(t) == 'table' end
@@ -262,27 +271,39 @@ function inveq.init()
       end
     end
   end
-  if istable(t.slots) and istable(t.eqcmd) and istable(t.dress) and istable(t.undress) then
+  render_slots_name = t.slots_name and true or false
+  if istable(t.slots) and istable(t.dress) and istable(t.undress) then
     -- Cобираем список слотов, которые будем отображать
-    equipment.addslots(t.slots)
+    equipment.initslots(t.slots)
     -- Считаем отступ для рисования экипировки после имени слота
-    delta_eq = equipment.getwidth() + 10
-    
---[[
-    -- Создаем триггеры на одевание и раздевание
-    for _,v in pairs(t.eqcmd) do
-      if not v.id or slots[v.id] then
-        createTrigger(v.key, function(vd) trigger_dress(v.id, vd, true) end)
+    delta_eq = 0
+    if render_slots_name then
+      local maxw = 0
+      for s in equipment.iterator() do
+        local w = r:textWidth(s.name)
+        if w > maxw then maxw = w end
       end
+      delta_eq = maxw + 10
     end
+    -- Создаем триггеры на одевание и раздевание
     for _,v in pairs(t.dress) do
-      if not v.id or slots[v.id] then
-        createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
+      if v.key and v.id then 
+        if type(v.id) == 'function' then
+          ml.add(v.key, nil, equipment.add, v.id, v.ip)
+        else
+          if equipment.is_slot_exist(v.id) then
+            createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
+          end
+        end
       end
     end
     for _,v in pairs(t.undress) do
-      createTrigger(v.key, function(vd) trigger_undress(v.id, vd) end)
+      if v.key then
+        createTrigger(v.key, function(vd) trigger_undress(v.id, vd) end)
+      end
     end
+
+--[[
     -- Инвентарь
     empty_inv = t.inventory_empty
     -- Триггер для отлова списка инвентаря
@@ -297,8 +318,8 @@ function inveq.init()
     for _,v in pairs(t.inventory_out) do
       createTrigger(v, trigger_inventory_out)
     end
-    inventory.clear()
-    working = true]]
+    inventory.clear()]]
+    initialized = true
   end
 end
 

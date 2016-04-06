@@ -212,13 +212,19 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
     if (state == L"on" || state == L"1" || state == L"load")
     {
         if (!p->state())
+        {
             loadPlugin(p);
+            setPluginState(p, true);
+        }
         return true;
     }
     if (state == L"off" || state == L"0" || state == L"unload")
     {
         if (p->state())
+        {
             unloadPlugin(p);
+            setPluginState(p, false);
+        }
         return true;
     }
     if (state == L"reload" || state == L"up")
@@ -226,6 +232,7 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
         if (p->state())
             unloadPlugin(p);
         loadPlugin(p);
+        setPluginState(p, true);
         return true;
     }
     return false;
@@ -508,20 +515,25 @@ void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
     }
 }
 
-void PluginsManager::terminatePlugin(Plugin* p)
+void PluginsManager::setPluginState(Plugin* p, bool state)
 {
     if (!p) return;
     int index = -1;
-    for (int i = 0, e = m_plugins.size(); i < e; ++i)
-    {
+    for (int i = 0, e = m_plugins.size(); i < e; ++i) {
         if (p == m_plugins[i])  { index = i; break; }
     }
-    p->setOn(false);
     if (index != -1)
     {
         PluginsDataValues &modules = tortilla::getProperties()->plugins;
-        modules[index].state = 0;
+        modules[index].state = (state) ? 1 : 0;
     }
+}
+
+void PluginsManager::terminatePlugin(Plugin* p)
+{
+    if (!p) return;
+    p->setOn(false);
+    setPluginState(p, false);
 }
 
 bool PluginsManager::loadPlugin(Plugin* p)
