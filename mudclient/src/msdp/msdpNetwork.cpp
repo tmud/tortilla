@@ -361,9 +361,7 @@ bool msdp_isoff()
 int msdpOffError(lua_State *L, const char* fname) 
 {
     TA2W f(fname);
-    tstring error(f);
-    error.append(L":MSDP is off");
-    return pluginError(error.c_str()); 
+    return pluginMethodError(f, L"MSDP is off");
 }
 
 int msdp_list(lua_State *L)

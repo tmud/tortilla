@@ -48,35 +48,28 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
     tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
-    swprintf(plugin_buffer(), L"'%s' %s: %s", plugin_name(), p.c_str(), error.c_str());
+    swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    swprintf(plugin_buffer(), L"'%s' %s: Ошибка загрузки файла: %s", plugin_name(), fname, file);
+    swprintf(plugin_buffer(), L"%s: %s Ошибка загрузки файла: %s", plugin_name(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
-int pluginError(const tchar* fname, const tchar* error)
+int pluginMethodError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"'%s' %s: %s", plugin_name(), fname, error);
-    pluginLogOut(plugin_buffer());
-    return 0;
-}
-
-int pluginError(const tchar* error)
-{
-    swprintf(plugin_buffer(), L"'%s': %s", plugin_name(), error);
+    swprintf(plugin_buffer(), L"Ошибка в методе %s: %s", fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginLog(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"'%s': %s", plugin_name(), msg);
+    swprintf(plugin_buffer(), L"%s: %s", plugin_name(), msg);
     pluginLogOut(plugin_buffer());
     return 0;
 }
@@ -87,18 +80,11 @@ int pluginOut(const tchar* msg)
     return 0;
 }
 
-void pluginLoadError(const tchar* msg, const tchar *plugin_fname)
+void pluginLoadError(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"'%s': Ошибка загрузки! %s", plugin_fname, msg);
+    swprintf(plugin_buffer(), L"Ошибка загрузки! %s", msg);
     pluginLogOut(plugin_buffer());
 }
-
-void pluginSaveError(const tchar* msg, const tchar *plugin_fname)
-{
-    swprintf(plugin_buffer(), L"'%s': Ошибка записи! %s", plugin_fname, msg);
-    pluginLogOut(plugin_buffer());
-}
-
 //---------------------------------------------------------------------
 int pluginName(lua_State *L)
 {
@@ -368,7 +354,7 @@ int getPath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginError(L"getPath", L"Ошибка создания каталога для плагина");
+        return pluginMethodError(L"getPath", L"Ошибка создания каталога для плагина");
     }
     return pluginInvArgs(L, L"getPath");
 }
@@ -388,7 +374,7 @@ int getProfilePath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginError(L"getProfilePath", L"Ошибка создания каталога для плагина");
+        return pluginMethodError(L"getProfilePath", L"Ошибка создания каталога для плагина");
     }
     return pluginInvArgs(L, L"getProfilePath");
 }
@@ -428,7 +414,7 @@ int getResource(lua_State* L)
             lua_pushwstring(L, path.c_str());
             return 1;
         }
-        return pluginError(L"getResource", L"Ошибка создания каталога для плагина");
+        return pluginMethodError(L"getResource", L"Ошибка создания каталога для плагина");
     }
     return pluginInvArgs(L, L"getResource");
 }
@@ -460,9 +446,8 @@ int loadTableLua(lua_State* L, const tstring& filename)
     const tchar* fname = filename.c_str();
     if (luaL_loadfile(L, TW2A(fname)))
     {
-        Utf8ToWide e(lua_tostring(L, -1));
-        lua_pop(L, 1);
-        pluginLoadError(e, fname);
+        pluginLoadError(lua_toerror(L));
+        lua_pop(L, 1);        
         return false;
     }
     // make empty eviroment and call script in them
@@ -472,9 +457,8 @@ int loadTableLua(lua_State* L, const tstring& filename)
     lua_setupvalue(L, -2, 1); 
     if (lua_pcall(L, 0, 0, 0))
     {
-        Utf8ToWide e(lua_tostring(L, -1));
+        pluginLoadError(lua_toerror(L));
         lua_pop(L, 1);
-        pluginLoadError(e, fname);
         return false;
     }
     return 1;
@@ -510,7 +494,8 @@ int loadTable(lua_State *L)
     if (!doc.load(pp) )
     {
        swprintf(plugin_buffer(), L"Ошибка чтения: %s", filename);
-       pluginError(L"loadTable", plugin_buffer());
+       tstring tmp(plugin_buffer());
+       pluginMethodError(L"loadTable", tmp.c_str());
        return 0;
     }
 
@@ -677,7 +662,8 @@ int saveTable(lua_State *L)
     if (!dh.makeDirEx(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename))
     {
        swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
-       pluginError(L"saveTable", plugin_buffer());
+       tstring tmp(plugin_buffer());
+       pluginMethodError(L"saveTable", tmp.c_str());
        return 0;
     }
 
@@ -905,12 +891,13 @@ int saveTable(lua_State *L)
     list.clear();
 
     if (incorrect_data)
-        pluginError(L"saveTable", L"Неверные данные в исходных данных.");
+        pluginMethodError(L"saveTable", L"Неверные данные в исходных данных.");
 
     if (!result)
     {
        swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
-       pluginError(L"saveTable", plugin_buffer());
+       tstring tmp(plugin_buffer());
+       pluginMethodError(L"saveTable", tmp.c_str());
     }
     return 0;
 }
@@ -1205,6 +1192,10 @@ bool initPluginsSystem()
 
     luaopen_base(L);
     lua_pop(L, 1);
+#ifdef _DEBUG
+    luaopen_debug(L);
+    lua_setglobal(L, "debug");
+#endif
     luaopen_math(L);
     lua_setglobal(L, "math");
     luaopen_table(L);

@@ -160,3 +160,53 @@ public:
     }
     operator const wchar_t*() const { return dump.c_str(); }
 };
+
+class lua_toerror
+{
+    std::wstring error;
+public:
+    lua_toerror(lua_State *L)
+    {
+        if (!lua_isstring(L, -1))
+            return;
+        const char* s = lua_tostring(L, -1);
+        const char* p = strchr(s, ':');
+        if (p) {
+        const char* b = p+1;
+        const char *e = strchr(b, ':');
+        if (e && e!=b) {
+          bool number = true;
+          for (const char *t=b; t!=e; ++t)
+          {
+              if (*t>='0' && *t<='9') {}
+              else { number = false; break; }
+          }
+          if (number) {
+            std::string fname(s, p-s);
+            std::string err(p);
+            std::wstring f, e;
+            convert_ansi(fname, f);
+            convert_utf8(err, e);
+            f.append(e);
+            error.swap(f);
+            return;
+          }
+        }}
+        std::string err(s);
+        convert_utf8(err, error);
+    }
+    operator const wchar_t*() const { return error.c_str(); }
+private:
+    void convert_ansi(const std::string& s, std::wstring& res)
+    {
+       int buffer_required = MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length(), NULL, 0);
+       res.resize(buffer_required);
+       MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length(), &res[0], buffer_required);
+    }
+    void convert_utf8(const std::string& s, std::wstring& res)
+    {
+       int buffer_required = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), s.length(), NULL, 0);
+       res.resize(buffer_required);
+       MultiByteToWideChar(CP_UTF8, 0, s.c_str(), s.length(), &res[0], buffer_required);
+    }
+};

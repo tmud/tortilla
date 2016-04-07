@@ -38,13 +38,13 @@ int luaT_push_args(lua_State *L, const char* func)
     int n = lua_gettop(L);
     lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar);
     std::wstring log( TA2W(ar.short_src) );
-    log.append(L":");
+    log.append(L" ");
     log.append( TA2W(func) );
     log.append(L":");
     wchar_t buffer[16];
     _itow(ar.currentline, buffer, 10);
     log.append(buffer);
-    log.append(L" (");
+    log.append(L": (");
     _itow(n, buffer, 10);
     log.append(buffer);
     log.append(L"):");
@@ -269,10 +269,7 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))
     {
         if (lua_isstring(L, -1))
-        {
-            std::wstring error(luaT_towstring(L, -1));
-            base::log(L, error.c_str());
-        }
+            base::log(L, lua_toerror(L));
         return false;
     }
     return true;

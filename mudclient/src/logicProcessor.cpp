@@ -307,8 +307,6 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
 
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
-    if (m_plugins_log_blocked)
-        return;
     PropertiesData *pdata = tortilla::getProperties();
     if (!pdata->plugins_logs)
         return;
@@ -318,7 +316,9 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        if (m_plugins_log_tocache)
+        if (m_plugins_log_blocked)
+            m_plugins_log_toblocked.push_back(log);
+        else if (m_plugins_log_tocache)
             m_plugins_log_cache.push_back(log);
         else
             processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);

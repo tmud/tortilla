@@ -540,10 +540,10 @@ bool PluginsManager::loadPlugin(Plugin* p)
 {
     if (!p->reloadPlugin())
     {
-        tstring error(L"Ошибка при загрузке плагина '");
+        tstring error(L"Плагин '");
         error.append(p->get(Plugin::FILE));
-        error.append(L"'. Плагин работать не будет.");
-        tmcLog(error.c_str());
+        error.append(L"'отключен.");
+        pluginOut(error.c_str());
         return false;
     }
     m_msdp_network.loadPlugin(p);
@@ -695,11 +695,12 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
-    Plugin *old = p;
+    Plugin *old = _cp;
     _cp = p;
     if (error)
-        pluginError(error);
-    pluginError(L"Плагин отключен!");
+        pluginOut(error);
+    swprintf(plugin_buffer(), L"Плагин %s отключен!", p->get(Plugin::FILE));
+    pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;
     PluginsDataValues &modules = tortilla::getProperties()->plugins;

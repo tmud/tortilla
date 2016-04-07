@@ -30,6 +30,11 @@ void LogicProcessor::processStackTick()
         }
     }
 
+    if (!m_plugins_log_toblocked.empty() && m_plugins_log_cache.empty())
+    {
+        m_plugins_log_toblocked.swap(m_plugins_log_cache);
+    }
+
     if (m_prompt_mode == OFF)
         return;
     MudViewString *last = m_pHost->getLastString(0);

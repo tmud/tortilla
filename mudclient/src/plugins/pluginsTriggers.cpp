@@ -150,9 +150,13 @@ void PluginsTrigger::run()
     {
         //error
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(luaT_towstring(L, -1));
+        {
+            pluginOut(lua_toerror(L));
+        }
         else
-            pluginError(L"неизвестная ошибка");
+        {
+            pluginLog(L"неизвестная ошибка");
+        }
         lua_settop(L, 0);
     }
     _cp = oldcp;

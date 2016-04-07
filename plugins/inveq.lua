@@ -91,7 +91,7 @@ function db.find(object)
 end
 function db.similar(ob1, ob2)
   if db.objects then
-    return db.objects:compare(s1, s2)
+    return db.objects:compare(ob1, ob2)
   end
 end
 
@@ -207,7 +207,7 @@ end
 local ml = { triggers = {} }
 function ml.add(key, start_func, main_func, func, ip)
   local t = ml.triggers
-  t[#t+1] = { key = createPcre(key), start = start_func, main = main_func, func = func(), ip = ip }
+  t[#t+1] = { key = createPcre(key), start = start_func, main = main_func, func = func(createPcre), ip = ip }
 end
 function ml.iterator()
   local i=0
@@ -225,7 +225,7 @@ function inveq.before(v, vd)
     for t in ml.iterator() do
       if vd:find(t.key) then
         ml.catch = t
-        if t.start_func then t.start_func() end
+        if t.start then t.start() end
         local index,size = vd:getIndex(),vd:size()
         if index == size then return end
         vd:select(index+1)
@@ -242,8 +242,8 @@ function inveq.before(v, vd)
       local item = vd:getText()
       if item ~= "" then
         local object, slot = t.func(item)
-        if t.ip then db:add(object) end
-        t.main_func(slot, object)
+        if t.ip then db.add(object) end
+        t.main(slot, object)
       end
     end
   end

@@ -74,6 +74,7 @@ class LogicProcessor : public LogicProcessorMethods
     int  m_prompt_counter;
     Pcre16 m_univ_prompt_pcre;
     std::vector<tstring> m_plugins_log_cache;
+    std::vector<tstring> m_plugins_log_toblocked;
     bool m_plugins_log_tocache;
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
