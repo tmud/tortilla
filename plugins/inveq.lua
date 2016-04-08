@@ -14,8 +14,6 @@ end
 
 local initialized = false
 local colors, inventory, equipment
---local catch_inv = false
---local begin_inv, empty_inv
 
 -- рендер информации экипировки и инвентаря
 local render_slots_name = true
@@ -54,7 +52,7 @@ local function render()
   r:print(x, y, 'Инвентарь')
   y = y + h
   setTextColor(colors.inventory)
-  for _,s in ipairs(inventory.get()) do
+  for s in inventory.iterator() do
     r:print(x, y, s)
     y = y + h
   end
@@ -68,12 +66,16 @@ function db.load()
     db.objects = decl.new()
     if not db.objects then return false end
   end
-  db.objects:load( getPath("words.lst") )
+  if not db.objects:load( getPath("words.lst") ) then
+    log("Не загружена таблица предметов.")
+  end
   return true
 end
 function db.save()
   if db.objects then 
-    db.objects:save( getPath("words.lst") )
+    if not db.objects:save( getPath("words.lst") ) then
+      log("Не сохранена таблица предметов.")
+    end
   end
 end
 function db.destroy()
@@ -97,18 +99,48 @@ end
 
 -- инвентарь
 inventory = {}
-function inventory.get()
-  return inventory.list and inventory.list or{ "?" }
+function inventory.iterator()
+  local i=0
+  return function() i=i+1
+    if not inventory.list then
+      if i == 1 then return "?" end
+      return
+    end
+    local inv = inventory.list[i]
+    if inv then
+      if inv.count == 1 then return inv.name end
+      return inv.name.." ["..inv.count.."]"
+    end
+  end
 end
-function inventory.add(object)
+function inventory.add(object, count)
+  if not count then count = 1 end
+  if not object or count < 1 then
+    log("inventory.add incorrect object or count<1")
+    return 
+  end
   inventory.list = inventory.list or {}
-  table.insert(inventory.list, 1, object:lfup())
+  for k,v in ipairs(inventory.list) do
+    if v.name == object then
+      v.count = v.count + count
+      return
+    end
+  end
+  table.insert(inventory.list, 1, { name = object:lfup(), count = count })
 end
 function inventory.remove(object)
+  if not object then
+    log("inventory.remove incorrect object")
+  end
   if not inventory.list then return end
   for k,s in ipairs(inventory.list) do
-    if db.similar(object, s) then
-      table.remove(inventory.list, k); break
+    if db.similar(object, s.name) then
+      if s.count == 1 then
+        table.remove(inventory.list, k)
+      else
+        s.count = s.count - 1
+      end
+      break
     end
   end
 end
@@ -139,21 +171,38 @@ function equipment.iterator()
   local i=0
   return function() i=i+1 return equipment.slots[i] end
 end
-function equipment.add(slot, object)
+function equipment.add(object, slot)
+  if not object or not slot then
+    log("equipment.add incorrect object or slot")
+    return
+  end
   local s = equipment.map[slot]
-  if s then s.equipment = object end
+  if not s then
+    log("equipment.add uknown slot "..slot)
+    return
+  end
+  s.equipment = object
 end
-function equipment.remove(slot, object)
+function equipment.remove(object, slot)
+  if not object then
+    log("equipment.remove incorrect object")
+    return
+  end
   if slot then
     local s = equipment.map[slot]
-    if s and db.similar(object, s.equipment) then s.equipment = "" end
+    if s and s.equipment~="?" and db.similar(object, eq) then s.equipment = "" end
     return
   end
   for _,s in ipairs(equipment.slots) do
-    if db.similar(object, s.equipment) then
+    if s.equipment~="?" and db.similar(object, s.equipment) then
       s.equipment = ""
       break
     end
+  end
+end
+function equipment.clear()
+  for _,s in ipairs(equipment.slots) do
+    s.equipment = "?"
   end
 end
 function equipment.is_slot_exist(slot)
@@ -176,15 +225,15 @@ end
 -- триггер на одевание
 local function trigger_dress(slot, vd, ip)
   local eq = geteq(vd, ip)
-  equipment.add(slot, eq)
+  equipment.add(eq, slot)
   inventory.remove(eq)
   update()
 end
 
 -- триггер на раздевание
-local function trigger_undress(slot, vd)
-  local eq = geteq(vd)
-  equipment.remove(slot, eq)
+local function trigger_undress(slot, vd, ip)
+  local eq = geteq(vd, ip)
+  equipment.remove(eq, slot)
   inventory.add(eq)
   update()
 end
@@ -197,17 +246,17 @@ local function trigger_inventory_in(vd, ip)
 end
 
 -- триггер на убрать из инвентаря
-local function trigger_inventory_out(vd)
-  local eq = geteq(vd)
+local function trigger_inventory_out(vd, ip)
+  local eq = geteq(vd, ip)
   inventory.remove(eq)
   update()
 end
 
 -- работа с многострочными триггерами
 local ml = { triggers = {} }
-function ml.add(key, start_func, main_func, func, ip)
+function ml.add(key, start_func, main_func, compare_func, ip)
   local t = ml.triggers
-  t[#t+1] = { key = createPcre(key), start = start_func, main = main_func, func = func(createPcre), ip = ip }
+  t[#t+1] = { key = createPcre(key), start = start_func, main = main_func, func = compare_func(createPcre), ip = ip }
 end
 function ml.iterator()
   local i=0
@@ -215,7 +264,7 @@ function ml.iterator()
 end
 
 local function trigger_equipment(slot, object)
-  equipment.add(slot, object)
+  equipment.add(object, slot)
 end
 
 -- ловим многострочные триггеры тут
@@ -229,6 +278,7 @@ function inveq.before(v, vd)
         local index,size = vd:getIndex(),vd:size()
         if index == size then return end
         vd:select(index+1)
+        break
       end
     end
   end
@@ -241,9 +291,11 @@ function inveq.before(v, vd)
     if not vd:isSystem() and not vd:isGameCmd() then 
       local item = vd:getText()
       if item ~= "" then
-        local object, slot = t.func(item)
+        local object, param = t.func(item)
+        local number = tonumber(param)
+        if number then param = number end
         if t.ip then db.add(object) end
-        t.main(slot, object)
+        t.main(object, param)
       end
     end
   end
@@ -292,49 +344,51 @@ function inveq.init()
           ml.add(v.key, nil, equipment.add, v.id, v.ip)
         else
           if equipment.is_slot_exist(v.id) then
-            createTrigger(v.key, function(vd) trigger_dress(v.id, vd) end)
+            createTrigger(v.key, function(vd) trigger_dress(v.id, vd, v.ip) end)
           end
         end
       end
     end
     for _,v in pairs(t.undress) do
       if v.key then
-        createTrigger(v.key, function(vd) trigger_undress(v.id, vd) end)
+        createTrigger(v.key, function(vd) trigger_undress(v.id, vd, v.ip) end)
       end
-    end
-
---[[
-    -- Инвентарь
-    empty_inv = t.inventory_empty
-    -- Триггер для отлова списка инвентаря
-    begin_inv = nil
-    if t.inventory_begin then
-      begin_inv = createPcre(t.inventory_begin)
     end
     -- Триггеры на добавление в инвентарь и удаления из него
     for _,v in pairs(t.inventory_in) do
-      createTrigger(v, trigger_inventory_in)
+      if v.key then
+        if v.id and type(v.id) == 'function' then
+          local start_func = v.clear and inventory.clear or nil
+          ml.add(v.key, start_func, inventory.add, v.id, v.ip)
+        else
+          createTrigger(v.key, function(vd) trigger_inventory_in(vd, v.ip) end)
+        end
+      end
     end
     for _,v in pairs(t.inventory_out) do
-      createTrigger(v, trigger_inventory_out)
+      if v.key then
+        if v.id and type(v.id) == 'function' then
+          ml.add(v.key, nil, inventory.remove, v.id, v.ip)
+        else
+          createTrigger(v.key, function(vd) trigger_inventory_out(vd, v.ip) end)
+        end
+      end
     end
-    inventory.clear()]]
+    inventory.clear()
     initialized = true
   end
 end
 
 function inveq.release()
---  db.save()
---  db.destroy()
+  db.save()
+  db.destroy()
 end
 
 function inveq.disconnect()
---[[  db.save()
-  for _,s in ipairs(slots) do
-      s.equipment = nil
-  end
+  db.save()
+  equipment.clear()
   inventory.clear()
-  update() ]]
+  update()
 end
 
 return inveq

@@ -12,6 +12,7 @@ extern "C" {
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
+#include <vector>
 
 class lua_pushwstring
 {
@@ -208,5 +209,95 @@ private:
        int buffer_required = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), s.length(), NULL, 0);
        res.resize(buffer_required);
        MultiByteToWideChar(CP_UTF8, 0, s.c_str(), s.length(), &res[0], buffer_required);
+    }
+};
+
+class load_file
+{
+public:
+    std::vector<std::string> text;
+    bool result;
+    bool file_missed;
+    load_file(const std::wstring& filepath, DWORD maxsize = 0) : result(false), file_missed(false)
+    {
+        HANDLE hFile = CreateFile(filepath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_FILE_NOT_FOUND)
+                file_missed = true;
+            return;
+        }
+        DWORD high = 0;
+        DWORD size = GetFileSize(hFile, &high);
+        if (high != 0) 
+            return;
+        if (maxsize > 0 && size > maxsize)
+            return;
+
+        result = true;
+
+        typedef unsigned char uchar;
+        std::string current_string;
+        const DWORD buffer_size = 256;
+        uchar* buffer = new uchar[buffer_size];
+
+        DWORD inbuffer = 0;
+        bool last_0d = false;
+        bool bom_check = false;
+        while (size > 0 || inbuffer > 0)
+        {
+            DWORD readed = inbuffer;
+            if (size > 0) {
+            DWORD toread = buffer_size - inbuffer;
+            if (toread > size) toread = size;
+            if (!ReadFile(hFile, buffer+inbuffer, toread, &readed, NULL))
+                { result = false; break; }
+            size -= readed;
+            readed = inbuffer + readed;
+            }
+
+            uchar *p = buffer;
+            uchar *e = p + readed;
+            if (!bom_check && readed >= 3)
+            {
+                bom_check = true;
+                if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf)
+                    p += 3;
+            }
+
+            uchar *b = p;
+            while (p != e)
+            {
+                uchar c = *p; p++;
+                if (c == 0xd || c == 0xa)
+                {
+                    if (c == 0xa && last_0d)
+                        { b = p; last_0d = false;  continue; }
+
+                    current_string.append((char*)b, p-b-1);
+                    text.push_back(current_string);
+                    current_string.clear();
+
+                    if (c == 0xd && last_0d)
+                        { last_0d = false; break; }
+                    if (c == 0xd)
+                          last_0d = true;
+                    break;
+                }
+                last_0d = false;
+                if (c < ' ')
+                {
+                    uchar *x = p-1;
+                    *x = ' ';
+                }
+            }
+            if (p == e)
+                current_string.append((char*)b, e-b);
+            DWORD processed = p - buffer;
+            DWORD notprocessed = readed - processed;
+            memcpy(buffer, p, notprocessed);
+            inbuffer = notprocessed;
+        }
+        CloseHandle(hFile);
     }
 };

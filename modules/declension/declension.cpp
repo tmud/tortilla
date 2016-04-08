@@ -14,7 +14,7 @@ int gettype(lua_State *L)
 {
     iterator it = m_decl_types.find(L);
     if (it == m_decl_types.end())
-        return 0;
+        return -1;
     return it->second;
 }
 void regtype(lua_State *L, int type)
@@ -169,7 +169,7 @@ private:
 class Dictonary
 {
 public:
-    Dictonary() {}
+    Dictonary() : m_changed(false) {}
     ~Dictonary() { clear(); }
     bool addPhrase(const tchar *phrase) 
     {
@@ -192,6 +192,8 @@ public:
         {
             result = it->second->addPhrase(p);
         }
+        if (result)
+            m_changed = true;
         return result;
     }
     bool findPhrase(const tchar* t, tstring* result) const
@@ -209,6 +211,7 @@ public:
     {
         std::for_each(m_data.begin(), m_data.end(), [](std::pair<int, PhrasesList*> p){ delete p.second; });
         m_data.clear();
+        m_changed = true;
     }
     bool check(const tchar* t, int index) const
     {
@@ -240,7 +243,14 @@ public:
         iterator it = m_data.find(index);
         return (it != m_data.end()) ? it->second : NULL;
     }
+    bool getAndResetChanged()
+    {
+        bool state = m_changed;
+        m_changed = false;
+        return state;
+    }
 private:
+    bool m_changed;
     std::map<int, PhrasesList*> m_data;
     typedef std::map<int, PhrasesList*>::const_iterator iterator;
 };
@@ -281,16 +291,44 @@ int declension_find(lua_State *L)
 
 int declension_load(lua_State *L)
 {
-    return 0;
+    if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
+    {
+        bool result = false;
+        Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
+        tstring filepath(luaT_towstring(L, 2));
+        load_file lf(filepath);
+        result = lf.result;
+        if (result)
+        {
+            d->clear();
+            for (int i=0,e=lf.text.size(); i<e; ++i)
+            {
+                TU2W t(lf.text[i].c_str());
+                d->addPhrase(t);
+            }
+        } else {
+            if (lf.file_missed)
+                result = true;
+        }
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    return declension_invalidargs(L, "load");
 }
 
 int declension_save(lua_State *L)
 {
     if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
     {
+        Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
+        if (!d->getAndResetChanged())
+        {
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+
         bool result = false;
         tstring filepath(luaT_towstring(L,2));
-        Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
         HANDLE hFile = CreateFile(filepath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hFile != INVALID_HANDLE_VALUE)
         {
@@ -385,7 +423,7 @@ int declension_new(lua_State *L)
         return lua_error(L);
     }
 
-    if (!gettype(L))
+    if (gettype(L) == -1)
     {
         int type = luaT_regtype(L, "declension");
         if (!type)

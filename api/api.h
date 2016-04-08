@@ -6,7 +6,6 @@
 #pragma comment(lib, "api.lib")
 #endif
 
-#include <vector>
 typedef char utf8;
 typedef std::string u8string;
 
