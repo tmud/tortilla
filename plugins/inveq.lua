@@ -304,8 +304,8 @@ end
 
 function inveq.init()
   initialized = false
-  if not db.load() then return end
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
+  if not db.load() then return end
   local p = createPanel("right", 250)
   r = p:setRender(render)
   r:setBackground(props.backgroundColor())
