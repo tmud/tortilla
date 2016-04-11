@@ -6,6 +6,7 @@
 #include "pluginSupport.h"
 #include "pluginsParseData.h"
 #include "pluginsActiveObjects.h"
+#include "pluginsViewString.h"
 
 #include "../MainFrm.h"
 extern CMainFrame _wndMain;
@@ -1052,6 +1053,75 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "isChanged", vd_isChanged);
     regFunction(L, "getKey", vd_getKey);
     regFunction(L, "__towatch", vd_toWatch);
+    regIndexMt(L);
+    lua_pop(L, 1);
+}
+//--------------------------------------------------------------------
+int vs_toWatch(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        char buffer[32];
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        lua_newtable(L);
+        for (int i=0,e=s->count();i<e;++i)
+        {
+            const MudViewStringBlock &b = s->get(i);
+            const MudViewStringParams& p = b.params;
+            lua_newtable(L);
+            lua_pushstring(L, "string");
+            luaT_pushwstring(L, b.string.c_str());
+            lua_settable(L, -3);
+            lua_pushstring(L, "color");
+            if (p.use_ext_colors) {
+                COLORREF c = p.ext_text_color;
+                sprintf(buffer, "%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
+            }
+            else {
+                sprintf(buffer, "%d", p.text_color);
+            }
+            lua_pushstring(L, buffer);
+            lua_settable(L, -3);
+            lua_pushstring(L, "background");
+            if (p.use_ext_colors) {
+                COLORREF c = p.ext_bkg_color;
+                sprintf(buffer, "%02x%02x%02x", GetRValue(c), GetGValue(c), GetBValue(c));
+            }
+            else {
+                sprintf(buffer, "%d", p.bkg_color);
+            }
+            lua_pushstring(L, buffer);
+            lua_settable(L, -3);
+
+            lua_pushstring(L, "style");
+            sprintf(buffer, "I:%d,U:%d,L:%d,B:%d,R:%d", p.italic_status, p.underline_status, p.intensive_status, p.blink_status, p.reverse_video);
+            lua_pushstring(L, buffer);
+            lua_settable(L, -3);
+
+            lua_pushinteger(L, i+1);
+            lua_insert(L, -2);
+            lua_settable(L, -3);
+        }        
+        return 1;
+    }
+    return 0;
+}
+
+int vs_gc(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        delete s;
+    }
+    return 0;
+}
+
+void reg_mt_viewstring(lua_State *L)
+{
+    luaL_newmetatable(L, "viewstring");
+    regFunction(L, "__towatch", vs_toWatch);
+    regFunction(L, "__gc", vs_gc);
     regIndexMt(L);
     lua_pop(L, 1);
 }

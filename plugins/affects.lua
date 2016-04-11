@@ -56,12 +56,28 @@ local function render()
   render_good_affects(x, y+h, h)
 end
 
-local function setaffect(id, state)
+local function getaffect(id)
   local af = bad_affects[id]
   if not af then af = good_affects[id] end
-  if af then
-    af.state = state
+  return af
+end
+
+local function checkaffect(id)
+  if type(id) == 'string' then
+    return getaffect(id) and true or false
   end
+  if type(id) ~= 'table' then
+    return false
+  end
+  for _,af in ipairs(id) do
+    if getaffect(af) then return true end
+  end
+  return false
+end
+
+local function setaffect(id, state)
+  local af = getaffect(id)
+  if af then af.state = state end
 end
 
 local function affects_on(t)
@@ -128,14 +144,14 @@ function affects.init()
   -- создание триггеров
   for _,at in ipairs(t.triggers) do
     if at.key then
-      if at.on and not at.off then
+      if at.on and not at.off and checkaffect(at.on) then
         createTrigger(at.key, function() affects_on(at.on) end)
       end
-      if not at.on and at.off then
-        createTrigger(at.key, function() affects_on(at.off) end)
+      if not at.on and at.off and checkaffect(at.off) then
+        createTrigger(at.key, function() affects_off(at.off) end)
       end
-      if at.on and at.off then
-        createTrigger(at.key, function() affects_on(at.on) affects_on(at.off) end)
+      if at.on and at.off and checkaffect(at.on) and checkaffect(at.off) then
+        createTrigger(at.key, function() affects_on(at.on) affects_off(at.off) end)
       end
     end
   end

@@ -182,6 +182,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\plugins\pluginsView.h" />
     <ClInclude Include="src\plugins\pluginsParseData.h" />
     <ClInclude Include="src\plugins\pluginsViewRender.h" />
+    <ClInclude Include="src\plugins\pluginsViewString.h" />
     <ClInclude Include="src\profiles\profileDlgs.h" />
     <ClInclude Include="src\profiles\profileHelpers.h" />
     <ClInclude Include="src\profiles\profilesPath.h" />
@@ -252,6 +253,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\pluginSupport.cpp" />
     <ClCompile Include="src\plugins\pluginsView.cpp" />
     <ClCompile Include="src\plugins\pluginsViewRender.cpp" />
+    <ClCompile Include="src\plugins\pluginsViewString.cpp" />
     <ClCompile Include="src\profiles\profileHelpers.cpp" />
     <ClCompile Include="src\profiles\profilesPath.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />

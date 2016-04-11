@@ -95,7 +95,8 @@ public:
 #define LUAT_PCRE       108
 #define LUAT_IMAGE      109
 #define LUAT_TRIGGER    110
-#define LUAT_LAST       110
+#define LUAT_VIEWSTRING 111
+#define LUAT_LAST       111
 
 class luaT_towstring 
 {

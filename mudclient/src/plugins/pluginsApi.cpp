@@ -1173,6 +1173,7 @@ int translateColors(lua_State *L)
 // Metatables for all types
 void reg_mt_window(lua_State *L);
 void reg_mt_viewdata(lua_State *L);
+void reg_mt_viewstring(lua_State *L);
 void reg_activeobjects(lua_State *L);
 void reg_string(lua_State *L);
 void reg_props(lua_State *L);
@@ -1240,6 +1241,7 @@ bool initPluginsSystem()
     reg_activeobjects(L);
     reg_mt_window(L);
     reg_mt_viewdata(L);
+    reg_mt_viewstring(L);
     reg_mt_panels(L);
     reg_mt_image(L);
     reg_mt_render(L);
