@@ -104,7 +104,7 @@ end
 
 function affects.init()
   colors = { good_active = 10, good_inactive = 2, bad_active = 9, bad_inactive = 1 }
-  local p = createPanel("right", 120)
+  local p = createPanel("right", 100)
   r = p:setRender(render)
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())

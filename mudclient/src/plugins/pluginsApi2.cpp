@@ -10,6 +10,7 @@
 
 #include "../MainFrm.h"
 extern CMainFrame _wndMain;
+extern LogicProcessorMethods* lp();
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f)
 {
@@ -446,14 +447,115 @@ int vd_blocks(lua_State *L)
     return pluginInvArgs(L, L"viewdata:blocks");
 }
 
+int vd_gettype(const tchar* type);
+bool vsp_pushparam(lua_State *L, const MudViewStringParams &p, int type)
+{
+    bool ok = true;
+    switch (type)
+    {
+        case luaT_ViewData::TEXTCOLOR:
+             if (p.use_ext_colors)
+                 ok = false;
+             else
+             {
+                 tbyte color = p.text_color;
+                 if (color <= 7 && p.intensive_status) color += 8;
+                 lua_pushunsigned(L, color);
+             }
+         break;
+         case luaT_ViewData::BKGCOLOR:
+             if (p.use_ext_colors)
+                  ok = false;
+             else
+                  lua_pushunsigned(L, p.bkg_color);
+             break;
+         case luaT_ViewData::UNDERLINE:
+             lua_pushunsigned(L, p.underline_status);
+             break;
+         case luaT_ViewData::ITALIC:
+             lua_pushunsigned(L, p.italic_status);
+             break;
+         case luaT_ViewData::BLINK:
+             lua_pushunsigned(L, p.blink_status);
+             break;
+         case luaT_ViewData::REVERSE:
+             lua_pushunsigned(L, p.reverse_video);
+             break;
+         case luaT_ViewData::EXTTEXTCOLOR:
+             if (p.use_ext_colors)
+                 lua_pushunsigned(L, p.ext_text_color);
+             else
+                 ok = false;
+             break;
+          case luaT_ViewData::EXTBKGCOLOR:
+             if (p.use_ext_colors)
+                  lua_pushunsigned(L, p.ext_bkg_color);
+             else
+                  ok = false;
+             break;
+          default:
+             ok = false;
+             break;
+   }
+   return ok;
+}
+
 tbyte _check(unsigned int val, unsigned int min, unsigned int max)
 {
     if (val < min) val = min;
     else if (val > max) val = max;
     return (tbyte)val;
 }
+bool vsp_setparam(MudViewStringParams &p, int type,  unsigned int v)
+{
+    bool ok = true;
+    switch (type)
+    {
+       case luaT_ViewData::TEXTCOLOR:
+          if (p.use_ext_colors)
+              p.bkg_color = 0;
+          p.use_ext_colors = 0;
+          p.intensive_status = 0;
+          p.text_color = _check(v, 0, 255);
+          break;
+       case luaT_ViewData::BKGCOLOR:
+          if (p.use_ext_colors)
+               p.text_color = 7;
+          p.use_ext_colors = 0;
+          p.intensive_status = 0;
+          p.bkg_color = _check(v, 0, 255);
+          break;
+       case luaT_ViewData::UNDERLINE:
+          p.underline_status = _check(v, 0, 1);
+          break;
+       case luaT_ViewData::ITALIC:
+          p.italic_status = _check(v, 0, 1);
+          break;
+       case luaT_ViewData::BLINK:
+          p.blink_status = _check(v, 0, 1);
+          break;
+       case luaT_ViewData::REVERSE:
+          p.reverse_video = _check(v, 0, 1);
+          break;
+       case luaT_ViewData::EXTTEXTCOLOR:
+          if (!p.use_ext_colors)
+            p.ext_bkg_color = tortilla::getPalette()->getColor(p.bkg_color);
+          p.use_ext_colors = 1;
+          p.ext_text_color = v;
+          break;
+       case luaT_ViewData::EXTBKGCOLOR:
+          if (!p.use_ext_colors)
+             p.ext_text_color = tortilla::getPalette()->getColor(p.text_color);
+          p.use_ext_colors = 1;
+          p.ext_bkg_color = v;
+          break;
+       default:
+          ok = false;
+          break;
+    }
+    return ok;
+}
 
-int vd_gettype(const tchar* type);
 int vd_get(lua_State *L)
 {
     if (luaT_check(L, 3, LUAT_VIEWDATA, LUA_TNUMBER, LUA_TNUMBER)||
@@ -471,7 +573,7 @@ int vd_get(lua_State *L)
 
         bool ok = false;
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        MudViewString* str = pdata->getselected();        
+        MudViewString* str = pdata->getselected();
         if (str)
         {
             int block = lua_tointeger(L, 2);
@@ -479,53 +581,7 @@ int vd_get(lua_State *L)
             if (block >= 1 && block <= size)
             {
                 MudViewStringParams &p = str->blocks[block-1].params;
-                ok = true;
-                switch (type)
-                {
-                    case luaT_ViewData::TEXTCOLOR:
-                        if (p.use_ext_colors)
-                            ok = false;
-                        else
-                        {
-                            tbyte color = p.text_color;
-                            if (color <= 7 && p.intensive_status) color += 8;
-                            lua_pushunsigned(L, color);
-                        }
-                        break;
-                    case luaT_ViewData::BKGCOLOR:
-                        if (p.use_ext_colors)
-                            ok = false;
-                        else
-                            lua_pushunsigned(L, p.bkg_color);
-                        break;
-                    case luaT_ViewData::UNDERLINE:
-                        lua_pushunsigned(L, p.underline_status);
-                        break;
-                    case luaT_ViewData::ITALIC:
-                        lua_pushunsigned(L, p.italic_status);
-                        break;
-                    case luaT_ViewData::BLINK:
-                        lua_pushunsigned(L, p.blink_status);
-                        break;
-                    case luaT_ViewData::REVERSE:
-                        lua_pushunsigned(L, p.reverse_video);
-                        break;
-                    case luaT_ViewData::EXTTEXTCOLOR:
-                        if (p.use_ext_colors)
-                            lua_pushunsigned(L, p.ext_text_color);
-                        else
-                            ok = false;
-                        break;
-                    case luaT_ViewData::EXTBKGCOLOR:
-                        if (p.use_ext_colors)
-                            lua_pushunsigned(L, p.ext_bkg_color);
-                        else
-                            ok = false;
-                        break;
-                    default:
-                        ok = false;
-                        break;
-                }
+                ok = vsp_pushparam(L, p, type);
             }
         }
         if (!ok)
@@ -573,51 +629,7 @@ int vd_set(lua_State *L)
             {
                 unsigned int v = lua_tounsigned(L, 4);
                 MudViewStringParams &p = str->blocks[block-1].params;
-                ok = true;
-                switch (type)
-                {
-                case luaT_ViewData::TEXTCOLOR:
-                    if (p.use_ext_colors)
-                        p.bkg_color = 0;
-                    p.use_ext_colors = 0;
-                    p.intensive_status = 0;
-                    p.text_color = _check(v, 0, 255);
-                    break;
-                case luaT_ViewData::BKGCOLOR:
-                    if (p.use_ext_colors)
-                        p.text_color = 7;
-                    p.use_ext_colors = 0;
-                    p.intensive_status = 0;
-                    p.bkg_color = _check(v, 0, 255);
-                    break;                
-                case luaT_ViewData::UNDERLINE:
-                    p.underline_status = _check(v, 0, 1);
-                    break;
-                case luaT_ViewData::ITALIC:
-                    p.italic_status = _check(v, 0, 1);
-                    break;
-                case luaT_ViewData::BLINK:
-                    p.blink_status = _check(v, 0, 1);
-                    break;
-                case luaT_ViewData::REVERSE:
-                    p.reverse_video = _check(v, 0, 1);
-                    break;
-                case luaT_ViewData::EXTTEXTCOLOR:
-                    if (!p.use_ext_colors)
-                        p.ext_bkg_color = tortilla::getPalette()->getColor(p.bkg_color);
-                    p.use_ext_colors = 1;
-                    p.ext_text_color = v;
-                    break;
-                case luaT_ViewData::EXTBKGCOLOR:
-                    if (!p.use_ext_colors)
-                        p.ext_text_color = tortilla::getPalette()->getColor(p.text_color);
-                    p.use_ext_colors = 1;
-                    p.ext_bkg_color = v;
-                    break;
-                default:
-                    ok = false;
-                    break;
-                }
+                ok = vsp_setparam(p, type, v);
             }
         }
         lua_pushboolean(L, ok ? 1 : 0);
@@ -959,7 +971,21 @@ int vd_getKey(lua_State *L)
             luaT_pushwstring(L, k.c_str());
         return 1;
     }
-    return pluginInvArgs(L, L"viewdata:isChanged");
+    return pluginInvArgs(L, L"viewdata:getKey");
+}
+
+int vd_createRef(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *s = pdata->getselected();
+        PluginsViewString *p = new PluginsViewString();
+        p->create(s);
+        luaT_pushobject(L, p, LUAT_VIEWSTRING);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:createRef");
 }
 
 int vd_toWatch(lua_State *L)
@@ -1052,11 +1078,166 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "getParameter", vd_getParameter);
     regFunction(L, "isChanged", vd_isChanged);
     regFunction(L, "getKey", vd_getKey);
+    regFunction(L, "createRef", vd_createRef);
     regFunction(L, "__towatch", vd_toWatch);
     regIndexMt(L);
     lua_pop(L, 1);
 }
 //--------------------------------------------------------------------
+int vs_getText(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        tstring text;
+        s->getText(&text);
+        luaT_pushwstring(L, text.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:getText");
+}
+
+int vs_getTextLen(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        lua_pushinteger(L, s->getTextLen());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:getTextLen");
+}
+
+int vs_blocks(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        lua_pushinteger(L, s->count());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:blocks");
+}
+
+int vs_setBlockText(lua_State *L)
+{
+    if (luaT_check(L, 3, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        tstring text(luaT_towstring(L, 3));
+        int result = (s->setBlockText(index-1, text)) ? 1 : 0;
+        lua_pushboolean(L, result);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:setBlockText");
+}
+
+int vs_getBlockText(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        tstring text;
+        if (s->getBlockText(index-1, &text))
+            luaT_pushwstring(L, text.c_str());
+        else
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:getBlockText");
+}
+
+int vs_deleteBlock(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        int result = s->deleteBlock(index-1) ? 1 : 0;
+        lua_pushboolean(L, result);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:deleteBlock");
+}
+
+int vs_set(lua_State *L)
+{
+    if (luaT_check(L, 4, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER) || 
+        luaT_check(L, 4, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TSTRING, LUA_TNUMBER))
+    {
+        int type = 0;
+        if (lua_isnumber(L, 3))
+            type = lua_tointeger(L, 3);
+        else
+        {
+            type = vd_gettype(luaT_towstring(L, 3));
+            if (type == -1)
+                return pluginInvArgs(L, L"viewstring:set");
+        }
+
+        bool ok = false;
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        if (index >= 1 && index <= s->count())
+        {
+            unsigned int v = lua_tounsigned(L, 4);
+            MudViewStringBlock &b = s->get(index-1);
+            ok = vsp_setparam(b.params, type, v);
+        }
+        if (!ok)
+            lua_pushnil(L);
+        lua_pushboolean(L, ok ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:set");
+}
+
+int vs_get(lua_State *L)
+{
+    if (luaT_check(L, 3, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TNUMBER)||
+        luaT_check(L, 3, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TSTRING))
+    {
+        int type = 0;
+        if (lua_isnumber(L, 3))
+            type = lua_tointeger(L, 3);
+        else
+        {
+            type = vd_gettype(luaT_towstring(L, 3));
+            if (type == -1)
+                return pluginInvArgs(L, L"viewstring:get");
+        }
+        bool ok = false;
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int index = lua_tointeger(L, 2);
+        if (index >= 1 && index <= s->count())
+        {
+            const MudViewStringBlock &b = s->get(index-1);
+            ok = vsp_pushparam(L, b.params, type);
+        }
+        if (!ok)
+            lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:get");
+}
+
+int vs_print(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        int window = lua_tointeger(L, 2);
+        if (window >= 0 && window <= OUTPUT_WINDOWS)
+        {
+            PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+            lp()->pluginsOutput(window, s);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"viewstring:print");
+}
+
 int vs_toWatch(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWSTRING))
@@ -1093,15 +1274,20 @@ int vs_toWatch(lua_State *L)
             lua_pushstring(L, buffer);
             lua_settable(L, -3);
 
-            lua_pushstring(L, "style");
-            sprintf(buffer, "I:%d,U:%d,L:%d,B:%d,R:%d", p.italic_status, p.underline_status, p.intensive_status, p.blink_status, p.reverse_video);
-            lua_pushstring(L, buffer);
+            lua_pushstring(L, "attr");
+            std::string a;
+            if (p.italic_status) a.append("i");
+            if (p.underline_status) a.append("u");
+            if (!p.use_ext_colors && p.intensive_status) a.append("^");
+            if (p.blink_status) a.append("f");
+            if (p.reverse_video) a.append("r");
+            lua_pushstring(L, a.c_str());
             lua_settable(L, -3);
 
             lua_pushinteger(L, i+1);
             lua_insert(L, -2);
             lua_settable(L, -3);
-        }        
+        }
         return 1;
     }
     return 0;
@@ -1120,6 +1306,15 @@ int vs_gc(lua_State *L)
 void reg_mt_viewstring(lua_State *L)
 {
     luaL_newmetatable(L, "viewstring");
+    regFunction(L, "getText", vs_getText);
+    regFunction(L, "getTextLen", vs_getTextLen);
+    regFunction(L, "blocks", vs_blocks);
+    regFunction(L, "setBlockText", vs_setBlockText);
+    regFunction(L, "getBlockText", vs_getBlockText);
+    regFunction(L, "deleteBlock", vs_deleteBlock);    
+    regFunction(L, "set", vs_set);
+    regFunction(L, "get", vs_get);
+    regFunction(L, "print", vs_print);
     regFunction(L, "__towatch", vs_toWatch);
     regFunction(L, "__gc", vs_gc);
     regIndexMt(L);

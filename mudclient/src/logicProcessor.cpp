@@ -368,6 +368,21 @@ void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
        printex(window, msgs);
 }
 
+void LogicProcessor::pluginsOutput(int window, const PluginsViewString* s)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS) {
+    parseData data;
+    MudViewString *new_string = new MudViewString();
+    int count = s->count();
+    new_string->blocks.resize(count);
+    for (int i=0;i<count;++i)
+       new_string->blocks[i] = s->ref(i);
+    new_string->system = true;
+    data.strings.push_back(new_string);
+    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, window);
+    }
+}
+
 void LogicProcessor::updateLog(const tstring& msg)
 {
     m_updatelog.append(msg);

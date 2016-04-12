@@ -1,6 +1,5 @@
 ﻿-- inveq
 -- Плагин для Tortilla mud client
-
 local inveq = {}
 function inveq.name()
   return 'Инвентарь и экипировка'
@@ -66,14 +65,14 @@ function db.load()
     db.objects = decl.new()
     if not db.objects then return false end
   end
-  if not db.objects:load( getPath("words.lst") ) then
+  if not db.objects:load( getPath("objects.lst") ) then
     log("Не загружена таблица предметов.")
   end
   return true
 end
 function db.save()
   if db.objects then 
-    if not db.objects:save( getPath("words.lst") ) then
+    if not db.objects:save( getPath("objects.lst") ) then
       log("Не сохранена таблица предметов.")
     end
   end
