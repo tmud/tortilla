@@ -44,7 +44,7 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const std::wstring& msg, bool from_queue)
+bool TrayMainObject::showMessage(const message& msg, bool from_queue)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
@@ -82,7 +82,7 @@ bool TrayMainObject::showMessage(const std::wstring& msg, bool from_queue)
         rb.y = pos.top-4;
     }
 
-    w->setText(msg);
+    w->setText(msg.text);
     const TraySettings &s = m_settings;
     SIZE sz = w->getSize();
 
@@ -94,6 +94,10 @@ bool TrayMainObject::showMessage(const std::wstring& msg, bool from_queue)
     a.wait_sec = m_settings.timeout;
     a.bkgnd_color = s.background;
     a.text_color = s.text;
+    if (msg.usecolors) {
+        a.bkgnd_color = msg.bkgndcolor;
+        a.text_color = msg.textcolor;
+    }
     a.notify_wnd = m_hWnd;
     a.notify_msg = WM_USER;
     a.notify_param = (WPARAM)w;
@@ -165,7 +169,7 @@ void TrayMainObject::tryShowQueue()
 {
     while (!isHeightLimited() && !m_queue.empty())
     {
-        std::wstring msg(*m_queue.begin());
+        message msg(*m_queue.begin());
         m_queue.pop_front();
         showMessage(msg, true);
     }

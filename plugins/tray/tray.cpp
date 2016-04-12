@@ -148,37 +148,37 @@ int syscmd(lua_State *L)
         lua_pop(L, 1);
         if (cmd == L"tray")
         {
-            COLORREF text_color, bgnd_color;
             int n = luaL_len(L, -1);
-            int s = 2;
-            if (n > 2)
-            {
-                lua_pushinteger(L, 2);
-                lua_gettable(L, -2);
-                if (lua_isstring(L, -1))
-                {
-                    std::wstring color(luaT_towstring(L, -1));
-                    if (base::translateColors(L, color.c_str(), &text_color, &bgnd_color)) {
-                        s = 3;
-                    }
-                }
-            }
-            std::wstring text;
-            for (int i=s; i<=n; ++i)
+            std::deque<std::wstring> text;
+            for (int i=2; i<=n; ++i)
             {
                 lua_pushinteger(L, i);
                 lua_gettable(L, -2);
                 if (lua_isstring(L, -1))
                 {
-                    if (!text.empty())
-                        text.append(L" ");
-                    text.append(luaT_towstring(L, -1));
+                    std::wstring tmp(luaT_towstring(L, -1));
+                    text.push_back(tmp);
                 }
                 lua_pop(L, 1);
             }
-            if (!text.empty())
-                 g_tray.showMessage(text, false);
             lua_pop(L, 1);
+            if (!text.empty())
+            {
+                message m;
+                COLORREF text_color, bgnd_color;
+                if (base::translateColors(L, text[0].c_str(), &text_color, &bgnd_color))
+                {
+                    text.pop_front();
+                    m.usecolors = true;
+                    m.textcolor = text_color;
+                    m.bkgndcolor = bgnd_color;
+                }
+                for (int i=0,e=text.size();i<e;++i) {
+                   if (i!=0) m.text.append(L" ");
+                   m.text.append(text[i]);
+                }
+                g_tray.showMessage(m, false);
+            }
             lua_pushnil(L);
             return 1;
         }
