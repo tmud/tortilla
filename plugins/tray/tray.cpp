@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.11");
+    luaT_pushwstring(L, L"1.12");
     return 1;
 }
 
@@ -66,9 +66,8 @@ int init(lua_State *L)
     g_tray.setAlarmWnd(base::getParent(L));
     g_tray.setActivated(p.activated());
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    std::wstring path(luaT_towstring(L, -1));
-    lua_pop(L, 1);
+    std::wstring path;
+    base::getPath(L, L"config.xml", &path);
 
     TraySettings &s = g_tray.traySettings();
     s.timeout = 5;
@@ -149,9 +148,23 @@ int syscmd(lua_State *L)
         lua_pop(L, 1);
         if (cmd == L"tray")
         {
+            COLORREF text_color, bgnd_color;
             int n = luaL_len(L, -1);
+            int s = 2;
+            if (n > 2)
+            {
+                lua_pushinteger(L, 2);
+                lua_gettable(L, -2);
+                if (lua_isstring(L, -1))
+                {
+                    std::wstring color(luaT_towstring(L, -1));
+                    if (base::translateColors(L, color.c_str(), &text_color, &bgnd_color)) {
+                        s = 3;
+                    }
+                }
+            }
             std::wstring text;
-            for (int i=2; i<=n; ++i)
+            for (int i=s; i<=n; ++i)
             {
                 lua_pushinteger(L, i);
                 lua_gettable(L, -2);
