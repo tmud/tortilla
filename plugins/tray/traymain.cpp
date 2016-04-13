@@ -72,14 +72,17 @@ bool TrayMainObject::showMessage(const message& msg, bool from_queue)
     POINT rb = { -1, -1 };
     Animation a; 
     if (m_windows.empty())
+    {
         rb = GetTaskbarRB();
+        m_point0 = rb;
+    }
     else
     {
         int last = m_windows.size() - 1;
         RECT pos;
         m_windows[last]->GetWindowRect(&pos);
         rb.x = GetSystemMetrics(SM_CXSCREEN);
-        rb.y = pos.top-4;
+        rb.y = pos.top;
     }
 
     w->setText(msg.text);
@@ -87,7 +90,7 @@ bool TrayMainObject::showMessage(const message& msg, bool from_queue)
     SIZE sz = w->getSize();
 
     rb.x -= 2;
-    rb.y -= sz.cy;
+    rb.y -= (sz.cy+4);
     rb.x -= sz.cx;
     a.pos = rb;
     a.speed = 0.5f;
@@ -101,8 +104,6 @@ bool TrayMainObject::showMessage(const message& msg, bool from_queue)
     a.notify_wnd = m_hWnd;
     a.notify_msg = WM_USER;
     a.notify_param = (WPARAM)w;
-    if (m_windows.empty())
-        m_point0 = rb;
     m_windows.push_back(w);
     w->startAnimation(a);
     if (!m_activated)
@@ -153,6 +154,8 @@ void TrayMainObject::tryRunMoveAnimation()
          PopupWindow* w = m_windows[i];
          SIZE sz = w->getSize();
          POINT w_pos = w->getAnimation().pos;
+
+         p.y -= (sz.cy+4);
          if (w_pos.x != p.x || w_pos.y != p.y)
          {
              MoveAnimation ma;
@@ -161,7 +164,6 @@ void TrayMainObject::tryRunMoveAnimation()
              ma.speed = 0.002f;
              w->startMoveAnimation(ma);
          }
-         p.y -= (sz.cy+4);
     }
 }
 

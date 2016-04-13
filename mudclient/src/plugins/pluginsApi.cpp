@@ -62,7 +62,7 @@ int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 
 int pluginMethodError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"Ошибка в методе %s: %s", fname, error);
+    swprintf(plugin_buffer(), L"%s: Ошибка в методе %s: %s", plugin_name(), fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
@@ -1155,13 +1155,15 @@ int vprint(lua_State *L)
 int translateColors(lua_State *L)
 {
     EXTRA_CP;
-    if (luaT_check(L, 1, LUA_TSTRING))
+    if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
     {
         tstring p(luaT_towstring(L, 1));
         HighlightHelper hh;
         if (!hh.checkText(&p))
             return 0;
-        PropertiesHighlight ph;
+        COLORREF text = lua_tounsigned(L, 2);
+        COLORREF bgnd = lua_tounsigned(L, 3);
+        PropertiesHighlight ph(text, bgnd);
         ph.convertFromString(p);
         lua_pushunsigned(L, ph.textcolor);
         lua_pushunsigned(L, ph.bkgcolor);

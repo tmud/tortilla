@@ -1377,6 +1377,7 @@ bool LogicProcessor::init()
     regCommand("woutput", wprint);
     regCommand("output", print);
     regCommand("message", message);
+    regCommand("echo", message);
 
     regCommand("tab", tab);
     regCommand("untab", untab);

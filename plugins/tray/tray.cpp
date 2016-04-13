@@ -165,7 +165,8 @@ int syscmd(lua_State *L)
             if (!text.empty())
             {
                 message m;
-                COLORREF text_color, bgnd_color;
+                COLORREF text_color = g_tray.traySettings().text;
+                COLORREF bgnd_color = g_tray.traySettings().background;
                 if (base::translateColors(L, text[0].c_str(), &text_color, &bgnd_color))
                 {
                     text.pop_front();

@@ -19,7 +19,7 @@ function testtray.syscmd(t)
         return t
     end
 	local r = rnd.rand(0,9)
-    local cmd = props.cmdPrefix()..'tray ['..r..']:'..rnd.string(15, 40)
+    local cmd = props.cmdPrefix()..'tray ['..r..']:'..rnd.string(50, 140)
     runCommand(cmd)
     return false
 end

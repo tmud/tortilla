@@ -18,6 +18,8 @@ struct PropertiesHighlight
 {
     PropertiesHighlight() : textcolor(RGB(192,192,192)), bkgcolor(RGB(0,0,0)),
         underlined(0), border(0), italic(0) {}
+    PropertiesHighlight(COLORREF text_color, COLORREF bgnd_color) : textcolor(text_color), bkgcolor(bgnd_color),
+        underlined(0), border(0), italic(0) {}
     COLORREF textcolor;
     COLORREF bkgcolor;
     int underlined;

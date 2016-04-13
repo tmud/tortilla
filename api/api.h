@@ -259,7 +259,8 @@ namespace base {
         luaT_run(L, "log", "s", message);
     }
     inline bool translateColors(lua_State* L, const wchar_t* str, COLORREF* text, COLORREF *bgnd) {
-        luaT_run(L, "translateColors", "s", str);
+        if (!text || !bgnd) return false;
+        luaT_run(L, "translateColors", "suu", str, *text, *bgnd);
         if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
         {
             if (text) *text = lua_tounsigned(L, 1);

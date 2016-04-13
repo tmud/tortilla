@@ -74,4 +74,17 @@
     <plugin key="send.lua" value="1"/>
     <plugin key="voice.lua" value="0"/>
   </plugins>
+  <messages>
+    <actions value="0"/>
+    <aliases value="0"/>
+    <subs value="0"/>
+    <antisubs value="0"/>
+    <hotkeys value="0"/>
+    <highlights value="0"/>
+    <gags value="0"/>
+    <groups value="0"/>
+    <vars value="0"/>
+    <timers value="0"/>
+    <tabwords value="0"/>
+  </messages>
 </profile>
