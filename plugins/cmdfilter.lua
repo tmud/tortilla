@@ -41,7 +41,7 @@ if window ~= 0 then return end
     end
   end
   for i=#todelete,1,-1 do
-    v:select(i)
+    v:select(todelete[i])
     v:deleteString()
   end
 end

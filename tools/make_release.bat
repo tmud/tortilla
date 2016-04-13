@@ -25,7 +25,6 @@ cd ..
 
 md sdk
 
-xcopy gamedata\*.* tortilla\gamedata /E /Y
 xcopy ..\help\*.* tortilla\help /Y
 
 xcopy ..\modules\system.dll tortilla\modules /Y
@@ -36,6 +35,7 @@ xcopy ..\modules\lbass.dll tortilla\modules /Y
 xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y
 xcopy ..\modules\voice.dll tortilla\modules /Y
+xcopy ..\modules\extra.dll tortilla\modules /Y
 
 xcopy ..\plugins\jmc3import.dll tortilla\plugins /Y
 xcopy ..\plugins\tray.dll tortilla\plugins /Y
@@ -53,11 +53,12 @@ xcopy ..\plugins\bell.lua tortilla\plugins /Y
 xcopy ..\plugins\voice.lua tortilla\plugins /Y
 xcopy ..\plugins\pcrecalc.dll tortilla\plugins /Y
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
+xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y
 xcopy ..\%prod%\api.dll tortilla /Y
 xcopy ..\%prod%\lua.dll tortilla /Y
-if %windbg% == 1 xcopy windbg\dbghelp.dll tortilla /Y
+if %windbg% == 1 xcopy ..\sdk\decoda\dbghelp.dll tortilla /Y
 xcopy ..\mudclient\readme.txt tortilla /Y
 xcopy ..\mudclient\changelog.txt tortilla /Y
 

@@ -5,7 +5,7 @@ if system then return end
 
 system = require 'system'
 rnd = require 'rnd'
-decl = require 'declension'
+extra = require 'extra'
 
 local function prequire(m)
   local ok, mod = pcall(require, m)

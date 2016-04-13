@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "../mudclient/src/common/tokenizer.h"
+#include "common.h"
 
 void tstring_tolower(tstring *str)
 {
@@ -408,15 +409,8 @@ int declension_gc(lua_State *L)
     return 0;
 }
 
-void regFunction(lua_State *L, const char* name, lua_CFunction f)
-{
-    lua_pushstring(L, name);
-    lua_pushcfunction(L, f);
-    lua_settable(L, -3);
-}
-
 int declension_new(lua_State *L)
-{ 
+{
     if (lua_gettop(L) != 0)
     {
         luaT_push_args(L, "new");
@@ -448,17 +442,5 @@ int declension_new(lua_State *L)
     }
     Dictonary* nd = new Dictonary();
     luaT_pushobject(L, nd, gettype(L));
-    return 1;
-}
-
-static const luaL_Reg declension_methods[] =
-{
-    { "new", declension_new },
-    { NULL, NULL }
-};
-
-int luaopen_declension(lua_State *L)
-{
-    luaL_newlib(L, declension_methods);
     return 1;
 }

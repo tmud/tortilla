@@ -4,7 +4,7 @@
 
 dofile 'modules.lua'
 
-local dlib = decl.new()
+local dlib = extra.declension()
 
 local function assert(s1, s2, r)
   local result = dlib:compare(s1, s2)

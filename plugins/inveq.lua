@@ -61,8 +61,8 @@ end
 local db = {}
 function db.load()
   if not db.objects then
-    if not decl then return false end
-    db.objects = decl.new()
+    if not extra and not extra.declension then return false end
+    db.objects = extra.declension()
     if not db.objects then return false end
   end
   if not db.objects:load( getPath("objects.lst") ) then
