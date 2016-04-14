@@ -36,7 +36,7 @@ public:
     void setViewString(int index);
     int  getViewString() const;
     int  getLastString() const;
-    bool isLastString() const;
+    bool isLastStringVisible() const;
     bool isLastStringUpdated() const;
     void deleteLastString();
     int  getStringsCount() const;

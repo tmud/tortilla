@@ -1238,6 +1238,24 @@ int vs_print(lua_State *L)
     return pluginInvArgs(L, L"viewstring:print");
 }
 
+int vs_getData(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        tstring text;
+        s->serialize(&text);
+        luaT_pushwstring(L, text.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:getData");
+}
+
+int vs_setData(lua_State *L)
+{
+    return pluginInvArgs(L, L"viewstring:setData");
+}
+
 int vs_toWatch(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWSTRING))
@@ -1311,10 +1329,12 @@ void reg_mt_viewstring(lua_State *L)
     regFunction(L, "blocks", vs_blocks);
     regFunction(L, "setBlockText", vs_setBlockText);
     regFunction(L, "getBlockText", vs_getBlockText);
-    regFunction(L, "deleteBlock", vs_deleteBlock);    
+    regFunction(L, "deleteBlock", vs_deleteBlock);
     regFunction(L, "set", vs_set);
     regFunction(L, "get", vs_get);
     regFunction(L, "print", vs_print);
+    regFunction(L, "getData", vs_getData);
+    regFunction(L, "setData", vs_setData);
     regFunction(L, "__towatch", vs_toWatch);
     regFunction(L, "__gc", vs_gc);
     regIndexMt(L);

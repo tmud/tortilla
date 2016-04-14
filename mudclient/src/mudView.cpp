@@ -193,7 +193,7 @@ int MudView::getLastString() const
     return last;
 }
 
-bool MudView::isLastString() const
+bool MudView::isLastStringVisible() const
 {
     return (getLastString() == getViewString()) ? true : false;
 }

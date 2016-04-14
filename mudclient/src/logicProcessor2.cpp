@@ -102,29 +102,32 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         fullcmd.append(main_cmd);
         if (!hide_cmd)
             fullcmd.append(cmd->parameters);
-        
+
+        syscmdLog(fullcmd);
+        fullcmd_loged = true;
+
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
+
+        if (cmd->dropped)
+        {
+            tstring tmp(L"-");
+            tmp.append(fullcmd);
+            syscmdLog(tmp);
+            return;
+        }
+
+        if (cmd->changed && cmd->command.empty())
+            return;
 
         if (cmd->changed)
         {
             tstring tmp(L">");
-            tmp.append(fullcmd);
-            syscmdLog(tmp);
             tmp.assign(prefix);
             tmp.append(cmd->command);
             tmp.append(L" ");
             tmp.append(cmd->parameters);
-            fullcmd.swap(tmp);
-        }
-        syscmdLog(fullcmd);
-        fullcmd_loged = true;
-
-        if (cmd->dropped)
-            return;
-
-        if (cmd->changed) 
-        {
+            syscmdLog(tmp);
             main_cmd.assign(cmd->command);
             recognizeSystemCommand(&main_cmd, &error);
             cmd->command.assign(main_cmd);
@@ -165,7 +168,8 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        bool usesrc = (cmd->alias.empty()) ? true : false;
+        bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
+        if (cmd->changed) msg.append(prefix);
         msg.append(usesrc ? cmd->srccmd : cmd->command);
         if (!hide_cmd)
             msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
@@ -181,24 +185,33 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
 
 void LogicProcessor::processGameCommand(InputCommand* cmd)
 {
-    m_pHost->preprocessCommand(cmd);
-    if (cmd->changed || cmd->dropped)
-    {
-        tstring tmpout(L">");
-        tmpout.append(cmd->srccmd);
-        tmpout.append(cmd->srcparameters);
-        syscmdLog(tmpout);
-    }
-    if (cmd->dropped)
-        return;
-    tchar br[2] = { 0xa, 0 };
+    tstring br(L"\r\n");
     tstring tmp(cmd->command);
-    if (cmd->changed)
-        tmp.append(L" ");
     tmp.append(cmd->parameters);
-   
     tmp.append(br);
     processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+
+    m_pHost->preprocessCommand(cmd);
+    if (cmd->dropped)
+    {
+        tstring tmp(L"-");
+        tmp.append(cmd->srccmd);
+        tmp.append(cmd->srcparameters);
+        syscmdLog(tmp);  // шлем через метод (отключается как вывод системых команд)
+        return;
+    }
+    if (cmd->changed && cmd->command.empty())
+        return;
+    if (cmd->changed)
+    {
+        tmp.assign(L">");
+        tmp.append(cmd->command);
+        tmp.append(L" ");
+        tmp.append(cmd->parameters);
+        tmp.append(br);
+        processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+        tmp.erase(tmp.begin());
+    }
     sendToNetwork(tmp);
 }
 
@@ -1272,12 +1285,8 @@ IMPL(message)
         MessageCmdHelper mh(pdata);
         tstring str;
         mh.getStrings(&str);
-        if (!str.empty()) {
-            tmcLog(L"Уведомления:");
-            simpleLog(str);
-        }
-        else
-            tmcLog(L"Все уведомления отключены");
+        tmcLog(L"Эхо-уведомления:");
+        simpleLog(str);
         return;
     }
 

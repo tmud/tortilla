@@ -1,13 +1,5 @@
 #include "stdafx.h"
 #include "../mudclient/src/common/tokenizer.h"
-#include "common.h"
-
-void tstring_tolower(tstring *str)
-{
-    std::locale loc("");
-    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
-    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::tolower), &ct));
-}
 
 std::map<lua_State*, int> m_decl_types;
 typedef std::map<lua_State*, int>::iterator iterator;

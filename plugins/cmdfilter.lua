@@ -10,7 +10,7 @@ function cmdfilter.name()
 end
 
 function cmdfilter.description()
-  local s = 'Плагин фильтрует заданные команды от попадания в окно клиента.\r\nУдобно использовать, если игровые команды используются в таймерах.\r\n'
+  local s = 'Плагин фильтрует заданные команды от попадания в окно клиента, остается только результат.\r\nУдобно использовать, если игровые команды используются в таймерах.\r\n'
   s = s.."Список команд находится в файле: "..getPath('config.lua')
   return s
 end
@@ -27,16 +27,29 @@ function cmdfilter.init()
   cmd_list = t.cmdlist
 end
 
+local catch_mode = false
 function cmdfilter.after(window, v)
 if window ~= 0 then return end
   local todelete = {}
   for i=1,v:size() do
     v:select(i)
-    if v:isGameCmd() then
-      local last=v:blocks()
-    local cmd = v:getBlockText(last)
-      for _,c in ipairs(cmd_list) do
-         if c == cmd then todelete[#todelete+1] = i; break; end
+    if not catch_mode then
+      if v:isGameCmd() then
+        local last=v:blocks()
+        local cmd = v:getBlockText(last)
+        for _,c in ipairs(cmd_list) do
+          if c == cmd then
+            todelete[#todelete+1] = i
+            catch_mode = true
+          end
+        end
+      end
+    else
+      if v:isPrompt() then
+        catch_mode = false
+      end
+      if v:getTextLen() == 0 then
+        todelete[#todelete+1] = i
       end
     end
   end

@@ -5,6 +5,7 @@ local initialized = false
 local lor_catch_mode = false
 local lor_trigger, lor_filter
 local lor_strings = {}
+local lor_dictonary
 
 function lor.name()
   return 'База предметов'
@@ -21,36 +22,50 @@ function lor.init()
   local t = loadTable("config.lua")
   if not t or type(t.key) ~= 'string' or type(t.check) ~= 'function' then
     terminate("Ошибка в настройках.")
-    return
   end
   lor_trigger = createPcre(t.key)
   if not lor_trigger then
-    terminate("Ошибка в ключевой строке key, в настройках.")
-    return
+    terminate("Ошибка в настройках, в ключевой строке key.")
   end
   lor_filter = t.check(createPcre)
   if type(lor_filter) ~= 'function' then
-    terminate("Ошибка в параметре check, должна быть возвращена функция.")
-    return
+    terminate("Ошибка в настройках, в параметре check должна быть возвращена функция.")
+  end
+  if extra and type(extra.dictonary) == 'function' then
+    lor_dictonary = extra.dictonary()
+  end
+  if not lor_dictonary then
+    terminate("Не загружен модуль extra для работы с базой предметов.")
   end
   initialized = true
 end
 
 local function save_lor_strings()
-  for _,s in ipairs(lor_strings) do
-    s:print(1)
+  if not lor_strings.name then
+    log("Не получено имя предмета, сохранить невозможно")
+    return
   end
+  local info = {}
+  for k,s in ipairs(lor_strings) do
+    s:print(1)
+    info[k] = s:getData()
+  end
+  lor_dictonary:add(lor_strings.name, info)
 end
 
 local function find_lor_strings(id)
-print("ЛОР:"..id)
+  print("ЛОР:"..id)
+end
+
+function lor.syscmd(t)
+  return t
 end
 
 function lor.gamecmd(t)
   if t[1] == "лор" then
     if not initialized then
       print("[лор]: Ошибка в настройках.")
-      return
+      return nil
     end
     local id = ""
     for k=2,#t do
@@ -58,7 +73,7 @@ function lor.gamecmd(t)
       id = id..t[k]
     end
     find_lor_strings(id)
-    return
+    return {}
   end
   return t
 end
@@ -67,7 +82,6 @@ function lor.before(v, vd)
   if v ~= 0 then return end
   if not lor_trigger then
     terminate("Ошибка в настройках.")
-    return
   end
   if not lor_catch_mode then
     if vd:find(lor_trigger) then

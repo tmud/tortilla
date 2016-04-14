@@ -710,7 +710,13 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {
     if (parts.empty())
+    {
+        cmd->command.clear();
+        cmd->parameters.clear();
+        cmd->parameters_list.clear();
+        cmd->changed =  true;
         return;
+    }
 
     tstring newcmd(parts[0]);
     if (newcmd != cmd->command)

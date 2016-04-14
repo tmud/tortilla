@@ -553,7 +553,7 @@ private:
             if (PtInRect(&rc, pt))
             {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
-                bool last = m_history.isLastString();
+                bool last = m_history.isLastStringVisible();
                 if (last)
                     closeHistory();
                 return 0;
@@ -1083,7 +1083,7 @@ private:
         if (view == 0)
         {
             int vs = m_view.getViewString();
-            bool last = m_view.isLastString();
+            bool last = m_view.isLastStringVisible();
             bool last_updated = m_view.isLastStringUpdated();
 
             parseData history;
