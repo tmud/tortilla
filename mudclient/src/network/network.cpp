@@ -155,7 +155,7 @@ void NetworkConnection::threadProc()
         peer.sin_addr.s_addr = inet_addr(m_connection.address.c_str());
     }
 
-    /* keep alive option
+    // keep alive option
     DWORD optval = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)(&optval), sizeof(DWORD)))
     {
@@ -165,13 +165,13 @@ void NetworkConnection::threadProc()
     tcp_keepalive alive;
     alive.onoff = 1;
 	alive.keepalivetime = 5000;    // <- время между посылками keep-alive (мс)
-	alive.keepaliveinterval = 500; // <- время между посылками при отсутсвии ответа
+	alive.keepaliveinterval = 500; // <- время между посылками при отсутсвии ответа (мс)
     DWORD nSize = 0;
     if  (WSAIoctl(sock, SIO_KEEPALIVE_VALS, &alive, sizeof(alive), NULL, 0, &nSize,NULL,NULL) == SOCKET_ERROR)
     {
         sendEvent(NE_ERROR_CONNECT);
         return;
-    }*/
+    }
 
     sendEvent(NE_CONNECTING);
     if (::connect(sock, (sockaddr*)&peer, sizeof(peer)) == SOCKET_ERROR)
