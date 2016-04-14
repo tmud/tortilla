@@ -1086,6 +1086,8 @@ private:
             bool last = m_view.isLastStringVisible();
             bool last_updated = m_view.isLastStringUpdated();
 
+            int ls = m_view.getLastString(); //todo
+
             parseData history;
             bool in_soft_scrolling = m_view.inSoftScrolling();
             int limited = 0;
@@ -1116,7 +1118,23 @@ private:
                         if (m_drag_flag) { m_drag_flag = false; skip_history = true; }
                     }
                     if (!skip_history)
+                    {
+                        //todo
+                        {
+                            tchar buffer[64];
+                            swprintf(buffer, L"ls=%d,vs=%d,lu=%d",ls,vs,last_updated?1:0);
+                            parseData pd;
+                            pd.strings.resize(1);
+                            MudViewString *s= new MudViewString;
+                            pd.strings[0] = s;
+                            s->blocks.resize(1);
+                            s->blocks[0].string.append(buffer);
+                            MudView* v = m_views[6-1];
+                            v->addText(&pd, NULL);
+                        }
+
                         showHistory(vs, 1);
+                    }
                     if (soft_scroll || skip_history) {
                       int last = m_view.getLastString();
                       m_view.setViewString(last);
