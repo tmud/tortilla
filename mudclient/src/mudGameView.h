@@ -1076,10 +1076,33 @@ private:
         return &m_plugins;
     }
 
+    void debugOut(const tchar* buffer)
+    {
+        parseData pd;
+        pd.strings.resize(1);
+        MudViewString *s= new MudViewString;
+        pd.strings[0] = s;
+        s->blocks.resize(1);
+        s->blocks[0].string.append(buffer);
+        MudView* v = m_views[6-1];
+        v->addText(&pd, NULL);
+    }
+
     void addText(int view, parseData* parse_data)
     {
         if (parse_data->strings.empty())
+        {
+            // todo
+            if (view == 0) {
+                            int ls = m_view.getLastString();
+                            int vs = m_view.getViewString();
+                            bool last_updated = m_view.isLastStringUpdated();
+                            tchar buffer[64];
+                            swprintf(buffer, L"add empty ls=%d,vs=%d,lu=%d",ls,vs,last_updated?1:0);
+                            debugOut(buffer);
+            }
             return;
+        }
         if (view == 0)
         {
             int vs = m_view.getViewString();
@@ -1091,6 +1114,24 @@ private:
             parseData history;
             bool in_soft_scrolling = m_view.inSoftScrolling();
             int limited = 0;
+
+            // todo
+            {
+                int dropped = 0; 
+                int count = parse_data->strings.size();
+                for (int i=0; i<count; ++i )
+                {
+                    if (parse_data->strings[i]->dropped)
+                        dropped++;
+                }
+                if (dropped == count) {
+                     tchar buffer[64];
+                     swprintf(buffer, L"dropped ls=%d,vs=%d,lu=%d,c=%d",ls,vs,last_updated?1:0,count);
+                     debugOut(buffer);
+                }
+            }
+
+
             m_view.addText(parse_data, &history, &limited);
             vs = vs - limited;
             if (history.strings.empty())
@@ -1123,14 +1164,7 @@ private:
                         {
                             tchar buffer[64];
                             swprintf(buffer, L"ls=%d,vs=%d,lu=%d",ls,vs,last_updated?1:0);
-                            parseData pd;
-                            pd.strings.resize(1);
-                            MudViewString *s= new MudViewString;
-                            pd.strings[0] = s;
-                            s->blocks.resize(1);
-                            s->blocks[0].string.append(buffer);
-                            MudView* v = m_views[6-1];
-                            v->addText(&pd, NULL);
+                            debugOut(buffer);
                         }
 
                         showHistory(vs, 1);
