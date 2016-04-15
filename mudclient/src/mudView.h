@@ -23,10 +23,12 @@ class MudView : public CWindowImpl<MudView>
 
     int m_find_string_index;
     int m_find_start_pos, m_find_end_pos;
+    
+    int m_id; //todo
 
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
-    MudView(PropertiesElements *elements);
+    MudView(PropertiesElements *elements, int id);
     ~MudView();
     void accLastString(parseData *parse_data);
     void addText(parseData* parse_data, parseData *copy_data, int *limited_strings = NULL);

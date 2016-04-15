@@ -2,7 +2,7 @@
 -- Плагин для Tortilla mud client
 
 -- список команд, которые нужно фильтровать
-local cmd_list = { 'группа' }
+local cmd_list = { 'группа', 'счет', 'аф' }
 
 local cmdfilter = {}
 function cmdfilter.name() 

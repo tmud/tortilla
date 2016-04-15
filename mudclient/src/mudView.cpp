@@ -3,7 +3,7 @@
 #include "mudView.h"
 #pragma warning(disable: 4996)
 
-MudView::MudView(PropertiesElements *elements) : 
+MudView::MudView(PropertiesElements *elements, int id) : 
 propElements(elements),
 m_lines_count(0),
 m_last_visible_line(-1),
@@ -12,7 +12,8 @@ m_use_softscrolling(false),
 m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1),
-m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1)
+m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1),
+m_id(id)
 {
     m_dragpt.x = m_dragpt.y = 0;
 }
@@ -59,6 +60,10 @@ void MudView::accLastString(parseData *parse_data)
     parse_data->strings[0] = last_string;
     m_strings.pop_back();                                   // remove last string from view
     m_last_string_updated = true;
+    if (m_id == 0)
+    {
+        int x = 1;
+    }
 }
 
 int MudView::getStringsCount() const
@@ -68,6 +73,13 @@ int MudView::getStringsCount() const
 
 void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_strings)
 {
+    //m_last_string_updated = false;  //todo
+
+    if (m_id == 0)
+    {
+        int x = 1; //todo
+    }
+
     removeDropped(parse_data);
     if (parse_data->strings.empty())
         return;

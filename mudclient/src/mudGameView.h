@@ -63,7 +63,7 @@ public:
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData), m_last_find_view(-1), m_network_queue(2048),
-        m_view(&m_propElements), m_history(&m_propElements),
+        m_view(&m_propElements, 0), m_history(&m_propElements, -1),
         m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
     }
@@ -423,7 +423,7 @@ private:
             const OutputWindow& w =  m_propData->windows[i];
             m_find_dlg.setWindowName(i+1,w.name);
 
-            MudView *v = new MudView(&m_propElements);
+            MudView *v = new MudView(&m_propElements, i+1);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
             int menu_id = i+ID_WINDOW_1;
             if (w.side != DOCK_HIDDEN)
@@ -1101,7 +1101,7 @@ private:
                             swprintf(buffer, L"add empty ls=%d,vs=%d,lu=%d",ls,vs,last_updated?1:0);
                             debugOut(buffer);
             }
-            return;
+            //return;
         }
         if (view == 0)
         {
@@ -1124,19 +1124,18 @@ private:
                     if (parse_data->strings[i]->dropped)
                         dropped++;
                 }
-                if (dropped == count) {
+                if (dropped == count && count > 0) {
                      tchar buffer[64];
                      swprintf(buffer, L"dropped ls=%d,vs=%d,lu=%d,c=%d",ls,vs,last_updated?1:0,count);
                      debugOut(buffer);
                 }
             }
 
-
             m_view.addText(parse_data, &history, &limited);
-            vs = vs - limited;
             if (history.strings.empty())
                 return;
 
+            vs = vs - limited;
             if (last_updated)
                 m_history.deleteLastString();
             m_history.pushText(&history);
