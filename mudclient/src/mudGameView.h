@@ -553,7 +553,8 @@ private:
             if (PtInRect(&rc, pt))
             {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
-                bool last = m_history.isLastStringVisible();
+                bool last = (m_history.getViewString() == m_history.getLastString());
+                //todo bool last = m_history.isLastStringVisible();
                 if (last)
                     closeHistory();
                 return 0;
@@ -1078,14 +1079,14 @@ private:
 
     void debugOut(const tchar* buffer)
     {
-        parseData pd;
+        /*parseData pd;
         pd.strings.resize(1);
         MudViewString *s= new MudViewString;
         pd.strings[0] = s;
         s->blocks.resize(1);
         s->blocks[0].string.append(buffer);
         MudView* v = m_views[6-1];
-        v->addText(&pd, NULL);
+         v->addText(&pd, NULL); */
     }
 
     void addText(int view, parseData* parse_data)
@@ -1096,9 +1097,9 @@ private:
             if (view == 0) {
                             int ls = m_view.getLastString();
                             int vs = m_view.getViewString();
-                            bool last_updated = m_view.isLastStringUpdated();
+                            //bool last_updated = false; m_view.isLastStringUpdated();
                             tchar buffer[64];
-                            swprintf(buffer, L"add empty ls=%d,vs=%d,lu=%d",ls,vs,last_updated?1:0);
+                            swprintf(buffer, L"add empty ls=%d,vs=%d",ls,vs); //,last_updated?1:0);
                             debugOut(buffer);
             }
             //return;
@@ -1106,8 +1107,9 @@ private:
         if (view == 0)
         {
             int vs = m_view.getViewString();
-            bool last = m_view.isLastStringVisible();
-            bool last_updated = m_view.isLastStringUpdated();
+            //bool last = m_view.isLastStringVisible();
+            //bool last_updated = m_view.isLastStringUpdated();
+            bool last = (m_view.getViewString() == m_view.getLastString());
 
             int ls = m_view.getLastString(); //todo
 
@@ -1126,18 +1128,13 @@ private:
                 }
                 if (dropped == count && count > 0) {
                      tchar buffer[64];
-                     swprintf(buffer, L"dropped ls=%d,vs=%d,lu=%d,c=%d",ls,vs,last_updated?1:0,count);
+                     swprintf(buffer, L"dropped ls=%d,vs=%d,c=%d",ls,vs,count); // ,last_updated?1:0,count);
                      debugOut(buffer);
                 }
             }
 
             m_view.addText(parse_data, &history, &limited);
-            if (history.strings.empty())
-                return;
-
             vs = vs - limited;
-            if (last_updated)
-                m_history.deleteLastString();
             m_history.pushText(&history);
 
             checkHistorySize();
@@ -1162,7 +1159,7 @@ private:
                         //todo
                         {
                             tchar buffer[64];
-                            swprintf(buffer, L"ls=%d,vs=%d,lu=%d",ls,vs,last_updated?1:0);
+                            swprintf(buffer, L"ls=%d,vs=%d",ls,vs); //,last_updated?1:0);
                             debugOut(buffer);
                         }
 
