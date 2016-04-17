@@ -19,39 +19,32 @@ int dict_invalidargs(lua_State *L, const char* function_name)
     luaT_push_args(L, function_name);
     return lua_error(L);
 }
-
-typedef std::vector<tstring> info;
+//typedef std::vector<tstring> info;
 
 class Dictonary 
 {
 public:
     Dictonary();
     ~Dictonary();
-    void add(const tstring& name, info *obj) 
+    void add(const tstring& name, const tstring& data)
     {
-        
+        int x = 1;
     }
 private:
-    std::map<tstring, info*> m_dictonary;
+    //std::map<tstring, info*> m_dictonary;
+    std::map<tstring, tstring> m_dictonary;
 };
 
 int dict_add(lua_State *L)
 {
-    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TTABLE))
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
     {
         Dictonary *d = (Dictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
-        std::vector<tstring> info;
-        lua_pushnil(L);                     // first key
-        while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
-        {
-            if (!lua_isstring(L, -1))
-                dict_invalidargs(L, "add");
-            tstring line(luaT_towstring(L, -1));
-            info.push_back(line);
-            lua_pop(L, 1);
-        }
-        return 0;
+        tstring info(luaT_towstring(L, 3));        
+        d->add(id, info);
+        lua_pushboolean(L, 1);
+        return 1;
     }
     return dict_invalidargs(L, "add");
 }
