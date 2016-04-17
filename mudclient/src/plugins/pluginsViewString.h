@@ -27,6 +27,7 @@ public:
     int count() const { return blocks.size(); }
     MudViewStringBlock& get(int index) {  return blocks[index]; }
     const MudViewStringBlock& ref(int index) const {  return blocks[index]; }
+    const MudViewStringBlocks& getBlocks() const { return blocks; }
 
     bool setBlockText(int index, const tstring& text)
     {

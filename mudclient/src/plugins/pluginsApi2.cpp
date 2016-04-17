@@ -875,8 +875,14 @@ int vd_setNext(lua_State *L)
     {
          PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
          MudViewString *str = pdata->getselected();
-         str->next = lua_toboolean(L, 2) ? true : false;
-         return 0;
+         if (str)
+         {
+            str->next = lua_toboolean(L, 2) ? true : false;
+            lua_pushboolean(L, 1);
+            return 1;
+         }
+         lua_pushboolean(L, 0);
+         return 1;
     }
     return pluginInvArgs(L, L"viewdata:setNext");
 }
@@ -887,8 +893,14 @@ int vd_setPrev(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString *str = pdata->getselected();
-        str->prev = lua_toboolean(L, 2) ? true : false;
-        return 0;
+        if (str)
+        {
+            str->prev = lua_toboolean(L, 2) ? true : false;
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        lua_pushboolean(L, 0);
+        return 1;
     }
     return pluginInvArgs(L, L"viewdata:setPrev");
 }
@@ -899,7 +911,12 @@ int vd_isNext(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString *str = pdata->getselected();
-        lua_pushboolean(L, str->next ? 1 : 0);
+        if (str)
+        {
+            lua_pushboolean(L, str->next ? 1 : 0);
+            return 1;
+        }
+        lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, L"viewdata:isNext");
@@ -911,7 +928,12 @@ int vd_isPrev(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString *str = pdata->getselected();
-        lua_pushboolean(L, str->prev ? 1 : 0);
+        if (str) 
+        {
+            lua_pushboolean(L, str->prev ? 1 : 0);
+            return 1;
+        }
+        lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, L"viewdata:isPrev");
@@ -980,12 +1002,34 @@ int vd_createRef(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString *s = pdata->getselected();
-        PluginsViewString *p = new PluginsViewString();
-        p->create(s);
-        luaT_pushobject(L, p, LUAT_VIEWSTRING);
-        return 1;
+        if (s) 
+        {
+            PluginsViewString *p = new PluginsViewString();
+            p->create(s);
+            luaT_pushobject(L, p, LUAT_VIEWSTRING);
+            return 1;
+        } else {
+            lua_pushnil(L);
+            return 1;
+        }
     }
     return pluginInvArgs(L, L"viewdata:createRef");
+}
+
+int vd_print(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *s = pdata->getselected();
+        int view = lua_tointeger(L, 2);
+        if (s && view >= 0 && view < OUTPUT_WINDOWS)
+        {
+            lp()->pluginsOutput(view, s->blocks);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"viewdata:print");
 }
 
 int vd_toWatch(lua_State *L)
@@ -1079,6 +1123,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "isChanged", vd_isChanged);
     regFunction(L, "getKey", vd_getKey);
     regFunction(L, "createRef", vd_createRef);
+    regFunction(L, "print", vd_print);
     regFunction(L, "__towatch", vd_toWatch);
     regIndexMt(L);
     lua_pop(L, 1);
@@ -1231,7 +1276,7 @@ int vs_print(lua_State *L)
         if (window >= 0 && window <= OUTPUT_WINDOWS)
         {
             PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
-            lp()->pluginsOutput(window, s);
+            lp()->pluginsOutput(window, s->getBlocks());
             return 0;
         }
     }

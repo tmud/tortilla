@@ -560,6 +560,11 @@ public:
     {
         runcmd("deleteAllStrings");
     }
+    void print(int view)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "print", "od", view);
+    }
     bool find(Pcre *p)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
@@ -588,15 +593,17 @@ public:
         lua_pop(L, 2);
         return result;
     }
-    void setNext(bool next)
+    bool setNext(bool next)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "setNext", "ob", next);
+        return boolresult();
     }
-    void setPrev(bool prev)
+    bool setPrev(bool prev)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "setPrev", "ob", prev);
+        return boolresult();
     }
     bool isNext()
     {

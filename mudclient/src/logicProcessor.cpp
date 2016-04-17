@@ -375,15 +375,15 @@ void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
        printex(window, msgs);
 }
 
-void LogicProcessor::pluginsOutput(int window, const PluginsViewString* s)
+void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)
 {
     if (window >= 0 && window <= OUTPUT_WINDOWS) {
     parseData data;
     MudViewString *new_string = new MudViewString();
-    int count = s->count();
+    int count = v.size();
     new_string->blocks.resize(count);
     for (int i=0;i<count;++i)
-       new_string->blocks[i] = s->ref(i);
+       new_string->blocks[i] = v[i];
     new_string->system = true;
     data.strings.push_back(new_string);
     printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, window);
