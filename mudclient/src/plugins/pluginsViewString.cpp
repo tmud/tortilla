@@ -36,7 +36,7 @@ void PluginsViewString::serialize(tstring *data)
         a.append(L";");
         data->append(a);
         data->append(b.string);
-        data->append(L"\n");
+        data->append(L"\t");
 
         /*const tstring& s = b.string;
         if (s.find(L";;") != tstring::npos) {
