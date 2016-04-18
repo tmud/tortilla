@@ -4,9 +4,8 @@
 class Phrase
 {
 public:
-    Phrase(const tchar* phrase_in_string) 
+    Phrase(tstring p)
     {
-        tstring p(phrase_in_string);
         tstring_tolower(&p);
         Tokenizer t(p.c_str(), L" ");
         t.trimempty();
@@ -152,9 +151,9 @@ class Dictonary
 public:
     Dictonary() : m_changed(false) {}
     ~Dictonary() { clear(); }
-    bool addPhrase(const tchar *phrase) 
+    bool addPhrase(const tstring& t)
     {
-        Phrase *p = new Phrase(phrase);
+        Phrase *p = new Phrase(t);
         int len = p->len();
         if (len == 0)
             { delete p; return false; }
@@ -177,7 +176,7 @@ public:
             m_changed = true;
         return result;
     }
-    bool findPhrase(const tchar* t, tstring* result) const
+    bool findPhrase(const tstring& t, tstring* result) const
     {
         Phrase p(t);
         int len = p.len();
@@ -188,13 +187,25 @@ public:
             return false;
         return it->second->findPhrase(p, result);
     }
+    bool deletePhrase(const tstring& t)
+    {
+        Phrase p(t);
+        int len = p.len();
+        if (len == 0)
+            return false;
+        iterator it = m_data.find(len);
+        if (it == m_data.end())
+            return false;
+        it->second->
+    }
+
     void clear() 
     {
         std::for_each(m_data.begin(), m_data.end(), [](std::pair<int, PhrasesList*> p){ delete p.second; });
         m_data.clear();
         m_changed = true;
     }
-    bool check(const tchar* t, int index) const
+    bool check(const tstring& t, int index) const
     {
         Phrase p(t);
         int len = p.len();

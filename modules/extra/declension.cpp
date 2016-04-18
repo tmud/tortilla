@@ -26,7 +26,8 @@ int declension_add(lua_State *L)
     if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
     {
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
-        bool result = d->addPhrase(luaT_towstring(L, 2));
+        tstring p(luaT_towstring(L, 2));
+        bool result = d->addPhrase(p);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -39,7 +40,8 @@ int declension_find(lua_State *L)
     {
         tstring result_string;
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
-        if (d->findPhrase(luaT_towstring(L, 2), &result_string))
+        tstring p(luaT_towstring(L, 2));
+        if (d->findPhrase(p, &result_string))
         {
             luaT_pushwstring(L, result_string.c_str());
             return 1;
@@ -47,6 +49,25 @@ int declension_find(lua_State *L)
         return 0;
     }
     return declension_invalidargs(L, "find");
+}
+
+int declension_remove(lua_State *L)
+{
+    if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
+    {
+        /*todo Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
+        tstring p(luaT_towstring(L, 2));
+        d->de
+
+        if (d->findPhrase(p, &result_string))
+        {
+            luaT_pushwstring(L, result_string.c_str());
+            return 1;
+        }*/
+        return 0;
+    }
+    return declension_invalidargs(L, "remove");
+
 }
 
 int declension_load(lua_State *L)
@@ -63,7 +84,7 @@ int declension_load(lua_State *L)
             d->clear();
             for (int i=0,e=lf.text.size(); i<e; ++i)
             {
-                TU2W t(lf.text[i].c_str());
+                tstring t(TU2W(lf.text[i].c_str()));
                 d->addPhrase(t);
             }
         } else {
@@ -137,8 +158,10 @@ int declension_compare(lua_State *L)
 {
    if (luaT_check(L, 3, gettype(L), LUA_TSTRING, LUA_TSTRING))
    {
-      Phrase p1(luaT_towstring(L, 2));
-      Phrase p2(luaT_towstring(L, 3));
+      tstring t1(luaT_towstring(L, 2));
+      tstring t2(luaT_towstring(L, 3));
+      Phrase p1(t1);
+      Phrase p2(t2);
       int result = p1.similar(p2) ? 1 : 0;
       lua_pushboolean(L, result);
       return 1;
@@ -147,11 +170,12 @@ int declension_compare(lua_State *L)
 }
 
 int declension_check(lua_State *L)
-{ 
+{
    if (luaT_check(L, 3, gettype(L), LUA_TSTRING, LUA_TNUMBER))
    {
       Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
-      bool result = d->check(luaT_towstring(L, 2), lua_tointeger(L, 3)-1);
+      tstring p(luaT_towstring(L, 2));
+      bool result = d->check(p, lua_tointeger(L, 3)-1);
       lua_pushboolean(L, result ? 1 : 0);
       return 1;
    }
@@ -185,6 +209,7 @@ int declension_new(lua_State *L)
         luaL_newmetatable(L, "declension");
         regFunction(L, "add", declension_add );
         regFunction(L, "find", declension_find );
+        regFunction(L, "remove", declension_remove );
         regFunction(L, "load", declension_load );
         regFunction(L, "save", declension_save );
         regFunction(L, "clear", declension_clear );

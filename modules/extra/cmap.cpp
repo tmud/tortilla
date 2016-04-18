@@ -19,10 +19,11 @@ int dict_invalidargs(lua_State *L, const char* function_name)
     luaT_push_args(L, function_name);
     return lua_error(L);
 }
+typedef std::vector<tstring> collection;
 
 class MapDictonary 
 {
-    typedef std::vector<tstring> collection;
+   
 public:
     MapDictonary() {}
     ~MapDictonary() {
@@ -42,9 +43,29 @@ public:
         {
             collection *c = it->second;
             c->push_back(data);        
+        }        
+        m_phrases.addPhrase( new Phrase(name) );
+    }
+    const collection* find(const tstring& name)
+    {
+        tstring result;
+        Phrase p(name);
+        if (!m_phrases.findPhrase(p, &result))
+            return NULL;
+        iterator it = m_dictonary.find(result);
+        if (it == m_dictonary.end())
+            return NULL;
+        return it->second;
+    }
+    bool del(const tstring& name)
+    {
+        iterator it = m_dictonary.find(name);
+        if (it != m_dictonary.end())
+        {
+            m_dictonary.erase(it);
+            return true;
         }
-        Phrase *p = new Phrase(name.c_str());
-        m_phrases.addPhrase(p);
+        return false;
     }
 private:
     PhrasesList m_phrases;
@@ -68,7 +89,39 @@ int dict_add(lua_State *L)
 
 int dict_find(lua_State *L)
 {
-    return 0;
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring id(luaT_towstring(L, 2));
+        const collection *c = d->find(id);
+        if (!c)
+            lua_pushnil(L);
+        else
+        {
+            lua_newtable(L);
+            for (int i=0,e=c->size();i<e;++i)
+            {
+                lua_pushinteger(L, i+1);
+                luaT_pushwstring(L, c->at(i).c_str());
+                lua_settable(L, -3);
+            }
+        }
+        return 1;
+    }
+    return dict_invalidargs(L, "find");
+}
+
+int dict_remove(lua_State *L)
+{
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring id(luaT_towstring(L, 2));
+        bool result = d->del(id);
+        lua_pushboolean(L, result ? 1:0);
+        return 1;
+    }
+    return dict_invalidargs(L, "remove");
 }
 
 int dict_load(lua_State *L)
@@ -107,6 +160,7 @@ int dict_new(lua_State *L)
         luaL_newmetatable(L, "dictonary");
         regFunction(L, "add", dict_add);
         regFunction(L, "find", dict_find);
+        regFunction(L, "remove", dict_remove);
         regFunction(L, "load", dict_load);
         regFunction(L, "save", dict_save);
         regFunction(L, "__gc", dict_gc);
