@@ -30,12 +30,14 @@ end
 
 local catch_mode = false
 local prompts_counter = 0
+
+function cmdfilter.disconnect()
+  catch_mode = false
+  prompts_counter = 0
+end
+
 function cmdfilter.after(window, v)
 if window ~= 0 then return end
-  --[[for i=1,v:size() do --todo
-    v:select(i)
-    vprint(2,v:getText())
-  end]]
   local todelete = {}
   for i=1,v:size() do
     v:select(i)
@@ -59,16 +61,13 @@ if window ~= 0 then return end
           catch_mode = false
         else
           prompts_counter = prompts_counter - 1
-          todelete[#todelete+1] = i
+          --todelete[#todelete+1] = i
         end
       end
     end
     ::next::
   end
-  for i=#todelete,1,-1 do
-    v:select(todelete[i])
-    v:deleteString()
-  end
+  v:deleteStrings(todelete)
 end
 
 return cmdfilter

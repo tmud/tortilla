@@ -105,6 +105,15 @@ public:
         selected = -1;
     }
 
+    void delete_strings(const std::vector<int>& strings)
+    {
+        for (int i=0,e=strings.size(); i<e; ++i)
+        {
+            selected = strings[i]-1;
+            delete_selected();
+        }
+    }
+
     void deleteall()
     {
         std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) {delete s;});
