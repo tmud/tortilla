@@ -1436,6 +1436,28 @@ int string_lfup(lua_State *L)
     return 0;
 }
 
+int string_tokenize(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    {
+         tstring s(luaT_towstring(L, 1));
+         tstring tokens(luaT_towstring(L, 2));
+         lua_newtable(L);
+         if (s.empty())
+             return 1;
+         Tokenizer t(s.c_str(), tokens.c_str());
+         t.trimempty();
+         for (int i=0,e=t.size();i<e;++i)
+         {
+             lua_pushinteger(L, i+1);
+             luaT_pushwstring(L, t[i]);
+             lua_settable(L, -3);
+         }
+         return 1;
+    }
+    return 0;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -1448,6 +1470,7 @@ void reg_string(lua_State *L)
     regFunction(L, "lower", string_lower);
     regFunction(L, "upper", string_upper);
     regFunction(L, "lfup", string_lfup);
+    regFunction(L, "tokenize", string_tokenize);
     regIndexMt(L);
 
     // set metatable for lua string type

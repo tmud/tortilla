@@ -32,8 +32,8 @@ public:
               const tstring &p2 = p.words[i];
               int len = min(p1.size(), p2.size());
               int delta = max(p1.size(), p2.size()) - len;
-              if (delta > 2)
-                  { result = false; break; }
+              /*if (delta > 2)
+                  { result = false; break; }*/
               int compared = 0;
               for (int i=0;i<len;++i) {
                   if (p1[i] != p2[i]) break;
@@ -109,27 +109,20 @@ public:
     }
     bool findPhrase(const Phrase& p, tstring* result)
     {
-        int begin = -1;
-        tchar c = p.get(0).at(0);
-        for (int i=0,e=m_phrases.size();i<e;++i)
-        {
-            tchar c2 = m_phrases[i]->get(0).at(0);
-            if (c == c2) { begin = i; break; }
+        int index = find(p);
+        if (index != -1)
+        {   m_phrases[index]->getFullPhrase(result);
+            return true;
         }
-        if (begin == -1) return false;
-        int end = m_phrases.size();
-        for (int i=begin,e=m_phrases.size();i<e;++i)
+        return false;
+    }
+    bool deletePhrase(const Phrase& p)
+    {
+        int index = find(p);
+        if (index != -1)
         {
-            tchar c2 = m_phrases[i]->get(0).at(0);
-            if (c != c2) { end = i; break; }
-        }
-        for (int i=begin;i<end;++i)
-        {
-            if (m_phrases[i]->similar(p))
-            {
-                m_phrases[i]->getFullPhrase(result);
-                return true;
-            }
+            m_phrases.erase(m_phrases.begin()+index);
+            return true;
         }
         return false;
     }
@@ -142,10 +135,32 @@ public:
         return m_phrases.size();
     }
 private:
+    int find(const Phrase& p)
+    {
+        int begin = -1;
+        tchar c = p.get(0).at(0);
+        for (int i=0,e=m_phrases.size();i<e;++i)
+        {
+            tchar c2 = m_phrases[i]->get(0).at(0);
+            if (c == c2) { begin = i; break; }
+        }
+        if (begin == -1) return -1;
+        int end = m_phrases.size();
+        for (int i=begin,e=m_phrases.size();i<e;++i)
+        {
+            tchar c2 = m_phrases[i]->get(0).at(0);
+            if (c != c2) { end = i; break; }
+        }
+        for (int i=begin;i<end;++i)
+        {
+            if (m_phrases[i]->similar(p))
+                return i;
+        }
+        return -1;
+    }
     std::vector<Phrase*> m_phrases;
 };
 
-// словарь слов
 class Dictonary
 {
 public:
@@ -196,7 +211,7 @@ public:
         iterator it = m_data.find(len);
         if (it == m_data.end())
             return false;
-        it->second->
+        return it->second->deletePhrase(p);
     }
 
     void clear() 

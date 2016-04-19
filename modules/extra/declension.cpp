@@ -55,19 +55,13 @@ int declension_remove(lua_State *L)
 {
     if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
     {
-        /*todo Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
+        Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
         tstring p(luaT_towstring(L, 2));
-        d->de
-
-        if (d->findPhrase(p, &result_string))
-        {
-            luaT_pushwstring(L, result_string.c_str());
-            return 1;
-        }*/
-        return 0;
+        bool result = d->deletePhrase(p);
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
     }
     return declension_invalidargs(L, "remove");
-
 }
 
 int declension_load(lua_State *L)

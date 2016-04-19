@@ -1298,6 +1298,13 @@ int vs_getData(lua_State *L)
 
 int vs_setData(lua_State *L)
 {
+    if (luaT_check(L, 2, LUAT_VIEWSTRING, LUA_TSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        tstring text(luaT_towstring(L, 2));
+        s->deserialize(text);
+        return 0;
+    }
     return pluginInvArgs(L, L"viewstring:setData");
 }
 
@@ -1366,8 +1373,20 @@ int vs_gc(lua_State *L)
     return 0;
 }
 
+int vs_create(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        MudViewString *vs = new MudViewString();
+        luaT_pushobject(L, vs, LUAT_VIEWSTRING);
+        return 1;
+    }
+    return pluginInvArgs(L, L"createViewString");
+}
+
 void reg_mt_viewstring(lua_State *L)
 {
+    lua_register(L, "createViewString", vs_create);
     luaL_newmetatable(L, "viewstring");
     regFunction(L, "getText", vs_getText);
     regFunction(L, "getTextLen", vs_getTextLen);

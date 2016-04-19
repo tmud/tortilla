@@ -54,7 +54,20 @@ local function save_lor_strings()
 end
 
 local function find_lor_strings(id)
-  print("ЛОР:"..id)
+  local t = lor_dictonary:find(id)
+  if not t then
+    print("Ничего не найдено")
+    return
+  end
+  local vs = createViewString()
+  for _,s in ipairs(t) do
+    local info = s:tokenize('\n')
+    for _,si in ipairs(info) do
+      vs:setData(si)
+      vs:print(0)
+    end
+  end
+  print("")
 end
 
 function lor.syscmd(t)

@@ -698,7 +698,7 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     Plugin *old = _cp;
     _cp = p;
     if (error)
-        pluginOut(error);
+        pluginLog(error);
     swprintf(plugin_buffer(), L"Плагин %s отключен!", p->get(Plugin::FILE));
     pluginOut(plugin_buffer());
     p->setOn(false);
