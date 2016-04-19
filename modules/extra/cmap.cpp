@@ -30,31 +30,44 @@ class MapDictonary
         DWORD size;
     };
     std::vector<fileinfo> m_files;
-    struct index 
+    struct index
     {
         int file;
         DWORD pos_in_file;
-    }; 
+    };
     typedef std::vector<index> indexes;
     std::unordered_map<tstring, indexes> m_indexes;
+    typedef std::unordered_map<tstring, indexes>::iterator iterator;
     int m_current_file;
+    tstring m_base_dir;
 
 public:
-    MapDictonary() : m_current_file(-1) {}
+    MapDictonary(const tstring& dir) : m_current_file(-1), m_base_dir(dir) {}
     ~MapDictonary() {
         //std::for_each(m_dictonary.begin(), m_dictonary.end(),           [](std::pair<const tstring, collection*> &o) { delete o.second; });
     }
     void add(const tstring& name, const tstring& data)
     {
+        index ix = add_tofile(data);
+        if (ix.file == -1)
+            return;
+
         tstring n(name);
         tstring_tolower(&n);
         Phrase p(n);
         int count = p.len();
+        if (count > 1)
+        {
+            for (int i = 0, e = p.len(); i < e; ++i)
+            {
+                m_phrases.addPhrase(new Phrase(p.get(i)));
+                add_toindex(p.get(i), ix);
+            }
+        }
+        m_phrases.addPhrase(new Phrase(n));
+        add_toindex(n, ix);
         
         /*
-
-
-
         iterator it = m_dictonary.find(n),it_end = m_dictonary.end();
         if (it == it_end)
         {
@@ -99,8 +112,21 @@ public:
         return false;
     }*/
 private:
+    void add_toindex(const tstring& t, index i)
+    {
+        iterator it = m_indexes.find(t);
+        if (it == m_indexes.end())
+        {
+            indexes ix;
+            m_indexes[t] = ix;
+            it = m_indexes.find(t);
+        }
+        it->second.push_back(i);
+    }
+
     index add_tofile(const tstring& data)
     {
+        u8string tmp(TW2U(data.c_str()));
         if (m_current_file != -1) {
            fileinfo &f = m_files[m_current_file];
            if (f.size > max_db_filesize) {
@@ -117,9 +143,12 @@ private:
         if (m_current_file == -1) {
             int idx = m_files.size();
             tchar buffer[16];
+            tstring filename;
             while(true) {
-                swprintf(buffer,L"%d.db", idx); 
-                if (GetFileAttributes(buffer) == INVALID_FILE_ATTRIBUTES)
+                swprintf(buffer,L"%d.db", idx);
+                filename.assign(m_base_dir);
+                filename.append(buffer);
+                if (GetFileAttributes(filename.c_str()) == INVALID_FILE_ATTRIBUTES)
                     break;
                 idx++;
             } 
@@ -127,13 +156,13 @@ private:
             i.file = -1;
             i.pos_in_file = 0;
             fileinfo f;
-            f.path = buffer;
-            HANDLE hfile = CreateFile(buffer, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            f.path = filename;
+            HANDLE hfile = CreateFile(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
             if (hfile == INVALID_HANDLE_VALUE)
                 return i;
             DWORD pos = SetFilePointer(hfile, 0, NULL, FILE_CURRENT);
-            DWORD written = 0; DWORD towrite = data.length()*sizeof(tchar);
-            if (!WriteFile(hfile, data.c_str(), towrite, &written, NULL) || written!=towrite)
+            DWORD written = 0; DWORD towrite = tmp.length();
+            if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written!=towrite)
             {
                 SetFilePointer(hfile,pos,NULL,FILE_CURRENT);
                 CloseHandle(hfile);
@@ -155,11 +184,11 @@ private:
         if (hfile == INVALID_HANDLE_VALUE)
                 return i;
         DWORD size = GetFileSize(hfile, NULL);
-        SetFilePointer(hfile, 0, NULL, FILE_END);
-        DWORD written = 0; DWORD towrite = data.length()*sizeof(tchar);
-        if (!WriteFile(hfile, data.c_str(), towrite, &written, NULL) || written!=towrite)
+        SetFilePointer(hfile, size, NULL, FILE_BEGIN);
+        DWORD written = 0; DWORD towrite = tmp.length();
+        if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written!=towrite)
         {
-            SetFilePointer(hfile,size,NULL,FILE_CURRENT);
+            SetFilePointer(hfile,size,NULL,FILE_BEGIN);
             CloseHandle(hfile);
             return i;
         }
@@ -252,7 +281,7 @@ int dict_remove(lua_State *L)
     }*/
     return dict_invalidargs(L, "remove");
 }
-
+/*
 int dict_load(lua_State *L)
 {
     return 0;
@@ -261,7 +290,7 @@ int dict_load(lua_State *L)
 int dict_save(lua_State *L)
 {
     return 0;
-}
+}*/
 
 int dict_gc(lua_State *L)
 {
@@ -290,8 +319,8 @@ int dict_new(lua_State *L)
         regFunction(L, "add", dict_add);
         regFunction(L, "find", dict_find);
         regFunction(L, "remove", dict_remove);
-        regFunction(L, "load", dict_load);
-        regFunction(L, "save", dict_save);
+        //regFunction(L, "load", dict_load);
+        //regFunction(L, "save", dict_save);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
         lua_pushvalue(L, -2);
@@ -301,7 +330,9 @@ int dict_new(lua_State *L)
         lua_settable(L, -3);
         lua_pop(L, 1);
     }
-    MapDictonary* nd = new MapDictonary();
+    tstring path;
+    base::getPath(L, L"", &path);
+    MapDictonary* nd = new MapDictonary(path);
     luaT_pushobject(L, nd, get_dict(L));
     return 1;
 }
