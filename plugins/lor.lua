@@ -59,19 +59,13 @@ local function find_lor_strings(id)
     print("Ничего не найдено")
     return
   end
+  local info = t:tokenize('\n')
   local vs = createViewString()
-  for _,s in ipairs(t) do
-    local info = s:tokenize('\n')
-    for _,si in ipairs(info) do
-      vs:setData(si)
-      vs:print(0)
-    end
+  for _,s in ipairs(info) do
+    vs:setData(si)
+    vs:print(0)
   end
   print("")
-end
-
-function lor.syscmd(t)
-  return t
 end
 
 function lor.gamecmd(t)

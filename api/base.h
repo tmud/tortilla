@@ -220,6 +220,7 @@ class load_file
     const DWORD buffer_size = 256;
     uchar* buffer;
     DWORD  file_size;
+    DWORD  not_readed;
     DWORD  in_buffer;
     bool   bom_check;
     bool   last_0d;
@@ -227,7 +228,8 @@ class load_file
 public:
     bool result;
     bool file_missed;
-    load_file(const std::wstring& filepath, DWORD maxsize = 0) : hfile(INVALID_HANDLE_VALUE), buffer(NULL), file_size(0), in_buffer(0), bom_check(false), last_0d(false),
+    load_file(const std::wstring& filepath, DWORD maxsize = 0) : hfile(INVALID_HANDLE_VALUE), buffer(NULL),
+        file_size(0), not_readed(0), in_buffer(0), bom_check(false), last_0d(false),
         result(false), file_missed(false)
     {
         buffer = new uchar[buffer_size];
@@ -245,6 +247,7 @@ public:
         if (maxsize > 0 && size > maxsize)
             return;
         file_size = size;
+        not_readed = size;
         result = true;
     }
     ~load_file() 
@@ -253,21 +256,22 @@ public:
         if (hfile != INVALID_HANDLE_VALUE) CloseHandle(hfile);
         hfile = INVALID_HANDLE_VALUE;
     }
-    bool readNextString(std::string *string)
+    bool readNextString(std::string *string, DWORD* startpos = NULL)
     {
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
-
-        while (file_size > 0 || in_buffer > 0)
+        if (startpos)
+            *startpos = file_size-not_readed;
+        while (not_readed > 0 || in_buffer > 0)
         {
             DWORD readed = 0;
-            if (file_size > 0)
+            if (not_readed > 0)
             {
                 DWORD toread = buffer_size - in_buffer;
-                if (toread > file_size) toread = file_size;
+                if (toread > not_readed) toread = not_readed;
                 if (!ReadFile(hfile, buffer+in_buffer, toread, &readed, NULL) || readed != toread)
                        { result = false; return false; }
-                file_size -= readed;
+                not_readed -= readed;
             }
             readed += in_buffer;
 
@@ -304,7 +308,7 @@ public:
                 current_string.append((char*)b, e-b);
                 in_buffer = 0;
             }
-            if (file_size == 0)
+            if (not_readed == 0)
             {
                string->assign(current_string);
                current_string.clear();

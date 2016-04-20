@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "phrase.h"
 
-const DWORD max_db_filesize = 4 * 1024 * 1024; // 4mb
+const DWORD max_db_filesize = 8 * 1024 * 1024; // 8mb
 std::map<lua_State*, int> m_dict_types;
 typedef std::map<lua_State*, int>::iterator iterator;
 int get_dict(lua_State *L)
@@ -49,29 +49,13 @@ public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_current_file(-1), m_base_dir(dir), L(pl) {
         load_db();
     }
-    ~MapDictonary() {
-        //std::for_each(m_dictonary.begin(), m_dictonary.end(),           [](std::pair<const tstring, collection*> &o) { delete o.second; });
-    }
+    ~MapDictonary() {}
     void add(const tstring& name, const tstring& data)
     {
         index ix = add_tofile(name, data);
         if (ix.file == -1)
             return;
-
-        tstring n(name);
-        tstring_tolower(&n);
-        Phrase p(n);
-        int count = p.len();
-        if (count > 1)
-        {
-            for (int i = 0, e = p.len(); i < e; ++i)
-            {
-                m_phrases.addPhrase(new Phrase(p.get(i)));
-                add_toindex(p.get(i), ix);
-            }
-        }
-        m_phrases.addPhrase(new Phrase(n));
-        add_toindex(n, ix);
+        add_index(name, ix);
         
         /*
         iterator it = m_dictonary.find(n),it_end = m_dictonary.end();
@@ -94,6 +78,21 @@ public:
         }
         m_phrases.addPhrase( new Phrase(n) );     */
     }
+    bool find(const tstring& name, tstring* value)
+    {
+        tstring n(name);
+        tstring_tolower(&n);
+        Phrase p(n);
+        tstring result;
+        if (!m_phrases.findPhrase(p, &result))
+            return false;
+        iterator it = m_indexes.find(result);
+        if (it == m_indexes.end())
+            return false;
+        indexes &i = it->second;
+        return false;
+    }
+
    /* const collection* find(const tstring& name)
     {
         tstring n(name);
@@ -118,16 +117,33 @@ public:
         return false;
     }*/
 private:
-    void add_toindex(const tstring& t, index i)
+    void add_index(const tstring& name, index ix)
+    {
+        tstring n(name);
+        tstring_tolower(&n);
+        Phrase p(n);
+        int count = p.len();
+        if (count > 1)
+        {
+            for (int i = 0, e = p.len(); i < e; ++i)
+            {
+                m_phrases.addPhrase(new Phrase(p.get(i)));
+                add_toindex(p.get(i), ix);
+            }
+        }
+        m_phrases.addPhrase(new Phrase(n));
+        add_toindex(n, ix);
+    }
+    void add_toindex(const tstring& t, index ix)
     {
         iterator it = m_indexes.find(t);
         if (it == m_indexes.end())
         {
-            indexes ix;
-            m_indexes[t] = ix;
+            indexes empty;
+            m_indexes[t] = empty;
             it = m_indexes.find(t);
         }
-        it->second.push_back(i);
+        it->second.push_back(ix);
     }
 
     bool write_tofile(HANDLE hfile, const tstring& t, DWORD *written)
@@ -155,7 +171,7 @@ private:
         tstring tmp(id);
         tmp.append(L"\n");
         tmp.append(data);
-        tmp.append(L"\n\n");       
+        tmp.append(L"\n\n");
 
         if (m_current_file != -1) {
            fileinfo &f = m_files[m_current_file];
@@ -190,7 +206,7 @@ private:
             HANDLE hfile = CreateFile(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);                             
             DWORD written = 0;
             if (!write_tofile(hfile, tmp, &written))
-                return i;            
+                return i;
             f.size = written;
             m_current_file = m_files.size();
             m_files.push_back(f);
@@ -207,10 +223,10 @@ private:
            return i;
         DWORD written = 0;
         if (!write_tofile(hfile, tmp, &written))
-           return i;            
+           return i;
         i.file = m_current_file;
         i.pos_in_file = written;
-        return i;        
+        return i;
     }
 
     void load_db()
@@ -253,32 +269,35 @@ private:
                 error(e);
                 continue;
             }
-
-            tstring name, data;
+            
+            DWORD pos = 0;
+            u8string str, name;
             bool find_name_mode = true;
-            u8string str;
-            while (lf.readNextString(&str))
+            while (lf.readNextString(&str, &pos))
             {
-                if (str.empty()) {
+                if (str.empty())
+                {
                     find_name_mode = true;
-                    if (!name.empty() && !data.empty())
-                       add(name, data);
+                    if (!name.empty())
+                    {
+                        index ix;
+                        ix.file = i;
+                        ix.pos_in_file = pos;
+                        tstring tn(TU2W(name.c_str()));
+                        add_index(tn, ix);
+                    }
                     name.clear();
-                    data.clear();
                     continue;
                 }
                 if (find_name_mode) 
                 {
-                    name.assign(TU2W(str.c_str()));
+                    name.assign(str);
                     find_name_mode = false;
                     continue;
                 }
-                if (!data.empty())
-                    data.append(L"\n");
-                data.append(TU2W(str.c_str()));
             }
         }
-    }    
+    }
 };
 
 int dict_add(lua_State *L)
@@ -297,25 +316,17 @@ int dict_add(lua_State *L)
 
 int dict_find(lua_State *L)
 {
-    /*if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
+    if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
     {
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
-        const collection *c = d->find(id);
-        if (!c)
-            lua_pushnil(L);
+        tstring result;
+        if (d->find(id, &result))
+            luaT_pushwstring(L, result.c_str());
         else
-        {
-            lua_newtable(L);
-            for (int i=0,e=c->size();i<e;++i)
-            {
-                lua_pushinteger(L, i+1);
-                luaT_pushwstring(L, c->at(i).c_str());
-                lua_settable(L, -3);
-            }
-        }
+            lua_pushnil(L);
         return 1;
-    }*/
+    }
     return dict_invalidargs(L, "find");
 }
 

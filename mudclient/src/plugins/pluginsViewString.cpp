@@ -35,27 +35,27 @@ void PluginsViewString::serialize(tstring *data)
         if (p.reverse_video) a.append(L"r");
         a.append(L";");
         data->append(a);
-        data->append(b.string);
-        
-        /*int count = 1;
+
+        int count = 1;
         tstring delimeter;
-        for (;count<10;++count)
+        for (;count<4;++count)
         {
             delimeter.assign(count, L';');
             if (b.string.find(delimeter) == tstring::npos)
-                break;        
+                break;
         }
-        if (count == 10)
+        if (count == 4)
         {
+            data->append(int_to_wstring(count));
             if (b.string.find(L"]]") != tstring::npos)
-            {            
-                data->append(L"0[=[");
+            {
+                data->append(L"[=[");
                 data->append(b.string);
                 data->append(L"]=]");
             }
             else
             {
-                data->append(L"0[[");
+                data->append(L"[[");
                 data->append(b.string);
                 data->append(L"]]");
             }
@@ -64,8 +64,8 @@ void PluginsViewString::serialize(tstring *data)
         {
             data->append(int_to_wstring(count));
             data->append(b.string);
-            data->append(delimeter);        
-        }*/
+            data->append(delimeter);
+        }
     }
 }
 
