@@ -76,10 +76,13 @@ int declension_load(lua_State *L)
         if (result)
         {
             d->clear();
-            for (int i=0,e=lf.text.size(); i<e; ++i)
+            u8string str;
+            while (lf.readNextString(&str))
             {
-                tstring t(TU2W(lf.text[i].c_str()));
-                d->addPhrase(t);
+                if (!str.empty()) {
+                    tstring t(TU2W(str.c_str()));
+                    d->addPhrase(t);
+                }
             }
         } else {
             if (lf.file_missed)

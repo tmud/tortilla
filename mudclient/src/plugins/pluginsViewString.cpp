@@ -36,7 +36,36 @@ void PluginsViewString::serialize(tstring *data)
         a.append(L";");
         data->append(a);
         data->append(b.string);
-        data->append(L"\t");
+        
+        /*int count = 1;
+        tstring delimeter;
+        for (;count<10;++count)
+        {
+            delimeter.assign(count, L';');
+            if (b.string.find(delimeter) == tstring::npos)
+                break;        
+        }
+        if (count == 10)
+        {
+            if (b.string.find(L"]]") != tstring::npos)
+            {            
+                data->append(L"0[=[");
+                data->append(b.string);
+                data->append(L"]=]");
+            }
+            else
+            {
+                data->append(L"0[[");
+                data->append(b.string);
+                data->append(L"]]");
+            }
+        }
+        else
+        {
+            data->append(int_to_wstring(count));
+            data->append(b.string);
+            data->append(delimeter);        
+        }*/
     }
 }
 

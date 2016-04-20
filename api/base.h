@@ -214,47 +214,62 @@ private:
 
 class load_file
 {
+    HANDLE hfile;
+    typedef unsigned char uchar;
+    std::string current_string;
+    const DWORD buffer_size = 256;
+    uchar* buffer;
+    DWORD  file_size;
+    DWORD  in_buffer;
+    bool   bom_check;
+    bool   last_0d;
+
 public:
-    std::vector<std::string> text;
     bool result;
     bool file_missed;
-    load_file(const std::wstring& filepath, DWORD maxsize = 0) : result(false), file_missed(false)
+    load_file(const std::wstring& filepath, DWORD maxsize = 0) : hfile(INVALID_HANDLE_VALUE), buffer(NULL), file_size(0), in_buffer(0), bom_check(false), last_0d(false),
+        result(false), file_missed(false)
     {
-        HANDLE hFile = CreateFile(filepath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile == INVALID_HANDLE_VALUE)
+        buffer = new uchar[buffer_size];
+        hfile = CreateFile(filepath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hfile == INVALID_HANDLE_VALUE)
         {
             if (GetLastError() == ERROR_FILE_NOT_FOUND)
                 file_missed = true;
             return;
         }
         DWORD high = 0;
-        DWORD size = GetFileSize(hFile, &high);
+        DWORD size = GetFileSize(hfile, &high);
         if (high != 0) 
             return;
         if (maxsize > 0 && size > maxsize)
             return;
-
+        file_size = size;
         result = true;
+    }
+    ~load_file() 
+    {
+        delete []buffer;
+        if (hfile != INVALID_HANDLE_VALUE) CloseHandle(hfile);
+        hfile = INVALID_HANDLE_VALUE;
+    }
+    bool readNextString(std::string *string)
+    {
+        if (hfile == INVALID_HANDLE_VALUE)
+            return false;
 
-        typedef unsigned char uchar;
-        std::string current_string;
-        const DWORD buffer_size = 256;
-        uchar* buffer = new uchar[buffer_size];
-
-        DWORD inbuffer = 0;
-        bool last_0d = false;
-        bool bom_check = false;
-        while (size > 0 || inbuffer > 0)
+        while (file_size > 0 || in_buffer > 0)
         {
-            DWORD readed = inbuffer;
-            if (size > 0) {
-            DWORD toread = buffer_size - inbuffer;
-            if (toread > size) toread = size;
-            if (!ReadFile(hFile, buffer+inbuffer, toread, &readed, NULL))
-                { result = false; break; }
-            size -= readed;
-            readed = inbuffer + readed;
+            DWORD readed = 0;
+            if (file_size > 0)
+            {
+                DWORD toread = buffer_size - in_buffer;
+                if (toread > file_size) toread = file_size;
+                if (!ReadFile(hfile, buffer+in_buffer, toread, &readed, NULL) || readed != toread)
+                       { result = false; return false; }
+                file_size -= readed;
             }
+            readed += in_buffer;
 
             uchar *p = buffer;
             uchar *e = p + readed;
@@ -272,32 +287,30 @@ public:
                 if (c == 0xd || c == 0xa)
                 {
                     if (c == 0xa && last_0d)
-                        { b = p; last_0d = false;  continue; }
-
+                        { b = p; last_0d = false; continue; }
                     current_string.append((char*)b, p-b-1);
-                    text.push_back(current_string);
+                    string->assign(current_string);
                     current_string.clear();
-
-                    if (c == 0xd && last_0d)
-                        { last_0d = false; break; }
                     if (c == 0xd)
-                          last_0d = true;
-                    break;
+                       last_0d = !last_0d;
+                    in_buffer = e-p;
+                    memcpy(buffer, p, e-p);
+                    return true;
                 }
                 last_0d = false;
-                if (c < ' ')
-                {
-                    uchar *x = p-1;
-                    *x = ' ';
-                }
             }
             if (p == e)
+            {
                 current_string.append((char*)b, e-b);
-            DWORD processed = p - buffer;
-            DWORD notprocessed = readed - processed;
-            memcpy(buffer, p, notprocessed);
-            inbuffer = notprocessed;
+                in_buffer = 0;
+            }
+            if (file_size == 0)
+            {
+               string->assign(current_string);
+               current_string.clear();
+               return true;
+            }
         }
-        CloseHandle(hFile);
+        return false;
     }
 };
