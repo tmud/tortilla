@@ -256,12 +256,15 @@ public:
         if (hfile != INVALID_HANDLE_VALUE) CloseHandle(hfile);
         hfile = INVALID_HANDLE_VALUE;
     }
+    DWORD getPosition() {
+        return file_size-(not_readed+in_buffer);
+    }
     bool readNextString(std::string *string, DWORD* startpos = NULL)
     {
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
-        if (startpos)
-            *startpos = file_size-not_readed;
+        if (startpos) *startpos = getPosition();
+
         while (not_readed > 0 || in_buffer > 0)
         {
             DWORD readed = 0;

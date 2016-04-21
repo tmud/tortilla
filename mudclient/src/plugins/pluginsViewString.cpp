@@ -47,17 +47,17 @@ void PluginsViewString::serialize(tstring *data)
         if (count == 4)
         {
             data->append(int_to_wstring(count));
-            if (b.string.find(L"]]") != tstring::npos)
+            if (b.string.find(L"]];") != tstring::npos)
             {
                 data->append(L"[=[");
                 data->append(b.string);
-                data->append(L"]=]");
+                data->append(L"]=];");
             }
             else
             {
                 data->append(L"[[");
                 data->append(b.string);
-                data->append(L"]]");
+                data->append(L"]];");
             }
         }
         else

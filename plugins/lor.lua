@@ -62,10 +62,9 @@ local function find_lor_strings(id)
   local info = t:tokenize('\n')
   local vs = createViewString()
   for _,s in ipairs(info) do
-    vs:setData(si)
+    vs:setData(s)
     vs:print(0)
   end
-  print("")
 end
 
 function lor.gamecmd(t)

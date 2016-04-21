@@ -19,3 +19,4 @@ typedef std::wstring tstring;
 typedef wchar_t tchar;
 
 #include "common.h"
+#include "../common/memoryBuffer.h"
