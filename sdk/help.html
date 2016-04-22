@@ -570,6 +570,7 @@ local t = {...} -- правильное написание
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
 <div class="cmd">void getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество отдельных блоков в текущей строке.
+<div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в текущей строке. Удаляет лишние или добавляет новые.
 <div class="cmd">bool get(int block, int param, unsigned int *value)</div> - значение параметра блока текущей строки. Допустимые значения параметра:
 <div class="m">TEXTCOLOR</div>, <div class="m">BKGCOLOR</div>, <div class="m">UNDERLINE</div>, <div class="m">ITALIC</div>, <div class="m">BLINK</div>, <div class="m">REVERSE</div>, <div class="m">EXTTEXTCOLOR</div>, <div class="m">EXTBKGCOLOR</div>.
 <div class="cmd">bool set(int block, int param, unsigned int value)</div> - устанавливает значение параметра блока текущей строки.
@@ -578,8 +579,10 @@ local t = {...} -- правильное написание
 <div class="cmd">bool copyBlock(int block, int dst_string, int dst_block)</div> - копирует заданный блок текущей строки в другую строку.
 <div class="cmd">bool deleteBlock(int block)</div> - удаляет блок текущей строки.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
-<div class="cmd">bool createString()</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней.
-<div class="cmd">bool createString(bool system, bool gamecmd)</div> - новая строка. Параметры задают соответствующие флаги новой строки.
+<div class="cmd">bool createString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется между текущей строкой
+и следующей за ней. Необязательные параметры задают соответствующие флаги новой строки.
+<div class="cmd">bool insertString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется после текущей строки.
+Необязательные задают соответствующие флаги новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет текущую строку.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом.
 <div class="cmd">bool find(Pcre* p[, int from])</div> - ищет строку по регулярному выражению. Если строка найдена, то она становиться текущей.
@@ -1258,6 +1261,7 @@ render:rect(r2)
 <div class="cmd">int  getTextLen()</div> - длина полного текста строки.
 <div class="cmd">string getHash()</div> - хэш строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество блоков в текущей строке.
+<div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в текущей строке. Удаляет лишние или добавляет новые.
 <div class="cmd">uint get(int index, string attr)</div> - получает значение атрибута блока. Возможные варианты атрибута: 
 <div class="m">textcolor</div>,<div class="m">bkgcolor</div>,<div class="m">underline</div>,<div class="m">italic</div>,<div class="m">blink</div>,<div class="m">reverse</div>,<div class="m">exttextcolor</div>,<div class="m">extbkgcolor</div>.
 <div class="cmd">bool set(int index, string attr, uint value)</div> - задает значение атрибута блока. Возможные варианты атрибута см. в <div class="m">get</div>.
@@ -1267,6 +1271,8 @@ render:rect(r2)
 <div class="cmd">bool deleteBlock(int index)</div> - удаляет блок.
 <div class="cmd">bool deleteAllBlocks()</div> - удаляет все блоки, остается пустая строка.
 <div class="cmd">bool createString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется между текущей строкой и следующей за ней. 
+Необязательные параметры system, gamecmd - задают соответствующие флаги для новой строки.
+<div class="cmd">bool insertString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется после текущей строки. 
 Необязательные параметры system, gamecmd - задают соответствующие флаги для новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет строку.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом.

@@ -46,16 +46,15 @@ void PluginsViewString::serialize(tstring *data)
         }
         if (count == 4)
         {
-            data->append(int_to_wstring(count));
             if (b.string.find(L"]];") != tstring::npos)
             {
-                data->append(L"[=[");
+                data->append(int_to_wstring(count+1));
                 data->append(b.string);
                 data->append(L"]=];");
             }
             else
             {
-                data->append(L"[[");
+                data->append(int_to_wstring(count));
                 data->append(b.string);
                 data->append(L"]];");
             }
@@ -85,41 +84,41 @@ void PluginsViewString::deserialize(const tstring& data)
 {
     blocks.clear();
     MudViewStringBlock block;
-    Tokenizer t(data.c_str(), L"\t");
-    for (int i=0,e=t.size();i<e;++i)
+    const tchar *b = data.c_str();
+    const tchar *e = b + data.length();
+    while(b != e)
     {
-        bool result = true;
+        bool result = false;
         block.params.reset();
-        do {
-            const tchar *b = t[i];
+        do 
+        {
             const tchar *p = wcschr(b, L';');   // text color
-            if (!p) { result = false; break; }
+            if (!p) break;
             tstring text_color(b, p-b);
             b = p + 1;
             p = wcschr(b, L';');   // background color
-            if (!p) { result = false; break; }
+            if (!p)  break;
             tstring background_color(b, p-b);
             b = p + 1;
             p = wcschr(b, L';');   // params
-            if (!p) { result = false; break; }
+            if (!p) break;
             tstring params(b, p-b);
             b = p + 1;
-            block.string.assign(b);
 
             {  // text color
                 Tokenizer tc(text_color.c_str(), L",");
                 tc.trimempty();
-                if (tc.size()!=1 && tc.size()!=3) { result = false; break; }
+                if (tc.size()!=1 && tc.size()!=3) break;
                 if (tc.size()==1)
                 {
-                    result = getcolor(tc[0], &block.params.text_color);
-                    if (!result) break;
+                    if (!getcolor(tc[0], &block.params.text_color))
+                        break;
                 }
                 else
                 {
                     tbyte r,g,b;
-                    result = (getcolor(tc[0],&r) && getcolor(tc[1],&g) && getcolor(tc[2],&b));
-                    if (!result) break;
+                    if (!(getcolor(tc[0],&r) && getcolor(tc[1],&g) && getcolor(tc[2],&b)))
+                        break;
                     block.params.ext_text_color = RGB(r,g,b);
                     block.params.use_ext_colors = 1;
                 }
@@ -128,25 +127,25 @@ void PluginsViewString::deserialize(const tstring& data)
             {   // background color
                 Tokenizer tc(background_color.c_str(), L",");
                 tc.trimempty();
-                if (tc.size()!=1 && tc.size()!=3) { result = false; break; }
+                if (tc.size()!=1 && tc.size()!=3) break;
                 if (tc.size()==1)
                 {
-                    result = getcolor(tc[0], &block.params.bkg_color);
-                    if (!result) break;
+                    if (!getcolor(tc[0], &block.params.bkg_color))
+                        break;
                 }
                 else
                 {
                     tbyte r,g,b;
-                    result = (getcolor(tc[0],&r) && getcolor(tc[1],&g) && getcolor(tc[2],&b));
-                    if (!result) break;
+                    if (!(getcolor(tc[0],&r) && getcolor(tc[1],&g) && getcolor(tc[2],&b)))
+                        break;
                     block.params.ext_bkg_color = RGB(r,g,b);
                     block.params.use_ext_colors = 1;
                 }
             }
 
             // params
-            if (!isOnlySymbols(params, L"iu^fr")) { result = false; break; }
-            for (int i=0,e=params.size();i<e;++i)
+            if (!isOnlySymbols(params, L"^iufr")) break;
+            for (int i=0,s=params.size();i<s;++i)
             {
                 switch(params[i]) {
                 case L'^': block.params.intensive_status = 1; break;
@@ -156,11 +155,37 @@ void PluginsViewString::deserialize(const tstring& data)
                 case L'r': block.params.reverse_video = 1; break;
                 }
             }
+
+            // text
+            if (b == e) break;
+            if (*b < L'1' || *b > L'5') break;
+            if (*b == L'4') {
+               p = wcsstr(b, L"]];");
+               if (!p) break;
+               block.string.assign(b+1, p-b-1);
+               b = p + 3;
+            } else if (*b == L'5') {
+               p = wcsstr(b, L"]=];");
+               if (!p) break;
+               block.string.assign(b+1, p-b-1);
+               b = p + 4;
+            } else
+            {
+                int count = *b - L'0';
+                tstring delimeter(count, L';');
+                p = wcsstr(b, delimeter.c_str());
+                if (!p) break;
+                block.string.assign(b+1, p-b-1);
+                b = p + count;
+            }
+
+            result = true;
         } while(0);
         if (!result)
         {
             block.params.reset();
-            block.string = L" ??? ";
+            block.string = L"<error>";
+            break;
         }
         blocks.push_back(block);
     }

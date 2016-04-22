@@ -676,6 +676,27 @@ int vd_setBlockText(lua_State *L)
     return pluginInvArgs(L, L"viewdata:setBlockText");
 }
 
+int vd_setBlocksCount(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        PluginViewString *str = pdata->getselected_pvs();
+        int newsize = lua_tointeger(L, 2);
+        bool ok = false;
+        if (str && newsize >= 0)
+        {
+            str->blocks.resize(newsize);
+            MudViewString *vs = pdata->getselected();
+            vs->blocks.resize(newsize);
+            ok = true;
+        }
+        lua_pushboolean(L, ok ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:setBlocksCount");
+}
+
 int vd_deleteBlock(lua_State *L)
 {
     if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
@@ -1105,6 +1126,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "set", vd_set);
     regFunction(L, "setBlockText", vd_setBlockText);
     regFunction(L, "getBlockText", vd_getBlockText);
+    regFunction(L, "setBlocksCount", vd_setBlocksCount);
     regFunction(L, "deleteBlock", vd_deleteBlock);
     regFunction(L, "deleteAllBlocks", vd_deleteAllBlocks);
     regFunction(L, "copyBlock", vd_copyBlock);

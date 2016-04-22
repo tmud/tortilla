@@ -51,13 +51,13 @@ public:
        return true;
    }
    DWORD size() const { return fsize; }
-   bool read(DWORD pos_begin, DWORD pos_end, MemoryBuffer* buffer)
+   bool read(DWORD pos_begin, DWORD len, MemoryBuffer* buffer)
    {
        if (hfile == INVALID_HANDLE_VALUE)
             return false;
-       if (pos_begin > fsize || pos_end > fsize || pos_end < pos_begin)
+       if (pos_begin > fsize || pos_begin+len > fsize)
            return false;
-       DWORD toread = pos_end - pos_begin;
+       DWORD toread = len;
        if (SetFilePointer(hfile, pos_begin, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
            return false;
        buffer->alloc(toread);
@@ -141,10 +141,10 @@ class MapDictonary
     std::vector<fileinfo> m_files;
     struct index
     {
-        index() : file(-1), pos_in_file(0), data_in_file(0) {}
+        index() : file(-1), data_in_file(0), datalen_in_file(0) {}
         int file;
-        DWORD pos_in_file;
         DWORD data_in_file;
+        DWORD datalen_in_file;
     };
     typedef std::vector<index> indexes;
     std::unordered_map<tstring, indexes> m_indexes;
@@ -152,22 +152,37 @@ class MapDictonary
     int m_current_file;
     tstring m_base_dir;
     lua_State *L;
-    void error(const tstring& error) {
-        base::log(L, error.c_str());
+    MemoryBuffer buffer;
+    void fileerror(const tstring& file) 
+    {
+        tstring e(L"Ошибка чтения файла: ");
+        e.append(file);
+        base::log(L, e.c_str());
     }
 
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_current_file(-1), m_base_dir(dir), L(pl) {
+        buffer.alloc(4096);
         load_db();
     }
     ~MapDictonary() {}
-    void add(const tstring& name, const tstring& data)
+    enum { MD_OK = 0, MD_EXIST, MD_ERROR };
+    int add(const tstring& name, const tstring& data)
     {
+        tstring n(name);
+        tstring_tolower(&n);
+        iterator it = m_indexes.find(n);
+        if (it != m_indexes.end())
+        {
+            return MD_EXIST;
+        }
         index ix = add_tofile(name, data);
         if (ix.file == -1)
-            return;
+            return MD_ERROR;
         add_index(name, ix);
+        return MD_OK;
     }
+
     bool find(const tstring& name, tstring* value)
     {
         tstring n(name);
@@ -179,9 +194,8 @@ public:
         iterator it = m_indexes.find(result);
         if (it == m_indexes.end())
             return false;
-        
-        MemoryBuffer buffer;
-        std::vector<filereader> open_files(m_files.size());        
+
+        std::vector<filereader> open_files(m_files.size());
         indexes &ix = it->second;
         for (int i=0,e=ix.size()-1;i<=e;++i)
         {
@@ -190,23 +204,24 @@ public:
             filereader& fr = open_files[fileid];
             if (!fr.open(fi.path, fi.size))
             {
-                //error
+                fileerror(fi.path);
                 continue;
             }
-            bool result = false;
-            if (i == e)
-                result = fr.read(ix[i].data_in_file, fr.size(), &buffer);
-            else
+
+            bool result = fr.read(ix[i].data_in_file, ix[i].datalen_in_file, &buffer);
+            if (!result)
             {
-                DWORD pos_end = ix[i+1].pos_in_file;                
-                result = fr.read(ix[i].data_in_file, pos_end, &buffer);
+                fileerror(fi.path);
+                continue;
             }
             int size = buffer.getSize();
             buffer.keepalloc(size+1);
             char *p = buffer.getData();
             p[size] = 0;
+            if (!value->empty())
+                value->append(L"\n");
             value->append(TU2W(p));
-        }        
+        }
         return true;
     }
 
@@ -221,7 +236,10 @@ private:
         {
             for (int i = 0, e = p.len(); i < e; ++i)
             {
-                m_phrases.addPhrase(new Phrase(p.get(i)));
+                tstring part(p.get(i));
+                if (part.length() < 4)
+                    continue;
+                m_phrases.addPhrase(new Phrase(part));
                 add_toindex(p.get(i), ix);
             }
         }
@@ -281,9 +299,9 @@ private:
         if (!fw.write(f.path, name, data))
            return ix;
         f.size += fw.written;
-        ix.file = m_current_file;
-        ix.pos_in_file = fw.start_name;
+        ix.file = m_current_file;        
         ix.data_in_file = fw.start_data;
+        ix.datalen_in_file = fw.written - (fw.start_data - fw.start_name);
         return ix;
     }
 
@@ -322,16 +340,14 @@ private:
             // read files in to catalog
             load_file lf(m_files[i].path);
             if (!lf.result) {
-                tstring e(L"Не получилось загрузить файл: ");
-                e.append(m_files[i].path);
-                error(e);
+                fileerror(m_files[i].path);
                 continue;
             }
 
             index ix;
-            ix.file = i;
-            ix.pos_in_file = 0;
+            ix.file = i;            
             ix.data_in_file = 0;
+            ix.datalen_in_file = 0;
 
             DWORD start_pos = 0;
             u8string str, name;
@@ -345,11 +361,12 @@ private:
                     {                        
                         if (ix.data_in_file != 0)
                         {
+                            ix.datalen_in_file = lf.getPosition()-ix.data_in_file;
                             tstring tn(TU2W(name.c_str()));
                             add_index(tn, ix);
                         }
-                        ix.pos_in_file = 0;
                         ix.data_in_file = 0;
+                        ix.datalen_in_file = 0;
                         name.clear();
                     }                    
                     continue;
@@ -358,7 +375,6 @@ private:
                 {
                     name.assign(str);                  
                     find_name_mode = false;
-                    ix.pos_in_file = start_pos;
                     ix.data_in_file = lf.getPosition();
                 }
             }
@@ -374,9 +390,15 @@ int dict_add(lua_State *L)
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
         tstring info(luaT_towstring(L, 3));
-        d->add(id, info);
-        lua_pushboolean(L, 1);
-        return 1;
+        int result = d->add(id, info);
+        if (result == MapDictonary::MD_OK)
+        {
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        lua_pushboolean(L, 0);
+        lua_pushstring(L, result == MapDictonary::MD_EXIST ? "exist" : "error");
+        return 2;
     }
     return dict_invalidargs(L, "add");
 }
@@ -436,6 +458,7 @@ int dict_new(lua_State *L)
         luaL_newmetatable(L, "dictonary");
         regFunction(L, "add", dict_add);
         regFunction(L, "find", dict_find);
+
         //regFunction(L, "remove", dict_remove);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");

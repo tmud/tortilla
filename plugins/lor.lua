@@ -42,15 +42,21 @@ end
 
 local function save_lor_strings()
   if not lor_strings.name then
-    log("Не получено имя предмета, сохранить невозможно")
-    return
+    return false, "Не получено имя предмета, сохранить невозможно."
   end
   local info = {}
   for k,s in ipairs(lor_strings) do
     s:print(1) -- todo
     info[k] = s:getData()
   end
-  lor_dictonary:add(lor_strings.name, table.concat(info,'\n'))
+  local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'))
+  if not res then
+    if err == 'exist' then
+      return false, "Предмет уже существует в базе."
+    end
+    return false, "Предмет не добавлен в базу из-за ошибки."
+  end
+  return true, "Предмет добавлен в базу."
 end
 
 local function find_lor_strings(id)
@@ -70,7 +76,7 @@ end
 function lor.gamecmd(t)
   if t[1] == "лор" then
     if not initialized then
-      print("[лор]: Ошибка в настройках.")
+      print("[lor]: Ошибка в настройках.")
       return nil
     end
     local id = ""
@@ -103,7 +109,13 @@ function lor.before(v, vd)
     vd:select(i)
     if vd:isPrompt() then
       lor_catch_mode = false
-      save_lor_strings()
+      local res,error = save_lor_strings()
+      if error then
+        vd:insertString(true, false)
+        vd:select(i)
+        vd:setBlocksCount(1)
+        vd:setBlockText(1, '[lor] '..error)
+      end
       lor_strings = {}
       break
     end
