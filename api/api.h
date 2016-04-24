@@ -407,16 +407,119 @@ public:
     }
 };
 
+enum vparam { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
+
+class luaT_ViewString
+{
+    lua_State *L;
+    void *view_string;
+public:
+    luaT_ViewString() : L(NULL), view_string(NULL) {}
+    void init(lua_State *pL, void *viewstring) { L = pL; view_string = viewstring; }
+    void getText(std::wstring* str)
+    {
+        runcmd("getText");
+        strresult(str);
+    }
+    int getTextLen()
+    {
+        runcmd("getTextLen");
+        return intresult();
+    }
+    int blocks()            // count of blocks for selected string
+    {
+        runcmd("blocks");
+        return intresult();
+    }
+    bool setBlocksCount(int count)
+    {
+        runcmdint("setBlocksCount", count);
+        return boolresult();
+    }
+    void getBlockText(int block, std::wstring* str)
+    {
+        runcmdint("getBlockText", block);
+        strresult(str);
+    }
+    bool get(int block, vparam param, unsigned int *value)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "get", "odd", block, (int)param);
+        bool result = false;
+        if (lua_isnumber(L, -1)) { *value = lua_tounsigned(L, -1); result = true; }
+        lua_pop(L, 1);
+        return result;
+    }
+    bool set(int block, vparam param, unsigned int value)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "set", "oddu", block, (int)param, value);
+        return boolresult();
+    }
+    bool setBlockText(int block, const wchar_t* text)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "setBlockText", "ods", block, text);
+        return boolresult();
+    }
+    bool deleteBlock(int block)
+    {
+        runcmdint("deleteBlock", block);
+        return boolresult();
+    }
+    void print(int view)
+    {
+        runcmdint("print", view);
+    }
+    void getData(std::wstring* str)
+    {
+        runcmd("getData");
+        strresult(str);
+    }
+    void setData(const std::wstring& str)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "setData", "os", str.c_str());
+    }
+private:
+    void runcmd(const char* cmd)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, cmd, "o");
+    }
+    void runcmdint(const char* cmd, int p)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, cmd, "od", p);
+    }
+    bool boolresult()
+    {
+        int result = (lua_isboolean(L, -1)) ? lua_toboolean(L, -1) : 0;
+        lua_pop(L, 1);
+        return result ? true : false;
+    }
+    int intresult()
+    {
+        int result = (lua_isnumber(L, -1)) ? lua_tointeger(L, -1) : 0;
+        lua_pop(L, 1);
+        return result;
+    }
+    void strresult(std::wstring *res)
+    {
+        if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
+        else res->clear();
+        lua_pop(L, 1);
+    }
+};
+
 class Pcre;
 class luaT_ViewData
 {
     lua_State *L;
     void *view_data;
 public:
-    enum vdparam { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
-
     luaT_ViewData() : L(NULL), view_data(NULL) {}
-    void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
+    //void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
     int size()             // count of all strings
     {
         runcmd("size");
@@ -487,12 +590,17 @@ public:
         runcmd("blocks");
         return intresult(); 
     }
+    bool setBlocksCount(int count)
+    {
+        runcmdint("setBlocksCount", count);
+        return boolresult();
+    }
     void getBlockText(int block, std::wstring* str)
     {
         runcmdint("getBlockText", block);
         strresult(str);
     }
-    bool get(int block, vdparam param, unsigned int *value)
+    bool get(int block, vparam param, unsigned int *value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "get", "odd", block, (int)param);
@@ -501,7 +609,7 @@ public:
         lua_pop(L, 1);
         return result;
     }
-    bool set(int block, vdparam param, unsigned int value)
+    bool set(int block, vparam param, unsigned int value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "set", "oddu", block, (int)param, value);
@@ -575,8 +683,7 @@ public:
     }
     void print(int view)
     {
-        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
-        luaT_run(L, "print", "od", view);
+        runcmdint("print", view);
     }
     bool find(Pcre *p)
     {
@@ -630,7 +737,19 @@ public:
         luaT_run(L, "isPrev", "o");
         return boolresult();
     }
-
+    /*todo bool createRef(luaT_ViewString *s)
+    {
+        runcmd("createRef");
+        if (luaT_check(L, 1, LUAT_VIEWSTRING))
+        {
+            luaT_ViewString vs;
+            vs.init(L, luaT_toobject(L, -1));
+            std::wstring str;
+            vs.getData(&str);
+            return true;
+        }
+        return false;
+    }*/
 private:
     void runcmd(const char* cmd)
     {

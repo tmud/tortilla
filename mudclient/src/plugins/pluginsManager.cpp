@@ -286,7 +286,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         lua_pushinteger(L, view);
         luaT_pushobject(L, &pdata, LUAT_VIEWDATA);
         if (!p->runMethod(method, 2, 0))
@@ -310,7 +310,7 @@ bool PluginsManager::processTriggers(parseData& parse_data, int string, LogicPip
     for (int j = 0, je = m_plugins.size(); j < je; ++j)
     {
         Plugin *p = m_plugins[j];
-        if (!p->state())
+        if (!p->state() || p->isErrorState())
             continue;
         std::vector<PluginsTrigger*>& vt = p->triggers;
         if (vt.empty())
@@ -561,7 +561,7 @@ void PluginsManager::doPluginsMethod(const char* method, int args)
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         if (!p->runMethod(method, args, 0))
         {
             // restart plugins
@@ -580,7 +580,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         bool not_supported = false;
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
@@ -627,7 +627,7 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         bool not_supported = false;
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {

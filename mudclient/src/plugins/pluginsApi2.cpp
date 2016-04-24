@@ -453,7 +453,7 @@ bool vsp_pushparam(lua_State *L, const MudViewStringParams &p, int type)
     bool ok = true;
     switch (type)
     {
-        case luaT_ViewData::TEXTCOLOR:
+        case TEXTCOLOR:
              if (p.use_ext_colors)
                  ok = false;
              else
@@ -463,31 +463,31 @@ bool vsp_pushparam(lua_State *L, const MudViewStringParams &p, int type)
                  lua_pushunsigned(L, color);
              }
          break;
-         case luaT_ViewData::BKGCOLOR:
+         case BKGCOLOR:
              if (p.use_ext_colors)
                   ok = false;
              else
                   lua_pushunsigned(L, p.bkg_color);
              break;
-         case luaT_ViewData::UNDERLINE:
+         case UNDERLINE:
              lua_pushunsigned(L, p.underline_status);
              break;
-         case luaT_ViewData::ITALIC:
+         case ITALIC:
              lua_pushunsigned(L, p.italic_status);
              break;
-         case luaT_ViewData::BLINK:
+         case BLINK:
              lua_pushunsigned(L, p.blink_status);
              break;
-         case luaT_ViewData::REVERSE:
+         case REVERSE:
              lua_pushunsigned(L, p.reverse_video);
              break;
-         case luaT_ViewData::EXTTEXTCOLOR:
+         case EXTTEXTCOLOR:
              if (p.use_ext_colors)
                  lua_pushunsigned(L, p.ext_text_color);
              else
                  ok = false;
              break;
-          case luaT_ViewData::EXTBKGCOLOR:
+          case EXTBKGCOLOR:
              if (p.use_ext_colors)
                   lua_pushunsigned(L, p.ext_bkg_color);
              else
@@ -511,39 +511,39 @@ bool vsp_setparam(MudViewStringParams &p, int type,  unsigned int v)
     bool ok = true;
     switch (type)
     {
-       case luaT_ViewData::TEXTCOLOR:
+       case TEXTCOLOR:
           if (p.use_ext_colors)
               p.bkg_color = 0;
           p.use_ext_colors = 0;
           p.intensive_status = 0;
           p.text_color = _check(v, 0, 255);
           break;
-       case luaT_ViewData::BKGCOLOR:
+       case BKGCOLOR:
           if (p.use_ext_colors)
                p.text_color = 7;
           p.use_ext_colors = 0;
           p.intensive_status = 0;
           p.bkg_color = _check(v, 0, 255);
           break;
-       case luaT_ViewData::UNDERLINE:
+       case UNDERLINE:
           p.underline_status = _check(v, 0, 1);
           break;
-       case luaT_ViewData::ITALIC:
+       case ITALIC:
           p.italic_status = _check(v, 0, 1);
           break;
-       case luaT_ViewData::BLINK:
+       case BLINK:
           p.blink_status = _check(v, 0, 1);
           break;
-       case luaT_ViewData::REVERSE:
+       case REVERSE:
           p.reverse_video = _check(v, 0, 1);
           break;
-       case luaT_ViewData::EXTTEXTCOLOR:
+       case EXTTEXTCOLOR:
           if (!p.use_ext_colors)
             p.ext_bkg_color = tortilla::getPalette()->getColor(p.bkg_color);
           p.use_ext_colors = 1;
           p.ext_text_color = v;
           break;
-       case luaT_ViewData::EXTBKGCOLOR:
+       case EXTBKGCOLOR:
           if (!p.use_ext_colors)
              p.ext_text_color = tortilla::getPalette()->getColor(p.text_color);
           p.use_ext_colors = 1;
@@ -909,14 +909,14 @@ int vd_getBlockPos(lua_State *L)
 std::map<tstring, int> vdtypes;
 void init_vdtypes()
 {
-    vdtypes[L"textcolor"] = luaT_ViewData::TEXTCOLOR;
-    vdtypes[L"bkgcolor"] = luaT_ViewData::BKGCOLOR;
-    vdtypes[L"underline"] = luaT_ViewData::UNDERLINE;
-    vdtypes[L"italic"] = luaT_ViewData::ITALIC;
-    vdtypes[L"blink"] = luaT_ViewData::BLINK;
-    vdtypes[L"reverse"] = luaT_ViewData::REVERSE;
-    vdtypes[L"exttextcolor"] = luaT_ViewData::EXTTEXTCOLOR;
-    vdtypes[L"extbkgcolor"] = luaT_ViewData::EXTBKGCOLOR;
+    vdtypes[L"textcolor"] = TEXTCOLOR;
+    vdtypes[L"bkgcolor"] = BKGCOLOR;
+    vdtypes[L"underline"] = UNDERLINE;
+    vdtypes[L"italic"] = ITALIC;
+    vdtypes[L"blink"] = BLINK;
+    vdtypes[L"reverse"] = REVERSE;
+    vdtypes[L"exttextcolor"] = EXTTEXTCOLOR;
+    vdtypes[L"extbkgcolor"] = EXTBKGCOLOR;
 
 }
 int vd_gettype(const tchar* type)
@@ -1058,7 +1058,7 @@ int vd_createRef(lua_State *L)
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString *s = pdata->getselected();
-        if (s) 
+        if (s)
         {
             PluginsViewString *p = new PluginsViewString();
             p->create(s);
@@ -1220,6 +1220,24 @@ int vs_blocks(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, L"viewstring:blocks");
+}
+
+int vs_setBlocksCount(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int newsize = lua_tointeger(L, 2);
+        bool ok = false;
+        if (s && newsize >= 0)
+        {
+            s->setBlocksCount(newsize);
+            ok = true;
+        }
+        lua_pushboolean(L, ok ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:setBlocksCount");
 }
 
 int vs_setBlockText(lua_State *L)
@@ -1449,6 +1467,7 @@ void reg_mt_viewstring(lua_State *L)
     regFunction(L, "getText", vs_getText);
     regFunction(L, "getTextLen", vs_getTextLen);
     regFunction(L, "blocks", vs_blocks);
+    regFunction(L, "setBlocksCount", vs_setBlocksCount);
     regFunction(L, "setBlockText", vs_setBlockText);
     regFunction(L, "getBlockText", vs_getBlockText);
     regFunction(L, "deleteBlock", vs_deleteBlock);

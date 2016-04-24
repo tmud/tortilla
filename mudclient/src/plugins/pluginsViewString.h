@@ -56,6 +56,11 @@ public:
         }
         return false;
     }
+    void setBlocksCount(int count)
+    {
+        blocks.resize(count);
+    }
+
     void serialize(tstring *data);
     void deserialize(const tstring& data);
 private:
