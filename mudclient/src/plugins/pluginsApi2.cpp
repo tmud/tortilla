@@ -794,6 +794,41 @@ int vd_deleteString(lua_State *L)
     return pluginInvArgs(L, L"viewdata:deleteString");
 }
 
+int vd_deleteStrings(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TTABLE))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int size = pdata->size();
+        bool ok = true;
+        std::vector<int> list;
+        list.reserve(8);
+        int index = 1;
+        while (true) {
+          lua_pushinteger(L, index);
+          lua_gettable(L, -2);
+          if (lua_isnil(L, -1)) { lua_pop(L,1); break; }
+          if (!lua_isnumber(L, -1)) { lua_pop(L, 1); ok = false; break; }
+          int id = lua_tointeger(L, -1);
+          lua_pop(L, 1);
+          if (id < 1 || id > size) { ok = false; break; }
+          list.push_back(id);
+          index++;
+        }
+        if (ok)
+        {
+            if (!list.empty())
+            {
+                std::sort(list.begin(),list.end(),std::greater<int>());
+                pdata->delete_strings(list);
+            }
+            lua_pushboolean(L, ok ? 1 : 0);
+            return 1;
+        }
+    }
+    return pluginInvArgs(L, L"viewdata:deleteStrings");
+}
+
 int vd_deleteAllStrings(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -1131,6 +1166,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteAllBlocks", vd_deleteAllBlocks);
     regFunction(L, "copyBlock", vd_copyBlock);
     regFunction(L, "deleteString", vd_deleteString);
+    regFunction(L, "deleteStrings", vd_deleteStrings);
     regFunction(L, "deleteAllStrings", vd_deleteAllStrings);
     regFunction(L, "createString", vd_createString);
     regFunction(L, "insertString", vd_insertString);

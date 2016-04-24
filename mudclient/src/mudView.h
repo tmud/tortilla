@@ -11,7 +11,6 @@ class MudView : public CWindowImpl<MudView>
     int m_lines_count;
     int m_last_visible_line;
     mudViewStrings m_strings;
-    bool m_last_string_updated;
     bool m_use_softscrolling;
     int  m_start_softscroll;
 
@@ -23,22 +22,21 @@ class MudView : public CWindowImpl<MudView>
 
     int m_find_string_index;
     int m_find_start_pos, m_find_end_pos;
+    
+    int m_id; //todo
 
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
-    MudView(PropertiesElements *elements);
+    MudView(PropertiesElements *elements, int id);
     ~MudView();
     void accLastString(parseData *parse_data);
     void addText(parseData* parse_data, parseData *copy_data, int *limited_strings = NULL);
-    void pushText(parseData* parse_data);
+    void pushText(parseData* parse_data);    
     void clearText();
     void truncateStrings(int maxcount);
     void setViewString(int index);
     int  getViewString() const;
     int  getLastString() const;
-    bool isLastStringVisible() const;
-    bool isLastStringUpdated() const;
-    void deleteLastString();
     int  getStringsCount() const;
     int  getStringsOnDisplay() const;
     int  getSymbolsOnDisplay() const;
@@ -91,6 +89,7 @@ private:
         return 0; 
     }
 private:
+    void deleteLastString(parseData* parse_data);
     void removeDropped(parseData* parse_data);
     void calcStringsSizes(mudViewStrings& pds);
     void renderView();

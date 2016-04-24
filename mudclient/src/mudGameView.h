@@ -63,7 +63,7 @@ public:
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData), m_last_find_view(-1), m_network_queue(2048),
-        m_view(&m_propElements), m_history(&m_propElements),
+        m_view(&m_propElements, 0), m_history(&m_propElements, -1),
         m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
     }
@@ -423,7 +423,7 @@ private:
             const OutputWindow& w =  m_propData->windows[i];
             m_find_dlg.setWindowName(i+1,w.name);
 
-            MudView *v = new MudView(&m_propElements);
+            MudView *v = new MudView(&m_propElements, i+1);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
             int menu_id = i+ID_WINDOW_1;
             if (w.side != DOCK_HIDDEN)
@@ -553,7 +553,8 @@ private:
             if (PtInRect(&rc, pt))
             {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
-                bool last = m_history.isLastStringVisible();
+                bool last = (m_history.getViewString() == m_history.getLastString());
+                //todo bool last = m_history.isLastStringVisible();
                 if (last)
                     closeHistory();
                 return 0;
@@ -1076,26 +1077,64 @@ private:
         return &m_plugins;
     }
 
+    void debugOut(const tchar* buffer)
+    {
+        /*parseData pd;
+        pd.strings.resize(1);
+        MudViewString *s= new MudViewString;
+        pd.strings[0] = s;
+        s->blocks.resize(1);
+        s->blocks[0].string.append(buffer);
+        MudView* v = m_views[6-1];
+         v->addText(&pd, NULL); */
+    }
+
     void addText(int view, parseData* parse_data)
     {
         if (parse_data->strings.empty())
-            return;
+        {
+            // todo
+            if (view == 0) {
+                            int ls = m_view.getLastString();
+                            int vs = m_view.getViewString();
+                            //bool last_updated = false; m_view.isLastStringUpdated();
+                            tchar buffer[64];
+                            swprintf(buffer, L"add empty ls=%d,vs=%d",ls,vs); //,last_updated?1:0);
+                            debugOut(buffer);
+            }
+            //return;
+        }
         if (view == 0)
         {
             int vs = m_view.getViewString();
-            bool last = m_view.isLastStringVisible();
-            bool last_updated = m_view.isLastStringUpdated();
+            //bool last = m_view.isLastStringVisible();
+            //bool last_updated = m_view.isLastStringUpdated();
+            bool last = (m_view.getViewString() == m_view.getLastString());
+
+            int ls = m_view.getLastString(); //todo
 
             parseData history;
             bool in_soft_scrolling = m_view.inSoftScrolling();
             int limited = 0;
+
+            // todo
+            {
+                int dropped = 0; 
+                int count = parse_data->strings.size();
+                for (int i=0; i<count; ++i )
+                {
+                    if (parse_data->strings[i]->dropped)
+                        dropped++;
+                }
+                if (dropped == count && count > 0) {
+                     tchar buffer[64];
+                     swprintf(buffer, L"dropped ls=%d,vs=%d,c=%d",ls,vs,count); // ,last_updated?1:0,count);
+                     debugOut(buffer);
+                }
+            }
+
             m_view.addText(parse_data, &history, &limited);
             vs = vs - limited;
-            if (history.strings.empty())
-                return;
-
-            if (last_updated)
-                m_history.deleteLastString();
             m_history.pushText(&history);
 
             checkHistorySize();
@@ -1116,7 +1155,16 @@ private:
                         if (m_drag_flag) { m_drag_flag = false; skip_history = true; }
                     }
                     if (!skip_history)
+                    {
+                        //todo
+                        {
+                            tchar buffer[64];
+                            swprintf(buffer, L"ls=%d,vs=%d",ls,vs); //,last_updated?1:0);
+                            debugOut(buffer);
+                        }
+
                         showHistory(vs, 1);
+                    }
                     if (soft_scroll || skip_history) {
                       int last = m_view.getLastString();
                       m_view.setViewString(last);

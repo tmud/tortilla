@@ -130,8 +130,8 @@ void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
 bool  luaT_dostring(lua_State *L, const wchar_t* script_text);
-void  luaT_showLuaStack(lua_State* L, const wchar_t* label);
-void  luaT_showTableOnTop(lua_State* L, const wchar_t* label);
+void  luaT_showLuaStack(lua_State* L, const wchar_t* label = NULL);
+void  luaT_showTableOnTop(lua_State* L, const wchar_t* label = NULL);
 #define SS(L,n) luaT_showLuaStack(L,n)
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
@@ -554,6 +554,19 @@ public:
     bool deleteString()
     {
         runcmd("deleteString");
+        return boolresult();
+    }
+    bool deleteStrings(const std::vector<int>& sv)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        lua_newtable(L);
+        for (int i=0,e=sv.size();i<e;++i)
+        {
+            lua_pushinteger(L, i+1);
+            lua_pushinteger(L, sv[i]);
+            lua_settable(L, -3);
+        }
+        luaT_run(L, "deleteStrings", "ot");
         return boolresult();
     }
     void deleteAllStrings()

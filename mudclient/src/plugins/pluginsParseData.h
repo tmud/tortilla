@@ -97,12 +97,21 @@ public:
             ss.erase(ss.begin() + selected);
             if (tdata)
                 tdata->markDeleted(selected);
-            if (selected == 0)
-                pdata->update_prev_string = false;
+            //if (selected == 0)
+            //todo    pdata->update_prev_string = false;
             if (ss.empty() || selected == last)
                 pdata->last_finished = true;
         }
         selected = -1;
+    }
+
+    void delete_strings(const std::vector<int>& strings)
+    {
+        for (int i=0,e=strings.size(); i<e; ++i)
+        {
+            selected = strings[i]-1;
+            delete_selected();
+        }
     }
 
     void deleteall()

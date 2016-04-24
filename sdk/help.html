@@ -584,6 +584,8 @@ local t = {...} -- правильное написание
 <div class="cmd">bool insertString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется после текущей строки.
 Необязательные задают соответствующие флаги новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет текущую строку.
+<div class="cmd">bool deleteStrings(const std::vector&lt;int&gt;&amp; sv)</div> - удаляет набор строк по их индексам.
+<div class="cmd">void deleteAllStrings()</div> - удаляет все строки.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом.
 <div class="cmd">bool find(Pcre* p[, int from])</div> - ищет строку по регулярному выражению. Если строка найдена, то она становиться текущей.
 Можно указать с какой строки нужно начинать поиск.
@@ -1275,6 +1277,8 @@ render:rect(r2)
 <div class="cmd">bool insertString([bool system, bool gamecmd])</div> - создает новую пустую строку. Строка добавляется после текущей строки. 
 Необязательные параметры system, gamecmd - задают соответствующие флаги для новой строки.
 <div class="cmd">bool deleteString()</div> - удаляет строку.
+<div class="cmd">bool deleteStrings(t)</div> - удаляет набор строк по индексам из таблицы.
+<div class="cmd">void deleteAllStrings()</div> - удаляет все строки.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом.
 <div class="cmd">bool find(pcre regexp [,int from])</div> - ищет в массиве строк <div class="cmd">viewdata</div> строку, которая совпадает с регулярным выражением. 
 Если поиск удался, то найденная строка становится текущей. Параметр from - необязательный, можно указать с какой 
