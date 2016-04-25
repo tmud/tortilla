@@ -1,19 +1,27 @@
 ﻿-- cmdfilter
 -- Плагин для Tortilla mud client
 
--- список команд, которые нужно фильтровать
-local cmd_list = { 'группа' }
+local cmd_list = {}
 
 local cmdfilter = {}
 function cmdfilter.name() 
   return 'Фильтр команд'
 end
 function cmdfilter.description()
-  local s = 'Плагин фильтрует заданные команды от попадания в окно клиента, остается только результат.'
+  local s = 'Плагин фильтрует заданные команды от попадания в окно клиента, остается только результат.\r\nУдобно использовать, если игровые команды используются в таймерах.\r\n'
+  s = s.."Список команд находится в файле: "..getPath('config.lua')
   return s
 end
 function cmdfilter.version()
   return '-'
+end
+
+function cmdfilter.init()
+  local t = loadTable('config.lua')
+  if not t or not t.cmdlist or type(t.cmdlist) ~= 'table' then
+    terminate('Ошибка в настройках '..getPath('config.lua')..', нет списка команд cmdlist.')
+  end
+  cmd_list = t.cmdlist
 end
 
 local function check_cmd(v)
@@ -61,7 +69,6 @@ if window ~= 0 then return end
           catch_mode = false
         else
           prompts_counter = prompts_counter - 1
-          --todelete[#todelete+1] = i
         end
       end
     end

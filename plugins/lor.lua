@@ -46,7 +46,6 @@ local function save_lor_strings()
   end
   local info = {}
   for k,s in ipairs(lor_strings) do
-    s:print(1) -- todo
     info[k] = s:getData()
   end
   local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'))

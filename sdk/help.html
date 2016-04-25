@@ -1415,7 +1415,12 @@ local s2 = s:lfup()
 -- s1 = "мад отличная игра"
 -- s2 = "Мад отличная игра"
 </div>
-<div class="cmd">table tokenize(string delimeters)</div> - возвращает таблицу подстрок. Создается из основной строки, разделенная на символы из строки delimeters.
+<div class="cmd">table tokenize(string delimeters)</div> - возвращает таблицу подстрок. Создается из строки-параметра, которую нужно разделить символами из строки delimeters.
+Пример:
+<div class="ee">local s = "Строка, которую, нужно,разделить"
+local t = s:tokenize(",")
+-- t = { "Строка", " которую" , " нужно", "разделить" }
+</div>
 </pre>
 <hr>
 <a name="triggers"></a>

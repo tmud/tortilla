@@ -519,7 +519,7 @@ class luaT_ViewData
     void *view_data;
 public:
     luaT_ViewData() : L(NULL), view_data(NULL) {}
-    //void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
+    void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
     int size()             // count of all strings
     {
         runcmd("size");
@@ -737,19 +737,18 @@ public:
         luaT_run(L, "isPrev", "o");
         return boolresult();
     }
-    /*todo bool createRef(luaT_ViewString *s)
+    bool getData(std::wstring *str)
     {
         runcmd("createRef");
         if (luaT_check(L, 1, LUAT_VIEWSTRING))
         {
             luaT_ViewString vs;
             vs.init(L, luaT_toobject(L, -1));
-            std::wstring str;
-            vs.getData(&str);
+            vs.getData(str);
             return true;
         }
         return false;
-    }*/
+    }
 private:
     void runcmd(const char* cmd)
     {

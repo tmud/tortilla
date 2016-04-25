@@ -62,17 +62,19 @@ local function getaffect(id)
   return af
 end
 
-local function checkaffect(id)
+local function checkaffects(id)
   if type(id) == 'string' then
-    return getaffect(id) and true or false
+    id = id:tokenize(",")
   end
   if type(id) ~= 'table' then
-    return false
+    return nil
   end
-  for _,af in ipairs(id) do
-    if getaffect(af) then return true end
+  local af = {}
+  for _,a in ipairs(id) do
+    if getaffect(a) then af[#af+1]=a end
   end
-  return false
+  if #af == 0 then return nil end
+  return af
 end
 
 local function setaffect(id, state)
@@ -81,23 +83,15 @@ local function setaffect(id, state)
 end
 
 local function affects_on(t)
-  if type(t) == 'string' then
-    setaffect(t, true)
-  else
-    for _,id in ipairs(t) do
-      setaffect(id, true)
-    end
+  for _,id in ipairs(t) do
+    setaffect(id, true)
   end
   update()
 end
 
 local function affects_off(t)
-  if type(t) == 'string' then
-    setaffect(t, true)
-  else
-    for _,id in ipairs(t) do
-      setaffect(id, false)
-    end
+  for _,id in ipairs(t) do
+    setaffect(id, false)
   end
   update()
 end
@@ -144,14 +138,17 @@ function affects.init()
   -- создание триггеров
   for _,at in ipairs(t.triggers) do
     if at.key then
-      if at.on and not at.off and checkaffect(at.on) then
-        createTrigger(at.key, function() affects_on(at.on) end)
+      local on, off
+      if at.on then on = checkaffects(at.on) end
+      if at.off then off = checkaffects(at.off) end
+      if on and not off then
+        createTrigger(at.key, function() affects_on(on) end)
       end
-      if not at.on and at.off and checkaffect(at.off) then
-        createTrigger(at.key, function() affects_off(at.off) end)
+      if not on and off then
+        createTrigger(at.key, function() affects_off(off) end)
       end
-      if at.on and at.off and checkaffect(at.on) and checkaffect(at.off) then
-        createTrigger(at.key, function() affects_on(at.on) affects_off(at.off) end)
+      if on and off then
+        createTrigger(at.key, function() affects_on(on) affects_off(off) end)
       end
     end
   end
