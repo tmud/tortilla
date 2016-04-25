@@ -237,7 +237,7 @@ private:
             for (int i = 0, e = p.len(); i < e; ++i)
             {
                 tstring part(p.get(i));
-                if (part.length() < 4)
+                if (part.length() < 3)
                     continue;
                 m_phrases.addPhrase(new Phrase(part));
                 add_toindex(p.get(i), ix);
