@@ -33,7 +33,7 @@ public:
        if (hfile != INVALID_HANDLE_VALUE)
        {
            assert(fsize == csize);
-           return true;       
+           return true;
        }
        hfile = CreateFile(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
        if (hfile == INVALID_HANDLE_VALUE)
@@ -65,7 +65,7 @@ public:
        if (!ReadFile(hfile, buffer->getData(), toread, &readed, NULL) || readed != toread)
        {
            buffer->alloc(0);
-           return false;       
+           return false;
        }
        return true;
    }
@@ -91,7 +91,7 @@ public:
         if (hsize > 0)
             return false;
         if (SetFilePointer(hfile, size, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
-            return false;        
+            return false;
         DWORD written1 = 0;
         tstring tmp(name); tmp.append(L"\n");
         if (!write_tofile(hfile, tmp, &written1))
@@ -107,7 +107,7 @@ public:
         written = written1 + written2 + written3;
         CloseHandle(hfile);
         hfile = INVALID_HANDLE_VALUE;
-        return true;    
+        return true;
     }
 
 private:
@@ -234,17 +234,27 @@ private:
         int count = p.len();
         if (count > 1)
         {
-            for (int i = 0, e = p.len(); i < e; ++i)
+            for (int i=0; i<count; ++i)
             {
-                tstring part(p.get(i));
-                if (part.length() < 3)
-                    continue;
-                m_phrases.addPhrase(new Phrase(part));
-                add_toindex(p.get(i), ix);
+              tstring part(p.get(i));
+              if (part.length() > 2)
+              {
+                 m_phrases.addPhrase(new Phrase(part));
+                 add_toindex(part, ix);
+              }
+              for (int j=i+1; j<count; ++j) {
+                 part.append(L" ");
+                 part.append(p.get(j));
+                 m_phrases.addPhrase(new Phrase(part));
+                 add_toindex(part, ix);
+              }
             }
         }
-        m_phrases.addPhrase(new Phrase(n));
-        add_toindex(n, ix);
+        else 
+        {
+          m_phrases.addPhrase(new Phrase(n));
+          add_toindex(n, ix);
+        }
     }
     void add_toindex(const tstring& t, index ix)
     {
@@ -299,7 +309,7 @@ private:
         if (!fw.write(f.path, name, data))
            return ix;
         f.size += fw.written;
-        ix.file = m_current_file;        
+        ix.file = m_current_file;
         ix.data_in_file = fw.start_data;
         ix.datalen_in_file = fw.written - (fw.start_data - fw.start_name);
         return ix;
@@ -345,7 +355,7 @@ private:
             }
 
             index ix;
-            ix.file = i;            
+            ix.file = i;
             ix.data_in_file = 0;
             ix.datalen_in_file = 0;
 
@@ -358,7 +368,7 @@ private:
                 {
                     find_name_mode = true;
                     if (!name.empty())
-                    {                        
+                    {
                         if (ix.data_in_file != 0)
                         {
                             ix.datalen_in_file = lf.getPosition()-ix.data_in_file;
@@ -368,12 +378,12 @@ private:
                         ix.data_in_file = 0;
                         ix.datalen_in_file = 0;
                         name.clear();
-                    }                    
+                    }
                     continue;
                 }
                 if (find_name_mode) 
                 {
-                    name.assign(str);                  
+                    name.assign(str);
                     find_name_mode = false;
                     ix.data_in_file = lf.getPosition();
                 }

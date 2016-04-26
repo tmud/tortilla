@@ -26,8 +26,21 @@ function speedwalk.version()
   return '1.0'
 end
 
+function speedwalk.init()
+  addCommand("swalk")
+end
+
 function speedwalk.syscmd(t)
-  return t
+  if t[1] ~= 'swalk' then
+   return t
+  end
+  local c = t[2]
+  if not c then
+    print(props.getPrefix().."swalk start|stop|save|return|go|play|list|delete|show")
+	return {}
+  end
+  
+  return {}
 end
 
 function speedwalk.gamecmd(t)

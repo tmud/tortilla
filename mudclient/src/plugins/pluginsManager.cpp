@@ -585,7 +585,7 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип полученного значения. Требуется string|nil", i);
+            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
@@ -632,7 +632,7 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
+            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется table|nil|boolean|string", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)

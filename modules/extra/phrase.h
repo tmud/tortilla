@@ -137,6 +137,8 @@ public:
 private:
     int find(const Phrase& p)
     {
+        if (p.len() == 0)
+            return -1;
         int begin = -1;
         tchar c = p.get(0).at(0);
         for (int i=0,e=m_phrases.size();i<e;++i)

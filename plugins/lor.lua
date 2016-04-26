@@ -3,7 +3,7 @@
 local lor = {}
 local initialized = false
 local lor_catch_mode = false
-local lor_trigger, lor_filter
+local lor_trigger, lor_filter, lor_import
 local lor_strings = {}
 local lor_dictonary
 
@@ -11,10 +11,22 @@ function lor.name()
   return 'База предметов'
 end
 function lor.description()
-  return 'Плагин сохраняет в базе информацию о предметах, а также позволяет в этой базе искать их.'
+  local s = {
+  'Плагин сохраняет в базе информацию о предметах, а также позволяет в этой базе искать их.',
+  'Лор-информация собирается автоматически, когда предмет изучается в игре.',
+  'Для поиска используется команда лор <имя предмета>, можно использовать сокращения.',
+  'Возможен импорт в базу из текстовых файлов командой лоримпорт <имя файла>, но для',
+  'этой возможности нужна своя настройка в конфигурационном файле плагина.',
+  'Импорт работает с кодировкой win. См. справку по плагину: '..props.cmdPrefix()..'help lor'
+  }
+  return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.0'
+  return '1.01'
+end
+
+local function print(s)
+  _G.print('[lor]: '..s)
 end
 
 function lor.init()
@@ -30,6 +42,12 @@ function lor.init()
   lor_filter = t.check(createPcre)
   if type(lor_filter) ~= 'function' then
     terminate("Ошибка в настройках, в параметре check должна быть возвращена функция.")
+  end
+  if type(t.import) == 'function' then
+    lor_import = t.import(createPcre)
+    if type(lor_import) ~= 'function' then
+      terminate("Ошибка в настройках, в параметре import должна быть возвращена функция.")
+    end
   end
   if extra and type(extra.dictonary) == 'function' then
     lor_dictonary = extra.dictonary()
@@ -72,21 +90,62 @@ local function find_lor_strings(id)
   end
 end
 
+local function import(file)
+  if not system then
+    print('Ошибка! Не загружен модуль system. Импорт невозможен.')
+    return
+  end
+  local t = system.loadTextFile(file)
+  if not t then
+    print('Ошибка! Файл '..file..' загрузить не получилось.')
+    return
+  end
+  for _,s in ipairs(t) do
+    s = system.convertFromWin(s)
+    local vs = createViewString()
+    local result, item = lor_import(s, vs)
+    if result then
+       if item then
+         save_lor_strings()
+         lor_strings = {}
+       end
+      lor_strings[#lor_strings+1] = vs
+      if item then lor_strings.name = item end
+    end
+  end
+end
+
 function lor.gamecmd(t)
-  if t[1] == "лор" then
-    if not initialized then
-      print("[lor]: Ошибка в настройках.")
+  if t[1] ~= "лор" and t[1] ~= 'лоримпорт' then
+    return t
+  end
+  if not initialized then
+    print("Ошибка в настройках.")
+    return nil
+  end
+  if t[1] == 'лоримпорт' then
+    if not lor_import then
+      print("Ошибка в настройках.")
       return nil
     end
-    local id = ""
-    for k=2,#t do
-      if k ~= 2 then id = id..' ' end
-      id = id..t[k]
+    if not t[2] then
+      print("Укажите имя файла")
+    else
+      import(t[2])
     end
-    find_lor_strings(id)
     return {}
   end
-  return t
+  local id = ""
+  for k=2,#t do
+    if k ~= 2 then id = id..' ' end
+    id = id..t[k]
+  end
+  if id:len() == 0 then
+    print("Что искать в базе?")
+  else
+    find_lor_strings(id)
+  end
+  return {}
 end
 
 function lor.before(v, vd)
