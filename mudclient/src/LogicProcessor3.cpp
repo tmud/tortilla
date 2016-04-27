@@ -64,7 +64,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 2. команды, но после prompt/другой команды - ок
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
-    if (window == 0)
+    if (window == 0 && !(flags & GAME_LOG) )
     {
         MudViewParserOscPalette palette;
         m_parser.parse(text, text_len, true, &parse_data, &palette);
