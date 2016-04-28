@@ -38,12 +38,12 @@ int declension_find(lua_State *L)
 {
     if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
     {
-        tstring result_string;
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
         tstring p(luaT_towstring(L, 2));
-        if (d->findPhrase(p, &result_string))
+        std::vector<tstring> result;
+        if (d->findPhrase(p, &result) && result.size() == 1)
         {
-            luaT_pushwstring(L, result_string.c_str());
+            luaT_pushwstring(L, result[0].c_str());
             return 1;
         }
         return 0;

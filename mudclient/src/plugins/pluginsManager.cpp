@@ -203,11 +203,16 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
     Plugin *p = findPlugin(name);
     if (!p)
     {
-        tstring error(L"Неизвестное имя плагина '");
-        error.append(name);
-        error.append(L"'.");
-        tmcLog(error.c_str());
-        return true;
+        initPlugins();
+        p = findPlugin(name);
+        if (!p)
+        {
+            tstring error(L"Ошибка при загрузке плагина '");
+            error.append(name);
+            error.append(L"'.");
+            tmcLog(error.c_str());
+            return true;
+        }
     }
     if (state == L"on" || state == L"1" || state == L"load")
     {

@@ -42,6 +42,13 @@ public:
               int notcompared = len - compared;
               if (notcompared > compared)
                   { result = false; break; }
+              if (notcompared)
+              {
+                  notcompared = notcompared + delta;
+                  if (notcompared >= compared*2) {
+                      result = false; break;
+                  }
+              }
         }
         return result;
     }
@@ -107,20 +114,27 @@ public:
        m_phrases.insert(m_phrases.begin()+index, p);
        return true;
     }
-    bool findPhrase(const Phrase& p, tstring* result)
+    bool findPhrase(const Phrase& p, std::vector<tstring>* result)
     {
-        int index = find(p);
-        if (index != -1)
-        {   m_phrases[index]->getFullPhrase(result);
-            return true;
+        std::vector<int> indexes;
+        find(p, indexes);
+        if (indexes.empty())
+            return false;
+        result->resize(indexes.size());
+        for (int i=0,e=indexes.size();i<e;++i)
+        {
+            int index = indexes[i];
+            m_phrases[index]->getFullPhrase( &result->operator[](i) );
         }
-        return false;
+        return true;
     }
     bool deletePhrase(const Phrase& p)
     {
-        int index = find(p);
-        if (index != -1)
+        std::vector<int> indexes;
+        find(p, indexes);
+        if (indexes.size() == 1)
         {
+            int index = indexes[0];
             m_phrases.erase(m_phrases.begin()+index);
             return true;
         }
@@ -135,10 +149,10 @@ public:
         return m_phrases.size();
     }
 private:
-    int find(const Phrase& p)
+    void find(const Phrase& p, std::vector<int>& indexes)
     {
         if (p.len() == 0)
-            return -1;
+            return;
         int begin = -1;
         tchar c = p.get(0).at(0);
         for (int i=0,e=m_phrases.size();i<e;++i)
@@ -146,7 +160,7 @@ private:
             tchar c2 = m_phrases[i]->get(0).at(0);
             if (c == c2) { begin = i; break; }
         }
-        if (begin == -1) return -1;
+        if (begin == -1) return;
         int end = m_phrases.size();
         for (int i=begin,e=m_phrases.size();i<e;++i)
         {
@@ -156,9 +170,8 @@ private:
         for (int i=begin;i<end;++i)
         {
             if (m_phrases[i]->similar(p))
-                return i;
+                indexes.push_back(i);
         }
-        return -1;
     }
     std::vector<Phrase*> m_phrases;
 };
@@ -193,7 +206,7 @@ public:
             m_changed = true;
         return result;
     }
-    bool findPhrase(const tstring& t, tstring* result) const
+    bool findPhrase(const tstring& t, std::vector<tstring>* result) const
     {
         Phrase p(t);
         int len = p.len();
@@ -202,7 +215,8 @@ public:
         iterator it = m_data.find(len);
         if (it == m_data.end())
             return false;
-        return it->second->findPhrase(p, result);
+        it->second->findPhrase(p, result);
+        return !result->empty();
     }
     bool deletePhrase(const tstring& t)
     {

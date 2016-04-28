@@ -6,6 +6,7 @@ local lor_catch_mode = false
 local lor_trigger, lor_filter, lor_import
 local lor_strings = {}
 local lor_dictonary
+local lor_cache = {}
 
 function lor.name()
   return 'База предметов'
@@ -23,6 +24,10 @@ function lor.description()
 end
 function lor.version()
   return '1.01'
+end
+
+local function output(s)
+  _G.print(s)
 end
 
 local function print(s)
@@ -60,6 +65,7 @@ end
 
 local function save_lor_strings()
   if not lor_strings.name then
+    lor_strings = {}
     return false, "Не получено имя предмета, сохранить невозможно."
   end
   local info = {}
@@ -67,26 +73,56 @@ local function save_lor_strings()
     info[k] = s:getData()
   end
   local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'))
+  local name = lor_strings.name..'.'
+  lor_strings = {}
   if not res then
     if err == 'exist' then
-      return false, "Предмет уже существует в базе."
+      return false, 'Предмет уже существует в базе: '..name
     end
-    return false, "Предмет не добавлен в базу из-за ошибки."
+    return false, "Предмет не добавлен в базу из-за ошибки: "..name
   end
-  return true, "Предмет добавлен в базу."
+  return true, "Предмет добавлен в базу: "..name
+end
+
+local function print_object(s)
+  local t = s:tokenize('\n')
+  local vs = createViewString()
+  for _,s in ipairs(t) do
+    vs:setData(s)
+    vs:print(0)
+  end
 end
 
 local function find_lor_strings(id)
+  if id:only('0123456789') then
+    local index = tonumber(id)
+    local t = lor_cache[index]
+    if t then
+      print_object(t.data)
+    else
+      print("Ничего не найдено")
+    end
+    return
+  end
   local t = lor_dictonary:find(id)
   if not t then
     print("Ничего не найдено")
     return
   end
-  local info = t:tokenize('\n')
-  local vs = createViewString()
-  for _,s in ipairs(info) do
-    vs:setData(s)
-    vs:print(0)
+  local count = 0
+  for _ in pairs(t) do count = count + 1 end
+  if count == 1 then
+    local _,info = next(t)
+    print_object(info)
+  else
+    print("Уточните поиск (лор номер):")
+    lor_cache = {}
+    local c = lor_cache
+    for name,data in pairs(t) do
+      local id = #c+1
+      c[id] = { name = name, data = data }
+      output(""..id..". "..name)
+    end
   end
 end
 
@@ -102,16 +138,25 @@ local function import(file)
   end
   for _,s in ipairs(t) do
     s = system.convertFromWin(s)
-    local vs = createViewString()
-    local result, item = lor_import(s, vs)
-    if result then
-       if item then
-         save_lor_strings()
-         lor_strings = {}
-       end
-      lor_strings[#lor_strings+1] = vs
-      if item then lor_strings.name = item end
+    if s:len() > 0 then
+      local vs = createViewString()
+      local result, item = lor_import(s, vs)
+      if result then
+        if item then
+          if lor_strings.name then
+            local _,result = save_lor_strings()
+            if result then print(result) end
+          end
+          lor_strings.name = item
+        end
+        lor_strings[#lor_strings+1] = vs
+        if item then lor_strings.name = item end
+      end
     end
+  end
+  if lor_strings.name then
+    local _,result = save_lor_strings()
+    if result then print(result) end
   end
 end
 
@@ -141,6 +186,12 @@ function lor.gamecmd(t)
     id = id..t[k]
   end
   if id:len() == 0 then
+    if #lor_cache > 0 then
+      print("Последний поиск:")
+    end
+    for id,t in ipairs(lor_cache) do
+      output(""..id..". "..t.name)
+    end
     print("Что искать в базе?")
   else
     find_lor_strings(id)
@@ -174,10 +225,9 @@ function lor.before(v, vd)
         vd:setBlocksCount(1)
         vd:setBlockText(1, '[lor] '..error)
       end
-      lor_strings = {}
       break
     end
-    if not vd:isSystem() and not vd:isGameCmd() and vd:getTextLen() > 0 then 
+    if not vd:isSystem() and not vd:isGameCmd() and vd:getTextLen() > 0 then
       local ref = vd:createRef()
       local item
       ref, item = lor_filter(ref)

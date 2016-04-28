@@ -1458,6 +1458,31 @@ int string_tokenize(lua_State *L)
     return 0;
 }
 
+int string_trim(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring s(luaT_towstring(L, 1));
+        tstring_trim(&s);
+        luaT_pushwstring(L, s.c_str());
+        return 1;
+    }
+    return 0;
+}
+
+int string_only(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    {
+         tstring s(luaT_towstring(L, 1));
+         tstring tokens(luaT_towstring(L, 2));
+         int result = isOnlySymbols(s, tokens) ? 1 : 0;
+         lua_pushboolean(L, result);
+         return 1;
+    }
+    return 0;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -1471,6 +1496,8 @@ void reg_string(lua_State *L)
     regFunction(L, "upper", string_upper);
     regFunction(L, "lfup", string_lfup);
     regFunction(L, "tokenize", string_tokenize);
+    regFunction(L, "trim", string_trim);
+    regFunction(L, "only", string_only);
     regIndexMt(L);
 
     // set metatable for lua string type

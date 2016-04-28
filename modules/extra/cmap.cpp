@@ -142,6 +142,7 @@ class MapDictonary
     struct index
     {
         index() : file(-1), data_in_file(0), datalen_in_file(0) {}
+        tstring name;
         int file;
         DWORD data_in_file;
         DWORD datalen_in_file;
@@ -179,56 +180,59 @@ public:
         index ix = add_tofile(name, data);
         if (ix.file == -1)
             return MD_ERROR;
-        add_index(name, ix);
+        ix.name = name;
+        add_index(ix);
         return MD_OK;
     }
 
-    bool find(const tstring& name, tstring* value)
+    bool find(const tstring& name, std::map<tstring,tstring>* values)
     {
         tstring n(name);
         tstring_tolower(&n);
         Phrase p(n);
-        tstring result;
+        std::vector<tstring> result;
         if (!m_phrases.findPhrase(p, &result))
             return false;
-        iterator it = m_indexes.find(result);
-        if (it == m_indexes.end())
-            return false;
-
-        std::vector<filereader> open_files(m_files.size());
-        indexes &ix = it->second;
-        for (int i=0,e=ix.size()-1;i<=e;++i)
+        for (int k=0,ke=result.size();k<ke;++k )
         {
-            int fileid = ix[i].file;
-            fileinfo& fi = m_files[fileid];
-            filereader& fr = open_files[fileid];
-            if (!fr.open(fi.path, fi.size))
-            {
-                fileerror(fi.path);
+            iterator it = m_indexes.find(result[k]);
+            if (it == m_indexes.end())
                 continue;
-            }
 
-            bool result = fr.read(ix[i].data_in_file, ix[i].datalen_in_file, &buffer);
-            if (!result)
+            std::vector<filereader> open_files(m_files.size());
+            indexes &ix = it->second;
+            for (int i=0,e=ix.size()-1;i<=e;++i)
             {
-                fileerror(fi.path);
-                continue;
+                int fileid = ix[i].file;
+                fileinfo& fi = m_files[fileid];
+                filereader& fr = open_files[fileid];
+                if (!fr.open(fi.path, fi.size))
+                {
+                    fileerror(fi.path);
+                    continue;
+                }
+
+                bool result = fr.read(ix[i].data_in_file, ix[i].datalen_in_file, &buffer);
+                if (!result)
+                {
+                    fileerror(fi.path);
+                    continue;
+                }
+                int size = buffer.getSize();
+                buffer.keepalloc(size+1);
+                char *p = buffer.getData();
+                p[size] = 0;
+                const tstring& name = ix[i].name;
+                values->operator[](name) = tstring(TU2W(p));
             }
-            int size = buffer.getSize();
-            buffer.keepalloc(size+1);
-            char *p = buffer.getData();
-            p[size] = 0;
-            if (!value->empty())
-                value->append(L"\n");
-            value->append(TU2W(p));
         }
         return true;
     }
 
 private:
-    void add_index(const tstring& name, index ix)
+    void add_index(index ix)
     {
-        tstring n(name);
+        tstring n(ix.name);
         tstring_tolower(&n);
         Phrase p(n);
         int count = p.len();
@@ -372,8 +376,8 @@ private:
                         if (ix.data_in_file != 0)
                         {
                             ix.datalen_in_file = lf.getPosition()-ix.data_in_file;
-                            tstring tn(TU2W(name.c_str()));
-                            add_index(tn, ix);
+                            ix.name = TU2W(name.c_str());
+                            add_index(ix);
                         }
                         ix.data_in_file = 0;
                         ix.datalen_in_file = 0;
@@ -419,9 +423,19 @@ int dict_find(lua_State *L)
     {
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
-        tstring result;
+        std::map<tstring,tstring> result;
+        typedef std::map<tstring,tstring>::iterator iterator;
         if (d->find(id, &result))
-            luaT_pushwstring(L, result.c_str());
+        {
+            lua_newtable(L);
+            iterator it = result.begin(), it_end = result.end();
+            for (;it!=it_end;++it)
+            {
+                luaT_pushwstring(L, it->first.c_str());
+                luaT_pushwstring(L, it->second.c_str());
+                lua_settable(L, -3);
+            }
+        }
         else
             lua_pushnil(L);
         return 1;
