@@ -32,8 +32,39 @@ public:
               const tstring &p2 = p.words[i];
               int len = min(p1.size(), p2.size());
               int delta = max(p1.size(), p2.size()) - len;
-              /*if (delta > 2)
-                  { result = false; break; }*/
+              int compared = 0;
+              for (int i=0;i<len;++i) {
+                  if (p1[i] != p2[i]) break;
+                  compared++;
+              }
+              int notcompared = len - compared;
+              if (notcompared > compared)
+                  { result = false; break; }
+              if (notcompared)
+              {
+                  notcompared = notcompared + delta;
+                  if (notcompared >= compared*2) {
+                      result = false; break;
+                  }
+              }
+        }
+        return result;
+    }
+    bool strong(const Phrase& p) const 
+    {
+        int plen = len();
+        if (plen != p.len())
+            return false;
+        if (plen == 0) return true;
+        bool result = true;
+        for (int i=0; i<plen;++i)
+        {
+              const tstring &p1 = words[i];
+              const tstring &p2 = p.words[i];
+              if (p1.size() < p2.size())
+                  { result = false; break; }
+              int len = p2.size();
+              int delta = p1.size() - len;
               int compared = 0;
               for (int i=0;i<len;++i) {
                   if (p1[i] != p2[i]) break;
@@ -114,10 +145,10 @@ public:
        m_phrases.insert(m_phrases.begin()+index, p);
        return true;
     }
-    bool findPhrase(const Phrase& p, std::vector<tstring>* result)
+    bool findPhrase(const Phrase& p, bool strong_mode, std::vector<tstring>* result)
     {
         std::vector<int> indexes;
-        find(p, indexes);
+        find(p, strong_mode, indexes);
         if (indexes.empty())
             return false;
         result->resize(indexes.size());
@@ -128,10 +159,10 @@ public:
         }
         return true;
     }
-    bool deletePhrase(const Phrase& p)
+    bool deletePhrase(const Phrase& p, bool strong_mode)
     {
         std::vector<int> indexes;
-        find(p, indexes);
+        find(p, strong_mode, indexes);
         if (indexes.size() == 1)
         {
             int index = indexes[0];
@@ -149,7 +180,7 @@ public:
         return m_phrases.size();
     }
 private:
-    void find(const Phrase& p, std::vector<int>& indexes)
+    void find(const Phrase& p, bool strong_mode, std::vector<int>& indexes)
     {
         if (p.len() == 0)
             return;
@@ -169,7 +200,8 @@ private:
         }
         for (int i=begin;i<end;++i)
         {
-            if (m_phrases[i]->similar(p))
+            bool result = (strong_mode) ? m_phrases[i]->strong(p) : m_phrases[i]->similar(p);
+            if (result)
                 indexes.push_back(i);
         }
     }
@@ -215,7 +247,7 @@ public:
         iterator it = m_data.find(len);
         if (it == m_data.end())
             return false;
-        it->second->findPhrase(p, result);
+        it->second->findPhrase(p, false, result);
         return !result->empty();
     }
     bool deletePhrase(const tstring& t)
@@ -227,7 +259,7 @@ public:
         iterator it = m_data.find(len);
         if (it == m_data.end())
             return false;
-        return it->second->deletePhrase(p);
+        return it->second->deletePhrase(p, true);
     }
 
     void clear() 

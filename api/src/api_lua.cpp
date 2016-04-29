@@ -40,10 +40,13 @@ int luaT_push_args(lua_State *L, const char* func)
     std::wstring log( TA2W(ar.short_src) );
     log.append(L" ");
     log.append( TA2W(func) );
-    log.append(L":");
     wchar_t buffer[16];
-    _itow(ar.currentline, buffer, 10);
-    log.append(buffer);
+    if (ar.currentline > 0)
+    {
+        log.append(L":");
+        _itow(ar.currentline, buffer, 10);
+        log.append(buffer);
+    }
     log.append(L": (");
     _itow(n, buffer, 10);
     log.append(buffer);

@@ -47,7 +47,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p(_cp ? L"Некорректные параметры" : L"Параметры");
+    tstring p( L"Некорректные параметры" ); // (_cp ? L"Некорректные параметры" : L"Параметры");
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;

@@ -55,7 +55,8 @@ function lor.init()
     end
   end
   if extra and type(extra.dictonary) == 'function' then
-    lor_dictonary = extra.dictonary()
+    local path = getPath("")
+    lor_dictonary = extra.dictonary(path)
   end
   if not lor_dictonary then
     terminate("Не загружен модуль extra для работы с базой предметов.")

@@ -54,8 +54,6 @@ local function assert2(s1, s2)
   end
 end
 
-assert2('з м', 'зеленая миска')
-
 assert2('зеленую миску', 'зеленая миска')
 assert2('зеленой миской', 'зеленая миска')
 assert2('зеленое миске', 'зеленая миска')
@@ -73,3 +71,56 @@ assert2('сачку бабочки', 'сачек бабочки')
 assert2('сачке бабочки', 'сачек бабочки')
 
 dlib:clear()
+dlib = nil
+
+local dict = extra.dictonary(".\\")
+local function dadd(s)
+  dict:add(s, 'Инфа: '..s)
+end
+
+dadd('зеленая миска')
+dadd('змеиная маска')
+dadd('золотая монета')
+dadd('кушак повара')
+dadd('сачек бабочки')
+dadd('ржавый меч')
+dadd('длинный меч удали')
+dadd('руна движения')
+dadd('клыки крылатого огненного змея')
+dadd('боярский кафтан')
+dadd('круглый дубовый щит')
+dadd('перстень с мутным камнем')
+dadd('перстень света')
+
+
+local function assert3(str, t)
+  local r = dict:find(str)
+  local count = 0
+  for k,_ in pairs(r) do
+    --print(k)
+    count = count + 1
+  end
+  if count ~= #t then
+    print("unit test (dictonary) faled: ["..str.."]")
+    return
+  end
+  for s,_ in pairs(r) do
+    local found = false
+    for _,s2 in ipairs(t) do
+      if s == s2 then found = true break end  
+    end
+    if not found then
+      print("unit test (dictonary) faled: ["..str.."]")
+      return
+    end
+  end
+end
+
+assert3('з м', {'змеиная маска', 'зеленая миска', 'золотая монета' } )
+assert3('к п', {'кушак повара' } )
+assert3('рж м', {'ржавый меч' } )
+assert3('к', {'кушак повара', 'боярский кафтан', 'клыки крылатого огненного змея', 'круглый дубовый щит', 'перстень с мутным камнем'} )
+assert3('п св', {'перстень света'} )
+
+dict:wipe()
+dict = nil

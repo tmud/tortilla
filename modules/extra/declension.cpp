@@ -193,7 +193,7 @@ int declension_new(lua_State *L)
 {
     if (lua_gettop(L) != 0)
     {
-        luaT_push_args(L, "new");
+        luaT_push_args(L, "declension");
         return lua_error(L);
     }
 

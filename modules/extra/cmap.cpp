@@ -168,6 +168,17 @@ public:
     }
     ~MapDictonary() {}
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
+    void wipe()
+    {
+        m_current_file = -1;
+        m_indexes.clear();
+        for (int i=0,e=m_files.size(); i<e; ++i)
+        {
+            DeleteFile(m_files[i].path.c_str());
+        }
+        m_files.clear();
+    }
+
     int add(const tstring& name, const tstring& data)
     {
         tstring n(name);
@@ -191,7 +202,7 @@ public:
         tstring_tolower(&n);
         Phrase p(n);
         std::vector<tstring> result;
-        if (!m_phrases.findPhrase(p, &result))
+        if (!m_phrases.findPhrase(p, true, &result))
             return false;
         for (int k=0,ke=result.size();k<ke;++k )
         {
@@ -456,6 +467,17 @@ int dict_find(lua_State *L)
     return dict_invalidargs(L, "remove");
 }*/
 
+int dict_wipe(lua_State *L)
+{
+   if (luaT_check(L, 1, get_dict(L)))
+   {
+       MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+       d->wipe();
+       return 0;
+   }
+   return dict_invalidargs(L, "wipe");
+}
+
 int dict_gc(lua_State *L)
 {
     if (luaT_check(L, 1, get_dict(L)))
@@ -468,11 +490,13 @@ int dict_gc(lua_State *L)
 
 int dict_new(lua_State *L)
 {
-    if (lua_gettop(L) != 0)
+    if (!luaT_check(L, 1, LUA_TSTRING))
     {
-        luaT_push_args(L, "new");
+        luaT_push_args(L, "dictonary");
         return lua_error(L);
     }
+    tstring path(luaT_towstring(L, 1));
+
     if (get_dict(L) == -1)
     {
         int type = luaT_regtype(L, "dictonary");
@@ -482,6 +506,8 @@ int dict_new(lua_State *L)
         luaL_newmetatable(L, "dictonary");
         regFunction(L, "add", dict_add);
         regFunction(L, "find", dict_find);
+        regFunction(L, "wipe", dict_wipe);
+
         //regFunction(L, "remove", dict_remove);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
@@ -492,8 +518,6 @@ int dict_new(lua_State *L)
         lua_settable(L, -3);
         lua_pop(L, 1);
     }
-    tstring path;
-    base::getPath(L, L"", &path);
     MapDictonary* nd = new MapDictonary(path, L);
     luaT_pushobject(L, nd, get_dict(L));
     return 1;
