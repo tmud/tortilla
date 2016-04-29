@@ -23,7 +23,7 @@ class MudView : public CWindowImpl<MudView>
     int m_find_string_index;
     int m_find_start_pos, m_find_end_pos;
     
-    int m_id; //todo
+    int m_id;
 
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)

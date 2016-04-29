@@ -97,8 +97,6 @@ public:
             ss.erase(ss.begin() + selected);
             if (tdata)
                 tdata->markDeleted(selected);
-            //if (selected == 0)
-            //todo    pdata->update_prev_string = false;
             if (ss.empty() || selected == last)
                 pdata->last_finished = true;
         }
