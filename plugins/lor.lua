@@ -23,7 +23,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.01'
+  return '1.02'
 end
 
 local function output(s)
@@ -186,6 +186,7 @@ function lor.gamecmd(t)
     if k ~= 2 then id = id..' ' end
     id = id..t[k]
   end
+  id = table.concat(id:tokenize('.'), ' ')
   if id:len() == 0 then
     if #lor_cache > 0 then
       print("Последний поиск:")
