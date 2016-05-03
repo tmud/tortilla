@@ -251,8 +251,8 @@ int u8string_len(const u8string& str)
 void u8string_substr(u8string *str, int from, int len)
 {
     from = utf8_getbinlen(str->c_str(), from);
-    len = utf8_getbinlen(str->c_str(), from + len);
-    u8string res(str->substr(from, len));
+    int afterlen = utf8_getbinlen(str->c_str(), from + len);
+    u8string res(str->substr(from, afterlen-from));
     str->swap(res);
 }
 

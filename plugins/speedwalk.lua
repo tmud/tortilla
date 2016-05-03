@@ -2,6 +2,16 @@
 -- Плагин для Tortilla mud client
 local speedwalk = {}
 
+-- используемые команды перемещений
+local move_cmds = {
+ n = { "с", "север", "n", "north" },
+ s = { "ю", "юг", "s", "south" },
+ w = { "з", "запад", "w", "west" },
+ e = { "в", "восток", "e", "east" },
+ u = { "вв", "вверх", "u", "up" },
+ d = { "вн", "вниз", "d", "down" }
+ }
+
 function speedwalk.name()
   return 'Маршруты speedwalks'
 end
@@ -30,6 +40,8 @@ end
 local recorddb = {}
 local record = ""
 local recording = false
+local cmap, blocked
+local move_stack = {}
 
 local function print(s)
   _G.print("[swalk]: "..s)
@@ -39,7 +51,22 @@ local function output(s)
 end
 
 function speedwalk.init()
+  local t = loadTable('config.lua')
+  if not t or type(t.blocked) ~= 'table' then 
+    terminate('Нет файла настроек.')
+  end
+  blocked = t.blocked
   addCommand("swalk")
+  cmap = {}
+  for k,cmds in pairs(move_cmds) do
+    for _,cmd in pairs(cmds) do
+      cmap[cmd] = k
+    end
+  end
+end
+
+function speedwalk.disconnect()
+  move_stack = {}
 end
 
 local function stop_recording()
@@ -222,6 +249,10 @@ function speedwalk.syscmd(t)
 end
 
 function speedwalk.gamecmd(t)
+  if #t ~= 1 then return t end
+  local dir = cmap[ t[1] ]
+  if not dir then return t end
+  print(dir)
   return t
 end
 

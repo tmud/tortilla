@@ -2,38 +2,57 @@
 -- Плагин для Tortilla mud client
 
 local cmd_list = {}
+local scmd_list = {}
 
 local cmdfilter = {}
 function cmdfilter.name() 
   return 'Фильтр команд'
 end
 function cmdfilter.description()
-  local s = 'Плагин фильтрует заданные команды от попадания в окно клиента, остается только результат.\r\nУдобно использовать, если игровые команды используются в таймерах.\r\n'
-  s = s.."Список команд находится в файле: "..getPath('config.lua')
-  return s
+  local s = { 'Плагин фильтрует заданные команды от попадания в окно клиента, остается только результат.',
+  'Удобно использовать, если игровые команды используются в таймерах или триггерах.',
+  "Список команд находится в файле: "..getPath('config.lua') }
+  return table.concat(s, '\r\n')
 end
 function cmdfilter.version()
-  return '-'
+  return '1.01'
 end
 
 function cmdfilter.init()
   local t = loadTable('config.lua')
-  if not t or not t.cmdlist or type(t.cmdlist) ~= 'table' then
-    terminate('Ошибка в настройках '..getPath('config.lua')..', нет списка команд cmdlist.')
+  if not t then
+    terminate('Ошибка в файле настроек '..getPath('config.lua')..', нет списка команд.')
   end
-  cmd_list = t.cmdlist
+  if (not t.cmdlist or type(t.cmdlist) ~= 'table') and (not t.scmdlist or type(t.scmdlist) ~= 'table') then
+    terminate('Ошибка в настройках '..getPath('config.lua')..', нет списка команд cmdlist и scmdlist.')
+  end
+  cmd_list = {} 
+  scmd_list = {}
+  for _,cmd in pairs(t.cmdlist) do
+    cmd_list[cmd] = true
+  end
+  for _,cmd in pairs(t.scmdlist) do
+    scmd_list[cmd] = true
+  end
 end
 
 local function check_cmd(v)
   if not v:isGameCmd() then return end
   local last=v:blocks()
   local cmd = v:getBlockText(last)
-  for _,c in ipairs(cmd_list) do
-    if c == cmd then
-      return true
-    end
-  end
-  return false
+  return cmd_list[cmd] and true or false
+end
+
+local function check_scmd(v)
+  if not v:isGameCmd() then return end
+  if v:blocks() == 0 then return end
+  local cmd = v:getBlockText(v:blocks())
+  local from = 1
+  if cmd:substr(1,1) == '-' then from = 2 end
+  if cmd:substr(from,1) ~= props.cmdPrefix() then return end
+  local c = cmd:substr(from+1, cmd:len()-from)
+  c = c:tokenize(' ')
+  return scmd_list[ c[1] ] and true or false
 end
 
 local catch_mode = false
@@ -49,6 +68,10 @@ if window ~= 0 then return end
   local todelete = {}
   for i=1,v:size() do
     v:select(i)
+    if check_scmd(v) then
+      todelete[#todelete+1] = i
+      goto next
+    end
     if not catch_mode then
       if check_cmd(v) then
         todelete[#todelete+1] = i
