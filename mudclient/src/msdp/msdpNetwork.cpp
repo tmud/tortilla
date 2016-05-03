@@ -359,6 +359,16 @@ void MsdpNetwork::unloadPlugins()
     releaseReports();
     if (!unreport.empty())
         send_varvals("UNREPORT", unreport);
+    m_state = false;
+}
+
+void MsdpNetwork::reset()
+{
+    if (!m_state)
+        return;
+    tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
+    releaseReports();
+    m_state = false;
 }
 
 void MsdpNetwork::setUtf8Encoding(bool flag)

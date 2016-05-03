@@ -485,6 +485,7 @@ void PluginsManager::processConnectEvent()
 
 void PluginsManager::processDisconnectEvent()
 {
+    m_msdp_network.reset();
     doPluginsMethod("disconnect", 0);
 }
 

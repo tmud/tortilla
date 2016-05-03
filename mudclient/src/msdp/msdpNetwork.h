@@ -17,6 +17,7 @@ public:
     void unloadPlugin(Plugin *p);
     void loadPlugins();
     void unloadPlugins();
+    void reset();
     void setUtf8Encoding(bool flag);
 private:
     void translate(DataQueue& msdp);
