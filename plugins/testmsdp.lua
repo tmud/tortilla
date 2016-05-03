@@ -14,6 +14,10 @@ function testmsdp.version()
     return '-'
 end
 
+local function log(s)
+  print("rgb140,60,80", "[msdp]: "..s)
+end
+
 --[[
 SENDABLE_VARIABLES
 REPORTED_VARIABLES
@@ -24,10 +28,11 @@ LISTS
 ]]
 
 function testmsdp.msdpon()
-    --[[msdp.list("LISTS")
+    log("ON")
+    msdp.list("LISTS")
     msdp.list("COMMANDS")
     msdp.list("REPORTABLE_VARIABLES")
-    msdp.list("CONFIGURABLE_VARIABLES")]]
+    msdp.list("CONFIGURABLE_VARIABLES")
 
     msdp.report('ROOM')
     --msdp.report('ROOM_VNUM')
@@ -36,6 +41,7 @@ function testmsdp.msdpon()
 end
 
 function testmsdp.msdpoff()
+    log("OFF")
     msdp.unreport("ROOM")
     msdp.unreport("MOVEMENT")
 end

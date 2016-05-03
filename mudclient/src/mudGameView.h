@@ -1005,7 +1005,9 @@ private:
        m_plugins.updateProps();
        if (m_propData->codepage == L"utf8") m_codepage = CPUTF8;
        else m_codepage = CPWIN;
-       m_network.setUtf8Encoding(m_codepage == CPUTF8 ? true : false);
+       bool utf8_encoding = m_codepage == CPUTF8 ? true : false;
+       m_network.setUtf8Encoding(utf8_encoding);
+       m_plugins.getMsdp()->setUtf8Encoding(utf8_encoding);
     }
 
     void updateTitle()
