@@ -372,7 +372,16 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
 void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
 {
     if (window >= 0 && window <= OUTPUT_WINDOWS)
-       printex(window, msgs);
+    {
+       if (m_plugins_log_blocked || m_plugins_log_tocache)
+       {
+           pluginLog(L"print в before, after использовать нельзя. см. справку.");
+       }
+       else
+       {
+           printex(window, msgs);
+       }
+    }
 }
 
 void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)

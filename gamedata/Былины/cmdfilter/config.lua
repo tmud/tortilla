@@ -7,5 +7,6 @@ scmdlist = {
 'drop', 
 'hide', 
 'woutput', 
-'tray'
+'tray',
+'output'
 }
