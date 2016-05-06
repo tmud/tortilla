@@ -42,7 +42,7 @@ local recorddb = {}
 local recorddb_changed = false
 local record = ""
 local recording = false
-local cmap, blocked, move_queue, replay, replaying
+local cmap, blocked, move_queue, replay, replaying, notreplayed
 
 local function output(s)
   _G.print(s)
@@ -124,7 +124,7 @@ local cvt = {
   ['о'] = 'd'
 }
 
-local function play_path(path, backward_mode, block_replay)
+local function play_path(path, backward_mode)
   local cmd = {}
   local count = ""
   for i=1,path:len() do
@@ -153,7 +153,7 @@ local function play_path(path, backward_mode, block_replay)
     end
     cmd = rcmd
   end
-  if not recording and not block_replay then 
+  if not recording then
     replay = table.concat(cmd)
     replaying = replay:clone()
     local runcmd = replay:substr(1,1)
@@ -283,6 +283,12 @@ end
 local function go(p)
   if not p then
     if recording then
+      if notreplayed then
+        local path = notreplayed:clone()
+        notreplayed = nil
+        play_path(path, false)
+        return
+      end
       print('Идет запись маршрута. Не указано имя маршрута.')
     else
       print('Не указано имя маршрута. Переместиться невозможно.')
@@ -433,6 +439,8 @@ local function in_replay(vd)
         if p:find(vd:getText()) then
           local traveled = replaying:len() - replay:len()
           if traveled == 0 then
+            notreplayed = replay
+            log(notreplayed)
             replay = nil
             replaying = nil
             return
@@ -445,6 +453,7 @@ local function in_replay(vd)
           for i=1,path:len() do
             record_dir( path:substr(i,1) )
           end
+          notreplayed = replay
           replay = nil
           replaying = nil
           recording = true
