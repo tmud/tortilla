@@ -447,7 +447,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     if (luaL_loadfile(L, TW2A(fname)))
     {
         pluginLoadError(lua_toerror(L));
-        lua_pop(L, 1);        
+        lua_pop(L, 1);
         return false;
     }
     // make empty eviroment and call script in them
@@ -460,6 +460,27 @@ int loadTableLua(lua_State* L, const tstring& filename)
         pluginLoadError(lua_toerror(L));
         lua_pop(L, 1);
         return false;
+    }
+    lua_pushstring(L, "_i");
+    lua_gettable(L, -2);
+    if (lua_istable(L, -1))
+    {
+        lua_pushnil(L);                     // first key
+        while (lua_next(L, -2) != 0)
+        {   //  value = -1, key = -2, srctable = -3, dsttable = -4
+            lua_pushvalue(L, -2);
+            lua_insert(L, -2);
+            // value = -1, key = -2,-3, srctable = -4, dsttable = -5
+            lua_settable(L, -5);
+            // key = -1, srctable = -2, dsttable = -3
+        }
+        lua_pop(L, 1);
+        lua_pushstring(L, "_i");
+        lua_pushnil(L);
+        lua_settable(L, -3);
+    }
+    else {
+        lua_pop(L, 1);
     }
     return 1;
 }
@@ -596,52 +617,69 @@ class LuaRecorder
     tstring tabs;
     const size_t tabs_size = 2;
     tstring r;
-    bool first_param, first_open;
+    bool first_param;
+    int root_index;
     int brackets_layer;
+    bool index_mode;
 public:
-    LuaRecorder() : first_param(true), first_open(false), brackets_layer(0) { r.reserve(4096);  }
+    LuaRecorder() : first_param(true), brackets_layer(0), index_mode(false) { r.reserve(4096);  root_index = 0; }
     const tstring& result() const { return r; }
-    void key(const tstring& k) {
-        if (!first_param) endvar();
-        addtabs(); r.append(k); r.append(L"="); }
-    void value(const tstring& v, bool itstring) {
-         if (!itstring) {  r.append(v); }
-         else {  tchar b[2] = { L'"', 0 }; if (v.find(L"\"") != tstring::npos) { b[0] = L'\''; }
-                 r.append(b); r.append(v); r.append(b);
-         }
-         first_param = false;
-         if (brackets_layer == 1)
-             endline();
+    void index(const tstring& v, bool itstring) {
+        beginparam();
+        beginindex();
+        addtabs(); 
+        val(v, itstring);
     }
+    void named(const tstring& k, const tstring& v, bool itstring) {
+        endindex();
+        beginparam();
+        addtabs(); 
+        r.append(k); r.append(L"="); 
+        val(v, itstring);
+        if (brackets_layer == 1) { first_param = true; endline(); }
+    }
+
     void openbracket(const tstring& name) {
         if (brackets_layer++ == 0) return;
-        if (first_open)
-        {
-            if (brackets_layer == 2)
-                endline();
-            else
-                endvar();
-        }
-        first_open = false;
+        endindex();
+        beginparam();
         first_param = true;
+
         addtabs();
         if (!name.empty()) { r.append(name); r.append(L" = "); }
         r.append(L"{"); endline();
         tabs.append(tabs_size, L' ');
     }
     void closebracket() {
-        if (--brackets_layer == 0) return;
-        first_open = true;
+        if (--brackets_layer == 0) { return; }
         size_t len = tabs.size(); 
-        if (len >= tabs_size) tabs.resize(len-tabs_size); 
+        if (len >= tabs_size) tabs.resize(len-tabs_size);
         endline();
         addtabs();
         r.append(L"}");
      }
 private:
+    void beginparam() {
+      if (!first_param)
+         endvar();
+      first_param = false;
+    }
+    void beginindex() {
+        if (brackets_layer == 1 && root_index == 0) { r.append(L"_i = {"); endline(); root_index = 1; }
+    }
+    void endindex() {
+       if (root_index == 1) { r.append(L"}"); endline(); root_index = 2; first_param = true; }
+    }
+    void val(const tstring& v, bool itstring) 
+    {
+       if (!itstring) {  r.append(v); return; }
+       tchar b[2] = { L'"', 0 }; 
+       if (v.find(L"\"") != tstring::npos) { b[0] = L'\''; }
+       r.append(b); r.append(v); r.append(b);
+    }
     void endvar() { r.append(L","); endline(); }
-    void endline() { r.append(L"\r\n"); }    
-    void addtabs() { r.append(tabs); }    
+    void endline() { r.append(L"\r\n"); }
+    void addtabs() { r.append(tabs); }
 };
 
 int saveTable(lua_State *L)
@@ -801,14 +839,13 @@ int saveTable(lua_State *L)
             saveDataNode::tarray &ta = n->array;
             saveDataNode::tarray::const_iterator it = ta.begin(), it_end = ta.end();
             for(; it!=it_end; ++it)
-                lr.value(it->second.first, it->second.second);
+                lr.index(it->second.first, it->second.second);
 
             // save named values
             std::vector<saveDataNode::value>::const_iterator at = n->attributes.begin(), at_end = n->attributes.end();
             for (;at != at_end; ++at)
             {
-                lr.key(at->first);
-                lr.value(at->second.first, at->second.second);
+                lr.named(at->first, at->second.first, at->second.second);
             }
             // save subtables -> push in stack
             if (n->childnodes.empty())

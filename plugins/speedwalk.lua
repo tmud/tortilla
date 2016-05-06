@@ -10,15 +10,6 @@ local move_cmds = {
  u = { "вв", "вверх", "u", "up" },
  d = { "вн", "вниз", "d", "down" }
  }
--- Обратные направления
-local rdir = {
-  ['n'] = 's',
-  ['s'] = 'n',
-  ['w'] = 'e',
-  ['e'] = 'w',
-  ['u'] = 'd',
-  ['d'] = 'u',
-}
 
 local speedwalk = {}
 function speedwalk.name()
@@ -48,6 +39,7 @@ function speedwalk.version()
 end
 
 local recorddb = {}
+local recorddb_changed = false
 local record = ""
 local recording = false
 local cmap, blocked, move_queue
@@ -60,13 +52,6 @@ local function print(s)
 end
 
 function speedwalk.init()
-
-  local x = { 1, 2, 3, 4, d={"aaaa", "bbb", c="ddd" }, "rrrr" }
-  saveTable(x, 'test.lua')
-  local x2 = loadTable('test.lua')
-  local x3 = loadTable('test2.lua')
-  saveTable(x3, 'test3.lua')
-
   local t = loadTable('config.lua')
   if not t or type(t.blocked) ~= 'table' then 
     terminate('Нет файла настроек.')
@@ -94,7 +79,10 @@ function speedwalk.init()
 end
 
 function speedwalk.release()
-  saveTable(recorddb, 'routes.lua')
+  if recorddb_changed then
+    saveTable(recorddb, 'routes.lua')
+  end
+  recorddb_changed = false
 end
 
 function speedwalk.disconnect()
@@ -111,6 +99,31 @@ local function start_recording()
   recording = true
 end
 
+-- Обратные направления
+local rdir = {
+  ['n'] = 's',
+  ['s'] = 'n',
+  ['w'] = 'e',
+  ['e'] = 'w',
+  ['u'] = 'd',
+  ['d'] = 'u',
+}
+
+local cvt = {
+  ['n'] = 'n',
+  ['s'] = 's',
+  ['w'] = 'w',
+  ['e'] = 'e',
+  ['u'] = 'u',
+  ['d'] = 'd',
+  ['с'] = 'n',
+  ['ю'] = 's',
+  ['з'] = 'w',
+  ['в'] = 'e',
+  ['п'] = 'u',
+  ['о'] = 'd'
+}
+
 local function play_path(path, backward_mode)
   local cmd = {}
   local count = ""
@@ -118,8 +131,9 @@ local function play_path(path, backward_mode)
     local dir = path:substr(i, 1)
     if dir:only('0123456789') then
       count = count..dir
-    elseif dir:only('nsweud') then
+    elseif dir:only('nsweudсюзвпо') then
       if count == "" then count = "1" end
+      dir = cvt[dir]
       if backward_mode then dir = rdir[dir] end
       for k=1,tonumber(count) do
         cmd[#cmd+1] = dir
@@ -193,17 +207,7 @@ local function record_dir(dir)
       record = record..dir
     end
   end
-  log('record: '..record)
-end
-
-local function collect_record_path()
-  local path = ""
-  local p = move_queue.first
-  while p do
-    path = path..p.dir
-    p = p.next
-  end
-  return path
+  --log('record: '..record)
 end
 
 local function start(p)
@@ -242,6 +246,7 @@ local function save(p)
     return
   end
   recorddb[p] = record
+  recorddb_changed = true
   stop_recording()
   print('Маршрут '..p..' сохранен в базу. Запись остановлена.')
 end
@@ -300,22 +305,6 @@ local function play(p)
   end
 end
 
-local function path(p)
-  if not p then
-    if recording then
-      print('Идет запись маршрута. Переместиться невозможно.')
-    else
-      print('Не указан маршрут. Переместиться невозможно.')
-    end
-    return
-  end
-  if recording then
-     print('Идет запись маршрута. Переместиться невозможно.')
-  else
-     play_path(path, false)
-  end
-end
-
 local function list(p)
   print('Маршруты:')
   if not next(recorddb) then
@@ -335,6 +324,7 @@ local function delete(p)
       print('Такого маршрута нет.')
     else
       recorddb[p] = nil
+      recorddb_changed = true
       print('Маршрут '..p..' удален.')
     end
   end
@@ -359,6 +349,7 @@ end
 
 local function add(p, path)
   recorddb[p] = path
+  recorddb_changed = true
   print('Маршрут '..p..' сохранен в базу.')
 end
 
@@ -391,6 +382,16 @@ function speedwalk.syscmd(t)
     f(t[3], t[4])
   end
   return {}
+end
+
+local function collect_record_path()
+  local path = ""
+  local p = move_queue.first
+  while p do
+    path = path..p.dir
+    p = p.next
+  end
+  return path
 end
 
 function speedwalk.gamecmd(t)
