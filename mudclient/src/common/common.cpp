@@ -201,7 +201,7 @@ bool tstring_cmpl(const tstring& str, const WCHAR* lstr)
 int utf8_getbinlen(const utf8* str, int symbol)
 {
     int p = 0;
-    while (str && symbol > 0)
+    while (str && *str && symbol > 0)
     {
         const unsigned char &c = str[p];
         if (c < 0x80) { symbol--; p++; }
@@ -250,8 +250,14 @@ int u8string_len(const u8string& str)
 
 void u8string_substr(u8string *str, int from, int len)
 {
-    int begin = utf8_getbinlen(str->c_str(), from);
+    if (from < 0 || len <= 0) {
+        str->clear(); return;
+    }
+    int begin = utf8_getbinlen(str->c_str(), from);    
     int afterlen = utf8_getbinlen(str->c_str(), from + len);
+    if (begin == -1 || afterlen == -1) {
+        str->clear();  return; 
+    }
     u8string res(str->substr(begin, afterlen-begin));
     str->swap(res);
 }

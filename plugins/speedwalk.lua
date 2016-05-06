@@ -42,7 +42,7 @@ local recorddb = {}
 local recorddb_changed = false
 local record = ""
 local recording = false
-local cmap, blocked, move_queue
+local cmap, blocked, move_queue, replay, replaying
 
 local function output(s)
   _G.print(s)
@@ -124,7 +124,7 @@ local cvt = {
   ['о'] = 'd'
 }
 
-local function play_path(path, backward_mode)
+local function play_path(path, backward_mode, block_replay)
   local cmd = {}
   local count = ""
   for i=1,path:len() do
@@ -153,9 +153,15 @@ local function play_path(path, backward_mode)
     end
     cmd = rcmd
   end
-  local runcmd = table.concat(cmd, props.cmdSeparator())
-  --print(runcmd)
-  runCommand(runcmd)
+  if not recording and not block_replay then 
+    replay = table.concat(cmd)
+    replaying = replay:clone()
+    local runcmd = replay:substr(1,1)
+    runCommand(runcmd)
+  else
+    local runcmd = table.concat(cmd, props.cmdSeparator())
+    runCommand(runcmd)
+  end
 end
 
 local function pop_last()
@@ -256,10 +262,9 @@ local function returnf(p)
     if not recording then
       print('Запись маршрута не осуществляется. Вернуться невозможно.')
     else
-      local path = record
+      local path = record:clone()
       stop_recording()
       play_path(path, true)
-      start_recording()
     end
     return
   end
@@ -410,6 +415,47 @@ function speedwalk.gamecmd(t)
   return t
 end
 
+local function in_replay(vd) 
+  for i=1,vd:size() do
+    vd:select(i)
+    if vd:isSystem() then goto next end
+    if vd:isPrompt() then
+      replay = replay:substr(2, replay:len()-1)
+      if replay:len() == 0 then
+        replay = nil
+        replaying = nil
+        return
+      end
+      local newcmd = replay:substr(1,1)
+      runCommand(newcmd)
+    else
+      for _,p in pairs(blocked) do
+        if p:find(vd:getText()) then
+          local traveled = replaying:len() - replay:len()
+          if traveled == 0 then
+            replay = nil
+            replaying = nil
+            return
+          end
+          vd:insertString(true, false)
+          vd:select(i)
+          vd:setBlocksCount(1)
+          vd:setBlockText(1, "[swalk] Остановка на маршруте. Начата запись из точки выхода.")
+          local path = replaying:substr(1, traveled)
+          for i=1,path:len() do
+            record_dir( path:substr(i,1) )
+          end
+          replay = nil
+          replaying = nil
+          recording = true
+          return
+        end
+      end
+    end
+    ::next::
+  end
+end
+
 local function popdir()
   local next = move_queue.first.next
   if not next then
@@ -420,8 +466,12 @@ local function popdir()
 end
 
 function speedwalk.before(v, vd)
-  if not recording then return t end
-  if v ~= 0 or not move_queue then return end
+  if v ~= 0 then return end
+  if not recording then
+    if replay then in_replay(vd) end
+    return
+  end
+  if not move_queue then return end
   for i=1,vd:size() do
     vd:select(i)
     if vd:isSystem() then goto next end

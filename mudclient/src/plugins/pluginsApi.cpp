@@ -1520,6 +1520,17 @@ int string_only(lua_State *L)
     return 0;
 }
 
+int string_clone(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+         std::string s(lua_tostring(L, 1));
+         lua_pushstring(L, s.c_str());
+         return 1;
+    }
+    return 0;
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -1535,6 +1546,7 @@ void reg_string(lua_State *L)
     regFunction(L, "tokenize", string_tokenize);
     regFunction(L, "trim", string_trim);
     regFunction(L, "only", string_only);
+    regFunction(L, "clone", string_clone);
     regIndexMt(L);
 
     // set metatable for lua string type
