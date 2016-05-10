@@ -42,7 +42,7 @@ local recorddb = {}
 local recorddb_changed = false
 local record = ""
 local recording = false
-local cmap, blocked, move_queue, replay, replaying, notreplayed
+local cmap, blocked, move_queue, replay, replaying, notreplayed, replayed, lastgo
 
 local function output(s)
   _G.print(s)
@@ -213,7 +213,6 @@ local function record_dir(dir)
       record = record..dir
     end
   end
-  --log('record: '..record)
 end
 
 local function start(p)
@@ -260,6 +259,14 @@ end
 local function returnf(p)
   if not p then
     if not recording then
+      if lastgo then
+        local path = recorddb[lastgo]
+        lastgo = nil
+        if path then
+          play_path(path, true)
+          return
+        end
+      end
       print('Запись маршрута не осуществляется. Вернуться невозможно.')
     else
       local path = record:clone()
@@ -285,7 +292,8 @@ local function go(p)
     if recording then
       if notreplayed then
         local path = notreplayed:clone()
-        notreplayed = nil
+        replayed = record
+        stop_recording()
         play_path(path, false)
         return
       end
@@ -303,6 +311,7 @@ local function go(p)
       print('Такого машрута нет в базе. Переместиться невозможно.')
     else
       play_path(path, false)
+      lastgo = p
     end
   end
 end
@@ -322,8 +331,20 @@ local function list(p)
     output('Маршрутов нет.')
     return
   end
-  for k,_ in pairs(recorddb) do
-    output(k)
+  local found = false
+  for k,rp in pairs(recorddb) do
+    if not p then
+      output(k..': '..rp)
+    else
+      if k == p then
+        output(k..': '..rp)
+        found = true
+        break
+      end
+    end
+  end
+  if p and not found then
+    output('Маршрут не найден.')
   end
 end
 
@@ -352,9 +373,10 @@ local function show(p)
   end
   local path = recorddb[p]
   if not path then
-    print('Такого маршрута нет.')
+    print('Маршрут не найден.')
   else
-    print(path)
+    print('Маршрут: ')
+    output(p..': '..path)
   end
 end
 
@@ -383,8 +405,16 @@ function speedwalk.syscmd(t)
   local c = t[2]
   if c then f = cmds[c] end
   if not f then
+    if not c then
+      if recording then
+        print('Идет запись маршрута.')
+        print('Маршрут: '..record)
+      else
+        print('Запись маршрута не осуществляется.')
+      end
+    end
     local p = props.cmdPrefix()
-    print(p.."swalk start|stop|save|return|go|play|list|delete|show|add ("..p.."help speedwalk)")
+    print(p..'swalk start|stop|save|return|go|play|list|delete|show|add ('..p..'help speedwalk)')
     return {}
   end
   if (#t > 3 and c ~= 'add') or #t > 4 then
@@ -406,6 +436,7 @@ local function collect_record_path()
 end
 
 function speedwalk.gamecmd(t)
+  if not replaying then lastgo = nil end
   if not recording then return t end
   if #t ~= 1 then return t end
   local dir = cmap[ t[1] ]
@@ -417,7 +448,6 @@ function speedwalk.gamecmd(t)
     move_queue.last.next = newmove
     move_queue.last = newmove
   end
-  --log("dir: "..collect_record_path())
   return t
 end
 
@@ -437,19 +467,14 @@ local function in_replay(vd)
     else
       for _,p in pairs(blocked) do
         if p:find(vd:getText()) then
-          local traveled = replaying:len() - replay:len()
-          if traveled == 0 then
-            notreplayed = replay
-            log(notreplayed)
-            replay = nil
-            replaying = nil
-            return
-          end
           vd:insertString(true, false)
           vd:select(i)
           vd:setBlocksCount(1)
-          vd:setBlockText(1, "[swalk] Остановка на маршруте. Начата запись из точки выхода.")
+          local action = replayed and 'Идет' or 'Начата'
+          vd:setBlockText(1, '[swalk] Остановка на маршруте. '..action..' запись из точки выхода.')
+          local traveled = replaying:len() - replay:len()
           local path = replaying:substr(1, traveled)
+          if replayed then path = replayed..path replayed = nil end
           for i=1,path:len() do
             record_dir( path:substr(i,1) )
           end
