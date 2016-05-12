@@ -1078,18 +1078,6 @@ private:
         return &m_plugins;
     }
 
-    void debugOut(const tchar* buffer)
-    {
-        /*parseData pd;
-        pd.strings.resize(1);
-        MudViewString *s= new MudViewString;
-        pd.strings[0] = s;
-        s->blocks.resize(1);
-        s->blocks[0].string.append(buffer);
-        MudView* v = m_views[6-1];
-         v->addText(&pd, NULL); */
-    }
-
     void addText(int view, parseData* parse_data)
     {
         if (view == 0)
@@ -1101,11 +1089,12 @@ private:
             bool in_soft_scrolling = m_view.inSoftScrolling();
             int limited = 0;
 
+            bool last_deleted = m_view.lastStringDeleted();
             m_view.addText(parse_data, &history, &limited);
             vs = vs - limited;
             if (history.strings.empty())
                 return;
-            m_history.pushText(&history);
+            m_history.pushText(&history, last_deleted);
 
             checkHistorySize();
             bool history_visible = m_history.IsWindowVisible() ? true : false;

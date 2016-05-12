@@ -7,6 +7,7 @@ MudView::MudView(PropertiesElements *elements, int id) :
 propElements(elements),
 m_lines_count(0),
 m_last_visible_line(-1),
+m_last_updated(false),
 m_use_softscrolling(false),
 m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
@@ -64,6 +65,7 @@ void MudView::accLastString(parseData *parse_data)
     s.swap(blocks);
 
     parse_data->update_prev_string = true;
+    m_last_updated = true;
 }
 
 int MudView::getStringsCount() const
@@ -73,14 +75,17 @@ int MudView::getStringsCount() const
 
 void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_strings)
 {
-    bool update_prev_string = parse_data->update_prev_string;
-    deleteLastString(parse_data);
+    if (m_last_updated)
+    {
+        m_last_updated = false;
+        deleteLastString();
+    }
     removeDropped(parse_data);
     calcStringsSizes(parse_data->strings);
 
     if (copy_data)
     {
-        copy_data->update_prev_string = update_prev_string;
+        copy_data->update_prev_string = parse_data->update_prev_string;
         copy_data->last_finished = parse_data->last_finished;
         parseDataStrings &s = parse_data->strings;
         int count = s.size();
@@ -96,7 +101,7 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
     if (parse_data->strings.empty())
         return;
 
-    pushText(parse_data);
+    pushText(parse_data, false);
 
     if (m_use_softscrolling) {
         if (m_start_softscroll == -1)
@@ -118,9 +123,10 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
     Invalidate(FALSE);
 }
 
-void MudView::pushText(parseData* parse_data)
+void MudView::pushText(parseData* parse_data, bool delete_last)
 {
-    deleteLastString(parse_data);
+    if (delete_last)
+        deleteLastString();
     parseDataStrings &pds = parse_data->strings;
     m_strings.insert(m_strings.end(), pds.begin(), pds.end());
     pds.clear();
@@ -201,11 +207,13 @@ int MudView::getLastString() const
     return last;
 }
 
-void MudView::deleteLastString(parseData* parse_data)
+bool MudView::lastStringDeleted() const
 {
-    if (!parse_data->update_prev_string)
-        return;
-    parse_data->update_prev_string = false;
+    return m_last_updated;
+}
+
+void MudView::deleteLastString()
+{
     if (m_strings.empty())
         return;
     int last = m_strings.size() - 1;
