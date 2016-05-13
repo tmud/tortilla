@@ -45,7 +45,7 @@ void LogicProcessor::processStackTick()
  
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
-    if (window == 0 && m_prompt_mode != OFF && flags & (GAME_LOG | GAME_CMD) && !(flags & FROM_STACK))
+    if (window == 0 /*&& m_prompt_mode != OFF*/ && (flags & (GAME_LOG | GAME_CMD)) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
        if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
@@ -140,6 +140,36 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     }
 #endif
 
+    if ( (flags & (GAME_CMD|GAME_LOG)) && !(flags & FROM_STACK))
+    {
+        if (!m_incoming_stack.empty())
+        {
+            int count = m_incoming_stack.size();
+            parseDataStrings pds(count);
+            for (int i=0; i<count; ++i) {
+                MudViewString *s = new MudViewString();
+                s->blocks.resize(1);
+                stack_el &e = m_incoming_stack[i];
+                tstring x(L">>");
+                x.append(e.text);
+                s->blocks[0].string = x;
+                if (e.flags & GAME_CMD)
+                    s->gamecmd = true;
+                if (e.flags & GAME_LOG)
+                    s->system = true;
+                pds[i] = s;
+            }
+
+            parseDataStrings& ps = parse_data.strings;
+            ps.insert(ps.begin(), pds.begin(), pds.end());
+            pds.clear();
+            m_incoming_stack.clear();
+            int x = 1;
+
+        }
+    }
+
+
     m_pHost->accLastString(window, &parse_data);
 
     // попытка вставки стека по ходу данных, если это обычные данные
@@ -160,16 +190,28 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 
 bool LogicProcessor::processStack(parseData& parse_data, int flags)
 {
+    class LastGameCmd
+    {
+    public:
+        int index;    
+        LastGameCmd() : index(-1) {}
+        void set(int new_index) { if (index == -1) index = new_index; }
+        void reset() { index = -1; }
+    } last_game_cmd;
+
+
     // find prompts in parse data (place to insert stack -> last gamecmd/prompt/or '>')
     const int max_lines_without_prompt = 30;
     bool p_exist = false;
-    int last_game_cmd = -1;
     PropertiesData *pdata = tortilla::getProperties();
     for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
     {
         MudViewString *s = parse_data.strings[i];
         if (s->prompt) { p_exist = true; }
-        if (s->gamecmd || s->prompt || s->system || s->triggered) { last_game_cmd = i; continue; }
+        if (s->gamecmd || s->prompt || s->system || s->triggered) {             
+            last_game_cmd.set(i);
+            continue; 
+        }
         if (pdata->recognize_prompt)
         {
             // recognize prompt string via template
@@ -178,7 +220,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
             if (m_prompt_pcre.getSize())
             {
                 s->setPrompt(m_prompt_pcre.getLast(0));
-                last_game_cmd = i;
+                last_game_cmd.set(i);
                 m_prompt_counter = 0;
                 m_prompt_mode = USER;
                 p_exist = true;
@@ -199,14 +241,18 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        // параллельно делим строку по prompt если находим
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
-           last_game_cmd = -1;
+           last_game_cmd.reset();
            parseDataStrings tmp;       // временный буфер
            for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
            {
                int last = tmp.size();
                MudViewString *s = parse_data.strings[i];
                tmp.push_back(s);
-               if (s->gamecmd || s->system || s->triggered) { last_game_cmd = last; continue; }
+               if (s->gamecmd || s->system || s->triggered) {
+                   
+                   last_game_cmd.set(last);
+                   continue;
+               }
 
                tstring text; s->getText(&text);
                m_univ_prompt_pcre.find(text);
@@ -215,7 +261,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                {
                    int end_prompt = m_univ_prompt_pcre.getLast(0);
                    s->setPrompt(end_prompt);
-                   last_game_cmd = last;
+                   last_game_cmd.set(last);
                    p_exist = true;
 
                    tstring after_prompt(text.substr(end_prompt));
@@ -249,14 +295,14 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
 
     if (m_incoming_stack.empty()) // нельзя поставить вначале, тк. требуется контроль наличия prompt в трафике
         return false;
-    if (last_game_cmd == -1)      // нет места для вставки данных из стека
+    if (last_game_cmd.index == -1)      // нет места для вставки данных из стека
         return false;
 
     // div current parseData at 2 parts
     parseData pd;
     pd.update_prev_string = parse_data.update_prev_string;
     pd.last_finished = true;
-    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin() + last_game_cmd + 1);
+    pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin() + last_game_cmd.index + 1);
     MARKITALIC(pd.strings);     // режим отладки
     printIncoming(pd, flags, 0);
     pd.strings.clear();
@@ -266,7 +312,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
 
     pd.update_prev_string = false;
     pd.last_finished = parse_data.last_finished;
-    pd.strings.assign(parse_data.strings.begin() + last_game_cmd + 1, parse_data.strings.end());
+    pd.strings.assign(parse_data.strings.begin() + last_game_cmd.index + 1, parse_data.strings.end());
     MARKBLINK(pd.strings);      // режим отладки
     printIncoming(pd, flags, 0);
     pd.strings.clear();
@@ -282,6 +328,7 @@ void LogicProcessor::printStack(int flags)
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
+        OutputDebugString(t.c_str());
         processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags, 0);
     }
     m_incoming_stack.clear();

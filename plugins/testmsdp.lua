@@ -15,7 +15,7 @@ function testmsdp.version()
 end
 
 local function log(s)
-  print("rgb140,60,80", "[msdp]: "..s)
+  --print("rgb140,60,80", "[msdp]: "..s)
 end
 
 --[[

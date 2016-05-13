@@ -472,12 +472,12 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
             tbyte support[3] = { IAC, flag, e[1] };
             sendplain(support, 3);
         }
-        else if (e[1] == MSDP)
+        /*else if (e[1] == MSDP)
         {
             tbyte support[3] = { IAC, DO, e[1] };
             sendplain(support, 3);
             init_msdp();
-        }
+        }*/
         else
         {
             // report, what client don't support other Telnet options

@@ -23,7 +23,7 @@ function speedwalk.description()
   p..'swalk start - начать запись в память клиента перемещения от текущей комнаты.',
   p..'swalk stop - остановить запись, забыть маршрут.',
   p..'swalk save name - остановить запись, сохранить маршрут в базу под именем name.',
-  p..'swalk return - вернуться по маршруту. Должна идти запись маршрута.',
+  p..'swalk return - вернуться по по последнему или записываемому маршруту.',
   p..'swalk return name - не должно быть записи. Вернутся обратно по маршуту из базы с именем name.',
   p..'swalk go name - не должно быть записи. Идти по маршруту из базы по имени name.',
   p..'swalk play path - не должно быть записи. Идти по маршруту - одна буква - одно направление.',
@@ -42,7 +42,8 @@ local recorddb = {}
 local recorddb_changed = false
 local record = ""
 local recording = false
-local cmap, blocked, move_queue, replay, replaying, notreplayed, replayed, lastgo
+local cmap, blocked, move_queue, replay, replaying, notreplayed, replayed
+local lastgo, lastgo_reverse = nil,false
 
 local function output(s)
   _G.print(s)
@@ -254,6 +255,8 @@ local function save(p)
   recorddb_changed = true
   stop_recording()
   print('Маршрут '..p..' сохранен в базу. Запись остановлена.')
+  lastgo = p
+  lastgo_reverse = true
 end
 
 local function returnf(p)
@@ -261,9 +264,9 @@ local function returnf(p)
     if not recording then
       if lastgo then
         local path = recorddb[lastgo]
-        lastgo = nil
         if path then
-          play_path(path, true)
+          play_path(path, lastgo_reverse)
+		  lastgo_reverse = not lastgo_reverse
           return
         end
       end
@@ -283,6 +286,8 @@ local function returnf(p)
       print('Такого маршрута нет в базе. Вернуться невозможно.')
     else
       play_path(path, true)
+	  lastgo = p
+	  lastgo_reverse = false
     end
   end
 end
@@ -312,6 +317,7 @@ local function go(p)
     else
       play_path(path, false)
       lastgo = p
+	  lastgo_reverse = true
     end
   end
 end
@@ -435,12 +441,12 @@ local function collect_record_path()
   return path
 end
 
-function speedwalk.gamecmd(t)
-  if not replaying then lastgo = nil end
-  if not recording then return t end
+function speedwalk.gamecmd(t)  
   if #t ~= 1 then return t end
   local dir = cmap[ t[1] ]
   if not dir then return t end
+  if not replaying then lastgo = nil end
+  if not recording then return t end
   local newmove = { dir = dir }
   if not move_queue then 
     move_queue = { first = newmove, last = newmove }
