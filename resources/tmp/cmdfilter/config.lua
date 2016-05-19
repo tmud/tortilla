@@ -1,9 +1,12 @@
 ﻿-- игровые команды
 cmdlist = {
-'группа',
-'счет'
 }
 
 -- системные команды
 scmdlist = {
+'drop', 
+'hide', 
+'woutput', 
+'tray',
+'output'
 }
