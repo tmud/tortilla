@@ -15,7 +15,7 @@ function cmdfilter.description()
   return table.concat(s, '\r\n')
 end
 function cmdfilter.version()
-  return '1.01'
+  return '1.02'
 end
 
 function cmdfilter.init()
@@ -66,8 +66,13 @@ end
 function cmdfilter.after(window, v)
 if window ~= 0 then return end
   local todelete = {}
+  local isnext = false
   for i=1,v:size() do
     v:select(i)
+    if isnext then
+      todelete[#todelete+1] = i
+      goto next
+    end
     if check_scmd(v) then
       todelete[#todelete+1] = i
       goto next
@@ -96,6 +101,11 @@ if window ~= 0 then return end
       end
     end
     ::next::
+    isnext = false
+    local last = #todelete
+    if v:isNext() and last > 0 and todelete[last] == i then
+      isnext = true
+    end
   end
   v:deleteStrings(todelete)
 end

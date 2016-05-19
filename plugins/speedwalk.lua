@@ -16,21 +16,21 @@ function speedwalk.name()
   return 'Маршруты speedwalks'
 end
 function speedwalk.description()
-  local p = props.cmdPrefix()
+  local p = props.cmdPrefix()..'swalk '
   local s = { 'Плагин позволяет быстро перемещатся по миру по заданным маршрутам(speedwalk).',
   'Можно сохранять маршруты в базу и использовать позднее. Помогает находить обратную дорогу.',
   'Работает с мадами с 6 направлениями для передвижений - север,юг,запад,восток,вверх,вниз.',
-  p..'swalk start - начать запись в память клиента перемещения от текущей комнаты.',
-  p..'swalk stop - остановить запись, забыть маршрут.',
-  p..'swalk save name - остановить запись, сохранить маршрут в базу под именем name.',
-  p..'swalk return - вернуться по по последнему или записываемому маршруту.',
-  p..'swalk return name - не должно быть записи. Вернутся обратно по маршуту из базы с именем name.',
-  p..'swalk go name - не должно быть записи. Идти по маршруту из базы по имени name.',
-  p..'swalk play path - не должно быть записи. Идти по маршруту - одна буква - одно направление.',
-  p..'swalk list - показать список маршрутов в базе.',
-  p..'swalk delete name - удалить маршрут из базы.',
-  p..'swalk show name - показать маршрут на экране.',
-  p..'swalk add name path - добавить маршрут в базу.'
+  p..'start - начать запись в память клиента перемещения от текущей комнаты.',
+  p..'stop - остановить запись, забыть маршрут.',
+  p..'save name - остановить запись, сохранить маршрут в базу под именем name.',
+  p..'return - вернуться по последнему или записываемому маршруту.',
+  p..'return name - не должно быть записи. Вернутся обратно по маршуту из базы с именем name.',
+  p..'go name - не должно быть записи. Идти по маршруту из базы по имени name.',
+  p..'play path - не должно быть записи. Идти по маршруту - одна буква - одно направление.',
+  p..'list - показать список маршрутов в базе.',
+  p..'delete name - удалить маршрут из базы.',
+  p..'show name - показать маршрут на экране.',
+  p..'add name path - добавить маршрут в базу.'
  }
   return table.concat(s, '\r\n')
 end
@@ -266,7 +266,7 @@ local function returnf(p)
         local path = recorddb[lastgo]
         if path then
           play_path(path, lastgo_reverse)
-		  lastgo_reverse = not lastgo_reverse
+          lastgo_reverse = not lastgo_reverse
           return
         end
       end
@@ -286,8 +286,8 @@ local function returnf(p)
       print('Такого маршрута нет в базе. Вернуться невозможно.')
     else
       play_path(path, true)
-	  lastgo = p
-	  lastgo_reverse = false
+      lastgo = p
+      lastgo_reverse = false
     end
   end
 end
@@ -317,7 +317,7 @@ local function go(p)
     else
       play_path(path, false)
       lastgo = p
-	  lastgo_reverse = true
+      lastgo_reverse = true
     end
   end
 end
@@ -441,14 +441,14 @@ local function collect_record_path()
   return path
 end
 
-function speedwalk.gamecmd(t)  
+function speedwalk.gamecmd(t)
   if #t ~= 1 then return t end
   local dir = cmap[ t[1] ]
   if not dir then return t end
   if not replaying then lastgo = nil end
   if not recording then return t end
   local newmove = { dir = dir }
-  if not move_queue then 
+  if not move_queue then
     move_queue = { first = newmove, last = newmove }
   else
     move_queue.last.next = newmove
@@ -457,7 +457,7 @@ function speedwalk.gamecmd(t)
   return t
 end
 
-local function in_replay(vd) 
+local function in_replay(vd)
   for i=1,vd:size() do
     vd:select(i)
     if vd:isSystem() then goto next end
@@ -473,12 +473,15 @@ local function in_replay(vd)
     else
       for _,p in pairs(blocked) do
         if p:find(vd:getText()) then
+          local traveled = replaying:len() - replay:len()
+          if traveled == 0 then
+            return
+          end
           vd:insertString(true, false)
           vd:select(i)
           vd:setBlocksCount(1)
           local action = replayed and 'Идет' or 'Начата'
           vd:setBlockText(1, '[swalk] Остановка на маршруте. '..action..' запись из точки выхода.')
-          local traveled = replaying:len() - replay:len()
           local path = replaying:substr(1, traveled)
           if replayed then path = replayed..path replayed = nil end
           for i=1,path:len() do

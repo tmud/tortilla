@@ -35,6 +35,12 @@ void LogicProcessor::processStackTick()
         m_plugins_log_toblocked.swap(m_plugins_log_cache);
     }
 
+    if (!m_connected)
+    {
+        printStack(FROM_TIMER);
+        return;
+    }
+
     if (m_prompt_mode == OFF)
         return;
     MudViewString *last = m_pHost->getLastString(0);
@@ -127,7 +133,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         MudViewString *s = p[0];
         MudViewStringBlock b;
         if (parse_data.update_prev_string)
-            b.string = L"*";
+            b.string = L"+";
         b.string.append(L"{");
         b.params.text_color = 5;
         b.params.intensive_status = 1;
@@ -135,48 +141,31 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         int last = p.size() - 1;
         s = p[last]; b.string = L"}";
         if (parse_data.last_finished)
-            b.string.append(L"#");
+            b.string.append(L".");
         s->blocks.push_back(b);
     }
 #endif
 
-    if ( (flags & (GAME_CMD|GAME_LOG)) && !(flags & FROM_STACK))
+    if (window == 0 && (flags & (GAME_CMD|GAME_LOG)) && !(flags & FROM_STACK))
     {
-        if (!m_incoming_stack.empty())
-        {
-            int count = m_incoming_stack.size();
-            parseDataStrings pds(count);
-            for (int i=0; i<count; ++i) {
-                MudViewString *s = new MudViewString();
-                s->blocks.resize(1);
-                stack_el &e = m_incoming_stack[i];
-                tstring x(L">>");
-                x.append(e.text);
-                s->blocks[0].string = x;
-                if (e.flags & GAME_CMD)
-                    s->gamecmd = true;
-                if (e.flags & GAME_LOG)
-                    s->system = true;
-                pds[i] = s;
-            }
-
-            parseDataStrings& ps = parse_data.strings;
-            ps.insert(ps.begin(), pds.begin(), pds.end());
-            pds.clear();
-            m_incoming_stack.clear();
-            int x = 1;
-
-        }
+        printStack();
     }
-
 
     m_pHost->accLastString(window, &parse_data);
 
     // попытка вставки стека по ходу данных, если это обычные данные
     if (window == 0 && !(flags & (GAME_LOG | GAME_CMD)))
     {
-        if (processStack(parse_data, flags))
-            return;
+        MudViewString *last = m_pHost->getLastString(0);
+        if (last && (last->prompt || last->system || last->gamecmd) && !m_incoming_stack.empty())
+        {
+            printStack();
+        } 
+        else
+        {
+            if (processStack(parse_data, flags))
+                return;
+        }
     }
 
     // collect strings in parse_data in one with same colors params
@@ -293,9 +282,9 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        }
     }
 
-    if (m_incoming_stack.empty()) // нельзя поставить вначале, тк. требуется контроль наличия prompt в трафике
+    if (m_incoming_stack.empty())   // нельзя поставить вначале, тк. требуется контроль наличия prompt в трафике
         return false;
-    if (last_game_cmd.index == -1)      // нет места для вставки данных из стека
+    if (last_game_cmd.index == -1)  // нет места для вставки данных из стека
         return false;
 
     // div current parseData at 2 parts
@@ -328,7 +317,6 @@ void LogicProcessor::printStack(int flags)
     {
         const stack_el &s = m_incoming_stack[i];
         const tstring &t = s.text;
-        OutputDebugString(t.c_str());
         processIncoming(t.c_str(), t.length(), s.flags | FROM_STACK | flags, 0);
     }
     m_incoming_stack.clear();

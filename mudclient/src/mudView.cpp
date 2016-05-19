@@ -133,6 +133,8 @@ void MudView::pushText(parseData* parse_data, bool delete_last)
     if (delete_last)
         deleteLastString();
     parseDataStrings &pds = parse_data->strings;
+    if (pds.empty())
+        return;
     m_strings.insert(m_strings.end(), pds.begin(), pds.end());
     pds.clear();
 }

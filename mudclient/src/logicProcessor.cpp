@@ -424,5 +424,4 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
-    m_incoming_stack.clear();
 }

@@ -1091,11 +1091,8 @@ private:
 
             bool last_deleted = m_view.lastStringDeleted();
             m_view.addText(parse_data, &history, &limited);
-            vs = vs - limited;
-            if (history.strings.empty())
-                return;
             m_history.pushText(&history, last_deleted);
-
+            vs = vs - limited;
             checkHistorySize();
             bool history_visible = m_history.IsWindowVisible() ? true : false;
             bool soft_scroll = m_propData->soft_scroll ? true : false;
