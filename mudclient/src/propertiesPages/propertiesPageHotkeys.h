@@ -185,10 +185,13 @@ private:
 
     LRESULT OnResetData(WORD, WORD, HWND, BOOL&)
     {
+        m_update_mode = true;
         m_text.SetWindowText(L"");
         m_hotkey.SetWindowText(L"");
         m_list.SelectItem(-1);
+        updateButtons();
         m_hotkey.SetFocus();
+        m_update_mode = false;
         return 0;
     }
 
