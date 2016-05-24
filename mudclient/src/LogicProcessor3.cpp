@@ -70,7 +70,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     // 2. команды, но после prompt/другой команды - ок
     // 3. команды, но из стека по таймеру - попытка вставки
     parseData parse_data;
-    if (window == 0 && !(flags & GAME_LOG) )
+    if (window == 0 && !(flags & GAME_LOG) && !(flags & FROM_STACK))
     {
         MudViewParserOscPalette palette;
         m_parser.parse(text, text_len, true, &parse_data, &palette);
@@ -160,7 +160,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         if (last && (last->prompt || last->system || last->gamecmd) && !m_incoming_stack.empty())
         {
             printStack();
-        } 
+        }
         else
         {
             if (processStack(parse_data, flags))
@@ -182,7 +182,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     class LastGameCmd
     {
     public:
-        int index;    
+        int index;
         LastGameCmd() : index(-1) {}
         void set(int new_index) { if (index == -1) index = new_index; }
         void reset() { index = -1; }
@@ -197,7 +197,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     {
         MudViewString *s = parse_data.strings[i];
         if (s->prompt) { p_exist = true; }
-        if (s->gamecmd || s->prompt || s->system || s->triggered) {             
+        if (s->gamecmd || s->prompt || s->system || s->triggered) {
             last_game_cmd.set(i);
             continue; 
         }
@@ -238,7 +238,6 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                MudViewString *s = parse_data.strings[i];
                tmp.push_back(s);
                if (s->gamecmd || s->system || s->triggered) {
-                   
                    last_game_cmd.set(last);
                    continue;
                }

@@ -77,11 +77,6 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
 {
     if (m_last_updated)
     {
-        if (parse_data->strings.size() == 1 && parse_data->strings[0]->blocks.size() == 1 )
-        {
-            int x =1;
-        }
-
         m_last_updated = false;
         deleteLastString();
     }

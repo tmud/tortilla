@@ -4,51 +4,6 @@
  #include <Mstcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
-#ifdef _DEBUG
-void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
-{
-    if (maxlen > len) maxlen = len;
-    std::string l("["); l.append(label);
-    char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
-    OutputDebugStringA(l.c_str());
-    const unsigned char *bytes = (const unsigned char *)data;
-    len = maxlen;
-    const int show_len = 32;
-    unsigned char *buffer = new unsigned char[show_len];
-
-    while (len > 0)
-    {
-        int toshow = show_len;
-        if (toshow > len) toshow = len;
-        std::string hex;
-        for (int i = 0; i < toshow; ++i)
-        {
-            sprintf(tmp, "%.2x ", bytes[i]);
-            hex.append(tmp);
-        }
-        memcpy(buffer, bytes, toshow);
-        for (int i=0; i<toshow; ++i) {
-            if (buffer[i] < 32) buffer[i] = '.';
-        }
-        hex.append((const char*)buffer, toshow);
-        OutputDebugStringA(hex.c_str());
-        OutputDebugStringA("\r\n");
-        bytes += toshow;
-        len -= toshow;
-    }
-    delete []buffer;
-}
-
-void OutputTelnetOption(const void *data, const char* label)
-{
-    OutputDebugStringA(label);
-    char tmp[32];
-    unsigned char byte = *(const char*)data;
-    sprintf(tmp, ": %d (%.2x)\r\n", byte, byte);
-    OutputDebugStringA(tmp);
-}
-#endif
-
 NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false)
 {
     m_recive_buffer.alloc(receive_buffer);
@@ -370,6 +325,7 @@ int Network::read_data()
             return -2;
     }
 
+    //OUTPUT_BYTES(m_input_data.getData(), m_input_data.getSize(), m_input_data.getSize(), "decompressed");
     while(m_input_data.getSize() > 0)
     {
         const tbyte* in = (tbyte*)m_input_data.getData();
@@ -402,6 +358,8 @@ int Network::read_data()
         }
         m_input_data.truncate(processed);
     }
+
+    //OUTPUT_BYTES(m_input_data.getData(), m_input_data.getSize(), m_input_data.getSize(), "notprocessed");
     return 1;
 }
 
@@ -472,12 +430,12 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
             tbyte support[3] = { IAC, flag, e[1] };
             sendplain(support, 3);
         }
-        /*else if (e[1] == MSDP)
+        else if (e[1] == MSDP)
         {
             tbyte support[3] = { IAC, DO, e[1] };
             sendplain(support, 3);
             init_msdp();
-        }*/
+        }
         else
         {
             // report, what client don't support other Telnet options
