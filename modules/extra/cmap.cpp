@@ -252,16 +252,18 @@ private:
             for (int i=0; i<count; ++i)
             {
               tstring part(p.get(i));
-              if (part.length() > 2)
+              m_phrases.addPhrase(new Phrase(part));
+              add_toindex(part, ix);
+              for (int j=i+1; j<count; ++j) 
               {
-                 m_phrases.addPhrase(new Phrase(part));
-                 add_toindex(part, ix);
-              }
-              for (int j=i+1; j<count; ++j) {
-                 part.append(L" ");
-                 part.append(p.get(j));
-                 m_phrases.addPhrase(new Phrase(part));
-                 add_toindex(part, ix);
+                 part.assign(p.get(i));
+                 for (int k=j; k<count; ++k)
+                 {
+                    part.append(L" ");
+                    part.append(p.get(k));
+                    m_phrases.addPhrase(new Phrase(part));
+                    add_toindex(part, ix);
+                 }
               }
             }
         }
