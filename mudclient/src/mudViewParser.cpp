@@ -66,6 +66,11 @@ void MudViewParser::parse(const WCHAR* text, int len, bool newline_iacga, parseD
 
 MudViewParser::parserResult MudViewParser::process(const WCHAR* b, int len)
 {
+    /*MemoryBuffer out;
+    WideToAnsiConverter tmp;
+    int slen = tmp.convert(&out, b, len);
+    OUTPUT_BYTES(out.getData(), slen, slen, "parser");*/
+
     if (*b >= 0x20)
         return process_string(b, len);
     if (*b == 0x1b)

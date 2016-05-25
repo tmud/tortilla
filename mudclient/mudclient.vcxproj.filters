@@ -274,6 +274,9 @@
     <ClInclude Include="src\findDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\plugins\pluginsViewString.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -407,6 +410,9 @@
     </ClCompile>
     <ClCompile Include="src\common\md5.cpp">
       <Filter>Libs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsViewString.cpp">
+      <Filter>Source Files\Plugins</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

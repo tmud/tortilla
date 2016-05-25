@@ -1,3 +1,3 @@
-Версия заточена под мад клиент.
 Исходники Decoda тут:
-https://github.com/gmax79/decoda/tree/customed2
+https://github.com/gmax79/decoda/tree/customed
+Данная версия адаптирована под работу с мад клиентом.

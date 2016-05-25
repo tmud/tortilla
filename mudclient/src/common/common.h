@@ -118,3 +118,13 @@ public:
         return diff;
     }
 };
+
+#ifdef _DEBUG
+#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
+#define OUTPUT_OPTION(data, label) OutputTelnetOption(data, label);
+void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label);
+void OutputTelnetOption(const void *data, const char* label);
+#else
+#define OUTPUT_BYTES(data, len, maxlen, label)
+#define OUTPUT_OPTION(data, label)
+#endif

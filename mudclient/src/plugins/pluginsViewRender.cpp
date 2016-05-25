@@ -40,9 +40,9 @@ bool PluginsViewRender::render()
         // error in call
         result = false;
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(L"render", luaT_towstring(L, -1));
+            pluginMethodError(L"render", lua_toerror(L));
         else
-            pluginError(L"render", L"неизвестная ошибка");
+            pluginMethodError(L"render", L"неизвестная ошибка");
         lua_settop(L, 0);
     }
     m_inside_render = false;

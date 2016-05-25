@@ -42,7 +42,7 @@
     <hotkey key="NUM7" value="вв" group="base"/>
     <hotkey key="NUM1" value="вн" group="base"/>
     <hotkey key="NUM0" value="см" group="base"/>
-    <hotkey key="F12" value="#connect 178.63.209.14 3040" group="base"/>
+    <hotkey key="F12" value="#connect 78.46.205.238 3040" group="base"/>
   </hotkeys>
   <subs/>
   <asubs/>

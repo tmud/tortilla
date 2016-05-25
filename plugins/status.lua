@@ -23,7 +23,7 @@ function status.description()
 end
 
 function status.version()
-    return '1.01'
+    return '1.02'
 end
 
 local r
@@ -71,15 +71,13 @@ function status.syscmd(t)
   if not v or v < 1 or v > count then
     return incparams(t)
   end
-  local tcolor, color
+  local tcolor = props.paletteColor(7)
+  local color = props.backgroundColor()
   if #t == 4 then
-    tcolor, color = translateColors(t[4])
+    tcolor, color = translateColors(t[4], tcolor, color)
     if not tcolor then
       return incparams(t)
     end
-  else
-    tcolor = props.paletteColor(7)
-    color = props.backgroundColor()
   end
   panels[v] = { text = tostring(t[3]), color = color, tcolor = tcolor }
   r:update()

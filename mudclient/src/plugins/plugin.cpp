@@ -54,11 +54,14 @@ bool Plugin::reloadPlugin()
     bool result = false;
     const wchar_t *e = wcsrchr(fname, L'.');
     if (!e) return false;
+    Plugin *old = _cp;
+    _cp = this;
     tstring ext(e+1);
     if (ext == L"lua")
         result = loadLuaPlugin(fname);
     else if (ext == L"dll")
         result = loadDllPlugin(fname);
+    _cp = old;
     setOn(result);
     load_state = result;
     return result;
@@ -133,9 +136,9 @@ bool Plugin::runMethod(const char* method, int args, int results, bool *not_supp
         // error in call
         TA2W m(method);
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(m, luaT_towstring(L, -1));
+            pluginMethodError(m, lua_toerror(L));
         else
-            pluginError(m, L"неизвестная ошибка");
+            pluginMethodError(m, L"неизвестная ошибка");
         _cp = old;
         lua_settop(L, 0);
         return false;
@@ -188,57 +191,19 @@ bool Plugin::loadLuaPlugin(const wchar_t* fname)
     tstring plugin_file(L"plugins\\");
     plugin_file.append(fname);
 
-    /*HANDLE hfile = CreateFile(plugin_file.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-    if (hfile == INVALID_HANDLE_VALUE)
-        return false;
-
-   struct autoclose { HANDLE h;  
-        autoclose(HANDLE file) : h(file) {}
-        ~autoclose() { close(); }
-        void close() { if (h != INVALID_HANDLE_VALUE) { CloseHandle(h); h = INVALID_HANDLE_VALUE; }  }
-    } ac(hfile);
-
-    DWORD high = 0;
-    DWORD size = GetFileSize(hfile, &high);
-    if (high != 0 || size < 3)
-        return false;
-    ac.close();*/
-
     if (luaL_loadfile(L, TW2A(plugin_file.c_str())))
     {
-        Utf8ToWide e(lua_tostring(L, -1));
+        pluginLoadError(lua_toerror(L));
         lua_pop(L, 1);
-        pluginLoadError(e, fname);
         return false;
     }
     if (lua_pcall(L, 0, 1, 0))
     {
-        Utf8ToWide e(lua_tostring(L, -1));
+        pluginLoadError(lua_toerror(L));
         lua_pop(L, 1);
-        pluginLoadError(e, fname);
         return false;
     }
-    luaT_showLuaStack(L, L"ssd");
     return initLoadedPlugin(fname);
-
-    /*DWORD readed = 0;
-    MemoryBuffer script(size+1);
-    if (ReadFile(hfile, script.getData(), size, &readed, NULL))
-    {
-        unsigned char *p = (unsigned char *)script.getData();
-        p[size] = 0;                                      // set EOF
-        if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf) // check BOM
-            p = p + 3;
-        if (luaL_dostring(L, (const char*)p))
-        {
-            Utf8ToWide e(lua_tostring(L, -1));
-            lua_pop(L, 1);
-            pluginLoadError(e, fname);
-            return false;
-        }
-        return initLoadedPlugin(fname);
-    }
-    return false;*/
 }
 
 bool Plugin::initLoadedPlugin(const wchar_t* fname)
@@ -253,7 +218,9 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
         lua_pop(L, 1);
         lua_pushnil(L);
         lua_setglobal(L, module.c_str());
-        pluginLoadError(L"plugin_open() did not return a table.", fname);
+        tstring error(fname);
+        error.append(L":plugin_open() did not return a table.");
+        pluginLoadError(error.c_str());
         return false;
     }
 

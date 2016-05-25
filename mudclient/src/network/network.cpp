@@ -4,51 +4,6 @@
  #include <Mstcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
-#ifdef _DEBUG
-void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
-{
-    if (maxlen > len) maxlen = len;
-    std::string l("["); l.append(label);
-    char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
-    OutputDebugStringA(l.c_str());
-    const unsigned char *bytes = (const unsigned char *)data;
-    len = maxlen;
-    const int show_len = 32;
-    unsigned char *buffer = new unsigned char[show_len];
-
-    while (len > 0)
-    {
-        int toshow = show_len;
-        if (toshow > len) toshow = len;
-        std::string hex;
-        for (int i = 0; i < toshow; ++i)
-        {
-            sprintf(tmp, "%.2x ", bytes[i]);
-            hex.append(tmp);
-        }
-        memcpy(buffer, bytes, toshow);
-        for (int i=0; i<toshow; ++i) {
-            if (buffer[i] < 32) buffer[i] = '.';
-        }
-        hex.append((const char*)buffer, toshow);
-        OutputDebugStringA(hex.c_str());
-        OutputDebugStringA("\r\n");
-        bytes += toshow;
-        len -= toshow;
-    }
-    delete []buffer;
-}
-
-void OutputTelnetOption(const void *data, const char* label)
-{
-    OutputDebugStringA(label);
-    char tmp[32];
-    unsigned char byte = *(const char*)data;
-    sprintf(tmp, ": %d (%.2x)\r\n", byte, byte);
-    OutputDebugStringA(tmp);
-}
-#endif
-
 NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false)
 {
     m_recive_buffer.alloc(receive_buffer);
@@ -155,7 +110,7 @@ void NetworkConnection::threadProc()
         peer.sin_addr.s_addr = inet_addr(m_connection.address.c_str());
     }
 
-    /* keep alive option
+    // keep alive option
     DWORD optval = 1;
     if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (char*)(&optval), sizeof(DWORD)))
     {
@@ -165,13 +120,13 @@ void NetworkConnection::threadProc()
     tcp_keepalive alive;
     alive.onoff = 1;
 	alive.keepalivetime = 5000;    // <- время между посылками keep-alive (мс)
-	alive.keepaliveinterval = 500; // <- время между посылками при отсутсвии ответа
+	alive.keepaliveinterval = 500; // <- время между посылками при отсутсвии ответа (мс)
     DWORD nSize = 0;
     if  (WSAIoctl(sock, SIO_KEEPALIVE_VALS, &alive, sizeof(alive), NULL, 0, &nSize,NULL,NULL) == SOCKET_ERROR)
     {
         sendEvent(NE_ERROR_CONNECT);
         return;
-    }*/
+    }
 
     sendEvent(NE_CONNECTING);
     if (::connect(sock, (sockaddr*)&peer, sizeof(peer)) == SOCKET_ERROR)
@@ -370,6 +325,7 @@ int Network::read_data()
             return -2;
     }
 
+    //OUTPUT_BYTES(m_input_data.getData(), m_input_data.getSize(), m_input_data.getSize(), "decompressed");
     while(m_input_data.getSize() > 0)
     {
         const tbyte* in = (tbyte*)m_input_data.getData();
@@ -402,6 +358,8 @@ int Network::read_data()
         }
         m_input_data.truncate(processed);
     }
+
+    //OUTPUT_BYTES(m_input_data.getData(), m_input_data.getSize(), m_input_data.getSize(), "notprocessed");
     return 1;
 }
 
@@ -584,11 +542,22 @@ bool Network::process_mccp()
         m_pMccpStream->next_out = (Bytef*)m_mccp_buffer.getData();
         m_pMccpStream->avail_out = m_mccp_buffer.getSize();
 
+        /*tchar buffer[64];
+        swprintf(buffer, L"src avin=%d\r\n", m_pMccpStream->avail_in);
+        OutputDebugString(buffer);*/
+
         int error = inflate(m_pMccpStream, Z_NO_FLUSH);
+        /*swprintf(buffer, L"res avin=%d,avout=%d\r\n", m_pMccpStream->avail_in,  m_pMccpStream->avail_out);
+        OutputDebugString(buffer);
+        */
+
         if (error != Z_OK && error != Z_STREAM_END)
              return false;
 
         int size = m_mccp_buffer.getSize() - m_pMccpStream->avail_out;
+
+        //OUTPUT_BYTES(m_mccp_buffer.getData(), size, size, "mccp");
+
         m_input_data.write(m_mccp_buffer.getData(), size);
         m_totalDecompressed += size;
 

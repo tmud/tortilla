@@ -3,30 +3,31 @@
 #include "mudView.h"
 #pragma warning(disable: 4996)
 
-MudView::MudView(PropertiesElements *elements) : 
+MudView::MudView(PropertiesElements *elements, int id) : 
 propElements(elements),
 m_lines_count(0),
 m_last_visible_line(-1),
-m_last_string_updated(false),
+m_last_updated(false),
 m_use_softscrolling(false),
 m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1),
-m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1)
+m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1),
+m_id(id)
 {
     m_dragpt.x = m_dragpt.y = 0;
 }
 
 MudView::~MudView()
 {
-    autodel<MudViewString> z(m_strings);
+    std::for_each(m_strings.begin(),m_strings.end(),[](MudViewString*s){delete s;});
 }
 
 void MudView::accLastString(parseData *parse_data)
 {
-    if (!parse_data->update_prev_string ||
-        m_strings.empty() ||
-        parse_data->strings.empty())
+    bool ups = parse_data->update_prev_string;
+    parse_data->update_prev_string = false;
+    if (!ups || m_strings.empty() || parse_data->strings.empty())
         return;
 
     int last = m_strings.size() - 1;
@@ -51,14 +52,20 @@ void MudView::accLastString(parseData *parse_data)
     if (string->gamecmd && string->blocks.empty())
     {
         MudViewStringBlock empty;
-        last_string->blocks.push_back(empty);
+        string->blocks.push_back(empty);
     }}
 
-    last_string->moveBlocks(string);
-    delete string;
-    parse_data->strings[0] = last_string;
-    m_strings.pop_back();                                   // remove last string from view
-    m_last_string_updated = true;
+    std::vector<MudViewStringBlock> blocks;
+    std::vector<MudViewStringBlock>& ls = last_string->blocks;
+    std::vector<MudViewStringBlock>& s = string->blocks;
+
+    blocks.resize(ls.size()+s.size());
+    std::copy(ls.begin(), ls.end(), blocks.begin());
+    std::copy(s.begin(), s.end(), blocks.begin()+ls.size());
+    s.swap(blocks);
+
+    parse_data->update_prev_string = true;
+    m_last_updated = true;
 }
 
 int MudView::getStringsCount() const
@@ -68,9 +75,12 @@ int MudView::getStringsCount() const
 
 void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_strings)
 {
+    if (m_last_updated)
+    {
+        m_last_updated = false;
+        deleteLastString();
+    }
     removeDropped(parse_data);
-    if (parse_data->strings.empty())
-        return;
     calcStringsSizes(parse_data->strings);
 
     if (copy_data)
@@ -88,8 +98,10 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
         }
     }
 
-    m_last_string_updated = false;
-    pushText(parse_data);
+    if (parse_data->strings.empty())
+        return;
+
+    pushText(parse_data, false);
 
     if (m_use_softscrolling) {
         if (m_start_softscroll == -1)
@@ -111,9 +123,13 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
     Invalidate(FALSE);
 }
 
-void MudView::pushText(parseData* parse_data)
+void MudView::pushText(parseData* parse_data, bool delete_last)
 {
+    if (delete_last)
+        deleteLastString();
     parseDataStrings &pds = parse_data->strings;
+    if (pds.empty())
+        return;
     m_strings.insert(m_strings.end(), pds.begin(), pds.end());
     pds.clear();
 }
@@ -189,18 +205,13 @@ int MudView::getViewString() const
 
 int MudView::getLastString() const
 {
-    int last = m_strings.size() - (m_last_string_updated ? 0 : 1);
+    int last = m_strings.size() - 1;
     return last;
 }
 
-bool MudView::isLastString() const
+bool MudView::lastStringDeleted() const
 {
-    return (getLastString() == getViewString()) ? true : false;
-}
-
-bool MudView::isLastStringUpdated() const
-{
-    return m_last_string_updated;
+    return m_last_updated;
 }
 
 void MudView::deleteLastString()
@@ -210,6 +221,8 @@ void MudView::deleteLastString()
     int last = m_strings.size() - 1;
     delete m_strings[last];
     m_strings.pop_back();
+    if (last == m_last_visible_line)
+        m_last_visible_line--;
 }
 
 int MudView::getStringsOnDisplay() const
@@ -265,8 +278,7 @@ void MudView::removeDropped(parseData* parse_data)
 
 void MudView::calcStringsSizes(mudViewStrings& pds)
 {
-    if (pds.empty())
-        return;
+    if (pds.empty()) return;
     CDC dc(GetDC());
     HFONT oldfont = dc.SelectFont(propElements->standard_font);
     for (int i=0,e=pds.size(); i<e; ++i) {
@@ -308,7 +320,7 @@ void MudView::renderView()
         return;
 
     int line_heigth = propElements->font_height;
-    int index = m_last_visible_line - (m_last_string_updated ? 1 : 0);
+    int index = m_last_visible_line; // - (m_last_string_updated ? 1 : 0);
     int count = m_lines_count + 1;
     int y = pos.bottom;
     while (index >= 0 && count > 0)

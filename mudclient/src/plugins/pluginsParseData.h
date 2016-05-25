@@ -41,7 +41,7 @@ public:
         if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
     }
-    
+
     PluginViewString* getselected_pvs()
     {
         return (isselected()) ? plugins_strings[selected] : NULL;
@@ -97,12 +97,19 @@ public:
             ss.erase(ss.begin() + selected);
             if (tdata)
                 tdata->markDeleted(selected);
-            if (selected == 0)
-                pdata->update_prev_string = false;
             if (ss.empty() || selected == last)
                 pdata->last_finished = true;
         }
         selected = -1;
+    }
+
+    void delete_strings(const std::vector<int>& strings)
+    {
+        for (int i=0,e=strings.size(); i<e; ++i)
+        {
+            selected = strings[i]-1;
+            delete_selected();
+        }
     }
 
     void deleteall()
@@ -129,7 +136,7 @@ public:
     }
 
     bool copy_block(int block, int dst_string, int dst_block)
-    {        
+    {
         PluginViewString *src_pvs = getselected_pvs();
         MudViewString *src = getselected();
         if (src_pvs && dst_block >= 1)
@@ -168,6 +175,13 @@ public:
         if (tdata && isselected())
             return tdata->getParameters(selected);
         return 0;
+    }
+
+    bool get_key(tstring *key)
+    {
+        if (tdata && isselected())
+            return tdata->getKey(selected, key);
+        return false;
     }
 
     bool get_parameter(int index, tstring* param)

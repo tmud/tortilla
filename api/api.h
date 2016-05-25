@@ -6,7 +6,6 @@
 #pragma comment(lib, "api.lib")
 #endif
 
-#include <vector>
 typedef char utf8;
 typedef std::string u8string;
 
@@ -96,7 +95,8 @@ public:
 #define LUAT_PCRE       108
 #define LUAT_IMAGE      109
 #define LUAT_TRIGGER    110
-#define LUAT_LAST       110
+#define LUAT_VIEWSTRING 111
+#define LUAT_LAST       111
 
 class luaT_towstring 
 {
@@ -121,15 +121,17 @@ public:
 };
 
 bool  luaT_check(lua_State *L, int n, ...);
+int   luaT_regtype(lua_State *L, const char* type_name);
+const char* luaT_typename(lua_State* L, int index);
 bool  luaT_run(lua_State *L, const char* func, const char* op, ...);
 int   luaT_error(lua_State *L, const wchar_t* error_message);
+int   luaT_push_args(lua_State *L, const char* func);
 void* luaT_toobject(lua_State* L, int index);
 void  luaT_pushobject(lua_State* L, void *object, int type);
 bool  luaT_isobject(lua_State* L, int type, int index);
-const char* luaT_typename(lua_State* L, int index);
 bool  luaT_dostring(lua_State *L, const wchar_t* script_text);
-void  luaT_showLuaStack(lua_State* L, const wchar_t* label);
-void  luaT_showTableOnTop(lua_State* L, const wchar_t* label);
+void  luaT_showLuaStack(lua_State* L, const wchar_t* label = NULL);
+void  luaT_showTableOnTop(lua_State* L, const wchar_t* label = NULL);
 #define SS(L,n) luaT_showLuaStack(L,n)
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
@@ -257,7 +259,8 @@ namespace base {
         luaT_run(L, "log", "s", message);
     }
     inline bool translateColors(lua_State* L, const wchar_t* str, COLORREF* text, COLORREF *bgnd) {
-        luaT_run(L, "translateColors", "s", str);
+        if (!text || !bgnd) return false;
+        luaT_run(L, "translateColors", "suu", str, *text, *bgnd);
         if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
         {
             if (text) *text = lua_tounsigned(L, 1);
@@ -404,14 +407,117 @@ public:
     }
 };
 
+enum vparam { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
+
+class luaT_ViewString
+{
+    lua_State *L;
+    void *view_string;
+public:
+    luaT_ViewString() : L(NULL), view_string(NULL) {}
+    void init(lua_State *pL, void *viewstring) { L = pL; view_string = viewstring; }
+    void getText(std::wstring* str)
+    {
+        runcmd("getText");
+        strresult(str);
+    }
+    int getTextLen()
+    {
+        runcmd("getTextLen");
+        return intresult();
+    }
+    int blocks()            // count of blocks for selected string
+    {
+        runcmd("blocks");
+        return intresult();
+    }
+    bool setBlocksCount(int count)
+    {
+        runcmdint("setBlocksCount", count);
+        return boolresult();
+    }
+    void getBlockText(int block, std::wstring* str)
+    {
+        runcmdint("getBlockText", block);
+        strresult(str);
+    }
+    bool get(int block, vparam param, unsigned int *value)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "get", "odd", block, (int)param);
+        bool result = false;
+        if (lua_isnumber(L, -1)) { *value = lua_tounsigned(L, -1); result = true; }
+        lua_pop(L, 1);
+        return result;
+    }
+    bool set(int block, vparam param, unsigned int value)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "set", "oddu", block, (int)param, value);
+        return boolresult();
+    }
+    bool setBlockText(int block, const wchar_t* text)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "setBlockText", "ods", block, text);
+        return boolresult();
+    }
+    bool deleteBlock(int block)
+    {
+        runcmdint("deleteBlock", block);
+        return boolresult();
+    }
+    void print(int view)
+    {
+        runcmdint("print", view);
+    }
+    void getData(std::wstring* str)
+    {
+        runcmd("getData");
+        strresult(str);
+    }
+    void setData(const std::wstring& str)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "setData", "os", str.c_str());
+    }
+private:
+    void runcmd(const char* cmd)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, cmd, "o");
+    }
+    void runcmdint(const char* cmd, int p)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, cmd, "od", p);
+    }
+    bool boolresult()
+    {
+        int result = (lua_isboolean(L, -1)) ? lua_toboolean(L, -1) : 0;
+        lua_pop(L, 1);
+        return result ? true : false;
+    }
+    int intresult()
+    {
+        int result = (lua_isnumber(L, -1)) ? lua_tointeger(L, -1) : 0;
+        lua_pop(L, 1);
+        return result;
+    }
+    void strresult(std::wstring *res)
+    {
+        if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
+        else res->clear();
+        lua_pop(L, 1);
+    }
+};
+
 class Pcre;
 class luaT_ViewData
 {
     lua_State *L;
     void *view_data;
 public:
-    enum vdparam { TEXTCOLOR = 0, BKGCOLOR, UNDERLINE, ITALIC, BLINK, REVERSE, EXTTEXTCOLOR, EXTBKGCOLOR };
-
     luaT_ViewData() : L(NULL), view_data(NULL) {}
     void init(lua_State *pL, void *viewdata) { L = pL; view_data = viewdata; }
     int size()             // count of all strings
@@ -484,12 +590,17 @@ public:
         runcmd("blocks");
         return intresult(); 
     }
+    bool setBlocksCount(int count)
+    {
+        runcmdint("setBlocksCount", count);
+        return boolresult();
+    }
     void getBlockText(int block, std::wstring* str)
     {
         runcmdint("getBlockText", block);
         strresult(str);
     }
-    bool get(int block, vdparam param, unsigned int *value)
+    bool get(int block, vparam param, unsigned int *value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "get", "odd", block, (int)param);
@@ -498,7 +609,7 @@ public:
         lua_pop(L, 1);
         return result;
     }
-    bool set(int block, vdparam param, unsigned int value)
+    bool set(int block, vparam param, unsigned int value)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "set", "oddu", block, (int)param, value);
@@ -553,9 +664,31 @@ public:
         runcmd("deleteString");
         return boolresult();
     }
+    bool deleteStrings(const std::vector<int>& sv)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        lua_newtable(L);
+        for (int i=0,e=sv.size();i<e;++i)
+        {
+            lua_pushinteger(L, i+1);
+            lua_pushinteger(L, sv[i]);
+            lua_settable(L, -3);
+        }
+        luaT_run(L, "deleteStrings", "ot");
+        return boolresult();
+    }
     void deleteAllStrings()
     {
         runcmd("deleteAllStrings");
+    }
+    bool dropString()
+    {
+        runcmd("dropString");
+        return boolresult();
+    }
+    void print(int view)
+    {
+        runcmdint("print", view);
     }
     bool find(Pcre *p)
     {
@@ -585,15 +718,17 @@ public:
         lua_pop(L, 2);
         return result;
     }
-    void setNext(bool next)
+    bool setNext(bool next)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "setNext", "ob", next);
+        return boolresult();
     }
-    void setPrev(bool prev)
+    bool setPrev(bool prev)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "setPrev", "ob", prev);
+        return boolresult();
     }
     bool isNext()
     {
@@ -607,7 +742,18 @@ public:
         luaT_run(L, "isPrev", "o");
         return boolresult();
     }
-
+    bool getData(std::wstring *str)
+    {
+        runcmd("createRef");
+        if (luaT_check(L, 1, LUAT_VIEWSTRING))
+        {
+            luaT_ViewString vs;
+            vs.init(L, luaT_toobject(L, -1));
+            vs.getData(str);
+            return true;
+        }
+        return false;
+    }
 private:
     void runcmd(const char* cmd)
     {
@@ -1008,6 +1154,7 @@ int   pcre_size(hpcre handle);
 int   pcre_first(hpcre handle, int index);
 int   pcre_last(hpcre handle, int index);
 hpcre_string pcre_string(hpcre handle, int index);
+hpcre_string pcre_regexp(hpcre handle);
 
 // pcre helper
 class Pcre
@@ -1033,6 +1180,13 @@ public:
         str->assign((const wchar_t*)strbuf_ptr(s));
         strbuf_destroy(s);
         return true;
+    }
+    void getRegExp(std::wstring *rgxp) { 
+        if (!rgxp) return;
+        hpcre_string s = pcre_regexp(regexp);
+        if (!s) return;
+        rgxp->assign((const wchar_t*)strbuf_ptr(s));
+        strbuf_destroy(s);
     }
 private:
     Pcre(const Pcre& p) {}

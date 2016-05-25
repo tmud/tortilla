@@ -18,6 +18,7 @@ public:
     void getRange(CompareRange *range) const;
     void getParameters(std::vector<tstring>* params) const;
     bool isFullstrReq() const;
+    void getKey(tstring* key) const;
 private:
     void createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template);
     void checkVars(tstring *pcre_template);

@@ -118,11 +118,10 @@
 #define IDC_CHECK_SOFTSCROLL            1135
 #define IDC_EDIT_STARTUP_PROFILE        1136
 #define IDC_EDIT_FINDTEXT               1137
-#define IDC_COMBO1                      1138
-#define IDC_COMBO_FINDWINDOW            1138
-#define IDC_RADIO_END_BEGIN             1139
-#define IDC_RADIO2                      1140
-#define IDC_RADIO_BEGIN_END             1140
+#define IDC_EDIT_STARTUP_FOLDER         1138
+#define IDC_COMBO_FINDWINDOW            1139
+#define IDC_RADIO_END_BEGIN             1140
+#define IDC_RADIO_BEGIN_END             1141
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -146,7 +145,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        224
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1140
+#define _APS_NEXT_CONTROL_VALUE         1142
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

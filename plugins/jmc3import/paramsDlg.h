@@ -150,7 +150,7 @@ private:
     bool loadFile(const wchar_t* file, std::wstring *error)
     {
         strings.clear();
-        HANDLE hfile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        HANDLE hfile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hfile == INVALID_HANDLE_VALUE)
         {
             error->assign(L"Невозможно прочитать данный файл!");

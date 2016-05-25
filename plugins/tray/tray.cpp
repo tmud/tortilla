@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.11");
+    luaT_pushwstring(L, L"1.12");
     return 1;
 }
 
@@ -66,9 +66,8 @@ int init(lua_State *L)
     g_tray.setAlarmWnd(base::getParent(L));
     g_tray.setActivated(p.activated());
 
-    luaT_run(L, "getPath", "s", "config.xml");
-    std::wstring path(luaT_towstring(L, -1));
-    lua_pop(L, 1);
+    std::wstring path;
+    base::getPath(L, L"config.xml", &path);
 
     TraySettings &s = g_tray.traySettings();
     s.timeout = 5;
@@ -150,22 +149,37 @@ int syscmd(lua_State *L)
         if (cmd == L"tray")
         {
             int n = luaL_len(L, -1);
-            std::wstring text;
+            std::deque<std::wstring> text;
             for (int i=2; i<=n; ++i)
             {
                 lua_pushinteger(L, i);
                 lua_gettable(L, -2);
                 if (lua_isstring(L, -1))
                 {
-                    if (!text.empty())
-                        text.append(L" ");
-                    text.append(luaT_towstring(L, -1));
+                    std::wstring tmp(luaT_towstring(L, -1));
+                    text.push_back(tmp);
                 }
                 lua_pop(L, 1);
             }
-            if (!text.empty())
-                 g_tray.showMessage(text, false);
             lua_pop(L, 1);
+            if (!text.empty())
+            {
+                message m;
+                COLORREF text_color = g_tray.traySettings().text;
+                COLORREF bgnd_color = g_tray.traySettings().background;
+                if (base::translateColors(L, text[0].c_str(), &text_color, &bgnd_color))
+                {
+                    text.pop_front();
+                    m.usecolors = true;
+                    m.textcolor = text_color;
+                    m.bkgndcolor = bgnd_color;
+                }
+                for (int i=0,e=text.size();i<e;++i) {
+                   if (i!=0) m.text.append(L" ");
+                   m.text.append(text[i]);
+                }
+                g_tray.showMessage(m, false);
+            }
             lua_pushnil(L);
             return 1;
         }

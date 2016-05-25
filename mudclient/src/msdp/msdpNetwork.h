@@ -9,15 +9,16 @@ public:
     bool state() const { return m_state; }    
     void translateReceived(DataQueue& msdp_data);
     DataQueue& getSendData();
-    void send_varval(const utf8* var, const utf8* val);
-    void send_varvals(const utf8* var, const std::vector<u8string>& vals);
-    void report(Plugin* p, std::vector<u8string> *report);
-    void unreport(Plugin* p, std::vector<u8string> *report);
+    void send_varval(const char* var, const char* val);
+    void send_varvals(const char* var, const std::vector<std::string>& vals);
+    void report(Plugin* p, std::vector<std::string> *report);
+    void unreport(Plugin* p, std::vector<std::string> *report);
     void loadPlugin(Plugin *p);
     void unloadPlugin(Plugin *p);
     void loadPlugins();
     void unloadPlugins();
-
+    void reset();
+    void setUtf8Encoding(bool flag);
 private:
     void translate(DataQueue& msdp);
     void send_begin();
@@ -37,6 +38,7 @@ private:
     bool m_state;
     typedef std::vector<Plugin*> PluginReport;
     typedef PluginReport::iterator PluginReportIterator;
-    typedef std::map<u8string, PluginReport*>::iterator PluginIterator;
-    std::map<u8string, PluginReport*> m_plugins_reports;    
+    typedef std::map<std::string, PluginReport*>::iterator PluginIterator;
+    std::map<std::string, PluginReport*> m_plugins_reports;
+    bool m_utf8_encoding;
 };

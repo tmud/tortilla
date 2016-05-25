@@ -17,9 +17,8 @@ bool luaT_script::run(const tstring& script, tstring* error)
     luaL_loadstring(L, w2u);
     if (!lua_pcall(L, 0, 0, 0))
         return true;
-
     if (error)
-        error->assign( luaT_towstring(L, -1) );
+        error->assign( lua_toerror(L) );
     lua_pop(L, 1);
     return false;
 }

@@ -227,6 +227,11 @@ bool CompareObject::isFullstrReq() const
     return m_fullstr_req;
 }
 
+void CompareObject::getKey(tstring* key) const
+{
+    key->assign(m_key);
+}
+
 void CompareObject::maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow)
 {
     //mask regexp special symbols

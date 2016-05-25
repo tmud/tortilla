@@ -12,6 +12,7 @@ extern "C" {
 #include <stdlib.h>
 #include <assert.h>
 #include <string>
+#include <vector>
 
 class lua_pushwstring
 {
@@ -159,4 +160,164 @@ public:
         dump.append(L")");
     }
     operator const wchar_t*() const { return dump.c_str(); }
+};
+
+class lua_toerror
+{
+    std::wstring error;
+public:
+    lua_toerror(lua_State *L)
+    {
+        if (!lua_isstring(L, -1))
+            return;
+        const char* s = lua_tostring(L, -1);
+        const char* p = strchr(s, ':');
+        if (p) {
+        const char* b = p+1;
+        const char *e = strchr(b, ':');
+        if (e && e!=b) {
+          bool number = true;
+          for (const char *t=b; t!=e; ++t)
+          {
+              if (*t>='0' && *t<='9') {}
+              else { number = false; break; }
+          }
+          if (number) {
+            std::string fname(s, p-s);
+            std::string err(p);
+            std::wstring f, e;
+            convert_ansi(fname, f);
+            convert_utf8(err, e);
+            f.append(e);
+            error.swap(f);
+            return;
+          }
+        }}
+        std::string err(s);
+        convert_utf8(err, error);
+    }
+    operator const wchar_t*() const { return error.c_str(); }
+private:
+    void convert_ansi(const std::string& s, std::wstring& res)
+    {
+       int buffer_required = MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length(), NULL, 0);
+       res.resize(buffer_required);
+       MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length(), &res[0], buffer_required);
+    }
+    void convert_utf8(const std::string& s, std::wstring& res)
+    {
+       int buffer_required = MultiByteToWideChar(CP_UTF8, 0, s.c_str(), s.length(), NULL, 0);
+       res.resize(buffer_required);
+       MultiByteToWideChar(CP_UTF8, 0, s.c_str(), s.length(), &res[0], buffer_required);
+    }
+};
+
+class load_file
+{
+    HANDLE hfile;
+    typedef unsigned char uchar;
+    std::string current_string;
+    const DWORD buffer_size = 256;
+    uchar* buffer;
+    DWORD  file_size;
+    DWORD  not_readed;
+    DWORD  in_buffer;
+    bool   bom_check;
+    bool   last_0d;
+
+public:
+    bool result;
+    bool file_missed;
+    load_file(const std::wstring& filepath, DWORD maxsize = 0) : hfile(INVALID_HANDLE_VALUE), buffer(NULL),
+        file_size(0), not_readed(0), in_buffer(0), bom_check(false), last_0d(false),
+        result(false), file_missed(false)
+    {
+        buffer = new uchar[buffer_size];
+        hfile = CreateFile(filepath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hfile == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_FILE_NOT_FOUND)
+                file_missed = true;
+            return;
+        }
+        DWORD high = 0;
+        DWORD size = GetFileSize(hfile, &high);
+        if (high != 0) 
+            return;
+        if (maxsize > 0 && size > maxsize)
+            return;
+        file_size = size;
+        not_readed = size;
+        result = true;
+    }
+    ~load_file() 
+    {
+        delete []buffer;
+        if (hfile != INVALID_HANDLE_VALUE) CloseHandle(hfile);
+        hfile = INVALID_HANDLE_VALUE;
+    }
+    DWORD getPosition() {
+        return file_size-(not_readed+in_buffer);
+    }
+    bool readNextString(std::string *string, DWORD* startpos = NULL)
+    {
+        if (hfile == INVALID_HANDLE_VALUE)
+            return false;
+        if (startpos) *startpos = getPosition();
+
+        while (not_readed > 0 || in_buffer > 0)
+        {
+            DWORD readed = 0;
+            if (not_readed > 0)
+            {
+                DWORD toread = buffer_size - in_buffer;
+                if (toread > not_readed) toread = not_readed;
+                if (!ReadFile(hfile, buffer+in_buffer, toread, &readed, NULL) || readed != toread)
+                       { result = false; return false; }
+                not_readed -= readed;
+            }
+            readed += in_buffer;
+
+            uchar *p = buffer;
+            uchar *e = p + readed;
+            if (!bom_check && readed >= 3)
+            {
+                bom_check = true;
+                if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf)
+                    p += 3;
+            }
+
+            uchar *b = p;
+            while (p != e)
+            {
+                uchar c = *p; p++;
+                if (c == 0xd || c == 0xa)
+                {
+                    if (c == 0xa && last_0d)
+                        { b = p; last_0d = false; continue; }
+                    current_string.append((char*)b, p-b-1);
+                    string->assign(current_string);
+                    current_string.clear();
+                    if (c == 0xd)
+                       last_0d = !last_0d;
+                    in_buffer = e-p;
+                    memcpy(buffer, p, e-p);
+                    return true;
+                }
+                last_0d = false;
+            }
+            if (p == e)
+            {
+                current_string.append((char*)b, e-b);
+                in_buffer = 0;
+            }
+            if (not_readed == 0)
+            {
+               string->assign(current_string);
+               current_string.clear();
+               return true;
+            }
+        }
+        return false;
+    }
 };

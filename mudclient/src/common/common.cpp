@@ -201,7 +201,7 @@ bool tstring_cmpl(const tstring& str, const WCHAR* lstr)
 int utf8_getbinlen(const utf8* str, int symbol)
 {
     int p = 0;
-    while (str && symbol > 0)
+    while (str && *str && symbol > 0)
     {
         const unsigned char &c = str[p];
         if (c < 0x80) { symbol--; p++; }
@@ -250,9 +250,15 @@ int u8string_len(const u8string& str)
 
 void u8string_substr(u8string *str, int from, int len)
 {
-    from = utf8_getbinlen(str->c_str(), from);
-    len = utf8_getbinlen(str->c_str(), from + len);
-    u8string res(str->substr(from, len));
+    if (from < 0 || len <= 0) {
+        str->clear(); return;
+    }
+    int begin = utf8_getbinlen(str->c_str(), from);    
+    int afterlen = utf8_getbinlen(str->c_str(), from + len);
+    if (begin == -1 || afterlen == -1) {
+        str->clear();  return; 
+    }
+    u8string res(str->substr(begin, afterlen-begin));
     str->swap(res);
 }
 
@@ -540,3 +546,56 @@ void deleteWindowHook(HWND hWnd)
         m_hHook = NULL;
     }
 }
+
+#ifdef _DEBUG
+void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
+{
+    if (maxlen > len) maxlen = len;
+    std::string l("["); l.append(label);
+    char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
+    OutputDebugStringA(l.c_str());
+    const unsigned char *bytes = (const unsigned char *)data;
+    len = maxlen;
+    const int show_len = 32;
+    unsigned char *buffer = new unsigned char[show_len];
+    std::string hex;
+    hex.reserve(160);
+    while (len > 0)
+    {
+        int toshow = show_len;
+        if (toshow > len) toshow = len;
+        for (int i = 0; i < toshow; ++i)
+        {
+            sprintf(tmp, "%.2x ", bytes[i]);
+            hex.append(tmp);
+        }
+        int empty = show_len - toshow;
+        if (empty > 0)
+        {
+            std::string spaces(empty*3, L' ');
+            hex.append(spaces);
+        }
+
+        memcpy(buffer, bytes, toshow);
+        for (int i=0; i<toshow; ++i) {
+            if (buffer[i] < 32) buffer[i] = '.';
+        }
+        hex.append((const char*)buffer, toshow);
+        OutputDebugStringA(hex.c_str());
+        OutputDebugStringA("\r\n");
+        hex.clear();
+        bytes += toshow;
+        len -= toshow;
+    }
+    delete []buffer;
+}
+
+void OutputTelnetOption(const void *data, const char* label)
+{
+    OutputDebugStringA(label);
+    char tmp[32];
+    unsigned char byte = *(const char*)data;
+    sprintf(tmp, ": %d (%.2x)\r\n", byte, byte);
+    OutputDebugStringA(tmp);
+}
+#endif

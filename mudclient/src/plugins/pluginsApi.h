@@ -9,11 +9,10 @@ bool initPluginsSystem();
 bool loadModules();
 void unloadModules();
 void tmcLog(const tstring& msg);
-void pluginLoadError(const tchar* msg, const wchar_t *plugin_name);
+void pluginLoadError(const tchar* msg);
 int  pluginInvArgs(lua_State *L, const tchar* fname);
 int  pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file);
-int  pluginError(const tchar* fname, const tchar* error);
-int  pluginError(const tchar* error);
+int  pluginMethodError(const tchar* method, const tchar* error);
 int  pluginLog(const tchar* msg);
 int  pluginOut(const tchar* msg);
 

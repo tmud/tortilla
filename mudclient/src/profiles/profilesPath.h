@@ -12,14 +12,14 @@ private:
 class ProfilesDirsListHelper
 {
 public:
-    ProfilesDirsListHelper();
+    ProfilesDirsListHelper(const tstring& dir);
     std::vector<tstring> dirs;
 };
 
 class ProfilePath
 {
 public:
-    ProfilePath(const tstring& profile, const tstring& file);    
+    ProfilePath(const tstring& profile, const tstring& file);
     operator const tchar*() { return m_path.c_str(); }
 private:
     tstring m_path;

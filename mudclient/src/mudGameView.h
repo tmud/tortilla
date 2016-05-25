@@ -63,7 +63,7 @@ public:
 
     MudGameView() : m_propElements(m_manager.getConfig()), m_propData(m_propElements.propData),
         m_barHeight(32), m_bar(m_propData), m_last_find_view(-1), m_network_queue(2048),
-        m_view(&m_propElements), m_history(&m_propElements),
+        m_view(&m_propElements, 0), m_history(&m_propElements, -1),
         m_processor(this), m_codepage(CPWIN), m_activated(false), m_settings_mode(false), m_drag_flag(false)
     {
     }
@@ -423,7 +423,7 @@ private:
             const OutputWindow& w =  m_propData->windows[i];
             m_find_dlg.setWindowName(i+1,w.name);
 
-            MudView *v = new MudView(&m_propElements);
+            MudView *v = new MudView(&m_propElements, i+1);
             DWORD style = WS_CHILD|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|WS_VISIBLE;
             int menu_id = i+ID_WINDOW_1;
             if (w.side != DOCK_HIDDEN)
@@ -553,7 +553,7 @@ private:
             if (PtInRect(&rc, pt))
             {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
-                bool last = m_history.isLastString();
+                bool last = (m_history.getViewString() == m_history.getLastString());
                 if (last)
                     closeHistory();
                 return 0;
@@ -1005,7 +1005,9 @@ private:
        m_plugins.updateProps();
        if (m_propData->codepage == L"utf8") m_codepage = CPUTF8;
        else m_codepage = CPWIN;
-       m_network.setUtf8Encoding(m_codepage == CPUTF8 ? true : false);
+       bool utf8_encoding = m_codepage == CPUTF8 ? true : false;
+       m_network.setUtf8Encoding(utf8_encoding);
+       m_plugins.getMsdp()->setUtf8Encoding(utf8_encoding);
     }
 
     void updateTitle()
@@ -1078,26 +1080,19 @@ private:
 
     void addText(int view, parseData* parse_data)
     {
-        if (parse_data->strings.empty())
-            return;
         if (view == 0)
         {
             int vs = m_view.getViewString();
-            bool last = m_view.isLastString();
-            bool last_updated = m_view.isLastStringUpdated();
+            bool last = (m_view.getViewString() == m_view.getLastString());
 
             parseData history;
             bool in_soft_scrolling = m_view.inSoftScrolling();
             int limited = 0;
+
+            bool last_deleted = m_view.lastStringDeleted();
             m_view.addText(parse_data, &history, &limited);
+            m_history.pushText(&history, last_deleted);
             vs = vs - limited;
-            if (history.strings.empty())
-                return;
-
-            if (last_updated)
-                m_history.deleteLastString();
-            m_history.pushText(&history);
-
             checkHistorySize();
             bool history_visible = m_history.IsWindowVisible() ? true : false;
             bool soft_scroll = m_propData->soft_scroll ? true : false;
@@ -1116,7 +1111,9 @@ private:
                         if (m_drag_flag) { m_drag_flag = false; skip_history = true; }
                     }
                     if (!skip_history)
+                    {
                         showHistory(vs, 1);
+                    }
                     if (soft_scroll || skip_history) {
                       int last = m_view.getLastString();
                       m_view.setViewString(last);

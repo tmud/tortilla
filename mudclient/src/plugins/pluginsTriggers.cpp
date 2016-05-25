@@ -58,8 +58,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
                     return false;
             }
         }
-        int count = m_compare_objects.size();
-        m_triggerParseData.init(count);
+        m_triggerParseData.init(m_compare_objects);
         m_enabled = true;
         return true;
     }
@@ -91,6 +90,11 @@ bool PluginsTrigger::isEnabled() const
 int PluginsTrigger::getLen() const
 {
     return m_compare_objects.size();
+}
+
+bool PluginsTrigger::getKey(int index, tstring* key)
+{
+    return m_triggerParseData.getKey(index, key);
 }
 
 bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
@@ -146,9 +150,13 @@ void PluginsTrigger::run()
     {
         //error
         if (luaT_check(L, 1, LUA_TSTRING))
-            pluginError(luaT_towstring(L, -1));
+        {
+            pluginOut(lua_toerror(L));
+        }
         else
-            pluginError(L"неизвестная ошибка");
+        {
+            pluginLog(L"неизвестная ошибка");
+        }
         lua_settop(L, 0);
     }
     _cp = oldcp;
@@ -157,19 +165,14 @@ void PluginsTrigger::run()
 
 int trigger_create(lua_State *L)
 {
-    if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
-        luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
+    PluginsTrigger *t = new PluginsTrigger();
+    if (t->init(L, _cp))
     {
-        PluginsTrigger *t = new PluginsTrigger();
-        if (!t->init(L, _cp))
-            { delete t; }
-        else
-        {
-            _cp->triggers.push_back(t);
-            luaT_pushobject(L, t, LUAT_TRIGGER);
-            return 1;
-        }
+        _cp->triggers.push_back(t);
+        luaT_pushobject(L, t, LUAT_TRIGGER);
+        return 1;
     }
+    delete t;
     return pluginInvArgs(L, L"createTrigger");
 }
 
@@ -206,6 +209,30 @@ int trigger_isEnabled(lua_State *L)
     return pluginInvArgs(L, L"trigger:isEnabled");
 }
 
+
+int trigger_towatch(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_TRIGGER))
+    {
+        lua_newtable(L);
+        PluginsTrigger *t = (PluginsTrigger*)luaT_toobject(L, 1);
+        lua_pushstring(L, "mode");
+        lua_pushstring(L, t->isEnabled() ? "on" : "off");
+        lua_settable(L, -3);
+        int count = t->getLen();
+        for (int i=0; i<count; ++i)
+        {
+            tstring k;
+            t->getKey(i, &k);
+            lua_pushinteger(L, i+1);
+            luaT_pushwstring(L, k.c_str());
+            lua_settable(L, -3);
+        }
+        return 1;
+    }
+    return 0;
+}
+
 void reg_mt_trigger(lua_State *L)
 {
     lua_register(L, "createTrigger", trigger_create);
@@ -213,6 +240,7 @@ void reg_mt_trigger(lua_State *L)
     regFunction(L, "enable", trigger_enable);
     regFunction(L, "disable", trigger_disable);
     regFunction(L, "isEnabled", trigger_isEnabled);
+    regFunction(L, "__towatch", trigger_towatch);
     regIndexMt(L);
     lua_pop(L, 1);
 }

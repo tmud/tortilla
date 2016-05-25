@@ -147,28 +147,11 @@ bool PluginsManager::pluginsPropsDlg()
 
     // turn off plugins first
     for (int i = 0, e = turn_off.size(); i < e; ++i)
-    {
-        Plugin *p = turn_off[i];
-        m_msdp_network.unloadPlugin(p);
-        p->unloadPlugin();
-    }
+        unloadPlugin(turn_off[i]);
 
     // turn on new plugins
     for (int i=0,e=turn_on.size(); i<e; ++i)
-    {
-        Plugin *p = turn_on[i];
-        if (!p->reloadPlugin())
-        {
-            tstring error(L"Ошибка при загрузке плагина '");
-            error.append(p->get(Plugin::FILE));
-            error.append(L"'. Плагин работать не будет.");
-            tmcLog(error.c_str());
-       }
-       else
-       {
-           m_msdp_network.loadPlugin(p);
-       }
-    }
+        loadPlugin(turn_on[i]);
 
     PluginsDataValues &modules = tortilla::getProperties()->plugins;
     PluginsDataValues new_modules;
@@ -213,6 +196,51 @@ Plugin* PluginsManager::findPlugin(const tstring& name)
            return m_plugins[i];
     }
     return NULL;
+}
+
+bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
+{
+    Plugin *p = findPlugin(name);
+    if (!p)
+    {
+        initPlugins();
+        p = findPlugin(name);
+        if (!p)
+        {
+            tstring error(L"Ошибка при загрузке плагина '");
+            error.append(name);
+            error.append(L"'.");
+            tmcLog(error.c_str());
+            return true;
+        }
+    }
+    if (state == L"on" || state == L"1" || state == L"load")
+    {
+        if (!p->state())
+        {
+            loadPlugin(p);
+            setPluginState(p, true);
+        }
+        return true;
+    }
+    if (state == L"off" || state == L"0" || state == L"unload")
+    {
+        if (p->state())
+        {
+            unloadPlugin(p);
+            setPluginState(p, false);
+        }
+        return true;
+    }
+    if (state == L"reload" || state == L"up")
+    {
+        if (p->state())
+            unloadPlugin(p);
+        loadPlugin(p);
+        setPluginState(p, true);
+        return true;
+    }
+    return false;
 }
 
 void PluginsManager::updateProps()
@@ -263,7 +291,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         lua_pushinteger(L, view);
         luaT_pushobject(L, &pdata, LUAT_VIEWDATA);
         if (!p->runMethod(method, 2, 0))
@@ -287,7 +315,7 @@ bool PluginsManager::processTriggers(parseData& parse_data, int string, LogicPip
     for (int j = 0, je = m_plugins.size(); j < je; ++j)
     {
         Plugin *p = m_plugins[j];
-        if (!p->state())
+        if (!p->state() || p->isErrorState())
             continue;
         std::vector<PluginsTrigger*>& vt = p->triggers;
         if (vt.empty())
@@ -457,6 +485,7 @@ void PluginsManager::processConnectEvent()
 
 void PluginsManager::processDisconnectEvent()
 {
+    m_msdp_network.reset();
     doPluginsMethod("disconnect", 0);
 }
 
@@ -492,20 +521,45 @@ void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
     }
 }
 
-void PluginsManager::terminatePlugin(Plugin* p)
+void PluginsManager::setPluginState(Plugin* p, bool state)
 {
     if (!p) return;
     int index = -1;
-    for (int i = 0, e = m_plugins.size(); i < e; ++i)
-    {
+    for (int i = 0, e = m_plugins.size(); i < e; ++i) {
         if (p == m_plugins[i])  { index = i; break; }
     }
-    p->setOn(false);
     if (index != -1)
     {
         PluginsDataValues &modules = tortilla::getProperties()->plugins;
-        modules[index].state = 0;
+        modules[index].state = (state) ? 1 : 0;
     }
+}
+
+void PluginsManager::terminatePlugin(Plugin* p)
+{
+    if (!p) return;
+    p->setOn(false);
+    setPluginState(p, false);
+}
+
+bool PluginsManager::loadPlugin(Plugin* p)
+{
+    if (!p->reloadPlugin())
+    {
+        tstring error(L"Плагин '");
+        error.append(p->get(Plugin::FILE));
+        error.append(L"'отключен.");
+        pluginOut(error.c_str());
+        return false;
+    }
+    m_msdp_network.loadPlugin(p);
+    return true;
+}
+
+void PluginsManager::unloadPlugin(Plugin *p)
+{
+    m_msdp_network.unloadPlugin(p);
+    p->unloadPlugin();
 }
 
 void PluginsManager::doPluginsMethod(const char* method, int args)
@@ -513,7 +567,7 @@ void PluginsManager::doPluginsMethod(const char* method, int args)
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         if (!p->runMethod(method, args, 0))
         {
             // restart plugins
@@ -532,12 +586,12 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         bool not_supported = false;
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип полученного значения. Требуется string|nil", i);
+            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
@@ -579,12 +633,12 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         bool not_supported = false;
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
+            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется table|nil|boolean|string", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -647,11 +701,12 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
-    Plugin *old = p;
+    Plugin *old = _cp;
     _cp = p;
     if (error)
-        pluginError(error);
-    pluginError(L"Плагин отключен!");
+        pluginLog(error);
+    swprintf(plugin_buffer(), L"Плагин %s отключен!", p->get(Plugin::FILE));
+    pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;
     PluginsDataValues &modules = tortilla::getProperties()->plugins;
@@ -661,7 +716,13 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
 {
     if (parts.empty())
+    {
+        cmd->command.clear();
+        cmd->parameters.clear();
+        cmd->parameters_list.clear();
+        cmd->changed =  true;
         return;
+    }
 
     tstring newcmd(parts[0]);
     if (newcmd != cmd->command)

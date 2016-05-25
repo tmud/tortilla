@@ -139,7 +139,7 @@ int system_loadTextFile(lua_State *L)
     if (luaT_check(L, 1, LUA_TSTRING))
     {
         std::wstring filename( luaT_towstring(L, 1) );
-        HANDLE file = CreateFile(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        HANDLE file = CreateFile(filename.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file == INVALID_HANDLE_VALUE)
             return 0;
         AutoCloseHandle auto_close(file);

@@ -59,6 +59,7 @@ struct MudViewStringBlock
    SIZE size;                             // size of string (DC size of current font)
    tbyte subs_protected;                  // protected from subs
 };
+typedef std::vector<MudViewStringBlock> MudViewStringBlocks;
 
 struct MudViewString
 {
@@ -160,7 +161,7 @@ struct MudViewString
        return s;
    }
    
-   std::vector<MudViewStringBlock> blocks;  // all string blocks
+   MudViewStringBlocks blocks;              // all string blocks
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd
    bool system;                             // flag - system cmd / log

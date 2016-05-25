@@ -26,8 +26,10 @@ EXPORTS
 	xml_get_attr_name
 	xml_get_attr_value
 	luaT_check
+	luaT_regtype
 	luaT_run
 	luaT_error
+	luaT_push_args
 	luaT_toobject
 	luaT_pushobject
 	luaT_isobject
@@ -43,6 +45,7 @@ EXPORTS
 	pcre_first
 	pcre_last
 	pcre_string
+	pcre_regexp
 	utf8_symlen
 	utf8_strlen
 	utf8_sympos

@@ -15,11 +15,14 @@ class triggerParseData
 public:
     triggerParseData() {}
     ~triggerParseData() { destroy(); }
-    void init(int count) 
+    void init(const std::vector<CompareObject>& cobjs)
     {
         destroy();
+        int count = cobjs.size();
         m_strings.resize(count, NULL);
-        for (int i=0;i<count;++i) { m_strings[i] = new triggerParseDataString;  } 
+        for (int i=0;i<count;++i) { m_strings[i] = new triggerParseDataString;  }
+        m_keys.resize(count);
+        for (int i=0;i<count;++i) { cobjs[i].getKey(&m_keys[i]); }
         resetindex();
     }
     void reset()
@@ -31,18 +34,18 @@ public:
     {
         if (!correctindex(string_index))
             return;
-        m_indexes.erase(m_indexes.begin()+string_index);        
+        m_indexes.erase(m_indexes.begin()+string_index);
     }
     void markDeletedAll()
     {
         m_indexes.clear();
     }
-    int getParameters(int string_index)
+    int getParameters(int string_index) const
     {
         triggerParseDataString *s = get(string_index);
         return (s) ? s->params.size() : 0;
     }
-    bool getParameter(int string_index, int parameter, tstring* p)
+    bool getParameter(int string_index, int parameter, tstring* p) const
     {
         triggerParseDataString *s = get(string_index);
         if (s) 
@@ -53,14 +56,14 @@ public:
         }
         return false;
     }
-    bool getCRC(int string_index, tstring* crc)
+    bool getCRC(int string_index, tstring* crc) const
     {
         triggerParseDataString *s = get(string_index);
         if (!s) return false;
         crc->assign(s->crc);
         return true;
     }
-    triggerParseDataString* get(int string_index)
+    triggerParseDataString* get(int string_index) const
     {
         if (correctindex(string_index))
         {
@@ -69,7 +72,15 @@ public:
         }
         return NULL;
     }
-private:   
+    bool getKey(int string_index, tstring* key) const
+    {
+        if (correctindex(string_index)) {
+            key->assign(m_keys[string_index]);
+            return true;
+        }
+        return false;
+    }
+private:
     void destroy() {
         std::for_each(m_strings.begin(), m_strings.end(), [](triggerParseDataString* tpd) { delete tpd;} );
         m_strings.clear();
@@ -79,12 +90,13 @@ private:
         m_indexes.resize(count);
         for (int i=0;i<count;++i) m_indexes[i] = i;
     }
-    bool correctindex(int string_index) {
+    bool correctindex(int string_index) const {
         int count = m_indexes.size();
         return (string_index >= 0 && string_index < count) ? true : false;
     }
     std::vector<triggerParseDataString*> m_strings;
     std::vector<int> m_indexes;
+    std::vector<tstring> m_keys;
 };
 
 
@@ -98,6 +110,7 @@ public:
     void enable(bool enable);
     bool isEnabled() const;
     int  getLen() const;
+    bool getKey(int index, tstring* key);
     bool compare(const CompareData& cd, bool incompl_flag);
     void run();
 private:

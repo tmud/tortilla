@@ -135,14 +135,15 @@ void LogicProcessor::runCommands(InputCommands& cmds)
             {
                 int repeats = 0;
                 w2int(cmd->command, &repeats);
-                tstring newcmd;
-                std::vector<tstring>& pl = cmd->parameters_list;
-                for (int i=0,e=pl.size(); i<e; ++i)
+                tstring newcmd(cmd->parameters);
+                tstring_trimleft(&newcmd);
+                /*std::vector<tstring>& pl = cmd->parameters_list;
+                for (int k=0,ke=pl.size(); k<ke; ++k)
                 {
-                    if (i!=0) newcmd.append(L" ");
-                    newcmd.append(pl[i]);
-                }
-                if (repeats == 0 && newcmd.empty())
+                    if (k!=0) newcmd.append(L" ");
+                    newcmd.append(pl[k]);
+                }*/
+                if (repeats == 0 || newcmd.empty())
                 {
                     m_repeat_commands.clear();
                     return;
@@ -150,6 +151,12 @@ void LogicProcessor::runCommands(InputCommands& cmds)
                 if (repeats > 0 && repeats <= 100)
                 {
                     m_repeat_commands.repeat(repeats, newcmd);
+                    for (int j=i+1;j<e;++j)
+                    {
+                        newcmd.assign(cmds[j]->srccmd);
+                        newcmd.append(cmds[j]->srcparameters);
+                        m_repeat_commands.push_back(newcmd);
+                    }
                     return;
                 }
             }
@@ -307,8 +314,6 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
 
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
-    if (m_plugins_log_blocked)
-        return;
     PropertiesData *pdata = tortilla::getProperties();
     if (!pdata->plugins_logs)
         return;
@@ -318,7 +323,9 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        if (m_plugins_log_tocache)
+        if (m_plugins_log_blocked)
+            m_plugins_log_toblocked.push_back(log);
+        else if (m_plugins_log_tocache)
             m_plugins_log_cache.push_back(log);
         else
             processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
@@ -365,7 +372,31 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
 void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
 {
     if (window >= 0 && window <= OUTPUT_WINDOWS)
-       printex(window, msgs);
+    {
+       if (m_plugins_log_blocked || m_plugins_log_tocache)
+       {
+           pluginLog(L"print в before, after использовать нельзя. см. справку.");
+       }
+       else
+       {
+           printex(window, msgs);
+       }
+    }
+}
+
+void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS) {
+    parseData data;
+    MudViewString *new_string = new MudViewString();
+    int count = v.size();
+    new_string->blocks.resize(count);
+    for (int i=0;i<count;++i)
+       new_string->blocks[i] = v[i];
+    new_string->system = true;
+    data.strings.push_back(new_string);
+    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, window);
+    }
 }
 
 void LogicProcessor::updateLog(const tstring& msg)
@@ -393,5 +424,4 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
-    m_incoming_stack.clear();
 }

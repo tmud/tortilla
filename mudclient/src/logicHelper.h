@@ -247,8 +247,8 @@ public:
         int stateid = recognizeState(state);
         if (stateid == LogicHelper::UPDATE_ALL)
         {
-            str->assign(L"Все элементы (all)");
-            str->append(stateStrEx(getState(LogicHelper::UPDATE_ACTIONS)));
+            str->assign(L"Все эхо-уведомления (all)");
+            str->append(stateStr(getState(LogicHelper::UPDATE_ACTIONS)));
             removeLastRN(str);
             return;
         }
@@ -258,7 +258,7 @@ public:
             if (stateid == ids[i])
             { 
                 str->assign(cmds[i]);
-                str->append(stateStrEx(getState(stateid)));
+                str->append(stateStr(getState(stateid)));
                 removeLastRN(str);
                 break;
             }
@@ -268,12 +268,7 @@ public:
 private:
     const tchar* stateStr(int state)
     {
-        return (state ? L" - Вкл \r\n" : L"\r\n"); // L" - Выкл \r\n");
-    }
-
-    const tchar* stateStrEx(int state)
-    {
-        return (state ? L" - Вкл \r\n" : L" - Выкл \r\n");
+        return (state ? L" - Вкл\r\n" : L" - Выкл\r\n");
     }
 
     int recognizeValue(const tstring& value)

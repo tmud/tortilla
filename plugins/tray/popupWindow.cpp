@@ -137,7 +137,17 @@ void PopupWindow::calcDCSize()
     assert(m_font);
     CDC dc(GetDC());
     HFONT oldfont = dc.SelectFont(*m_font);
-    GetTextExtentPoint32(dc, m_text.c_str(), m_text.length(), &m_dc_size);
+    CSize size(0, 0);
+    m_dc_size = size;
+    for (int i = 0, e=m_text.size(); i<e; ++i)
+    {
+        const std::wstring& t = m_text[i];
+        if (t.empty()) continue;
+        GetTextExtentPoint32(dc, t.c_str(), t.length(), &size);
+        if (size.cx > m_dc_size.cx)
+            m_dc_size.cx = size.cx;
+    }
+    m_dc_size.cy = m_text.size() * size.cy;
     dc.SelectFont(oldfont);
 }
 
@@ -153,9 +163,6 @@ void PopupWindow::fillSrcDC()
     HFONT old_font = pdc.SelectFont(*m_font);
     pdc.SetBkColor(m_animation.bkgnd_color);
     pdc.SetTextColor(m_animation.text_color);
-    pdc.DrawText(m_text.c_str(), m_text.length(), &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    pdc.SelectFont(old_font);
-
     CPen p;
     p.CreatePen(PS_SOLID, 2, m_animation.text_color);
     HPEN old = pdc.SelectPen(p);
@@ -165,6 +172,23 @@ void PopupWindow::fillSrcDC()
     pdc.LineTo(rc.left+1, rc.bottom-1);
     pdc.LineTo(rc.left+1, rc.top);
     pdc.SelectPen(old);
+
+    int count = m_text.size();
+    if (count > 0)
+    {
+        rc.left = 4; rc.right-=4;
+        int dy = (m_dc_size.cy / count);
+        rc.top = (sz.cy - m_dc_size.cy) / 2;
+        rc.bottom = rc.top + dy;
+        for (int i=0;i<count;++i)
+        {
+            const std::wstring &t = m_text[i];
+            pdc.DrawText(t.c_str(), t.length(), &rc, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+            rc.top = rc.bottom;
+            rc.bottom = rc.top + dy;
+        }
+    }
+    pdc.SelectFont(old_font);
 }
 
 void PopupWindow::setAlpha(float a)

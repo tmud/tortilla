@@ -10,6 +10,7 @@ struct luaT_userdata
 };
 
 const char* metatables[] = { "window", "viewdata", "activeobjects", "panel", "render", "pen", "brush", "font", "pcre", "image", "trigger", "viewstring" };
+std::vector<std::string> types;
 
 void getmetatable(lua_State *L, int type)
 {
@@ -18,9 +19,111 @@ void getmetatable(lua_State *L, int type)
         type = type - LUAT_WINDOW;
         luaL_getmetatable(L, metatables[type]);
     }
-    else{
-        lua_pushnil(L);
+    else
+    {
+        int index = type-(LUAT_LAST+1);
+        int count = types.size();
+        if (index >= 0 && index < count) {
+            luaL_getmetatable(L, types[index].c_str());
+        }
+        else {
+            lua_pushnil(L);
+        }
     }
+}
+
+const wchar_t* lua_types_str[] = {L"nil", L"bool", L"lightud", L"number", L"string", L"table", L"function", L"userdata", L"thread"  };
+int luaT_push_args(lua_State *L, const char* func)
+{
+    int n = lua_gettop(L);
+    lua_Debug ar;  lua_getstack(L, 1, &ar); lua_getinfo(L, "nSl", &ar);
+    std::wstring log( TA2W(ar.short_src) );
+    log.append(L" ");
+    log.append( TA2W(func) );
+    wchar_t buffer[16];
+    if (ar.currentline > 0)
+    {
+        log.append(L":");
+        _itow(ar.currentline, buffer, 10);
+        log.append(buffer);
+    }
+    log.append(L": (");
+    _itow(n, buffer, 10);
+    log.append(buffer);
+    log.append(L"):");
+    for (int i = 1; i <= n; ++i)
+    {
+        int t = lua_type(L, i);
+        if (t >= 0 && t < LUA_NUMTAGS)
+        {
+            bool known_user_data = false;
+            if (t == LUA_TUSERDATA)
+            {
+                luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, i);
+                if (o && o->type >= LUAT_WINDOW && o->type <= LUAT_LAST)
+                {
+                    int ti = o->type - LUAT_WINDOW;
+                    TA2W mt(metatables[ti] );
+                    log.append(mt);
+                    known_user_data = true;
+                }
+            }
+            if (!known_user_data)
+                log.append(lua_types_str[t]);
+        }
+        else 
+        {
+            log.append(L"unknown");
+        }
+        if (i != n) log.append(L",");
+    }
+    luaT_pushwstring(L, log.c_str());
+    return 1;
+}
+
+int luaT_regtype(lua_State *L, const char* type_name)
+{
+    int count = LUAT_LAST - LUAT_WINDOW + 1;
+    for (int i=0;i<count;++i) 
+    {
+        if (!strcmp(type_name, metatables[i]))
+            return 0;    
+    }
+    for (int i=0,e=types.size();i<e;++i)
+    {
+        if (!types[i].compare(type_name))
+            return 0;
+    }
+    luaL_getmetatable(L, type_name);
+    bool result =(lua_istable(L, -1));
+    lua_pop(L, 1);
+    if (result)     // table exist
+        return 0;
+    types.push_back(type_name);
+    int id = types.size() + LUAT_LAST;
+    return id;
+}
+
+const char* luaT_typename(lua_State* L, int index)
+{
+    if (!lua_isuserdata(L, index))
+        return lua_typename(L, lua_type(L, index));
+    luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, index);
+    if (o && o->type >= LUAT_WINDOW && o->type <= LUAT_LAST)
+    {
+        int ti = o->type - LUAT_WINDOW;
+        return metatables[ti];
+    }
+    if (o)
+    {
+        int type = o->type;
+        int index = type-(LUAT_LAST+1);
+        int count = types.size();
+        if (index >= 0 && index < count) {
+            return types[index].c_str();
+        }
+    }
+    return "unknown";
 }
 
 bool luaT_run(lua_State *L, const char* func, const char* op, ...)
@@ -169,10 +272,7 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))
     {
         if (lua_isstring(L, -1))
-        {
-            std::wstring error(luaT_towstring(L, -1));
-            base::log(L, error.c_str());
-        }
+            base::log(L, lua_toerror(L));
         return false;
     }
     return true;
@@ -245,19 +345,6 @@ bool luaT_isobject(lua_State* L, int type, int index)
         return false;
     luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, index);
     return (o->type == type) ? true : false;
-}
-
-const char* luaT_typename(lua_State* L, int index)
-{
-    if (!lua_isuserdata(L, index))
-        return lua_typename(L, lua_type(L, index));
-    luaT_userdata *o = (luaT_userdata*)lua_touserdata(L, index);
-    if (o && o->type >= LUAT_WINDOW && o->type <= LUAT_LAST)
-    {
-        int ti = o->type - LUAT_WINDOW;
-        return metatables[ti];
-    }
-    return "unknown_ud";
 }
 
 bool luaT_dostring(lua_State *L, const wchar_t* script_text)
