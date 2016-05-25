@@ -53,6 +53,7 @@ private:
         attach(&m_dark_room, IDC_EDIT_DARK_ROOM, &propData->dark_room);
 
         CenterWindow(GetParent());
+        SetFocus();
         return 0;
     }
 

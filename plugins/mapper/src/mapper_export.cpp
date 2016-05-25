@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.01");
+    luaT_pushwstring(L, L"1.0");
     return 1;
 }
 
@@ -91,11 +91,13 @@ int init(lua_State *L)
     if (rc.right == 0) rc.right = 400; // requeires for splitter inside map window (if parent window hidden)
     HWND res = m_mapper_window->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);  
     m_parent_window.attach(res);
+    m_parent_window.block(L"left,right,top,bottom");
  
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
     //todo m_mapper_window->loadMaps(L);
+
     return 0;
 }
 
