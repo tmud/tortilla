@@ -587,6 +587,7 @@ local t = {...} -- правильное написание
 <div class="cmd">bool deleteString()</div> - удаляет текущую строку.
 <div class="cmd">bool deleteStrings(const std::vector&lt;int&gt;&amp; sv)</div> - удаляет набор строк по их индексам.
 <div class="cmd">void deleteAllStrings()</div> - удаляет все строки.
+<div class="cmd">bool dropString()</div> - помечает текущую строку для удаления (не будет отображена в клиенте), но может быть обработана другими плагинами.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом.
 <div class="cmd">bool find(Pcre* p[, int from])</div> - ищет строку по регулярному выражению. Если строка найдена, то она становиться текущей.
 Можно указать с какой строки нужно начинать поиск.
@@ -1287,6 +1288,7 @@ render:rect(r2)
 <div class="cmd">bool deleteString()</div> - удаляет строку.
 <div class="cmd">bool deleteStrings(t)</div> - удаляет набор строк по индексам из таблицы.
 <div class="cmd">void deleteAllStrings()</div> - удаляет все строки.
+<div class="cmd">bool dropString()</div> - помечает текущую строку для удаления (не будет отображена в клиенте), но может быть обработана другими плагинами.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом.
 <div class="cmd">viewstring createRef()</div> - создает копию текущей строки, как отдельный объект, см. <a href="#viewstring" class="cmd">viewstring</a>.
 <div class="cmd">bool find(pcre regexp [,int from])</div> - ищет в массиве строк <div class="cmd">viewdata</div> строку, которая совпадает с регулярным выражением. 

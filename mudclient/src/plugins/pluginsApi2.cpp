@@ -777,6 +777,20 @@ int vd_insertString(lua_State *L)
     return vd_createStringEx(L, L"viewdata:insertString", 0);
 }
 
+int vd_dropString(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *s = pdata->getselected();
+        if (s)
+            s->dropped = true;
+        lua_pushboolean(L, s ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:dropString");
+}
+
 int vd_deleteString(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -1167,6 +1181,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "copyBlock", vd_copyBlock);
     regFunction(L, "deleteString", vd_deleteString);
     regFunction(L, "deleteStrings", vd_deleteStrings);
+    regFunction(L, "dropString", vd_dropString);
     regFunction(L, "deleteAllStrings", vd_deleteAllStrings);
     regFunction(L, "createString", vd_createString);
     regFunction(L, "insertString", vd_insertString);

@@ -37,7 +37,7 @@ void LogicProcessor::processStackTick()
 
     if (!m_connected)
     {
-        printStack(FROM_TIMER);
+        printStack(FROM_TIMER|FROM_STACK);
         return;
     }
 
@@ -46,12 +46,12 @@ void LogicProcessor::processStackTick()
     MudViewString *last = m_pHost->getLastString(0);
     if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
             return;
-    printStack(FROM_TIMER);
+    printStack(FROM_TIMER|FROM_STACK);
 }
  
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
-    if (window == 0 /*&& m_prompt_mode != OFF*/ && (flags & (GAME_LOG | GAME_CMD)) && !(flags & FROM_STACK))
+    if (window == 0 && m_prompt_mode != OFF && (flags & (GAME_LOG | GAME_CMD)) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
        if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
@@ -148,7 +148,11 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 
     if (window == 0 && (flags & (GAME_CMD|GAME_LOG)) && !(flags & FROM_STACK))
     {
-        printStack();
+        MudViewString *last = m_pHost->getLastString(0);
+        if (last && (last->prompt || last->system || last->gamecmd) && !m_incoming_stack.empty())
+        {
+            printStack();
+        }
     }
 
     m_pHost->accLastString(window, &parse_data);
@@ -196,7 +200,11 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
     {
         MudViewString *s = parse_data.strings[i];
-        if (s->prompt) { p_exist = true; }
+        if (s->prompt) {
+            m_prompt_counter = 0;
+            m_prompt_mode = IACGA;
+            p_exist = true; 
+        }
         if (s->gamecmd || s->prompt || s->system || s->triggered) {
             last_game_cmd.set(i);
             continue; 
@@ -219,7 +227,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
 
     if (!p_exist)
     {
-       if (m_prompt_mode == USER)
+       if (m_prompt_mode == USER || m_prompt_mode == IACGA)
        {
            m_prompt_counter += parse_data.strings.size();
            if (m_prompt_counter > max_lines_without_prompt) {

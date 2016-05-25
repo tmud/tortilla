@@ -71,7 +71,7 @@ class LogicProcessor : public LogicProcessorMethods
         int flags;
     };
     std::vector<stack_el> m_incoming_stack;
-    enum PromptMode { OFF = 0, USER, UNIVERSAL };
+    enum PromptMode { OFF = 0, USER, UNIVERSAL, IACGA };
     PromptMode m_prompt_mode;
     int  m_prompt_counter;
     Pcre16 m_univ_prompt_pcre;

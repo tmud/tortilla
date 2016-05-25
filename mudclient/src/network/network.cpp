@@ -542,11 +542,22 @@ bool Network::process_mccp()
         m_pMccpStream->next_out = (Bytef*)m_mccp_buffer.getData();
         m_pMccpStream->avail_out = m_mccp_buffer.getSize();
 
+        /*tchar buffer[64];
+        swprintf(buffer, L"src avin=%d\r\n", m_pMccpStream->avail_in);
+        OutputDebugString(buffer);*/
+
         int error = inflate(m_pMccpStream, Z_NO_FLUSH);
+        /*swprintf(buffer, L"res avin=%d,avout=%d\r\n", m_pMccpStream->avail_in,  m_pMccpStream->avail_out);
+        OutputDebugString(buffer);
+        */
+
         if (error != Z_OK && error != Z_STREAM_END)
              return false;
 
         int size = m_mccp_buffer.getSize() - m_pMccpStream->avail_out;
+
+        //OUTPUT_BYTES(m_mccp_buffer.getData(), size, size, "mccp");
+
         m_input_data.write(m_mccp_buffer.getData(), size);
         m_totalDecompressed += size;
 

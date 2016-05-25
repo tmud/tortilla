@@ -681,6 +681,11 @@ public:
     {
         runcmd("deleteAllStrings");
     }
+    bool dropString()
+    {
+        runcmd("dropString");
+        return boolresult();
+    }
     void print(int view)
     {
         runcmdint("print", view);
