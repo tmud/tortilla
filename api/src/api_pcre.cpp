@@ -64,7 +64,8 @@ hpcre_string pcre_string(hpcre handle, int index)
     if (!handle) return NULL;
     Pcre16* h = (Pcre16*)handle;
     std::wstring text;
-    h->getString(index, &text);
+    if (!h->getString(index, &text))
+        return NULL;
     int len = (text.length()+1)*sizeof(wchar_t);
     strbuf b = strbuf_new(len);
     wcscpy((wchar_t*)strbuf_ptr(b), text.c_str());

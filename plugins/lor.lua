@@ -3,6 +3,7 @@
 local lor = {}
 local initialized = false
 local lor_catch_mode = false
+local lor_show_mode = false
 local lor_trigger, lor_filter, lor_import
 local lor_strings = {}
 local lor_dictonary
@@ -23,7 +24,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.02'
+  return '1.03'
 end
 
 local function output(s)
@@ -86,12 +87,14 @@ local function save_lor_strings()
 end
 
 local function print_object(s)
+  lor_show_mode = true
   local t = s:tokenize('\n')
   local vs = createViewString()
   for _,s in ipairs(t) do
     vs:setData(s)
     vs:print(0)
   end
+  lor_show_mode = false
 end
 
 local function find_lor_strings(id)
@@ -206,12 +209,12 @@ function lor.before(v, vd)
   if not lor_trigger then
     terminate("Ошибка в настройках.")
   end
-  if not lor_catch_mode then
+  if not lor_catch_mode and not lor_show_mode then
     if vd:find(lor_trigger) then
       lor_catch_mode = true
       local index,size = vd:getIndex(),vd:size()
       if index == size then return end
-      vd:select(index+1)
+      vd:select(index)
     end
   end
   if not lor_catch_mode then return end

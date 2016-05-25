@@ -2,10 +2,11 @@
 check = function(create_pcre_func)
   local r1 = create_pcre_func('^Предмет "(.*)",')
   local r2 = create_pcre_func('^За информацию о предмете.*')
+  local r3 = create_pcre_func('^Вы узнали следующее:')
   return function(vs)
     local s = vs:getText()
     if r1:find(s) then return vs, r1:get(1) end
-    if r2:find(s) then return end
+    if r2:find(s) or r3:find(s) then return end
     return vs
   end
 end

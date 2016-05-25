@@ -698,7 +698,7 @@ IMPL(password)
         if (!pass.empty())
         {
             tstring msg(L"*****\r\n");
-            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
+            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|NEW_LINE, 0);
             WCHAR br[2] = { 10, 0 };
             pass.append(br);
             sendToNetwork(pass);
@@ -713,7 +713,7 @@ IMPL(hide)
     if (p->size() != 0)
     {
         tstring msg(L"*****\r\n");
-        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
+        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|NEW_LINE, 0);
         WCHAR br[2] = { 10, 0 };
         tstring cmd(p->params());
         cmd.append(br);

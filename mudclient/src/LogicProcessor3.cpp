@@ -108,6 +108,11 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parse_data.update_prev_string = false;
     }
 
+    if (flags & NEW_LINE)
+    {
+        parse_data.update_prev_string = false;
+    }
+
 #ifdef MARKERS_IN_VIEW       // для отладки
     parseDataStrings &p = parse_data.strings;
     MARKPROMPTUNDERLINE(p);  // метка на prompt
