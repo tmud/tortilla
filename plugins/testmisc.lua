@@ -3,7 +3,8 @@
 
 local testmisc = {}
 function testmisc.name()
-  return 'Тесты команд и скриптов'
+  -- плагин отключен в клиенте
+  -- return 'Тесты команд и скриптов'
 end
 
 function testmisc.version()
