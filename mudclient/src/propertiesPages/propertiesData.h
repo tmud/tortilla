@@ -490,14 +490,16 @@ struct PropertiesData
 
     int      soft_scroll;
 
-    RECT main_window;
+    PropertiesDisplayManager displays;
+
+    /*RECT main_window;
     int  main_window_fullscreen;
     int  display_width;
     int  display_height;
     std::vector<OutputWindow> windows;
 
     RECT find_window;
-    int  find_window_visible;
+    int  find_window_visible;*/ //todo
 
     tstring title;        // name of main window (dont need to save)
 
@@ -534,7 +536,7 @@ struct PropertiesData
 
     void initMainWindow()
     {
-        main_window_fullscreen = 0;
+        /*main_window_fullscreen = 0;
         display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
         display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
@@ -545,16 +547,16 @@ struct PropertiesData
         main_window.left = (primary_width - width) / 2;
         main_window.top  = (primary_height - height) / 2;
         main_window.right = main_window.left + width;
-        main_window.bottom = main_window.top + height;
+        main_window.bottom = main_window.top + height;*/ //todo
     }
 
     void initFindWindow()
     {
-        find_window.left = 200;
+        /*find_window.left = 200;
         find_window.top = 100;
         find_window.right = find_window.left;
         find_window.bottom = find_window.top;
-        find_window_visible = 0;
+        find_window_visible = 0;*/
     }
 
     void initAllDefault()
@@ -715,7 +717,7 @@ private:
 
     void initOutputWindows()
     {
-        windows.clear();
+        /*windows.clear();
         for (int i=0; i<OUTPUT_WINDOWS; ++i) 
         {
             OutputWindow w;
@@ -732,6 +734,6 @@ private:
                 w.name.assign(buffer);
             }
             windows.push_back(w);
-        }
+        }*/ //todo
     }
 };
