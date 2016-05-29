@@ -36,6 +36,7 @@ xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y
 xcopy ..\modules\voice.dll tortilla\modules /Y
 xcopy ..\modules\extra.dll tortilla\modules /Y
+xcopy ..\modules\trprompt.lua tortilla\modules /Y
 
 xcopy ..\plugins\jmc3import.dll tortilla\plugins /Y
 xcopy ..\plugins\tray.dll tortilla\plugins /Y

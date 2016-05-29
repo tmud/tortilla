@@ -6,8 +6,9 @@
 
 local function filter(vs)
   -- функция фильтр для отбора нужных строк, vs - это viewstring
-  -- false - строку отбросить, true - строку сохранить
-  return true
+  -- 1 результат - false - строку не сохранять в триггере, true - строку сохранить/запомнить.
+  -- 2 результат - false - строку оставить в исходном окне, true - удалить (дропнуть) из исходного окна.
+  return true, false
 end
 
 local t
@@ -49,7 +50,11 @@ function prompt_trigger(key_string, filter_function)
         self.collect_mode = true
         self.strings = {}
         local vs = vd:createRef()
-        if self.filter and not self.filter(vs) then vs = nil end
+        if self.filter then
+          local ref,drop = self.filter(vs)
+          if not ref then vs = nil end
+          if drop then vd:dropString() end
+        end
         if vs then
           local s = self.strings
           s[#s+1] = vs
@@ -71,7 +76,11 @@ function prompt_trigger(key_string, filter_function)
         return true
       end
       local vs = vd:createRef()
-      if self.filter and not self.filter(vs) then vs = nil end
+      if self.filter then
+        local ref,drop = self.filter(vs)
+        if not ref then vs = nil end
+        if drop then vd:dropString() end
+      end
       if vs then
         local s = self.strings
         s[#s+1] = vs

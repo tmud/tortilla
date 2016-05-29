@@ -12,9 +12,13 @@ function testtr.version()
 end
 
 local t
+
+-- Фильтр-функция, возвращает 2 булевских значения
+-- 1 - запомнить строку триггером или нет
+-- 2 - отбросить (дропнуть) строку или нет из основного окна
 local function filter(vs)
-  if vs:getTextLen() == 0 then return false end
-  return true
+  if vs:getTextLen() == 0 then return false, false end
+  return true, true
 end
 
 function testtr.init()
