@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "propertiesData.h"
 #include "propertiesDisplay.h"
 
 PropertiesDisplay::PropertiesDisplay() : display_width(0), display_height(0), full_screen(0), find_window_visible(0)
@@ -119,7 +120,6 @@ void PropertiesDisplay::initOutputWindows()
         client_windows.push_back(w);
     }
 }
-
 
 bool PropertiesDisplay::loadWindow(xml::node parent, OutputWindow* w)
 {

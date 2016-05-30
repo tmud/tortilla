@@ -1,5 +1,4 @@
 #pragma once
-#include "propertiesData.h"
 
 class PropertiesDisplay
 {

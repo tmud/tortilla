@@ -161,9 +161,11 @@ bool PropertiesManager::loadProfileData()
     loadArray(sd, L"timers/timer", true, true, &m_propData.timers);
     loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
     loadArray(sd, L"variables/var", true, false, &m_propData.variables);
-    m_propData.plugins.clear();
 
-    bool default_window = false;
+    m_propData.displays.load(sd);
+
+    //todo
+    /*bool default_window = false;
     xml::request mw(sd, L"mainwindow");
     if (mw.size())
     {
@@ -210,6 +212,7 @@ bool PropertiesManager::loadProfileData()
     }
 
     // load plugins and windows
+    m_propData.plugins.clear();
     xml::request pp(sd, L"plugins/plugin");
     for (int i = 0, e = pp.size(); i < e; ++i)
     {
@@ -234,7 +237,7 @@ bool PropertiesManager::loadProfileData()
             }
             m_propData.plugins.push_back(pd);
         }
-    }
+    }*/
 
     xml::request msrq(sd, L"messages");
     if (msrq.size() == 1)
@@ -324,7 +327,10 @@ bool PropertiesManager::saveProfileData()
     xml::node vars = sd.createsubnode(L"variables");
     saveArray(vars, L"var", m_propData.variables);
 
-    xml::node windows = sd.createsubnode(L"windows");
+    m_propData.displays.save(sd);
+
+    //todo
+    /*xml::node windows = sd.createsubnode(L"windows");
     for (int i=0,e=m_propData.windows.size(); i<e; ++i)
         saveWindow(windows, m_propData.windows[i]);
 
@@ -351,7 +357,7 @@ bool PropertiesManager::saveProfileData()
             for (int j = 0, je = pd.windows.size(); j < je; ++j)
                 saveWindow(pw, pd.windows[j]);
         }
-    }
+    }*/
 
     xml::node ms = sd.createsubnode(L"messages");
     PropertiesData::message_data& d = m_propData.messages;

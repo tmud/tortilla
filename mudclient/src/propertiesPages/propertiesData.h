@@ -413,6 +413,8 @@ public:
     std::vector<PropertiesDlgPageState> pages;
 };
 
+#include "propertiesDisplay.h"
+
 struct PropertiesData
 {
     PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
