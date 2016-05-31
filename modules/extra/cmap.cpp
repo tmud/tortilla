@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "phrase.h"
+#include <memory>
 
 const DWORD max_db_filesize = 8 * 1024 * 1024; // 8mb
 std::map<lua_State*, int> m_dict_types;
@@ -81,9 +82,9 @@ public:
     DWORD start_data;
     DWORD written;
 
-    bool write(const tstring &path, const tstring& name, const tstring& data)
+    bool write(const tstring &path, const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
-        hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);                             
+        hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
         DWORD hsize = 0;
@@ -93,7 +94,14 @@ public:
         if (SetFilePointer(hfile, size, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
             return false;
         DWORD written1 = 0;
-        tstring tmp(name); tmp.append(L"\n");
+        tstring tmp(name);
+        tmp.append(L";");
+        for (int i=0,e=tegs.size();i<e;++i) 
+        {
+            tmp.append(tegs[i]);
+            tmp.append(L";");
+        }
+        tmp.append(L"\n");
         if (!write_tofile(hfile, tmp, &written1))
             return error(size);
         DWORD written2 = 0;
@@ -147,7 +155,8 @@ class MapDictonary
         DWORD data_in_file;
         DWORD datalen_in_file;
     };
-    typedef std::vector<index> indexes;
+    typedef std::shared_ptr<index> index_ptr;
+    typedef std::vector<index_ptr> indexes;
     std::unordered_map<tstring, indexes> m_indexes;
     typedef std::unordered_map<tstring, indexes>::iterator iterator;
     int m_current_file;
@@ -171,7 +180,6 @@ public:
     void wipe()
     {
         m_current_file = -1;
-        m_indexes.clear();
         for (int i=0,e=m_files.size(); i<e; ++i)
         {
             DeleteFile(m_files[i].path.c_str());
@@ -179,7 +187,7 @@ public:
         m_files.clear();
     }
 
-    int add(const tstring& name, const tstring& data)
+    int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
         tstring n(name);
         tstring_tolower(&n);
@@ -188,10 +196,12 @@ public:
         {
             return MD_EXIST;
         }
-        index ix = add_tofile(name, data);
-        if (ix.file == -1)
+        index_ptr ix = add_tofile(name, data, tegs);
+        if (ix->file == -1)
+        {
             return MD_ERROR;
-        ix.name = name;
+        }
+        ix->name = name;
         add_index(ix);
         return MD_OK;
     }
@@ -214,7 +224,7 @@ public:
             indexes &ix = it->second;
             for (int i=0,e=ix.size()-1;i<=e;++i)
             {
-                int fileid = ix[i].file;
+                int fileid = ix[i]->file;
                 fileinfo& fi = m_files[fileid];
                 filereader& fr = open_files[fileid];
                 if (!fr.open(fi.path, fi.size))
@@ -223,7 +233,7 @@ public:
                     continue;
                 }
 
-                bool result = fr.read(ix[i].data_in_file, ix[i].datalen_in_file, &buffer);
+                bool result = fr.read(ix[i]->data_in_file, ix[i]->datalen_in_file, &buffer);
                 if (!result)
                 {
                     fileerror(fi.path);
@@ -233,7 +243,7 @@ public:
                 buffer.keepalloc(size+1);
                 char *p = buffer.getData();
                 p[size] = 0;
-                const tstring& name = ix[i].name;
+                const tstring& name = ix[i]->name;
                 values->operator[](name) = tstring(TU2W(p));
             }
         }
@@ -241,9 +251,9 @@ public:
     }
 
 private:
-    void add_index(index ix)
+    void add_index(index_ptr ix)
     {
-        tstring n(ix.name);
+        tstring n(ix->name);
         tstring_tolower(&n);
         Phrase p(n);
         int count = p.len();
@@ -273,7 +283,7 @@ private:
           add_toindex(n, ix);
         }
     }
-    void add_toindex(const tstring& t, index ix)
+    void add_toindex(const tstring& t, index_ptr ix)
     {
         iterator it = m_indexes.find(t);
         if (it == m_indexes.end())
@@ -285,7 +295,7 @@ private:
         it->second.push_back(ix);
     }
 
-    index add_tofile(const tstring& name, const tstring& data)
+    index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
         if (m_current_file != -1) {
            fileinfo &f = m_files[m_current_file];
@@ -301,7 +311,7 @@ private:
             }
         }
 
-        index ix;
+        index_ptr ix = std::make_shared<index>();
         if (m_current_file == -1)
         {
             int idx = m_files.size();
@@ -323,12 +333,12 @@ private:
         }
         fileinfo &f = m_files[m_current_file];
         filewriter fw;
-        if (!fw.write(f.path, name, data))
+        if (!fw.write(f.path, name, data, tegs))
            return ix;
         f.size += fw.written;
-        ix.file = m_current_file;
-        ix.data_in_file = fw.start_data;
-        ix.datalen_in_file = fw.written - (fw.start_data - fw.start_name);
+        ix->file = m_current_file;
+        ix->data_in_file = fw.start_data;
+        ix->datalen_in_file = fw.written - (fw.start_data - fw.start_name);
         return ix;
     }
 
@@ -371,10 +381,10 @@ private:
                 continue;
             }
 
-            index ix;
-            ix.file = i;
-            ix.data_in_file = 0;
-            ix.datalen_in_file = 0;
+            index_ptr ix = std::make_shared<index>();
+            ix->file = i;
+            ix->data_in_file = 0;
+            ix->datalen_in_file = 0;
 
             DWORD start_pos = 0;
             u8string str, name;
@@ -386,14 +396,15 @@ private:
                     find_name_mode = true;
                     if (!name.empty())
                     {
-                        if (ix.data_in_file != 0)
+                        if (ix->data_in_file != 0)
                         {
-                            ix.datalen_in_file = lf.getPosition()-ix.data_in_file;
-                            ix.name = TU2W(name.c_str());
+                            ix->datalen_in_file = lf.getPosition()-ix->data_in_file;
+                            tstring name( TU2W(name.c_str()) );
+                            ix->name = name;
                             add_index(ix);
                         }
-                        ix.data_in_file = 0;
-                        ix.datalen_in_file = 0;
+                        ix->data_in_file = 0;
+                        ix->datalen_in_file = 0;
                         name.clear();
                     }
                     continue;
@@ -402,7 +413,7 @@ private:
                 {
                     name.assign(str);
                     find_name_mode = false;
-                    ix.data_in_file = lf.getPosition();
+                    ix->data_in_file = lf.getPosition();
                 }
             }
 
@@ -412,12 +423,24 @@ private:
 
 int dict_add(lua_State *L)
 {
-    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING) || 
+        luaT_check(L, 4, get_dict(L), LUA_TSTRING, LUA_TSTRING, LUA_TTABLE))
     {
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
         tstring info(luaT_towstring(L, 3));
-        int result = d->add(id, info);
+        std::vector<tstring> tegs;
+        if (lua_gettop(L) == 4)
+        {
+            lua_pushnil(L);
+            while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+            {
+                tstring teg(luaT_towstring(L, -1));
+                tegs.push_back(teg);
+                lua_pop(L, 1);
+            }
+        }
+        int result = d->add(id, info, tegs);
         if (result == MapDictonary::MD_OK)
         {
             lua_pushboolean(L, 1);

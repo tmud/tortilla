@@ -4,7 +4,7 @@ local lor = {}
 local initialized = false
 local lor_catch_mode = false
 local lor_show_mode = false
-local lor_trigger, lor_filter, lor_import
+local lor_trigger, lor_check, lor_drop, lor_tegs, lor_import
 local lor_strings = {}
 local lor_dictonary
 local lor_cache = {}
@@ -24,7 +24,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.03'
+  return '1.04'
 end
 
 local function output(s)
@@ -38,21 +38,39 @@ end
 function lor.init()
   initialized = false
   local t = loadTable("config.lua")
+  if t and type(t.init) == 'function' then
+    t.init()
+  end
   if not t or type(t.key) ~= 'string' or type(t.check) ~= 'function' then
-    terminate("Ошибка в настройках.")
+    terminate("Ошибка в настройках. См. справку.")
   end
   lor_trigger = createPcre(t.key)
   if not lor_trigger then
     terminate("Ошибка в настройках, в ключевой строке key.")
   end
-  lor_filter = t.check(createPcre)
-  if type(lor_filter) ~= 'function' then
+  lor_check = t.check()
+  if type(lor_check) ~= 'function' then
     terminate("Ошибка в настройках, в параметре check должна быть возвращена функция.")
   end
+  lor_tegs = nil
+  if type(t.tegs) == 'function' then
+    lor_tegs = t.tegs()
+    if type(lor_tegs) ~= 'function' then
+      terminate("Ошибка в настройках, в параметре tegs должна быть возвращена функция.")
+    end
+  end
+  lor_import = nil
   if type(t.import) == 'function' then
-    lor_import = t.import(createPcre)
+    lor_import = t.import()
     if type(lor_import) ~= 'function' then
       terminate("Ошибка в настройках, в параметре import должна быть возвращена функция.")
+    end
+  end
+  lor_drop = nil
+  if type(t.drop) == 'function' then
+    lor_drop = t.drop()
+    if type(lor_drop) ~= 'function' then
+      terminate("Ошибка в настройках, в параметре drop должна быть возвращена функция.")
     end
   end
   if extra and type(extra.dictonary) == 'function' then
@@ -70,16 +88,22 @@ local function save_lor_strings()
     lor_strings = {}
     return false, "Не получено имя предмета, сохранить невозможно."
   end
+  if lor_drop and lor_drop(lor_strings.name) then return false end
   local info = {}
+  local tegs = {}
   for k,s in ipairs(lor_strings) do
+    if lor_tegs then
+      local teg = lor_tegs(s:getText())
+      if teg then tegs[#tegs+1] = teg end
+    end
     info[k] = s:getData()
   end
-  local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'))
+  local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'), tegs)
   local name = lor_strings.name..'.'
   lor_strings = {}
   if not res then
     if err == 'exist' then
-      return false, 'Предмет уже существует в базе: '..name
+      return false, 'Предмет уже есть в базе: '..name
     end
     return false, "Предмет не добавлен в базу из-за ошибки: "..name
   end
@@ -235,7 +259,7 @@ function lor.before(v, vd)
     if not vd:isSystem() and not vd:isGameCmd() and vd:getTextLen() > 0 then
       local ref = vd:createRef()
       local item
-      ref, item = lor_filter(ref)
+      ref, item = lor_check(ref)
       if ref then
         lor_strings[#lor_strings+1] = ref
         if item then lor_strings.name = item end

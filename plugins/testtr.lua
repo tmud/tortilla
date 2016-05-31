@@ -8,7 +8,7 @@ function testtr.description()
   return 'Плагин для тестирования модуля prompt_trigger (trprompt.lua).'
 end
 function testtr.version()
-  return '-'
+  --off return '-'
 end
 
 local t

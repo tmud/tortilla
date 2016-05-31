@@ -1,8 +1,8 @@
 ﻿key = "^Предмет '.*', Тип предмета: .*"
-check = function(create_pcre_func)
-  local r1 = create_pcre_func("^Предмет '(.*)', Тип предмета: .*")
-  local r2 = create_pcre_func('^.* состоянии.')
-  local r3 = create_pcre_func('^Вес:.*(Таймер: [0-9]+, ).*')
+check = function()
+  local r1 = createPcre("^Предмет '(.*)', Тип предмета: .*")
+  local r2 = createPcre('^.* состоянии.')
+  local r3 = createPcre('^Вес:.*(Таймер: [0-9]+, ).*')
   return function(vs)
     local s = vs:getText()
     if r1:find(s) then return vs, r1:get(1) end
