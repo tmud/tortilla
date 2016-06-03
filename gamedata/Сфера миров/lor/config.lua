@@ -1,9 +1,4 @@
-﻿local drop_table =
-{
-'малая доска',
-'большая доска',
-'доска новичков'
-}
+﻿local drop_index = {}
 
 key = "^Предмет '.*', Тип предмета: .*"
 check = function()
@@ -12,7 +7,11 @@ check = function()
   local r3 = createPcre('^Вес:.*(Таймер: [0-9]+, ).*')
   return function(vs)
     local s = vs:getText()
-    if r1:find(s) then return vs, r1:get(1) end
+    if r1:find(s) then
+      local name = r1:get(1)
+      if drop_index[name] then return false end
+      return vs, name
+    end
     if r2:find(s) then return end
     if r3:find(s) then
       local b = r3:first(1)
@@ -25,20 +24,19 @@ check = function()
   end
 end
 
-local drop_index
-drop = function()
-  return function (s)
-    if drop_index[s] then return true end
-    return false
-  end
-end
-
 tegs = function()
   local r1 = createPcre("Материал: (.*)")
   return function(s)
     if r1:find(s) then return r1:get(1) end
   end
 end
+
+local drop_table =
+{
+'малая доска',
+'большая доска',
+'доска новичков'
+}
 
 init = function()
   drop_index = {}

@@ -1,10 +1,11 @@
 ﻿-- lor
 -- Плагин для Tortilla mud client
+
 local lor = {}
 local initialized = false
 local lor_catch_mode = false
 local lor_show_mode = false
-local lor_trigger, lor_check, lor_drop, lor_tegs, lor_import
+local lor_trigger, lor_check, lor_tegs, lor_import
 local lor_strings = {}
 local lor_dictonary
 local lor_cache = {}
@@ -13,13 +14,17 @@ function lor.name()
   return 'База предметов'
 end
 function lor.description()
+  local p = props.cmdPrefix()
   local s = {
   'Плагин сохраняет в базе информацию о предметах, а также позволяет в этой базе искать их.',
   'Лор-информация собирается автоматически, когда предмет изучается в игре.',
   'Для поиска используется команда лор <имя предмета>, можно использовать сокращения.',
-  'Возможен импорт в базу из текстовых файлов командой лоримпорт <имя файла>, но для',
-  'этой возможности нужна своя настройка в конфигурационном файле плагина.',
-  'Импорт работает с кодировкой win. См. справку по плагину: '..props.cmdPrefix()..'help lor'
+  'Возможен импорт в базу из текстовых файлов командой '..p..'lorimport <имя файла>, но для',
+  'этой возможности нужна своя настройка в конфигурационном файле плагина. Импорт работает с ',
+  'кодировкой win. Также можно искать предметы по тегам. Для пересчета тегов всей базы',
+  'используется команда '..p..'lorupdate. Выполнение команды можент занять заметное время.',
+  'Для поддержки тегов нужна своя настройка в конфигурационном файле плагина.',
+  'См. справку по плагину: '..p..'help lor.'
   }
   return table.concat(s, '\r\n')
 end
@@ -30,7 +35,6 @@ end
 local function output(s)
   _G.print(s)
 end
-
 local function print(s)
   _G.print('[lor]: '..s)
 end
@@ -66,13 +70,6 @@ function lor.init()
       terminate("Ошибка в настройках, в параметре import должна быть возвращена функция.")
     end
   end
-  lor_drop = nil
-  if type(t.drop) == 'function' then
-    lor_drop = t.drop()
-    if type(lor_drop) ~= 'function' then
-      terminate("Ошибка в настройках, в параметре drop должна быть возвращена функция.")
-    end
-  end
   if extra and type(extra.dictonary) == 'function' then
     local path = getPath("")
     lor_dictonary = extra.dictonary(path)
@@ -88,13 +85,22 @@ local function save_lor_strings()
     lor_strings = {}
     return false, "Не получено имя предмета, сохранить невозможно."
   end
-  if lor_drop and lor_drop(lor_strings.name) then return false end
   local info = {}
   local tegs = {}
   for k,s in ipairs(lor_strings) do
     if lor_tegs then
-      local teg = lor_tegs(s:getText())
-      if teg then tegs[#tegs+1] = teg end
+      local newtegs = lor_tegs(s:getText())
+      if newtegs then
+        if type(newtegs) == 'string' then
+          tegs[#tegs+1] = teg
+        elseif type(newtegs) == 'table' then
+          for _,t in pairs(newtegs) do
+            tegs[#tegs+1] = t
+          end
+        else
+          return false, "Ошибка при вызове функции tegs"
+        end
+      end
     end
     info[k] = s:getData()
   end
@@ -105,7 +111,8 @@ local function save_lor_strings()
     if err == 'exist' then
       return false, 'Предмет уже есть в базе: '..name
     end
-    return false, "Предмет не добавлен в базу из-за ошибки: "..name
+    local errtext = err and ' Ошибка: '..err..'.' or ''
+    return false, "Предмет не добавлен в базу из-за ошибки: "..name..errtext
   end
   return true, "Предмет добавлен в базу: "..name
 end
@@ -189,24 +196,10 @@ local function import(file)
 end
 
 function lor.gamecmd(t)
-  if t[1] ~= "лор" and t[1] ~= 'лоримпорт' then
-    return t
-  end
+  if t[1] ~= "лор" then return t end
   if not initialized then
     print("Ошибка в настройках.")
     return nil
-  end
-  if t[1] == 'лоримпорт' then
-    if not lor_import then
-      print("Ошибка в настройках.")
-      return nil
-    end
-    if not t[2] then
-      print("Укажите имя файла")
-    else
-      import(t[2])
-    end
-    return {}
   end
   local id = ""
   for k=2,#t do
@@ -226,6 +219,30 @@ function lor.gamecmd(t)
     find_lor_strings(id)
   end
   return {}
+end
+
+function lor.syscmd(t)
+  if t[1] == 'lorimport' then
+    if not lor_import then
+      print("Не заданы настройки для данной операции.")
+      return nil
+    end
+    if not t[2] then
+      print("Укажите имя файла")
+    else
+      import(t[2])
+    end
+    return {}
+  end
+  if t[1] == 'lorupdate' then
+    if not lor_tegs then
+      print("Не заданы настройки для данной операции.")
+      return nil
+    end
+    lor_dictonary:update(lor_tegs)
+    return {}
+  end
+  return t
 end
 
 function lor.before(v, vd)
@@ -263,6 +280,9 @@ function lor.before(v, vd)
       if ref then
         lor_strings[#lor_strings+1] = ref
         if item then lor_strings.name = item end
+      elseif ref == false then  -- false -> drop object
+        lor_catch_mode = false
+        break
       end
     end
   end

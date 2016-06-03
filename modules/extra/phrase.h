@@ -64,7 +64,11 @@ public:
               if (p1.size() < p2.size())
                   { result = false; break; }
               int len = p2.size();
-              int delta = p1.size() - len;
+              for (int i=0;i<len;++i) {
+                 if (p1[i] != p2[i])
+                  {  result = false; break; }
+              }
+              /*int delta = p1.size() - len;
               int compared = 0;
               for (int i=0;i<len;++i) {
                   if (p1[i] != p2[i]) break;
@@ -79,7 +83,7 @@ public:
                   if (notcompared >= compared*2) {
                       result = false; break;
                   }
-              }
+              }*/
         }
         return result;
     }

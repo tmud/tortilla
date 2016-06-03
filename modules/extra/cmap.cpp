@@ -140,7 +140,6 @@ private:
 
 class MapDictonary
 {
-    PhrasesList m_phrases;
     struct fileinfo
     {
         tstring path;
@@ -155,6 +154,7 @@ class MapDictonary
         DWORD data_in_file;
         DWORD datalen_in_file;
     };
+    PhrasesList m_phrases;
     typedef std::shared_ptr<index> index_ptr;
     typedef std::vector<index_ptr> indexes;
     std::unordered_map<tstring, indexes> m_indexes;
@@ -171,12 +171,16 @@ class MapDictonary
     }
 
 public:
-    MapDictonary(const tstring& dir, lua_State *pl) : m_current_file(-1), m_base_dir(dir), L(pl) {
+    MapDictonary(const tstring& dir, lua_State *pl) : m_current_file(-1), m_base_dir(dir), L(pl)
+    {
         buffer.alloc(4096);
         load_db();
     }
     ~MapDictonary() {}
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
+    void update()
+    {
+    }
     void wipe()
     {
         m_current_file = -1;
@@ -202,7 +206,9 @@ public:
             return MD_ERROR;
         }
         ix->name = name;
-        add_index(ix);
+        add_index(name, ix);
+        for (int i=0,e=tegs.size();i<e;++i)
+            add_index(tegs[i], ix);
         return MD_OK;
     }
 
@@ -251,9 +257,9 @@ public:
     }
 
 private:
-    void add_index(index_ptr ix)
+    void add_index(const tstring& name, index_ptr ix)
     {
-        tstring n(ix->name);
+        tstring n(name);
         tstring_tolower(&n);
         Phrase p(n);
         int count = p.len();
@@ -383,8 +389,6 @@ private:
 
             index_ptr ix = std::make_shared<index>();
             ix->file = i;
-            ix->data_in_file = 0;
-            ix->datalen_in_file = 0;
 
             DWORD start_pos = 0;
             u8string str, name;
@@ -399,12 +403,13 @@ private:
                         if (ix->data_in_file != 0)
                         {
                             ix->datalen_in_file = lf.getPosition()-ix->data_in_file;
-                            tstring name( TU2W(name.c_str()) );
-                            ix->name = name;
-                            add_index(ix);
+                            Tokenizer tk(TU2W(name.c_str()), L";");
+                            ix->name = tk[0];
+                            for (int i=0,e=tk.size();i<e;++i)
+                                add_index(tk[i], ix);
                         }
-                        ix->data_in_file = 0;
-                        ix->datalen_in_file = 0;
+                        ix = std::make_shared<index>();
+                        ix->file = i;
                         name.clear();
                     }
                     continue;
@@ -479,18 +484,16 @@ int dict_find(lua_State *L)
     return dict_invalidargs(L, "find");
 }
 
-/*int dict_remove(lua_State *L)
+int dict_update(lua_State *L)
 {
-    if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
-    {
-        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
-        tstring id(luaT_towstring(L, 2));
-        bool result = d->remove(id);
-        lua_pushboolean(L, result ? 1:0);
-        return 1;
-    }
-    return dict_invalidargs(L, "remove");
-}*/
+   if (luaT_check(L, 2, get_dict(L), LUA_TFUNCTION))
+   {
+       MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+       d->update();
+       return 0;
+   }
+   return dict_invalidargs(L, "update");
+}
 
 int dict_wipe(lua_State *L)
 {
@@ -513,6 +516,19 @@ int dict_gc(lua_State *L)
     return 0;
 }
 
+/*int dict_remove(lua_State *L)
+{
+    if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring id(luaT_towstring(L, 2));
+        bool result = d->remove(id);
+        lua_pushboolean(L, result ? 1:0);
+        return 1;
+    }
+    return dict_invalidargs(L, "remove");
+}*/
+
 int dict_new(lua_State *L)
 {
     if (!luaT_check(L, 1, LUA_TSTRING))
@@ -531,8 +547,8 @@ int dict_new(lua_State *L)
         luaL_newmetatable(L, "dictonary");
         regFunction(L, "add", dict_add);
         regFunction(L, "find", dict_find);
+        regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
-
         //regFunction(L, "remove", dict_remove);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
