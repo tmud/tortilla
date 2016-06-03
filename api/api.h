@@ -269,7 +269,6 @@ namespace base {
         }
         return false;
     }
-
     // createWindow, createPanel, pcre -> in classes below
 } // namespace base
 
@@ -415,7 +414,17 @@ class luaT_ViewString
     void *view_string;
 public:
     luaT_ViewString() : L(NULL), view_string(NULL) {}
-    void init(lua_State *pL, void *viewstring) { L = pL; view_string = viewstring; }
+    void init(lua_State *pL, void *viewstring) { L = pL; view_string = viewstring; }    
+    bool create(lua_State *pL)
+	{
+		if (!pL)
+            return false;
+		L = pL;
+		luaT_run(L, "createViewString", "");
+		view_string = luaT_toobject(L, -1);
+        if (!view_string) L = NULL;
+		return (view_string) ? true : false;
+	}
     void getText(std::wstring* str)
     {
         runcmd("getText");

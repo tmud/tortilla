@@ -138,6 +138,96 @@ private:
   }
 };
 
+class new_filewriter
+{
+    HANDLE hfile;
+    tstring m_path;
+    DWORD start_data;
+    DWORD written;
+
+public:
+    new_filewriter() : hfile(INVALID_HANDLE_VALUE), start_data(0), written(0) {}
+    ~new_filewriter() { close(); }
+    bool open(const tstring &path)
+    {
+        hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hfile == INVALID_HANDLE_VALUE)
+            return false;
+        m_path = true;
+        return true;
+    }
+    void close()
+    {
+        if (hfile!=INVALID_HANDLE_VALUE)
+            CloseHandle(hfile);
+        hfile = INVALID_HANDLE_VALUE;
+        start_data = 0;
+        written = 0;
+    }
+    void remove()
+    {
+        error();
+    }
+
+    struct WriteResult
+    {
+        DWORD start;
+        DWORD len;
+    };
+    bool write(const tstring& name, const MemoryBuffer& data, const std::vector<tstring>& tegs, WriteResult* r)
+    {
+        tstring tmp(name);
+        tmp.append(L";");
+        for (int i=0,e=tegs.size();i<e;++i) 
+        {
+            tmp.append(tegs[i]);
+            tmp.append(L";");
+        }
+        //tmp.append(L"\n");
+
+        start_data += written;
+        DWORD written1 = 0;
+        if (!write_tofile(hfile, tmp, &written1))
+            return error();
+        DWORD written2 = 0;
+        if (!write_tofile(hfile, data, &written2))
+            return error();
+        DWORD written3 = 0;
+        /*if (!write_tofile(hfile, L"\n\n", &written3))
+            return error();*/
+        written = written1 + written2 + written3;
+        if (r) {
+        r->len = written;
+        r->start = start_data;
+        }
+        return true;
+    }
+private:
+    bool error() 
+    {
+       close();
+       DeleteFile(m_path.c_str());
+       return false;
+    }
+    bool write_tofile(HANDLE hfile, const tstring& t, DWORD *written)
+    {
+        *written = 0;
+        u8string tmp(TW2U(t.c_str()));
+        DWORD towrite = tmp.length();
+        if (!WriteFile(hfile, tmp.c_str(), towrite, written, NULL) || *written!=towrite)
+            return false;
+        return true;
+    }
+    bool write_tofile(HANDLE hfile, const MemoryBuffer& t, DWORD *written)
+    {
+        *written = 0;
+        DWORD towrite = t.getSize();
+        if (!WriteFile(hfile, t.getData(), towrite, written, NULL) || *written!=towrite)
+            return false;
+        return true;
+    }
+};
+
 class MapDictonary
 {
     struct fileinfo
@@ -178,9 +268,181 @@ public:
     }
     ~MapDictonary() {}
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
-    void update()
+
+    bool update(const lua_ref& r, tstring *error)
     {
+        typedef std::set<index_ptr> indexes_set;
+        std::map<int, indexes_set> cat;
+        indexes_set empty;
+        for (int i=0,e=m_files.size(); i<e; ++i) {
+            cat[i] = empty;
+        }
+        iterator it = m_indexes.begin(), it_end = m_indexes.end();
+        for (; it!=it_end; ++it)
+        {
+            indexes &x = it->second;
+            for (int i=0,e=x.size();i<e;++i)
+            {
+                int file = x[i]->file;
+                indexes_set &c = cat[file];
+                c.insert(x[i]);
+            }
+        }
+
+        MemoryBuffer mb;
+        std::vector<tstring> tegs;
+        struct new_index { DWORD pos; DWORD len; std::vector<tstring> tegs; };
+        std::unordered_map<index_ptr, new_index*> new_indexes;
+        std::vector<DWORD> new_files_size(m_files.size(), 0);
+
+        bool result = true;
+        std::map<int, indexes_set>::iterator ft = cat.begin(), ft_end = cat.end();
+        for (; ft!=ft_end; ++ft)
+        {
+            const fileinfo& fi = m_files[ ft->first ];
+            const indexes_set &s = ft->second;
+            filereader fr;
+            if (!fr.open(fi.path, fi.size))
+            {
+                error->assign(L"Ошибка при открытии файла: ");
+                error->append(fi.path);
+                result = false;
+                break;
+            }
+            tstring newfile_path(fi.path);
+            newfile_path.append(L".new");
+            new_filewriter fw;
+            if (!fw.open(newfile_path))
+            {
+                error->assign(L"Ошибка при открытии файла на запись: ");
+                error->append(newfile_path);
+                result = false;
+                break;
+            }
+
+            indexes_set::iterator si = s.begin(), si_end = s.end();
+            for (;si != si_end; ++si)
+            {
+                index_ptr i = (*si);
+                DWORD pos = i->data_in_file;
+                DWORD len = i->datalen_in_file;
+                if (!fr.read(pos, len, &mb))
+                {
+                    error->assign(L"Ошибка при чтении файла: ");
+                    error->append(fi.path);
+                    result = false;
+                    break;
+                }
+                r.pushValue(L);
+                u8string data(mb.getData(), mb.getSize());
+                lua_pushstring(L, data.c_str());
+                if (lua_pcall(L, 1, 1, 0))
+                {
+                    error->assign(lua_toerror(L));
+                    result = false;
+                    break;
+                }
+
+                tegs.clear();
+                if (lua_istable(L, -1))
+                {
+                    lua_pushnil(L);                     // first key
+                    while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+                    {
+                        if (lua_isstring(L, -1))
+                        {
+                            tstring teg(luaT_towstring(L, -1));
+                            tegs.push_back(teg);
+                        }
+                        lua_pop(L, 1);
+                    }
+                }
+                lua_pop(L, 1);
+                new_filewriter::WriteResult r;
+                if (!fw.write(i->name, mb, tegs, &r))
+                {
+                    error->assign(L"Ошибка при записи файла: ");
+                    error->append(newfile_path);
+                    result = false;
+                    break;
+                }
+                new_index *ni = new new_index;
+                ni->pos = r.start; ni->len = r.len;
+                tegs.push_back(i->name);
+                ni->tegs.swap(tegs);
+                new_indexes[i] = ni;
+                new_files_size[ft->first] = r.start + r.len;
+            }
+            if (!result) 
+            {
+                fw.remove();
+                break;
+            }
+        }
+
+        if (result)
+        {
+            // переименование старых файлов
+            for (int i=0,e=m_files.size(); i<e; ++i)
+            {
+                tstring name(m_files[i].path);
+                tstring oldname(name);
+                oldname.append(L".old");
+                if (!MoveFile(name.c_str(), oldname.c_str()))
+                {
+                    error->assign(L"Ошибка при переименовании файлов. Переименуйте их вручную.");
+                    result = false;
+                    break;
+                }
+            }
+        }
+
+        if (result)
+        {
+            // переименование новых файлов
+            for (int i=0,e=m_files.size(); i<e; ++i)
+            {
+                tstring name(m_files[i].path);
+                tstring newname(name);
+                newname.append(L".new");
+                if (!MoveFile(newname.c_str(), name.c_str()))
+                {
+                    error->assign(L"Ошибка при переименовании файлов. Переименуйте их вручную.");
+                    result = false;
+                    break;
+                }
+            }
+        }
+
+        if (result)
+        {
+             // удаление старых файлов, переписываем индекс
+            for (int i=0,e=m_files.size(); i<e; ++i)
+            {
+                tstring name(m_files[i].path);
+                name.append(L".old");
+                DeleteFile(name.c_str());
+                m_files[i].size = new_files_size[i];
+            }
+
+            m_phrases.clear();
+            std::unordered_map<index_ptr, new_index*>::iterator it = new_indexes.begin(), it_end = new_indexes.end();
+            for (; it!=it_end; ++it)
+            {
+                index_ptr i = it->first;
+                new_index* ni = it->second;
+                i->data_in_file = ni->pos;
+                i->datalen_in_file = ni->len;
+                std::vector<tstring>& new_tegs = ni->tegs;
+                for (int k=0,e=new_tegs.size();k<e;++k)
+                    add_index(new_tegs[k], i);
+                delete ni;
+            }
+            new_indexes.clear();
+        }
+        return result;
     }
+
     void wipe()
     {
         m_current_file = -1;
@@ -489,8 +751,15 @@ int dict_update(lua_State *L)
    if (luaT_check(L, 2, get_dict(L), LUA_TFUNCTION))
    {
        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
-       d->update();
-       return 0;
+       lua_ref r;
+       r.createRef(L);
+       tstring error;
+       bool result = d->update(r, &error);
+       r.unref(L);
+       if (result) { lua_pushboolean(L, 1); return 1; }
+       lua_pushboolean(L, 0);
+       luaT_pushwstring(L, error.c_str());
+       return 2;
    }
    return dict_invalidargs(L, "update");
 }

@@ -81,7 +81,7 @@ public:
     lua_ref& operator=(const lua_ref& r) { ref = r.ref; r.ref = LUA_NOREF; }
     ~lua_ref() { assert(ref==LUA_NOREF); }
     void createRef(lua_State *L) { assert(ref==LUA_NOREF); ref=luaL_ref(L, LUA_REGISTRYINDEX); }
-    void pushValue(lua_State *L) { lua_rawgeti(L, LUA_REGISTRYINDEX, ref); }
+    void pushValue(lua_State *L) const { lua_rawgeti(L, LUA_REGISTRYINDEX, ref); }
     void unref(lua_State *L) { luaL_unref(L, LUA_REGISTRYINDEX, ref); ref=LUA_NOREF; }
 };
 

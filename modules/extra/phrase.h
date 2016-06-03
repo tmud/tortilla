@@ -122,7 +122,7 @@ class PhrasesList
 {
 public:
     PhrasesList() {}
-    ~PhrasesList() { std::for_each(m_phrases.begin(), m_phrases.end(), [](Phrase*p) { delete p; }); }
+    ~PhrasesList() { clear(); }
     bool addPhrase(Phrase *p)
     {
        int index = 0;
@@ -182,6 +182,11 @@ public:
     int getPhrasesCount() const 
     {
         return m_phrases.size();
+    }
+    void clear()
+    {
+        std::for_each(m_phrases.begin(), m_phrases.end(), [](Phrase*p) { delete p; });
+        m_phrases.clear();
     }
 private:
     void find(const Phrase& p, bool strong_mode, std::vector<int>& indexes)

@@ -19,10 +19,10 @@ function lor.description()
   'Плагин сохраняет в базе информацию о предметах, а также позволяет в этой базе искать их.',
   'Лор-информация собирается автоматически, когда предмет изучается в игре.',
   'Для поиска используется команда лор <имя предмета>, можно использовать сокращения.',
-  'Возможен импорт в базу из текстовых файлов командой '..p..'lorimport <имя файла>, но для',
+  'Возможен импорт в базу из текстовых файлов командой '..p..'lor import <имя файла>, но для',
   'этой возможности нужна своя настройка в конфигурационном файле плагина. Импорт работает с ',
   'кодировкой win. Также можно искать предметы по тегам. Для пересчета тегов всей базы',
-  'используется команда '..p..'lorupdate. Выполнение команды можент занять заметное время.',
+  'используется команда '..p..'lor reteg. Выполнение команды можент занять заметное время.',
   'Для поддержки тегов нужна своя настройка в конфигурационном файле плагина.',
   'См. справку по плагину: '..p..'help lor.'
   }
@@ -92,7 +92,7 @@ local function save_lor_strings()
       local newtegs = lor_tegs(s:getText())
       if newtegs then
         if type(newtegs) == 'string' then
-          tegs[#tegs+1] = teg
+          tegs[#tegs+1] = newtegs
         elseif type(newtegs) == 'table' then
           for _,t in pairs(newtegs) do
             tegs[#tegs+1] = t
@@ -126,6 +126,26 @@ local function print_object(s)
     vs:print(0)
   end
   lor_show_mode = false
+end
+
+local function reteg(s)
+  local tegs = {}
+  local t = s:tokenize('\n')
+  local vs = createViewString()
+  for _,s in ipairs(t) do
+    vs:setData(s)
+    local newtegs = lor_tegs(vs:getText())
+    if newtegs then
+      if type(newtegs) == 'string' then
+        tegs[#tegs+1] = newtegs
+      elseif type(newtegs) == 'table' then
+        for _,t in pairs(newtegs) do
+          tegs[#tegs+1] = t
+        end
+      end
+    end
+  end
+  return tegs
 end
 
 local function find_lor_strings(id)
@@ -221,28 +241,46 @@ function lor.gamecmd(t)
   return {}
 end
 
+local function print_help()
+  local p = props.cmdPrefix()
+  print(p..'lor import|reteg ('..p..'help lor).')
+end
+
 function lor.syscmd(t)
-  if t[1] == 'lorimport' then
+  if t[1] ~= 'lor' then return t end
+  if not t[2] then
+    print_help()
+    return
+  end
+  if t[2] == 'import' then
     if not lor_import then
       print("Не заданы настройки для данной операции.")
       return nil
     end
-    if not t[2] then
+    if not t[3] then
       print("Укажите имя файла")
     else
-      import(t[2])
+      import(t[3])
     end
     return {}
   end
-  if t[1] == 'lorupdate' then
+  if t[2] == 'reteg' then
     if not lor_tegs then
       print("Не заданы настройки для данной операции.")
       return nil
     end
-    lor_dictonary:update(lor_tegs)
+    print('Обновление тегов в базе...')
+    local res, err = lor_dictonary:update(reteg)
+    if res then
+      print('Обновление тегов завершено.')
+    else
+      print('Обновление тегов не произошло. Ошибка: '..err)
+    end
     return {}
   end
-  return t
+  print('Ошибка: Неизвестная команда.')
+  print_help()
+  return
 end
 
 function lor.before(v, vd)
