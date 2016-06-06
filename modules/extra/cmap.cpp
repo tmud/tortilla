@@ -236,11 +236,12 @@ class MapDictonary
     std::vector<fileinfo> m_files;
     struct index
     {
-        index() : file(-1), data_in_file(0), datalen_in_file(0) {}
+        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0) {}
         tstring name;
         int file;
-        DWORD data_in_file;
-        DWORD datalen_in_file;
+        DWORD pos_in_file;
+        DWORD name_tegs_len;
+        DWORD data_len;
     };
     PhrasesList m_phrases;
     typedef std::shared_ptr<index> index_ptr;
@@ -289,7 +290,7 @@ public:
 
         MemoryBuffer mb;
         std::vector<tstring> tegs;
-        struct new_index { DWORD pos; DWORD len; std::vector<tstring> tegs; };
+        struct new_index { DWORD pos; DWORD title_len; DWORD data_len; std::vector<tstring> tegs; };
         std::unordered_map<index_ptr, new_index*> new_indexes;
         std::vector<DWORD> new_files_size(m_files.size(), 0);
 
@@ -332,8 +333,8 @@ public:
             for (;si != si_end; ++si)
             {
                 index_ptr i = (*si);
-                DWORD pos = i->data_in_file;
-                DWORD len = i->datalen_in_file;
+                DWORD pos = i->pos_in_file+i->name_tegs_len;
+                DWORD len = i->data_len;
                 if (!fr.read(pos, len, &mb))
                 {
                     error->assign(L"Ошибка при чтении файла: ");
@@ -376,7 +377,7 @@ public:
                     break;
                 }
                 new_index *ni = new new_index;
-                ni->pos = r.start+r.title_len; ni->len = r.data_len;
+                ni->pos = r.start; ni->title_len=r.title_len; ni->data_len = r.data_len;
                 tegs.push_back(i->name);
                 ni->tegs.swap(tegs);
                 new_indexes[i] = ni;
@@ -441,8 +442,9 @@ public:
             {
                 index_ptr i = it->first;
                 new_index* ni = it->second;
-                i->data_in_file = ni->pos;
-                i->datalen_in_file = ni->len;
+                i->pos_in_file = ni->pos;
+                i->name_tegs_len = ni->title_len;
+                i->data_len = ni->data_len;
                 std::vector<tstring>& new_tegs = ni->tegs;
                 for (int k=0,e=new_tegs.size();k<e;++k)
                     add_index(new_tegs[k], i);
@@ -511,7 +513,8 @@ public:
                     continue;
                 }
 
-                bool result = fr.read(ix[i]->data_in_file, ix[i]->datalen_in_file, &buffer);
+                index_ptr p = ix[i];
+                bool result = fr.read(p->pos_in_file, p->data_len+p->name_tegs_len, &buffer);
                 if (!result)
                 {
                     fileerror(fi.path);
@@ -519,10 +522,10 @@ public:
                 }
                 int size = buffer.getSize();
                 buffer.keepalloc(size+1);
-                char *p = buffer.getData();
-                p[size] = 0;
+                char *b = buffer.getData();
+                b[size] = 0;
                 const tstring& name = ix[i]->name;
-                values->operator[](name) = tstring(TU2W(p));
+                values->operator[](name) = tstring(TU2W(b));
             }
         }
         return true;
@@ -615,8 +618,9 @@ private:
            return ix;
         f.size += fw.written;
         ix->file = m_current_file;
-        ix->data_in_file = fw.start_data;
-        ix->datalen_in_file = fw.written - (fw.start_data - fw.start_name);
+        ix->pos_in_file = fw.start_name;
+        ix->name_tegs_len = fw.start_data - fw.start_name;
+        ix->data_len = fw.written - (fw.start_data - fw.start_name);
         return ix;
     }
 
@@ -672,9 +676,9 @@ private:
                     find_name_mode = true;
                     if (!name.empty())
                     {
-                        if (ix->data_in_file != 0)
+                        if (ix->pos_in_file != 0)
                         {
-                            ix->datalen_in_file = lf.getPosition()-ix->data_in_file;
+                            ix->data_len = lf.getPosition()-ix->pos_in_file-ix->name_tegs_len;
                             Tokenizer tk(TU2W(name.c_str()), L";");
                             ix->name = tk[0];
                             for (int i=0,e=tk.size();i<e;++i)
@@ -690,7 +694,8 @@ private:
                 {
                     name.assign(str);
                     find_name_mode = false;
-                    ix->data_in_file = lf.getPosition();
+                    ix->pos_in_file = start_pos;
+                    ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
             }
 

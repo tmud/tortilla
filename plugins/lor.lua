@@ -121,8 +121,8 @@ local function print_object(s)
   lor_show_mode = true
   local t = s:tokenize('\r\n')
   local vs = createViewString()
-  for _,s in ipairs(t) do
-    vs:setData(s)
+  for i=2,#t do
+    vs:setData(t[i])
     vs:print(0)
   end
   lor_show_mode = false
@@ -175,8 +175,11 @@ local function find_lor_strings(id)
     local c = lor_cache
     for name,data in pairs(t) do
       local id = #c+1
-      c[id] = { name = name, data = data }
-      output(""..id..". "..name)
+	  local t = data:tokenize('\r\n')
+	  local t2 = t[1]:tokenize(';')
+	  local tegs = table.concat(t2, ',', 2)
+	  c[id] = { name = name, data = data, tegs = tegs }
+      output(""..id..". "..name.." ("..tegs..")")
     end
   end
 end
@@ -230,10 +233,10 @@ function lor.gamecmd(t)
   id = table.concat(id:tokenize('.'), ' ')
   if id:len() == 0 then
     if #lor_cache > 0 then
-      print("Последний поиск:")
+      print("Последний поиск (лор номер):")
     end
     for id,t in ipairs(lor_cache) do
-      output(""..id..". "..t.name)
+      output(""..id..". "..t.name.." ("..t.tegs..")")
     end
     print("Что искать в базе?")
   else
