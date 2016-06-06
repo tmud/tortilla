@@ -29,11 +29,10 @@ class filereader
 public:
    filereader() : hfile(INVALID_HANDLE_VALUE), fsize(0) {}
    ~filereader() { if (hfile != INVALID_HANDLE_VALUE) CloseHandle(hfile); }
-   bool open(const tstring& path, DWORD csize)
+   bool open(const tstring& path)
    {
        if (hfile != INVALID_HANDLE_VALUE)
        {
-           assert(fsize == csize);
            return true;
        }
        hfile = CreateFile(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -48,7 +47,6 @@ public:
            return false;
        }
        fsize = lsize;
-       assert(fsize == csize);
        return true;
    }
    DWORD size() const { return fsize; }
@@ -172,7 +170,8 @@ public:
     struct WriteResult
     {
         DWORD start;
-        DWORD len;
+        DWORD title_len;
+        DWORD data_len;
     };
     bool write(const tstring& name, const MemoryBuffer& data, const std::vector<tstring>& tegs, WriteResult* r)
     {
@@ -183,7 +182,7 @@ public:
             tmp.append(tegs[i]);
             tmp.append(L";");
         }
-        //tmp.append(L"\n");
+        tmp.append(L"\n");
 
         start_data += written;
         DWORD written1 = 0;
@@ -192,13 +191,12 @@ public:
         DWORD written2 = 0;
         if (!write_tofile(hfile, data, &written2))
             return error();
-        DWORD written3 = 0;
-        /*if (!write_tofile(hfile, L"\n\n", &written3))
-            return error();*/
-        written = written1 + written2 + written3;
-        if (r) {
-        r->len = written;
-        r->start = start_data;
+        written = written1 + written2;
+        if (r) 
+        {
+          r->start = start_data;
+          r->title_len = written1;
+          r->data_len = written2;
         }
         return true;
     }
@@ -299,16 +297,26 @@ public:
         std::map<int, indexes_set>::iterator ft = cat.begin(), ft_end = cat.end();
         for (; ft!=ft_end; ++ft)
         {
-            const fileinfo& fi = m_files[ ft->first ];
+            fileinfo& fi = m_files[ ft->first ];
             const indexes_set &s = ft->second;
             filereader fr;
-            if (!fr.open(fi.path, fi.size))
+            if (!fr.open(fi.path))
             {
                 error->assign(L"Ошибка при открытии файла: ");
                 error->append(fi.path);
                 result = false;
                 break;
             }
+
+            if (fi.size != fr.size())
+            {
+                error->assign(L"Файл изменен другой программой: ");
+                error->append(fi.path);
+                error->append(L". Перезапустите плагин.");
+                result = false;
+                break;            
+            }
+
             tstring newfile_path(fi.path);
             newfile_path.append(L".new");
             new_filewriter fw;
@@ -333,8 +341,9 @@ public:
                     result = false;
                     break;
                 }
-                r.pushValue(L);
+
                 u8string data(mb.getData(), mb.getSize());
+                r.pushValue(L);
                 lua_pushstring(L, data.c_str());
                 if (lua_pcall(L, 1, 1, 0))
                 {
@@ -367,11 +376,11 @@ public:
                     break;
                 }
                 new_index *ni = new new_index;
-                ni->pos = r.start; ni->len = r.len;
+                ni->pos = r.start+r.title_len; ni->len = r.data_len;
                 tegs.push_back(i->name);
                 ni->tegs.swap(tegs);
                 new_indexes[i] = ni;
-                new_files_size[ft->first] = r.start + r.len;
+                new_files_size[ft->first] = r.start + (r.data_len+r.title_len);
             }
             if (!result) 
             {
@@ -425,6 +434,7 @@ public:
                 m_files[i].size = new_files_size[i];
             }
 
+            m_indexes.clear();
             m_phrases.clear();
             std::unordered_map<index_ptr, new_index*>::iterator it = new_indexes.begin(), it_end = new_indexes.end();
             for (; it!=it_end; ++it)
@@ -495,7 +505,7 @@ public:
                 int fileid = ix[i]->file;
                 fileinfo& fi = m_files[fileid];
                 filereader& fr = open_files[fileid];
-                if (!fr.open(fi.path, fi.size))
+                if (!fr.open(fi.path) || fi.size != fr.size())
                 {
                     fileerror(fi.path);
                     continue;
@@ -728,7 +738,7 @@ int dict_find(lua_State *L)
         tstring id(luaT_towstring(L, 2));
         std::map<tstring,tstring> result;
         typedef std::map<tstring,tstring>::iterator iterator;
-        if (d->find(id, &result))
+        if (d->find(id, &result) && !result.empty())
         {
             lua_newtable(L);
             iterator it = result.begin(), it_end = result.end();

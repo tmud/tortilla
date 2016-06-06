@@ -119,7 +119,7 @@ end
 
 local function print_object(s)
   lor_show_mode = true
-  local t = s:tokenize('\n')
+  local t = s:tokenize('\r\n')
   local vs = createViewString()
   for _,s in ipairs(t) do
     vs:setData(s)
@@ -191,6 +191,7 @@ local function import(file)
     print('Ошибка! Файл '..file..' загрузить не получилось.')
     return
   end
+  lor_cache = {}
   for _,s in ipairs(t) do
     s = system.convertFromWin(s)
     if s:len() > 0 then
@@ -270,6 +271,7 @@ function lor.syscmd(t)
       return nil
     end
     print('Обновление тегов в базе...')
+	lor_cache = {}
     local res, err = lor_dictonary:update(reteg)
     if res then
       print('Обновление тегов завершено.')
