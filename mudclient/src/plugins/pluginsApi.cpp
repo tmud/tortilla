@@ -474,6 +474,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     env.add("log");
     env.add("createPcre");
     env.add("table");
+    env.add("props");
 
     lua_insert(L, -2);
     lua_pushvalue(L, -2);

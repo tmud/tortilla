@@ -5,7 +5,7 @@ local lor = {}
 local initialized = false
 local lor_catch_mode = false
 local lor_show_mode = false
-local lor_trigger, lor_check, lor_tegs, lor_import
+local lor_trigger, lor_check, lor_tegs, lor_import_trigger, lor_import, lor_drop
 local lor_strings = {}
 local lor_dictonary
 local lor_cache = {}
@@ -19,12 +19,11 @@ function lor.description()
   'Плагин сохраняет в базе информацию о предметах, а также позволяет в этой базе искать их.',
   'Лор-информация собирается автоматически, когда предмет изучается в игре.',
   'Для поиска используется команда лор <имя предмета>, можно использовать сокращения.',
-  'Возможен импорт в базу из текстовых файлов командой '..p..'lor import <имя файла>, но для',
-  'этой возможности нужна своя настройка в конфигурационном файле плагина. Импорт работает с ',
-  'кодировкой win. Также можно искать предметы по тегам. Для пересчета тегов всей базы',
-  'используется команда '..p..'lor reteg. Выполнение команды можент занять заметное время.',
-  'Для поддержки тегов нужна своя настройка в конфигурационном файле плагина.',
-  'См. справку по плагину: '..p..'help lor.'
+  'Поиск идет как по имени предмета, так и по тегам. Теги присваиваются автоматически,',
+  'но можно добавлять и свои теги. Для этого нужно выполнить команды лортег <имя тега>.',
+  'Команда лортег добавляет тег на последний предмет который вы смотрели командой лор.',
+  'Теги, которые назначаются автоматически - настраиваются в конфигурационном файле плагина.',  
+  'Возможен импорт в базу из текстовых файлов, подробности в справке '..p..'help lor.'  
   }
   return table.concat(s, '\r\n')
 end
@@ -50,7 +49,7 @@ function lor.init()
   end
   lor_trigger = createPcre(t.key)
   if not lor_trigger then
-    terminate("Ошибка в настройках, в ключевой строке key.")
+    terminate("Ошибка в настройках, в параметре key.")
   end
   lor_check = t.check()
   if type(lor_check) ~= 'function' then
@@ -69,6 +68,20 @@ function lor.init()
     if type(lor_import) ~= 'function' then
       terminate("Ошибка в настройках, в параметре import должна быть возвращена функция.")
     end
+    if type(t.import_key) ~= 'string' then
+      terminate("Ошибка в настройках. Для импорта необходим параметр import_key.")
+    end
+    lor_import_trigger = createPcre(t.import_key)
+    if not lor_import_trigger then
+       terminate("Ошибка в настройках, в параметре import_key.")
+    end
+  end
+  lor_drop = nil
+  if type(t.drop) == 'function' then
+    lor_drop = t.drop()
+    if type(lor_drop) ~= 'function' then
+      terminate("Ошибка в настройках, в параметре drop должна быть возвращена функция.")
+    end
   end
   if extra and type(extra.dictonary) == 'function' then
     local path = getPath("")
@@ -84,6 +97,10 @@ local function save_lor_strings()
   if not lor_strings.name then
     lor_strings = {}
     return false, "Не получено имя предмета, сохранить невозможно."
+  end
+  if lor_drop and not lor_drop(lor_strings.name) then
+    lor_strings = {}
+    return false
   end
   local info = {}
   local tegs = {}
@@ -175,10 +192,10 @@ local function find_lor_strings(id)
     local c = lor_cache
     for name,data in pairs(t) do
       local id = #c+1
-	  local t = data:tokenize('\r\n')
-	  local t2 = t[1]:tokenize(';')
-	  local tegs = table.concat(t2, ',', 2)
-	  c[id] = { name = name, data = data, tegs = tegs }
+      local t = data:tokenize('\r\n')
+      local t2 = t[1]:tokenize(';')
+      local tegs = table.concat(t2, ',', 2)
+      c[id] = { name = name, data = data, tegs = tegs }
       output(""..id..". "..name.." ("..tegs..")")
     end
   end
@@ -195,23 +212,31 @@ local function import(file)
     return
   end
   lor_cache = {}
+  local working = false
   for _,s in ipairs(t) do
     s = system.convertFromWin(s)
-    if s:len() > 0 then
-      local vs = createViewString()
-      local result, item = lor_import(s, vs)
-      if result then
-        if item then
-          if lor_strings.name then
-            local _,result = save_lor_strings()
-            if result then print(result) end
-          end
-          lor_strings.name = item
-        end
-        lor_strings[#lor_strings+1] = vs
-        if item then lor_strings.name = item end
-      end
+    local found_key = lor_import_trigger:find(s)
+    if not working then
+      if not found_key then goto next end
+      working = true
     end
+    if found_key then
+      local _,result = save_lor_strings()
+      if result then print(result) end
+      lor_strings = {}
+    end
+    local vs = createViewString()
+    vs:setBlocksCount(1)
+    vs:setBlockText(1, s)
+    local result, item = lor_import(vs)
+    if item then lor_strings.name = item end
+    if result then
+      lor_strings[#lor_strings+1] = vs
+    elseif result == nil then
+      working = false  --drop
+      lor_strings = {}
+    end
+    ::next::
   end
   if lor_strings.name then
     local _,result = save_lor_strings()
@@ -220,9 +245,9 @@ local function import(file)
 end
 
 function lor.gamecmd(t)
-  if t[1] ~= "лор" then return t end
+  if t[1] ~= "лор" and t[1] ~= "лортег" then return t end
   if not initialized then
-    print("Ошибка в настройках.")
+    print("Ошибка в настройках плагина.")
     return nil
   end
   local id = ""
@@ -274,7 +299,7 @@ function lor.syscmd(t)
       return nil
     end
     print('Обновление тегов в базе...')
-	lor_cache = {}
+    lor_cache = {}
     local res, err = lor_dictonary:update(reteg)
     if res then
       print('Обновление тегов завершено.')
@@ -285,7 +310,6 @@ function lor.syscmd(t)
   end
   print('Ошибка: Неизвестная команда.')
   print_help()
-  return
 end
 
 function lor.before(v, vd)
@@ -320,10 +344,10 @@ function lor.before(v, vd)
       local ref = vd:createRef()
       local item
       ref, item = lor_check(ref)
+      if item then lor_strings.name = item end
       if ref then
         lor_strings[#lor_strings+1] = ref
-        if item then lor_strings.name = item end
-      elseif ref == false then  -- false -> drop object
+      elseif ref == nil then  -- nil -> drop object
         lor_catch_mode = false
         break
       end
