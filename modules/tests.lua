@@ -124,3 +124,6 @@ assert3('п св', {'перстень света'} )
 
 dict:wipe()
 dict = nil
+
+--local maj,min = getVersion()
+--print("Версия: "..maj.."."..min)

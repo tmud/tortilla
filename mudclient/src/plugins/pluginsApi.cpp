@@ -1208,6 +1208,17 @@ int translateColors(lua_State *L)
     }
     return pluginInvArgs(L, L"translateColors");
 }
+
+int getVersion(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        lua_pushinteger(L, TORTILLA_VERSION_MAJOR);
+        lua_pushinteger(L, TORTILLA_VERSION_MINOR);
+        return 2;
+    }
+    return pluginInvArgs(L, L"getVersion");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -1275,6 +1286,7 @@ bool initPluginsSystem()
     lua_register(L, "print", print);
     lua_register(L, "vprint", vprint);
     lua_register(L, "translateColors", translateColors);
+    lua_register(L, "getVersion", getVersion);
 
     reg_props(L);
     reg_activeobjects(L);
