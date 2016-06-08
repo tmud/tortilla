@@ -437,7 +437,7 @@ private:
             {
                 m_dock.DockWindow(*v, w.side);
                 int size = IsDockedVertically(w.side) ? w.pos.right-w.pos.left : w.pos.bottom-w.pos.top;
-                m_dock.SetPaneSize(w.side, size);
+                m_dock.SetPaneSize(w.side, size+DEFAULT_SPLITTER_SIZE);
             }
             else if (w.side == DOCK_FLOAT)
                 m_dock.FloatWindow(*v, w.pos);

@@ -65,6 +65,7 @@ private:
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDown)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+        MESSAGE_HANDLER(WM_GETMINMAXINFO, OnMinMaxInfo)
     END_MSG_MAP()
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { return 0; }
@@ -89,6 +90,14 @@ private:
     {
         doDraging();
         return 0; 
+    }
+    LRESULT OnMinMaxInfo(UINT, WPARAM, LPARAM lparam, BOOL&)
+    {
+        LONG p = DEFAULT_SPLITTER_SIZE + MIN_DOCKPANE_SIZE;
+        MINMAXINFO *minmax = (MINMAXINFO*) lparam;
+        minmax->ptMinTrackSize.x = p;
+        minmax->ptMinTrackSize.y = p;
+        return 0;
     }
 private:
     void deleteLastString();
