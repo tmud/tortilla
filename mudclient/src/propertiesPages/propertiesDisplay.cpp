@@ -2,11 +2,33 @@
 #include "propertiesData.h"
 #include "propertiesDisplay.h"
 
-PropertiesDisplay::PropertiesDisplay() : display_width(0), display_height(0), full_screen(0), find_window_visible(0)
+PropertiesWindow* PropertiesDisplay::mainWindow()
 {
-    RECT r = { 0 };
-    main_window = r;
-    find_window = r;
+    return &main_window;
+}
+PropertiesWindow* PropertiesDisplay::findWindow()
+{
+    return &find_window;
+}
+OutputWindowsCollection* PropertiesDisplay::outputWindows()
+{
+    return &client_windows;
+}
+OutputWindowsCollection* PropertiesDisplay::pluginWindows(const tstring& name)
+{
+    std::map<tstring, OutputWindowsCollection*>::iterator it = plugins_windows.find(name);
+    return (it == plugins_windows.end()) ? NULL : it->second;
+}
+
+PropertiesDisplay::PropertiesDisplay() : display_width(0), display_height(0)
+{
+    client_windows.resize(OUTPUT_WINDOWS);
+}
+
+PropertiesDisplay::~PropertiesDisplay()
+{
+    std::for_each( plugins_windows.begin(), plugins_windows.end(),
+        [](std::pair<const tstring, OutputWindowsCollection*>& o) { delete o.second; } );
 }
 
 void PropertiesDisplay::initDefault()
@@ -32,9 +54,11 @@ bool PropertiesDisplay::load(xml::node root_node)
     xml::node w = mw[0];
     if (!display_loaded && !loadDisplaySize(w))
        return false;
+    int full_screen = 0;
     w.get(L"fullscreen", &full_screen);
-    if (full_screen != 1) full_screen = 0;
-    if (!loadRECT(w, &main_window))
+    main_window.fullscreen = (full_screen==1) ? true : false;
+
+    if (!loadRECT(w, &main_window.pos))
         initMainWindow();
     xml::request fw(root_node, L"findwindow");
     if (!fw.size())
@@ -42,14 +66,14 @@ bool PropertiesDisplay::load(xml::node root_node)
     else
     {
         xml::node w = fw[0];
-        if (!w.get(L"visible", &find_window_visible) || !loadRECT(w, &find_window))
+        int visible = 0;
+        if (!w.get(L"visible", &visible) || !loadRECT(w, &find_window.pos))
         {
             initFindWindow();
         }
         else
         {
-            if (find_window_visible != 1)
-                find_window_visible = 0;
+            find_window.visible = (visible==1) ? true : false;
         }
     }
 
@@ -77,26 +101,28 @@ bool PropertiesDisplay::current() const
 
 void PropertiesDisplay::initMainWindow()
 {
-    full_screen = 0;
+    main_window.fullscreen = false;
     display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
     display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
     int primary_width = GetSystemMetrics(SM_CXSCREEN);
     int primary_height = GetSystemMetrics(SM_CYSCREEN);
     int width = (primary_width / 4) * 3;
     int height = (primary_height / 4) * 3;
-    main_window.left = (primary_width - width) / 2;
-    main_window.top = (primary_height - height) / 2;
-    main_window.right = main_window.left + width;
-    main_window.bottom = main_window.top + height;
+    RECT &pos = main_window.pos;
+    pos.left = (primary_width - width) / 2;
+    pos.top = (primary_height - height) / 2;
+    pos.right = pos.left + width;
+    pos.bottom = pos.top + height;
 }
 
 void PropertiesDisplay::initFindWindow()
 {
-    find_window.left = 200;
-    find_window.top = 100;
-    find_window.right = find_window.left;
-    find_window.bottom = find_window.top;
-    find_window_visible = 0;
+    RECT &pos = find_window.pos;
+    pos.left = 200;
+    pos.top = 100;
+    pos.right = pos.left;
+    pos.bottom = pos.top;
+    find_window.visible = false;
 }
 
 void PropertiesDisplay::initOutputWindows()

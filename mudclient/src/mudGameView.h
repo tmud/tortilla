@@ -119,7 +119,7 @@ public:
         if (msg == WM_KEYDOWN  && pMsg->wParam == 'F' && checkKeysState(false, true, false))
         {
             // Ctrl+F - search mode
-            if (m_propData->find_window_visible && m_find_dlg.focused()) { hideFindView(); }
+            if (m_propData->main_window()->visible && m_find_dlg.focused()) { hideFindView(); }
             else { showFindView(true); }
             return TRUE;
         }
@@ -408,7 +408,7 @@ private:
         m_hSplitter.SetSplitterPanes(m_history, m_view);
         m_hSplitter.SetSinglePaneMode(SPLIT_PANE_BOTTOM);
 
-        m_parent.MoveWindow(&m_propData->main_window);
+        m_parent.MoveWindow(&m_propData->main_window()->pos);
 
         // create find panel
         m_find_dlg.Create(m_dock);
@@ -418,9 +418,10 @@ private:
         m_find_dlg.selectWindow(0);
 
         // create docking output windows
+        OutputWindowsCollection* output_windows = m_propData->output_windows();
         for (int i=0; i < OUTPUT_WINDOWS; ++i)
-        {
-            const OutputWindow& w =  m_propData->windows[i];
+        {            
+            const OutputWindow& w =  output_windows->at(i);
             m_find_dlg.setWindowName(i+1,w.name);
 
             MudView *v = new MudView(&m_propElements, i+1);
@@ -444,14 +445,14 @@ private:
         }
 
         // show find window if required
-        if (m_propData->find_window_visible)
+        if (m_propData->find_window()->visible)
             showFindView(false);
 
         m_handlers.push_back( new MudViewHandler(&m_view, &m_history) );
         for (int i=0; i<OUTPUT_WINDOWS; ++i)
         {
             MudView *v = m_views[i];
-            const OutputWindow& w =  m_propData->windows[i];
+            const OutputWindow& w =  output_windows->at(i);
             DOCKCONTEXT *ctx = m_dock._GetContext(*v);
             ctx->rcWindow = w.pos;
             ctx->sizeFloat = w.size;
@@ -462,7 +463,7 @@ private:
         m_dock.SortPanes();
         onStart();
         m_parent.ShowWindow(SW_SHOW);
-        if (m_propData->main_window_fullscreen)
+        if (m_propData->main_window()->fullscreen)
             PostMessage(WM_USER+2);
 
         if (m_manager.isFirstStartup())
@@ -854,7 +855,7 @@ private:
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         if (ctx->Side == DOCK_HIDDEN)
         {
-            RECT& p = m_propData->find_window;
+            RECT& p = m_propData->find_window()->pos;
             SIZE sz =  m_find_dlg.getSize(); 
             int w = 0; int h = 0;
             addWindowBorder(w, h);
@@ -864,7 +865,7 @@ private:
             m_dock.FloatWindow(m_find_dlg, p);
         }
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 1);
-        m_propData->find_window_visible = 1;
+        m_propData->find_window()->visible = true;
         if (set_focus)
             m_find_dlg.setFocus();
     }
@@ -874,7 +875,7 @@ private:
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         //m_propData->find_window = ctx->rcWindow;
         m_dock.HideWindow(m_find_dlg);
-        m_propData->find_window_visible = 0;
+        m_propData->find_window()->visible = false;
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)
             m_history.clearFind();
@@ -887,7 +888,7 @@ private:
 
     LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
     {
-        if (m_propData->find_window_visible) { hideFindView(); }
+        if (m_propData->find_window()->visible) { hideFindView(); }
         else { showFindView(true); }
         return 0;
     }
@@ -1268,32 +1269,31 @@ private:
     void saveFindWindowPos()
     {
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
-        m_propData->find_window = ctx->rcWindow;
-        m_propData->find_window_visible = (ctx->Side == DOCK_FLOAT) ? 1 : 0;    
+        m_propData->find_window()->pos = ctx->rcWindow;
+        m_propData->find_window()->visible = (ctx->Side == DOCK_FLOAT) ? true : false;
     }
 
     void saveClientWindowPos()
     {
-        m_propData->windows.clear();
+        OutputWindowsCollection* windows = m_propData->output_windows();
         tstring buffer;
         for (int i = 0, e = m_views.size(); i<e; ++i)
         {
             MudView *v = m_views[i];
             getWindowText(*v, &buffer);
             DOCKCONTEXT *ctx = m_dock._GetContext(*v);
-            OutputWindow w;
+            OutputWindow& w = windows->at(i);
             w.name = tstring(buffer);
             w.side = ctx->Side;
             w.lastside = ctx->LastSide;
             w.pos = ctx->rcWindow;
             w.size = ctx->sizeFloat;
-            m_propData->windows.push_back(w);
         }
 
         WINDOWPLACEMENT wp;
         m_parent.GetWindowPlacement(&wp);
-        m_propData->main_window = wp.rcNormalPosition;
-        m_propData->main_window_fullscreen = (wp.showCmd == SW_SHOWMAXIMIZED) ? 1 : 0;
+        m_propData->main_window()->pos = wp.rcNormalPosition;
+        m_propData->main_window()->fullscreen = (wp.showCmd == SW_SHOWMAXIMIZED) ? true : false;
         saveFindWindowPos();
     }
 
@@ -1314,13 +1314,14 @@ private:
         std::vector<int> sides = { DOCK_TOP, DOCK_BOTTOM, DOCK_LEFT, DOCK_RIGHT, DOCK_FLOAT, DOCK_HIDDEN };
 
         // recreate docking output windows
+        OutputWindowsCollection* windows = m_propData->output_windows();
         for (int j=0,je=sides.size(); j<je; ++j)
         {
             typedef std::pair<int,int> wd;
             std::vector<wd> wds;
             for (int i=0; i < OUTPUT_WINDOWS; ++i)
             {
-                const OutputWindow& w =  m_propData->windows[i];
+                const OutputWindow& w =  windows->at(i);
                 if (w.side == sides[j]) {
                   wd d; d.first = i; d.second = 0;
                   if (IsDockedVertically(w.side)) d.second = w.pos.top;
@@ -1361,7 +1362,7 @@ private:
         {
             MudView *v = m_views[i];
             DOCKCONTEXT *ctx = m_dock._GetContext(*v);
-            const OutputWindow& w =  m_propData->windows[i];
+            const OutputWindow& w =  windows->at(i);
             ctx->Side = w.side;
             ctx->LastSide = w.lastside;
             ctx->rcWindow = w.pos;
@@ -1370,7 +1371,7 @@ private:
         }
 
         // find window
-        int state = m_propData->find_window_visible;
+        bool state = m_propData->find_window()->visible;
         hideFindView();
         m_dock.UpdatePanes();
         if (state)

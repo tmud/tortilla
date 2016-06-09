@@ -494,6 +494,11 @@ struct PropertiesData
 
     PropertiesDisplayManager displays;
 
+    PropertiesWindow* main_window() { displays.display()->mainWindow(); }
+    PropertiesWindow* find_window() { displays.display()->findWindow(); }
+    OutputWindowsCollection* output_windows() { displays.display()->outputWindows(); }
+    
+
     /*RECT main_window;
     int  main_window_fullscreen;
     int  display_width;
