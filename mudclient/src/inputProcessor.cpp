@@ -232,14 +232,14 @@ void InputTemplateCommands::fillgamecmd(InputCommand *cmd)
     const tchar *e = p + params.length();
     while (p != e)
     {
-       const tchar *s = wcschr(p, L' ');
-       if (!s) break;
-       if (p != s)
-            cmd->parameters_list.push_back(tstring(p, s-p));
-       p = s + 1;
+       const tchar *s = p;
+       while (s != e && *s == L' ') s++;
+       if (s != e) {
+           while (s != e && *s != L' ') s++;
+       }
+       cmd->parameters_list.push_back(tstring(p, s-p));
+       p = s;
     }
-    if (p != e)
-        cmd->parameters_list.push_back(tstring(p, e-p));
 }
 
 void InputTemplateCommands::parsecmd(const tstring& cmd)

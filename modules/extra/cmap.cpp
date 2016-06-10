@@ -248,6 +248,20 @@ class MapDictonary
     typedef std::vector<index_ptr> indexes;
     std::unordered_map<tstring, indexes> m_indexes;
     typedef std::unordered_map<tstring, indexes>::iterator iterator;
+
+
+    std::unordered_map<tstring, index_ptr> m_objects;
+    typedef std::unordered_map<tstring, index_ptr>::iterator objects_iterator;
+
+    PhrasesList m_tegs_phrases;
+    std::unordered_map<tstring, indexes> m_tegs_indexes;
+
+    typedef std::set<tstring> filter;
+    typedef std::shared_ptr<filter> filter_ptr;
+    typedef std::map<tstring, filter_ptr> filter_map;
+    typedef std::map<tstring, filter_ptr>::iterator filter_map_iterator;
+    filter_map m_tegs;
+    
     int m_current_file;
     tstring m_base_dir;
     lua_State *L;
@@ -437,6 +451,7 @@ public:
 
             m_indexes.clear();
             m_phrases.clear();
+            m_objects.clear();
             std::unordered_map<index_ptr, new_index*>::iterator it = new_indexes.begin(), it_end = new_indexes.end();
             for (; it!=it_end; ++it)
             {
@@ -448,6 +463,7 @@ public:
                 std::vector<tstring>& new_tegs = ni->tegs;
                 for (int k=0,e=new_tegs.size();k<e;++k)
                     add_index(new_tegs[k], i);
+                m_objects[i->name] = i;
                 delete ni;
             }
             new_indexes.clear();
@@ -463,6 +479,68 @@ public:
             DeleteFile(m_files[i].path.c_str());
         }
         m_files.clear();
+    }
+
+    bool teg(const tstring& name, const tstring& teg, bool *remove_or_add)
+    {
+        bool action_add = true;
+        objects_iterator it = m_objects.find(name);
+        if (it == m_objects.end())
+            return false;
+        index_ptr ix = it->second;
+
+        tstring t(teg);
+        tstring_tolower(&t);
+        Phrase p(t);
+        int count = p.len();
+        for (int i=0; i<count; ++i)
+        {
+           tstring part(p.get(i));
+           m_tegs_phrases.addPhrase(new Phrase(part));
+           //add_toindex(part, ix);
+           for (int j=i+1; j<count; ++j) 
+           {
+              part.assign(p.get(i));
+              for (int k=j; k<count; ++k)
+              {
+                 part.append(L" ");
+                 part.append(p.get(k));
+                 m_tegs_phrases.addPhrase(new Phrase(part));
+                 //add_toindex(part, ix);
+              }
+           }
+        }
+
+
+       /* else 
+        {
+            m_tegs_phrases.addPhrase(new Phrase(t));
+            //add_toindex(n, ix);
+        }*/
+
+
+        /*
+
+        filter_ptr m;
+        filter_map_iterator dt = m_tegs.find(t);
+        if (dt == m_tegs.end())
+        {
+            filter_ptr m = std::make_shared<filter>();
+            m_tegs[t] = m;
+            m->insert(name);            
+        }
+        else
+        {
+            filter_ptr m = dt->second;
+            if (m->find(name) == m->end())
+                m->insert(name);
+            else {
+                action_add = false;
+                m->erase(name);
+            }
+        }
+        *remove_or_add = action_add;*/
+        return true;
     }
 
     int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -483,6 +561,7 @@ public:
         add_index(name, ix);
         for (int i=0,e=tegs.size();i<e;++i)
             add_index(tegs[i], ix);
+        m_objects[name] = ix;
         return MD_OK;
     }
 
@@ -676,14 +755,14 @@ private:
                     find_name_mode = true;
                     if (!name.empty())
                     {
-                        if (ix->pos_in_file != 0)
+                        ix->data_len = lf.getPosition()-ix->pos_in_file-ix->name_tegs_len;
+                        Tokenizer tk(TU2W(name.c_str()), L";");
+                        ix->name = tk[0];
                         {
-                            ix->data_len = lf.getPosition()-ix->pos_in_file-ix->name_tegs_len;
-                            Tokenizer tk(TU2W(name.c_str()), L";");
-                            ix->name = tk[0];
-                            for (int i=0,e=tk.size();i<e;++i)
-                                add_index(tk[i], ix);
+                           for (int i=0,e=tk.size();i<e;++i)
+                             add_index(tk[i], ix);
                         }
+                        m_objects[ix->name] = ix;
                         ix = std::make_shared<index>();
                         ix->file = i;
                         name.clear();
@@ -790,6 +869,27 @@ int dict_wipe(lua_State *L)
    return dict_invalidargs(L, "wipe");
 }
 
+int dict_teg(lua_State *L)
+{
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring name(luaT_towstring(L, 2));
+        tstring teg(luaT_towstring(L, 3));
+        bool remove_or_add = false;
+        bool result = d->teg(name, teg, &remove_or_add);
+        if (!result)
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        lua_pushboolean(L, 1);
+        lua_pushboolean(L, remove_or_add ? 1 : 0);
+        return 2;
+    }
+    return dict_invalidargs(L, "teg");
+}
+
 int dict_gc(lua_State *L)
 {
     if (luaT_check(L, 1, get_dict(L)))
@@ -833,6 +933,7 @@ int dict_new(lua_State *L)
         regFunction(L, "find", dict_find);
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
+        regFunction(L, "teg", dict_teg);
         //regFunction(L, "remove", dict_remove);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");

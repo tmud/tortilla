@@ -5,7 +5,7 @@ local lor = {}
 local initialized = false
 local lor_catch_mode = false
 local lor_show_mode = false
-local lor_trigger, lor_check, lor_tegs, lor_import_trigger, lor_import, lor_drop
+local lor_trigger, lor_check, lor_tegs, lor_import_trigger, lor_import, lor_drop, lor_last
 local lor_strings = {}
 local lor_dictonary
 local lor_cache = {}
@@ -126,15 +126,17 @@ local function save_lor_strings()
   lor_strings = {}
   if not res then
     if err == 'exist' then
+      lor_last = name
       return false, 'Предмет уже есть в базе: '..name
     end
     local errtext = err and ' Ошибка: '..err..'.' or ''
     return false, "Предмет не добавлен в базу из-за ошибки: "..name..errtext
   end
+  lor_last = name
   return true, "Предмет добавлен в базу: "..name
 end
 
-local function print_object(s)
+local function print_object(name, s)
   lor_show_mode = true
   local t = s:tokenize('\r\n')
   local vs = createViewString()
@@ -143,6 +145,7 @@ local function print_object(s)
     vs:print(0)
   end
   lor_show_mode = false
+  lor_last = name
 end
 
 local function reteg(s)
@@ -170,7 +173,7 @@ local function find_lor_strings(id)
     local index = tonumber(id)
     local t = lor_cache[index]
     if t then
-      print_object(t.data)
+      print_object(t.name, t.data)
     else
       print("Ничего не найдено")
     end
@@ -184,8 +187,8 @@ local function find_lor_strings(id)
   local count = 0
   for _ in pairs(t) do count = count + 1 end
   if count == 1 then
-    local _,info = next(t)
-    print_object(info)
+    local name,info = next(t)
+    print_object(name, info)
   else
     print("Уточните поиск (лор номер):")
     lor_cache = {}
@@ -196,7 +199,11 @@ local function find_lor_strings(id)
       local t2 = t[1]:tokenize(';')
       local tegs = table.concat(t2, ',', 2)
       c[id] = { name = name, data = data, tegs = tegs }
-      output(""..id..". "..name.." ("..tegs..")")
+      if tegs:len()>0 then
+        output(""..id..". "..name.." ("..tegs..")")
+      else
+        output(""..id..". "..name)
+      end
     end
   end
 end
@@ -244,24 +251,56 @@ local function import(file)
   end
 end
 
+local function lorteg(teg)
+  if teg:len() == 0 then
+    print("Ошибка: Укажите тег.")
+    return
+  end
+  if not lor_last then
+    print("Ошибка: тег присваивается или снимается с последнего осмотренного предмета.")
+    return
+  end
+  local res, op = lor_dictonary:teg(lor_last, teg)
+  if not res then
+    print("Ошибка: команда лортег не выполнилась.")
+    return
+  end
+  if op then 
+    print("Добавлен тег '"..teg.."' для '"..lor_last.."'.")
+  else
+    print("Тег '"..teg.."' удален для '"..lor_last.."'.")
+  end
+end
+
 function lor.gamecmd(t)
   if t[1] ~= "лор" and t[1] ~= "лортег" then return t end
   if not initialized then
     print("Ошибка в настройках плагина.")
     return nil
   end
+  if t[1] == 'лортег' then
+    local id = table.concat(t, '', 2)
+    lorteg(id:trim())
+    return {}
+  end
   local id = ""
   for k=2,#t do
     if k ~= 2 then id = id..' ' end
     id = id..t[k]
   end
+  id = id:trim()
   id = table.concat(id:tokenize('.'), ' ')
   if id:len() == 0 then
     if #lor_cache > 0 then
       print("Последний поиск (лор номер):")
     end
     for id,t in ipairs(lor_cache) do
-      output(""..id..". "..t.name.." ("..t.tegs..")")
+      local tegs = t.tegs
+      if tegs:len() > 0 then
+        output(""..id..". "..t.name.." ("..t.tegs..")")
+      else
+        output(""..id..". "..t.name)
+      end
     end
     print("Что искать в базе?")
   else

@@ -39,7 +39,7 @@ void tmcLog(const tstring& msg) { lp()->tmcLog(msg); }
 void pluginLogOut(const tstring& msg) { lp()->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
-const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : L"?плагин?"; }
+const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : L"?"; }
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
