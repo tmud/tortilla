@@ -260,15 +260,17 @@ local function lorteg(teg)
     print("Ошибка: тег присваивается или снимается с последнего осмотренного предмета.")
     return
   end
-  local res, op = lor_dictonary:teg(lor_last, teg)
-  if not res then
-    print("Ошибка: команда лортег не выполнилась.")
-    return
-  end
-  if op then 
+  local res = lor_dictonary:teg(lor_last, teg)
+  if res == 'added' then
     print("Добавлен тег '"..teg.."' для '"..lor_last.."'.")
-  else
+  elseif res == 'removed' then
     print("Тег '"..teg.."' удален для '"..lor_last.."'.")
+  elseif res == 'absent' then
+    print("Объекта '"..lor_last.."' нет в базе. Тег не добавлен.")
+  elseif res == 'exist' then
+    print("У объекта '"..lor_last.."' уже есть данный автотег.")
+  else
+    print("Ошибка: команда лортег не выполнилась.")
   end
 end
 

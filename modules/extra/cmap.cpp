@@ -139,10 +139,10 @@ private:
 class new_filewriter
 {
     HANDLE hfile;
+protected:
     tstring m_path;
     DWORD start_data;
     DWORD written;
-
 public:
     new_filewriter() : hfile(INVALID_HANDLE_VALUE), start_data(0), written(0) {}
     ~new_filewriter() { close(); }
@@ -166,7 +166,35 @@ public:
     {
         error();
     }
+protected:
+    bool error() 
+    {
+       close();
+       DeleteFile(m_path.c_str());
+       return false;
+    }
+    bool write_tofile(const tstring& t, DWORD *written)
+    {
+        *written = 0;
+        u8string tmp(TW2U(t.c_str()));
+        DWORD towrite = tmp.length();
+        if (!WriteFile(hfile, tmp.c_str(), towrite, written, NULL) || *written!=towrite)
+            return false;
+        return true;
+    }
+    bool write_tofile(const MemoryBuffer& t, DWORD *written)
+    {
+        *written = 0;
+        DWORD towrite = t.getSize();
+        if (!WriteFile(hfile, t.getData(), towrite, written, NULL) || *written!=towrite)
+            return false;
+        return true;
+    }
+};
 
+class database_file_writer : public new_filewriter
+{
+public:
     struct WriteResult
     {
         DWORD start;
@@ -186,10 +214,10 @@ public:
 
         start_data += written;
         DWORD written1 = 0;
-        if (!write_tofile(hfile, tmp, &written1))
+        if (!write_tofile(tmp, &written1))
             return error();
         DWORD written2 = 0;
-        if (!write_tofile(hfile, data, &written2))
+        if (!write_tofile(data, &written2))
             return error();
         written = written1 + written2;
         if (r) 
@@ -198,30 +226,6 @@ public:
           r->title_len = written1;
           r->data_len = written2;
         }
-        return true;
-    }
-private:
-    bool error() 
-    {
-       close();
-       DeleteFile(m_path.c_str());
-       return false;
-    }
-    bool write_tofile(HANDLE hfile, const tstring& t, DWORD *written)
-    {
-        *written = 0;
-        u8string tmp(TW2U(t.c_str()));
-        DWORD towrite = tmp.length();
-        if (!WriteFile(hfile, tmp.c_str(), towrite, written, NULL) || *written!=towrite)
-            return false;
-        return true;
-    }
-    bool write_tofile(HANDLE hfile, const MemoryBuffer& t, DWORD *written)
-    {
-        *written = 0;
-        DWORD towrite = t.getSize();
-        if (!WriteFile(hfile, t.getData(), towrite, written, NULL) || *written!=towrite)
-            return false;
         return true;
     }
 };
@@ -236,32 +240,27 @@ class MapDictonary
     std::vector<fileinfo> m_files;
     struct index
     {
-        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0) {}
+        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0), manual(false) {}
         tstring name;
         int file;
         DWORD pos_in_file;
         DWORD name_tegs_len;
         DWORD data_len;
+        bool  manual;
     };
     PhrasesList m_phrases;
     typedef std::shared_ptr<index> index_ptr;
     typedef std::vector<index_ptr> indexes;
     std::unordered_map<tstring, indexes> m_indexes;
     typedef std::unordered_map<tstring, indexes>::iterator iterator;
-
-
     std::unordered_map<tstring, index_ptr> m_objects;
-    typedef std::unordered_map<tstring, index_ptr>::iterator objects_iterator;
+    typedef std::unordered_map<tstring, index_ptr>::iterator objects_iterator;    
+    typedef std::vector<tstring> manual_tegs;
+    typedef std::shared_ptr<manual_tegs> manual_tegs_ptr;
+    std::map<tstring, manual_tegs_ptr> m_manual_tegs;
+    typedef std::map<tstring, manual_tegs_ptr>::iterator manual_tegs_iterator;
+    bool m_manual_tegs_changed;
 
-    PhrasesList m_tegs_phrases;
-    std::unordered_map<tstring, indexes> m_tegs_indexes;
-
-    typedef std::set<tstring> filter;
-    typedef std::shared_ptr<filter> filter_ptr;
-    typedef std::map<tstring, filter_ptr> filter_map;
-    typedef std::map<tstring, filter_ptr>::iterator filter_map_iterator;
-    filter_map m_tegs;
-    
     int m_current_file;
     tstring m_base_dir;
     lua_State *L;
@@ -272,14 +271,24 @@ class MapDictonary
         e.append(file);
         base::log(L, e.c_str());
     }
+    void filesave_error(const tstring& file)
+    {
+        tstring e(L"Ошибка записи файла: ");
+        e.append(file);
+        base::log(L, e.c_str());
+    }
 
 public:
-    MapDictonary(const tstring& dir, lua_State *pl) : m_current_file(-1), m_base_dir(dir), L(pl)
+    MapDictonary(const tstring& dir, lua_State *pl) : m_manual_tegs_changed(false), m_current_file(-1), m_base_dir(dir), L(pl)
     {
         buffer.alloc(4096);
         load_db();
+        load_manual_tegs();
     }
-    ~MapDictonary() {}
+    ~MapDictonary() 
+    {
+        save_manual_tegs();
+    }
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
 
     bool update(const lua_ref& r, tstring *error)
@@ -296,6 +305,7 @@ public:
             indexes &x = it->second;
             for (int i=0,e=x.size();i<e;++i)
             {
+                if (x[i]->manual) continue;
                 int file = x[i]->file;
                 indexes_set &c = cat[file];
                 c.insert(x[i]);
@@ -334,7 +344,7 @@ public:
 
             tstring newfile_path(fi.path);
             newfile_path.append(L".new");
-            new_filewriter fw;
+            database_file_writer fw;
             if (!fw.open(newfile_path))
             {
                 error->assign(L"Ошибка при открытии файла на запись: ");
@@ -382,7 +392,7 @@ public:
                     }
                 }
                 lua_pop(L, 1);
-                new_filewriter::WriteResult r;
+                database_file_writer::WriteResult r;
                 if (!fw.write(i->name, mb, tegs, &r))
                 {
                     error->assign(L"Ошибка при записи файла: ");
@@ -440,7 +450,7 @@ public:
 
         if (result)
         {
-             // удаление старых файлов, переписываем индекс
+             // удаление старых файлов
             for (int i=0,e=m_files.size(); i<e; ++i)
             {
                 tstring name(m_files[i].path);
@@ -449,9 +459,11 @@ public:
                 m_files[i].size = new_files_size[i];
             }
 
+            // пересчитываем индексы и теги
             m_indexes.clear();
             m_phrases.clear();
             m_objects.clear();
+            std::map<tstring, manual_tegs_ptr> new_manual_tegs;
             std::unordered_map<index_ptr, new_index*>::iterator it = new_indexes.begin(), it_end = new_indexes.end();
             for (; it!=it_end; ++it)
             {
@@ -464,9 +476,36 @@ public:
                 for (int k=0,e=new_tegs.size();k<e;++k)
                     add_index(new_tegs[k], i);
                 m_objects[i->name] = i;
+
+                manual_tegs_iterator mt = m_manual_tegs.find(i->name);
+                if (mt != m_manual_tegs.end())
+                {
+                    manual_tegs_ptr newmt = std::make_shared<manual_tegs>();
+                    manual_tegs_ptr p = mt->second;
+                    for (int j=0,e=p->size(); j<e; ++j) 
+                    {
+                       const tstring& manual_teg = p->at(j);
+                       if (std::find(new_tegs.begin(), new_tegs.end(), manual_teg) == new_tegs.end())
+                           newmt->push_back(manual_teg);
+                    }
+                    if (!newmt->empty())
+                    {
+                        index_ptr mi = std::make_shared<index>(*i);
+                        mi->manual = true;
+                        for (int j=0,e=newmt->size(); j<e; ++j)
+                        {
+                            const tstring& manual_teg = newmt->at(j);
+                            add_index(manual_teg, mi);
+                        }
+                        new_manual_tegs[i->name] = newmt;
+                    }
+                }
                 delete ni;
             }
             new_indexes.clear();
+            m_manual_tegs.swap(new_manual_tegs);
+            m_manual_tegs_changed = true;
+            save_manual_tegs();
         }
         return result;
     }
@@ -481,66 +520,76 @@ public:
         m_files.clear();
     }
 
-    bool teg(const tstring& name, const tstring& teg, bool *remove_or_add)
+    enum TegResult { ERR = 0, ABSENT, EXIST, ADDED, REMOVED };
+    TegResult teg(const tstring& name, const tstring& teg)
     {
-        bool action_add = true;
-        objects_iterator it = m_objects.find(name);
-        if (it == m_objects.end())
-            return false;
-        index_ptr ix = it->second;
+        if (teg.find(L";") != teg.npos)
+            return ERR;
 
-        tstring t(teg);
-        tstring_tolower(&t);
-        Phrase p(t);
-        int count = p.len();
-        for (int i=0; i<count; ++i)
+        objects_iterator ot = m_objects.find(name);
+        if (ot == m_objects.end())
+            return ABSENT;
+
+        bool manual_indexes_exists = false;
+        iterator it = m_indexes.find(teg);
+        if (it != m_indexes.end())
         {
-           tstring part(p.get(i));
-           m_tegs_phrases.addPhrase(new Phrase(part));
-           //add_toindex(part, ix);
-           for (int j=i+1; j<count; ++j) 
-           {
-              part.assign(p.get(i));
-              for (int k=j; k<count; ++k)
-              {
-                 part.append(L" ");
-                 part.append(p.get(k));
-                 m_tegs_phrases.addPhrase(new Phrase(part));
-                 //add_toindex(part, ix);
-              }
-           }
+            indexes& x = it->second;
+            for (int i=0,e=x.size();i<e;++i)
+            {
+               if (x[i]->name == name)
+               {
+                   if (!x[i]->manual)
+                      return EXIST;
+                   manual_indexes_exists = true;
+                   break;
+               }
+            }
         }
 
-
-       /* else 
+        if (manual_indexes_exists)
         {
-            m_tegs_phrases.addPhrase(new Phrase(t));
-            //add_toindex(n, ix);
-        }*/
+            struct pred { tstring name;
+               bool operator() (index_ptr i) { return (i->manual && i->name == name); }
+            };
+            indexes& x = it->second;
+            pred p; p.name = name;
+            x.erase( std::remove_if(x.begin(), x.end(), p), x.end() );
+            manual_tegs_iterator mt = m_manual_tegs.find(name);
+            if (mt != m_manual_tegs.end())
+            {
+                struct pred2 { tstring name;
+                    bool operator() (const tstring& n) { return (n == name); }
+                };
+                manual_tegs_ptr pt = mt->second;
+                pred2 p2; p2.name = teg;
+                pt->erase( std::remove_if(pt->begin(), pt->end(), p2), pt->end());
+                if (pt->empty())
+                    m_manual_tegs.erase(mt);
+            }
+            m_manual_tegs_changed = true;
+            return REMOVED;
+        }
 
+        index_ptr ix = ot->second;
+        index_ptr manual_teg_ix = std::make_shared<index>(*ix);
+        manual_teg_ix->manual = true;
+        add_index(teg, manual_teg_ix);
 
-        /*
-
-        filter_ptr m;
-        filter_map_iterator dt = m_tegs.find(t);
-        if (dt == m_tegs.end())
+        manual_tegs_iterator mt = m_manual_tegs.find(ix->name);
+        if (mt != m_manual_tegs.end())
         {
-            filter_ptr m = std::make_shared<filter>();
-            m_tegs[t] = m;
-            m->insert(name);            
+            manual_tegs_ptr p = mt->second;
+            p->push_back(teg);
         }
         else
         {
-            filter_ptr m = dt->second;
-            if (m->find(name) == m->end())
-                m->insert(name);
-            else {
-                action_add = false;
-                m->erase(name);
-            }
+            manual_tegs_ptr p = std::make_shared<manual_tegs>();
+            p->push_back(teg);
+            m_manual_tegs[ix->name] = p;
         }
-        *remove_or_add = action_add;*/
-        return true;
+        m_manual_tegs_changed = true;
+        return ADDED;
     }
 
     int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -780,6 +829,57 @@ private:
 
         }
     }
+
+    void save_manual_tegs()
+    {
+        if (!m_manual_tegs_changed)
+            return;
+
+        class tegs_file_writer : public new_filewriter  {
+        public:
+        bool write(const tstring& name, const std::vector<tstring>& tegs)
+        {
+            tstring s(name);
+            for (int i=0,e=tegs.size();i<e;++i)
+            {
+                s.append(L";");
+                s.append(tegs[i]);
+            }
+            DWORD written = 0;
+            return write_tofile(s, &written);
+        }} file;
+
+        tstring path(m_base_dir);
+        path.append(L"usertegs.new");
+        if (!file.open(path.c_str()))
+        {
+            filesave_error(path);
+            return;
+        }
+        manual_tegs_iterator mt = m_manual_tegs.begin(), mt_end = m_manual_tegs.end();
+        for(; mt!=mt_end;++mt)
+        {
+            manual_tegs_ptr p = mt->second;
+            if (p->empty())
+                continue;
+            if (!file.write(mt->first,*p))
+            {
+                filesave_error(path);
+                return;
+            }
+        }
+        file.close();
+        tstring newpath(m_base_dir);
+        newpath.append(L"usertegs.db");
+        if (!::MoveFileEx(path.c_str(), newpath.c_str(), MOVEFILE_REPLACE_EXISTING))
+            return;
+        m_manual_tegs_changed = false;
+    }
+
+    void load_manual_tegs()
+    {
+    
+    }
 };
 
 int dict_add(lua_State *L)
@@ -876,16 +976,24 @@ int dict_teg(lua_State *L)
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring name(luaT_towstring(L, 2));
         tstring teg(luaT_towstring(L, 3));
-        bool remove_or_add = false;
-        bool result = d->teg(name, teg, &remove_or_add);
-        if (!result)
-        {
-            lua_pushboolean(L, 0);
-            return 1;
+        MapDictonary::TegResult result = d->teg(name, teg);
+        switch (result) {
+        case MapDictonary::ABSENT:
+            lua_pushstring(L, "absent");
+            break;
+        case MapDictonary::EXIST:
+            lua_pushstring(L, "exist");
+            break;
+        case MapDictonary::ADDED:
+            lua_pushstring(L, "added");
+            break;
+        case MapDictonary::REMOVED:
+            lua_pushstring(L, "removed");
+            break;
+        default:
+            lua_pushnil(L);
         }
-        lua_pushboolean(L, 1);
-        lua_pushboolean(L, remove_or_add ? 1 : 0);
-        return 2;
+        return 1;
     }
     return dict_invalidargs(L, "teg");
 }
