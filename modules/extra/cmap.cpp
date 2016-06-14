@@ -230,6 +230,15 @@ public:
     }
 };
 
+struct MapDictonaryData
+{
+    std::string data;
+    std::vector<tstring> auto_tegs;
+    std::vector<tstring> manual_tegs;
+};
+typedef std::shared_ptr<MapDictonaryData> data_ptr;
+typedef std::map<tstring,data_ptr> MapDictonaryMap;
+
 class MapDictonary
 {
     struct fileinfo
@@ -614,7 +623,7 @@ public:
         return MD_OK;
     }
 
-    bool find(const tstring& name, std::map<tstring,tstring>* values)
+    bool find(const tstring& name, MapDictonaryMap* values)
     {
         tstring n(name);
         tstring_tolower(&n);
@@ -642,18 +651,48 @@ public:
                 }
 
                 index_ptr p = ix[i];
-                bool result = fr.read(p->pos_in_file, p->data_len+p->name_tegs_len, &buffer);
+                bool result = fr.read(p->pos_in_file, p->name_tegs_len, &buffer);
                 if (!result)
                 {
                     fileerror(fi.path);
                     continue;
                 }
-                int size = buffer.getSize();
-                buffer.keepalloc(size+1);
-                char *b = buffer.getData();
-                b[size] = 0;
+
+                data_ptr d = std::make_shared<MapDictonaryData>();
+                {
+                    int size = buffer.getSize();
+                    buffer.keepalloc(size+1);
+                    char *b = buffer.getData();
+                    b[size] = 0;
+                    Tokenizer tk(TU2W(b), L";\r\n");
+                    tk.trimempty();
+                    for (int i=1,e=tk.size();i<e;++i)
+                        d->auto_tegs.push_back(tk[i]);
+                }
+                result = fr.read(p->pos_in_file+p->name_tegs_len, p->data_len, &buffer);
+                if (!result)
+                {
+                    fileerror(fi.path);
+                    continue;
+                }
+                // load data
+                {
+                   int size = buffer.getSize();
+                   buffer.keepalloc(size+1);
+                   char *b = buffer.getData();
+                   b[size] = 0;
+                   d->data.assign(b);
+                }
                 const tstring& name = ix[i]->name;
-                values->operator[](name) = tstring(TU2W(b));
+
+                // manual tegs
+                manual_tegs_iterator mt = m_manual_tegs.find(name);
+                if (mt != m_manual_tegs.end())
+                {
+                    manual_tegs_ptr p = mt->second;
+                    std::copy(p->begin(), p->end(), std::back_inserter(d->manual_tegs));
+                }
+                values->operator[](name) = d;
             }
         }
         return true;
@@ -878,7 +917,29 @@ private:
 
     void load_manual_tegs()
     {
-    
+        tstring path(m_base_dir);
+        path.append(L"usertegs.db");
+        load_file fr(path);
+        if (fr.file_missed)
+            return;
+        if (!fr.result)
+        {
+            tstring error(L"Ошибка при открытии файла: ");
+            error.append(path.c_str());
+            fileerror( error.c_str() );
+            return;
+        }
+        std::string s;
+        while (fr.readNextString(&s))
+        {
+            tstring ws(TU2W(s.c_str()));
+            Tokenizer tk(ws.c_str(), L";");
+            if (tk.size() < 2) continue;
+            const tstring& name = tk[0];
+            for (int i=1,e=tk.size();i<e;++i)
+                teg(name, tk[i]);
+        }
+        fr.close();
     }
 };
 
@@ -920,8 +981,8 @@ int dict_find(lua_State *L)
     {
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
-        std::map<tstring,tstring> result;
-        typedef std::map<tstring,tstring>::iterator iterator;
+        MapDictonaryMap result;
+        typedef MapDictonaryMap::iterator iterator;
         if (d->find(id, &result) && !result.empty())
         {
             lua_newtable(L);
@@ -929,7 +990,34 @@ int dict_find(lua_State *L)
             for (;it!=it_end;++it)
             {
                 luaT_pushwstring(L, it->first.c_str());
-                luaT_pushwstring(L, it->second.c_str());
+                lua_newtable(L);
+
+                data_ptr p = it->second;
+                lua_pushstring(L, "data");
+                lua_pushstring(L, p->data.c_str());
+                lua_settable(L, -3);
+
+                const std::vector<tstring>& at = p->auto_tegs;
+                lua_pushstring(L, "auto");
+                lua_newtable(L);
+                for (int i=0,e=at.size();i<e;++i)
+                {
+                    lua_pushinteger(L, i+1);
+                    luaT_pushwstring(L, at[i].c_str());
+                    lua_settable(L, -3);
+                }                
+                lua_settable(L, -3);
+
+                const std::vector<tstring>& mt = p->manual_tegs;
+                lua_pushstring(L, "tegs");
+                lua_newtable(L);
+                for (int i=0,e=mt.size();i<e;++i)
+                {
+                    lua_pushinteger(L, i+1);
+                    luaT_pushwstring(L, mt[i].c_str());
+                    lua_settable(L, -3);
+                }
+                lua_settable(L, -3);
                 lua_settable(L, -3);
             }
         }

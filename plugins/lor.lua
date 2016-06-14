@@ -136,11 +136,11 @@ local function save_lor_strings()
   return true, "Предмет добавлен в базу: "..name
 end
 
-local function print_object(name, s)
+local function print_object(name, info)
   lor_show_mode = true
-  local t = s:tokenize('\r\n')
+  local t = info.data:tokenize('\r\n')
   local vs = createViewString()
-  for i=2,#t do
+  for i=1,#t do
     vs:setData(t[i])
     vs:print(0)
   end
@@ -168,12 +168,28 @@ local function reteg(s)
   return tegs
 end
 
+local function concat_tegs(info)
+  local tegs1 = table.concat(info.auto, ',')
+  local tegs2 = table.concat(info.tegs, ',')
+  local tegs = ''
+  if tegs1:len() > 0 then
+    if tegs2:len() > 0 then
+      tegs = tegs1..','..tegs2
+    else
+      tegs = tegs1
+    end
+  elseif tegs2:len() > 0 then
+    tegs = tegs2
+  end
+  return tegs
+end
+
 local function find_lor_strings(id)
   if id:only('0123456789') then
     local index = tonumber(id)
     local t = lor_cache[index]
     if t then
-      print_object(t.name, t.data)
+      print_object(t.name, t.info)
     else
       print("Ничего не найдено")
     end
@@ -193,12 +209,10 @@ local function find_lor_strings(id)
     print("Уточните поиск (лор номер):")
     lor_cache = {}
     local c = lor_cache
-    for name,data in pairs(t) do
+    for name,info in pairs(t) do
       local id = #c+1
-      local t = data:tokenize('\r\n')
-      local t2 = t[1]:tokenize(';')
-      local tegs = table.concat(t2, ',', 2)
-      c[id] = { name = name, data = data, tegs = tegs }
+      c[id] = { name = name, info = info }
+      local tegs = concat_tegs(info)
       if tegs:len()>0 then
         output(""..id..". "..name.." ("..tegs..")")
       else
@@ -297,14 +311,16 @@ function lor.gamecmd(t)
       print("Последний поиск (лор номер):")
     end
     for id,t in ipairs(lor_cache) do
-      local tegs = t.tegs
+      local tegs = concat_tegs(t.info)
       if tegs:len() > 0 then
-        output(""..id..". "..t.name.." ("..t.tegs..")")
+        output(""..id..". "..t.name.." ("..tegs..")")
       else
         output(""..id..". "..t.name)
       end
     end
-    print("Что искать в базе?")
+    if #lor_cache == 0 then
+      print("Что искать в базе?")
+    end
   else
     find_lor_strings(id)
   end
