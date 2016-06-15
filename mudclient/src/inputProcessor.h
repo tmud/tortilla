@@ -90,10 +90,6 @@ public:
         base::insert(end(), cmds.begin(), cmds.end());
         cmds.resize(0);
     }
-    void push_back(InputCommands& cmds, int pos) {
-        base::insert(end(), cmds.begin()+pos, cmds.end());
-        cmds.base::erase(cmds.begin()+pos, cmds.end());
-    }
     void clear() {
         base::clear();
     }
@@ -111,6 +107,7 @@ public:
     }
     void repeat(size_t count) 
     {
+        if (count <= 1) return;
         size_t size = base::size();
         size_t newsize = count * size;
         base::resize(newsize);
@@ -122,7 +119,7 @@ public:
                 size_t ci = k*size+i;
                 at(ci) = c;
             }
-        }      
+        }
     }
 };
 

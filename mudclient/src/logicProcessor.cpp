@@ -140,7 +140,7 @@ void LogicProcessor::runCommands(InputCommands& cmds)
             if (p.empty() || repeats < 0)
                 continue;
             if (repeats > 100)
-            {   
+            {
                 tstring error(L"Ошибка: Слишком большое количество повторов [");
                 error.append(cmd->srccmd);
                 error.append(cmd->srcparameters);
@@ -155,9 +155,8 @@ void LogicProcessor::runCommands(InputCommands& cmds)
             InputCommands queue_cmds;
             makeCommands(t, &queue_cmds);
             queue_cmds.repeat(repeats);
-            queue_cmds.push_back(cmds, i+1);
             m_commands_queue.push_back(queue_cmds);
-            return;
+            continue;
         }
         if (!m_commands_queue.empty())
         {
@@ -430,4 +429,6 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
+    m_commands_queue.clear();
+    m_waitcmds.clear();
 }
