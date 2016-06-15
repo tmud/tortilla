@@ -14,7 +14,7 @@
 class parser
 {
 public:
-    parser(InputCommand *pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
+    parser(InputCommand pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
     int size() const { return cmd->parameters_list.size(); }
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
@@ -29,7 +29,7 @@ public:
     void blockedbyprops() { error(L" оманда не выполнена (открыто окно настроек)."); }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
-    InputCommand *cmd;
+    InputCommand cmd;
     tstring *perror;
 };
 //-------------------------------------------------------------------
@@ -84,7 +84,7 @@ void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
    }
 }
 
-void LogicProcessor::processSystemCommand(InputCommand* cmd)
+void LogicProcessor::processSystemCommand(InputCommand cmd)
 {
     tstring error, main_cmd(cmd->command);
     recognizeSystemCommand(&main_cmd, &error);
@@ -183,7 +183,7 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
     }
 }
 
-void LogicProcessor::processGameCommand(InputCommand* cmd)
+void LogicProcessor::processGameCommand(InputCommand cmd)
 {
     tstring br(L"\r\n");
     tstring tmp(cmd->command);

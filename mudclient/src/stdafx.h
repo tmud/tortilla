@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98beta9"
+#define TORTILLA_VERSION L"0.98b32"
 #define TORTILLA_VERSION_MAJOR 0
 #define TORTILLA_VERSION_MINOR 98
 
@@ -57,6 +57,7 @@
 #include <set>
 #include <deque>
 #include <functional>
+#include <memory>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;
