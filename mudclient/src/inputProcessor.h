@@ -92,8 +92,7 @@ public:
     }
     void push_back(InputCommands& cmds, int pos) {
         base::insert(end(), cmds.begin()+pos, cmds.end());
-        int newsize = cmds.size() - pos + 1;
-        cmds.resize(newsize);
+        cmds.base::erase(cmds.begin()+pos, cmds.end());
     }
     void clear() {
         base::clear();

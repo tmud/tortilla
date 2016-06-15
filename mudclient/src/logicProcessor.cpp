@@ -157,7 +157,7 @@ void LogicProcessor::runCommands(InputCommands& cmds)
             queue_cmds.repeat(repeats);
             queue_cmds.push_back(cmds, i+1);
             m_commands_queue.push_back(queue_cmds);
-            continue;
+            return;
         }
         if (!m_commands_queue.empty())
         {
