@@ -277,8 +277,24 @@ local function lorteg(teg)
   local res = lor_dictonary:teg(lor_last, teg)
   if res == 'added' then
     print("Добавлен тег '"..teg.."' для '"..lor_last.."'.")
+    for _,t in ipairs(lor_cache) do
+      if t.name == lor_last then
+        local t = t.info.tegs
+        t[#t+1] = teg
+        break
+      end
+    end
   elseif res == 'removed' then
     print("Тег '"..teg.."' удален для '"..lor_last.."'.")
+    for _,t in ipairs(lor_cache) do
+      if t.name == lor_last then
+        local t = t.info.tegs
+        for k,kteg in pairs(t) do
+          if teg == kteg then table.remove(t, k) break end
+        end
+        break
+      end
+    end
   elseif res == 'absent' then
     print("Объекта '"..lor_last.."' нет в базе. Тег не добавлен.")
   elseif res == 'exist' then
