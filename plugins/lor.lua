@@ -31,12 +31,68 @@ function lor.version()
   return '1.04'
 end
 
-local function output(s)
-  _G.print(s)
-end
 local function print(s)
   _G.print('[lor]: '..s)
 end
+
+--#### Perpage output
+local lor_output_perpage
+local lor_output_count = 0
+local lor_output_page = 0
+local lor_output_pages = 0
+local lor_output = {}
+
+local function init_output()
+  lor_output_count = 0
+  lor_output_page = 0
+  lor_output_pages = 0
+  lor_output = {}
+end
+
+local function output(s)
+  if not lor_output_perpage then
+    _G.print(s)
+    return
+  end
+  if lor_output_count < lor_output_perpage then
+    lor_output_count = lor_output_count + 1
+    _G.print(s)
+  end
+  lor_output[#lor_output+1] = s
+end
+
+local function end_output()
+  local count = #lor_output
+  if count > 0 then
+    lor_output_pages = math.ceil( count / lor_output_perpage )
+    lor_output_page = 1
+    if lor_output_page ~= lor_output_pages then
+      print('Страница: '..lor_output_page..'/'..lor_output_pages)
+    end
+  end
+end
+
+local function next_ouput_page()
+  local count = #lor_output
+  if count == 0 then return false end
+  lor_output_page = lor_output_page + 1
+  if lor_output_page > lor_output_pages then lor_output_page = 1 end
+  local from = (lor_output_page - 1) * lor_output_perpage + 1
+  local to = from + lor_output_perpage - 1
+  if to > count then to = count end
+  for i=from,to do
+    _G.print(lor_output[i])
+  end
+  if lor_output_page ~= lor_output_pages then
+    print('Страница: '..lor_output_page..'/'..lor_output_pages)
+  end
+  return true
+end
+
+local function first_output_page()
+  lor_output_page = lor_output_pages
+end
+--##### Perpage output
 
 function lor.init()
   initialized = false
@@ -89,6 +145,12 @@ function lor.init()
   end
   if not lor_dictonary then
     terminate("Не загружен модуль extra для работы с базой предметов.")
+  end
+  local pp = t.perpage
+  if type(pp) == 'number' and pp > 10 then
+    lor_output_perpage = pp
+  else
+    lor_output_perpage = 20
   end
   initialized = true
 end
@@ -207,6 +269,7 @@ local function find_lor_strings(id)
     print_object(name, info)
   else
     print("Уточните поиск (лор номер):")
+    init_output()
     lor_cache = {}
     local c = lor_cache
     for name,info in pairs(t) do
@@ -219,6 +282,7 @@ local function find_lor_strings(id)
         output(""..id..". "..name)
       end
     end
+    end_output()
   end
 end
 
@@ -276,6 +340,7 @@ local function lorteg(teg)
   end
   local res = lor_dictonary:teg(lor_last, teg)
   if res == 'added' then
+    lor_output = {}
     print("Добавлен тег '"..teg.."' для '"..lor_last.."'.")
     for _,t in ipairs(lor_cache) do
       if t.name == lor_last then
@@ -285,6 +350,7 @@ local function lorteg(teg)
       end
     end
   elseif res == 'removed' then
+    lor_output = {}
     print("Тег '"..teg.."' удален для '"..lor_last.."'.")
     for _,t in ipairs(lor_cache) do
       if t.name == lor_last then
@@ -322,10 +388,17 @@ function lor.gamecmd(t)
   end
   id = id:trim()
   id = table.concat(id:tokenize('.'), ' ')
+  if id == '0' then first_output_page() id="" end
   if id:len() == 0 then
     if #lor_cache > 0 then
-      print("Последний поиск (лор номер):")
+      if lor_output_pages > 1 then
+        print("Последний поиск (лор номер, 0-с первой страницы):")
+      else
+        print("Последний поиск (лор номер):")
+      end
     end
+    if next_ouput_page() then return {} end
+    init_output()
     for id,t in ipairs(lor_cache) do
       local tegs = concat_tegs(t.info)
       if tegs:len() > 0 then
@@ -334,6 +407,7 @@ function lor.gamecmd(t)
         output(""..id..". "..t.name)
       end
     end
+    end_output()
     if #lor_cache == 0 then
       print("Что искать в базе?")
     end

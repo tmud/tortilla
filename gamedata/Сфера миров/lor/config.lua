@@ -19,6 +19,7 @@ check = function()
   end
 end
 
+perpage = 25
 import_key = key
 import = check
 
