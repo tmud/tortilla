@@ -9,8 +9,6 @@ PropertiesDisplay::PropertiesDisplay() : display_width(0), display_height(0)
 
 PropertiesDisplay::~PropertiesDisplay()
 {
-    std::for_each( plugins_windows.begin(), plugins_windows.end(),
-        [](std::pair<const tstring, OutputWindowsCollection*>& o) { delete o.second; } );
 }
 
 void PropertiesDisplay::initDefault()
@@ -18,7 +16,7 @@ void PropertiesDisplay::initDefault()
     initMainWindow();
     initFindWindow();
     initOutputWindows();
-    plugins_windows.clear();
+    plugins_data.setAllOff();
 }
 
 bool PropertiesDisplay::load(xml::node root_node)
@@ -58,7 +56,7 @@ bool PropertiesDisplay::load(xml::node root_node)
     if (!loadOutputWindows(ow, &output_windows))
         initOutputWindows();
 
-    xml::request p(root_node, L"plugins/plugin");
+    /*xml::request p(root_node, L"plugins/plugin");
     for (int i=0,e=p.size();i<e;++i)
     {
         tstring name;
@@ -71,7 +69,7 @@ bool PropertiesDisplay::load(xml::node root_node)
            plugins_windows[name] = owc;
         else
            delete owc;
-    }
+    }*/
     return true;
 }
 
@@ -92,7 +90,7 @@ void PropertiesDisplay::save(xml::node root_node)
     xml::node w = r.createsubnode(L"windows");
     saveOutputWindows(w, output_windows);
 
-    xml::node p = r.createsubnode(L"plugins");
+    /*xml::node p = r.createsubnode(L"plugins");
     iterator it = plugins_windows.begin(), it_end = plugins_windows.end();
     for (; it!=it_end; ++it)
     {
@@ -101,7 +99,7 @@ void PropertiesDisplay::save(xml::node root_node)
         xml::node pw = p.createsubnode(L"plugin");
         pw.set(L"key", it->first);
         saveOutputWindows(pw, *c);
-    }
+    }*/
 }
 
 bool PropertiesDisplay::current(int width, int height) const

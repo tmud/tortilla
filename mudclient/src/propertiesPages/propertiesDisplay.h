@@ -15,17 +15,13 @@ class PropertiesDisplay
     PropertiesWindow main_window;
     PropertiesWindow find_window;
     OutputWindowsCollection output_windows;
-    std::map<tstring, OutputWindowsCollection*> plugins_windows;
-    typedef std::map<tstring, OutputWindowsCollection*>::iterator iterator;
+    PluginsDataValues plugins_data;
 public:
     PropertiesWindow* mainWindow() { return &main_window; }
     PropertiesWindow* findWindow() { return &find_window; }
     OutputWindowsCollection* outputWindows() { return &output_windows; }
-    OutputWindowsCollection* pluginWindows(const tstring& plugin) {
-       iterator it = plugins_windows.find(plugin);
-       if (it == plugins_windows.end()) return NULL;
-       return it->second;
-    }
+    PluginsDataValues* pluginsData() { return &plugins_data; }
+
     PropertiesDisplay();
     ~PropertiesDisplay();
     void initDefault();
@@ -63,8 +59,8 @@ public:
     OutputWindowsCollection* output_windows() const {
         return current_display->outputWindows();
     }
-    OutputWindowsCollection* plugin_windows(const tstring& name) {
-        return current_display->pluginWindows(name);
+    PluginsDataValues* plugins_data() const {
+        return current_display->pluginsData();
     }
 private:
     int findCurrentDisplay();

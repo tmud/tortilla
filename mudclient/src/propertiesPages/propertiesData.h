@@ -370,6 +370,13 @@ struct PluginsDataValues : public std::vector<PluginData>
             break;
         }}
     }
+    void setAllOff()
+    {
+        for (int i = 0, e = size(); i < e; ++i) {
+            PluginData &p = at(i);
+            p.state = 0;
+        }
+    }
 };
 
 struct PropertiesDlgPageState
@@ -425,7 +432,7 @@ struct PropertiesData
        , soft_scroll(0)
     {
         initDefaultColorsAndFont();
-        initWindows();
+        initDisplay();
     }
 
     PropertiesValues aliases;
@@ -440,7 +447,6 @@ struct PropertiesData
     PropertiesValues variables;
     PropertiesList   tabwords;
     PropertiesList   tabwords_commands;
-    PluginsDataValues plugins;
     PropertiesDlgData dlg;
     PropertiesDisplayManager displays;
 
@@ -539,21 +545,20 @@ struct PropertiesData
         cmd_history.clear();
         groups.clear();
         initDefaultColorsAndFont();
-        initWindows();
+        initDisplay();
         messages.initDefault();
         timers_on = 0;
-        initPlugins();
+        //initPlugins();
         recognize_prompt = 0;
         recognize_prompt_template.clear();
         dlg.clear();
     }
 
-    void initPlugins()
+    /*todo void initPlugins()
     {
         // turn off all plugins
-        for (int i = 0, e = plugins.size(); i<e; ++i)
-            plugins[i].state = 0;
-    }
+        displays.plugins_data()->setAllOff();
+    }*/ 
 
     void initLogFont(HWND hwnd, LOGFONT *f)
     {
@@ -573,7 +578,7 @@ struct PropertiesData
         wcscpy(f->lfFaceName, font_name.c_str() );
     }
 
-    void initWindows()
+    void initDisplay()
     {
         displays.initDefault();
     }

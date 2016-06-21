@@ -1390,6 +1390,7 @@ private:
 
     void savePluginWindowPos(HWND wnd = NULL)
     {
+        PluginsDataValues* pdv =  tortilla::pluginsData();
         for (int i = 0, e = m_plugins_views.size(); i < e; ++i)
         {
             PluginsView *v = m_plugins_views[i];
@@ -1403,7 +1404,7 @@ private:
                 w.pos = ctx->rcWindow;
                 w.size = ctx->sizeFloat;
                 Plugin *p = v->getPlugin();
-                m_propData->plugins.saveWindowPos(p->get(Plugin::FILE), w);
+                pdv->saveWindowPos(p->get(Plugin::FILE), w);
             }
         }
     }
