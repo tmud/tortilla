@@ -425,8 +425,7 @@ struct PropertiesData
        , soft_scroll(0)
     {
         initDefaultColorsAndFont();
-        initMainWindow();
-        initFindWindow();
+        initWindows();
     }
 
     PropertiesValues aliases;
@@ -443,10 +442,11 @@ struct PropertiesData
     PropertiesList   tabwords_commands;
     PluginsDataValues plugins;
     PropertiesDlgData dlg;
+    PropertiesDisplayManager displays;
 
     struct message_data { 
     message_data() { initDefault();  }
-    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
+    void initDefault(int val = 0) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
     int actions;
     int aliases;
     int subs;
@@ -492,22 +492,6 @@ struct PropertiesData
 
     int      soft_scroll;
 
-    PropertiesDisplayManager displays;
-
-    PropertiesWindow* main_window() { displays.display()->mainWindow(); }
-    PropertiesWindow* find_window() { displays.display()->findWindow(); }
-    OutputWindowsCollection* output_windows() { displays.display()->outputWindows(); }
-    
-
-    /*RECT main_window;
-    int  main_window_fullscreen;
-    int  display_width;
-    int  display_height;
-    std::vector<OutputWindow> windows;
-
-    RECT find_window;
-    int  find_window_visible;*/ //todo
-
     tstring title;        // name of main window (dont need to save)
 
     void initDefaultColorsAndFont()
@@ -541,31 +525,6 @@ struct PropertiesData
         for (int i = 0; i < 16; ++i) { osc_colors[i] = 0; osc_flags[i] = 0; }
     }
 
-    void initMainWindow()
-    {
-        /*main_window_fullscreen = 0;
-        display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-        int primary_width = GetSystemMetrics(SM_CXSCREEN);
-        int primary_height = GetSystemMetrics(SM_CYSCREEN);
-        int width = (primary_width / 4) * 3;
-        int height = (primary_height / 4) * 3;
-        main_window.left = (primary_width - width) / 2;
-        main_window.top  = (primary_height - height) / 2;
-        main_window.right = main_window.left + width;
-        main_window.bottom = main_window.top + height;*/ //todo
-    }
-
-    void initFindWindow()
-    {
-        /*find_window.left = 200;
-        find_window.top = 100;
-        find_window.right = find_window.left;
-        find_window.bottom = find_window.top;
-        find_window_visible = 0;*/
-    }
-
     void initAllDefault()
     {
         aliases.clear();
@@ -580,7 +539,7 @@ struct PropertiesData
         cmd_history.clear();
         groups.clear();
         initDefaultColorsAndFont();
-        initOutputWindows();
+        initWindows();
         messages.initDefault();
         timers_on = 0;
         initPlugins();
@@ -612,6 +571,11 @@ struct PropertiesData
         f->lfQuality = DEFAULT_QUALITY;
         f->lfPitchAndFamily = DEFAULT_PITCH;
         wcscpy(f->lfFaceName, font_name.c_str() );
+    }
+
+    void initWindows()
+    {
+        displays.initDefault();
     }
 
     void addGroup(const tstring& name)
@@ -720,27 +684,5 @@ private:
         int last=todelete.size()-1;
         for (int i=last; i>=0; --i)
             values->del(todelete[i]);
-    }
-
-    void initOutputWindows()
-    {
-        /*windows.clear();
-        for (int i=0; i<OUTPUT_WINDOWS; ++i) 
-        {
-            OutputWindow w;
-            w.size.cx = 350; w.size.cy = 200;
-            int d = (i+1) * 70;
-            RECT defpos = { d, d, d+w.size.cx, d+w.size.cy };
-            w.pos = defpos;
-            w.side = DOCK_HIDDEN;
-            w.lastside = DOCK_FLOAT;
-            if (w.name.empty())
-            {
-                WCHAR buffer[8];
-                swprintf(buffer, L"Окно %d", i+1);
-                w.name.assign(buffer);
-            }
-            windows.push_back(w);
-        }*/ //todo
     }
 };

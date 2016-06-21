@@ -2,27 +2,9 @@
 #include "propertiesData.h"
 #include "propertiesDisplay.h"
 
-PropertiesWindow* PropertiesDisplay::mainWindow()
-{
-    return &main_window;
-}
-PropertiesWindow* PropertiesDisplay::findWindow()
-{
-    return &find_window;
-}
-OutputWindowsCollection* PropertiesDisplay::outputWindows()
-{
-    return &client_windows;
-}
-OutputWindowsCollection* PropertiesDisplay::pluginWindows(const tstring& name)
-{
-    std::map<tstring, OutputWindowsCollection*>::iterator it = plugins_windows.find(name);
-    return (it == plugins_windows.end()) ? NULL : it->second;
-}
-
 PropertiesDisplay::PropertiesDisplay() : display_width(0), display_height(0)
 {
-    client_windows.resize(OUTPUT_WINDOWS);
+    initOutputWindows();
 }
 
 PropertiesDisplay::~PropertiesDisplay()
@@ -65,38 +47,66 @@ bool PropertiesDisplay::load(xml::node root_node)
         initFindWindow();
     else
     {
-        xml::node w = fw[0];
-        int visible = 0;
+        xml::node w = fw[0]; int visible = 0;
         if (!w.get(L"visible", &visible) || !loadRECT(w, &find_window.pos))
-        {
             initFindWindow();
-        }
         else
-        {
             find_window.visible = (visible==1) ? true : false;
-        }
     }
 
-    if (!display_loaded)
-    {
-    
-    }
-    else
-    {
-        
-    }
+    xml::request ow(root_node, L"windows/window");    
+    if (!loadOutputWindows(ow, &output_windows))
+        initOutputWindows();
 
+    xml::request p(root_node, L"plugins/plugin");
+    for (int i=0,e=p.size();i<e;++i)
+    {
+        tstring name;
+        if (!p[i].get(L"key", &name) || name.empty())
+           continue;
+        xml::request pw(p[i], L"windows/window");
+        if (pw.empty()) continue;
+        OutputWindowsCollection *owc = new OutputWindowsCollection;
+        if (loadOutputWindows(pw, owc))
+           plugins_windows[name] = owc;
+        else
+           delete owc;
+    }
     return true;
 }
 
 void PropertiesDisplay::save(xml::node root_node)
 {
-    
+    xml::node r = root_node.createsubnode(L"display");
+    r.set(L"width", display_width);
+    r.set(L"height", display_height);
+
+    xml::node mw = r.createsubnode(L"mainwindow");
+    saveRECT(mw, main_window.pos);
+    mw.set(L"fullscreen", main_window.fullscreen ? 1 : 0);
+
+    xml::node fw = r.createsubnode(L"findwindow");
+    saveRECT(fw, find_window.pos);
+    fw.set(L"visible", find_window.visible ? 1 : 0);
+
+    xml::node w = r.createsubnode(L"windows");
+    saveOutputWindows(w, output_windows);
+
+    xml::node p = r.createsubnode(L"plugins");
+    iterator it = plugins_windows.begin(), it_end = plugins_windows.end();
+    for (; it!=it_end; ++it)
+    {
+        OutputWindowsCollection *c = it->second;
+        if (c->empty()) continue;
+        xml::node pw = p.createsubnode(L"plugin");
+        pw.set(L"key", it->first);
+        saveOutputWindows(pw, *c);
+    }
 }
 
-bool PropertiesDisplay::current() const
+bool PropertiesDisplay::current(int width, int height) const
 {
-    return (display_width == GetSystemMetrics(SM_CXVIRTUALSCREEN) && display_height == GetSystemMetrics(SM_CYVIRTUALSCREEN)) ? true : false;
+    return (display_width == width && display_height == height) ? true : false;
 }
 
 void PropertiesDisplay::initMainWindow()
@@ -127,7 +137,7 @@ void PropertiesDisplay::initFindWindow()
 
 void PropertiesDisplay::initOutputWindows()
 {
-    client_windows.clear();
+    output_windows.clear();
     for (int i = 0; i < OUTPUT_WINDOWS; ++i)
     {
         OutputWindow w;
@@ -143,40 +153,8 @@ void PropertiesDisplay::initOutputWindows()
             swprintf(buffer, L"Окно %d", i + 1);
             w.name.assign(buffer);
         }
-        client_windows.push_back(w);
+        output_windows.push_back(w);
     }
-}
-
-bool PropertiesDisplay::loadWindow(xml::node parent, OutputWindow* w)
-{
-    if (!parent.get(L"side", &w->side))
-        w->side = DOCK_FLOAT;
-    if (!parent.get(L"lastside", &w->lastside))
-        w->lastside = DOCK_FLOAT;
-    tstring name;
-    if (loadRECT(parent, &w->pos) && parent.get(L"name", &name))
-    {
-        w->name = name;
-        int width = 0; int height = 0;
-        if (!parent.get(L"width", &width))
-            width = w->pos.right - w->pos.left;
-        if (!parent.get(L"height", &height))
-            height = w->pos.bottom - w->pos.top;
-        w->size.cx = width; w->size.cy = height;
-        return true;
-    }
-    return false;
-}
-
-void PropertiesDisplay::saveWindow(xml::node parent, const OutputWindow& w)
-{
-    xml::node xw = parent.createsubnode(L"window");
-    xw.set(L"name", w.name.c_str());
-    saveRECT(xw, w.pos);
-    xw.set(L"side", w.side);
-    xw.set(L"lastside", w.lastside);
-    xw.set(L"width", w.size.cx);
-    xw.set(L"height", w.size.cy);
 }
 
 bool PropertiesDisplay::loadDisplaySize(xml::node n)
@@ -208,6 +186,72 @@ void PropertiesDisplay::saveRECT(xml::node n, const RECT &rc)
     n.set(L"bottom", rc.bottom);
 }
 
+void PropertiesDisplay::saveOutputWindows(xml::node n, const OutputWindowsCollection &owc)
+{
+    for (int i=0,e=owc.size();i<e;++i)
+    {
+        const OutputWindow& ow = owc[i];
+        xml::node w = n.createsubnode(L"window");
+        w.set(L"name", ow.name);
+        saveRECT(w, ow.pos);
+        w.set(L"side", ow.side);
+        w.set(L"lastside", ow.lastside);
+        w.set(L"width", ow.size.cx);
+        w.set(L"height", ow.size.cy);
+    }
+}
+
+bool PropertiesDisplay::loadOutputWindows(xml::request& r, OutputWindowsCollection *owc)
+{
+    int maxcount = owc->size();
+    int to = (maxcount == 0) ? r.size() : maxcount;
+    for (int i=0;i<to;++i)
+    {
+        OutputWindow w;
+        xml::node n = r[i];
+        if (!n.get(L"side", &w.side))
+            w.side = DOCK_FLOAT;
+        if (!n.get(L"lastside", &w.lastside))
+            w.lastside = DOCK_FLOAT;
+        tstring name;
+        if (!loadRECT(n, &w.pos) || !n.get(L"name", &name))
+            return false;
+        w.name = name;
+        int width = 0; int height = 0;
+        if (!n.get(L"width", &width))
+           width = w.pos.right - w.pos.left;
+        if (!n.get(L"height", &height))
+           height = w.pos.bottom - w.pos.top;
+        w.size.cx = width; w.size.cy = height;
+        if (maxcount > 0)
+            owc->at(i) = w;
+        else
+            owc->push_back(w);
+    }
+    return true;
+}
+
+bool PropertiesDisplay::loadWindow(xml::node parent, OutputWindow* w)
+{
+    if (!parent.get(L"side", &w->side))
+        w->side = DOCK_FLOAT;
+    if (!parent.get(L"lastside", &w->lastside))
+        w->lastside = DOCK_FLOAT;
+    tstring name;
+    if (loadRECT(parent, &w->pos) && parent.get(L"name", &name))
+    {
+        w->name = name;
+        int width = 0; int height = 0;
+        if (!parent.get(L"width", &width))
+            width = w->pos.right - w->pos.left;
+        if (!parent.get(L"height", &height))
+            height = w->pos.bottom - w->pos.top;
+        w->size.cx = width; w->size.cy = height;
+        return true;
+    }
+    return false;
+}
+
 PropertiesDisplayManager::PropertiesDisplayManager() : current_display(NULL)
 {
 }
@@ -217,37 +261,77 @@ PropertiesDisplayManager::~PropertiesDisplayManager()
     std::for_each(m_displays.begin(), m_displays.end(), [](PropertiesDisplay* d) { delete d; });
 }
 
+void PropertiesDisplayManager::initDefault()
+{
+    if (!current_display)
+    {
+        int index = findCurrentDisplay();
+        if (index != -1)
+            current_display = m_displays[index];
+    }
+    if (!current_display)
+    {
+        current_display = new PropertiesDisplay();
+        m_displays.push_back(current_display);
+    }
+    current_display->initDefault();
+}
+
 void PropertiesDisplayManager::load(xml::node root_node)
 {
-    bool default_display = true;
-    PropertiesDisplay *d = new PropertiesDisplay();
-    if (!d->load(root_node))
-        d->initDefault();
-    current_display = d;    
     xml::request disp(root_node, L"displays/display");
     for (int i=0,e=disp.size();i<e;++i)
     {
-        d = new PropertiesDisplay();
-        if (d->load(disp[i]))
-        {            
-            if (d->current()) {
-                if (!default_display) { delete d; continue; }
-                default_display = false;
-                delete current_display;
-                current_display = d;
-            }
-            m_displays.push_back(d);
-        } 
-        else
+        PropertiesDisplay *d = new PropertiesDisplay();
+        if (!d->load(disp[i]))
+            { delete d; continue; }
+        int index = findDisplay(d->width(), d->height());
+        if (index != -1)
         {
-            delete d;
+            delete m_displays[index];
+            m_displays.erase(m_displays.begin()+index);
         }
+        m_displays.push_back(d);
+    }
+
+    int index = findCurrentDisplay();
+    if (index != -1)
+       current_display =  m_displays[index];
+    else
+    {
+        PropertiesDisplay *d = new PropertiesDisplay();
+        if (!d->load(root_node))
+            d->initDefault();
+        current_display = d;
+        m_displays.push_back(d);
     }
 }
 
-bool PropertiesDisplayManager::save(xml::node root_node)
+void PropertiesDisplayManager::save(xml::node root_node)
 {
     xml::node d = root_node.createsubnode(L"displays");
-    if (!d) return false;
-    return true;
+    for (int i=0,e=m_displays.size();i<e;++i)
+      m_displays[i]->save(d);
+}
+
+int PropertiesDisplayManager::findCurrentDisplay()
+{
+    int display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);    
+    return findDisplay(display_width, display_height);
+}
+
+int PropertiesDisplayManager::findDisplay(int cx, int cy)
+{
+    int index = -1;
+    for (int i=0,e=m_displays.size();i<e;++i)
+    {
+        PropertiesDisplay *d = m_displays[i];
+        if (d->current(cx, cy))
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
 }
