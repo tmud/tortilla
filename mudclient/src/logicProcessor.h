@@ -8,7 +8,6 @@
 #include "waitCmds.h"
 #include "plugins/pluginsViewString.h"
 
-struct InputCommand;
 class LogicProcessorHost
 {
 public:
@@ -25,7 +24,7 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessCommand(InputCommand* cmd) = 0;
+    virtual void preprocessCommand(InputCommand cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
     virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
@@ -81,7 +80,7 @@ class LogicProcessor : public LogicProcessorMethods
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
     LogicPipeline m_pipeline;
-    InputPlainCommands m_repeat_commands;
+    InputCommands m_commands_queue;
 
 public:
     LogicProcessor(LogicProcessorHost *host);
@@ -112,12 +111,13 @@ public:
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
+    void makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds);
     void runCommands(InputCommands& cmds);
     bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void recognizeSystemCommand(tstring* cmd, tstring* error);
-    void processSystemCommand(InputCommand* cmd);
-    void processGameCommand(InputCommand* cmd);
+    void processSystemCommand(InputCommand cmd);
+    void processGameCommand(InputCommand cmd);
     enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
            SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24,
            GAME_LOG = 32, GAME_CMD = 64, FROM_STACK = 128, FROM_TIMER = 256, NEW_LINE = 512 };

@@ -4,6 +4,15 @@
 
 void LogicProcessor::processStackTick()
 {
+    if (!m_commands_queue.empty())
+    {
+        InputCommand cmd = m_commands_queue.pop_front();
+        if (cmd->system)
+            processSystemCommand(cmd);
+        else
+            processGameCommand(cmd);
+    }
+
     if (!m_plugins_log_cache.empty())
     {
         PropertiesData *pdata = tortilla::getProperties();

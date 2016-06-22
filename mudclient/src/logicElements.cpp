@@ -118,10 +118,10 @@ int CompareData::findpos(int pos, int d)
 
 class AliasParameters : public InputParameters
 {
-    const InputCommand *m_pCmd;
+    const InputCommand m_pCmd;
     bool m_process_not_values;
 public:
-    AliasParameters(const InputCommand *cmd, bool process_not_values) : m_pCmd(cmd), m_process_not_values(process_not_values) {}
+    AliasParameters(const InputCommand cmd, bool process_not_values) : m_pCmd(cmd), m_process_not_values(process_not_values) {}
     void getParameters(std::vector<tstring>* params) const
     {
         if (!m_pCmd->srcparameters.empty())
@@ -144,7 +144,7 @@ Alias::Alias(const property_value& v, const InputTemplateParameters& p)
     m_cmds.makeTemplates();
 }
 
-bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
+bool Alias::processing(const InputCommand cmd, InputCommands *newcmds)
 {
     int cmdlen = 0;
     if (cmd->system)

@@ -468,8 +468,7 @@ private:
         if (m_manager.isFirstStartup())
             PostMessage(WM_USER+3);
 
-        SetTimer(1, 200);
-        SetTimer(2, 40);
+        SetTimer(1, 40);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -502,7 +501,6 @@ private:
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->RemoveIdleHandler(this);
 
-        KillTimer(2);
         KillTimer(1);
         std::for_each(m_handlers.begin(), m_handlers.end(), [](MudViewHandler *obj){ delete obj; });        
         for (int i=0,e=m_views.size(); i<e; ++i)
@@ -706,18 +704,19 @@ private:
 
     LRESULT OnTimer(UINT, WPARAM id, LPARAM, BOOL&)
     {
-        if (id == 1)
+        static int count = 0;
+        count = count + 1;
+        if (count == 5)
         {
+            count = 0;
             m_processor.processTick();
             m_plugins.processTick();
         }
-        else if (id == 2)
-        {
-            m_processor.processStackTick();
-            m_view.updateSoftScrolling();
-            for (int i=0,e=m_views.size();i<e;++i)
-              m_views[i]->updateSoftScrolling();
-        }
+
+        m_processor.processStackTick();
+        m_view.updateSoftScrolling();
+        for (int i=0,e=m_views.size();i<e;++i)
+           m_views[i]->updateSoftScrolling();
         return 0;
     }
 
@@ -1215,7 +1214,7 @@ private:
         return m_parent;
     }
 
-    void preprocessCommand(InputCommand* cmd);
+    void preprocessCommand(InputCommand cmd);
 
     void checkHistorySize()
     {

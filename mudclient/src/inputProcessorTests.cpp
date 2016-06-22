@@ -91,8 +91,8 @@ bool InputCommandTemplateUnitTest::test2(const tstring& str, int params, InputCo
 
     for (int i=0, e=tcmds.size(); i<e; ++i)
     {
-        InputCommand *c1 = tcmds[i];
-        InputCommand *c2 = ref->operator[](i);
+        InputCommand c1 = tcmds[i];
+        InputCommand c2 = ref->operator[](i);
         if (c1->srccmd != c2->srccmd)
             return false;
         if (c1->srcparameters != c2->srcparameters)
@@ -105,10 +105,10 @@ bool InputCommandTemplateUnitTest::test2(const tstring& str, int params, InputCo
     return true;
 }
 
-InputCommand* InputCommandTemplateUnitTest::makecmd(bool system, const tstring& srccmd, const tstring& srcparams,
+InputCommand InputCommandTemplateUnitTest::makecmd(bool system, const tstring& srccmd, const tstring& srcparams,
     const tstring& cmd, int n, ...)
 {
-    InputCommand *c = new InputCommand;
+    InputCommand c =  std::make_shared<InputCommandData>();
     c->srccmd = srccmd;
     c->srcparameters = srcparams;
     c->command = cmd;

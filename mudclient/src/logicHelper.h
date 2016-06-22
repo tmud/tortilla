@@ -121,7 +121,7 @@ public:
 
     LogicHelper();
     void updateProps(int what = UPDATE_ALL);
-    bool processAliases(const InputCommand* cmd, InputCommands* newcmds);
+    bool processAliases(const InputCommand cmd, InputCommands* newcmds);
     bool processHotkeys(const tstring& key, InputCommands* newcmds);
     bool processActions(parseData *parse_data, int index, LogicPipelineElement *pe);
     void processSubs(parseData *parse_data);

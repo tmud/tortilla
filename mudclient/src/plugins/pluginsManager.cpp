@@ -263,7 +263,7 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
     }
 }
 
-void PluginsManager::processGameCmd(InputCommand* cmd)
+void PluginsManager::processGameCmd(InputCommand cmd)
 {
     std::vector<tstring> p;
     p.push_back(cmd->command);
@@ -713,7 +713,7 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     modules[plugin_index].state = 0;
 }
 
-void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
+void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd)
 {
     if (parts.empty())
     {
