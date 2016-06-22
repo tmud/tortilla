@@ -189,6 +189,11 @@ public:
         m_values.swap(p.m_values);
     }
 
+    void assign(const PropertiesValuesT<T>& p)
+    {
+        m_values.assign(p.m_values.begin(), p.m_values.end());
+    }
+
     const el& get(int index) const
     {
         return m_values[index];
@@ -283,6 +288,11 @@ public:
         return (find(key) == -1) ? false : true;
     }
 
+    void assign(const PropertiesList& p)
+    {
+        m_values.assign(p.m_values.begin(), p.m_values.end());
+    }
+
 private:
     std::vector<tstring> m_values;
 };
@@ -324,11 +334,11 @@ struct PanelWindow
 
 struct PluginData
 {
-    PluginData() : state(false) {}
+    PluginData() : state(0) {}
     tstring name;
     int state;
     std::vector<OutputWindow> windows;
-    std::vector<PanelWindow> panels;
+    //std::vector<PanelWindow> panels;
 
     void initDefaultPos(int width, int height, OutputWindow *w)
     {
@@ -424,6 +434,11 @@ public:
 
 struct PropertiesData
 {
+private:
+    PropertiesData(const PropertiesData&) {}
+    PropertiesData& operator=(const PropertiesData&) {}
+
+public:
     PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
@@ -435,6 +450,58 @@ struct PropertiesData
         initDisplay();
     }
 
+    void copy(const PropertiesData& p)
+    {
+        aliases.assign(p.aliases);
+        actions.assign(p.actions);
+        subs.assign(p.subs);
+        hotkeys.assign(p.hotkeys);
+        highlights.assign(p.highlights);
+        groups.assign(p.groups);
+        antisubs.assign(p.antisubs);
+        gags.assign(p.gags);
+        timers.assign(p.timers);
+        variables.assign(p.variables);
+        tabwords.assign(p.tabwords);
+        //skip tabwords_commands.assign(p.tabwords_commands);
+
+        dlg = p.dlg;
+        // skip displays
+        messages = p.messages;
+        // skip cmd_history
+        codepage = p.codepage;
+
+        memcpy(&colors, p.colors, sizeof(colors));
+        memcpy(&osc_colors, p.osc_colors, sizeof(osc_colors));
+        memcpy(&osc_flags, p.osc_flags, sizeof(osc_flags));
+        bkgnd = p.bkgnd;
+        font_name = p.font_name;
+        font_heigth = p.font_heigth;
+        font_bold = p.font_bold;
+        font_italic = p.font_italic;
+
+        cmd_separator = p.cmd_separator;
+        cmd_prefix = p.cmd_prefix;
+
+        view_history_size = p.view_history_size;
+        cmd_history_size = p.cmd_history_size;
+        show_system_commands = p.show_system_commands;
+        clear_bar = p.clear_bar;
+        disable_ya = p.disable_ya;
+        disable_osc = p.disable_osc;
+        history_tab = p.history_tab;
+        //skip timers_on = p.timers_on;
+        plugins_logs = p.plugins_logs;
+        plugins_logs_window = p.plugins_logs_window;
+
+        recognize_prompt = p.recognize_prompt;
+        recognize_prompt_template = p.recognize_prompt_template;
+
+        soft_scroll = p.soft_scroll;
+        //skip title
+    }
+
+public:
     PropertiesValues aliases;
     PropertiesValues actions;
     PropertiesValues subs;
@@ -548,17 +615,10 @@ struct PropertiesData
         initDisplay();
         messages.initDefault();
         timers_on = 0;
-        //initPlugins();
         recognize_prompt = 0;
         recognize_prompt_template.clear();
         dlg.clear();
     }
-
-    /*todo void initPlugins()
-    {
-        // turn off all plugins
-        displays.plugins_data()->setAllOff();
-    }*/ 
 
     void initLogFont(HWND hwnd, LOGFONT *f)
     {
@@ -580,6 +640,7 @@ struct PropertiesData
 
     void initDisplay()
     {
+        displays.clear();
         displays.initDefault();
     }
 

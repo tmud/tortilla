@@ -467,8 +467,7 @@ private:
         onStart();
         m_parent.ShowWindow(SW_SHOW);
 
-        if (main_window->fullscreen)
-            PostMessage(WM_USER+2);
+        PostMessage(WM_USER+2, main_window->fullscreen ? 1 :0);
 
         if (m_manager.isFirstStartup())
             PostMessage(WM_USER+3);
@@ -480,9 +479,12 @@ private:
         return 0;
     }
 
-    LRESULT OnFullScreen(UINT, WPARAM, LPARAM, BOOL&)
+    LRESULT OnFullScreen(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
-        m_parent.ShowWindow(SW_SHOWMAXIMIZED);
+        if (wparam)
+            m_parent.ShowWindow(SW_SHOWMAXIMIZED);
+        else
+            m_parent.ShowWindow(SW_SHOWNORMAL);
         return 0;
     }
 
@@ -825,11 +827,13 @@ private:
         m_plugins.processPluginsMethod("propsblocked", 0);
 
         PropertiesData& data = *m_manager.getConfig();
-        PropertiesData tmp(data);
+        PropertiesData tmp;
+        tmp.copy(data);
+
         PropertiesDlg propDlg(&tmp);
         if (propDlg.DoModal() == IDOK)
         {
-            data = tmp;
+            data.copy(tmp);
             updateProps();
             if (!m_manager.saveProfile())
                 msgBox(m_hWnd, IDS_ERROR_SAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
@@ -1308,6 +1312,10 @@ private:
 
     void loadClientWindowPos()
     {
+        m_parent.ShowWindow(SW_RESTORE);
+        PropertiesWindow *main_window = m_propData->displays.main_window();
+        m_parent.MoveWindow(&main_window->pos);
+
         for (int i = 0; i<OUTPUT_WINDOWS; ++i)
         {
             MudView *v = m_views[i];
@@ -1386,6 +1394,9 @@ private:
         m_dock.UpdatePanes();
         if (state)
             showFindView(false);
+
+        // maximize main window
+        PostMessage(WM_USER+2, main_window->fullscreen ? 1 :0);
     }
 
     void savePluginWindowPos(HWND wnd = NULL)

@@ -56,20 +56,26 @@ bool PropertiesDisplay::load(xml::node root_node)
     if (!loadOutputWindows(ow, &output_windows))
         initOutputWindows();
 
-    /*xml::request p(root_node, L"plugins/plugin");
+    xml::request p(root_node, L"plugins/plugin");
     for (int i=0,e=p.size();i<e;++i)
     {
         tstring name;
         if (!p[i].get(L"key", &name) || name.empty())
            continue;
+        PluginData pd;
+        pd.name = name;
+        int state = 0;
+        if (p[i].get(L"value", &state) && state == 1)
+            pd.state = 1;
         xml::request pw(p[i], L"windows/window");
-        if (pw.empty()) continue;
-        OutputWindowsCollection *owc = new OutputWindowsCollection;
-        if (loadOutputWindows(pw, owc))
-           plugins_windows[name] = owc;
-        else
-           delete owc;
-    }*/
+        if (!pw.empty())
+        {
+            std::vector<OutputWindow> tmp;
+            if (loadOutputWindows(pw, &tmp))
+                pd.windows.swap(tmp);
+        }
+        plugins_data.push_back(pd);
+    }
     return true;
 }
 
@@ -90,16 +96,19 @@ void PropertiesDisplay::save(xml::node root_node)
     xml::node w = r.createsubnode(L"windows");
     saveOutputWindows(w, output_windows);
 
-    /*xml::node p = r.createsubnode(L"plugins");
-    iterator it = plugins_windows.begin(), it_end = plugins_windows.end();
-    for (; it!=it_end; ++it)
+    xml::node p = r.createsubnode(L"plugins");
+    for (int i=0,e=plugins_data.size();i<e;++i)
     {
-        OutputWindowsCollection *c = it->second;
-        if (c->empty()) continue;
-        xml::node pw = p.createsubnode(L"plugin");
-        pw.set(L"key", it->first);
-        saveOutputWindows(pw, *c);
-    }*/
+        PluginData &pd = plugins_data[i];
+        xml::node pn = p.createsubnode(L"plugin");
+        pn.set(L"key", pd.name);
+        pn.set(L"value", pd.state);
+        if (!pd.windows.empty())
+        {
+            xml::node w = pn.createsubnode(L"windows");
+            saveOutputWindows(w, pd.windows);
+        }
+    }
 }
 
 bool PropertiesDisplay::current(int width, int height) const
@@ -256,7 +265,14 @@ PropertiesDisplayManager::PropertiesDisplayManager() : current_display(NULL)
 
 PropertiesDisplayManager::~PropertiesDisplayManager()
 {
+    clear();
+}
+
+void PropertiesDisplayManager::clear()
+{
     std::for_each(m_displays.begin(), m_displays.end(), [](PropertiesDisplay* d) { delete d; });
+    m_displays.clear();
+    current_display = NULL;
 }
 
 void PropertiesDisplayManager::initDefault()

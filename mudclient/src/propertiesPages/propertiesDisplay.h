@@ -48,6 +48,7 @@ public:
     PropertiesDisplayManager();
     ~PropertiesDisplayManager();
     void initDefault();
+    void clear();
     void load(xml::node root_node);
     void save(xml::node root_node);
     PropertiesWindow* main_window() const {
