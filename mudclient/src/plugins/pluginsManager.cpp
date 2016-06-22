@@ -747,7 +747,7 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
     {
         const tstring& s = parts[i];
         cmd->parameters_list.push_back(s);
-        if (i != 1)
+        if (i != 1 && system)
             params.append(L" ");
         if (!system)
             params.append(s);

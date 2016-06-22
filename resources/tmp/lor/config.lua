@@ -1,7 +1,7 @@
 ﻿key = "^Вы узнали следующее:"
-check = function(create_pcre_func)
-  local r1 = create_pcre_func('^Предмет "(.*)",')
-  local r2 = create_pcre_func('^За информацию о предмете.*')
+check = function()
+  local r1 = createPcre('^Предмет "(.*)",')
+  local r2 = createPcre('^За информацию о предмете.*')
   return function(vs)
     local s = vs:getText()
     if r1:find(s) then return vs, r1:get(1) end
@@ -9,10 +9,10 @@ check = function(create_pcre_func)
     return vs
   end
 end
-import = function(create_pcre_func)
-  local r1 = create_pcre_func('^Предмет "(.*)",')
-  local r2 = create_pcre_func('^(Неудобен : |Материал : |Недоступен : |Имеет экстрафлаги: |Накладывает на вас аффекты: )(.*)')
-  local r3 = create_pcre_func('^( +)(.*)')
+import = function()
+  local r1 = createPcre('^Предмет "(.*)",')
+  local r2 = createPcre('^(Неудобен : |Материал : |Недоступен : |Имеет экстрафлаги: |Накладывает на вас аффекты: )(.*)')
+  local r3 = createPcre('^( +)(.*)')
   return function(s, vs)
     if r1:find(s) then
       vs:setBlocksCount(1)

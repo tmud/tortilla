@@ -81,7 +81,7 @@ public:
     lua_ref& operator=(const lua_ref& r) { ref = r.ref; r.ref = LUA_NOREF; }
     ~lua_ref() { assert(ref==LUA_NOREF); }
     void createRef(lua_State *L) { assert(ref==LUA_NOREF); ref=luaL_ref(L, LUA_REGISTRYINDEX); }
-    void pushValue(lua_State *L) { lua_rawgeti(L, LUA_REGISTRYINDEX, ref); }
+    void pushValue(lua_State *L) const { lua_rawgeti(L, LUA_REGISTRYINDEX, ref); }
     void unref(lua_State *L) { luaL_unref(L, LUA_REGISTRYINDEX, ref); ref=LUA_NOREF; }
 };
 
@@ -243,9 +243,9 @@ public:
         DWORD high = 0;
         DWORD size = GetFileSize(hfile, &high);
         if (high != 0) 
-            return;
+            { close(); return; }
         if (maxsize > 0 && size > maxsize)
-            return;
+            { close(); return; }
         file_size = size;
         not_readed = size;
         result = true;
@@ -253,8 +253,7 @@ public:
     ~load_file() 
     {
         delete []buffer;
-        if (hfile != INVALID_HANDLE_VALUE) CloseHandle(hfile);
-        hfile = INVALID_HANDLE_VALUE;
+        close();
     }
     DWORD getPosition() {
         return file_size-(not_readed+in_buffer);
@@ -263,7 +262,8 @@ public:
     {
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
-        if (startpos) *startpos = getPosition();
+        if (startpos)
+            *startpos = getPosition();
 
         while (not_readed > 0 || in_buffer > 0)
         {
@@ -280,32 +280,49 @@ public:
 
             uchar *p = buffer;
             uchar *e = p + readed;
-            if (!bom_check && readed >= 3)
+            if (!bom_check && file_size > 3)
             {
+                if (readed < 3)
+                    continue;
                 bom_check = true;
                 if (p[0] == 0xef && p[1] == 0xbb && p[2] == 0xbf)
-                    p += 3;
+                     p += 3;
             }
 
             uchar *b = p;
             while (p != e)
             {
                 uchar c = *p; p++;
-                if (c == 0xd || c == 0xa)
+                if (c == 0xa)
                 {
-                    if (c == 0xa && last_0d)
-                        { b = p; last_0d = false; continue; }
-                    current_string.append((char*)b, p-b-1);
+                    if (!last_0d)
+                       current_string.append((char*)b, p-b-1);
                     string->assign(current_string);
                     current_string.clear();
-                    if (c == 0xd)
-                       last_0d = !last_0d;
+                    last_0d = false;
                     in_buffer = e-p;
-                    memcpy(buffer, p, e-p);
+                    memcpy(buffer, p, in_buffer);
                     return true;
+                }
+                if (c == 0xd)
+                {
+                    current_string.append((char*)b, p-b-1);
+                    in_buffer = e-p;
+                    memcpy(buffer, p, in_buffer);
+                    if (last_0d)
+                    {
+                       string->assign(current_string);
+                       current_string.clear();
+                       return true;
+                    }
+                    last_0d = true;
+                    break;
                 }
                 last_0d = false;
             }
+            if (last_0d)
+                continue;
+
             if (p == e)
             {
                 current_string.append((char*)b, e-b);
@@ -319,5 +336,12 @@ public:
             }
         }
         return false;
+    }
+
+    void close()
+    {
+        if (hfile != INVALID_HANDLE_VALUE)
+            CloseHandle(hfile);
+        hfile = INVALID_HANDLE_VALUE;    
     }
 };

@@ -39,7 +39,7 @@ void tmcLog(const tstring& msg) { lp()->tmcLog(msg); }
 void pluginLogOut(const tstring& msg) { lp()->pluginLog(msg);  }
 void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
-const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : L"?плагин?"; }
+const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : L"?"; }
 //---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
@@ -441,6 +441,23 @@ int getParent(lua_State *L)
     return pluginInvArgs(L, L"getParent");
 }
 
+class LuaEnviroment
+{
+    lua_State *L;
+public:
+    LuaEnviroment(lua_State *pl) : L(pl)
+    {
+        lua_newtable(L);
+    }
+    void add(const char* global_func)
+    {
+        lua_pushstring(L, global_func);
+        lua_getglobal(L, global_func);
+        assert(lua_isfunction(L, -1) || lua_istable(L, -1));
+        lua_settable(L, -3);
+    }
+};
+
 int loadTableLua(lua_State* L, const tstring& filename)
 {
     const tchar* fname = filename.c_str();
@@ -451,7 +468,14 @@ int loadTableLua(lua_State* L, const tstring& filename)
         return false;
     }
     // make empty eviroment and call script in them
-    lua_newtable(L);
+    LuaEnviroment env(L);
+    env.add("pairs");
+    env.add("ipairs");
+    env.add("log");
+    env.add("createPcre");
+    env.add("table");
+    env.add("props");
+
     lua_insert(L, -2);
     lua_pushvalue(L, -2);
     lua_setupvalue(L, -2, 1); 
