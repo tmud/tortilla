@@ -18,6 +18,12 @@ PropertiesData* tortilla::getProperties()
     return _gameview->getPropData();
 }
 
+PluginsDataValues* tortilla::pluginsData()
+{
+    PropertiesData* pdata = _gameview->getPropData();
+    return pdata->displays.plugins_data();
+}
+
 CFont* tortilla::getCurrentFont()
 {
     return _gameview->getStandardFont();

@@ -11,6 +11,7 @@ void init();
 CFont* getCurrentFont();
 Palette256* getPalette();
 PropertiesData* getProperties();
+PluginsDataValues* pluginsData();
 PropertiesManager* getPropertiesManager();
 PluginsManager* getPluginsManager();
 lua_State* getLua();

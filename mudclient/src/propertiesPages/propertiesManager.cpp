@@ -161,80 +161,6 @@ bool PropertiesManager::loadProfileData()
     loadArray(sd, L"timers/timer", true, true, &m_propData.timers);
     loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
     loadArray(sd, L"variables/var", true, false, &m_propData.variables);
-    m_propData.plugins.clear();
-
-    bool default_window = false;
-    xml::request mw(sd, L"mainwindow");
-    if (mw.size())
-    {
-        xml::node w = mw[0];
-        w.get(L"width", &m_propData.display_width);
-        w.get(L"height", &m_propData.display_height);
-        w.get(L"fullscreen", &m_propData.main_window_fullscreen);
-        if (!loadRECT(w, &m_propData.main_window) ||
-            m_propData.display_width != GetSystemMetrics(SM_CXVIRTUALSCREEN) || 
-            m_propData.display_height != GetSystemMetrics(SM_CYVIRTUALSCREEN))
-        {
-            m_propData.initMainWindow();
-            m_propData.initFindWindow();
-            default_window = true;
-        }
-    }
-
-    xml::request fw(sd, L"findwindow");
-    if (fw.size())
-    {
-        xml::node w = fw[0];
-        if (!w.get(L"visible", &m_propData.find_window_visible) || !loadRECT(w, &m_propData.find_window))
-        {
-            m_propData.initFindWindow();
-        }
-        else
-        {
-            if (m_propData.find_window_visible != 1)
-                m_propData.find_window_visible = 0;
-        }
-    }
-
-    xml::request cw(sd, L"windows/window");
-    int e = cw.size();
-    for (int i=0; i<OUTPUT_WINDOWS; ++i) 
-    {
-        OutputWindow w;
-        if (!default_window && i<e)
-        {
-            xml::node xn = cw[i];
-            if (loadWindow(cw[i], &w))
-                m_propData.windows[i] = w;
-        }
-    }
-
-    // load plugins and windows
-    xml::request pp(sd, L"plugins/plugin");
-    for (int i = 0, e = pp.size(); i < e; ++i)
-    {
-        tstring name; int value = 0;
-        xml::node pn = pp[i];
-        pn.get(L"key", &name);
-        pn.get(L"value", &value);
-        if (!name.empty())
-        {
-            PluginData pd;
-            pd.name = name;
-            pd.state = (value == 1) ? 1 : 0;
-            if (!default_window)
-            {
-                OutputWindow w;
-                xml::request wp(pn, L"windows/window");
-                for (int j = 0, je = wp.size(); j < je; ++j)
-                {
-                    if (loadWindow(wp[j], &w))
-                        pd.windows.push_back(w);
-                }
-            }
-            m_propData.plugins.push_back(pd);
-        }
-    }
 
     xml::request msrq(sd, L"messages");
     if (msrq.size() == 1)
@@ -253,6 +179,8 @@ bool PropertiesManager::loadProfileData()
         loadValue(ms, L"timers", 0, 1, &d.timers);
         loadValue(ms, L"tabwords", 0, 1, &d.tabwords);
     }
+
+    m_propData.displays.load(sd);
 
     sd.deletenode();
     m_propData.checkGroups();
@@ -324,35 +252,6 @@ bool PropertiesManager::saveProfileData()
     xml::node vars = sd.createsubnode(L"variables");
     saveArray(vars, L"var", m_propData.variables);
 
-    xml::node windows = sd.createsubnode(L"windows");
-    for (int i=0,e=m_propData.windows.size(); i<e; ++i)
-        saveWindow(windows, m_propData.windows[i]);
-
-    xml::node mw = sd.createsubnode(L"mainwindow");
-    saveRECT(mw, m_propData.main_window);
-    mw.set(L"width", m_propData.display_width);
-    mw.set(L"height", m_propData.display_height);
-    mw.set(L"fullscreen", m_propData.main_window_fullscreen);
-
-    xml::node fw = sd.createsubnode(L"findwindow");
-    saveRECT(fw, m_propData.find_window);
-    fw.set(L"visible", m_propData.find_window_visible);
-
-    xml::node plugins = sd.createsubnode(L"plugins");
-    for (int i = 0, e = m_propData.plugins.size(); i < e; ++i)
-    {
-        const PluginData &pd = m_propData.plugins[i];
-        xml::node pn = plugins.createsubnode(L"plugin");
-        pn.set(L"key", pd.name);
-        pn.set(L"value", pd.state == 0 ? 0 : 1);
-        if (!pd.windows.empty())
-        {
-            xml::node pw = pn.createsubnode(L"windows");
-            for (int j = 0, je = pd.windows.size(); j < je; ++j)
-                saveWindow(pw, pd.windows[j]);
-        }
-    }
-
     xml::node ms = sd.createsubnode(L"messages");
     PropertiesData::message_data& d = m_propData.messages;
     saveValue(ms, L"actions", d.actions);
@@ -366,6 +265,8 @@ bool PropertiesManager::saveProfileData()
     saveValue(ms, L"vars", d.variables);
     saveValue(ms, L"timers", d.timers);
     saveValue(ms, L"tabwords", d.tabwords);
+
+    m_propData.displays.save(sd);
 
     tstring config(L"profiles\\");
     config.append(m_profile.name);

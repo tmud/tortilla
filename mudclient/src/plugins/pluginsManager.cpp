@@ -78,11 +78,11 @@ void PluginsManager::initPlugins()
     }
     files.clear();
 
-    PluginsDataValues &modules = tortilla::getProperties()->plugins;
+    PluginsDataValues* modules = tortilla::pluginsData();
     PluginsDataValues new_modules;
-    for (int i = 0, e = modules.size(); i < e; ++i)
+    for (int i = 0, e = modules->size(); i < e; ++i)
     {
-        const PluginData& v = modules[i];
+        const PluginData& v = modules->at(i);
         bool exist = false;
         for (int j = 0, je = m_plugins.size(); j < je; ++j)
             if (v.name == m_plugins[j]->get(Plugin::FILE)) { exist = true; break; }
@@ -96,13 +96,13 @@ void PluginsManager::initPlugins()
             if (new_modules[j].name == name) { exist = true; break; }
         if (!exist) { PluginData pd; pd.name = name; pd.state = 0; new_modules.push_back(pd); }
     }
-    modules.swap(new_modules);
+    modules->swap(new_modules);
 
     // sort and set initial state
     PluginsList new_plugins;
-    for (int i = 0, e = modules.size(); i < e; ++i)
+    for (int i = 0, e = modules->size(); i < e; ++i)
     {
-        const PluginData& v = modules[i];
+        const PluginData& v = modules->at(i);
         for (int j = 0, je = m_plugins.size(); j < je; ++j)
         if (v.name == m_plugins[j]->get(Plugin::FILE))
         {
@@ -153,24 +153,24 @@ bool PluginsManager::pluginsPropsDlg()
     for (int i=0,e=turn_on.size(); i<e; ++i)
         loadPlugin(turn_on[i]);
 
-    PluginsDataValues &modules = tortilla::getProperties()->plugins;
+    PluginsDataValues* modules = tortilla::pluginsData();
     PluginsDataValues new_modules;
     for (int i=0,e=m_plugins.size(); i<e; ++i)
     {
         Plugin *p = m_plugins[i];
         tstring name = p->get(Plugin::FILE);
-        for (int j = 0, je = modules.size(); j < je; ++j)
+        for (int j = 0, je = modules->size(); j < je; ++j)
         {
-            if (modules[j].name == name)
+            if (modules->at(j).name == name)
             {
-                PluginData& v = modules[j];
+                PluginData& v = modules->at(j);
                 v.state = p->state() ? 1 : 0;
                 new_modules.push_back(v);
                 break;
             }
         }
     }
-    modules.swap(new_modules);
+    modules->swap(new_modules);
     return true;
 }
 
@@ -530,8 +530,8 @@ void PluginsManager::setPluginState(Plugin* p, bool state)
     }
     if (index != -1)
     {
-        PluginsDataValues &modules = tortilla::getProperties()->plugins;
-        modules[index].state = (state) ? 1 : 0;
+        PluginsDataValues* modules = tortilla::pluginsData();
+        modules->at(index).state = (state) ? 1 : 0;
     }
 }
 
@@ -709,8 +709,8 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;
-    PluginsDataValues &modules = tortilla::getProperties()->plugins;
-    modules[plugin_index].state = 0;
+    PluginsDataValues* modules = tortilla::pluginsData();    
+    modules->at(plugin_index).state = 0;
 }
 
 void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd)
