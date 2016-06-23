@@ -31,6 +31,7 @@ public:
     bool current(int width, int height) const;
     int width() const { return display_width; }
     int height() const { return display_height; }
+    void setres(int width, int height) { display_width = width; display_height = height; }
 private:
     void initMainWindow();
     void initFindWindow();

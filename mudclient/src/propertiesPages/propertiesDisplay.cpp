@@ -325,6 +325,12 @@ void PropertiesDisplayManager::load(xml::node root_node)
             d->initDefault();
             d->loadOnlyPlugins(root_node);
         }
+        else
+        {
+            int display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+            int display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+            d->setres(display_width, display_height);
+        }
         current_display = d;
         m_displays.push_back(d);
     }
