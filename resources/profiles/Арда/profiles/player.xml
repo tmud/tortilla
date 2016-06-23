@@ -10,6 +10,8 @@
   <plogs value="1"/>
   <plogswnd value="0"/>
   <codepage value="win"/>
+  <prompt value="1"/>
+  <ptemplate value="оп&gt;"/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
@@ -31,7 +33,7 @@
   </colors>
   <font italic="0" bold="400" height="10" name="Fixedsys"/>
   <actions>
-    <action key="^Select one :$" value="2" group="default"/>
+    <action key="^Viberite kodirovku:$" value="1" group="default"/>
   </actions>
   <aliases/>
   <hotkeys>
@@ -42,7 +44,7 @@
     <hotkey key="NUM7" value="вв" group="default"/>
     <hotkey key="NUM1" value="вн" group="default"/>
     <hotkey key="NUM0" value="см" group="default"/>
-    <hotkey key="F12" value="#connect bylins.su 4000" group="default"/>
+    <hotkey key="F12" value="#connect arda.pp.ru 7000" group="default"/>
     <hotkey key="NUMDEL" value="сч" group="default"/>
     <hotkey key="NUM5" value="огл" group="default"/>
   </hotkeys>

@@ -611,6 +611,7 @@ public:
         variables.clear();
         cmd_history.clear();
         groups.clear();
+        tabwords.clear();
         initDefaultColorsAndFont();
         initDisplay();
         messages.initDefault();

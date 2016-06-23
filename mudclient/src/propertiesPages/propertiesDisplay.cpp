@@ -52,10 +52,15 @@ bool PropertiesDisplay::load(xml::node root_node)
             find_window.visible = (visible==1) ? true : false;
     }
 
-    xml::request ow(root_node, L"windows/window");    
+    xml::request ow(root_node, L"windows/window");
     if (!loadOutputWindows(ow, &output_windows))
         initOutputWindows();
 
+    return loadOnlyPlugins(root_node);
+}
+
+bool PropertiesDisplay::loadOnlyPlugins(xml::node root_node)
+{
     xml::request p(root_node, L"plugins/plugin");
     for (int i=0,e=p.size();i<e;++i)
     {
@@ -293,6 +298,7 @@ void PropertiesDisplayManager::initDefault()
 
 void PropertiesDisplayManager::load(xml::node root_node)
 {
+    clear();
     xml::request disp(root_node, L"displays/display");
     for (int i=0,e=disp.size();i<e;++i)
     {
@@ -315,7 +321,10 @@ void PropertiesDisplayManager::load(xml::node root_node)
     {
         PropertiesDisplay *d = new PropertiesDisplay();
         if (!d->load(root_node))
+        {
             d->initDefault();
+            d->loadOnlyPlugins(root_node);
+        }
         current_display = d;
         m_displays.push_back(d);
     }

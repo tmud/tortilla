@@ -26,6 +26,7 @@ public:
     ~PropertiesDisplay();
     void initDefault();
     bool load(xml::node root_node);
+    bool loadOnlyPlugins(xml::node root_node);
     void save(xml::node root_node);
     bool current(int width, int height) const;
     int width() const { return display_width; }
