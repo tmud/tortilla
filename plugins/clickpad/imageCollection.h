@@ -21,7 +21,8 @@ public:
     void scanImages();
     int  getImagesCount() const;
     const BigImageData& getImage(int index) const;
-    ClickpadImage* load(const std::wstring& params);    
+    ClickpadImage* load(const std::wstring& params);
+    ClickpadImage* load(const std::wstring& path, int x, int y);
     void save(ClickpadImage* image, std::wstring* params);
 private:
     std::vector<BigImageData> m_files;

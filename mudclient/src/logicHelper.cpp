@@ -10,7 +10,7 @@ LogicHelper::LogicHelper()
      m_params_regexp.setRegExp(L"['{\"]?(.*['}\"]?[^'}\"])", true);
 }
 
-bool LogicHelper::processAliases(const InputCommand* cmd, InputCommands* newcmds)
+bool LogicHelper::processAliases(const InputCommand cmd, InputCommands* newcmds)
 {
     for (int i=0,e=m_aliases.size(); i<e; ++i)
     {

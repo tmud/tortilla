@@ -15,7 +15,7 @@ function cmdfilter.description()
   return table.concat(s, '\r\n')
 end
 function cmdfilter.version()
-  return '1.02'
+  return '1.03'
 end
 
 function cmdfilter.init()
@@ -24,15 +24,19 @@ function cmdfilter.init()
     terminate('Ошибка в файле настроек '..getPath('config.lua')..', нет списка команд.')
   end
   if (not t.cmdlist or type(t.cmdlist) ~= 'table') and (not t.scmdlist or type(t.scmdlist) ~= 'table') then
-    terminate('Ошибка в настройках '..getPath('config.lua')..', нет списка команд cmdlist и scmdlist.')
+    terminate('Ошибка в настройках '..getPath('config.lua')..', нет списка команд cmdlist или scmdlist.')
   end
   cmd_list = {} 
   scmd_list = {}
-  for _,cmd in pairs(t.cmdlist) do
-    cmd_list[cmd] = true
+  if t.cmdlist then
+    for _,cmd in pairs(t.cmdlist) do
+      cmd_list[cmd] = true
+    end
   end
-  for _,cmd in pairs(t.scmdlist) do
-    scmd_list[cmd] = true
+  if t.scmdlist then
+    for _,cmd in pairs(t.scmdlist) do
+      scmd_list[cmd] = true
+    end
   end
 end
 

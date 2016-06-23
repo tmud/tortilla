@@ -13,7 +13,7 @@ void InputVarsAccessor::translateVars(tstring *cmd)
     tortilla::getVars()->processVars(cmd, false);
 }
 
-bool InputCommandsVarsFilter::checkFilter(InputCommand *cmd)
+bool InputCommandsVarsFilter::checkFilter(InputCommand cmd)
 {
     if (!cmd->system)
         return false;
@@ -53,7 +53,7 @@ bool InputCommandsVarsFilter::checkFilter(InputCommand *cmd)
     return false;
 }
 
-bool InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
+bool InputCommandVarsProcessor::makeCommand(InputCommand cmd)
 {
     VarProcessor *vp = tortilla::getVars();
     vp->processVars(&cmd->parameters, false);
@@ -153,7 +153,7 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
     {
         const InputSubcmd &subcmd = at(i);
 
-        InputCommand *cmd = new InputCommand();
+        InputCommand cmd =  std::make_shared<InputCommandData>();
         cmd->system = subcmd.system;
         if (cmd->system)
             cmd->srccmd.append(prefix);
@@ -220,26 +220,26 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
     }
 }
 
-void InputTemplateCommands::fillsyscmd(InputCommand *cmd)
+void InputTemplateCommands::fillsyscmd(InputCommand cmd)
 {
     unmarkbrackets(&cmd->parameters, &cmd->parameters_list);
 }
 
-void InputTemplateCommands::fillgamecmd(InputCommand *cmd)
+void InputTemplateCommands::fillgamecmd(InputCommand cmd)
 {
     const tstring& params = cmd->parameters;
     const tchar *p = params.c_str();
     const tchar *e = p + params.length();
     while (p != e)
     {
-       const tchar *s = wcschr(p, L' ');
-       if (!s) break;
-       if (p != s)
-            cmd->parameters_list.push_back(tstring(p, s-p));
-       p = s + 1;
+       const tchar *s = p;
+       while (s != e && *s == L' ') s++;
+       if (s != e) {
+           while (s != e && *s != L' ') s++;
+       }
+       cmd->parameters_list.push_back(tstring(p, s-p));
+       p = s;
     }
-    if (p != e)
-        cmd->parameters_list.push_back(tstring(p, e-p));
 }
 
 void InputTemplateCommands::parsecmd(const tstring& cmd)

@@ -42,7 +42,7 @@ public:
 };
 
 bool InputCommandTemplateUnitTest::test1(const tstring& str, int n, ...)
-{    
+{
     InputPlainCommands cmds(str);
     InputTemplateParameters p; 
     p.separator = L';';
@@ -85,14 +85,14 @@ bool InputCommandTemplateUnitTest::test2(const tstring& str, int params, InputCo
     InputTestsParameters tp(params);
     InputCommands tcmds;
     t.makeCommands(&tcmds, &tp);
-    
+
     if (tcmds.size() != ref->size())
         return false;
 
     for (int i=0, e=tcmds.size(); i<e; ++i)
     {
-        InputCommand *c1 = tcmds[i];
-        InputCommand *c2 = ref->operator[](i);
+        InputCommand c1 = tcmds[i];
+        InputCommand c2 = ref->operator[](i);
         if (c1->srccmd != c2->srccmd)
             return false;
         if (c1->srcparameters != c2->srcparameters)
@@ -105,15 +105,15 @@ bool InputCommandTemplateUnitTest::test2(const tstring& str, int params, InputCo
     return true;
 }
 
-InputCommand* InputCommandTemplateUnitTest::makecmd(bool system, const tstring& srccmd, const tstring& srcparams,
+InputCommand InputCommandTemplateUnitTest::makecmd(bool system, const tstring& srccmd, const tstring& srcparams,
     const tstring& cmd, int n, ...)
 {
-    InputCommand *c = new InputCommand;
+    InputCommand c =  std::make_shared<InputCommandData>();
     c->srccmd = srccmd;
     c->srcparameters = srcparams;
     c->command = cmd;
     c->system = system;
-    
+
     va_list args;
     va_start(args, n);
     for (int i=0; i<n; ++i)
@@ -135,14 +135,22 @@ void InputCommandTemplateUnitTest::run()
     assert( test1(L"#ddd {fff} ; {ffff 'f;f{f;f}f;f'}", 2, L"#ddd {fff} ", L" ffff 'f;f{f;f}f;f'") );
     assert( test1(L"#bbb '{};fff;\"aaa\"'", 1, L"#bbb '{};fff;\"aaa\"'") );
 
-    InputCommands t0;
-    t0.push_back(makecmd(false, L" ", L"", L" ", 0));
-    assert(test2(L" ", 0, &t0));
+    InputCommands g1;
+    g1.push_back(makecmd(false, L" ", L"", L" ", 0));
+    assert(test2(L" ", 0, &g1));
+
+    InputCommands g2;
+    g2.push_back(makecmd(false, L"тест", L"  123 456  789", L"тест", 3, L"  123", L" 456", L"  789" ));
+    assert(test2(L"тест  123 456  789", 3, &g2));
+
+    InputCommands g3;
+    g3.push_back(makecmd(false, L"тест2", L" aaa  bbb  ccc  ", L"тест2", 4, L" aaa", L"  bbb", L"  ccc", L"  "));
+    assert(test2(L"тест2 aaa  bbb  ccc  ", 4, &g3));
 
     InputCommands t1;
     t1.push_back( makecmd(true, L"# ", L"wout 1 test test2", L"", 4, L"wout", L"1", L"test", L"test2") );
     assert( test2(L"# wout 1 test test2", 0, &t1) );
-    
+
     InputCommands t2;
     t2.push_back(makecmd(true, L"#wout", L" 1 {red} blue", L"wout", 3, L"1", L"red", L"blue"));
     assert(test2(L"#wout 1 {red} blue", 0, &t2));

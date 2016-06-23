@@ -28,13 +28,7 @@ void LogicProcessor::processTick()
             wait_cmds.move(tmp);
         }
         processCommands(wait_cmds);
-    }
-    if (!m_repeat_commands.empty())
-    {
-        processCommands(m_repeat_commands);
-        m_repeat_commands.clear();
-    }
-
+    }    
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -83,7 +77,7 @@ void LogicProcessor::processCommand(const tstring& cmd)
     processCommands(cmds);
 }
 
-void LogicProcessor::processCommands(const InputPlainCommands& cmds)
+void LogicProcessor::makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds)
 {
     PropertiesData* pdata = tortilla::getProperties();
 
@@ -94,9 +88,13 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
     InputTemplateCommands tcmds;
     tcmds.init(cmds, p);
     tcmds.makeTemplates();
+    tcmds.makeCommands(rcmds, NULL);
+}
 
+void LogicProcessor::processCommands(const InputPlainCommands& cmds)
+{
     InputCommands result;
-    tcmds.makeCommands(&result, NULL);
+    makeCommands(cmds, &result);
     runCommands(result);
 }
 
@@ -109,13 +107,13 @@ void LogicProcessor::runCommands(InputCommands& cmds)
     int i=0,e=cmds.size();
     for (; i<e; ++i)
     {
-        InputCommand *cmd = cmds[i];
+        InputCommand cmd = cmds[i];
         if (!vf.checkFilter(cmd))
         {
           while (vp.makeCommand(cmd))
           {
              // found $var in cmd name -> run aliases again
-             cmds.remove(i);
+             cmds.erase(i);
              InputCommands alias;
              alias.push_back(cmd);
              bool result = processAliases(alias);
@@ -128,40 +126,47 @@ void LogicProcessor::runCommands(InputCommands& cmds)
           }
         }
 
-        if (cmd->system)
+        // check repeat commands
+        if (cmd->system && isOnlyDigits( cmd->command))
         {
-            // check repeat commands
-            if (isOnlyDigits( cmd->command))
+            int repeats = 0;
+            w2int(cmd->command, &repeats);
+            std::vector<tstring>& p = cmd->parameters_list;
+            if (repeats == 0)
             {
-                int repeats = 0;
-                w2int(cmd->command, &repeats);
-                tstring newcmd(cmd->parameters);
-                tstring_trimleft(&newcmd);
-                /*std::vector<tstring>& pl = cmd->parameters_list;
-                for (int k=0,ke=pl.size(); k<ke; ++k)
-                {
-                    if (k!=0) newcmd.append(L" ");
-                    newcmd.append(pl[k]);
-                }*/
-                if (repeats == 0 || newcmd.empty())
-                {
-                    m_repeat_commands.clear();
-                    return;
-                }
-                if (repeats > 0 && repeats <= 100)
-                {
-                    m_repeat_commands.repeat(repeats, newcmd);
-                    for (int j=i+1;j<e;++j)
-                    {
-                        newcmd.assign(cmds[j]->srccmd);
-                        newcmd.append(cmds[j]->srcparameters);
-                        m_repeat_commands.push_back(newcmd);
-                    }
-                    return;
-                }
+                m_commands_queue.clear();
+                continue;
             }
-            processSystemCommand(cmd); //it is system command for client
+            if (p.empty() || repeats < 0)
+                continue;
+            if (repeats > 100)
+            {
+                tstring error(L"Ошибка: Слишком большое количество повторов [");
+                error.append(cmd->srccmd);
+                error.append(cmd->srcparameters);
+                error.append(L"]");
+                tmcLog(error);
+                continue;
+            }
+
+            InputPlainCommands t;
+            for (int j=0,je=cmd->parameters_list.size();j<je;++j)
+                t.push_back(cmd->parameters_list[j]);
+            InputCommands queue_cmds;
+            makeCommands(t, &queue_cmds);
+            queue_cmds.repeat(repeats);
+            m_commands_queue.push_back(queue_cmds);
+            continue;
         }
+        if (!m_commands_queue.empty())
+        {
+            cmds.erase(i);
+            e = cmds.size();
+            m_commands_queue.push_back(cmd);
+            continue;
+        }
+        if (cmd->system)
+            processSystemCommand(cmd); //it is system command for client
         else
             processGameCommand(cmd);   // it is game command
     }
@@ -175,7 +180,7 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
     int queue_size = cmds.size();
     for (int i=0; i<queue_size;)
     {
-        InputCommand* cmd = cmds[i];
+        InputCommand cmd = cmds[i];
         if (cmd->command.empty()) 
             { i++; continue; }
 
@@ -187,7 +192,7 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
  
         for (int j = 0, je = newcmds.size(); j < je; ++j)
         {
-            InputCommand *cmd2 = newcmds[j];
+            InputCommand cmd2 = newcmds[j];
             const tstring& compare_cmd = (cmd2->system) ? cmd2->srccmd : cmd2->command;
             if (std::find(loops.begin(), loops.end(), compare_cmd) != loops.end())
             {
@@ -424,4 +429,6 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
+    m_commands_queue.clear();
+    m_waitcmds.clear();
 }

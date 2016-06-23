@@ -64,6 +64,115 @@ int ClickpadMainWnd::getColumns() const
     return m_columns;
 }
 
+bool ClickpadMainWnd::checkRowColumn(int row, int column)
+{
+    return (row >= 1 && row <= MAX_ROWS && column >= 1 && column <= MAX_COLUMNS) ? true : false;
+}
+
+bool ClickpadMainWnd::showRowsColumns(int rows, int columns)
+{
+    if (!checkRowColumn(rows, columns))
+        return false;
+    m_rows = rows;
+    m_columns = columns;
+    setWorkWindowSize();
+    return true;
+}
+
+bool ClickpadMainWnd::setButton(int row, int column, const ButtonParams& p)
+{
+    if (!checkRowColumn(row, column))
+        return false;
+    PadButton* pb = getButton(column-1, row-1);
+    if (!pb)
+        return false;
+    pb->setText(p.text);
+    pb->setCommand(p.cmd);
+    pb->setTemplate(p.templ);
+    ClickpadImage *image = m_image_collection->load(p.imagefile, p.imagex, p.imagey);
+    pb->setImage(image);
+    showButton(column-1,row-1,true);
+    return true;
+}
+
+bool ClickpadMainWnd::updateButton(int row, int column, const ButtonParams& p)
+{
+    if (!checkRowColumn(row, column))
+        return false;
+    PadButton* pb = getButton(column-1, row-1);
+    if (!pb)
+        return false;
+    if (p.update & ButtonParams::TEXT)
+        pb->setText(p.text);
+    if (p.update & ButtonParams::CMD)
+        pb->setCommand(p.cmd);
+    if (p.update & ButtonParams::IMAGE)
+    {
+        int x = 0; int y = 0;
+        if (p.update & ButtonParams::IMAGEXY)
+        {
+            x = p.imagex; y = p.imagey;        
+        }
+        ClickpadImage *image = m_image_collection->load(p.imagefile, x, y);
+        if (image)
+            pb->setImage(image);
+    }
+    if (p.update & ButtonParams::TEMPLATE)
+        pb->setTemplate(p.templ);
+    showButton(column-1,row-1,true);
+    return true;
+}
+
+bool ClickpadMainWnd::getButton(int row, int column, ButtonParams* p)
+{
+    if (!checkRowColumn(row, column))
+        return false;
+    PadButton* pb = getButton(column-1, row-1);
+    if (!pb)
+        return false;
+    pb->getText(&p->text);
+    if (!p->text.empty())
+        p->update |= ButtonParams::TEXT;
+    pb->getCommand(&p->cmd);
+    if (!p->cmd.empty())
+        p->update |= ButtonParams::CMD;
+    ClickpadImage *image = pb->getImage();
+    if (image)
+    {
+        const ClickpadImageParams&cp = image->params();
+        p->imagefile = cp.atlas_filename;
+        p->update |= ButtonParams::IMAGE;
+        if (cp.atlas_x > 0 || cp.atlas_y > 0)
+        {
+            p->imagex = cp.atlas_x; p->imagey = cp.atlas_y;
+            p->update |= ButtonParams::IMAGEXY;
+        }
+        else
+        {
+            p->imagex = 0; p->imagey = 0;
+        }
+    }
+    bool templ = pb->getTemplate();
+    if (templ)
+    {
+        p->templ = true;
+        p->update |= ButtonParams::TEMPLATE;
+    }
+    return true;
+}
+
+bool ClickpadMainWnd::clearButton(int row, int column)
+{
+    if (!checkRowColumn(row, column))
+        return false;
+    PadButton* pb = getButton(column-1, row-1);
+    if (!pb)
+        return false;
+    pb->clear();
+    showButton(column-1,row-1,false);
+    return true;
+}
+
 void ClickpadMainWnd::setRows(int count)
 {
     if (count <= 0) return;

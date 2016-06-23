@@ -187,6 +187,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\profiles\profileHelpers.h" />
     <ClInclude Include="src\profiles\profilesPath.h" />
     <ClInclude Include="src\propertiesPages\propertiesData.h" />
+    <ClInclude Include="src\propertiesPages\propertiesDisplay.h" />
     <ClInclude Include="src\propertiesPages\propertiesDlg.h" />
     <ClInclude Include="src\propertiesPages\propertiesElements.h" />
     <ClInclude Include="src\propertiesPages\propertiesManager.h" />
@@ -256,6 +257,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\pluginsViewString.cpp" />
     <ClCompile Include="src\profiles\profileHelpers.cpp" />
     <ClCompile Include="src\profiles\profilesPath.cpp" />
+    <ClCompile Include="src\propertiesPages\propertiesDisplay.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesManager.cpp" />
     <ClCompile Include="src\mudclient.cpp" />
