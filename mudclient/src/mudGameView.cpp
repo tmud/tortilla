@@ -177,7 +177,7 @@ void MudGameView::unloadPlugins()
     m_plugins.unloadPlugins();
 }
 
-void MudGameView::preprocessCommand(InputCommand* cmd)
+void MudGameView::preprocessCommand(InputCommand cmd)
 {
     m_plugins.processGameCmd(cmd);
 }

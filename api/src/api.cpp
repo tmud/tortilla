@@ -283,7 +283,7 @@ xstringw xml_get_text(xnode node)
 {
     xstring result = xmlGetText(node);
     if (!result)
-        return "";
+        return convert_utf8_to_wide("");
     return convert_utf8_to_wide(EscSymbolsDecoder(result));
 }
 

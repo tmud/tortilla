@@ -64,7 +64,11 @@ public:
               if (p1.size() < p2.size())
                   { result = false; break; }
               int len = p2.size();
-              int delta = p1.size() - len;
+              for (int i=0;i<len;++i) {
+                 if (p1[i] != p2[i])
+                  {  result = false; break; }
+              }
+              /*int delta = p1.size() - len;
               int compared = 0;
               for (int i=0;i<len;++i) {
                   if (p1[i] != p2[i]) break;
@@ -79,7 +83,7 @@ public:
                   if (notcompared >= compared*2) {
                       result = false; break;
                   }
-              }
+              }*/
         }
         return result;
     }
@@ -118,7 +122,7 @@ class PhrasesList
 {
 public:
     PhrasesList() {}
-    ~PhrasesList() { std::for_each(m_phrases.begin(), m_phrases.end(), [](Phrase*p) { delete p; }); }
+    ~PhrasesList() { clear(); }
     bool addPhrase(Phrase *p)
     {
        int index = 0;
@@ -178,6 +182,11 @@ public:
     int getPhrasesCount() const 
     {
         return m_phrases.size();
+    }
+    void clear()
+    {
+        std::for_each(m_phrases.begin(), m_phrases.end(), [](Phrase*p) { delete p; });
+        m_phrases.clear();
     }
 private:
     void find(const Phrase& p, bool strong_mode, std::vector<int>& indexes)

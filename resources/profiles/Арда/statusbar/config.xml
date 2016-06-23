@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<plugindata>
+  <cmd value="очки"/>
+  <baseparams>
+    <hp value="/[0-9]+зд"/>
+    <mn value="/[0-9]+ма"/>
+    <mv value="/[0-9]+дв"/>
+    <dsu value="оп"/>
+  </baseparams>
+  <maxparams>
+    <hp value="1"/>
+    <hpid value="r1"/>
+    <mn value="2"/>
+    <mnid value="r2"/>
+    <mv value="1"/>
+    <mvid value="r3"/>
+    <xpv value="1"/>
+    <xpvid value="r2"/>
+  </maxparams>
+  <regexp>
+    <r1 value="^Практик.*из +([0-9]+)"/>
+    <r2 value="^Опыт : +([0-9]+).*из +([0-9]+)"/>
+    <r3 value="^Денег.*из +([0-9]+)"/>
+  </regexp>
+</plugindata>

@@ -16,7 +16,7 @@ end
 if not bass then
   local res, err
   bass,err = prequire('lbass')
-  if not bass then 
+  if not bass then
     print (err)
   else
     res, err = bass.init()
@@ -34,8 +34,8 @@ if lvoice then
     regUnloadFunction(lvoice.free)
   else
     lvoice = nil
-    print("[lvoice] Ошибка при загрузке модуля.")
+    print("[lvoice] Ошибка при инициализации модуля.")
   end
 else
-  print("[lvoice] Ошибка при загрузке модуля.")
+  print("[lvoice] Ошибка при загрузке модуля: "..err)
 end

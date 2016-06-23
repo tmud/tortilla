@@ -22,7 +22,7 @@ public:
     bool setPluginState(const tstring& name, const tstring& state);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
-    void processGameCmd(InputCommand* cmd);
+    void processGameCmd(InputCommand cmd);
     void processViewData(const char* method, int view, parseData* data);
     void processBarCmds(InputPlainCommands* cmds);
     void processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history);
@@ -35,7 +35,7 @@ public:
 
 private:
     bool processTriggers(parseData& parse_data, int string, LogicPipelineElement* pe);
-    void concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd);
+    void concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
     enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };

@@ -37,7 +37,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.02");
+    luaT_pushwstring(L, L"1.03");
     return 1;
 }
 
@@ -211,9 +211,9 @@ int closewnd(lua_State *L)
     HWND hwnd = reinterpret_cast<HWND>(lua_tounsigned(L, 1));
     if (hwnd == m_parent_window.hwnd())
     {
-        /*m_parent_window.hide();
+        m_parent_window.hide();
         base::uncheckMenu(L, 1);
-        m_settings_window.hide();*/
+        m_settings_window.hide();
     }
     else if (hwnd == m_settings_window.hwnd())
     {
@@ -245,6 +245,212 @@ int propsupdated(lua_State *L)
     return 0;
 }
 
+int showButtons(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        int rows = lua_tointeger(L, 1);
+        int columns = lua_tointeger(L, 2);
+        bool res  = false;
+        if (m_clickpad)
+            res = m_clickpad->showRowsColumns(rows, columns);
+        lua_pushboolean(L, res ? 1 : 0);
+        return 1;
+    }
+    return 0;
+}
+
+bool readButton(lua_State *L, int index, ButtonParams* p)
+{
+    if (!lua_istable(L, index))
+        return false;
+    lua_pushstring(L, "text");
+    lua_gettable(L, index);
+    if (lua_isstring(L, -1))
+    {
+        p->text = luaT_towstring(L, -1);
+        p->update |= ButtonParams::TEXT;
+    }
+    lua_pop(L, 1);
+
+    lua_pushstring(L, "command");
+    lua_gettable(L, index);
+    if (lua_isstring(L, -1))
+    {
+        p->cmd = luaT_towstring(L, -1);
+        p->update |= ButtonParams::CMD;
+    }
+    lua_pop(L, 1);
+
+    lua_pushstring(L, "image");
+    lua_gettable(L, index);
+    if (lua_isstring(L, -1))
+    {
+        p->imagefile = luaT_towstring(L, -1);
+        p->update |= ButtonParams::IMAGE;
+    }
+    lua_pop(L, 1);
+
+    bool imagex = false;
+    lua_pushstring(L, "imagex");
+    lua_gettable(L, index);
+    if (lua_isnumber(L, -1))
+    {
+        p->imagex = lua_tointeger(L, -1);
+        imagex = true;
+    }
+    lua_pop(L, 1);
+
+    lua_pushstring(L, "imagey");
+    lua_gettable(L, index);
+    if (lua_isnumber(L, -1) && imagex)
+    {
+        p->imagey = lua_tointeger(L, -1);
+        p->update |= ButtonParams::IMAGEXY;
+    }
+    else {
+        p->imagex = 0;
+        p->imagey = 0;
+    }
+    lua_pop(L, 1);
+
+    lua_pushstring(L, "template");
+    lua_gettable(L, index);
+    if (lua_isnumber(L, -1) || lua_isboolean(L, -1))
+    {
+        bool templ = false;
+        if (lua_isboolean(L, -1))
+            templ = lua_toboolean(L, -1) ? true : false;
+        else
+        {
+            int flag = lua_tointeger(L, -1);
+            templ = (flag == 0) ? false : true;
+        }
+        p->templ = templ;
+        p->update |= ButtonParams::TEMPLATE;
+    }
+    lua_pop(L, 1);
+    return true;
+}
+
+bool writeButton(lua_State *L, int index, const ButtonParams& p)
+{
+    if (p.update & ButtonParams::TEXT)
+    {
+        lua_pushstring(L, "text");
+        luaT_pushwstring(L, p.text.c_str());
+        lua_settable(L, index);
+    }
+    if (p.update & ButtonParams::CMD)
+    {
+        lua_pushstring(L, "command");
+        luaT_pushwstring(L, p.cmd.c_str());
+        lua_settable(L, index);
+    }
+    if (p.update & ButtonParams::IMAGE)
+    {
+        lua_pushstring(L, "image");
+        luaT_pushwstring(L, p.imagefile.c_str());
+        lua_settable(L, index);
+        if (p.update & ButtonParams::IMAGEXY)
+        {
+            lua_pushstring(L, "imagex");
+            lua_pushinteger(L, p.imagex);
+            lua_settable(L, index);
+            lua_pushstring(L, "imagey");
+            lua_pushinteger(L, p.imagey);
+            lua_settable(L, index);
+        }
+    }
+    if (p.update & ButtonParams::TEMPLATE)
+    {
+        lua_pushstring(L, "template");
+        lua_pushboolean(L, p.templ);
+        lua_settable(L, index);
+    }
+    return true;
+}
+
+int setButton(lua_State *L)
+{
+    if (luaT_check(L, 3, LUA_TNUMBER, LUA_TNUMBER, LUA_TTABLE))
+    {
+        int row = lua_tointeger(L, 1);
+        int column = lua_tointeger(L, 2);
+        bool res = false;
+        ButtonParams p;
+        if (m_clickpad && readButton(L, 3, &p))
+            res = m_clickpad->setButton(row, column, p);
+        lua_pushboolean(L, res ? 1 : 0);
+        return 1;
+    }
+    if (luaT_check(L, 3, LUA_TNUMBER, LUA_TNUMBER, LUA_TNIL))
+    {
+        int row = lua_tointeger(L, 1);
+        int column = lua_tointeger(L, 2);
+        bool res = false;
+        if (m_clickpad)
+            res = m_clickpad->clearButton(row, column);
+        lua_pushboolean(L, res ? 1 : 0);
+    }
+    return 0;
+}
+
+int getButton(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        int row = lua_tointeger(L, 1);
+        int column = lua_tointeger(L, 2);
+        bool res = false;
+        ButtonParams p;
+        if (m_clickpad)
+        {
+            res = m_clickpad->getButton(row, column, &p);
+        }
+        if (res)
+        {
+            lua_newtable(L);
+            res = writeButton(L, lua_gettop(L), p);
+        }
+        if (!res)
+            lua_pushnil(L);
+        return 1;
+    }
+    return 0;
+}
+
+int updateButton(lua_State *L)
+{
+    if (luaT_check(L, 3, LUA_TNUMBER, LUA_TNUMBER, LUA_TTABLE))
+    {
+        int row = lua_tointeger(L, 1);
+        int column = lua_tointeger(L, 2);
+        bool res = false;
+        ButtonParams p;
+        if (m_clickpad && readButton(L, 3, &p))
+            res = m_clickpad->updateButton(row, column, p);
+        lua_pushboolean(L, res ? 1 : 0);
+        return 1;
+    }
+    return 0;
+}
+
+int clearButton(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        int row = lua_tointeger(L, 1);
+        int column = lua_tointeger(L, 2);
+        bool res = false;
+        if (m_clickpad)
+            res = m_clickpad->clearButton(row, column);
+        lua_pushboolean(L, res ? 1 : 0);
+        return 1;
+    }
+    return 0;
+}
+
 static const luaL_Reg clickpad_methods[] =
 {
     { "name", get_name },
@@ -256,6 +462,12 @@ static const luaL_Reg clickpad_methods[] =
     { "closewindow", closewnd },
     { "propsblocked", propsblocked },
     { "propsupdated", propsupdated },
+
+    { "show", showButtons },
+    { "set", setButton },
+    { "get", getButton },
+    { "update", updateButton },
+    { "clear", clearButton },
     { NULL, NULL }
 };
 

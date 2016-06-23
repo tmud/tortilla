@@ -16,6 +16,18 @@ public:
     virtual void setFont(LOGFONT font) = 0;
 };
 
+struct ButtonParams
+{
+    ButtonParams() : imagex(0), imagey(0), templ(false), update(0) {}
+    std::wstring text;
+    std::wstring cmd;
+    std::wstring imagefile;
+    int imagex, imagey;
+    bool templ;
+    enum { TEXT = 1, CMD = 2, IMAGE = 4, IMAGEXY = 8, TEMPLATE = 16 };
+    DWORD update;
+};
+
 class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >, public ClickpadSettings
 {
 public:
@@ -26,6 +38,13 @@ public:
     void save(xml::node& node);
     void load(xml::node& node);
     void updated();
+
+    bool showRowsColumns(int rows, int columns);
+    bool setButton(int row, int column, const ButtonParams& p);
+    bool updateButton(int row, int column, const ButtonParams& p);
+    bool getButton(int row, int column, ButtonParams* p);
+    bool clearButton(int row, int column);
+
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
         MESSAGE_HANDLER(WM_USER, OnClickButton)
@@ -70,6 +89,7 @@ private:
     void getFont(LOGFONT* font) const;
     void setFont(LOGFONT font);
     void initLogFont(LOGFONT *f);
+    bool checkRowColumn(int row, int column);
 private:
     bool m_editmode;
     int m_button_size, m_rows, m_columns;

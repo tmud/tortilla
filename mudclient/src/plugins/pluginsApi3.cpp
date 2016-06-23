@@ -39,12 +39,12 @@ void pluginFormatByType(lua_State* L, int index, tstring *buf)
 
 PluginData& find_plugin()
 {
-    PropertiesData *pdata = tortilla::getProperties();
+    PluginsDataValues* pdv =  tortilla::pluginsData();
     tstring plugin_name(_cp->get(Plugin::FILE));
     int index = -1;
-    for (int i = 0, e = pdata->plugins.size(); i < e; ++i)
+    for (int i = 0, e = pdv->size(); i < e; ++i)
     {
-        const PluginData &p = pdata->plugins[i];
+        const PluginData &p = pdv->at(i);
         if (p.name == plugin_name)
         {
             index = i; break;
@@ -55,8 +55,8 @@ PluginData& find_plugin()
         PluginData pd;
         pd.name = plugin_name;
         pd.state = _cp->state() ? 1 : 0;
-        pdata->plugins.push_back(pd);
-        index = pdata->plugins.size() - 1;
+        pdv->push_back(pd);
+        index = pdv->size() - 1;
     }
-    return pdata->plugins[index];
+    return pdv->at(index);
 }

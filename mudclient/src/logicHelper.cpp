@@ -5,12 +5,12 @@
 
 LogicHelper::LogicHelper()
 {
-     m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<|>|<=|>=) *([^ =~!<>]*)$", true);     
+     m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<>|<|>|<=|>=) *([^ =~!<>]*)$", true);     
      m_math_regexp.setRegExp(L"^([^+-/*]*) *([+-/*]) *([^+-/*]*)$", true);
      m_params_regexp.setRegExp(L"['{\"]?(.*['}\"]?[^'}\"])", true);
 }
 
-bool LogicHelper::processAliases(const InputCommand* cmd, InputCommands* newcmds)
+bool LogicHelper::processAliases(const InputCommand cmd, InputCommands* newcmds)
 {
     for (int i=0,e=m_aliases.size(); i<e; ++i)
     {
@@ -174,19 +174,23 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
              int n2 = _wtoi(p2.c_str());
              if (n1 == n2 && (cond == L"=" || cond == L"==" || cond == L"<=" || cond == L">="))
                  return LogicHelper::IF_SUCCESS;
-             if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!=" || cond == L"!="))
+             if (n1 < n2 && (cond == L"<" || cond == L"<="))
                  return LogicHelper::IF_SUCCESS;
-             if (n1 > n2 && (cond == L">" || cond == L">=" || cond == L"!=" || cond == L"!="))
+             if (n1 > n2 && (cond == L">" || cond == L">="))
+                 return LogicHelper::IF_SUCCESS;
+             if (n1 != n2 && (cond == L"!=" || cond == L"~=" || cond == L"<>"))
                  return LogicHelper::IF_SUCCESS;
           }
           else
           {
              int result = wcscmp(p1.c_str(), p2.c_str());
-             if (result == 0 && (cond == L"=" || cond == L"<=" || cond == L">="))
+             if (result == 0 && (cond == L"=" || cond == L"==" || cond == L"<=" || cond == L">="))
                  return LogicHelper::IF_SUCCESS;
-             if (result < 0 && (cond == L"<" || cond == L"<=" || cond == L"!="))
+             if (result < 0 && (cond == L"<" || cond == L"<="))
                  return LogicHelper::IF_SUCCESS;
-             if (result > 0 && (cond == L">" || cond == L">=" || cond == L"!="))
+             if (result > 0 && (cond == L">" || cond == L">="))
+                 return LogicHelper::IF_SUCCESS;
+             if (result != 0 && (cond == L"!=" || cond == L"~=" || cond == L"<>"))
                  return LogicHelper::IF_SUCCESS;
            }
      }

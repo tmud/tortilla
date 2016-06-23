@@ -277,6 +277,9 @@
     <ClInclude Include="src\plugins\pluginsViewString.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesDisplay.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -413,6 +416,9 @@
     </ClCompile>
     <ClCompile Include="src\plugins\pluginsViewString.cpp">
       <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\propertiesPages\propertiesDisplay.cpp">
+      <Filter>Source Files\PropertiesPages</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
