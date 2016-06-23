@@ -1102,7 +1102,10 @@ private:
 
             bool last_deleted = m_view.lastStringDeleted();
             m_view.addText(parse_data, &history, &limited);
+            bool empty = history.strings.empty();
             m_history.pushText(&history, last_deleted);
+            if (empty)
+                return;
             vs = vs - limited;
             checkHistorySize();
             bool history_visible = m_history.IsWindowVisible() ? true : false;
