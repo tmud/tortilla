@@ -2,7 +2,7 @@
 
 struct PropertiesMapper
 {
-    PropertiesMapper() {}
+    PropertiesMapper() : use_msdp(false) {}
     tstring begin_name;
     tstring end_name;
     tstring begin_descr;
@@ -29,6 +29,8 @@ struct PropertiesMapper
     tstring down_exit;
 
     tstring dark_room;
+
+    bool use_msdp;
     
     void initAllDefault()
     {
@@ -56,5 +58,6 @@ struct PropertiesMapper
         down_exit.clear();
 
         dark_room.clear();
+        use_msdp = false;
     }
 };

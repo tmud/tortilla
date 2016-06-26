@@ -2,7 +2,7 @@
 #include "debugHelpers.h"
 
 #ifdef _DEBUG
-const int debug_view = 2;
+const int debug_view = 3;
 lua_State *L = NULL;
 void init_debug_helpers(lua_State *_l) {
     L = _l;

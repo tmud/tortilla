@@ -17,10 +17,13 @@ int get_name(lua_State *L)
 }
 
 int get_description(lua_State *L) 
-{
-    luaT_pushwstring(L, L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
-        L"Работает с мадами с 6 стандартными выходами.\r\n"
-        L"Требует для работы VNUM комнаты в блоке между названием и промпт-строкой."
+{    
+    luaT_pushwstring(L, 
+        L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
+        L"Предназначен для мадов с 6 стандартными выходами.\r\n"
+        L"Требует для работы наличия VNUM комнаты в блоке текста с ее описанием,\r\n"
+        L"или MSDP протокола, в котором есть информация о местоположении.\r\n"
+        L"О настройке см. справку (#help mapper)."
         );
     return 1;
 }
@@ -47,6 +50,9 @@ int init(lua_State *L)
     xml::node ld;
     if (ld.load(path.c_str()))
     {
+        int usemsdp = 0;
+        ld.get(L"usemsdp/value", &usemsdp);
+        m_props.use_msdp = (usemsdp == 1) ? true : false;
         ld.get(L"darkroom/label", &m_props.dark_room);
         ld.get(L"name/begin", &m_props.begin_name);
         ld.get(L"name/end", &m_props.end_name);
@@ -92,20 +98,19 @@ int init(lua_State *L)
     HWND res = m_mapper_window->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);  
     m_parent_window.attach(res);
     m_parent_window.block(L"left,right,top,bottom");
- 
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    //todo m_mapper_window->loadMaps(L);
-
+    //todo! m_mapper_window->loadMaps(L);
     return 0;
 }
 
 int release(lua_State *L)
 {
-    //todo m_mapper_window->saveMaps(L);
+    //todo! m_mapper_window->saveMaps(L);
 
     xml::node s(L"mapper");
+    s.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
     s.set(L"darkroom/label", m_props.dark_room);
     s.set(L"name/begin", m_props.begin_name);
     s.set(L"name/end", m_props.end_name);
@@ -135,7 +140,6 @@ int release(lua_State *L)
 
     tstring path;
     base::getPath(L, L"config.xml", &path);
-
     if (!s.save(path.c_str()))
     {
         s.deletenode();
@@ -214,10 +218,12 @@ int gamecmd(lua_State *L)
         if (len > 0)
         {
             lua_pushinteger(L, 1);
-            lua_gettable(L, -2);            
+            lua_gettable(L, -2);
             tstring cmd(luaT_towstring(L, -1));
             lua_pop(L, 1);
-            luaT_showLuaStack(L, L"D");
+            int pos = wcsspn(cmd.c_str(), L" ");
+            if (pos != 0)
+                cmd.assign(cmd.substr(pos));
             m_mapper_window->processCmd(cmd);
         }        
     }

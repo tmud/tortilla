@@ -9,7 +9,7 @@ Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), m_lastDir(-1), m_p
 
 Mapper::~Mapper()
 {
-    autodel<Zone> z(m_zones);
+    std::for_each(m_zones.begin(),m_zones.end(),[](Zone* p){delete p;});
 }
 
 void Mapper::processNetworkData(const tchar* text, int text_len)
@@ -38,8 +38,9 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     DEBUGOUT(room.name);
     DEBUGOUT(room.vnum);
     DEBUGOUT(room.exits);
-    //DEBUGOUT(room.descr);
-    
+
+    return;
+
     bool cached = m_cache.isExistRoom(m_pCurrentRoom);
 
     // can be return NULL (if cant find or create new) so it is mean -> lost position
@@ -83,26 +84,44 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     m_pCurrentRoom = new_room;
 }
 
+int MapperDirCommand::check(const tstring& cmd) const
+{
+    int size = cmd.size();
+    if (size < main_size) return -1;
+    if (size == main_size)
+        return (cmd == main) ? dir : -1;
+    tstring main_part(cmd.substr(0, main_size));
+    if (main_part != main) return -1;
+    if (rel.empty()) return -1;
+    tstring rel_part(cmd.substr(main_size));
+    int rel_part_size = rel_part.size();
+    if (rel_part_size > rel_size) return -1;
+    return rel.find(rel_part)==0 ? dir : -1;
+}
+
 void Mapper::processCmd(const tstring& cmd)
 {
     if (cmd.empty())
         return;
-
     int dir = -1;
-    if (cmd == m_propsData->north_cmd)
-        dir = RD_NORTH;
-    else if (cmd == m_propsData->south_cmd)
-        dir = RD_SOUTH;
-    else if (cmd == m_propsData->west_cmd)
-        dir = RD_WEST;
-    else if (cmd == m_propsData->east_cmd)
-        dir = RD_EAST;
-    else if (cmd == m_propsData->up_cmd)
-        dir = RD_UP;
-    else if (cmd == m_propsData->down_cmd)
-        dir = RD_DOWN;
-    if (dir != -1)
-        m_path.push_back(dir);
+    for (int i=0,e=m_dirs.size();i<e;++i)
+    {
+        dir = m_dirs[i].check(cmd);
+        if (dir != -1) { m_path.push_back(dir); break; }
+    }
+#ifdef _DEBUG
+    tstring d(L"dir:");
+    switch(dir) {
+    case RD_NORTH: d.append(L"ё"); break;
+    case RD_SOUTH: d.append(L"ў"); break;
+    case RD_WEST:  d.append(L"ч"); break;
+    case RD_EAST:  d.append(L"т"); break;
+    case RD_UP:    d.append(L"тт"); break;
+    case RD_DOWN:  d.append(L"тэ"); break;
+    default: d.append(L"?");
+    }
+    DEBUGOUT(d);
+#endif
 }
 
 void Mapper::popDir()
@@ -285,7 +304,7 @@ Room* Mapper::findRoom(const RoomData& room)
            next->dirs[revert].next_room = m_pCurrentRoom;
            return next;
         }
-    } //todo
+    } //todo!
 
     // Add new room in cache - will it checking later
     Room* new_room = addNewRoom(room);
@@ -407,10 +426,54 @@ Room* Mapper::getNextRoom(Room *room, int dir)
     return rc.getOffsetRoom();
 }
 
+class InitDirsHeler {
+    Pcre r1, r2; DirsVector& m;
+ public:
+    InitDirsHeler(DirsVector& p) : m(p) { r1.init(L","); r2.init(L"\\|"); m.clear(); }
+    bool make(int dir, const tstring& key) {
+       bool result = true;
+       r1.findall(key.c_str());
+       int b = 0;
+       for (int i=1,ie=r1.size();i<ie;++i) {
+           int e = r1.first(i);
+           if (!set(dir, key.substr(b, e-b)))
+               result = false;
+           b=e+1;
+       }
+       if (!set(dir, key.substr(b)))
+           result = false;
+       return result;
+    }
+private:
+    bool set(int dir, const tstring& dkey) {
+        if (dkey.empty()) return true;
+        if (!r2.find(dkey.c_str())) {
+          MapperDirCommand k(dir, dkey, L"");
+          m.push_back(k);
+          return true;
+        }
+        if (r2.size()!=1)
+            return false;
+        int p = r2.first(0);
+        tstring main(dkey.substr(0, p));
+        tstring rel(dkey.substr(p+1));
+        MapperDirCommand k(dir, main, rel);
+        m.push_back(k);
+        return true;
+    }
+};
+
 void Mapper::updateProps()
 {
     m_processor.updateProps(m_propsData);
     m_prompt.updateProps(m_propsData);
+    InitDirsHeler h(m_dirs);
+    h.make(RD_NORTH, m_propsData->north_cmd);
+    h.make(RD_SOUTH, m_propsData->south_cmd);
+    h.make(RD_WEST, m_propsData->west_cmd);
+    h.make(RD_EAST, m_propsData->east_cmd);
+    h.make(RD_UP, m_propsData->up_cmd);
+    h.make(RD_DOWN, m_propsData->down_cmd);
 }
 
 void Mapper::redrawPosition()

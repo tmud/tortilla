@@ -10,6 +10,19 @@
 #include "mapperZoneControl.h"
 #include "mapperRoomsCache.h"
 
+class MapperDirCommand
+{
+    int dir; tstring main, rel;
+    int main_size, rel_size;
+public:
+    MapperDirCommand(int d, const tstring& main_part, const tstring& rel_part) : dir(d), main(main_part), rel(rel_part) 
+    {
+        main_size = main.size(); rel_size = rel.size();
+    }
+    int check(const tstring& cmd) const;
+};
+typedef std::vector<MapperDirCommand> DirsVector;
+
 class Mapper : public CWindowImpl<Mapper>
 {
 public:
@@ -56,15 +69,19 @@ private:
     Room* getNextRoom(Room *room, int dir);
     void  redrawPosition();
 
-private: // Elements on the screen
+private:
+    // properties
     PropertiesMapper *m_propsData;
 
+    // ui, windows and toolbars
     MapperToolbar m_toolbar;
     CSplitterWindowExT<true, 1, 4> m_vSplitter;
     MappeZoneControl m_zones_control;
     MapperRender m_view;
     int m_toolbar_height;
 
+    // logic
+    DirsVector m_dirs;
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
     MapperHashTable m_table;

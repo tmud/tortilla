@@ -53,7 +53,6 @@ struct RoomData
             dhash = dcrc.getCRC32();
         }
     }
-
     RoomData() : hash(0), dhash(0) {}
 };
 

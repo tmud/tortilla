@@ -9,6 +9,7 @@ class MapperSettings :  public CDialogImpl<MapperSettings>
     CEdit m_ex_north,m_ex_south,m_ex_west,m_ex_east,m_ex_up,m_ex_down;
     CEdit m_dark_room;
     CEdit m_begin_prompt, m_end_prompt;
+    CButton m_use_msdp;
 
 public:
    enum { IDD = IDD_MAPPER };
@@ -22,6 +23,7 @@ private:
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+        COMMAND_ID_HANDLER(IDC_CHECK_USEMSDP, OnUseMsdp)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -52,6 +54,13 @@ private:
         attach(&m_ex_down, IDC_EDIT_EXIT_DOWN, &propData->down_exit);
         attach(&m_dark_room, IDC_EDIT_DARK_ROOM, &propData->dark_room);
 
+        m_use_msdp.Attach(GetDlgItem(IDC_CHECK_USEMSDP));
+        if (propData->use_msdp)
+        {
+            m_use_msdp.SetCheck(BST_CHECKED);
+            enable_state(false);
+        }
+
         CenterWindow(GetParent());
         SetFocus();
         return 0;
@@ -67,7 +76,29 @@ private:
         return 0;
     }
 
-private:   
+    LRESULT OnUseMsdp(WORD, WORD, HWND, BOOL&)
+    {
+        if (m_use_msdp.GetCheck() == BST_CHECKED)
+        {
+            propData->use_msdp = true;
+            enable_state(false);
+        }
+        else
+        {
+            propData->use_msdp = false;
+            enable_state(true);
+        }
+        return 0;
+    }
+
+private:
+    void enable_state(bool state)
+    {
+        BOOL enable = state ? TRUE : FALSE;
+        for (int i=0,e=elements.size(); i<e; ++i)
+            elements[i].cntrl->EnableWindow(enable);
+    }
+
     struct el
     {
         void get() 

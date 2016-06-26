@@ -1,11 +1,12 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <mapper>
+  <usemsdp value="0"/>
   <darkroom label=""/>
   <name begin="\$[1;36m" end="\s["/>
   <descr begin="\$[0;37m\r\n" end="\r\n\$["/>
   <exits begin="\sВых:" end="&gt;\s\$"/>
-  <prompt begin="\r\n$[0;" end="\sВых:"/>
+  <prompt begin="\r\n$[0;" end="&gt;\s\$"/>
   <vnum begin="\s[" end="]\$[0;"/>
   <dirs north="С" south="Ю" west="З" east="В" up="^" down="v"/>
-  <cmds north="с" south="ю" west="з" east="в" up="вв" down="вн"/>
+  <cmds north="с|евер,n|orth" south="ю|г,s|outh" west="з|апад,w|est" east="в|осток,e|ast" up="вв|ерх,u|p" down="вн|из,d|own"/>
 </mapper>
