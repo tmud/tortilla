@@ -19,8 +19,8 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     {
         if (m_prompt.processNetworkData(text, text_len))
             popDir();
-        DEBUGOUT(L"------");
-        DEBUGOUT(L"Не распознано");
+        //DEBUGOUT(L"------");
+        //DEBUGOUT(L"Не распознано");
         return;
     }
     if (room.descr.empty())
@@ -39,9 +39,10 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     DEBUGOUT(room.vnum);
     DEBUGOUT(room.exits);
 
-    return;
+    Room *new_room = findRoom(room);
 
-    bool cached = m_cache.isExistRoom(m_pCurrentRoom);
+
+    /*bool cached = m_cache.isExistRoom(m_pCurrentRoom);
 
     // can be return NULL (if cant find or create new) so it is mean -> lost position
     Room* new_room = (cached) ? findRoomCached(room) : findRoom(room);
@@ -81,7 +82,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     m_viewpos.room = croom;
     m_viewpos.level = croom->level;
     redrawPosition();
-    m_pCurrentRoom = new_room;
+    m_pCurrentRoom = new_room;*/
 }
 
 int MapperDirCommand::check(const tstring& cmd) const
@@ -110,7 +111,7 @@ void Mapper::processCmd(const tstring& cmd)
         if (dir != -1) { m_path.push_back(dir); break; }
     }
 #ifdef _DEBUG
-    tstring d(L"dir:");
+    tstring d;
     switch(dir) {
     case RD_NORTH: d.append(L"с"); break;
     case RD_SOUTH: d.append(L"ю"); break;
@@ -118,9 +119,13 @@ void Mapper::processCmd(const tstring& cmd)
     case RD_EAST:  d.append(L"в"); break;
     case RD_UP:    d.append(L"вв"); break;
     case RD_DOWN:  d.append(L"вн"); break;
-    default: d.append(L"?");
     }
-    DEBUGOUT(d);
+    if (!d.empty())
+    {
+        tstring t(L"dir:");
+        t.append(d);
+        DEBUGOUT(t);
+    }
 #endif
 }
 
@@ -129,8 +134,8 @@ void Mapper::popDir()
     if (m_path.empty())
         m_lastDir = -1;
     else {
-        m_lastDir = m_path[0];
-        m_path.erase(m_path.begin());
+        m_lastDir = *m_path.begin();
+        m_path.pop_front();
     }
 }
 
@@ -203,7 +208,7 @@ Room* Mapper::findRoomCached(const RoomData& room)
 
     if (index != -1)
     {
-        m_cache.deleteRoom(m_pCurrentRoom);
+        //todo! m_cache.deleteRoom(m_pCurrentRoom);
         Room* new_current = vr[index];
         Room *f = m_pCurrentRoom->dirs[from].next_room;
         deleteRoom(m_pCurrentRoom);
@@ -227,7 +232,7 @@ Room* Mapper::findRoomCached(const RoomData& room)
         }
     }
 
-    m_cache.deleteRoom(m_pCurrentRoom);
+    //todo! m_cache.deleteRoom(m_pCurrentRoom);
     return addNewRoom(room);
 }
 
@@ -293,7 +298,6 @@ Room* Mapper::findRoom(const RoomData& room)
            return next;
        }
     }
-
     if (size == 1)
     {
         Room *next = vr[0];
@@ -308,7 +312,7 @@ Room* Mapper::findRoom(const RoomData& room)
 
     // Add new room in cache - will it checking later
     Room* new_room = addNewRoom(room);
-    m_cache.addRoom(new_room);
+    //todo! m_cache.addRoom(new_room);
     return new_room;
 }
 

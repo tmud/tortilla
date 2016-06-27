@@ -38,6 +38,7 @@ typedef unsigned int uint;
 #include "resource.h"
 
 #include <vector>
+#include <deque>
 #include <string>
 #include <map>
 #include <algorithm>

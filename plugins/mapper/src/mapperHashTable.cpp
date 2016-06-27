@@ -7,39 +7,39 @@ MapperHashTable::MapperHashTable()
 
 MapperHashTable::~MapperHashTable()
 {
-    iterator it = rooms.begin(), it_end = rooms.end();
-    for(; it!=it_end; ++it)
-        it->second.destroy();        
+    std::for_each(rooms.begin(), rooms.end(),
+        [](std::pair<const uint, rooms_list*>&it){ delete it.second; });
 }
 
 void MapperHashTable::addRoom(Room* room)
 {
     if (!room) { assert(false); return; }
-    RoomData &d = room->roomdata;
+    const RoomData &d = room->roomdata;
     iterator it = rooms.find(d.hash);
     if (it == rooms.end())
     {
-        hash_element h;
-        h.room = room;
-        rooms[d.hash] = h;
+        rooms_list* rlist = new rooms_list;
+        rlist->push_back(room);
+        rooms[d.hash] = rlist;
     }
     else
     {
-        hash_element &tmp = it->second;
-        tmp.add(room);
+        rooms_list* rlist = it->second;
+        rlist->push_back(room);
     }
 }
 
 void MapperHashTable::deleteRoom(Room* room)
 {
     if (!room) { assert(false); return; }
-    RoomData &d = room->roomdata;
+    const RoomData &d = room->roomdata;
     iterator it = rooms.find(d.hash);
     if (it != rooms.end())
     {
-        hash_element &tmp = it->second;
-        if (tmp.del(room))
-            rooms.erase(it);
+        rooms_list* rlist = it->second;
+        rooms_list_iterator rt = std::find(rlist->begin(), rlist->end(), room);
+        if (rt != rlist->end())
+           rlist->erase(rt);
     }
 }
 
@@ -51,24 +51,18 @@ void MapperHashTable::findRooms(const RoomData& room, std::vector<Room*> *vr)
         return;
     if (!room.dhash)        // get all rooms
     {
-        hash_element &tmp = it->second;
-        vr->push_back(tmp.room);
-        hash_element *p = tmp.next;
-        for (; p; p=p->next) {
-            vr->push_back(p->room);
+        rooms_list* rlist = it->second;
+        for (int i=0,e=rlist->size();i<e;++i){
+            vr->push_back(rlist->at(i));
         }
         return;
     }
-
     // get only rooms with same dhash
-    hash_element &tmp = it->second;
-    if (tmp.room->roomdata.dhash == room.dhash)
-        vr->push_back(tmp.room);
-
-    hash_element *p = tmp.next;
-    for (; p; p=p->next)
+    rooms_list* rlist = it->second;
+    for (int i = 0, e = rlist->size(); i < e; ++i)
     {
-        if (p->room->roomdata.dhash == room.dhash)
-            vr->push_back(p->room);
+        Room* r = rlist->at(i);
+        if (r->roomdata.dhash == room.dhash)
+            vr->push_back(r);
     }
 }

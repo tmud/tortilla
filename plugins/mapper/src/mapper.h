@@ -85,9 +85,9 @@ private:
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
     MapperHashTable m_table;
-    MapperRoomsCache m_cache;
+    //todo! MapperRoomsCache m_cache;
 
-    std::vector<int> m_path;
+    std::deque<int> m_path;
     int m_lastDir;
     Room *m_pCurrentRoom;
     std::vector<Zone*> m_zones;
