@@ -217,7 +217,7 @@ class load_file
     HANDLE hfile;
     typedef unsigned char uchar;
     std::string current_string;
-    const DWORD buffer_size = 256;
+    const DWORD buffer_size = 1024;
     uchar* buffer;
     DWORD  file_size;
     DWORD  not_readed;

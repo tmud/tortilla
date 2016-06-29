@@ -705,13 +705,14 @@ private:
         tstring_tolower(&n);
         Phrase p(n);
         int count = p.len();
+        return;
         if (count > 1)
         {
             for (int i=0; i<count; ++i)
             {
               tstring part(p.get(i));
               m_phrases.addPhrase(new Phrase(part));
-              add_toindex(part, ix);
+              /*add_toindex(part, ix);
               for (int j=i+1; j<count; ++j) 
               {
                  part.assign(p.get(i));
@@ -722,13 +723,13 @@ private:
                     m_phrases.addPhrase(new Phrase(part));
                     add_toindex(part, ix);
                  }
-              }
+              }*/
             }
         }
         else 
         {
           m_phrases.addPhrase(new Phrase(n));
-          add_toindex(n, ix);
+          //add_toindex(n, ix);
         }
     }
     void add_toindex(const tstring& t, index_ptr ix)
@@ -805,8 +806,13 @@ private:
                 {
                     if (fd.nFileSizeHigh > 0)
                         continue;
-                    DWORD max_size = max_db_filesize + 4096;
+                    DWORD max_size = max_db_filesize + 16384;
                     if (fd.nFileSizeLow >= max_size)
+                        continue;
+                    tstring name(fd.cFileName);
+                    int len = name.length()-3;
+                    name = name.substr(0,len);
+                    if (!isOnlyDigits(name))
                         continue;
                     fileinfo f;
                     tstring path(m_base_dir);
@@ -848,7 +854,9 @@ private:
                         ix->name = tk[0];
                         {
                            for (int i=0,e=tk.size();i<e;++i)
-                             add_index(tk[i], ix);
+                           {
+                               add_index(tk[i], ix);
+                           }
                         }
                         m_objects[ix->name] = ix;
                         ix = std::make_shared<index>();

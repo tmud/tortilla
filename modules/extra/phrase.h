@@ -146,6 +146,10 @@ public:
                 e = index;
             }
        }
+       
+       int dsize = m_phrases.capacity() - m_phrases.size();
+       if (dsize < 16)
+           m_phrases.reserve(m_phrases.size()+1000);
        m_phrases.insert(m_phrases.begin()+index, p);
        return true;
     }

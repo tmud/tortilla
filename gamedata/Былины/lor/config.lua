@@ -31,3 +31,10 @@ import = function()
     return true
   end
 end
+
+tegs = function()
+  local r1 = createPcre("Материал : (.*)")
+  return function(s)
+    if r1:find(s) then return r1:get(1) end
+  end
+end
