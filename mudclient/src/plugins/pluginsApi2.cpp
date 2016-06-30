@@ -1066,7 +1066,7 @@ int vd_getKey(lua_State *L)
     return pluginInvArgs(L, L"viewdata:getKey");
 }
 
-int vd_createRef(lua_State *L)
+int vd_createViewString(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
     {
@@ -1083,7 +1083,7 @@ int vd_createRef(lua_State *L)
             return 1;
         }
     }
-    return pluginInvArgs(L, L"viewdata:createRef");
+    return pluginInvArgs(L, L"viewdata:createViewString");
 }
 
 int vd_print(lua_State *L)
@@ -1195,7 +1195,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "getParameter", vd_getParameter);
     regFunction(L, "isChanged", vd_isChanged);
     regFunction(L, "getKey", vd_getKey);
-    regFunction(L, "createRef", vd_createRef);
+    regFunction(L, "createViewString", vd_createViewString);
     regFunction(L, "print", vd_print);
     regFunction(L, "__towatch", vd_toWatch);
     regIndexMt(L);

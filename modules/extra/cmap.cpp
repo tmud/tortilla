@@ -705,14 +705,13 @@ private:
         tstring_tolower(&n);
         Phrase p(n);
         int count = p.len();
-        return;
         if (count > 1)
         {
             for (int i=0; i<count; ++i)
             {
               tstring part(p.get(i));
               m_phrases.addPhrase(new Phrase(part));
-              /*add_toindex(part, ix);
+              add_toindex(part, ix);
               for (int j=i+1; j<count; ++j) 
               {
                  part.assign(p.get(i));
@@ -723,13 +722,13 @@ private:
                     m_phrases.addPhrase(new Phrase(part));
                     add_toindex(part, ix);
                  }
-              }*/
+              }
             }
         }
         else 
         {
           m_phrases.addPhrase(new Phrase(n));
-          //add_toindex(n, ix);
+          add_toindex(n, ix);
         }
     }
     void add_toindex(const tstring& t, index_ptr ix)
