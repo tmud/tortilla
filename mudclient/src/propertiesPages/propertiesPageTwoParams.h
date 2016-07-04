@@ -250,6 +250,13 @@ private:
     {
        if (m_update_mode)
            return 0;
+       int item = m_list.getOnlySingleSelection();
+       if (item != -1)
+       {
+          const property_value& v = m_list_values.get(item);
+          if (v.group != m_currentGroup)
+              return 0;
+       }
        updateCurrentItem(false);
        return 0;
     }
