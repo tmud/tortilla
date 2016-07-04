@@ -949,7 +949,7 @@ IMPL(whide)
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -991,7 +991,10 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, view);
+    int flags = SKIP_SUBS|GAME_LOG;
+    if (!enable_actions)
+        flags |= SKIP_ACTIONS;
+    printIncoming(data, flags, view);
 }
 
 IMPL(wprint)
@@ -1005,7 +1008,7 @@ IMPL(wprint)
         std::vector<tstring> data;
         for (int i=1; i<n; ++i)
             data.push_back(p->at(i));
-        return printex(window, data);
+        return printex(window, data, false);
     }
     p->invalidargs();
 }
@@ -1018,7 +1021,7 @@ IMPL(print)
         std::vector<tstring> data;
         for (int i=0; i<n; ++i)
             data.push_back(p->at(i));
-        return printex(0, data);
+        return printex(0, data, true);
     }
     p->invalidargs();
 }

@@ -165,7 +165,7 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
-    void printex(int view, const std::vector<tstring>& params);
+    void printex(int view, const std::vector<tstring>& params, bool enable_actions);
     DEF(wprint);
     DEF(print);
     DEF(message);

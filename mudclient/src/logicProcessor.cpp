@@ -384,7 +384,7 @@ void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
        }
        else
        {
-           printex(window, msgs);
+           printex(window, msgs, false);
        }
     }
 }
