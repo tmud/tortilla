@@ -710,7 +710,7 @@ private:
             for (int i=0; i<count; ++i)
             {
               tstring part(p.get(i));
-              m_phrases.addPhrase(new Phrase(part));
+              //m_phrases.addPhrase(new Phrase(part));
               add_toindex(part, ix);
               for (int j=i+1; j<count; ++j) 
               {
@@ -727,7 +727,7 @@ private:
         }
         else 
         {
-          m_phrases.addPhrase(new Phrase(n));
+          //m_phrases.addPhrase(new Phrase(n));
           add_toindex(n, ix);
         }
     }
@@ -736,7 +736,7 @@ private:
         iterator it = m_indexes.find(t);
         if (it == m_indexes.end())
         {
-            indexes empty;
+            indexes empty; 
             m_indexes[t] = empty;
             it = m_indexes.find(t);
         }

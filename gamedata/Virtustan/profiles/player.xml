@@ -1,15 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <profile>
   <viewsize value="3000"/>
   <cmdsize value="30"/>
   <systemcmds value="0"/>
   <clearbar value="1"/>
   <disableya value="0"/>
+  <disableosc value="1"/>
   <historytab value="1"/>
-  <timersf value="0"/>
   <plogs value="1"/>
   <plogswnd value="0"/>
+  <softscroll value="0"/>
   <codepage value="win"/>
+  <prompt value="0"/>
+  <ptemplate value=""/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
@@ -59,18 +62,65 @@
   </groups>
   <tabwords/>
   <variables/>
-  <plugins>
-    <plugin key="prompt.dll" value="0"/>
-    <plugin key="jmc3import.dll" value="1"/>
-    <plugin key="historyfilter.lua" value="1"/>
-    <plugin key="autowrap.lua" value="1"/>
-    <plugin key="statusbar.lua" value="1"/>
-    <plugin key="reconnect.lua" value="0"/>
-    <plugin key="colorgamecmd.lua" value="1"/>
-    <plugin key="clickpad.dll" value="1"/>
-    <plugin key="tray.dll" value="1"/>
-    <plugin key="sound.dll" value="1"/>
-    <plugin key="bell.lua" value="1"/>
-    <plugin key="send.lua" value="1"/>
-  </plugins>
+  <messages>
+    <actions value="0"/>
+    <aliases value="0"/>
+    <subs value="0"/>
+    <antisubs value="0"/>
+    <hotkeys value="0"/>
+    <highlights value="0"/>
+    <gags value="0"/>
+    <groups value="0"/>
+    <vars value="0"/>
+    <timers value="0"/>
+    <tabwords value="0"/>
+  </messages>
+  <displays>
+    <display width="3840" height="1080">
+      <mainwindow left="240" right="1680" top="135" bottom="945" fullscreen="0"/>
+      <findwindow left="0" right="448" top="0" bottom="180" visible="0"/>
+      <windows>
+        <window name="Окно 1" left="70" right="420" top="70" bottom="270" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 2" left="140" right="490" top="140" bottom="340" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 3" left="210" right="560" top="210" bottom="410" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 4" left="280" right="630" top="280" bottom="480" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
+      </windows>
+      <plugins>
+        <plugin key="prompt.dll" value="0"/>
+        <plugin key="jmc3import.dll" value="1"/>
+        <plugin key="historyfilter.lua" value="1"/>
+        <plugin key="autowrap.lua" value="1"/>
+        <plugin key="statusbar.lua" value="1"/>
+        <plugin key="reconnect.lua" value="0"/>
+        <plugin key="colorgamecmd.lua" value="1"/>
+        <plugin key="clickpad.dll" value="1">
+          <windows>
+            <window name="Игровая панель Clickpad" left="101" right="451" top="251" bottom="491" side="5" lastside="4" width="350" height="240"/>
+            <window name="Настройки Clickpad" left="150" right="929" top="300" bottom="781" side="5" lastside="5" width="779" height="481"/>
+            <window name="Иконка для кнопки" left="200" right="780" top="350" bottom="850" side="5" lastside="4" width="580" height="500"/>
+          </windows>
+        </plugin>
+        <plugin key="tray.dll" value="1"/>
+        <plugin key="sound.dll" value="1"/>
+        <plugin key="bell.lua" value="1"/>
+        <plugin key="send.lua" value="1"/>
+        <plugin key="affects.lua" value="0"/>
+        <plugin key="cmdfilter.lua" value="0"/>
+        <plugin key="group.lua" value="0"/>
+        <plugin key="inveq.lua" value="0"/>
+        <plugin key="lor.lua" value="0"/>
+        <plugin key="luatrigger.lua" value="0"/>
+        <plugin key="mapper.dll" value="0"/>
+        <plugin key="pcrecalc.dll" value="0"/>
+        <plugin key="speedwalk.lua" value="0"/>
+        <plugin key="status.lua" value="0"/>
+        <plugin key="testclickpad.lua" value="0"/>
+        <plugin key="testmsdp.lua" value="0"/>
+        <plugin key="testtray.lua" value="0"/>
+        <plugin key="voice.lua" value="0"/>
+      </plugins>
+    </display>
+  </displays>
 </profile>
