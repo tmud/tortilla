@@ -64,26 +64,8 @@ public:
               if (p1.size() < p2.size())
                   { result = false; break; }
               int len = p2.size();
-              for (int i=0;i<len;++i) {
-                 if (p1[i] != p2[i])
-                  {  result = false; break; }
-              }
-              /*int delta = p1.size() - len;
-              int compared = 0;
-              for (int i=0;i<len;++i) {
-                  if (p1[i] != p2[i]) break;
-                  compared++;
-              }
-              int notcompared = len - compared;
-              if (notcompared > compared)
+              if (p1.compare(0, p2.size(), p2))
                   { result = false; break; }
-              if (notcompared)
-              {
-                  notcompared = notcompared + delta;
-                  if (notcompared >= compared*2) {
-                      result = false; break;
-                  }
-              }*/
         }
         return result;
     }
@@ -146,7 +128,7 @@ public:
                 e = index;
             }
        }
-       
+
        int dsize = m_phrases.capacity() - m_phrases.size();
        if (dsize < 16)
            m_phrases.reserve(m_phrases.size()+1000);
