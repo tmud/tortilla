@@ -217,28 +217,15 @@ private:
         {
             m_currentGroup = group;
             int index = m_list_values.find(pattern, group);
-            int selected = m_list.getOnlySingleSelection();
             if (index != -1)
                 m_list.SelectItem(index);
-            else
-               updateCurrentItem();
             updateButtons();
-            m_state_helper.setCanSaveState();
             return 0;
         }
-        if (propValues->find(pattern, group) == -1)
-        {
-            tstring old = m_currentGroup;
-            m_currentGroup = group;
-            updateCurrentItem();
-            m_currentGroup = old;
-        }
-        saveValues();
         m_currentGroup = group;
         loadValues();
         update();
         updateButtons();
-        m_state_helper.setCanSaveState();
         return 0;
     }
 
@@ -445,11 +432,15 @@ private:
             bool mode = FALSE;
             if (!pattern_empty)
             {
-                tstring pattern;
-                getWindowText(m_hotkey, &pattern);
                 int selected = m_list.getOnlySingleSelection();
                 const property_value& v = m_list_values.get(selected);
-                mode = (pattern == v.key) ? FALSE : TRUE;
+                mode = TRUE;
+                if (m_currentGroup == v.group)
+                {
+                    tstring pattern;
+                    getWindowText(m_hotkey, &pattern);               
+                    mode = (pattern == v.key) ? FALSE : TRUE;
+                }
             }
             m_replace.EnableWindow(mode);
             m_add.EnableWindow(mode);

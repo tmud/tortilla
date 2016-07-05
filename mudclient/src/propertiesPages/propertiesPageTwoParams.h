@@ -256,8 +256,8 @@ private:
           const property_value& v = m_list_values.get(item);
           if (v.group != m_currentGroup)
               return 0;
+          updateCurrentItem(false);
        }
-       updateCurrentItem(false);
        return 0;
     }
 
@@ -456,10 +456,8 @@ private:
             {
                 int selected = m_list.getOnlySingleSelection();
                 const property_value& v = m_list_values.get(selected);
-                tstring group;
-                getCurrentGroup(&group);
                 mode = TRUE;
-                if (group == v.group) 
+                if (m_currentGroup == v.group) 
                 {
                     tstring pattern;
                     getWindowText(m_pattern, &pattern);
