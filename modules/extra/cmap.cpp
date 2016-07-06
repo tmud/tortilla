@@ -249,18 +249,37 @@ class MapDictonary
     std::vector<fileinfo> m_files;
     struct index
     {
-        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0), manual(false) {}
+        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0), manual2(false) {}
         tstring name;
         int file;
         DWORD pos_in_file;
         DWORD name_tegs_len;
         DWORD data_len;
-        bool  manual;
+        bool  manual2; //todo!
     };
+    typedef std::shared_ptr<index> index_ptr;
+
+    struct position
+    {
+        index_ptr idx;
+        int word_idx;
+    };    
+    typedef std::vector<position> positions_vector;
+    typedef std::shared_ptr<positions_vector> positions_ptr;    
+    struct worddata
+    {
+        tstring word;
+        positions_ptr positions;    
+    };
+    std::vector<worddata> m_words_table;
+
     
     PhrasesList m_phrases;
 
-    typedef std::shared_ptr<index> index_ptr;
+
+
+
+    
     typedef std::vector<index_ptr> indexes;
     typedef std::shared_ptr<indexes> indexes_ptr;
     
@@ -293,7 +312,6 @@ class MapDictonary
         e.append(file);
         base::log(L, e.c_str());
     }
-
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_manual_tegs_changed(false), m_current_file(-1), m_base_dir(dir), L(pl)
     {
@@ -633,13 +651,13 @@ public:
 
     bool find(const tstring& name, MapDictonaryMap* values)
     {
-      /*  tstring n(name);
+        tstring n(name);
         tstring_tolower(&n);
         Phrase p(n);
         std::vector<tstring> result;
         if (!m_phrases.findPhrase(p, true, &result))
             return false;
-        for (int k=0,ke=result.size();k<ke;++k )
+      /*  for (int k=0,ke=result.size();k<ke;++k )
         {
             iterator it = m_indexes.find(result[k]);
             if (it == m_indexes.end())
@@ -891,9 +909,7 @@ private:
                         ix->name = tk[0];
                         {
                            for (int i=0,e=tk.size();i<e;++i)
-                           {
                                add_index(tk[i], ix);
-                           }
                         }
                         //todo! m_objects[ix->name] = ix;
                         ix = std::make_shared<index>();
