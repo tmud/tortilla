@@ -434,7 +434,7 @@ private:
             m_up.EnableWindow(FALSE);
             m_down.EnableWindow(FALSE);
             m_replace.EnableWindow(FALSE);
-        }        
+        }
     }
 
     void swapItems(int index1, int index2)

@@ -278,8 +278,16 @@ private:
 
     LRESULT OnHotkeyTextChanged(WORD, WORD, HWND, BOOL&)
     {
-        if (!m_update_mode)
-            updateCurrentItem();
+        if (m_update_mode)
+           return 0;
+        int item = m_list.getOnlySingleSelection();
+        if (item != -1)
+        {
+          const property_value& v = m_list_values.get(item);
+          if (v.group != m_currentGroup)
+              return 0;
+        }
+        updateCurrentItem();
         return 0;
     }
 
@@ -438,7 +446,7 @@ private:
                 if (m_currentGroup == v.group)
                 {
                     tstring pattern;
-                    getWindowText(m_hotkey, &pattern);               
+                    getWindowText(m_hotkey, &pattern);
                     mode = (pattern == v.key) ? FALSE : TRUE;
                 }
             }
@@ -450,7 +458,7 @@ private:
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
             m_replace.EnableWindow(FALSE);
-        }         
+        }
     }
 
     void swapItems(int index1, int index2)
