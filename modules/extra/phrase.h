@@ -130,7 +130,7 @@ public:
        }
 
        int dsize = m_phrases.capacity() - m_phrases.size();
-       if (dsize < 16)
+       if (dsize == 0)
            m_phrases.reserve(m_phrases.size()+1000);
        m_phrases.insert(m_phrases.begin()+index, p);
        return true;
@@ -188,7 +188,7 @@ private:
         }
         if (begin == -1) return;
         int end = m_phrases.size();
-        for (int i=begin,e=m_phrases.size();i<e;++i)
+        for (int i=begin,e=end;i<e;++i)
         {
             tchar c2 = m_phrases[i]->get(0).at(0);
             if (c != c2) { end = i; break; }
@@ -256,7 +256,6 @@ public:
             return false;
         return it->second->deletePhrase(p, true);
     }
-
     void clear() 
     {
         std::for_each(m_data.begin(), m_data.end(), [](std::pair<int, PhrasesList*> p){ delete p.second; });

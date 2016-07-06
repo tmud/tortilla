@@ -257,16 +257,23 @@ class MapDictonary
         DWORD data_len;
         bool  manual;
     };
+    
     PhrasesList m_phrases;
+
     typedef std::shared_ptr<index> index_ptr;
     typedef std::vector<index_ptr> indexes;
-    std::unordered_map<tstring, indexes> m_indexes;
-    typedef std::unordered_map<tstring, indexes>::iterator iterator;
-    std::unordered_map<tstring, index_ptr> m_objects;
-    typedef std::unordered_map<tstring, index_ptr>::iterator objects_iterator;    
+    typedef std::shared_ptr<indexes> indexes_ptr;
+    
+    std::unordered_map<tstring, indexes_ptr> m_indexes;    
+    typedef std::unordered_map<tstring, indexes_ptr>::iterator iterator;
+
+    //std::unordered_map<tstring, index_ptr> m_objects;
+    //typedef std::unordered_map<tstring, index_ptr>::iterator objects_iterator;    
+
     typedef std::vector<tstring> manual_tegs;
     typedef std::shared_ptr<manual_tegs> manual_tegs_ptr;
     std::map<tstring, manual_tegs_ptr> m_manual_tegs;
+
     typedef std::map<tstring, manual_tegs_ptr>::iterator manual_tegs_iterator;
     bool m_manual_tegs_changed;
 
@@ -302,7 +309,7 @@ public:
 
     bool update(const lua_ref& r, tstring *error)
     {
-        typedef std::set<index_ptr> indexes_set;
+        /*typedef std::set<index_ptr> indexes_set;
         std::map<int, indexes_set> cat;
         indexes_set empty;
         for (int i=0,e=m_files.size(); i<e; ++i) {
@@ -516,15 +523,15 @@ public:
             m_manual_tegs_changed = true;
             save_manual_tegs();
         }
-        return result;
+        return result;*/
+        return true;
     }
 
     void wipe()
     {
         m_current_file = -1;
-        for (int i=0,e=m_files.size(); i<e; ++i)
-        {
-            DeleteFile(m_files[i].path.c_str());
+        for (int i=0,e=m_files.size(); i<e; ++i) {
+          DeleteFile(m_files[i].path.c_str());
         }
         m_files.clear();
     }
@@ -532,7 +539,7 @@ public:
     enum TegResult { ERR = 0, ABSENT, EXIST, ADDED, REMOVED };
     TegResult teg(const tstring& name, const tstring& teg)
     {
-        if (teg.find(L";") != teg.npos)
+       /* if (teg.find(L";") != teg.npos)
             return ERR;
 
         objects_iterator ot = m_objects.find(name);
@@ -598,7 +605,8 @@ public:
             m_manual_tegs[ix->name] = p;
         }
         m_manual_tegs_changed = true;
-        return ADDED;
+        return ADDED;*/
+        return ERR;
     }
 
     int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -619,13 +627,13 @@ public:
         add_index(name, ix);
         for (int i=0,e=tegs.size();i<e;++i)
             add_index(tegs[i], ix);
-        m_objects[name] = ix;
+        //todo! m_objects[name] = ix;
         return MD_OK;
     }
 
     bool find(const tstring& name, MapDictonaryMap* values)
     {
-        tstring n(name);
+      /*  tstring n(name);
         tstring_tolower(&n);
         Phrase p(n);
         std::vector<tstring> result;
@@ -694,18 +702,47 @@ public:
                 }
                 values->operator[](name) = d;
             }
-        }
+        }*/
         return true;
     }
 
 private:
     void add_index(const tstring& name, index_ptr ix)
     {
-        tstring n(name);
-        tstring_tolower(&n);
-        Phrase p(n);
-        int count = p.len();
-        if (count > 1)
+       Phrase p(name);
+       int count = p.len();
+       for (int i=0; i<count; ++i)
+       {
+          tstring part(p.get(i));
+          m_phrases.addPhrase(new Phrase(part));
+
+          iterator it = m_indexes.find(part);
+          if (it == m_indexes.end())
+          {
+             indexes_ptr newcoll = std::make_shared<indexes>();
+             newcoll->push_back(ix);
+             m_indexes[part] = newcoll;
+          }
+          else
+          {          
+            indexes_ptr coll = it->second;
+            coll->push_back(ix);
+          }
+
+          /*for (int j=i+1; j<count; ++j) 
+          {
+             part.assign(p.get(i));
+             for (int k=j; k<count; ++k)
+             {
+                part.append(L" ");
+                part.append(p.get(k));
+                m_phrases.addPhrase(new Phrase(part));
+                add_toindex(part, ix);
+             }
+          }*/
+        }
+        
+        /*if (count > 1)
         {
             for (int i=0; i<count; ++i)
             {
@@ -729,9 +766,10 @@ private:
         {
           //m_phrases.addPhrase(new Phrase(n));
           add_toindex(n, ix);
-        }
+        }*/
     }
-    void add_toindex(const tstring& t, index_ptr ix)
+    
+    /*void add_toindex(const tstring& t, index_ptr ix)
     {
         iterator it = m_indexes.find(t);
         if (it == m_indexes.end())
@@ -741,7 +779,7 @@ private:
             it = m_indexes.find(t);
         }
         it->second.push_back(ix);
-    }
+    }*/
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
@@ -857,7 +895,7 @@ private:
                                add_index(tk[i], ix);
                            }
                         }
-                        m_objects[ix->name] = ix;
+                        //todo! m_objects[ix->name] = ix;
                         ix = std::make_shared<index>();
                         ix->file = i;
                         name.clear();
@@ -872,7 +910,6 @@ private:
                     ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
             }
-
         }
     }
 
@@ -1064,7 +1101,7 @@ int dict_wipe(lua_State *L)
    return dict_invalidargs(L, "wipe");
 }
 
-int dict_teg(lua_State *L)
+/*int dict_teg(lua_State *L)
 {
     if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
     {
@@ -1091,7 +1128,7 @@ int dict_teg(lua_State *L)
         return 1;
     }
     return dict_invalidargs(L, "teg");
-}
+}*/
 
 int dict_gc(lua_State *L)
 {
@@ -1136,7 +1173,9 @@ int dict_new(lua_State *L)
         regFunction(L, "find", dict_find);
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
-        regFunction(L, "teg", dict_teg);
+        
+        //regFunction(L, "teg", dict_teg);
+        
         //regFunction(L, "remove", dict_remove);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");

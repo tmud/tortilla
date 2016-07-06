@@ -15,6 +15,7 @@
 #include <set>
 #include <unordered_map>
 #include <functional>
+#include <deque>
 
 typedef std::wstring tstring;
 typedef wchar_t tchar;
