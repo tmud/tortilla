@@ -272,9 +272,10 @@ class MapDictonary
         positions_ptr positions;    
     };
     std::vector<worddata> m_words_table;
+    typedef std::vector<worddata>::iterator words_table_iterator;
 
     
-    PhrasesList m_phrases;
+    //PhrasesList m_phrases;
 
 
 
@@ -631,6 +632,9 @@ public:
     {
         tstring n(name);
         tstring_tolower(&n);
+        //words_table_iterator it = m_words_table.find(n);
+
+
         iterator it = m_indexes.find(n);
         if (it != m_indexes.end())
         {
@@ -642,21 +646,31 @@ public:
             return MD_ERROR;
         }
         ix->name = name;
-        add_index(name, ix);
+        add_index(name, ix, false);
         for (int i=0,e=tegs.size();i<e;++i)
-            add_index(tegs[i], ix);
+            add_index(tegs[i], ix, true);
         //todo! m_objects[name] = ix;
         return MD_OK;
     }
 
     bool find(const tstring& name, MapDictonaryMap* values)
     {
-        tstring n(name);
-        tstring_tolower(&n);
-        Phrase p(n);
-        std::vector<tstring> result;
-        if (!m_phrases.findPhrase(p, true, &result))
+        Phrase p(name);
+        if (p.len()==0)
             return false;
+        std::vector<index_ptr> result;        
+        for (int i=0,e=p.len();i<e;++i)
+        {
+            find_similar(p.get(i), i, result);
+            if (result.empty())
+                break;
+        }
+        int x = 1;
+        
+        /*if (!m_phrases.findPhrase(p, true, &result))
+            return false;*/
+
+
       /*  for (int k=0,ke=result.size();k<ke;++k )
         {
             iterator it = m_indexes.find(result[k]);
@@ -724,15 +738,144 @@ public:
         return true;
     }
 
-private:
-    void add_index(const tstring& name, index_ptr ix)
+private:   
+    void find_similar(const tstring& start_symbols, int word_idx, std::vector<index_ptr>& words_indexes)
+    {
+        if (start_symbols.empty())
+            return;
+        int begin = -1; int end = m_words_table.size();
+        tchar c = start_symbols.at(0);
+        for (int i=0;i<end;++i)
+        {
+            const tstring& word = m_words_table[i].word;
+            if (word.compare(0, start_symbols.size(), start_symbols)==0)
+              { begin = i; break; }
+        }
+        if (begin == -1) return;
+        for (int i=begin,e=end;i<e;++i)
+        {
+            const tstring& word = m_words_table[i].word;
+            if (word.compare(0, start_symbols.size(), start_symbols)!=0)
+              { end = i; break; }
+        }
+
+        if (word_idx == 0)
+        {
+            for (int i=begin;i<end;++i)
+            {
+                const positions_vector& pv = *m_words_table[i].positions;
+                for (int i=0,e=pv.size();i<e;++i)
+                {
+                    if (pv[i].word_idx == word_idx)
+                       words_indexes.push_back(pv[i].idx);
+                }
+            }
+        }
+        else
+        {
+            std::vector<index_ptr> words_tmp;
+            for (int j=0,je=words_indexes.size();j<je;++j)
+            {
+                bool found = false;
+                for (int k=begin;k<end;++k)
+                {
+                    const positions_vector& pv = *m_words_table[k].positions;
+                    for (int i=0,e=pv.size();i<e;++i)
+                    {
+                        if ((pv[i].word_idx == word_idx) && (pv[i].idx == words_indexes[j]))
+                            { found = true; break; }
+                    }
+                    if (found) break;
+                }
+                if (found)
+                    words_tmp.push_back(words_indexes[j]);
+            }
+            words_indexes.swap(words_tmp);
+        }
+    }
+
+    bool find_pos(const tstring& word, int* pos)
+    {
+        int index = 0;
+        int b = 0, e = m_words_table.size();
+        while (b != e)
+        {
+           index = (e-b)/2;
+           index += b;
+           const tstring& key = m_words_table[index].word;
+           if (key == word)
+           {
+               if (pos)
+                   *pos = index;
+               return true;               
+           }
+           if (key < word)
+           {
+               b = index+1;
+               index = b;
+           }
+           else
+           {
+               e = index;
+           }
+        }
+        if (pos)
+            *pos = index;
+        return false;
+    }
+
+    void add_index(const tstring& name, index_ptr ix, bool teg)
     {
        Phrase p(name);
-       int count = p.len();
-       for (int i=0; i<count; ++i)
+       for (int i=0,len=p.len(); i<len; ++i)
        {
+          position word_pos; word_pos.word_idx = (teg) ? -1 : i; word_pos.idx = ix;
+          positions_ptr positions_vector_ptr;
           tstring part(p.get(i));
-          m_phrases.addPhrase(new Phrase(part));
+          int index = 0;
+          if (find_pos(part, &index))
+              positions_vector_ptr = m_words_table[index].positions;
+          else
+          {
+              worddata wd;
+              wd.word = part;
+              wd.positions = std::make_shared<positions_vector>();
+              positions_vector_ptr = wd.positions;
+              int dc = m_words_table.size() - m_words_table.capacity();
+              if (dc == 0)
+                  m_words_table.reserve(m_words_table.size()+1000);
+              m_words_table.insert(m_words_table.begin()+index, wd);
+          }          
+          positions_vector_ptr->push_back(word_pos);
+
+          /*words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
+          words_table_iterator pt = it;
+          while (pt != it_end)
+          {
+              int p = (it_end-it)/2;
+              words_table_iterator pt = (it)
+
+              if (m_phrases[index]->equal(*p))
+              {
+                  delete p;
+                  return true;
+              }
+              if (m_phrases[index]->less(*p))
+              {
+                  b = index+1;
+                  index = b;
+              }
+              else
+              {
+                  e = index;
+              }
+          }*/
+       }
+          
+          
+          
+          
+          /*m_phrases.addPhrase(new Phrase(part));
 
           iterator it = m_indexes.find(part);
           if (it == m_indexes.end())
@@ -757,8 +900,8 @@ private:
                 m_phrases.addPhrase(new Phrase(part));
                 add_toindex(part, ix);
              }
-          }*/
-        }
+          }
+        }*/
         
         /*if (count > 1)
         {
@@ -909,7 +1052,7 @@ private:
                         ix->name = tk[0];
                         {
                            for (int i=0,e=tk.size();i<e;++i)
-                               add_index(tk[i], ix);
+                               add_index(tk[i], ix, (i!=0));
                         }
                         //todo! m_objects[ix->name] = ix;
                         ix = std::make_shared<index>();
