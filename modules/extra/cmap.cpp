@@ -258,7 +258,6 @@ class MapDictonary
         bool  manual2; //todo!
     };
     typedef std::shared_ptr<index> index_ptr;
-
     struct position
     {
         index_ptr idx;
@@ -269,12 +268,15 @@ class MapDictonary
     struct worddata
     {
         tstring word;
-        positions_ptr positions;    
+        positions_ptr positions;
     };
     std::vector<worddata> m_words_table;
     typedef std::vector<worddata>::iterator words_table_iterator;
 
     
+
+
+
     //PhrasesList m_phrases;
 
 
@@ -658,7 +660,7 @@ public:
         Phrase p(name);
         if (p.len()==0)
             return false;
-        std::vector<index_ptr> result;        
+        positions_vector result;        
         for (int i=0,e=p.len();i<e;++i)
         {
             find_similar(p.get(i), i, result);
@@ -739,7 +741,7 @@ public:
     }
 
 private:   
-    void find_similar(const tstring& start_symbols, int word_idx, std::vector<index_ptr>& words_indexes)
+    void find_similar(const tstring& start_symbols, int word_idx, positions_vector& words_indexes)
     {
         if (start_symbols.empty())
             return;
@@ -764,16 +766,12 @@ private:
             for (int i=begin;i<end;++i)
             {
                 const positions_vector& pv = *m_words_table[i].positions;
-                for (int i=0,e=pv.size();i<e;++i)
-                {
-                    if (pv[i].word_idx == word_idx)
-                       words_indexes.push_back(pv[i].idx);
-                }
+                words_indexes.insert(words_indexes.end(), pv.begin(), pv.end());
             }
         }
         else
         {
-            std::vector<index_ptr> words_tmp;
+            positions_vector words_tmp;
             for (int j=0,je=words_indexes.size();j<je;++j)
             {
                 bool found = false;
@@ -782,13 +780,16 @@ private:
                     const positions_vector& pv = *m_words_table[k].positions;
                     for (int i=0,e=pv.size();i<e;++i)
                     {
-                        if ((pv[i].word_idx == word_idx) && (pv[i].idx == words_indexes[j]))
-                            { found = true; break; }
+                        if (words_indexes[j].idx == pv[i].idx && words_indexes[j].word_idx < pv[i].word_idx)
+                        {
+                            position newp; newp.idx = words_indexes[j].idx; newp.word_idx = pv[i].word_idx;
+                            words_tmp.push_back(newp);
+                            found = true;
+                            break; 
+                        }
                     }
                     if (found) break;
                 }
-                if (found)
-                    words_tmp.push_back(words_indexes[j]);
             }
             words_indexes.swap(words_tmp);
         }
