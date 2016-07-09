@@ -18,37 +18,37 @@ bool InputCommandsVarsFilter::checkFilter(InputCommand cmd)
     if (!cmd->system)
         return false;
     const tstring& c = cmd->command;
-    if (!c.compare(L"action"))
+    if (!c.compare(0, 3, L"action", 3))
         return true;
-    if (!c.compare(L"alias"))
+    if (!c.compare(0, 3, L"alias", 3))
         return true;
-    if (!c.compare(L"sub"))
+    if (!c.compare(0, 3, L"sub", 3))
         return true;
-    if (!c.compare(L"highlight"))
+    if (!c.compare(0, 3, L"highlight", 3))
         return true;
-    if (!c.compare(L"hotkey"))
+    if (!c.compare(0, 3, L"hotkey", 3))
         return true;
-    if (!c.compare(L"unaction"))
+    if (!c.compare(0, 3, L"unsub", 3))
         return true;
-    if (!c.compare(L"unalias"))
+    if (!c.compare(0, 4, L"unhighlight", 4))
         return true;
-    if (!c.compare(L"unsub"))
+    if (!c.compare(0, 4, L"unhotkey", 4))
         return true;
-    if (!c.compare(L"unhighlight"))
+    if (!c.compare(0, 3, L"gag", 3))
         return true;
-    if (!c.compare(L"unhotkey"))
+    if (!c.compare(0, 3, L"ungag", 3))
         return true;
-    if (!c.compare(L"gag"))
+    if (!c.compare(0, 3, L"antisub", 3))
         return true;
-    if (!c.compare(L"ungag"))
+    if (!c.compare(0, 4, L"unaction", 4))
         return true;
-    if (!c.compare(L"antisub"))
+    if (!c.compare(0, 4, L"unalias", 4))
         return true;
-    if (!c.compare(L"unantisub"))
+    if (!c.compare(0, 4, L"unantisub", 4))
         return true;
-    if (!c.compare(L"timer"))
+    if (!c.compare(0, 3, L"timer", 3))
         return true;
-    if (!c.compare(L"untimer"))
+    if (!c.compare(0, 3, L"untimer", 3))
         return true;
     return false;
 }
