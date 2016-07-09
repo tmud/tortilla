@@ -45,6 +45,7 @@ public:
     virtual bool getConnectionState() = 0;
     virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
     virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
+    virtual void windowClear(int window) = 0;
 };
 
 class parser;
@@ -106,6 +107,7 @@ public:
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
+    void windowClear(int window);
     void windowOutput(int window, const std::vector<tstring>& msgs);
     void pluginsOutput(int window, const MudViewStringBlocks& v);
 private:

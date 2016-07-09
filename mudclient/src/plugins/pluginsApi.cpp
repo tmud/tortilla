@@ -1152,7 +1152,7 @@ int hideView(lua_State *L)
 
 int flashWindow(lua_State *L)
 {
-   EXTRA_CP;
+    EXTRA_CP;
     if (luaT_check(L, 0))
     {
         HWND alarmWnd = _wndMain;
@@ -1173,8 +1173,24 @@ int flashWindow(lua_State *L)
 
 int regUnloadFunction(lua_State *L);
 
+int clear(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TNUMBER))
+    {
+        int window = lua_tointeger(L, 1);
+        if (window >= 0 && window <= OUTPUT_WINDOWS)
+        {
+            lp()->windowClear(window);
+            return 0;
+        }
+    }
+    return pluginInvArgs(L, L"clear");
+}
+
 int print(lua_State *L)
 {
+    EXTRA_CP;
     std::vector<tstring> params;
     int n = lua_gettop(L);
     for (int i=1; i<=n; ++i)
@@ -1190,6 +1206,7 @@ int print(lua_State *L)
 
 int vprint(lua_State *L)
 {
+    EXTRA_CP;
     int view = -1;
     if (lua_isnumber(L, 1))
     {
@@ -1235,6 +1252,7 @@ int translateColors(lua_State *L)
 
 int getVersion(lua_State *L)
 {
+    EXTRA_CP;
     if (luaT_check(L, 0))
     {
         lua_pushinteger(L, TORTILLA_VERSION_MAJOR);
@@ -1309,6 +1327,7 @@ bool initPluginsSystem()
     lua_register(L, "regUnloadFunction", regUnloadFunction);
     lua_register(L, "print", print);
     lua_register(L, "vprint", vprint);
+    lua_register(L, "clear", clear);
     lua_register(L, "translateColors", translateColors);
     lua_register(L, "getVersion", getVersion);
 

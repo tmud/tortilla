@@ -374,6 +374,12 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     return true;
 }
 
+void LogicProcessor::windowClear(int window)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS)
+        m_pHost->clearText(window);
+}
+
 void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
 {
     if (window >= 0 && window <= OUTPUT_WINDOWS)

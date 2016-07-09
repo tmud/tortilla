@@ -22,12 +22,13 @@ end
 function testmisc.syscmd(t)
   local c = t[1]
   if c == 'test' then
-    local v = tonumber(t[2])
+    --[[local v = tonumber(t[2])
     if isViewVisible(v) then
       hideView(v)
     else
       showView(v)
-    end
+    end]]
+	clear(0)
     return nil
   end
   return t
