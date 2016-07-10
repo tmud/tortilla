@@ -278,19 +278,6 @@ class MapDictonary
     std::vector<worddata> m_words_table;
     typedef std::vector<worddata>::iterator words_table_iterator;
 
-    //PhrasesList m_phrases;
-    //typedef std::vector<index_ptr> indexes;
-    //typedef std::shared_ptr<indexes> indexes_ptr;    
-    //std::unordered_map<tstring, indexes_ptr> m_indexes;    
-    //typedef std::unordered_map<tstring, indexes_ptr>::iterator iterator;
-    //std::unordered_map<tstring, index_ptr> m_objects;
-    //typedef std::unordered_map<tstring, index_ptr>::iterator objects_iterator;
-    /*typedef std::vector<tstring> manual_tegs;
-    typedef std::shared_ptr<manual_tegs> manual_tegs_ptr;
-    std::map<tstring, manual_tegs_ptr> m_manual_tegs;
-    typedef std::map<tstring, manual_tegs_ptr>::iterator manual_tegs_iterator;
-    */
-
     bool m_manual_tegs_changed;
 
     int m_current_file;
@@ -550,6 +537,7 @@ public:
           DeleteFile(m_files[i].path.c_str());
         }
         m_files.clear();
+        m_words_table.clear();
     }
 
     enum TegResult { ERR = 0, ABSENT, EXIST, ADDED, REMOVED };
@@ -697,7 +685,7 @@ public:
                 b[size] = 0;
                 d->data.assign(b);
             }
-            // manual tegs
+            // копируем manual tegs
             const std::vector<tstring> &t = ix->manual_tegs;
             d->manual_tegs.assign(t.begin(), t.end());
             values->operator[](ix->name) = d;
