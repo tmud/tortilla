@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "traymain.h"
 #include "traySettings.h"
-#include "sharingData.h"
 
 TrayMainObject g_tray;
 
