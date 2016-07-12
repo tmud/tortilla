@@ -118,10 +118,10 @@ int CompareData::findpos(int pos, int d)
 
 class AliasParameters : public InputParameters
 {
-    const InputCommand *m_pCmd;
+    const InputCommand m_pCmd;
     bool m_process_not_values;
 public:
-    AliasParameters(const InputCommand *cmd, bool process_not_values) : m_pCmd(cmd), m_process_not_values(process_not_values) {}
+    AliasParameters(const InputCommand cmd, bool process_not_values) : m_pCmd(cmd), m_process_not_values(process_not_values) {}
     void getParameters(std::vector<tstring>* params) const
     {
         if (!m_pCmd->srcparameters.empty())
@@ -136,21 +136,36 @@ public:
     }
 };
 
-Alias::Alias(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
+Alias::Alias(const property_value& v, const InputTemplateParameters& p)
 {
+    m_compare.initOnlyVars(v.key);
     InputPlainCommands plain(v.value);
     m_cmds.init(plain, p);
     m_cmds.makeTemplates();
 }
 
-bool Alias::processing(const InputCommand *cmd, InputCommands *newcmds)
+bool Alias::processing(const InputCommand cmd, InputCommands *newcmds)
 {
-    if (cmd->system) {
-        if (cmd->srccmd.compare(m_key))
+    int cmdlen = 0;
+    if (cmd->system)
+    {
+        if (!m_compare.compare(cmd->srccmd))
             return false;
+        cmdlen = cmd->srccmd.size();
     }
-    else if (cmd->command.compare(m_key))
+    else
+    {
+        if (!m_compare.compare(cmd->command))
+            return false;
+        cmdlen = cmd->command.size();
+    }
+
+    // check full alias len
+    CompareRange cr;
+    m_compare.getRange(&cr);
+    if (cr.begin != 0 || cr.end != cmdlen)
         return false;
+
     AliasParameters ap(cmd, m_cmds.size() == 1);
     m_cmds.makeCommands(newcmds, &ap);
 

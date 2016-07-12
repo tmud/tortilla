@@ -26,10 +26,11 @@ bool MudGameView::initialize()
     {
         if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
             return false;
-
-        if (!m_manager.loadNewProfile(m_manager.getProfileGroup(), L"player"))
+        Profile p(m_manager.getProfile());
+        p.name = default_profile_name;
+        if (!m_manager.loadProfile(p))
         {
-            if (!m_manager.createNewProfile(L"player"))
+            if (!m_manager.createEmptyProfile(p))
             {
                 msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP);
                 return false;
@@ -58,28 +59,27 @@ void MudGameView::onNewProfile()
     dlg.loadProfiles(m_manager.getProfileGroup());
     if (dlg.DoModal() == IDOK)
     {
-        tstring source, name;
-        dlg.getProfiles(&source, &name);
+        CopyProfileData data;
+        dlg.getProfile(&data);
 
         unloadPlugins();
 
-        tstring cgroup = m_manager.getProfileGroup();
-        tstring cname = m_manager.getProfileName();
+        Profile current(m_manager.getProfile());
         bool successed = true;
-        if (source.empty())
+        if (data.src.name.empty())
         {
-            if (!m_manager.createNewProfile(name)) {
+            if (!m_manager.createEmptyProfile(data.dst)) {
                 msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK|MB_ICONSTOP); successed = false;
             }
         }
         else
         {
-            if (!m_manager.createCopyProfile(source, name)) {
+            if (!m_manager.copyProfile(data.src, data.dst)) {
                 msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, MB_OK|MB_ICONSTOP); successed = false;
             }
         }
         if (!successed)
-            m_manager.loadNewProfile(cgroup, cname);
+            m_manager.loadProfile(current);
 
         updateProps();
         loadClientWindowPos();
@@ -93,12 +93,13 @@ void MudGameView::onLoadProfile()
     LoadProfileDlg dlg;
     if (dlg.DoModal() == IDOK)
     {
-        tstring group, name;
-        dlg.getProfiles(&group, &name);
-        if (name.empty())
+        Profile profile;
+        dlg.getProfile(&profile);
+        if (profile.name.empty())
             return;
 
-        if (m_manager.getProfileGroup() == group && m_manager.getProfileName() == name)
+        Profile current(m_manager.getProfile());
+        if (current.group == profile.group && current.name == profile.name)
             return;
 
         saveClientWindowPos();
@@ -111,12 +112,10 @@ void MudGameView::onLoadProfile()
             loadPlugins();
             return;
         }
-        tstring cgroup = m_manager.getProfileGroup();
-        tstring cname = m_manager.getProfileName();
-        if (!m_manager.loadNewProfile(group, name))
+        if (!m_manager.loadProfile(profile))
         {
             msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK|MB_ICONSTOP);
-            m_manager.loadNewProfile(cgroup, cname);
+            m_manager.loadProfile(current);
         }
         updateProps();
         loadClientWindowPos();
@@ -130,7 +129,7 @@ void MudGameView::onNewWorld()
     NewWorldDlg dlg;
     if (dlg.DoModal() == IDOK)
     {
-        NewWorldDlgData data;
+        CopyProfileData data;
         dlg.getData(&data);
 
         saveClientWindowPos();
@@ -140,30 +139,26 @@ void MudGameView::onNewWorld()
         {
             msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
             loadPlugins();
-            loadClientWindowPos();            
+            loadClientWindowPos();
             return;
         }
 
-        tstring cgroup = m_manager.getProfileGroup();
-        tstring cname = m_manager.getProfileName();
+        Profile current(m_manager.getProfile());
         bool successed = true;
-        if (!data.from_name.empty())
+        if (!data.src.group.empty())
         {
-            if (!m_manager.loadNewProfile(data.from_name, data.from_profile)) {
-                msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
-            }
-            else if (!m_manager.renameProfile(data.name, data.profile)) {
-                msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false; 
+            if (!m_manager.copyProfile(data.src, data.dst)) {
+                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
             }
         }
         else
         {
-            if (!m_manager.createNewProfile(data.name, data.profile)) {
+            if (!m_manager.createEmptyProfile(data.dst)) {
                 msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
             }
         }
         if (!successed)
-            m_manager.loadNewProfile(cgroup, cname);
+            m_manager.loadProfile(current);
 
         updateProps();
         loadClientWindowPos();
@@ -182,7 +177,7 @@ void MudGameView::unloadPlugins()
     m_plugins.unloadPlugins();
 }
 
-void MudGameView::preprocessCommand(InputCommand* cmd)
+void MudGameView::preprocessCommand(InputCommand cmd)
 {
     m_plugins.processGameCmd(cmd);
 }
@@ -209,4 +204,50 @@ MudViewHandler* MudGameView::getHandler(int view)
     if (view >= 0 && view <= OUTPUT_WINDOWS)
         return m_handlers[view];
     return NULL;
+}
+
+void MudGameView::findText()
+{
+    tstring text;
+    m_find_dlg.getTextToSearch(&text);
+    if (text.empty())
+        return;
+    int view = m_find_dlg.getSelectedWindow();
+    bool shift = (GetKeyState(VK_SHIFT) < 0);
+    int find_direction = m_find_dlg.getDirection() * ((shift) ? -1 : 1);
+
+    MudView *v = (view == 0) ? &m_history : m_views[view - 1];
+    int current_find = v->getCurrentFindString();
+    int new_find = v->findAndSelectText(current_find, find_direction, text);
+    if (new_find == -1)
+    {
+       // not found
+       if (current_find == -1)
+          return;
+    }
+    // found / not found with last found
+    // clear find in last find window (if it another window)
+    if (m_last_find_view != view && m_last_find_view != -1)
+    {
+        MudView *lf = (m_last_find_view == 0) ? &m_history : m_views[m_last_find_view - 1];
+        lf->clearFind();
+        m_last_find_view = -1;
+        if (new_find == -1)
+            return;
+    }
+    if (new_find == -1)
+        new_find = current_find;
+
+    if (view == 0 && !m_history.IsWindowVisible())
+        showHistory(new_find, 0);
+
+    int count = v->getStringsCount();
+    int delta = v->getStringsOnDisplay() / 2;  // center on the screen
+    int center_vs = new_find + delta;          // пробуем найденную строку поставить по центру
+    if (center_vs < count)
+        new_find = center_vs;
+    else
+        new_find = count-1;
+    v->setViewString(new_find);
+    m_last_find_view = view;
 }

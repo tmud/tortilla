@@ -13,7 +13,47 @@ void InputVarsAccessor::translateVars(tstring *cmd)
     tortilla::getVars()->processVars(cmd, false);
 }
 
-bool InputCommandVarsProcessor::makeCommand(InputCommand *cmd)
+bool InputCommandsVarsFilter::checkFilter(InputCommand cmd)
+{
+    if (!cmd->system)
+        return false;
+    const tstring& c = cmd->command;
+    if (!c.compare(0, 3, L"action", 3))
+        return true;
+    if (!c.compare(0, 3, L"alias", 3))
+        return true;
+    if (!c.compare(0, 3, L"sub", 3))
+        return true;
+    if (!c.compare(0, 3, L"highlight", 3))
+        return true;
+    if (!c.compare(0, 3, L"hotkey", 3))
+        return true;
+    if (!c.compare(0, 3, L"unsub", 3))
+        return true;
+    if (!c.compare(0, 4, L"unhighlight", 4))
+        return true;
+    if (!c.compare(0, 4, L"unhotkey", 4))
+        return true;
+    if (!c.compare(0, 3, L"gag", 3))
+        return true;
+    if (!c.compare(0, 3, L"ungag", 3))
+        return true;
+    if (!c.compare(0, 3, L"antisub", 3))
+        return true;
+    if (!c.compare(0, 4, L"unaction", 4))
+        return true;
+    if (!c.compare(0, 4, L"unalias", 4))
+        return true;
+    if (!c.compare(0, 4, L"unantisub", 4))
+        return true;
+    if (!c.compare(0, 3, L"timer", 3))
+        return true;
+    if (!c.compare(0, 3, L"untimer", 3))
+        return true;
+    return false;
+}
+
+bool InputCommandVarsProcessor::makeCommand(InputCommand cmd)
 {
     VarProcessor *vp = tortilla::getVars();
     vp->processVars(&cmd->parameters, false);
@@ -113,7 +153,7 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
     {
         const InputSubcmd &subcmd = at(i);
 
-        InputCommand *cmd = new InputCommand();
+        InputCommand cmd =  std::make_shared<InputCommandData>();
         cmd->system = subcmd.system;
         if (cmd->system)
             cmd->srccmd.append(prefix);
@@ -180,26 +220,26 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
     }
 }
 
-void InputTemplateCommands::fillsyscmd(InputCommand *cmd)
+void InputTemplateCommands::fillsyscmd(InputCommand cmd)
 {
     unmarkbrackets(&cmd->parameters, &cmd->parameters_list);
 }
 
-void InputTemplateCommands::fillgamecmd(InputCommand *cmd)
+void InputTemplateCommands::fillgamecmd(InputCommand cmd)
 {
     const tstring& params = cmd->parameters;
     const tchar *p = params.c_str();
     const tchar *e = p + params.length();
     while (p != e)
     {
-       const tchar *s = wcschr(p, L' ');
-       if (!s) break;
-       if (p != s)
-            cmd->parameters_list.push_back(tstring(p, s-p));
-       p = s + 1;
+       const tchar *s = p;
+       while (s != e && *s == L' ') s++;
+       if (s != e) {
+           while (s != e && *s != L' ') s++;
+       }
+       cmd->parameters_list.push_back(tstring(p, s-p));
+       p = s;
     }
-    if (p != e)
-        cmd->parameters_list.push_back(tstring(p, e-p));
 }
 
 void InputTemplateCommands::parsecmd(const tstring& cmd)
@@ -343,7 +383,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
             if (*p != '{' && p+1 != e)
             {
                 const tchar* p1 = p+1;
-                if (!isopenorspace(p1) && *p1 != _params.separator)
+                if (!isbracketorspace(p1) && *p1 != _params.separator)
                     { p++; continue; }
             }
         }
@@ -498,4 +538,10 @@ bool InputTemplateCommands::isopenorspace(const tchar *p) const
 bool InputTemplateCommands::iscloseorspace(const tchar *p) const
 {
     return (wcschr(L"} \"'", *p)) ? true : false;
+}
+
+bool InputTemplateCommands::isbracketorspace(const tchar *p) const
+{
+    if (*p == L' ') return true;
+    return isbracket(p);
 }

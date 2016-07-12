@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "profilesPath.h"
 
-ProfilesDirsListHelper::ProfilesDirsListHelper()
+ProfilesDirsListHelper::ProfilesDirsListHelper(const tstring& dir)
 {
     WIN32_FIND_DATA fd;
     memset(&fd, 0, sizeof(WIN32_FIND_DATA));
-    HANDLE file = FindFirstFile(L"gamedata\\*.*", &fd);
+    tstring mask(dir); mask.append(L"\\*.*");
+    HANDLE file = FindFirstFile(mask.c_str(), &fd);
     if (file != INVALID_HANDLE_VALUE)
     {
         do

@@ -28,7 +28,7 @@ void LogicProcessor::processTick()
             wait_cmds.move(tmp);
         }
         processCommands(wait_cmds);
-    }
+    }    
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -77,7 +77,7 @@ void LogicProcessor::processCommand(const tstring& cmd)
     processCommands(cmds);
 }
 
-void LogicProcessor::processCommands(const InputPlainCommands& cmds)
+void LogicProcessor::makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds)
 {
     PropertiesData* pdata = tortilla::getProperties();
 
@@ -88,9 +88,13 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
     InputTemplateCommands tcmds;
     tcmds.init(cmds, p);
     tcmds.makeTemplates();
+    tcmds.makeCommands(rcmds, NULL);
+}
 
+void LogicProcessor::processCommands(const InputPlainCommands& cmds)
+{
     InputCommands result;
-    tcmds.makeCommands(&result, NULL);
+    makeCommands(cmds, &result);
     runCommands(result);
 }
 
@@ -99,23 +103,68 @@ void LogicProcessor::runCommands(InputCommands& cmds)
     if (!processAliases(cmds))
         return;
     InputCommandVarsProcessor vp;
+    InputCommandsVarsFilter vf;
     int i=0,e=cmds.size();
     for (; i<e; ++i)
     {
-        InputCommand *cmd = cmds[i];
-        while (vp.makeCommand(cmd))
+        InputCommand cmd = cmds[i];
+        if (!vf.checkFilter(cmd))
         {
-            // found $var in cmd name -> run aliases again
-            cmds.remove(i);
-            InputCommands alias;
-            alias.push_back(cmd);
-            bool result = processAliases(alias);
-            cmds.insert(i, alias);
-            e = cmds.size();
-            cmd = cmds[i];
-            if (!result) return;
+          while (vp.makeCommand(cmd))
+          {
+             // found $var in cmd name -> run aliases again
+             cmds.erase(i);
+             InputCommands alias;
+             alias.push_back(cmd);
+             bool result = processAliases(alias);
+             cmds.insert(i, alias);
+             e = cmds.size();
+             cmd = cmds[i];
+             if (!result) return;
+             if (vf.checkFilter(cmd))
+                 break;
+          }
         }
 
+        // check repeat commands
+        if (cmd->system && isOnlyDigits( cmd->command))
+        {
+            int repeats = 0;
+            w2int(cmd->command, &repeats);
+            std::vector<tstring>& p = cmd->parameters_list;
+            if (repeats == 0)
+            {
+                m_commands_queue.clear();
+                continue;
+            }
+            if (p.empty() || repeats < 0)
+                continue;
+            if (repeats > 100)
+            {
+                tstring error(L"Ошибка: Слишком большое количество повторов [");
+                error.append(cmd->srccmd);
+                error.append(cmd->srcparameters);
+                error.append(L"]");
+                tmcLog(error);
+                continue;
+            }
+
+            InputPlainCommands t;
+            for (int j=0,je=cmd->parameters_list.size();j<je;++j)
+                t.push_back(cmd->parameters_list[j]);
+            InputCommands queue_cmds;
+            makeCommands(t, &queue_cmds);
+            queue_cmds.repeat(repeats);
+            m_commands_queue.push_back(queue_cmds);
+            continue;
+        }
+        if (!m_commands_queue.empty())
+        {
+            cmds.erase(i);
+            e = cmds.size();
+            m_commands_queue.push_back(cmd);
+            continue;
+        }
         if (cmd->system)
             processSystemCommand(cmd); //it is system command for client
         else
@@ -131,7 +180,7 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
     int queue_size = cmds.size();
     for (int i=0; i<queue_size;)
     {
-        InputCommand* cmd = cmds[i];
+        InputCommand cmd = cmds[i];
         if (cmd->command.empty()) 
             { i++; continue; }
 
@@ -143,7 +192,7 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
  
         for (int j = 0, je = newcmds.size(); j < je; ++j)
         {
-            InputCommand *cmd2 = newcmds[j];
+            InputCommand cmd2 = newcmds[j];
             const tstring& compare_cmd = (cmd2->system) ? cmd2->srccmd : cmd2->command;
             if (std::find(loops.begin(), loops.end(), compare_cmd) != loops.end())
             {
@@ -270,8 +319,6 @@ void LogicProcessor::syscmdLog(const tstring& cmd)
 
 void LogicProcessor::pluginLog(const tstring& cmd)
 {
-    if (m_plugins_log_blocked)
-        return;
     PropertiesData *pdata = tortilla::getProperties();
     if (!pdata->plugins_logs)
         return;
@@ -281,7 +328,9 @@ void LogicProcessor::pluginLog(const tstring& cmd)
         tstring log(L"[plugin] ");
         log.append(cmd);
         log.append(L"\r\n");
-        if (m_plugins_log_tocache)
+        if (m_plugins_log_blocked)
+            m_plugins_log_toblocked.push_back(log);
+        else if (m_plugins_log_tocache)
             m_plugins_log_cache.push_back(log);
         else
             processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
@@ -325,10 +374,40 @@ bool LogicProcessor::deleteSystemCommand(const tstring& cmd)
     return true;
 }
 
+void LogicProcessor::windowClear(int window)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS)
+        m_pHost->clearText(window);
+}
+
 void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
 {
     if (window >= 0 && window <= OUTPUT_WINDOWS)
-       printex(window, msgs);
+    {
+       if (m_plugins_log_blocked || m_plugins_log_tocache)
+       {
+           pluginLog(L"print в before, after использовать нельзя. см. справку.");
+       }
+       else
+       {
+           printex(window, msgs, false);
+       }
+    }
+}
+
+void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)
+{
+    if (window >= 0 && window <= OUTPUT_WINDOWS) {
+    parseData data;
+    MudViewString *new_string = new MudViewString();
+    int count = v.size();
+    new_string->blocks.resize(count);
+    for (int i=0;i<count;++i)
+       new_string->blocks[i] = v[i];
+    new_string->system = true;
+    data.strings.push_back(new_string);
+    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, window);
+    }
 }
 
 void LogicProcessor::updateLog(const tstring& msg)
@@ -356,5 +435,6 @@ void LogicProcessor::processNetworkError(const tstring& error)
         tmcLog(error.c_str());
     m_connected = false;
     m_connecting = false;
-    m_incoming_stack.clear();
+    m_commands_queue.clear();
+    m_waitcmds.clear();
 }

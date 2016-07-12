@@ -1,6 +1,8 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.98b16"
+#define TORTILLA_VERSION L"0.98rc"
+#define TORTILLA_VERSION_MAJOR 0
+#define TORTILLA_VERSION_MINOR 98
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -14,10 +16,23 @@
 #define _WIN32_IE	0x0501
 #define _RICHEDIT_VER	0x0200
 
+// only for debug (debuging text formatting)
 #ifdef _DEBUG
+//#define MARKERS_IN_VIEW
+//#define _WINDBG
+#endif
+
+// Visual Studio Leak Detector
+//#define VLD
+
+#ifdef _DEBUG
+#ifndef VLD
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+#else
+#include "vld.h"
+#endif
 #endif
 
 #include <atlbase.h>
@@ -28,6 +43,7 @@
 #include <atldlgs.h>
 #include <atlctrlw.h>
 #include <atlmisc.h>
+//#include <atlcrack.h>
 
 #include "resource.h"
 
@@ -40,6 +56,8 @@
 #include <algorithm>
 #include <set>
 #include <deque>
+#include <functional>
+#include <memory>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;
@@ -68,11 +86,8 @@ typedef unsigned int uint;
 #define TIMERS_COUNT 10
 #define MAINWND_CLASS_NAME L"TortillaMudClient"
 
-// only for debug (debuging text formatting)
-#ifdef _DEBUG
-//#define MARKERS_IN_VIEW
-//#define _WINDBG
-#endif
-
 extern CAppModule _Module;
 #pragma comment(linker, "/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
+
+#define default_profile_folder L"default"
+#define default_profile_name L"player"

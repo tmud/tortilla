@@ -121,7 +121,7 @@ public:
 
     LogicHelper();
     void updateProps(int what = UPDATE_ALL);
-    bool processAliases(const InputCommand* cmd, InputCommands* newcmds);
+    bool processAliases(const InputCommand cmd, InputCommands* newcmds);
     bool processHotkeys(const tstring& key, InputCommands* newcmds);
     bool processActions(parseData *parse_data, int index, LogicPipelineElement *pe);
     void processSubs(parseData *parse_data);
@@ -147,6 +147,7 @@ private:
     LogicWrapperTimers m_timers;
     Pcre16 m_if_regexp;
     Pcre16 m_math_regexp;
+    Pcre16 m_params_regexp;
     Ticker m_ticker;
 };
 
@@ -246,8 +247,8 @@ public:
         int stateid = recognizeState(state);
         if (stateid == LogicHelper::UPDATE_ALL)
         {
-            str->assign(L"Все элементы (all)");
-            str->append(stateStrEx(getState(LogicHelper::UPDATE_ACTIONS)));
+            str->assign(L"Все эхо-уведомления (all)");
+            str->append(stateStr(getState(LogicHelper::UPDATE_ACTIONS)));
             removeLastRN(str);
             return;
         }
@@ -257,7 +258,7 @@ public:
             if (stateid == ids[i])
             { 
                 str->assign(cmds[i]);
-                str->append(stateStrEx(getState(stateid)));
+                str->append(stateStr(getState(stateid)));
                 removeLastRN(str);
                 break;
             }
@@ -267,12 +268,7 @@ public:
 private:
     const tchar* stateStr(int state)
     {
-        return (state ? L" - Вкл \r\n" : L"\r\n"); // L" - Выкл \r\n");
-    }
-
-    const tchar* stateStrEx(int state)
-    {
-        return (state ? L" - Вкл \r\n" : L" - Выкл \r\n");
+        return (state ? L" - Вкл\r\n" : L" - Выкл\r\n");
     }
 
     int recognizeValue(const tstring& value)

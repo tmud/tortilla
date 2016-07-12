@@ -59,6 +59,7 @@ struct MudViewStringBlock
    SIZE size;                             // size of string (DC size of current font)
    tbyte subs_protected;                  // protected from subs
 };
+typedef std::vector<MudViewStringBlock> MudViewStringBlocks;
 
 struct MudViewString
 {
@@ -127,6 +128,14 @@ struct MudViewString
        text->assign(tmp.substr(0, prompt));
    }
 
+   void getMd5(tstring *crc) const
+   {
+       MD5 md5;
+       for (int i=0,e=blocks.size(); i<e; ++i)
+           md5.update(blocks[i].string);
+       crc->assign(md5.getCRC());
+   }
+
    MudViewString* divideString(int pos)
    {
        MudViewString *s = new MudViewString;
@@ -152,7 +161,7 @@ struct MudViewString
        return s;
    }
    
-   std::vector<MudViewStringBlock> blocks;  // all string blocks
+   MudViewStringBlocks blocks;              // all string blocks
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd
    bool system;                             // flag - system cmd / log

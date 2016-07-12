@@ -78,11 +78,11 @@ void PluginsManager::initPlugins()
     }
     files.clear();
 
-    PluginsDataValues &modules = tortilla::getProperties()->plugins;
+    PluginsDataValues* modules = tortilla::pluginsData();
     PluginsDataValues new_modules;
-    for (int i = 0, e = modules.size(); i < e; ++i)
+    for (int i = 0, e = modules->size(); i < e; ++i)
     {
-        const PluginData& v = modules[i];
+        const PluginData& v = modules->at(i);
         bool exist = false;
         for (int j = 0, je = m_plugins.size(); j < je; ++j)
             if (v.name == m_plugins[j]->get(Plugin::FILE)) { exist = true; break; }
@@ -96,13 +96,13 @@ void PluginsManager::initPlugins()
             if (new_modules[j].name == name) { exist = true; break; }
         if (!exist) { PluginData pd; pd.name = name; pd.state = 0; new_modules.push_back(pd); }
     }
-    modules.swap(new_modules);
+    modules->swap(new_modules);
 
     // sort and set initial state
     PluginsList new_plugins;
-    for (int i = 0, e = modules.size(); i < e; ++i)
+    for (int i = 0, e = modules->size(); i < e; ++i)
     {
-        const PluginData& v = modules[i];
+        const PluginData& v = modules->at(i);
         for (int j = 0, je = m_plugins.size(); j < je; ++j)
         if (v.name == m_plugins[j]->get(Plugin::FILE))
         {
@@ -147,47 +147,30 @@ bool PluginsManager::pluginsPropsDlg()
 
     // turn off plugins first
     for (int i = 0, e = turn_off.size(); i < e; ++i)
-    {
-        Plugin *p = turn_off[i];
-        m_msdp_network.unloadPlugin(p);
-        p->unloadPlugin();
-    }
+        unloadPlugin(turn_off[i]);
 
     // turn on new plugins
     for (int i=0,e=turn_on.size(); i<e; ++i)
-    {
-        Plugin *p = turn_on[i];
-        if (!p->reloadPlugin())
-        {
-            tstring error(L"Ошибка при загрузке плагина '");
-            error.append(p->get(Plugin::FILE));
-            error.append(L"'. Плагин работать не будет.");
-            tmcLog(error.c_str());
-       }
-       else
-       {
-           m_msdp_network.loadPlugin(p);
-       }
-    }
+        loadPlugin(turn_on[i]);
 
-    PluginsDataValues &modules = tortilla::getProperties()->plugins;
+    PluginsDataValues* modules = tortilla::pluginsData();
     PluginsDataValues new_modules;
     for (int i=0,e=m_plugins.size(); i<e; ++i)
     {
         Plugin *p = m_plugins[i];
         tstring name = p->get(Plugin::FILE);
-        for (int j = 0, je = modules.size(); j < je; ++j)
+        for (int j = 0, je = modules->size(); j < je; ++j)
         {
-            if (modules[j].name == name)
+            if (modules->at(j).name == name)
             {
-                PluginData& v = modules[j];
+                PluginData& v = modules->at(j);
                 v.state = p->state() ? 1 : 0;
                 new_modules.push_back(v);
                 break;
             }
         }
     }
-    modules.swap(new_modules);
+    modules->swap(new_modules);
     return true;
 }
 
@@ -215,6 +198,51 @@ Plugin* PluginsManager::findPlugin(const tstring& name)
     return NULL;
 }
 
+bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
+{
+    Plugin *p = findPlugin(name);
+    if (!p)
+    {
+        initPlugins();
+        p = findPlugin(name);
+        if (!p)
+        {
+            tstring error(L"Ошибка при загрузке плагина '");
+            error.append(name);
+            error.append(L"'.");
+            tmcLog(error.c_str());
+            return true;
+        }
+    }
+    if (state == L"on" || state == L"1" || state == L"load")
+    {
+        if (!p->state())
+        {
+            loadPlugin(p);
+            setPluginState(p, true);
+        }
+        return true;
+    }
+    if (state == L"off" || state == L"0" || state == L"unload")
+    {
+        if (p->state())
+        {
+            unloadPlugin(p);
+            setPluginState(p, false);
+        }
+        return true;
+    }
+    if (state == L"reload" || state == L"up")
+    {
+        if (p->state())
+            unloadPlugin(p);
+        loadPlugin(p);
+        setPluginState(p, true);
+        return true;
+    }
+    return false;
+}
+
 void PluginsManager::updateProps()
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
@@ -235,7 +263,7 @@ void PluginsManager::processStreamData(MemoryBuffer *data)
     }
 }
 
-void PluginsManager::processGameCmd(InputCommand* cmd)
+void PluginsManager::processGameCmd(InputCommand cmd)
 {
     std::vector<tstring> p;
     p.push_back(cmd->command);
@@ -259,11 +287,11 @@ void PluginsManager::processGameCmd(InputCommand* cmd)
 
 void PluginsManager::processViewData(const char* method, int view, parseData* data)
 {
-    PluginsParseData pdata(data);
+    PluginsParseData pdata(data, NULL);
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         lua_pushinteger(L, view);
         luaT_pushobject(L, &pdata, LUAT_VIEWDATA);
         if (!p->runMethod(method, 2, 0))
@@ -276,16 +304,56 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-bool PluginsManager::processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe)
+bool PluginsManager::processTriggers(parseData& parse_data, int string, LogicPipelineElement* pe)
 {
-    int i = start_string; int last = parse_data.strings.size() - 1;
+    int i = string; int last = parse_data.strings.size() - 1;
+    MudViewString *s = parse_data.strings[i];
+    CompareData cd(s);
+    bool incomplstr = (i == last && !parse_data.last_finished);
+
+    bool processed = false;
+    for (int j = 0, je = m_plugins.size(); j < je; ++j)
+    {
+        Plugin *p = m_plugins[j];
+        if (!p->state() || p->isErrorState())
+            continue;
+        std::vector<PluginsTrigger*>& vt = p->triggers;
+        if (vt.empty())
+            continue;
+        for (int k = 0, ke = vt.size(); k < ke; ++k)
+        {
+            PluginsTrigger *t = vt[k];
+            if (t->compare(cd, incomplstr))
+            {
+                pe->triggers.push_back(t);
+                // проверка всех триггеров на эту строку
+                processed = true;
+            }
+        }
+    }
+
+    /*if (processed)
+    {
+        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        parseData &not_processed = pe->data;
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = string+1;
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+    }*/
+
+    return processed;
+
+    /*int i = start_string; int last = parse_data.strings.size() - 1;
 
     MudViewString *s = parse_data.strings[i];
     CompareData cd(s);
     bool incomplstr = (i==last && !parse_data.last_finished);
 
     bool processed = false;
-    bool wait = false;
+    //bool wait = false;
     for (int j=0, je=m_plugins.size(); j<je; ++j)
     {
         Plugin *p = m_plugins[j];
@@ -299,8 +367,12 @@ bool PluginsManager::processTriggers(parseData& parse_data, int start_string, Lo
             PluginsTrigger *t = vt[k];
             if (!t->isEnabled())
                 continue;
-            if (!t->compare(0, cd, incomplstr))
-                continue;
+            if (t->compare(0, cd, incomplstr))
+            {
+                processed = true;
+                break;
+            }
+
             if (t->getLen() == 1)
             {
                 processed = true;
@@ -329,10 +401,11 @@ bool PluginsManager::processTriggers(parseData& parse_data, int start_string, Lo
             if (compared)
             {
                 processed = true;
-                pe->triggers.push_back(t);               
+                pe->triggers.push_back(t);
             }
         }
-        if (wait) break;
+        //if (wait) break;
+        if (processed) break;
     }
 
     if (processed)
@@ -343,12 +416,12 @@ bool PluginsManager::processTriggers(parseData& parse_data, int start_string, Lo
         not_processed.last_finished = parse_data.last_finished;
         parse_data.last_finished = true;
         not_processed.update_prev_string = false;
-        int from = start_string + (wait) ? 0 : 1;   // если wait то оставляет строчку срабатывания на обработку в след. круг
+        int from = start_string;
         not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
         parse_data.strings.resize(from);
     }
 
-    return processed;
+    return processed;*/
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)
@@ -412,6 +485,7 @@ void PluginsManager::processConnectEvent()
 
 void PluginsManager::processDisconnectEvent()
 {
+    m_msdp_network.reset();
     doPluginsMethod("disconnect", 0);
 }
 
@@ -447,20 +521,45 @@ void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
     }
 }
 
-void PluginsManager::terminatePlugin(Plugin* p)
+void PluginsManager::setPluginState(Plugin* p, bool state)
 {
     if (!p) return;
     int index = -1;
-    for (int i = 0, e = m_plugins.size(); i < e; ++i)
-    {
+    for (int i = 0, e = m_plugins.size(); i < e; ++i) {
         if (p == m_plugins[i])  { index = i; break; }
     }
-    p->setOn(false);
     if (index != -1)
     {
-        PluginsDataValues &modules = tortilla::getProperties()->plugins;
-        modules[index].state = 0;
+        PluginsDataValues* modules = tortilla::pluginsData();
+        modules->at(index).state = (state) ? 1 : 0;
     }
+}
+
+void PluginsManager::terminatePlugin(Plugin* p)
+{
+    if (!p) return;
+    p->setOn(false);
+    setPluginState(p, false);
+}
+
+bool PluginsManager::loadPlugin(Plugin* p)
+{
+    if (!p->reloadPlugin())
+    {
+        tstring error(L"Плагин '");
+        error.append(p->get(Plugin::FILE));
+        error.append(L"'отключен.");
+        pluginOut(error.c_str());
+        return false;
+    }
+    m_msdp_network.loadPlugin(p);
+    return true;
+}
+
+void PluginsManager::unloadPlugin(Plugin *p)
+{
+    m_msdp_network.unloadPlugin(p);
+    p->unloadPlugin();
 }
 
 void PluginsManager::doPluginsMethod(const char* method, int args)
@@ -468,7 +567,7 @@ void PluginsManager::doPluginsMethod(const char* method, int args)
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         if (!p->runMethod(method, args, 0))
         {
             // restart plugins
@@ -487,12 +586,12 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         bool not_supported = false;
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип полученного значения. Требуется string|nil", i);
+            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется string|nil", i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
@@ -534,12 +633,12 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
-        if (!p->state()) continue;
+        if (!p->state() || p->isErrorState()) continue;
         bool not_supported = false;
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип полученного значения. Требуется table|nil|boolean|string", i);
+            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется table|nil|boolean|string", i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -602,31 +701,28 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
 {
     // error in plugin - turn it off
     Plugin *p = m_plugins[plugin_index];
-    Plugin *old = p;
+    Plugin *old = _cp;
     _cp = p;
     if (error)
-        pluginError(error);
-    pluginError(L"Плагин отключен!");
+        pluginLog(error);
+    swprintf(plugin_buffer(), L"Плагин %s отключен!", p->get(Plugin::FILE));
+    pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;
-    PluginsDataValues &modules = tortilla::getProperties()->plugins;
-    modules[plugin_index].state = 0;
+    PluginsDataValues* modules = tortilla::pluginsData();    
+    modules->at(plugin_index).state = 0;
 }
 
-void PluginsManager::processReceived(Network *network)
-{
-    m_msdp_network.processReceived(network);
-}
-
-void PluginsManager::processToSend(Network* network)
-{
-    m_msdp_network.sendExist(network);
-}
-
-void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd)
+void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd)
 {
     if (parts.empty())
+    {
+        cmd->command.clear();
+        cmd->parameters.clear();
+        cmd->parameters_list.clear();
+        cmd->changed =  true;
         return;
+    }
 
     tstring newcmd(parts[0]);
     if (newcmd != cmd->command)
@@ -651,7 +747,7 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
     {
         const tstring& s = parts[i];
         cmd->parameters_list.push_back(s);
-        if (i != 1)
+        if (i != 1 && system)
             params.append(L" ");
         if (!system)
             params.append(s);

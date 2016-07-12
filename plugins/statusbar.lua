@@ -20,7 +20,7 @@ exp1 = {r=240,g=240,b=240},
 exp2 = {r=128,g=128,b=128}
 }
 
-statusbar = {}
+local statusbar = {}
 function statusbar.name()
     return 'Гистограммы здоровья, маны, энергии, опыта'
 end
@@ -33,7 +33,7 @@ return 'Плагин отображает информацию о здоровь
 end
 
 function statusbar.version()
-    return '1.07'
+    return '1.09'
 end
 
 local objs = {}
@@ -41,10 +41,11 @@ local regs = {}
 local bars = 0
 local connect = false
 local reinit = false
-local tegs = { 'hp','mn','mv','xp','dsu'}
+local tegs = { 'hp','mn','mv','xp','dsu','xpv' }
 
 local r, values, cfg
 local round = math.floor
+local scorecmd
 
 function statusbar.render()
   if not cfg or not connect or bars == 0 then
@@ -65,7 +66,7 @@ function statusbar.render()
     end
   end
   if showmsg then
-    statusbar.print(4, "Выполните команду 'счет' для настройки плагина.")
+    statusbar.print(4, "Выполните команду '"..scorecmd.."' для настройки плагина.")
     return
   end
   statusbar.drawbars()
@@ -128,7 +129,7 @@ function statusbar.drawbars()
 
 -- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
   if reinit then
-    statusbar.print(pos.x, "(сч)")
+    statusbar.print(pos.x, "("..scorecmd..")")
   end
 end
 
@@ -160,7 +161,7 @@ end
 
 function statusbar.before(window, v)
   if window ~= 0 or not cfg then return end
-  local update = false 
+  local update = false
   for i=1,v:size() do
     v:select(i)
     if v:isPrompt() then
@@ -190,6 +191,10 @@ function statusbar.before(window, v)
           values['max'..teg] = tonumber(regexp:get(c.regindex))
           if teg == 'xp' and cfg.levels then
             statusbar.xplimits()
+          end
+          if teg == 'xpv' then
+            values.maxxp = values.maxxpv
+            values.maxdsu = values.dsu
           end
         end
       end
@@ -331,4 +336,9 @@ function statusbar.init()
 
   values = {}
   connect = props.connected()
+
+  scorecmd = 'счет'
+  if type(cfg.cmd) == 'string' then scorecmd = cfg.cmd end
 end
+
+return statusbar

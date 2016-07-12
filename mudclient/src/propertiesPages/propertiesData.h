@@ -8,9 +8,17 @@
 #define MAX_VIEW_HISTORY_SIZE 300000
 #define TOTAL_MAX_VIEW_HISTORY_SIZE 500000
 
+struct Profile
+{
+    tstring group;
+    tstring name;
+};
+
 struct PropertiesHighlight
 {
     PropertiesHighlight() : textcolor(RGB(192,192,192)), bkgcolor(RGB(0,0,0)),
+        underlined(0), border(0), italic(0) {}
+    PropertiesHighlight(COLORREF text_color, COLORREF bgnd_color) : textcolor(text_color), bkgcolor(bgnd_color),
         underlined(0), border(0), italic(0) {}
     COLORREF textcolor;
     COLORREF bkgcolor;
@@ -181,6 +189,11 @@ public:
         m_values.swap(p.m_values);
     }
 
+    void assign(const PropertiesValuesT<T>& p)
+    {
+        m_values.assign(p.m_values.begin(), p.m_values.end());
+    }
+
     const el& get(int index) const
     {
         return m_values[index];
@@ -275,6 +288,11 @@ public:
         return (find(key) == -1) ? false : true;
     }
 
+    void assign(const PropertiesList& p)
+    {
+        m_values.assign(p.m_values.begin(), p.m_values.end());
+    }
+
 private:
     std::vector<tstring> m_values;
 };
@@ -316,11 +334,11 @@ struct PanelWindow
 
 struct PluginData
 {
-    PluginData() : state(false) {}
+    PluginData() : state(0) {}
     tstring name;
     int state;
     std::vector<OutputWindow> windows;
-    std::vector<PanelWindow> panels;
+    //std::vector<PanelWindow> panels;
 
     void initDefaultPos(int width, int height, OutputWindow *w)
     {
@@ -361,6 +379,13 @@ struct PluginsDataValues : public std::vector<PluginData>
             else { p.windows.push_back(w); }
             break;
         }}
+    }
+    void setAllOff()
+    {
+        for (int i = 0, e = size(); i < e; ++i) {
+            PluginData &p = at(i);
+            p.state = 0;
+        }
     }
 };
 
@@ -405,8 +430,15 @@ public:
     std::vector<PropertiesDlgPageState> pages;
 };
 
+#include "propertiesDisplay.h"
+
 struct PropertiesData
 {
+private:
+    PropertiesData(const PropertiesData&) {}
+    PropertiesData& operator=(const PropertiesData&) {}
+
+public:
     PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
@@ -415,9 +447,61 @@ struct PropertiesData
        , soft_scroll(0)
     {
         initDefaultColorsAndFont();
-        initMainWindow();
+        initDisplay();
     }
 
+    void copy(const PropertiesData& p)
+    {
+        aliases.assign(p.aliases);
+        actions.assign(p.actions);
+        subs.assign(p.subs);
+        hotkeys.assign(p.hotkeys);
+        highlights.assign(p.highlights);
+        groups.assign(p.groups);
+        antisubs.assign(p.antisubs);
+        gags.assign(p.gags);
+        timers.assign(p.timers);
+        variables.assign(p.variables);
+        tabwords.assign(p.tabwords);
+        //skip tabwords_commands.assign(p.tabwords_commands);
+
+        dlg = p.dlg;
+        // skip displays
+        messages = p.messages;
+        // skip cmd_history
+        codepage = p.codepage;
+
+        memcpy(&colors, p.colors, sizeof(colors));
+        memcpy(&osc_colors, p.osc_colors, sizeof(osc_colors));
+        memcpy(&osc_flags, p.osc_flags, sizeof(osc_flags));
+        bkgnd = p.bkgnd;
+        font_name = p.font_name;
+        font_heigth = p.font_heigth;
+        font_bold = p.font_bold;
+        font_italic = p.font_italic;
+
+        cmd_separator = p.cmd_separator;
+        cmd_prefix = p.cmd_prefix;
+
+        view_history_size = p.view_history_size;
+        cmd_history_size = p.cmd_history_size;
+        show_system_commands = p.show_system_commands;
+        clear_bar = p.clear_bar;
+        disable_ya = p.disable_ya;
+        disable_osc = p.disable_osc;
+        history_tab = p.history_tab;
+        //skip timers_on = p.timers_on;
+        plugins_logs = p.plugins_logs;
+        plugins_logs_window = p.plugins_logs_window;
+
+        recognize_prompt = p.recognize_prompt;
+        recognize_prompt_template = p.recognize_prompt_template;
+
+        soft_scroll = p.soft_scroll;
+        //skip title
+    }
+
+public:
     PropertiesValues aliases;
     PropertiesValues actions;
     PropertiesValues subs;
@@ -430,12 +514,12 @@ struct PropertiesData
     PropertiesValues variables;
     PropertiesList   tabwords;
     PropertiesList   tabwords_commands;
-    PluginsDataValues plugins;
     PropertiesDlgData dlg;
+    PropertiesDisplayManager displays;
 
     struct message_data { 
     message_data() { initDefault();  }
-    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
+    void initDefault(int val = 0) { actions = aliases = subs = hotkeys = highlights = groups = antisubs = gags = timers = variables = tabwords = val; }
     int actions;
     int aliases;
     int subs;
@@ -481,12 +565,6 @@ struct PropertiesData
 
     int      soft_scroll;
 
-    RECT main_window;
-    int  main_window_fullscreen;
-    int  display_width;
-    int  display_height;
-    std::vector<OutputWindow> windows;
-
     tstring title;        // name of main window (dont need to save)
 
     void initDefaultColorsAndFont()
@@ -520,22 +598,6 @@ struct PropertiesData
         for (int i = 0; i < 16; ++i) { osc_colors[i] = 0; osc_flags[i] = 0; }
     }
 
-    void initMainWindow()
-    {
-        main_window_fullscreen = 0;
-        display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-
-        int primary_width = GetSystemMetrics(SM_CXSCREEN);
-        int primary_height = GetSystemMetrics(SM_CYSCREEN);
-        int width = (primary_width / 4) * 3;
-        int height = (primary_height / 4) * 3;
-        main_window.left = (primary_width - width) / 2;
-        main_window.top  = (primary_height - height) / 2;
-        main_window.right = main_window.left + width;
-        main_window.bottom = main_window.top + height;
-    }
-
     void initAllDefault()
     {
         aliases.clear();
@@ -549,21 +611,14 @@ struct PropertiesData
         variables.clear();
         cmd_history.clear();
         groups.clear();
+        tabwords.clear();
         initDefaultColorsAndFont();
-        initOutputWindows();
+        initDisplay();
         messages.initDefault();
         timers_on = 0;
-        initPlugins();
         recognize_prompt = 0;
         recognize_prompt_template.clear();
         dlg.clear();
-    }
-
-    void initPlugins()
-    {
-        // turn off all plugins
-        for (int i = 0, e = plugins.size(); i<e; ++i)
-            plugins[i].state = 0;
     }
 
     void initLogFont(HWND hwnd, LOGFONT *f)
@@ -582,6 +637,12 @@ struct PropertiesData
         f->lfQuality = DEFAULT_QUALITY;
         f->lfPitchAndFamily = DEFAULT_PITCH;
         wcscpy(f->lfFaceName, font_name.c_str() );
+    }
+
+    void initDisplay()
+    {
+        displays.clear();
+        displays.initDefault();
     }
 
     void addGroup(const tstring& name)
@@ -690,27 +751,5 @@ private:
         int last=todelete.size()-1;
         for (int i=last; i>=0; --i)
             values->del(todelete[i]);
-    }
-
-    void initOutputWindows()
-    {
-        windows.clear();
-        for (int i=0; i<OUTPUT_WINDOWS; ++i) 
-        {
-            OutputWindow w;
-            w.size.cx = 350; w.size.cy = 200;
-            int d = (i+1) * 70;
-            RECT defpos = { d, d, d+w.size.cx, d+w.size.cy };
-            w.pos = defpos;
-            w.side = DOCK_HIDDEN;
-            w.lastside = DOCK_FLOAT;
-            if (w.name.empty())
-            {
-                WCHAR buffer[8];
-                swprintf(buffer, L"Окно %d", i+1);
-                w.name.assign(buffer);
-            }
-            windows.push_back(w);
-        }
     }
 };

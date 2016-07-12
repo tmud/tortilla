@@ -14,11 +14,28 @@ PropertiesManager::~PropertiesManager()
 bool PropertiesManager::init()
 {
     ProfilesGroupList groups;
-    if (!groups.init())
-        return false;
-    m_first_startup = groups.isFirstStartUp();
+    groups.init();
+
+    for (int i=0,e=groups.getCount(); i<e; ++i)
+    {
+        tstring group;
+        groups.getName(i, &group);
+        ProfilePath pp(group, L"profiles\\player.txml");
+        DeleteFile(pp);    
+    }
+
+    m_first_startup = false;
     int last = groups.getLast();
-    groups.getName(last, &m_configName);
+    if (last == -1)
+    {
+        NewProfileHelper h;
+        if (!h.createFromResources(groups))
+            return false;
+        m_first_startup = h.isFirstStartUp();
+        m_profile =  h.getProfile();
+        return true;
+    }
+    groups.getName(last, &m_profile.group);
     return true;
 }
 
@@ -45,7 +62,7 @@ bool PropertiesManager::loadSettings()
     if (profile.empty())
         return false;
 
-    m_profileName.assign( profile );
+    m_profile.name.assign( profile );
     sd.deletenode();
     return true;
 }
@@ -75,7 +92,7 @@ bool PropertiesManager::loadProfileData()
 {
     m_propData.initAllDefault();
     tstring profile(L"profiles\\");
-    profile.append(m_profileName);
+    profile.append(m_profile.name);
     profile.append(L".xml");
 
     xml::node sd;
@@ -144,64 +161,6 @@ bool PropertiesManager::loadProfileData()
     loadArray(sd, L"timers/timer", true, true, &m_propData.timers);
     loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
     loadArray(sd, L"variables/var", true, false, &m_propData.variables);
-    m_propData.plugins.clear();
-
-    bool default_window = false;
-    xml::request mw(sd, L"mainwindow");
-    if (mw.size())
-    {
-        xml::node w = mw[0];
-        w.get(L"width", &m_propData.display_width);
-        w.get(L"height", &m_propData.display_height);
-        w.get(L"fullscreen", &m_propData.main_window_fullscreen);
-        if (!loadRECT(w, &m_propData.main_window) ||
-            m_propData.display_width != GetSystemMetrics(SM_CXVIRTUALSCREEN) || 
-            m_propData.display_height != GetSystemMetrics(SM_CYVIRTUALSCREEN))
-        {
-            m_propData.initMainWindow();
-            default_window = true;
-        }
-    }
-
-    xml::request cw(sd, L"windows/window");
-    int e = cw.size();
-    for (int i=0; i<OUTPUT_WINDOWS; ++i) 
-    {
-        OutputWindow w;
-        if (!default_window && i<e)
-        {
-            xml::node xn = cw[i];
-            if (loadWindow(cw[i], &w))
-                m_propData.windows[i] = w;
-        }
-    }
-
-    // load plugins and windows
-    xml::request pp(sd, L"plugins/plugin");
-    for (int i = 0, e = pp.size(); i < e; ++i)
-    {
-        tstring name; int value = 0;
-        xml::node pn = pp[i];
-        pn.get(L"key", &name);
-        pn.get(L"value", &value);
-        if (!name.empty())
-        {
-            PluginData pd;
-            pd.name = name;
-            pd.state = (value == 1) ? 1 : 0;
-            if (!default_window)
-            {
-                OutputWindow w;
-                xml::request wp(pn, L"windows/window");
-                for (int j = 0, je = wp.size(); j < je; ++j)
-                {
-                    if (loadWindow(wp[j], &w))
-                        pd.windows.push_back(w);
-                }
-            }
-            m_propData.plugins.push_back(pd);
-        }
-    }
 
     xml::request msrq(sd, L"messages");
     if (msrq.size() == 1)
@@ -220,6 +179,8 @@ bool PropertiesManager::loadProfileData()
         loadValue(ms, L"timers", 0, 1, &d.timers);
         loadValue(ms, L"tabwords", 0, 1, &d.tabwords);
     }
+
+    m_propData.displays.load(sd);
 
     sd.deletenode();
     m_propData.checkGroups();
@@ -291,31 +252,6 @@ bool PropertiesManager::saveProfileData()
     xml::node vars = sd.createsubnode(L"variables");
     saveArray(vars, L"var", m_propData.variables);
 
-    xml::node windows = sd.createsubnode(L"windows");
-    for (int i=0,e=m_propData.windows.size(); i<e; ++i)
-        saveWindow(windows, m_propData.windows[i]);
-
-    xml::node mw = sd.createsubnode(L"mainwindow");
-    saveRECT(mw, m_propData.main_window);
-    mw.set(L"width", m_propData.display_width);
-    mw.set(L"height", m_propData.display_height);
-    mw.set(L"fullscreen", m_propData.main_window_fullscreen);
-
-    xml::node plugins = sd.createsubnode(L"plugins");
-    for (int i = 0, e = m_propData.plugins.size(); i < e; ++i)
-    {
-        const PluginData &pd = m_propData.plugins[i];
-        xml::node pn = plugins.createsubnode(L"plugin");
-        pn.set(L"key", pd.name);
-        pn.set(L"value", pd.state == 0 ? 0 : 1);
-        if (!pd.windows.empty())
-        {
-            xml::node pw = pn.createsubnode(L"windows");
-            for (int j = 0, je = pd.windows.size(); j < je; ++j)
-                saveWindow(pw, pd.windows[j]);
-        }
-    }
-
     xml::node ms = sd.createsubnode(L"messages");
     PropertiesData::message_data& d = m_propData.messages;
     saveValue(ms, L"actions", d.actions);
@@ -330,8 +266,10 @@ bool PropertiesManager::saveProfileData()
     saveValue(ms, L"timers", d.timers);
     saveValue(ms, L"tabwords", d.tabwords);
 
+    m_propData.displays.save(sd);
+
     tstring config(L"profiles\\");
-    config.append(m_profileName);
+    config.append(m_profile.name);
     config.append(L".xml");
 
     bool result = saveToFile(sd, config);
@@ -360,7 +298,7 @@ bool PropertiesManager::saveSettings()
 {
     xml::node sd(L"settings");
     xml::node n = sd.createsubnode(L"profile");
-    n.settext(m_profileName.c_str());
+    n.settext(m_profile.name.c_str());
     bool result = saveToFile(sd, L"settings.xml");
     sd.deletenode();
     return result;
@@ -538,13 +476,13 @@ void PropertiesManager::saveRgbColor(xml::node parent, const tstring& name, COLO
 
 bool PropertiesManager::loadFromFile(xml::node& node, const tstring& file)
 {
-    ProfilePath config(m_configName, file);
+    ProfilePath config(m_profile.group, file);
     return (node.load(config)) ? true : false;
 }
 
 bool PropertiesManager::saveToFile(xml::node node, const tstring& file)
 {
-    ProfilePath config(m_configName, file);
+    ProfilePath config(m_profile.group, file);
     return (node.save(config)) ? true : false;
 }
 
@@ -557,8 +495,10 @@ bool PropertiesManager::loadRECT(xml::node n, RECT *rc)
         !n.get(L"bottom", &bottom))
         return false;
 
-    RECT pos = { left, top, right, bottom };
-    *rc = pos;
+    rc->left = left;
+    rc->right = right;
+    rc->top = top;
+    rc->bottom = bottom;
     return true;
 }
 
@@ -570,33 +510,30 @@ void PropertiesManager::saveRECT(xml::node n, const RECT &rc)
     n.set(L"bottom", rc.bottom);
 }
 //----------------------------------------------------------------------------
-bool PropertiesManager::createNewProfile(const tstring& name)
+bool PropertiesManager::createEmptyProfile(const Profile& profile)
 {
     m_propData.initAllDefault();
-    m_profileName = name;
     m_propData.addDefaultGroup();
+    m_profile = profile;
+    ProfileDirHelper dh;
+    if (!dh.makeDir(m_profile.group, L"profiles"))
+        return false;
     bool result = saveProfileData();
     saveSettings();
     return result;
 }
 
-bool PropertiesManager::createCopyProfile(const tstring& from, const tstring& name)
+bool PropertiesManager::copyProfile(const Profile& src, const Profile& dst)
 {
-    m_profileName = from;
-    if (!loadProfileData())
-        { m_profileName = name; return false; }
-
-    m_profileName = name;
-    m_propData.messages.initDefault();
-    bool result = saveProfileData();
-    saveSettings();
-    return result;
+    NewProfileHelper h;
+    if (!h.copy(src, dst))
+        return false;
+    return loadProfile(dst);
 }
 
-bool PropertiesManager::loadNewProfile(const tstring& group, const tstring& name)
+bool PropertiesManager::loadProfile(const Profile& profile)
 {
-    m_configName = group;
-    m_profileName = name;
+    m_profile = profile;
     if (loadProfileData())
     {
         loadHistory();
@@ -604,32 +541,4 @@ bool PropertiesManager::loadNewProfile(const tstring& group, const tstring& name
         return true;
     }
     return false;
-}
-
-bool PropertiesManager::createNewProfile(const tstring& group, const tstring& name)
-{
-    m_propData.initAllDefault();
-    m_propData.addDefaultGroup();
-    m_configName = group;
-    m_profileName = name;
-    ProfileDirHelper dh;
-    if (!dh.makeDir(m_configName, L"profiles"))
-        return false;
-    bool result = saveProfileData();
-    saveSettings();
-    return result;
-}
-
-bool PropertiesManager::renameProfile(const tstring& group, const tstring& name)
-{
-    m_configName = group;
-    m_profileName = name;
-    m_propData.initPlugins();
-    ProfileDirHelper dh;
-    if (!dh.makeDir(m_configName, L"profiles"))
-        return false;
-    m_propData.messages.initDefault();
-    bool result = saveProfileData();
-    saveSettings();
-    return result;
 }

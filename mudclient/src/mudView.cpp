@@ -3,29 +3,31 @@
 #include "mudView.h"
 #pragma warning(disable: 4996)
 
-MudView::MudView(PropertiesElements *elements) : 
+MudView::MudView(PropertiesElements *elements, int id) : 
 propElements(elements),
 m_lines_count(0),
 m_last_visible_line(-1),
-m_last_string_updated(false),
+m_last_updated(false),
 m_use_softscrolling(false),
 m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
-drag_left(-1), drag_right(-1)
+drag_left(-1), drag_right(-1),
+m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1),
+m_id(id)
 {
     m_dragpt.x = m_dragpt.y = 0;
 }
 
 MudView::~MudView()
 {
-    autodel<MudViewString> z(m_strings);
+    std::for_each(m_strings.begin(),m_strings.end(),[](MudViewString*s){delete s;});
 }
 
 void MudView::accLastString(parseData *parse_data)
 {
-    if (!parse_data->update_prev_string ||
-        m_strings.empty() ||
-        parse_data->strings.empty())
+    bool ups = parse_data->update_prev_string;
+    parse_data->update_prev_string = false;
+    if (!ups || m_strings.empty() || parse_data->strings.empty())
         return;
 
     int last = m_strings.size() - 1;
@@ -50,14 +52,20 @@ void MudView::accLastString(parseData *parse_data)
     if (string->gamecmd && string->blocks.empty())
     {
         MudViewStringBlock empty;
-        last_string->blocks.push_back(empty);
+        string->blocks.push_back(empty);
     }}
 
-    last_string->moveBlocks(string);
-    delete string;
-    parse_data->strings[0] = last_string;
-    m_strings.pop_back();                                   // remove last string from view
-    m_last_string_updated = true;
+    std::vector<MudViewStringBlock> blocks;
+    std::vector<MudViewStringBlock>& ls = last_string->blocks;
+    std::vector<MudViewStringBlock>& s = string->blocks;
+
+    blocks.resize(ls.size()+s.size());
+    std::copy(ls.begin(), ls.end(), blocks.begin());
+    std::copy(s.begin(), s.end(), blocks.begin()+ls.size());
+    s.swap(blocks);
+
+    parse_data->update_prev_string = true;
+    m_last_updated = true;
 }
 
 int MudView::getStringsCount() const
@@ -65,17 +73,35 @@ int MudView::getStringsCount() const
     return m_strings.size();
 }
 
-void MudView::addText(parseData* parse_data)
+void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_strings)
 {
+    if (m_last_updated)
+    {
+        m_last_updated = false;
+        deleteLastString();
+    }
+    removeDropped(parse_data);
+    calcStringsSizes(parse_data->strings);
+
+    if (copy_data)
+    {
+        copy_data->update_prev_string = parse_data->update_prev_string;
+        copy_data->last_finished = parse_data->last_finished;
+        parseDataStrings &s = parse_data->strings;
+        int count = s.size();
+        copy_data->strings.resize(count);
+        for (int i=0;i<count;++i)
+        {
+            MudViewString *hs = new MudViewString;
+            hs->copy(s[i]);
+            copy_data->strings[i] = hs;
+        }
+    }
+
     if (parse_data->strings.empty())
         return;
 
-    m_last_string_updated = false;
-
-    removeDropped(parse_data);
-    calcStringsSizes(parse_data->strings);
-    int count = parse_data->strings.size();
-    pushText(parse_data);
+    pushText(parse_data, false);
 
     if (m_use_softscrolling) {
         if (m_start_softscroll == -1)
@@ -89,15 +115,21 @@ void MudView::addText(parseData* parse_data)
         return;
     }
 
-    checkLimit();
+    int limited = checkLimit();
+    if (limited_strings)
+        *limited_strings = limited;
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
 }
 
-void MudView::pushText(parseData* parse_data)
+void MudView::pushText(parseData* parse_data, bool delete_last)
 {
+    if (delete_last)
+        deleteLastString();
     parseDataStrings &pds = parse_data->strings;
+    if (pds.empty())
+        return;
     m_strings.insert(m_strings.end(), pds.begin(), pds.end());
     pds.clear();
 }
@@ -173,18 +205,13 @@ int MudView::getViewString() const
 
 int MudView::getLastString() const
 {
-    int last = m_strings.size() - (m_last_string_updated ? 0 : 1);
+    int last = m_strings.size() - 1;
     return last;
 }
 
-bool MudView::isLastString() const
+bool MudView::lastStringDeleted() const
 {
-    return (getLastString() == getViewString()) ? true : false;
-}
-
-bool MudView::isLastStringUpdated() const
-{
-    return m_last_string_updated;
+    return m_last_updated;
 }
 
 void MudView::deleteLastString()
@@ -194,6 +221,8 @@ void MudView::deleteLastString()
     int last = m_strings.size() - 1;
     delete m_strings[last];
     m_strings.pop_back();
+    if (last == m_last_visible_line)
+        m_last_visible_line--;
 }
 
 int MudView::getStringsOnDisplay() const
@@ -234,6 +263,8 @@ void MudView::updateProps()
 void MudView::removeDropped(parseData* parse_data)
 {
     parseDataStrings &pds = parse_data->strings;
+    if (pds.empty())
+        return;
     for (int i=pds.size()-1; i>=0; --i)
     {
         MudViewString *string = pds[i];
@@ -247,8 +278,7 @@ void MudView::removeDropped(parseData* parse_data)
 
 void MudView::calcStringsSizes(mudViewStrings& pds)
 {
-    if (pds.empty())
-        return;
+    if (pds.empty()) return;
     CDC dc(GetDC());
     HFONT oldfont = dc.SelectFont(propElements->standard_font);
     for (int i=0,e=pds.size(); i<e; ++i) {
@@ -290,7 +320,7 @@ void MudView::renderView()
         return;
 
     int line_heigth = propElements->font_height;
-    int index = m_last_visible_line - (m_last_string_updated ? 1 : 0);
+    int index = m_last_visible_line; // - (m_last_string_updated ? 1 : 0);
     int count = m_lines_count + 1;
     int y = pos.bottom;
     while (index >= 0 && count > 0)
@@ -300,6 +330,27 @@ void MudView::renderView()
         y = y - line_heigth;
     }
 }
+
+struct DragParamsChecker
+{
+    DragParamsChecker(int &l, int &r, int &s, int &e) : left(l), right(r), start_sym(s), end_sym(e) {}
+    bool check() 
+    {
+        if ((left >= start_sym && left < end_sym) ||
+            (right >= start_sym && right < end_sym) ||
+            (left < start_sym && right >= end_sym))
+        {
+            if (left >= start_sym && left < end_sym) left -= start_sym;
+            else left = 0;
+            if (right >= start_sym  && right < end_sym) right -= start_sym;
+            else right = end_sym - 1;
+            return true;
+        }
+        return false;
+    }
+private:
+    int &left, &right, &start_sym, &end_sym;
+};
 
 void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, int index)
 {
@@ -313,7 +364,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         dc->FillSolidRect(&pos, bkg);
         return;
     }
-    
+
     int start_sym = 0;
     std::vector<MudViewStringBlock> &b = s->blocks;
     dc->SelectFont(propElements->standard_font);
@@ -357,7 +408,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         }
 
         bool dragging = false;
-        const tstring &s = b[i].string;
+        const tstring &str = b[i].string;
         if (checkDragging(index, false))
         {
             dragging = true;
@@ -368,8 +419,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         else if (checkDragging(index, true))
         {
             dragging = true;
-            const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;           
-            int end_sym = start_sym + s.size();
+            const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;
             int last = ld.size() - 1;
             int left = drag_left;
             int right = drag_right;
@@ -409,20 +459,15 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
             }
 
             // проверка что блок попадает в вычисленный диапазон (частью или целиком)
-            if ((left >= start_sym && left < end_sym) ||
-                (right >= start_sym && right < end_sym) ||
-                (left < start_sym && right >= end_sym))
+            // и вычисл€ем в left right - что выделено, но в символьных координатах блока
+            int end_sym = start_sym + str.size();
+            DragParamsChecker dpc(left, right, start_sym, end_sym);
+            if (dpc.check())
             {
-                //вычисл€ем в left right - что выделено, но в символьных координатах блока
-                if (left >= start_sym && left < end_sym) left -= start_sym;
-                else left = 0;
-                if (right >= start_sym  && right < end_sym) right -= start_sym;
-                else right = end_sym - 1;
-
                 if (left != 0)
                 {
                     RECT side = pos; side.right = ld[start_sym + left - 1];
-                    renderDragSym(dc, s.substr(0, left), side, text_color, bkg_color);
+                    renderDragSym(dc, str.substr(0, left), side, text_color, bkg_color);
                 }
                 // selected
                 {
@@ -430,22 +475,57 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                     if (right != (end_sym - 1)) side.right = ld[start_sym + right];
                     COLORREF txt0 = propElements->propData->bkgnd;
                     COLORREF bkg0 = invertColor(txt0);
-                    renderDragSym(dc, s.substr(left, right-left+1), side, txt0, bkg0);
+                    renderDragSym(dc, str.substr(left, right-left+1), side, txt0, bkg0);
                 }
                 if (right != (end_sym - 1))
                 {
                     RECT side = pos; side.left = ld[start_sym + right];
-                    renderDragSym(dc, s.substr(right+1), side, text_color, bkg_color);
+                    renderDragSym(dc, str.substr(right+1), side, text_color, bkg_color);
                 }
                 start_sym = end_sym;
                 continue;
             }
         }
 
+        if (!dragging && index == m_find_string_index)
+        {
+            int left = m_find_start_pos;
+            int right = m_find_end_pos;
+            int end_sym = start_sym + str.size();
+
+            DragParamsChecker dpc(left, right, start_sym, end_sym);
+            if (dpc.check())
+            {
+                std::vector<int> ld;
+                calcDragArray(s, ld);
+
+                if (left != 0)
+                {
+                    RECT side = pos; side.right = ld[start_sym + left - 1];
+                    renderDragSym(dc, str.substr(0, left), side, text_color, bkg_color);
+                }
+                // selected
+                {
+                    RECT side = pos; if (left != 0) side.left = ld[start_sym + left - 1];
+                    if (right != (end_sym - 1)) side.right = ld[start_sym + right];
+                    COLORREF txt0 = propElements->propData->bkgnd;
+                    COLORREF bkg0 = invertColor(txt0);
+                    renderDragSym(dc, str.substr(left, right - left + 1), side, txt0, bkg0);
+                }
+                if (right != (end_sym - 1))
+                {
+                    RECT side = pos; side.left = ld[start_sym + right];
+                    renderDragSym(dc, str.substr(right + 1), side, text_color, bkg_color);
+                }
+                start_sym = end_sym;
+                continue;
+           }
+        }
+
         dc->FillSolidRect(&pos, bkg_color);
         dc->SetBkColor(bkg_color);
         dc->SetTextColor(text_color);
-        dc->DrawText(s.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
+        dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
 
         if (p.underline_status || p.italic_status)
             dc->SelectFont(propElements->standard_font);
@@ -462,7 +542,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
             dc->LineTo(pos.left, pos.top);
             dc->SelectPen(oldpen);
         }
-        start_sym += s.length();
+        start_sym += str.length();
     }
 }
 
@@ -552,14 +632,16 @@ void MudView::mouseWheel(WORD position)
     Invalidate();
 }
 
-void MudView::checkLimit()
+int MudView::checkLimit()
 {
     int size = m_strings.size();
     if (size > propElements->propData->view_history_size)
     {
         size = size - propElements->propData->view_history_size;
         deleteBeginStrings(size);
+        return size;
     }
+    return 0;
 }
 
 void MudView::deleteBeginStrings(int count_from_begin)
@@ -782,10 +864,15 @@ void MudView::calcDragLine(int line, dragline type)
     if (line < 0) return;
     std::vector<int> &ld = (type == BEGINLINE) ? m_drag_beginline_len : m_drag_endline_len;
     MudViewString *s = m_strings[line];
+    calcDragArray(s, ld);
+}
+
+void MudView::calcDragArray(MudViewString* s, std::vector<int> &ld)
+{
     int blocks = s->blocks.size();
     if (!blocks) { ld.clear(); return; }
     int dc_size = 0;
-    for (int i = 0; i <blocks; ++i)
+    for (int i = 0; i < blocks; ++i)
     {
         const MudViewStringBlock &b = s->blocks[i];
         dc_size += b.size.cx;
@@ -815,4 +902,67 @@ bool MudView::inSoftScrolling() const
 bool MudView::isDragMode() const
 {
     return (drag_begin == -1) ? false : true;
+}
+
+int MudView::findAndSelectText(int from, int direction, const tstring& text)
+{
+    if (text.empty())
+        return -1;
+    if (direction != -1 && direction != 1)
+        return -1;
+    if (from == -1) {
+        if (direction == 1) from = 0;
+        else from = m_strings.size()-1;
+    }
+    int count = m_strings.size();
+    if (from >= count)
+        return -1;
+
+    tstring ltext(text);
+    tstring_tolower(&ltext);
+
+    int start = m_find_start_pos;
+    int i = from;
+    int end = (direction==1) ? count : -1;
+    while (i != end)
+    {
+        tstring str;
+        m_strings[i]->getText(&str);
+        tstring_tolower(&str);
+        size_t pos = -1;
+        if (direction == 1)
+        {
+           size_t start_pos = (start==-1) ? 0 : start+ltext.length();
+           pos = str.find(ltext, start_pos);
+        }
+        else
+        {
+           tstring p( (start>=0) ? str.substr(0, start) : str);
+           pos = p.rfind(ltext);
+        }
+        if (pos != -1)
+        {
+            m_find_string_index = i;
+            m_find_start_pos = pos;
+            m_find_end_pos = pos + ltext.size() - 1;
+            return i;
+        }
+        else
+        {
+            start = -1;
+        }
+        i = i + direction;
+    }
+    return -1;
+}
+
+int MudView::getCurrentFindString()
+{
+    return m_find_string_index;
+}
+
+void MudView::clearFind()
+{
+    m_find_string_index = m_find_start_pos = m_find_end_pos = -1;
+    Invalidate(FALSE);
 }

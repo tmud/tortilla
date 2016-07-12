@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mainapp-client", "mudclient\mudclient.vcxproj", "{FDCB8C3B-117D-42E9-BB60-04BFCE5EA051}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -50,6 +50,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sound", "plugins\sound\soun
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "voice", "modules\voice\voice.vcxproj", "{413D9E03-C1B6-4EA4-A9CF-EA2AC9A61CEF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcrecalc", "plugins\pcrecalc\pcrecalc.vcxproj", "{A78A1B44-ED19-44F5-8370-55E534FA54E3}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extra", "modules\extra\extra.vcxproj", "{948F73B3-F954-4908-A542-7DD7669F7123}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -181,6 +191,26 @@ Global
 		{413D9E03-C1B6-4EA4-A9CF-EA2AC9A61CEF}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{413D9E03-C1B6-4EA4-A9CF-EA2AC9A61CEF}.Release|Win32.ActiveCfg = Release|Win32
 		{413D9E03-C1B6-4EA4-A9CF-EA2AC9A61CEF}.Release|Win32.Build.0 = Release|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Debug|Win32.Build.0 = Debug|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Any CPU.ActiveCfg = Release|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Win32.ActiveCfg = Release|Win32
+		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Win32.Build.0 = Release|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Win32.ActiveCfg = Debug|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Win32.Build.0 = Debug|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Any CPU.ActiveCfg = Release|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Win32.ActiveCfg = Release|Win32
+		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

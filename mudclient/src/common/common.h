@@ -37,6 +37,19 @@ void u8string_substr(u8string *str, int from, int len);
 
 bool checkKeysState(bool shift, bool ctrl, bool alt);
 
+void createWindowHook(HWND wnd, UINT test_msg);
+void deleteWindowHook(HWND wnd);
+
+#include "md5.h"
+class MD5
+{
+public:
+    void update(const tstring& str);
+    tstring getCRC();
+private:
+    md5 crc;
+};
+
 class Separator
 {
 public:
@@ -105,3 +118,13 @@ public:
         return diff;
     }
 };
+
+#ifdef _DEBUG
+#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
+#define OUTPUT_OPTION(data, label) OutputTelnetOption(data, label);
+void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label);
+void OutputTelnetOption(const void *data, const char* label);
+#else
+#define OUTPUT_BYTES(data, len, maxlen, label)
+#define OUTPUT_OPTION(data, label)
+#endif

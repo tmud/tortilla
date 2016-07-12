@@ -7,7 +7,7 @@
 extern luaT_State L;
 extern Plugin* _cp;
 
-MsdpNetwork::MsdpNetwork() : m_state(false)
+MsdpNetwork::MsdpNetwork() : m_state(false), m_utf8_encoding(false)
 {
     m_to_send.setBufferSize(1024);
 }
@@ -17,27 +17,21 @@ MsdpNetwork::~MsdpNetwork()
     releaseReports();
 }
 
-void MsdpNetwork::processReceived(Network *network)
+void MsdpNetwork::translateReceived(DataQueue& msdp_data)
 {
-    DataQueue *msdp_data = network->receive_msdp();
-    if (msdp_data->getSize() > 0)
+    if (msdp_data.getSize() > 0)
         translate(msdp_data);
-    sendExist(network);
 }
 
-void MsdpNetwork::sendExist(Network *network)
+DataQueue& MsdpNetwork::getSendData()
 {
-    if (m_to_send.getSize() > 0)
-    {
-        network->sendplain((const tbyte*)m_to_send.getData(), m_to_send.getSize());
-        m_to_send.clear();
-    }
+    return m_to_send;
 }
 
-void MsdpNetwork::translate(DataQueue *msdp)
+void MsdpNetwork::translate(DataQueue& msdp)
 {
-    const tbyte* data = (const tbyte*)msdp->getData();
-    int len = msdp->getSize();
+    const tbyte* data = (const tbyte*)msdp.getData();
+    int len = msdp.getSize();
     //OUTPUT_BYTES(data, len, len, "MSDP");
 
     while (len > 0)
@@ -45,7 +39,7 @@ void MsdpNetwork::translate(DataQueue *msdp)
         if (len < 3 || data[0] != IAC || data[2] != MSDP)
         {
             assert(false);
-            msdp->clear();
+            msdp.clear();
             return;
         }
 
@@ -62,35 +56,35 @@ void MsdpNetwork::translate(DataQueue *msdp)
                     break;
                 }
             }
-            msdp->truncate(len);
+            msdp.truncate(len);
         }
         else if (cmd == DO)
         {
             m_state = true;
-            msdp->truncate(3);
+            msdp.truncate(3);
             send_varval("CLIENT_NAME", "TORTILLA");
-            send_varval("CLIENT_VERSION", TW2U(TORTILLA_VERSION));
+            send_varval("CLIENT_VERSION", TW2A(TORTILLA_VERSION));
             tortilla::getPluginsManager()->processPluginsMethod("msdpon", 0);
         }
         else if (cmd == DONT)
         {
             m_state = false;
-            msdp->truncate(3);
+            msdp.truncate(3);
             tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
             releaseReports();
         }
         else
         {
             assert(false);
-            msdp->clear();
+            msdp.clear();
             return;
         }
-        data = (const tbyte*)msdp->getData();
-        len = msdp->getSize();
+        data = (const tbyte*)msdp.getData();
+        len = msdp.getSize();
     }
 }
 
-void MsdpNetwork::send_varval(const utf8* var, const utf8* val)
+void MsdpNetwork::send_varval(const char* var, const char* val)
 {
     send_begin();
     send_param(MSDP_VAR, var);
@@ -98,7 +92,7 @@ void MsdpNetwork::send_varval(const utf8* var, const utf8* val)
     send_end();
 }
 
-void MsdpNetwork::send_varvals(const utf8* var, const std::vector<u8string>& vals)
+void MsdpNetwork::send_varvals(const char* var, const std::vector<std::string>& vals)
 {
     send_begin();
     send_param(MSDP_VAR, var);
@@ -156,7 +150,7 @@ bool MsdpNetwork::process_var(cursor& c)
      }
      if (b == c.e)
          return false;
-     u8string var_name((const utf8*)(p+1), b-p-1);
+     std::string var_name((const char*)(p+1), b-p-1);
      lua_pushstring(L, var_name.c_str());
      c.p = b;
      return true;
@@ -180,8 +174,32 @@ bool MsdpNetwork::process_val(cursor& c)
          while (b != c.e && *b >= ' ') b++;
          if (b != c.e && *b != MSDP_VAR && *b != MSDP_VAL && *b != MSDP_ARRAY_CLOSE && *b != MSDP_TABLE_CLOSE)
              return false;
-         u8string value((const utf8*)(p+1), b-p-1);
-         lua_pushstring(L, value.c_str());
+         std::string value((const char*)(p+1), b-p-1);
+         if (m_utf8_encoding) 
+         {
+             lua_pushstring(L, value.c_str());
+         }
+         else
+         {
+             std::string newval;
+             const char* b0 = value.c_str();
+             const tbyte* b = (const tbyte*)b0;
+             const tbyte* e = b + value.length();             
+             while (b != e) 
+             {
+                 const tbyte *p = b;
+                 while (p!=e && *p!=0xff) p++;
+                 if (p==e) break;
+                 p++; if (p==e) break;
+                 newval.append((const char*)b, p-b);
+                 if (*p == 0xff) { p++; }
+                 b = p;
+             }
+             newval.append((const char*)b);             
+             TA2W ws(newval.c_str());         
+             luaT_pushwstring(L, ws);
+         }
+         
          lua_settable(L, -3);
          c.p = b;
          return true;
@@ -242,12 +260,12 @@ bool MsdpNetwork::process_val(cursor& c)
      return false;
 }
 
-void MsdpNetwork::report(Plugin* p, std::vector<u8string> *report)
+void MsdpNetwork::report(Plugin* p, std::vector<std::string> *report)
 {
-    std::vector<u8string> new_report;
+    std::vector<std::string> new_report;
     for (int i=0,e=report->size(); i<e; ++i)
     {
-        const u8string &cmd = report->at(i);
+        const std::string &cmd = report->at(i);
         PluginIterator it = m_plugins_reports.find(cmd);
         if (it != m_plugins_reports.end())
         {
@@ -266,12 +284,12 @@ void MsdpNetwork::report(Plugin* p, std::vector<u8string> *report)
     report->swap(new_report);
 }
 
-void MsdpNetwork::unreport(Plugin* p, std::vector<u8string> *report)
+void MsdpNetwork::unreport(Plugin* p, std::vector<std::string> *report)
 {
-    std::vector<u8string> new_report;
+    std::vector<std::string> new_report;
     for (int i = 0, e = report->size(); i < e; ++i)
     {
-        const u8string &cmd = report->at(i);
+        const std::string &cmd = report->at(i);
         PluginIterator it = m_plugins_reports.find(cmd);
         if (it == m_plugins_reports.end())
             continue;
@@ -302,7 +320,7 @@ void MsdpNetwork::unloadPlugin(Plugin *p)
     if (!m_state)
         return;
     tortilla::getPluginsManager()->processPluginMethod(p, "msdpoff", 0);
-    std::vector<u8string> unreport;
+    std::vector<std::string> unreport;
     PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
     for (;it!=it_end;++it)
     {
@@ -334,13 +352,28 @@ void MsdpNetwork::unloadPlugins()
     if (!m_state)
         return;
     tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
-    std::vector<u8string> unreport;
+    std::vector<std::string> unreport;
     PluginIterator it = m_plugins_reports.begin(), it_end = m_plugins_reports.end();
     for (;it!=it_end;++it)
         unreport.push_back(it->first);
     releaseReports();
     if (!unreport.empty())
         send_varvals("UNREPORT", unreport);
+    m_state = false;
+}
+
+void MsdpNetwork::reset()
+{
+    if (!m_state)
+        return;
+    tortilla::getPluginsManager()->processPluginsMethod("msdpoff", 0);
+    releaseReports();
+    m_state = false;
+}
+
+void MsdpNetwork::setUtf8Encoding(bool flag)
+{
+    m_utf8_encoding = flag;
 }
 
 void MsdpNetwork::releaseReports()
@@ -367,9 +400,7 @@ bool msdp_isoff()
 int msdpOffError(lua_State *L, const char* fname) 
 {
     TA2W f(fname);
-    tstring error(f);
-    error.append(L":MSDP is off");
-    return pluginError(error.c_str()); 
+    return pluginMethodError(f, L"MSDP is off");
 }
 
 int msdp_list(lua_State *L)
@@ -391,7 +422,7 @@ int msdp_multi_command(lua_State *L, const char* cmd, const char* cmdname)
         return msdpOffError(L, cmdname);
     if (luaT_check(L, 1, LUA_TSTRING) || luaT_check(L, 1, LUA_TTABLE))
     {
-        std::vector<u8string> vals;
+        std::vector<std::string> vals;
         if (lua_isstring(L, 1))
             vals.push_back(lua_tostring(L, 1));
         else

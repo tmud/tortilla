@@ -254,7 +254,7 @@ static const luaL_Reg voice_methods[] =
 };
 
 int luaopen_voice(lua_State *L)
-{    
+{
     luaL_newlib(L, voice_methods);
     return 1;
 }

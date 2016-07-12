@@ -2,7 +2,7 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
-CompareObject::CompareObject() : m_fullstr_req(true) {}
+CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false) {}
 CompareObject::~CompareObject() {}
 
 bool CompareObject::init(const tstring& key, bool endline_mode)
@@ -11,9 +11,38 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
         return false;
 
     m_key = key;
+    if (key.at(0) == L'$')      // regexp marker
+    {
+       ParamsHelper ph(key, ParamsHelper::DETECT_ANYID);
+       if (ph.getSize() == 0)
+       {
+           const tchar *k = key.c_str();
+           //.*,[^, +,]+
+           if (wcsstr(k, L".*") || wcsstr(k, L" +") || wcsstr(k, L"]+") || wcsstr(k, L"[^"))
+           {
+               if (m_pcre.setRegExp(key.substr(1), true))
+               {
+                   m_std_regexp = true;
+                   return true;
+               }
+           }
+       }
+    }
 
     tstring regexp;
     createCheckPcre(key, endline_mode, &regexp);
+    checkVars(&regexp);
+    bool result = m_pcre.setRegExp(regexp, true);
+    assert(result);
+    return result;
+}
+
+bool CompareObject::initOnlyVars(const tstring& key)
+{
+    if (key.empty())
+       return false;
+    tstring regexp(key);
+    maskRegexpSpecialSymbols(&regexp, false);
     checkVars(&regexp);
     bool result = m_pcre.setRegExp(regexp, true);
     assert(result);
@@ -59,6 +88,15 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     std::vector<tstring> &p = *params;
     if (m_pcre.getSize() == 0)  { p.clear(); return; }
 
+    if (m_std_regexp)
+    {
+        int count = m_pcre.getSize();
+        p.resize(count);
+        for (int i=0; i<count; ++i)
+            m_pcre.getString(i, &p[i]);
+        return;
+    }
+
     ParamsHelper keys(m_key, ParamsHelper::BLOCK_DOUBLEID);
     int maxid = keys.getMaxId()+1;
     if (maxid <= 0)
@@ -84,9 +122,10 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
 
 void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template)
 {
-    tstring k(key);
+    tstring tmp(key);
     if (endline_mode)
     {
+        tstring &k = tmp;
         int last = k.size() - 1;
         if (last != 0 && k.at(last) == L'$')
         {
@@ -97,36 +136,7 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
     }
 
     //mask regexp special symbols
-    tstring tmp;
-    const tchar *symbols = L"*+/?|^$.[]()\\";
-    const tchar *b = k.c_str();
-    const tchar *e = b + k.length();
-
-    // skip first ^ - it a part of regexp
-    if (*b == '^')
-    {
-        tmp.append(L"^");
-        b++;
-    }
-
-    const tchar* p = b + wcscspn(b, symbols);
-    while (p != e)
-    {
-        bool skip_slash = false;
-        tmp.append( tstring(b, p-b) );
-        if (*p == L'$' && p+1!=e)
-        {
-            if (*(p + 1) == L'$') p++;
-            else {  skip_slash = true; }
-        }
-        if (!skip_slash)
-            tmp.append(L"\\");
-        tchar x[2] = { *p, 0 };
-        tmp.append(x);
-        b = p + 1;
-        p = b + wcscspn(b, symbols);
-    }
-    tmp.append(b);
+    maskRegexpSpecialSymbols(&tmp, true);
 
     // replace parameters, like %0 etc. to regexp
     int pos = 0; int len = tmp.length();
@@ -136,20 +146,6 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
         prce_template->append(tmp.substr(pos, ph.getFirst(i) - pos));
         pos = ph.getLast(i);
         int id = ph.getId(i);
-
-        /*tstring flag(tmp.substr(pos,1));
-        if (flag == L"%") // %x% variant
-        {
-            int last = tmp.size() - 1;
-            if (pos == last) // if %x% is last in string
-                prce_template->append(L"(.*)");
-            else
-                prce_template->append(L"(.*?)"); 
-            pos++;
-        }
-        else              // %x variant
-          { prce_template->append(L"([^ ]*)"); }*/
-
         if (pos == len)   // for last %x in string
             prce_template->append( (id == -1) ? L".*" : L"(.*)");
         else
@@ -229,4 +225,45 @@ void CompareObject::getRange(CompareRange *range) const
 bool CompareObject::isFullstrReq() const
 {
     return m_fullstr_req;
+}
+
+void CompareObject::getKey(tstring* key) const
+{
+    key->assign(m_key);
+}
+
+void CompareObject::maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow)
+{
+    //mask regexp special symbols
+    tstring tmp;
+    const tchar *symbols = L"*+/?|^$.[]()\\";
+    const tchar *b = pcre_template->c_str();
+    const tchar *e = b + pcre_template->length();
+
+    // skip first ^ - it a part of regexp
+    if (use_first_arrow && *b == '^')
+    {
+        tmp.append(L"^");
+        b++;
+    }
+
+    const tchar* p = b + wcscspn(b, symbols);
+    while (p != e)
+    {
+        bool skip_slash = false;
+        tmp.append( tstring(b, p-b) );
+        if (*p == L'$' && p+1!=e)
+        {
+            if (*(p + 1) == L'$') p++;
+            else {  skip_slash = true; }
+        }
+        if (!skip_slash)
+            tmp.append(L"\\");
+        tchar x[2] = { *p, 0 };
+        tmp.append(x);
+        b = p + 1;
+        p = b + wcscspn(b, symbols);
+    }
+    tmp.append(b);
+    pcre_template->swap(tmp);
 }

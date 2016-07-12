@@ -327,17 +327,32 @@ BEGIN
     LTEXT           "Введите пароль:",IDC_STATIC,7,13,61,8
 END
 
-IDD_STARTUP_WORLD DIALOGEX 0, 0, 300, 154
+IDD_STARTUP_WORLD DIALOGEX 0, 0, 300, 169
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Tortilla Mud Client"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     LISTBOX         IDC_LIST_STARTUP_WORLD,7,16,286,94,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_EDIT_STARTUP_PROFILE,68,115,107,12,ES_AUTOHSCROLL
-    CONTROL         "Открыть cправку к клиенту",IDC_CHECK_OPEN_ABOUT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,136,107,11
-    DEFPUSHBUTTON   "OK",IDOK,243,133,50,14
+    EDITTEXT        IDC_EDIT_STARTUP_FOLDER,70,116,107,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_STARTUP_PROFILE,70,131,107,12,ES_AUTOHSCROLL
+    CONTROL         "Открыть cправку к клиенту",IDC_CHECK_OPEN_ABOUT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,151,107,11
+    DEFPUSHBUTTON   "OK",IDOK,243,148,50,14
     LTEXT           "Выберите профиль мада, в котором вы начнете игру:",IDC_STATIC,7,7,185,8
-    LTEXT           "Имя персонажа:",IDC_STATIC,8,117,56,8
+    LTEXT           "Имя персонажа:",IDC_STATIC,8,133,56,8
+    LTEXT           "Название папки:",IDC_STATIC,7,118,61,8
+END
+
+IDD_FIND DIALOGEX 0, 0, 256, 63
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_EDIT_FINDTEXT,62,7,187,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_COMBO_FINDWINDOW,61,24,148,50,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "От конца к началу",IDC_RADIO_END_BEGIN,"Button",BS_AUTORADIOBUTTON | WS_TABSTOP,61,42,97,8
+    CONTROL         "От начала к концу",IDC_RADIO_BEGIN_END,"Button",BS_AUTORADIOBUTTON,61,51,97,8
+    LTEXT           "Искать:",IDC_STATIC,7,8,30,8
+    LTEXT           "Место поиска:",IDC_STATIC,7,26,50,8
+    LTEXT           "Направление:",IDC_STATIC,7,43,48,10
 END
 
 
@@ -455,7 +470,14 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 293
         TOPMARGIN, 7
-        BOTTOMMARGIN, 147
+        BOTTOMMARGIN, 162
+    END
+
+    IDD_FIND, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -481,6 +503,7 @@ BEGIN
     POPUP "Вид"
     BEGIN
         MENUITEM "&Панель инструментов",        ID_VIEW_TOOLBAR
+        MENUITEM "Поиск...\tCtrl+F",            ID_VIEW_FIND
         MENUITEM SEPARATOR
         MENUITEM "Окно &1",                     ID_WINDOW_1
         MENUITEM "Окно &2",                     ID_WINDOW_2
@@ -603,7 +626,7 @@ BEGIN
     IDS_ERROR_COPYPROFILE_FAILED 
                             "Ошибка при копировании профиля. Проверьте права на запись в каталог программы. Возможно исходный профиль поврежден."
     IDS_ERROR_INITPROFILES_FAILED 
-                            "Ошибка при инициализации профилей! Проверьте права на запись в каталог программы."
+                            "Ошибка при инициализации профилей! Проверьте права на запись в каталог клиента. Для игры необходимо создать хотя бы один профиль."
     IDS_ERROR_SAVEPROFILE_FAILED 
                             "Ошибка при сохранении профиля! Проверьте права на запись в каталог программы."
     IDS_ERROR_CURRENTSAVEPROFILE_FAILED 
@@ -631,7 +654,7 @@ BEGIN
     IDS_ERROR_LOADPROFILE_FAILED 
                             "Ошибка при загрузке профиля. Файл профиля поврежден."
     IDS_ERROR_LASTLOAD_FAILED 
-                            "Ошибка при загрузке текущего профиля. Файл профиля отсутствует или поврежден. Загрузить профиль по умолчанию?"
+                            "Ошибка при загрузке последнего игрового профиля. Файл профиля отсутствует или поврежден. Загрузить профиль по умолчанию?"
 END
 
 #endif    // Russian (Russia) resources

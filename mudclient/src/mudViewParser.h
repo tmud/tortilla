@@ -5,10 +5,16 @@ typedef mudViewStrings parseDataStrings;
 struct parseData
 {
     parseData() : update_prev_string(false), last_finished(true) {}
-    ~parseData() { autodel<MudViewString> z1(strings); }
+    ~parseData() { clear(); }
     bool update_prev_string;
     bool last_finished;
     parseDataStrings strings;
+    void clear() {
+        std::for_each(strings.begin(), strings.end(), [](MudViewString* s) {delete s;});
+        strings.clear();
+        update_prev_string = false;
+        last_finished = true;
+    }
 };
 
 #ifdef MARKERS_IN_VIEW

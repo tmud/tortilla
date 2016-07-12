@@ -20,7 +20,7 @@ int luapcre_create(lua_State *L)
 
 int luapcre_find(lua_State *L)
 {
-    if (luaT_check(L, 2), LUAT_PCRE, LUA_TSTRING)
+    if (luaT_check(L, 2, LUAT_PCRE, LUA_TSTRING))
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         bool result = p->find(luaT_towstring(L, 2));
@@ -32,7 +32,7 @@ int luapcre_find(lua_State *L)
 
 int luapcre_findall(lua_State *L)
 {
-    if (luaT_check(L, 2), LUAT_PCRE, LUA_TSTRING)
+    if (luaT_check(L, 2, LUAT_PCRE, LUA_TSTRING))
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         bool result = p->findall(luaT_towstring(L, 2));
@@ -44,7 +44,7 @@ int luapcre_findall(lua_State *L)
 
 int luapcre_size(lua_State *L)
 {
-    if (luaT_check(L, 1), LUAT_PCRE)
+    if (luaT_check(L, 1, LUAT_PCRE))
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         lua_pushinteger(L, p->size());
@@ -55,11 +55,14 @@ int luapcre_size(lua_State *L)
 
 int luapcre_first(lua_State *L)
 {
-    if (luaT_check(L, 2), LUAT_PCRE, LUA_TNUMBER)
+    if (luaT_check(L, 2, LUAT_PCRE, LUA_TNUMBER))
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         int first = p->first(lua_tointeger(L, 2));
-        lua_pushinteger(L, first);
+        if (first >= 0)
+            lua_pushinteger(L, first+1);
+        else
+            lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, L"pcre:first");
@@ -67,11 +70,14 @@ int luapcre_first(lua_State *L)
 
 int luapcre_last(lua_State *L)
 {
-    if (luaT_check(L, 2), LUAT_PCRE, LUA_TNUMBER)
+    if (luaT_check(L, 2, LUAT_PCRE, LUA_TNUMBER))
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         int last = p->last(lua_tointeger(L, 2));
-        lua_pushinteger(L, last);
+        if (last >= 0)
+            lua_pushinteger(L, last+1);
+        else
+            lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, L"pcre:last");
@@ -79,15 +85,30 @@ int luapcre_last(lua_State *L)
 
 int luapcre_get(lua_State *L)
 {
-    if (luaT_check(L, 2), LUAT_PCRE, LUA_TNUMBER)
+    if (luaT_check(L, 2, LUAT_PCRE, LUA_TNUMBER))
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         tstring str;
-        p->get(lua_tointeger(L, 2), &str);
-        luaT_pushwstring(L, str.c_str());
+        if (!p->get(lua_tointeger(L, 2), &str))
+            lua_pushnil(L);
+        else
+            luaT_pushwstring(L, str.c_str());
         return 1;
     }
     return pluginInvArgs(L, L"pcre:get");
+}
+
+int luapcre_regexp(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_PCRE))
+    {
+        Pcre *p = (Pcre*)luaT_toobject(L, 1);
+        tstring str;
+        p->getRegExp(&str);
+        luaT_pushwstring(L, str.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"pcre:regexp");
 }
 
 int luapcre_gc(lua_State *L)
@@ -96,6 +117,31 @@ int luapcre_gc(lua_State *L)
     {
         Pcre *p = (Pcre *)luaT_toobject(L, 1);
         delete p;
+    }
+    return 0;
+}
+
+int luapcre_towatch(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_PCRE))
+    {
+        lua_newtable(L);
+        Pcre *p = (Pcre *)luaT_toobject(L, 1);
+        int size = p->size();
+        tstring rgxp;
+        p->getRegExp(&rgxp);
+        lua_pushstring(L, "key");
+        luaT_pushwstring(L, rgxp.c_str());
+        lua_settable(L, -3);
+        for (int i=0; i<size; ++i)
+        {
+            tstring str;
+            p->get(i, &str);
+            lua_pushinteger(L, i);
+            luaT_pushwstring(L, str.c_str());
+            lua_settable(L, -3);
+        }
+        return 1;
     }
     return 0;
 }
@@ -110,7 +156,9 @@ void reg_mt_pcre(lua_State *L)
     regFunction(L, "first", luapcre_first);
     regFunction(L, "last", luapcre_last);
     regFunction(L, "get", luapcre_get);
+    regFunction(L, "regexp", luapcre_regexp);
     regFunction(L, "__gc", luapcre_gc);
+    regFunction(L, "__towatch", luapcre_towatch);
     regIndexMt(L);
     lua_pop(L, 1);
 }

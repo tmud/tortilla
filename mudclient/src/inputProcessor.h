@@ -53,9 +53,9 @@ struct InputTemplateParameters
     tchar prefix;
 };
 
-struct InputCommand
+struct InputCommandData
 {
-    InputCommand() : dropped(false), system(false), changed(false) {}
+    InputCommandData() : dropped(false), system(false), changed(false) {}
                                             // full command as is = command + parameters
     tstring srccmd;                         // only command name with prefix as is
     tstring srcparameters;                  // original parameters as is without changes    
@@ -67,38 +67,59 @@ struct InputCommand
     bool system;
     bool changed;
 };
+typedef std::shared_ptr<InputCommandData> InputCommand;
 
-class InputCommands : private std::vector<InputCommand*>
+class InputCommands : private std::deque<InputCommand>
 {
-    typedef std::vector<InputCommand*> base;
+    typedef std::deque<InputCommand> base;
 public:
     ~InputCommands() { clear(); }
     int size() const { return base::size(); }
     bool empty() const { return base::empty(); }
-    InputCommand* operator[] (int index) const { 
+    InputCommand operator[] (int index) const { 
         return base::operator[](index);
     }
-    void remove(int pos) {
-        base::erase(begin()+pos);
-    }
     void erase(int pos) {
-        InputCommand *cmd = base::operator[](pos);
-        delete cmd;
         base::erase(begin()+pos);
     }
     void insert(int pos, InputCommands& cmds) {
         base::insert(begin() + pos, cmds.begin(), cmds.end());
         cmds.resize(0);
     }
+    void push_back(InputCommands& cmds) {
+        base::insert(end(), cmds.begin(), cmds.end());
+        cmds.resize(0);
+    }
     void clear() {
-        std::for_each(begin(), end(), [](InputCommand *c){ delete c; });
         base::clear();
     }
-    void push_back(InputCommand *cmd) {
+    void push_back(InputCommand cmd) {
         base::push_back(cmd);
     }
     void pop_back() {
         base::pop_back();
+    }
+    InputCommand pop_front()
+    {
+        InputCommand cmd = at(0);
+        base::pop_front();
+        return cmd;
+    }
+    void repeat(size_t count) 
+    {
+        if (count <= 1) return;
+        size_t size = base::size();
+        size_t newsize = count * size;
+        base::resize(newsize);
+        for (size_t k=1;k<count;++k)
+        {
+            for (size_t i=0;i<size;++i)
+            {
+                InputCommand c = at(i);
+                size_t ci = k*size+i;
+                at(ci) = c;
+            }
+        }
     }
 };
 
@@ -122,20 +143,27 @@ public:
 private:
     const tchar MARKER = L'\t';
     InputTemplateParameters _params;
-    void fillsyscmd(InputCommand *cmd);
-    void fillgamecmd(InputCommand *cmd);
+    void fillsyscmd(InputCommand cmd);
+    void fillgamecmd(InputCommand cmd);
     void parsecmd(const tstring& cmd);
     void markbrackets(tstring *cmd) const;
     void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
     bool isbracket(const tchar *p) const;
     bool isopenorspace(const tchar *p) const;
     bool iscloseorspace(const tchar *p) const;
+    bool isbracketorspace(const tchar *p) const;
+};
+
+class InputCommandsVarsFilter
+{
+public:
+    bool checkFilter(InputCommand cmd);
 };
 
 class InputCommandVarsProcessor
 {
 public:
-    bool makeCommand(InputCommand *cmd);
+    bool makeCommand(InputCommand cmd);
 };
 
 #ifdef _DEBUG
@@ -143,11 +171,10 @@ class InputCommandTemplateUnitTest
 {
     static bool test1(const tstring& str, int n, ...);
     static bool test2(const tstring& str, int params, InputCommands *ref);
-    static InputCommand* makecmd(bool system, const tstring& srccmd, const tstring& srcparams, 
+    static InputCommand makecmd(bool system, const tstring& srccmd, const tstring& srcparams, 
         const tstring& cmd, int n, ...);
 public:
     static void run();
-    
 };
 #define RUN_INPUTPROCESSOR_TESTS InputCommandTemplateUnitTest::run();
 #else

@@ -19,9 +19,10 @@ public:
     bool pluginsPropsDlg();
     Plugin* findPlugin(HWND view);
     Plugin* findPlugin(const tstring& name);
+    bool setPluginState(const tstring& name, const tstring& state);
     void updateProps();
     void processStreamData(MemoryBuffer *data);
-    void processGameCmd(InputCommand* cmd);
+    void processGameCmd(InputCommand cmd);
     void processViewData(const char* method, int view, parseData* data);
     void processBarCmds(InputPlainCommands* cmds);
     void processHistoryCmds(const InputPlainCommands& cmds, InputPlainCommands* history);
@@ -29,19 +30,20 @@ public:
     void processDisconnectEvent();
     void processTick();
     void processPluginsMethod(const char* method, int args);
-    void processPluginMethod(Plugin *p, char* method, int args);
-    void processReceived(Network *network);
-    void processToSend(Network* network);
+    void processPluginMethod(Plugin *p, char* method, int args);   
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
-    bool processTriggers(parseData& parse_data, int start_string, LogicPipelineElement* pe);
-    void concatCommand(std::vector<tstring>& parts, bool system, InputCommand* cmd);
+    bool processTriggers(parseData& parse_data, int string, LogicPipelineElement* pe);
+    void concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
     enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };
     TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg);
     void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const tchar* error, int plugin_index);
+    void setPluginState(Plugin* p, bool state);
     void terminatePlugin(Plugin* p);
+    bool loadPlugin(Plugin* p);
+    void unloadPlugin(Plugin *p);
 };

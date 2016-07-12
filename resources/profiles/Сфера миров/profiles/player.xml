@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profile>
+  <viewsize value="3000"/>
+  <cmdsize value="30"/>
+  <systemcmds value="0"/>
+  <clearbar value="1"/>
+  <disableya value="0"/>
+  <historytab value="1"/>
+  <timersf value="0"/>
+  <plogs value="1"/>
+  <plogswnd value="0"/>
+  <codepage value="win"/>
+  <colors>
+    <color id="background" r="0" g="0" b="0"/>
+    <color id="0" r="64" g="64" b="64"/>
+    <color id="1" r="128" g="0" b="0"/>
+    <color id="2" r="0" g="128" b="0"/>
+    <color id="3" r="128" g="128" b="0"/>
+    <color id="4" r="0" g="64" b="128"/>
+    <color id="5" r="128" g="0" b="128"/>
+    <color id="6" r="0" g="128" b="128"/>
+    <color id="7" r="192" g="192" b="192"/>
+    <color id="8" r="128" g="128" b="128"/>
+    <color id="9" r="255" g="0" b="0"/>
+    <color id="10" r="0" g="255" b="0"/>
+    <color id="11" r="255" g="255" b="0"/>
+    <color id="12" r="0" g="128" b="255"/>
+    <color id="13" r="255" g="0" b="255"/>
+    <color id="14" r="0" g="255" b="255"/>
+    <color id="15" r="255" g="255" b="255"/>
+  </colors>
+  <font italic="0" bold="400" height="10" name="Fixedsys"/>
+  <actions>
+    <action key="^Enter Charset:$" value="1" group="default"/>
+  </actions>
+  <aliases/>
+  <hotkeys>
+    <hotkey key="NUM8" value="с" group="default"/>
+    <hotkey key="NUM2" value="ю" group="default"/>
+    <hotkey key="NUM4" value="з" group="default"/>
+    <hotkey key="NUM6" value="в" group="default"/>
+    <hotkey key="NUM7" value="вв" group="default"/>
+    <hotkey key="NUM1" value="вн" group="default"/>
+    <hotkey key="NUM0" value="см" group="default"/>
+    <hotkey key="F12" value="#connect sowmud.ru 4000" group="default"/>
+    <hotkey key="NUMDEL" value="сч" group="default"/>
+    <hotkey key="NUM5" value="огл" group="default"/>
+  </hotkeys>
+  <subs/>
+  <asubs/>
+  <gags/>
+  <highlights>
+    <highlight key="[tortilla] %%" value="txt[0,128,192],bkg[0,0,0],ubi[0,0,0]" group="default"/>
+  </highlights>
+  <timers/>
+  <groups>
+    <group key="default" value="1"/>
+    <group key="off" value="0"/>
+  </groups>
+  <tabwords/>
+  <variables/>
+  <plugins>
+    <plugin key="jmc3import.dll" value="1"/>
+    <plugin key="historyfilter.lua" value="1"/>
+    <plugin key="autowrap.lua" value="1"/>
+    <plugin key="statusbar.lua" value="1"/>
+    <plugin key="reconnect.lua" value="0"/>
+    <plugin key="colorgamecmd.lua" value="1"/>
+    <plugin key="clickpad.dll" value="1"/>
+    <plugin key="tray.dll" value="1"/>
+    <plugin key="sound.dll" value="1"/>
+    <plugin key="bell.lua" value="1"/>
+    <plugin key="send.lua" value="1"/>
+    <plugin key="voice.lua" value="0"/>
+    <plugin key="prompt.dll" value="0"/>
+  </plugins>
+  <messages>
+    <actions value="0"/>
+    <aliases value="0"/>
+    <subs value="0"/>
+    <antisubs value="0"/>
+    <hotkeys value="0"/>
+    <highlights value="0"/>
+    <gags value="0"/>
+    <groups value="0"/>
+    <vars value="0"/>
+    <timers value="0"/>
+    <tabwords value="0"/>
+  </messages>
+</profile>

@@ -171,12 +171,16 @@ void tstring_trimsymbols(tstring *str, const tstring& symbols)
 
 void tstring_toupper(tstring *str)
 {
-    std::transform(str->begin(), str->end(), str->begin(), ::toupper);
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::toupper), &ct));
 }
 
 void tstring_tolower(tstring *str)
 {
-    std::transform(str->begin(), str->end(), str->begin(), ::tolower);
+    std::locale loc("");
+    const std::ctype<wchar_t>& ct = std::use_facet<std::ctype<wchar_t> >(loc);
+    std::transform(str->begin(), str->end(), str->begin(), std::bind1st(std::mem_fun(&std::ctype<wchar_t>::tolower), &ct));
 }
 
 void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
@@ -197,7 +201,7 @@ bool tstring_cmpl(const tstring& str, const WCHAR* lstr)
 int utf8_getbinlen(const utf8* str, int symbol)
 {
     int p = 0;
-    while (str && symbol > 0)
+    while (str && *str && symbol > 0)
     {
         const unsigned char &c = str[p];
         if (c < 0x80) { symbol--; p++; }
@@ -206,8 +210,7 @@ int utf8_getbinlen(const utf8* str, int symbol)
         {
             int sym_len = 2;
             if ((c & 0xf0) == 0xe0) sym_len = 3;
-            else if ((c & 0xf8) == 0xf0) sym_len = 4;
-            else if (c >= 0xf8) break;         // error
+            else if ((c & 0xf8) == 0xf0) sym_len = 4;            
             p += sym_len;
             symbol--;
         }
@@ -247,18 +250,37 @@ int u8string_len(const u8string& str)
 
 void u8string_substr(u8string *str, int from, int len)
 {
-    from = utf8_getbinlen(str->c_str(), from);
-    len = utf8_getbinlen(str->c_str(), from + len);
-    u8string res(str->substr(from, len));
+    if (from < 0 || len <= 0) {
+        str->clear(); return;
+    }
+    int begin = utf8_getbinlen(str->c_str(), from);    
+    int afterlen = utf8_getbinlen(str->c_str(), from + len);
+    if (begin == -1 || afterlen == -1) {
+        str->clear();  return; 
+    }
+    u8string res(str->substr(begin, afterlen-begin));
     str->swap(res);
 }
 
 bool checkKeysState(bool shift, bool ctrl, bool alt)
 {
-    bool ctrl_key = (GetKeyState(VK_CONTROL) < 0) ? true : false;
-    bool alt_key = (GetKeyState(VK_MENU) < 0) ? true : false;
-    bool shift_key = (GetKeyState(VK_SHIFT) < 0) ? true : false;
-    return (ctrl == ctrl_key && alt_key == alt && shift_key == shift) ? true : false;
+    if ((GetKeyState(VK_SHIFT) < 0) != shift) return false;
+    if ((GetKeyState(VK_CONTROL) < 0) != ctrl) return false;
+    if ((GetKeyState(VK_MENU) < 0) != alt) return false;
+    return true;
+}
+
+void MD5::update(const tstring& str)
+{
+    TW2U s(str.c_str());
+    crc.update(s);
+}
+
+tstring MD5::getCRC()
+{
+    std::string crc(crc.digest().hex_str_value());
+    TU2W c(crc.c_str());
+    return tstring(c);
 }
 
 Separator::Separator(const tstring& str)
@@ -432,3 +454,148 @@ bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring*
 
     return (len == 0) ? true : false;
 }
+
+
+typedef std::map<HWND, UINT> THWNDCollection;
+HHOOK m_hHook = NULL;
+THWNDCollection m_aWindows;
+
+BOOL CALLBACK MyEnumProc(HWND hwnd, LPARAM lParam)
+{
+    TCHAR buf[16];
+    GetClassName(hwnd, buf, sizeof(buf) / sizeof(TCHAR));
+    if (_tcsncmp(buf, _T("#32768"), 6) == 0) { // special classname for menus
+        *((HWND*)lParam) = hwnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+// Hook procedure for WH_GETMESSAGE hook type.
+// This function is more or less a combination of MSDN KB articles
+// Q187988 and Q216503. See MSDN for additional details
+LRESULT CALLBACK GetMessageProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+    // If this is a keystrokes message, pass it to IsDialogMessage for tab
+    // and accelerator processing
+    LPMSG lpMsg = (LPMSG)lParam;
+
+    // If this is a keystrokes message, pass it to IsDialogMessage for tab
+    // and accelerator processing
+    if ((nCode >= 0) && PM_REMOVE == wParam &&
+        (lpMsg->message >= WM_KEYFIRST && lpMsg->message <= WM_KEYLAST))
+    {
+         // check if there is a menu active
+        HWND hMenuWnd = NULL;
+        EnumWindows(MyEnumProc, (LPARAM)&hMenuWnd);
+        if (hMenuWnd == NULL) {
+        HWND hWnd = NULL; HWND hActiveWindow = GetActiveWindow();
+        THWNDCollection::iterator it = m_aWindows.begin();
+        // check each window we manage to see if the message is meant for them
+        while (it != m_aWindows.end())
+        {
+            hWnd = it->first;
+            if (::IsWindow(hWnd) && ::IsDialogMessage(hWnd, lpMsg))
+            {
+                if (it->second)
+                {
+                    LRESULT result = SendMessage(hWnd, it->second, 0, lParam);
+                    if (result) {  break; //processed
+                    }
+                }
+
+                // The value returned from this hookproc is ignored, and it cannot
+                // be used to tell Windows the message has been handled. To avoid
+                // further processing, convert the message to WM_NULL before
+                // returning.
+                lpMsg->hwnd = NULL;
+                lpMsg->message = WM_NULL;
+                lpMsg->lParam = 0L;
+                lpMsg->wParam = 0;
+                break;
+            }
+            it++;
+        }}
+    }
+
+    // Passes the hook information to the next hook procedure in
+    // the current hook chain.
+    return ::CallNextHookEx(m_hHook, nCode, wParam, lParam);
+}
+
+void createWindowHook(HWND hWnd, UINT test_msg)
+{
+    // make sure the hook is installed
+    if (m_hHook == NULL)
+    {
+        m_hHook = ::SetWindowsHookEx(WH_GETMESSAGE, GetMessageProc, NULL, GetCurrentThreadId());
+        // is the hook set?
+        if (m_hHook == NULL)
+            return;
+    }
+    // add the window to our list of managed windows
+    m_aWindows[hWnd] = test_msg;
+}
+
+void deleteWindowHook(HWND hWnd)
+{
+    m_aWindows.erase(hWnd);
+    if (m_aWindows.empty() && m_hHook)
+    {
+        ::UnhookWindowsHookEx(m_hHook);
+        m_hHook = NULL;
+    }
+}
+
+#ifdef _DEBUG
+void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label)
+{
+    if (maxlen > len) maxlen = len;
+    std::string l("["); l.append(label);
+    char tmp[32]; sprintf(tmp, " len=%d,show=%d]:\r\n", len, maxlen); l.append(tmp);
+    OutputDebugStringA(l.c_str());
+    const unsigned char *bytes = (const unsigned char *)data;
+    len = maxlen;
+    const int show_len = 32;
+    unsigned char *buffer = new unsigned char[show_len];
+    std::string hex;
+    hex.reserve(160);
+    while (len > 0)
+    {
+        int toshow = show_len;
+        if (toshow > len) toshow = len;
+        for (int i = 0; i < toshow; ++i)
+        {
+            sprintf(tmp, "%.2x ", bytes[i]);
+            hex.append(tmp);
+        }
+        int empty = show_len - toshow;
+        if (empty > 0)
+        {
+            std::string spaces(empty*3, L' ');
+            hex.append(spaces);
+        }
+
+        memcpy(buffer, bytes, toshow);
+        for (int i=0; i<toshow; ++i) {
+            if (buffer[i] < 32) buffer[i] = '.';
+        }
+        hex.append((const char*)buffer, toshow);
+        OutputDebugStringA(hex.c_str());
+        OutputDebugStringA("\r\n");
+        hex.clear();
+        bytes += toshow;
+        len -= toshow;
+    }
+    delete []buffer;
+}
+
+void OutputTelnetOption(const void *data, const char* label)
+{
+    OutputDebugStringA(label);
+    char tmp[32];
+    unsigned char byte = *(const char*)data;
+    sprintf(tmp, ": %d (%.2x)\r\n", byte, byte);
+    OutputDebugStringA(tmp);
+}
+#endif

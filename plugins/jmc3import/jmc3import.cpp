@@ -15,7 +15,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.08");
+    luaT_pushwstring(L, L"1.09");
     return 1;
 }
 
@@ -70,6 +70,5 @@ static const luaL_Reg jmc3_methods[] =
 int WINAPI plugin_open(lua_State *L)
 {
     luaL_newlib(L, jmc3_methods);
-    lua_setglobal(L, "jmc3import");
-    return 0;
+    return 1;
 }

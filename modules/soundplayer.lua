@@ -196,7 +196,7 @@ function soundplayer.stopRecord()
 end
 
 local function unload()
-  soundplayer.stopall()
+  soundplayer.stopAll()
 end
 
 regUnloadFunction(unload)

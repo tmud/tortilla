@@ -192,7 +192,11 @@ ClickpadImage* ImageCollection::load(const std::wstring& params)
     int x = 0; int y = 0;
     if (!s2i(ax, &x) || !s2i(ay, &y))
         return NULL;
+    return load(path, x, y);
+}
 
+ClickpadImage* ImageCollection::load(const std::wstring& path, int x, int y)
+{
     int index = -1;
     for (int i=0,e=m_files.size();i<e;++i)
     {

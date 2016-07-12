@@ -4,6 +4,14 @@
 #include "traySettings.h"
 #include "sharingController.h"
 
+struct message {
+    message() : textcolor(0), bkgndcolor(0), usecolors(false) {}
+    std::wstring text;
+    COLORREF textcolor;
+    COLORREF bkgndcolor;
+    bool usecolors;
+};
+
 class TrayMainObject : public CWindowImpl < TrayMainObject >
 {
 public:
@@ -13,7 +21,7 @@ public:
     bool create();
     void setFont(HFONT font);
     void setAlarmWnd(HWND wnd);
-    bool showMessage(const std::wstring& msg, bool from_queue);
+    bool showMessage(const message& msg, bool from_queue);
     void setActivated(bool activated);
     TraySettings& traySettings();
 
@@ -80,6 +88,7 @@ private:
     bool m_timerStarted;
     HWND m_alarmWnd;
     POINT m_point0;
-    std::deque<std::wstring> m_queue;
+private:
+    std::deque<message> m_queue;
     SharingController m_shared;
 };

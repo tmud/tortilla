@@ -71,7 +71,7 @@ private:
 class PopupWindow : public CWindowImpl<PopupWindow>
 {
     CFont *m_font;
-    std::wstring m_text;
+    std::vector<std::wstring> m_text;
     CSize m_dc_size;
     TempDC m_src_dc;
 
@@ -101,18 +101,65 @@ public:
     {
         m_font = font;
         Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE);
-        return (IsWindow()) ? true : false;    
+        return (IsWindow()) ? true : false;
     }
 
     void setText(const std::wstring& text)
     {
-        m_text.assign( text );
+        m_text.resize(1);
+        m_text[0].assign(text);
         calcDCSize();
+        int dx = m_dc_size.cx;
+        int wx = GetSystemMetrics(SM_CXSCREEN);
+        int p = (dx * 100) / wx;
+        if (p > 40)
+        {
+            int count = (p / 40) + 1;
+            size_t perline = text.size() / count;
+            m_text.resize(count);
+
+            std::vector<std::wstring> parts;
+            const wchar_t *p = text.c_str();
+            const wchar_t *e = p + wcslen(p);
+            while (p < e)
+            {
+                size_t len = wcscspn(p, L" ");
+                parts.push_back(std::wstring(p, len));
+                p = p + len;
+                len = wcsspn(p, L" ");
+                p = p + len;
+                for (;len > 0;--len)
+                    parts.push_back(L" ");
+            }
+
+            int k = 0;
+            for (int i=0; i<count-1; ++i) 
+            {
+                std::wstring str;
+                while (str.length() < perline)
+                {
+                    str.append(parts[k++]);
+                }
+                trimleft(&str);
+                m_text[i] = str;
+            }
+            std::wstring str;
+            for (size_t i=k; i < parts.size(); ++i)
+                str.append(parts[i]);
+            trimleft(&str);
+            if (str.empty())
+                m_text.pop_back();
+            else {
+                int last = count-1;
+                m_text[last] = str;
+            }
+            calcDCSize();
+        }
     }
     const SIZE& getSize() const
     {
         CSize sz(m_dc_size);
-        sz += CSize(18,14);
+        sz += CSize(16,12);
         return sz;
     }
 
@@ -132,6 +179,13 @@ private:
     void setAlpha(float a);
     void onClickButton();
     void sendNotify(int state);
+
+    void trimleft(std::wstring* s)
+    {
+        size_t pos = wcsspn(s->c_str(), L" ");
+        if (pos != 0)
+             s->assign(s->substr(pos));
+    }
 private:
     BEGIN_MSG_MAP(PopupWindow)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)

@@ -151,10 +151,12 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\AboutDlg.h" />
     <ClInclude Include="src\accessors.h" />
     <ClInclude Include="src\common\criticalSection.h" />
+    <ClInclude Include="src\common\md5.h" />
     <ClInclude Include="src\common\replaceColor.h" />
     <ClInclude Include="src\common\tokenizer.h" />
     <ClInclude Include="src\common\toolbarEx.h" />
     <ClInclude Include="src\compareObject.h" />
+    <ClInclude Include="src\findDlg.h" />
     <ClInclude Include="src\helpManager.h" />
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />
@@ -180,10 +182,12 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\plugins\pluginsView.h" />
     <ClInclude Include="src\plugins\pluginsParseData.h" />
     <ClInclude Include="src\plugins\pluginsViewRender.h" />
+    <ClInclude Include="src\plugins\pluginsViewString.h" />
     <ClInclude Include="src\profiles\profileDlgs.h" />
     <ClInclude Include="src\profiles\profileHelpers.h" />
     <ClInclude Include="src\profiles\profilesPath.h" />
     <ClInclude Include="src\propertiesPages\propertiesData.h" />
+    <ClInclude Include="src\propertiesPages\propertiesDisplay.h" />
     <ClInclude Include="src\propertiesPages\propertiesDlg.h" />
     <ClInclude Include="src\propertiesPages\propertiesElements.h" />
     <ClInclude Include="src\propertiesPages\propertiesManager.h" />
@@ -225,6 +229,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
     <ClCompile Include="src\AboutDlg.cpp" />
     <ClCompile Include="src\accessors.cpp" />
+    <ClCompile Include="src\common\md5.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
     <ClCompile Include="src\helpManager.cpp" />
@@ -249,8 +254,10 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\pluginSupport.cpp" />
     <ClCompile Include="src\plugins\pluginsView.cpp" />
     <ClCompile Include="src\plugins\pluginsViewRender.cpp" />
+    <ClCompile Include="src\plugins\pluginsViewString.cpp" />
     <ClCompile Include="src\profiles\profileHelpers.cpp" />
     <ClCompile Include="src\profiles\profilesPath.cpp" />
+    <ClCompile Include="src\propertiesPages\propertiesDisplay.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesManager.cpp" />
     <ClCompile Include="src\mudclient.cpp" />

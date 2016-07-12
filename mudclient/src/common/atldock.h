@@ -75,7 +75,7 @@ inline bool IsFloating(short Side) { return Side == DOCK_FLOAT; };
 #define DEFAULT_DOCKING_ZONE 32
 
 // Minimum size of docking pane
-#define MIN_DOCKPANE_SIZE 120
+#define MIN_DOCKPANE_SIZE 40
 
 // Default size of floating window rectangle
 #define DEFAULT_FLOAT_WIDTH 360
@@ -1037,12 +1037,18 @@ public:
          ::GetWindowRect(GetParent(),& m_rcTrackerBounds);
          RECT rcLimit = { 0 };
          ::SendMessage(GetParent(), WM_DOCK_QUERYRECT, DOCK_INFO_CHILD, (LPARAM)&rcLimit);
-         switch( m_Side ) {
-         case DOCK_LEFT:   m_rcTrackerBounds.right = rcLimit.right; break;
-         case DOCK_RIGHT:  m_rcTrackerBounds.left = rcLimit.left; break;
-         case DOCK_TOP:    m_rcTrackerBounds.bottom = rcLimit.bottom; break;
-         case DOCK_BOTTOM: m_rcTrackerBounds.top = rcLimit.top; break;
+         if (IsDockedVertically(m_Side))
+         {
+             m_rcTrackerBounds.right = rcLimit.right;
+             m_rcTrackerBounds.left = rcLimit.left;
          }
+         if (IsDockedHorizontally(m_Side))
+         {
+             m_rcTrackerBounds.bottom = rcLimit.bottom;
+             m_rcTrackerBounds.top = rcLimit.top;
+         }
+
+
          // The actual dragging area is slightly smaller than the client area
          ::InflateRect(&m_rcTrackerBounds, -MIN_DOCKPANE_SIZE, -MIN_DOCKPANE_SIZE);
          // Enter tracking loop
@@ -1728,7 +1734,10 @@ public:
          ::GetWindowRect(m_panes[wParam], prc);
          break;
       case DOCK_INFO_CHILD:
-         ::GetWindowRect(m_hwndClient, prc);
+          ::GetWindowRect(m_hWnd, prc);
+         m_panels.recalcIntPos(*prc);
+         if (isUsedStatusBar())
+             prc->bottom -= m_barHeight;
          break;
       default:
          ATLASSERT(false);

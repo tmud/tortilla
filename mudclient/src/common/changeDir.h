@@ -15,8 +15,7 @@ public:
     }
     ~ChangeDir()
     {
-        if (m_dirChanged)
-            SetCurrentDirectory(m_currentDir.c_str());
+        restoreDir();
     } 
 
     bool changeDir(const std::wstring& dir)
@@ -25,6 +24,13 @@ public:
         if (result)
             m_dirChanged = true;
         return (result) ? true : false;
+    }
+
+    void restoreDir()
+    {
+        if (m_dirChanged)
+            SetCurrentDirectory(m_currentDir.c_str());
+        m_dirChanged = false;
     }
 
     const std::wstring& getCurrentDir() const

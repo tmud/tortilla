@@ -5,11 +5,12 @@
 
 LogicHelper::LogicHelper()
 {
-     m_if_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ =~!<>]+) *(=|!=|<|>|<=|>=) *('.*'|\".*\"|{.*}|[^ =~!<>]+)$", true);
-     m_math_regexp.setRegExp(L"^('.*'|\".*\"|{.*}|[^ */+-]+) *([*/+-]) *('.*'|\".*\"|{.*}|[^ */+-]+)$", true);
+     m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<>|<|>|<=|>=) *([^ =~!<>]*)$", true);     
+     m_math_regexp.setRegExp(L"^([^+-/*]*) *([+-/*]) *([^+-/*]*)$", true);
+     m_params_regexp.setRegExp(L"['{\"]?(.*['}\"]?[^'}\"])", true);
 }
 
-bool LogicHelper::processAliases(const InputCommand* cmd, InputCommands* newcmds)
+bool LogicHelper::processAliases(const InputCommand cmd, InputCommands* newcmds)
 {
     for (int i=0,e=m_aliases.size(); i<e; ++i)
     {
@@ -46,17 +47,6 @@ bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipeline
            if (s->dropped) break;
         }
 
-        if (processed)
-        {
-            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-            parseData &not_processed = pe->data;
-            not_processed.last_finished = parse_data->last_finished;
-            parse_data->last_finished = true;
-            not_processed.update_prev_string = false;
-            int from = j+1;
-            not_processed.strings.assign(parse_data->strings.begin() + from, parse_data->strings.end());
-            parse_data->strings.resize(from);
-        }
         return processed;
     }
 }
@@ -159,27 +149,48 @@ LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
      m_if_regexp.getString(3, &p2);  //2nd parameter
      m_if_regexp.getString(2, &cond);//condition
 
+     // check brackets in parameters - get params without brackets
+     if (!p1.empty()) {
+     m_params_regexp.find(p1);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::IF_ERROR;
+     m_params_regexp.getString(1, &p1);
+     tstring_trim(&p1);
+     }
+
+     if (!p2.empty()) {
+     m_params_regexp.find(p2);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::IF_ERROR;
+     m_params_regexp.getString(1, &p2);
+     tstring_trim(&p1);
+     }
+
      if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
          if (isInt(p1) && isInt(p2))
          {
              int n1 = _wtoi(p1.c_str());
              int n2 = _wtoi(p2.c_str());
-             if (n1 == n2 && (cond == L"=" || cond == L"<=" || cond == L">="))
+             if (n1 == n2 && (cond == L"=" || cond == L"==" || cond == L"<=" || cond == L">="))
                  return LogicHelper::IF_SUCCESS;
-             if (n1 < n2 && (cond == L"<" || cond == L"<=" || cond == L"!="))
+             if (n1 < n2 && (cond == L"<" || cond == L"<="))
                  return LogicHelper::IF_SUCCESS;
-             if (n1 > n2 && (cond == L">" || cond == L">=" || cond == L"!="))
+             if (n1 > n2 && (cond == L">" || cond == L">="))
+                 return LogicHelper::IF_SUCCESS;
+             if (n1 != n2 && (cond == L"!=" || cond == L"~=" || cond == L"<>"))
                  return LogicHelper::IF_SUCCESS;
           }
           else
           {
              int result = wcscmp(p1.c_str(), p2.c_str());
-             if (result == 0 && (cond == L"=" || cond == L"<=" || cond == L">="))
+             if (result == 0 && (cond == L"=" || cond == L"==" || cond == L"<=" || cond == L">="))
                  return LogicHelper::IF_SUCCESS;
-             if (result < 0 && (cond == L"<" || cond == L"<=" || cond == L"!="))
+             if (result < 0 && (cond == L"<" || cond == L"<="))
                  return LogicHelper::IF_SUCCESS;
-             if (result > 0 && (cond == L">" || cond == L">=" || cond == L"!="))
+             if (result > 0 && (cond == L">" || cond == L">="))
+                 return LogicHelper::IF_SUCCESS;
+             if (result != 0 && (cond == L"!=" || cond == L"~=" || cond == L"<>"))
                  return LogicHelper::IF_SUCCESS;
            }
      }
@@ -196,6 +207,23 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      m_math_regexp.getString(1, &p1);  //1st parameter
      m_math_regexp.getString(3, &p2);  //2nd parameter
      m_math_regexp.getString(2, &op);  //operator
+
+      // check brackets in parameters - get params without brackets
+     if (!p1.empty()) {
+     m_params_regexp.find(p1);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::MATH_ERROR;
+     m_params_regexp.getString(1, &p1);
+     tstring_trim(&p1);
+     }
+
+     if (!p2.empty()) {
+     m_params_regexp.find(p2);
+     if (m_params_regexp.getSize() != 2) 
+         return LogicHelper::MATH_ERROR;
+     m_params_regexp.getString(1, &p2);
+     tstring_trim(&p2);
+     }
 
      if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {

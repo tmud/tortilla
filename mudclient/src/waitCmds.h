@@ -38,4 +38,8 @@ public:
         if (count_to_del > 0)
             m_commands.erase(m_commands.begin(), m_commands.begin()+count_to_del);
     }
+    void clear()
+    {
+        m_commands.clear();
+    }
 };

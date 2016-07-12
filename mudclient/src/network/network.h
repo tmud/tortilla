@@ -1,16 +1,7 @@
 #pragma once
 
 #include "zlib.h"
-
-#ifdef _DEBUG
-#define OUTPUT_BYTES(data, len, maxlen, label) OutputBytesBuffer(data, len, maxlen, label);
-#define OUTPUT_OPTION(data, label) OutputTelnetOption(data, label);
-void OutputBytesBuffer(const void *data, int len, int maxlen, const char* label);
-void OutputTelnetOption(const void *data, const char* label);
-#else
-#define OUTPUT_BYTES(data, len, maxlen, label)
-#define OUTPUT_OPTION(data, label)
-#endif
+#include "../common/tempThread.h"
 
 #define IAC             255 // ff - in hex
 #define DONT            254 // fe
@@ -44,10 +35,12 @@ void OutputTelnetOption(const void *data, const char* label);
 #define TELOPT_NAWS      31 // 1f
 #define TELOPT_CHARSET   42 // 2a
 
-enum NetworkEvents
+enum NetworkEvent
 {
     NE_NOEVENT = 0,
     NE_NEWDATA,
+    NE_ALREADY_CONNECTED,
+    NE_CONNECTING,
     NE_CONNECT,
     NE_DISCONNECT,
     NE_ERROR_CONNECT,
@@ -63,6 +56,29 @@ struct NetworkConnectData
     UINT notifyMsg;
 };
 
+class NetworkConnection : private TempThread<false>
+{
+public:
+    NetworkConnection(int receive_buffer);
+    ~NetworkConnection();
+    void connect(const NetworkConnectData& cdata);
+    bool connected();
+    void disconnect();
+    void send(const tbyte* data, int len);
+    int  receive(MemoryBuffer *data);
+private:
+    void threadProc();
+    void sendEvent(NetworkEvent e);
+    NetworkConnectData m_connection;
+    CriticalSection m_cs_connect;
+    CriticalSection m_cs_send;
+    CriticalSection m_cs_receive;
+    DataQueue m_send_data;
+    DataQueue m_receive_data;
+    MemoryBuffer m_recive_buffer;
+    bool m_connected;
+};
+
 struct MccpStatus
 {
     MccpStatus() : network_data_len(0), game_data_len(0), status(0) {}
@@ -76,43 +92,40 @@ class Network
 public:
     Network();
     ~Network();
-    bool connect(const NetworkConnectData& data);
-    NetworkEvents processMsg(DWORD msg_lparam);
-    DataQueue* receive();
-    DataQueue* receive_msdp();
-    bool send(const tbyte* data, int len);
-    bool sendplain(const tbyte* data, int len); // send data directly
+    NetworkEvent translateEvent(LPARAM event);
+    void connect(const NetworkConnectData& data);
     void disconnect();
-    void getMccpRatio(MccpStatus* data);
+    void send(const tbyte* data, int len);      // send with iacs processing
+    void sendplain(const tbyte* data, int len); // send data directly
+    DataQueue& received();
+    DataQueue& receivedMsdp();
+    void getMccpStatus(MccpStatus* data);
     void setSendDoubleIACmode(bool on);
     void setUtf8Encoding(bool flag);
-
 private:
-    bool send_ex(const tbyte* data, int len);
-    int read_socket();
-    int write_socket();
-    void close();
-    int processing_data(const tbyte* buffer, int len, bool *error);
+    int  read_data();
+    int  processing_data(const tbyte* buffer, int len, bool *error);
     void init_mccp();
     bool process_mccp();
     void close_mccp();
     void init_mtts();
-    bool process_mtts();
+    void process_mtts();
     void close_mtts();
     void init_msdp();
     void process_msdp(const tbyte* buffer, int len);
     void close_msdp();
 
+    NetworkConnection m_connection;
+
     MemoryBuffer m_input_buffer;            // to receive data from network    
     DataQueue m_mccp_data;                  // accamulated MCCP data from network
-    MemoryBuffer m_mccp_buffer;             // to decompress data   
+    MemoryBuffer m_mccp_buffer;             // to decompress MCCP data   
     DataQueue m_input_data;                 // accamulated data from network
-    DataQueue m_receive_data;               // ready to receive by app
-    DataQueue m_output_buffer;              // buffer to compile output data
-    DataQueue m_send_data;                  // data for send to server
+    DataQueue m_receive_data;               // ready to get by app
+
+    DataQueue m_output_buffer;              // buffer to accumulate output data
     DataQueue m_msdp_data;                  // data of msdp protocol
 
-    SOCKET sock;
     z_stream *m_pMccpStream;
     bool m_mccp_on;
 
@@ -122,6 +135,5 @@ private:
     bool m_utf8_encoding;
 
     int  m_mtts_step;
-
     bool m_msdp_on;
 };

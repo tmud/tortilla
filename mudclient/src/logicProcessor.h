@@ -6,14 +6,14 @@
 #include "logsProcessor.h"
 #include "network/network.h"
 #include "waitCmds.h"
+#include "plugins/pluginsViewString.h"
 
-struct InputCommand;
 class LogicProcessorHost
 {
 public:
     virtual void connectToNetwork(const tstring& address, int port) = 0;
     virtual void disconnectFromNetwork() = 0;
-    virtual void sendToNetwork(const tstring& data) = 0;    
+    virtual void sendToNetwork(const tstring& data) = 0;
     virtual MudViewString* getLastString(int view) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
@@ -24,7 +24,7 @@ public:
     virtual void setWindowName(int view, const tstring& name) = 0;
     virtual void getMccpStatus(MccpStatus *status) = 0;
     virtual HWND getMainWindow() = 0;
-    virtual void preprocessCommand(InputCommand* cmd) = 0;
+    virtual void preprocessCommand(InputCommand cmd) = 0;
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
     virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
@@ -44,6 +44,8 @@ public:
     virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
     virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
+    virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
+    virtual void windowClear(int window) = 0;
 };
 
 class parser;
@@ -69,15 +71,17 @@ class LogicProcessor : public LogicProcessorMethods
         int flags;
     };
     std::vector<stack_el> m_incoming_stack;
-    enum PromptMode { OFF = 0, USER, UNIVERSAL };
+    enum PromptMode { OFF = 0, USER, UNIVERSAL, IACGA };
     PromptMode m_prompt_mode;
     int  m_prompt_counter;
     Pcre16 m_univ_prompt_pcre;
     std::vector<tstring> m_plugins_log_cache;
+    std::vector<tstring> m_plugins_log_toblocked;
     bool m_plugins_log_tocache;
     bool m_plugins_log_blocked;
     WaitCommands m_waitcmds;
     LogicPipeline m_pipeline;
+    InputCommands m_commands_queue;
 
 public:
     LogicProcessor(LogicProcessorHost *host);
@@ -103,18 +107,22 @@ public:
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
+    void windowClear(int window);
     void windowOutput(int window, const std::vector<tstring>& msgs);
+    void pluginsOutput(int window, const MudViewStringBlocks& v);
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
+    void makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds);
     void runCommands(InputCommands& cmds);
     bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
-    void processSystemCommand(InputCommand* cmd);
-    void processGameCommand(InputCommand* cmd);
+    void recognizeSystemCommand(tstring* cmd, tstring* error);
+    void processSystemCommand(InputCommand cmd);
+    void processGameCommand(InputCommand cmd);
     enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
            SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24,
-           GAME_LOG = 32, GAME_CMD = 64, FROM_STACK = 128, FROM_TIMER = 256 };
+           GAME_LOG = 32, GAME_CMD = 64, FROM_STACK = 128, FROM_TIMER = 256, NEW_LINE = 512 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
@@ -159,7 +167,7 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
-    void printex(int view, const std::vector<tstring>& params);
+    void printex(int view, const std::vector<tstring>& params, bool enable_actions);
     DEF(wprint);
     DEF(print);
     DEF(message);
@@ -181,4 +189,5 @@ public: // system commands
     DEF(var);
     DEF(unvar);
     DEF(wait);
+    DEF(plugin);
 };

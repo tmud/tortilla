@@ -1,17 +1,18 @@
 ﻿-- update
 -- Плагин Tortilla mud client
 
-tupdate = {}
+local tupdate = {}
 function tupdate.name() 
-    return 'Тестовый плагин метода update для плагинов'
+  -- плагин отключен в клиенте
+  -- return 'Тестовый плагин метода update для плагинов'
 end
 
 function tupdate.description()
-    return 'Плагин используется для тестирования механизма оповещений.'
+  return 'Плагин используется для тестирования механизма оповещений.'
 end
 
 function tupdate.version()
-    return ' '
+  return '-'
 end
 
 function tupdate.update(what)
@@ -29,3 +30,5 @@ end
 function tupdate.upddel(what, name)
     log("УДАЛЕНО "..what..": "..name)
 end
+
+return tupdate

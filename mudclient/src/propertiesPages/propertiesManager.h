@@ -11,14 +11,13 @@ public:
     bool loadProfile();
     bool saveProfile();
     PropertiesData* getConfig() { return &m_propData; }
-    const tstring& getProfileGroup() const { return m_configName; }
-    const tstring& getProfileName() const { return m_profileName; }
+    const tstring& getProfileGroup() const { return m_profile.group; }
+    const tstring& getProfileName() const { return m_profile.name; }
+    const Profile& getProfile() const { return m_profile; }
     bool isFirstStartup() const { return m_first_startup; }
-    bool createNewProfile(const tstring& name);
-    bool createCopyProfile(const tstring& from, const tstring& name);
-    bool loadNewProfile(const tstring& group, const tstring& name);
-    bool createNewProfile(const tstring& group, const tstring& name);
-    bool renameProfile(const tstring& group, const tstring& name);
+    bool createEmptyProfile(const Profile& profile);
+    bool copyProfile(const Profile& src, const Profile& dst);
+    bool loadProfile(const Profile& profile);
 
 private:
     bool loadSettings();
@@ -47,8 +46,7 @@ private:
     bool saveMapperData();
 
 private:
-    tstring m_configName;
-    tstring m_profileName;
+    Profile m_profile;
     PropertiesData m_propData;
     bool m_first_startup;
 };

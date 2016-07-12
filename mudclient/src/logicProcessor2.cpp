@@ -14,7 +14,7 @@
 class parser
 {
 public:
-    parser(InputCommand *pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
+    parser(InputCommand pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
     int size() const { return cmd->parameters_list.size(); }
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
@@ -24,12 +24,12 @@ public:
     bool isNumber(int index) const { const tstring& p = cmd->parameters_list[index]; return isItNumber(p); }
     double toNumber(int index) const { const tstring& p = cmd->parameters_list[index]; double v = 0; w2double(p, &v); return v; }
     void invalidargs() { error(L"Некорректный набор параметров."); }
-    void invalidoperation() { error(L"Некорректная операция."); }
+    void invalidoperation() { error(L"Невозможно вычислить."); }
     void invalidvars() { error(L"Используются неизвестные переменные."); }
     void blockedbyprops() { error(L"Команда не выполнена (открыто окно настроек)."); }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
-    InputCommand *cmd;
+    InputCommand cmd;
     tstring *perror;
 };
 //-------------------------------------------------------------------
@@ -38,57 +38,62 @@ ParamsBuffer pb;
 LogicProcessor* g_lprocessor = NULL;
 #define IMPL(fn) void fn(parser *p) { g_lprocessor->impl_##fn(p); } void LogicProcessor::impl_##fn(parser* p)
 //------------------------------------------------------------------
-void LogicProcessor::processSystemCommand(InputCommand* cmd)
+void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
 {
-    tstring main_cmd(cmd->srccmd.substr(1)); // not cmd->command! -> block #__xxx commands ( _ - space)
+   tstring& main_cmd(*cmd);
+   typedef std::map<tstring, syscmd_fun>::iterator iterator;
+   typedef std::vector<tstring>::iterator piterator;
+   iterator it = m_syscmds.find(main_cmd);
+   iterator it_end = m_syscmds.end();
+   if (it == it_end)
+   {
+       // команда в системных не найдена - ищем в плагинах
+       piterator p_end = m_plugins_cmds.end();
+       piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+       if (p != p_end)
+           main_cmd.assign(*p);
+       else
+       {
+           //пробуем подобрать по сокращенному имени
+           int len = main_cmd.size();
+           if (len < 3)
+               error->append(L"Неизвестная команда");
+           else
+           {
+               std::vector<tstring> cmds;
+               for (it = m_syscmds.begin(); it != it_end; ++it)
+               {
+                   if (!it->first.compare(0, len, main_cmd))
+                       cmds.push_back(it->first);
+               }
+               for (p = m_plugins_cmds.begin(); p != p_end; ++p)
+               {
+                   if (!p->compare(0, len, main_cmd))
+                       cmds.push_back(*p);
+               }
+               int count = cmds.size();
+               if (count == 1)
+                   main_cmd.assign(cmds[0]);
+               else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
+               {
+                   error->append(L"Уточните команду (варианты): ");
+                   for (int i = 0; i < count; ++i) { if (i != 0) error->append(L", "); error->append(cmds[i]); }
+               }
+           }
+       }
+   }
+}
 
-    tstring error;
-    typedef std::map<tstring, syscmd_fun>::iterator iterator;
-    typedef std::vector<tstring>::iterator piterator;
-    iterator it = m_syscmds.find(main_cmd);
-    iterator it_end = m_syscmds.end();
-    if (it == it_end)
-    {
-        // команда в системных не найдена - ищем в плагинах
-        piterator p_end = m_plugins_cmds.end();
-        piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
-        if (p != p_end)
-            main_cmd.assign(*p);
-        else
-        {
-            //пробуем подобрать по сокращенному имени
-            int len = main_cmd.size();
-            if (len < 3)
-                error.append(L"Неизвестная команда");
-            else
-            {
-                std::vector<tstring> cmds;
-                for (it = m_syscmds.begin(); it != it_end; ++it)
-                {
-                    if (!it->first.compare(0, len, main_cmd))
-                        cmds.push_back(it->first);
-                }
-                for (p = m_plugins_cmds.begin(); p != p_end; ++p)
-                {
-                    if (!p->compare(0, len, main_cmd))
-                        cmds.push_back(*p);
-                }
-                int count = cmds.size();
-                if (count == 1)
-                    main_cmd.assign(cmds[0]);
-                else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
-                {
-                    error.append(L"Уточните команду (варианты): ");
-                    for (int i = 0; i < count; ++i) { if (i != 0) error.append(L", "); error.append(cmds[i]); }
-                }
-            }
-        }
-    }
+void LogicProcessor::processSystemCommand(InputCommand cmd)
+{
+    tstring error, main_cmd(cmd->command);
+    recognizeSystemCommand(&main_cmd, &error);
 
     PropertiesData *pdata = tortilla::getProperties();
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
+    bool fullcmd_loged = false;
     if (error.empty())
     {
         cmd->command.assign(main_cmd);
@@ -99,43 +104,72 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
             fullcmd.append(cmd->parameters);
 
         syscmdLog(fullcmd);
+        fullcmd_loged = true;
 
         if (!hide_cmd)
             m_pHost->preprocessCommand(cmd);
 
+        if (cmd->dropped)
+        {
+            tstring tmp(L"-");
+            tmp.append(fullcmd);
+            syscmdLog(tmp);
+            return;
+        }
+
+        if (cmd->changed && cmd->command.empty())
+            return;
+
         if (cmd->changed)
         {
             tstring tmp(L">");
-            tmp.append(prefix);
-            tmp.append(cmd->srccmd);
-            tmp.append(cmd->srcparameters);
+            tmp.assign(prefix);
+            tmp.append(cmd->command);
+            tmp.append(L" ");
+            tmp.append(cmd->parameters);
             syscmdLog(tmp);
+            main_cmd.assign(cmd->command);
+            recognizeSystemCommand(&main_cmd, &error);
+            cmd->command.assign(main_cmd);
         }
 
-        if (cmd->dropped)
-            return;
-
-        it = m_syscmds.find(main_cmd);
-        if (it != it_end)
+        if (error.empty()) 
         {
-            parser p(cmd, &error);
-            it->second(&p);
-        }
-        else
-        {
-            piterator p_end = m_plugins_cmds.end();
-            piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
-            if (p == p_end)
-                error.append(L"Неизвестная команда");
+            typedef std::map<tstring, syscmd_fun>::iterator iterator;
+            iterator it_end = m_syscmds.end();
+            iterator it = m_syscmds.find(main_cmd);
+            if (it != it_end)
+            {
+                parser p(cmd, &error);
+                it->second(&p);
+            }
+            else
+            {
+                typedef std::vector<tstring>::iterator piterator;
+                piterator p_end = m_plugins_cmds.end();
+                piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
+                if (p == p_end)
+                    error.append(L"Неизвестная команда");
+            }
         }
     }
 
     if (!error.empty())
     {
+        if (!fullcmd_loged)
+        {
+            tstring fullcmd;
+            fullcmd.append(cmd->srccmd);
+            if (!hide_cmd)
+                fullcmd.append(cmd->srcparameters);
+            syscmdLog(fullcmd);
+        }
+
         tstring msg(L"Ошибка: ");
         msg.append(error);
         msg.append(L" [");
-        bool usesrc = (cmd->alias.empty()) ? true : false;
+        bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
+        if (cmd->changed) msg.append(prefix);
         msg.append(usesrc ? cmd->srccmd : cmd->command);
         if (!hide_cmd)
             msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
@@ -149,16 +183,35 @@ void LogicProcessor::processSystemCommand(InputCommand* cmd)
     }
 }
 
-void LogicProcessor::processGameCommand(InputCommand* cmd)
+void LogicProcessor::processGameCommand(InputCommand cmd)
 {
-    m_pHost->preprocessCommand(cmd);
-    if (cmd->dropped)
-        return;
-    tchar br[2] = { 0xa, 0 };
+    tstring br(L"\r\n");
     tstring tmp(cmd->command);
     tmp.append(cmd->parameters);
     tmp.append(br);
     processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+
+    m_pHost->preprocessCommand(cmd);
+    if (cmd->dropped)
+    {
+        tstring tmp(L"-");
+        tmp.append(cmd->srccmd);
+        tmp.append(cmd->srcparameters);
+        syscmdLog(tmp);  // шлем через метод (отключается как вывод системых команд)
+        return;
+    }
+    if (cmd->changed && cmd->command.empty())
+        return;
+    if (cmd->changed)
+    {
+        tmp.assign(L">");
+        tmp.append(cmd->command);
+        tmp.append(L" ");
+        tmp.append(cmd->parameters);
+        tmp.append(br);
+        processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+        tmp.erase(tmp.begin());
+    }
     sendToNetwork(tmp);
 }
 
@@ -224,8 +277,9 @@ IMPL(alias)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
+    AliasTestControl control;
     int update = script.process(p, &pdata->aliases, &pdata->groups,
-        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph);
+        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph, &control);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -644,7 +698,7 @@ IMPL(password)
         if (!pass.empty())
         {
             tstring msg(L"*****\r\n");
-            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
+            processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|NEW_LINE, 0);
             WCHAR br[2] = { 10, 0 };
             pass.append(br);
             sendToNetwork(pass);
@@ -659,7 +713,7 @@ IMPL(hide)
     if (p->size() != 0)
     {
         tstring msg(L"*****\r\n");
-        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS, 0);
+        processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|NEW_LINE, 0);
         WCHAR br[2] = { 10, 0 };
         tstring cmd(p->params());
         cmd.append(br);
@@ -840,6 +894,17 @@ IMPL(wname)
     }
     p->invalidargs();
 }
+
+IMPL(plugin)
+{
+    int n = p->size();
+    if (n == 2)
+    {
+        if (tortilla::getPluginsManager()->setPluginState(p->at(0), p->at(1)))
+            return;
+    }
+    p->invalidargs();
+}
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
@@ -884,7 +949,7 @@ IMPL(whide)
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -926,7 +991,10 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, view);
+    int flags = SKIP_SUBS|GAME_LOG;
+    if (!enable_actions)
+        flags |= SKIP_ACTIONS;
+    printIncoming(data, flags, view);
 }
 
 IMPL(wprint)
@@ -940,7 +1008,7 @@ IMPL(wprint)
         std::vector<tstring> data;
         for (int i=1; i<n; ++i)
             data.push_back(p->at(i));
-        return printex(window, data);
+        return printex(window, data, false);
     }
     p->invalidargs();
 }
@@ -953,7 +1021,7 @@ IMPL(print)
         std::vector<tstring> data;
         for (int i=0; i<n; ++i)
             data.push_back(p->at(i));
-        return printex(0, data);
+        return printex(0, data, true);
     }
     p->invalidargs();
 }
@@ -1220,12 +1288,8 @@ IMPL(message)
         MessageCmdHelper mh(pdata);
         tstring str;
         mh.getStrings(&str);
-        if (!str.empty()) {
-            tmcLog(L"Уведомления:");
-            simpleLog(str);
-        }
-        else
-            tmcLog(L"Все уведомления отключены");
+        tmcLog(L"Эхо-уведомления:");
+        simpleLog(str);
         return;
     }
 
@@ -1325,6 +1389,7 @@ bool LogicProcessor::init()
     regCommand("woutput", wprint);
     regCommand("output", print);
     regCommand("message", message);
+    regCommand("echo", message);
 
     regCommand("tab", tab);
     regCommand("untab", untab);
@@ -1339,5 +1404,7 @@ bool LogicProcessor::init()
     regCommand("wlog", wlog);
     regCommand("wlogn", wlogn);
     regCommand("wname", wname);
+
+    regCommand("plugin", plugin);
     return true;
 }

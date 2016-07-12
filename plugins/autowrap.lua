@@ -9,13 +9,13 @@ local autowrap_maxlen_main = -1
 -- Максимально допустимая длина строк для output-окон
 local autowrap_maxlen_out = -1
 
-autowrap = {}
+local autowrap = {}
 function autowrap.name()
   return 'Автоперенос строк'
 end
 
 function autowrap.version()
-  return '1.02'
+  return '1.04'
 end
 
 function autowrap.description()
@@ -82,7 +82,7 @@ local function divall(v, maxlen)
   local i,size = 1,v:size()
   while i <= size do
     v:select(i)
-    if v:getTextLen() > maxlen then
+    if not v:isDropped() and v:getTextLen() > maxlen then
       div(v, maxlen)
       size = v:size()
     end
@@ -178,3 +178,5 @@ function autowrap.syscmd(t)
     updateView(window, function(v) update_view(v,newlen) end)
     return nil
 end
+
+return autowrap
