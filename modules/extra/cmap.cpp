@@ -543,16 +543,20 @@ public:
     enum TegResult { ERR = 0, ABSENT, EXIST, ADDED, REMOVED };
     TegResult teg(const tstring& name, const tstring& teg)
     {
+        if (teg.empty())
+            return ERR;
         if (teg.find(L";") != tstring::npos)
             return ERR;
 
         index_ptr ix = find_name(name);
         if (!ix)
             return ABSENT;
+
         tstring t(teg);
         tstring_tolower(&t);
         std::vector<tstring>& tegs = ix->manual_tegs;
-        std::vector<tstring>::iterator it = std::find(tegs.begin(), tegs.end(), t);
+        std::vector<tstring>::iterator it = std::find_if(tegs.begin(), tegs.end(), [&](const tstring& s) 
+            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );
         if (it != tegs.end())
         {
             tegs.erase(it);
@@ -562,9 +566,11 @@ public:
                 int pos = 0;
                 if (find_pos(p.get(i), &pos))
                 {
-                    positions_vector& pv = *m_words_table[i].positions;
+                    positions_vector& pv = *m_words_table[pos].positions;
                     for (int i=0,e=pv.size();i<e;++i) {
-                      if (pv[i].idx == ix) { pv.erase(pv.begin()+i); break; }
+                      if (pv[i].idx == ix && pv[i].word_idx == i && pv[i].word_type == manual_teg){
+                          pv.erase(pv.begin()+i); break; 
+                      }
                     }
                 }
             }
@@ -572,37 +578,13 @@ public:
             return REMOVED;
         }
 
-        Phrase p(teg);
-        if (p.len()==0)
-            return ERR;
-
-
-
-
-        tstring t(teg);
-        tstring_tolower(&t);
-        int pos = 0;
-        if (find_pos(t, &pos))
+        if (add_index(teg, ix, true, true))
         {
-            tstring n(name);
-            tstring_tolower(&n);
-            positions_vector &v = *m_words_table[pos].positions;
-            for (int i=0,e=v.size();i<e;++i) {
-                if (v[i].word_idx == manual_teg && v[i].idx->name == n)
-                {
-                    v.erase(v.begin()+i);
-                    m_manual_tegs_changed = true;
-                    return REMOVED;
-                }
-            }
+            m_manual_tegs_changed = true;
+            ix->manual_tegs.push_back(teg);
+            return ADDED;
         }
-
-        index_ptr ix = find_name(name);
-        if (!ix)    
-            return ABSENT;
-        add_index(teg, ix, true, true);
-        m_manual_tegs_changed = true;
-        return ADDED;
+        return ERR;
     }
 
     int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -812,9 +794,11 @@ private:
         return 0;
     }
 
-    void add_index(const tstring& name, index_ptr ix, bool teg, bool manual)
+    bool add_index(const tstring& name, index_ptr ix, bool teg, bool manual)
     {
        Phrase p(name);
+       if (p.len()==0)
+           return false;
        for (int i=0,len=p.len(); i<len; ++i)
        {
           position word_pos;
@@ -840,6 +824,7 @@ private:
           }
           positions_vector_ptr->push_back(word_pos);
        }
+       return true;
     }
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -987,6 +972,7 @@ private:
                 s.append(L";");
                 s.append(tegs[i]);
             }
+            s.append(L"\r\n");
             DWORD written = 0;
             return write_tofile(s, &written);
         }} file;
@@ -999,6 +985,7 @@ private:
             return;
         }
 
+        std::set<index_ptr> saved;
         words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
         for(; it!=it_end;++it)
         {
@@ -1008,11 +995,13 @@ private:
                 if (pv[i].word_type == manual_teg && pv[i].word_idx == 0)
                 {
                     index_ptr p = pv[i].idx;
+                    if (!p->manual_tegs.empty() && (saved.find(p) == saved.end()))  {
+                    saved.insert(p);
                     if (!file.write(p->name,p->manual_tegs))
                     {
                         filesave_error(path);
                         return;
-                    }
+                    }}
                 }
             }
         }
@@ -1206,19 +1195,6 @@ int dict_gc(lua_State *L)
     return 0;
 }
 
-/*int dict_remove(lua_State *L)
-{
-    if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
-    {
-        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
-        tstring id(luaT_towstring(L, 2));
-        bool result = d->remove(id);
-        lua_pushboolean(L, result ? 1:0);
-        return 1;
-    }
-    return dict_invalidargs(L, "remove");
-}*/
-
 int dict_new(lua_State *L)
 {
     if (!luaT_check(L, 1, LUA_TSTRING))
@@ -1240,8 +1216,6 @@ int dict_new(lua_State *L)
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
         regFunction(L, "teg", dict_teg);
-
-        //regFunction(L, "remove", dict_remove);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
         lua_pushvalue(L, -2);
