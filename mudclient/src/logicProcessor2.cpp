@@ -810,15 +810,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    int pos = logfile.rfind(L'.');
-    if (pos == -1)
-        logfile.append(L".html");
-    else
-    {
-        tstring ext(logfile.substr(pos+1));
-        if (ext != L"htm" && ext != L"html")
-            logfile.append(L".html");
-    }
+    m_logs.calcFileName(logfile);
 
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)

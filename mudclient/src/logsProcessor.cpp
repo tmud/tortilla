@@ -14,13 +14,40 @@ LogsProcessor::~LogsProcessor()
     closeAllLogs();
     stop();
     wait();
-    autodel<MudViewString> z(m_free);
+    std::for_each(m_free.begin(),m_free.end(),[](MudViewString* s) {delete s;});
     delete m_palette;
 }
 
 bool LogsProcessor::init()
 {
     return run();
+}
+
+void LogsProcessor::calcFileName(tstring& filename)
+{
+    bool htmlformat = true;
+    tstring format(m_propData->logformat);
+    if (format == L"txt")
+        htmlformat = false;
+    int pos = filename.rfind(L'.');
+    if (pos == -1)
+    {
+        filename.append(htmlformat ? L".html" : L".txt");
+    }
+    else
+    {
+        tstring ext(filename.substr(pos + 1));
+        if (htmlformat) 
+        {
+            if (ext != L"htm" && ext != L"html")
+                filename.append(L".html");
+        }
+        else
+        {
+            if (ext != L"txt")
+                filename.append(L".txt");
+        }
+    }
 }
 
 int LogsProcessor::openLog(const tstring& filename, bool newlog)
@@ -57,6 +84,10 @@ int LogsProcessor::openLog(const tstring& filename, bool newlog)
     l->hfile = hfile;
     if (newlog || size == 0) l->newlog = true;
     else l->append = true;
+    l->htmlformat = true;
+    tstring format(m_propData->logformat);
+    if (format == L"txt")
+        l->htmlformat = false;
     m_logs.push_back(l);
     index = m_logs.size()-1;
     return index;
@@ -163,7 +194,11 @@ void LogsProcessor::saveAll()
         int lastid = m_logs.size()-1;
         if (id < 0 || id > lastid || !m_logs[id])
             continue;
-        prepare(id);
+        bool htmlformat = m_logs[id]->htmlformat;
+        if (htmlformat)
+            prepare(id);
+        else
+            prepare_txt(id);
 
         for (int j=i; j<e; ++j)
         {
@@ -172,7 +207,10 @@ void LogsProcessor::saveAll()
             m.log = -1;
             if (!m.str->dropped) {
             std::string out;
-            convertString(m.str, &out);
+            if (htmlformat)
+                convertString(m.str, &out);
+            else
+                convertString_txt(m.str, &out);
             write(m_logs[id]->hfile, out);
             }
         }
@@ -187,6 +225,37 @@ void LogsProcessor::saveAll()
     m_towrite.clear();
 }
 
+void LogsProcessor::prepare_txt(int id)
+{
+    log *l = m_logs[id];
+    l->opened = true;
+
+    if (l->append)
+    {
+        l->append = false;
+        ::SetFilePointer(l->hfile, 0, NULL, FILE_END);
+    }
+    if (l->newlog)
+    {
+        l->newlog = false;
+        SetFilePointer(l->hfile, 0, NULL, FILE_BEGIN);
+        SetEndOfFile(l->hfile);
+        tstring tu;
+        {
+            tu.assign(m_propData->title);
+            SYSTEMTIME tm;
+            GetSystemTime(&tm);
+            tchar buffer[32];
+            swprintf(buffer, L" - %d %s %d\r\n", tm.wDay, month[tm.wMonth], tm.wYear);
+            tu.append(buffer);
+        }
+        unsigned char bom[4] = { 0xEF, 0xBB, 0xBF, 0 };
+        std::string data((char*)bom);
+        data.append( TW2U(tu.c_str()) );
+        write(l->hfile, data);
+    }
+}
+
 void LogsProcessor::prepare(int id)
 {
     log *l = m_logs[id];
@@ -197,7 +266,10 @@ void LogsProcessor::prepare(int id)
     {
         l->append = false;
         DWORD inbuffer = 0;
-        DWORD size = GetFileSize(l->hfile, NULL);
+        DWORD hsize = 0;
+        DWORD lsize = GetFileSize(l->hfile, &hsize);
+        unsigned __int64 size = hsize; size <<= 32; size |= lsize;
+
         DWORD buffer_len = m_buffer.getSize();
         char *buffer = m_buffer.getData();
 
@@ -206,7 +278,7 @@ void LogsProcessor::prepare(int id)
         while (size > 0)
         {
             DWORD toread = buffer_len - inbuffer;
-            if (toread > size) toread = size;
+            if (toread > size) toread = (DWORD)size;
             char *p = buffer + inbuffer;
             DWORD readed = 0;
             if (!ReadFile(l->hfile, p, toread, &readed, NULL) || toread != readed)
@@ -301,7 +373,7 @@ void LogsProcessor::closeReqLogs()
         log *l = m_logs[i];
         if (l && l->close)
         {
-            if (l->opened)
+            if (l->opened && l->htmlformat)
             {
                 std::string close = "</pre></body></html>";
                 DWORD towrite = close.length();
@@ -313,6 +385,15 @@ void LogsProcessor::closeReqLogs()
             delete l;
         }
     }
+}
+
+void LogsProcessor::convertString_txt(MudViewString* str, std::string* out)
+{
+    tstring s;
+    str->getText(&s);
+    m_converter.convert(s.c_str(), s.length());
+    out->assign(m_converter);
+    out->append("\r\n");
 }
 
 void LogsProcessor::convertString(MudViewString* str, std::string* out)

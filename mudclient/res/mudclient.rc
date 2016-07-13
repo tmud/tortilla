@@ -195,6 +195,8 @@ BEGIN
     LTEXT           "шт",IDC_STATIC,156,37,27,8
     LTEXT           "Кодировка клиента:",IDC_STATIC,208,23,70,9
     GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,141,204,51
+    LTEXT           "Формат записи логов:",IDC_STATIC,199,50,79,9
+    COMBOBOX        IDC_COMBO_LOGFORMAT,283,48,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPERTY_GROUPS DIALOGEX 0, 0, 340, 225
