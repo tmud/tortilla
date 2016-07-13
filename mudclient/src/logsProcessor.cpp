@@ -240,20 +240,19 @@ void LogsProcessor::prepare_txt(int id)
         l->newlog = false;
         SetFilePointer(l->hfile, 0, NULL, FILE_BEGIN);
         SetEndOfFile(l->hfile);
-        tstring tu;
-        {
-            tu.assign(m_propData->title);
-            SYSTEMTIME tm;
-            GetSystemTime(&tm);
-            tchar buffer[32];
-            swprintf(buffer, L" - %d %s %d\r\n", tm.wDay, month[tm.wMonth], tm.wYear);
-            tu.append(buffer);
-        }
-        unsigned char bom[4] = { 0xEF, 0xBB, 0xBF, 0 };
-        std::string data((char*)bom);
-        data.append( TW2U(tu.c_str()) );
-        write(l->hfile, data);
     }
+    
+    std::string data;
+    if (l->newlog)
+    {
+        unsigned char bom[4] = { 0xEF, 0xBB, 0xBF, 0 };
+        data.append((char*)bom);
+    }
+
+    std::string date;
+    getHeader(&date);
+    data.append(date);
+    write(l->hfile, data);
 }
 
 void LogsProcessor::prepare(int id)
@@ -317,6 +316,9 @@ void LogsProcessor::prepare(int id)
             SetFilePointer(l->hfile, fileptr, NULL, FILE_BEGIN);
             SetEndOfFile(l->hfile);
             write(l->hfile, "<pre>\r\n");
+            std::string date;
+            getHeader(&date);
+            write(l->hfile, date.c_str());
         }
     }
 
@@ -328,19 +330,13 @@ void LogsProcessor::prepare(int id)
             SetFilePointer(l->hfile, 0, NULL, FILE_BEGIN);
             SetEndOfFile(l->hfile);
         }
-        tstring tu;
-        {
-            tu.assign(m_propData->title);
-            SYSTEMTIME tm;
-            GetSystemTime(&tm);
-            tchar buffer[32];
-            swprintf(buffer, L" - %d %s %d", tm.wDay, month[tm.wMonth], tm.wYear);
-            tu.append(buffer);
-        }
+
+        std::string date;
+        getHeader(&date);
 
         char *buffer = m_buffer.getData();
         std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>");
-        header.append(TW2U(tu.c_str()));
+        header.append(date);
         header.append("</title>\r\n</head>\r\n<style type=\"text/css\">\r\n");
         TW2U font(m_propData->font_name.c_str());
         sprintf(buffer, "body{ background-color: %s; color: %s; font-size: %dpt; font-weight: %d; font-family: %s }\r\n", 
@@ -487,4 +483,16 @@ const char* LogsProcessor::color2(COLORREF c)
     char *buffer = m_color_buffer2.getData();
     sprintf(buffer, "#%.2x%.2x%.2x", GetRValue(c), GetGValue(c), GetBValue(c));
     return buffer;
+}
+
+void LogsProcessor::getHeader(std::string* out)
+{
+    tstring tu;
+    tu.assign(m_propData->title);
+    SYSTEMTIME tm;
+    GetLocalTime(&tm);
+    tchar buffer[64];
+    swprintf(buffer, L" - %d %s %d, %d:%2d:%2d\r\n", tm.wDay, month[tm.wMonth], tm.wYear, tm.wHour, tm.wMinute, tm.wSecond);
+    tu.append(buffer);
+    out->assign(TW2U(tu.c_str()));
 }

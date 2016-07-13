@@ -27,6 +27,7 @@ private:
     void closeReqLogs();
     void convertString(MudViewString* str, std::string* out);
     void convertString_txt(MudViewString* str, std::string* out);
+    void getHeader(std::string* out);
     MudViewString* getFreeString();
     const char* color(COLORREF c);
     const char* color2(COLORREF c);
