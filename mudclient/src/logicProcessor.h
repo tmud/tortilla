@@ -115,6 +115,7 @@ private:
     void processCommands(const InputPlainCommands& cmds);
     void makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds);
     void runCommands(InputCommands& cmds);
+    void runCommand(InputCommand cmd, InputCommands& inserts);
     bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void recognizeSystemCommand(tstring* cmd, tstring* error);

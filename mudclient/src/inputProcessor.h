@@ -121,6 +121,14 @@ public:
             }
         }
     }
+    void append(InputCommands& cmds, int from)
+    {
+        base::insert(end(), cmds.begin()+from, cmds.end());
+    }
+    void swap(InputCommands& cmds)
+    {
+        base::swap(cmds);
+    }
 };
 
 class CompareObject;
