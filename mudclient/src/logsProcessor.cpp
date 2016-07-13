@@ -86,7 +86,9 @@ void LogsProcessor::writeLog(int id, const parseData& pdata)
             continue;
         }
         MudViewString* s = getFreeString();
-        s->copy(pdata.strings[i]);
+        MudViewString *src = pdata.strings[i];
+        s->copy(src);
+        s->dropped = src->dropped;
         msg m; m.log = id; m.str = s;
         m_msgs.push_back(m);
     }
@@ -113,7 +115,7 @@ void LogsProcessor::closeAllLogs()
         log *l = m_logs[i];
         if (l)
             l->close = true;
-    }  
+    }
 }
 
 void LogsProcessor::threadProc()
@@ -140,13 +142,13 @@ void LogsProcessor::threadProc()
         saveAll();
         closeReqLogs();
     }
-    
+
     {
         CSectionLock _lock(m_cs);
-        if (!m_msgs.empty())    
+        if (!m_msgs.empty())
             m_msgs.swap(m_towrite);
     }
-    saveAll();    
+    saveAll();
     closeReqLogs();
 }
 
@@ -166,21 +168,23 @@ void LogsProcessor::saveAll()
         for (int j=i; j<e; ++j)
         {
             msg &m = m_towrite[j];
-            if (m.log != id) continue;                
+            if (m.log != id) continue;
             m.log = -1;
+            if (!m.str->dropped) {
             std::string out;
             convertString(m.str, &out);
             write(m_logs[id]->hfile, out);
+            }
         }
     }
-    
+
     CSectionLock _lock(m_cs);
     for (int i=0,e=m_towrite.size(); i<e; ++i)
     {
         MudViewString *s = m_towrite[i].str;
         m_free.push_back(s);
     }
-    m_towrite.clear();    
+    m_towrite.clear();
 }
 
 void LogsProcessor::prepare(int id)
@@ -196,7 +200,7 @@ void LogsProcessor::prepare(int id)
         DWORD size = GetFileSize(l->hfile, NULL);
         DWORD buffer_len = m_buffer.getSize();
         char *buffer = m_buffer.getData();
-        
+
         int pos = 0;
         int fileptr = -1;
         while (size > 0)
@@ -207,7 +211,7 @@ void LogsProcessor::prepare(int id)
             DWORD readed = 0;
             if (!ReadFile(l->hfile, p, toread, &readed, NULL) || toread != readed)
                 { result = false; break; }
-            size -= toread;            
+            size -= toread;
             toread += inbuffer;
 
             // find teg in data
@@ -233,7 +237,7 @@ void LogsProcessor::prepare(int id)
             inbuffer = teg_len;
             memcpy(buffer, buffer+(toread-teg_len), teg_len);
         }
-        
+
         if (fileptr == -1)
             result = false;
         else
@@ -243,7 +247,7 @@ void LogsProcessor::prepare(int id)
             write(l->hfile, "<pre>\r\n");
         }
     }
-    
+
     if (l->newlog || !result)
     {
         l->newlog = false;
@@ -261,7 +265,7 @@ void LogsProcessor::prepare(int id)
             swprintf(buffer, L" - %d %s %d", tm.wDay, month[tm.wMonth], tm.wYear);
             tu.append(buffer);
         }
-        
+
         char *buffer = m_buffer.getData();
         std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>");
         header.append(TW2U(tu.c_str()));
@@ -294,7 +298,7 @@ void LogsProcessor::closeReqLogs()
     CSectionLock _lock(m_cs_logs);
     for (int i=0,e=m_logs.size(); i<e; ++i)
     {
-        log *l = m_logs[i];       
+        log *l = m_logs[i];
         if (l && l->close)
         {
             if (l->opened)
@@ -307,7 +311,7 @@ void LogsProcessor::closeReqLogs()
             CloseHandle(l->hfile);
             m_logs[i] = NULL;
             delete l;
-        }        
+        }
     }
 }
 
@@ -333,7 +337,7 @@ void LogsProcessor::convertString(MudViewString* str, std::string* out)
             int len = eff.length();
             eff = eff.substr(0, len-1);
         }
-        
+
         if (p.use_ext_colors)
         {
             std::string text(m_converter);
@@ -356,7 +360,7 @@ void LogsProcessor::convertString(MudViewString* str, std::string* out)
                 sprintf(buffer, "%s c%d", eff.c_str(), txt);
             else
                 sprintf(buffer, "c%d", txt);
-            
+
             std::string tmp(buffer);
             if (p.bkg_color != 0)
             {
