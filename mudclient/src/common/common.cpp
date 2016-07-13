@@ -186,7 +186,7 @@ void tstring_tolower(tstring *str)
 void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
 {
     size_t pos = 0;
-    while((pos = str->find(what, pos)) != std::string::npos)
+    while((pos = str->find(what, pos)) != tstring::npos)
     {
         str->replace(pos, what.length(), forr);
         pos += forr.length();

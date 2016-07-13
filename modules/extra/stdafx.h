@@ -22,3 +22,4 @@ typedef wchar_t tchar;
 
 #include "common.h"
 #include "../common/memoryBuffer.h"
+#include "../common/dataQueue.h"

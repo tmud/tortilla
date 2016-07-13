@@ -203,6 +203,7 @@ public:
     };
     bool write(const tstring& name, const MemoryBuffer& data, const std::vector<tstring>& tegs, WriteResult* r)
     {
+        tstring rn(L"\r\n");
         tstring tmp(name);
         tmp.append(L";");
         for (int i=0,e=tegs.size();i<e;++i) 
@@ -210,7 +211,7 @@ public:
             tmp.append(tegs[i]);
             tmp.append(L";");
         }
-        tmp.append(L"\n");
+        tmp.append(rn);
 
         start_data += written;
         DWORD written1 = 0;
@@ -219,7 +220,10 @@ public:
         DWORD written2 = 0;
         if (!write_tofile(data, &written2))
             return error();
-        written = written1 + written2;
+        DWORD written3 = 0;
+        if (!write_tofile(rn, &written3))
+            return error();
+        written = written1 + written2 + written3;
         if (r) 
         {
           r->start = start_data;
@@ -312,6 +316,114 @@ public:
 
     bool update(const lua_ref& r, tstring *error)
     {
+        bool result = true;
+        std::vector<DWORD> new_files_size(m_files.size(), 0);
+        std::vector<worddata> newt;
+
+        for (int i=0,e=m_files.size();i<e;++i)
+        {
+             fileinfo& fi = m_files[i];
+             load_file lf(fi.path);
+             if (!lf.result)
+             {
+                 error->assign(L"Ошибка при открытии файла: ");
+                 error->append(fi.path);
+                 result = false;
+                 break;
+             }      
+             if (fi.size != lf.size())
+             {
+                 error->assign(L"Файл изменен другой программой: ");
+                 error->append(fi.path);
+                 error->append(L". Перезапустите плагин.");
+                 result = false;
+                 break;            
+             }
+             tstring newfile_path(fi.path);
+             newfile_path.append(L".new");
+             database_file_writer fw;
+             if (!fw.open(newfile_path))
+             {
+                 error->assign(L"Ошибка при открытии файла на запись: ");
+                 error->append(newfile_path);
+                 result = false;
+                 break;
+             }
+             std::string str, name;
+             DataQueue data;
+             while (lf.readNextString(&str, false))
+             {
+                 std::string t(str);
+                 string_replace(&t, "\r", "");
+                 string_replace(&t, "\n", "");
+                 if (!t.empty())
+                 {
+                     if (name.empty())
+                         name.assign(t);
+                     else
+                         data.write(str.data(), str.length());
+                     continue;                
+                 }
+                 if (name.empty())
+                 {
+                     data.clear();
+                     continue;
+                 }
+                 r.pushValue(L);
+                 u8string tmp((const char*)data.getData(), data.getSize());
+                 lua_pushstring(L, tmp.c_str());
+                 if (lua_pcall(L, 1, 1, 0))
+                 {
+                     error->assign(lua_toerror(L));
+                     result = false;
+                     break;
+                 }
+                 // read tegs
+                 std::vector<tstring> tegs;
+                 if (lua_istable(L, -1))
+                 {
+                     lua_pushnil(L);                     // first key
+                     while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+                     {
+                         if (lua_isstring(L, -1))
+                         {
+                             tstring teg(luaT_towstring(L, -1));
+                             tegs.push_back(teg);
+                         }
+                         lua_pop(L, 1);
+                     }
+                  }
+                  lua_pop(L, 1);
+
+                  // write file
+                  Tokenizer tk(TU2W(name.c_str()), L";");
+                  database_file_writer::WriteResult r;
+                  if (!fw.write(tk[0], data.getMemoryBuffer(), tegs, &r))
+                  {
+                      error->assign(L"Ошибка при записи файла: ");
+                      error->append(newfile_path);
+                      result = false;
+                      break;
+                  }
+                  /*new_index *ni = new new_index;
+                  ni->pos = r.start; ni->title_len=r.title_len; ni->data_len = r.data_len;
+                  tegs.push_back(i->name);
+                  ni->tegs.swap(tegs);
+                  new_indexes[i] = ni;
+                  new_files_size[ft->first] = r.start + (r.data_len+r.title_len);
+                  */
+
+
+                  //tegs.clear();
+                  name.clear();
+                  data.clear();
+             }
+        }
+        return result;
+
+
+
+
         /*typedef std::set<index_ptr> indexes_set;
         std::map<int, indexes_set> cat;
         indexes_set empty;
@@ -926,7 +1038,7 @@ private:
             DWORD start_pos = 0;
             u8string str, name;
             bool find_name_mode = true;
-            while (lf.readNextString(&str, &start_pos))
+            while (lf.readNextString(&str, true, &start_pos))
             {
                 if (str.empty())
                 {
@@ -1028,7 +1140,7 @@ private:
             return;
         }
         std::string s;
-        while (fr.readNextString(&s))
+        while (fr.readNextString(&s, true))
         {
             tstring ws(TU2W(s.c_str()));
             Tokenizer tk(ws.c_str(), L";");

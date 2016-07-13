@@ -26,3 +26,13 @@ bool isOnlyDigits(const tstring& str)
    if (str.empty()) return false;
    return isOnlySymbols(str, L"0123456789");
 }
+
+void string_replace(std::string *str, const std::string& what, const std::string& forr)
+{
+    size_t pos = 0;
+    while((pos = str->find(what, pos)) != std::string::npos)
+    {
+        str->replace(pos, what.length(), forr);
+        pos += forr.length();
+    }
+}
