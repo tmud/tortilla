@@ -117,7 +117,7 @@ public:
             {
                 InputCommand c = at(i);
                 size_t ci = k*size+i;
-                at(ci) = c;
+                at(ci) = std::make_shared<InputCommandData>(*c);
             }
         }
     }

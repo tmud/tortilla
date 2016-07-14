@@ -19,7 +19,7 @@ void LogicProcessor::processTick()
 {
     std::vector<tstring> cmds;
     m_waitcmds.tick(&cmds);
-    if (!cmds.empty()) 
+    if (!cmds.empty())
     {
         InputPlainCommands wait_cmds;
         for (int i=0,e=cmds.size();i<e;++i)
@@ -28,7 +28,7 @@ void LogicProcessor::processTick()
             wait_cmds.move(tmp);
         }
         processCommands(wait_cmds);
-    }    
+    }
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -91,6 +91,17 @@ void LogicProcessor::makeCommands(const InputPlainCommands& cmds, InputCommands*
     tcmds.makeCommands(rcmds, NULL);
 }
 
+void LogicProcessor::processQueueCommand()
+{
+    if (m_commands_queue.empty())
+        return;
+    InputCommand cmd = m_commands_queue.pop_front();
+    InputCommands inserts;
+    runCommand(cmd, inserts);
+    if (!inserts.empty())
+        m_commands_queue.insert(0, inserts);
+}
+
 void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 {
     InputCommands result;
@@ -112,11 +123,12 @@ void LogicProcessor::runCommands(InputCommands& cmds)
             break;
         }
         InputCommand cmd = cmds[i];
-        InputCommands newqueue;
-        runCommand(cmd, newqueue);
-        if (!newqueue.empty())
+        InputCommands inserts;
+        runCommand(cmd, inserts);
+        if (!inserts.empty())
         {
-        
+            cmds.insert(i+1, inserts);
+            e = cmds.size();
         }
     }
 }
@@ -167,8 +179,9 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
            alias.push_back(cmd);
            if (!processAliases(alias))
               return;
+           cmd = alias[0];
+           alias.pop_front();
            inserts.swap(alias);
-           cmd = cmds[i];
         }
     }
     if (cmd->system)

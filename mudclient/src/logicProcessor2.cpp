@@ -423,7 +423,7 @@ IMPL(math)
             { p->invalidvars(); return; }
 
         if (vp->setVar(p->at(0), result))
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
         else
             swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         helper->tmcLog(pb.buffer);
@@ -445,7 +445,7 @@ IMPL(var)
             helper->tmcLog(L"Переменные(vars):");
         else
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменные с {%s}:", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
 
@@ -456,7 +456,7 @@ IMPL(var)
             const property_value& v = pdata->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", v.key.c_str(), v.value.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", v.key.c_str(), v.value.c_str());
             helper->simpleLog(pb.buffer);
             found = true;
         }
@@ -473,7 +473,7 @@ IMPL(var)
         else
         {
             if (vp->setVar(p->at(0), p->at(1)))
-                swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", p->c_str(0), p->c_str(1));
+                swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), p->c_str(1));
             else
                 swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         }
