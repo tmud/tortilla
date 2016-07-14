@@ -786,13 +786,13 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id != -1)
     {
          tstring oldfile(m_logs.getLogFile(id));
-         m_logs.closeLog(id);
-         m_wlogs[log] = -1;
          if (log == 0)
             swprintf(pb.buffer, pb.buffer_len, L"Ћог закрыт: '%s'.", oldfile.c_str());
          else
              swprintf(pb.buffer, pb.buffer_len, L"Ћог в окне %d закрыт: '%s'.", log, oldfile.c_str());
          tmcLog(pb.buffer);
+         m_wlogs[log] = -1;
+         m_logs.closeLog(id);
          if (file.empty())
              return;
     }

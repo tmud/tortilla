@@ -108,18 +108,20 @@ void LogsProcessor::closeLog(int id)
 void LogsProcessor::writeLog(int id, const parseData& pdata)
 {
     CSectionLock _lock(m_cs);
-    for (int i=0,e=pdata.strings.size(); i<e; ++i)
+    int e=pdata.strings.size()-1;
+    for (int i=0; i<=e; ++i)
     {
+        MudViewString *src = pdata.strings[i];
+        if (src->dropped) continue;
         if (i == 0 && pdata.update_prev_string)
         {
-            int last = m_msgs.size() - 1;
-            m_msgs[last].str->copy(pdata.strings[i]);
+            int last = m_msgs.size()-1;
+            MudViewString* s = m_msgs[last].str;
+            s->copy(src);
             continue;
         }
         MudViewString* s = getFreeString();
-        MudViewString *src = pdata.strings[i];
         s->copy(src);
-        s->dropped = src->dropped;
         msg m; m.log = id; m.str = s;
         m_msgs.push_back(m);
     }
@@ -173,11 +175,13 @@ void LogsProcessor::threadProc()
         saveAll();
         closeReqLogs();
     }
-
     {
         CSectionLock _lock(m_cs);
         if (!m_msgs.empty())
-            m_msgs.swap(m_towrite);
+        {
+            m_towrite.insert(m_towrite.end(), m_msgs.begin(), m_msgs.end());
+            m_msgs.clear();
+        }
     }
     saveAll();
     closeReqLogs();
@@ -234,25 +238,32 @@ void LogsProcessor::prepare_txt(int id)
     {
         l->append = false;
         ::SetFilePointer(l->hfile, 0, NULL, FILE_END);
+        std::string bin;
+        DWORD hsize = 0;
+        DWORD size = GetFileSize(l->hfile, &hsize);
+        if (hsize == 0 && size == 0)
+        {
+            unsigned char bom[4] = { 0xEF, 0xBB, 0xBF, 0 };
+            bin.append((char*)bom);
+        }
+        std::string date;
+        getHeader(&date);
+        bin.append(date);
+        write(l->hfile, bin);
     }
     if (l->newlog)
     {
         l->newlog = false;
         SetFilePointer(l->hfile, 0, NULL, FILE_BEGIN);
         SetEndOfFile(l->hfile);
-    }
-    
-    std::string data;
-    if (l->newlog)
-    {
         unsigned char bom[4] = { 0xEF, 0xBB, 0xBF, 0 };
-        data.append((char*)bom);
+        std::string bin;
+        bin.append((char*)bom);
+        std::string date;
+        getHeader(&date);
+        bin.append(date);
+        write(l->hfile, bin);
     }
-
-    std::string date;
-    getHeader(&date);
-    data.append(date);
-    write(l->hfile, data);
 }
 
 void LogsProcessor::prepare(int id)
@@ -331,12 +342,8 @@ void LogsProcessor::prepare(int id)
             SetEndOfFile(l->hfile);
         }
 
-        std::string date;
-        getHeader(&date);
-
         char *buffer = m_buffer.getData();
-        std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>");
-        header.append(date);
+        std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>Tortilla Mud Client log");
         header.append("</title>\r\n</head>\r\n<style type=\"text/css\">\r\n");
         TW2U font(m_propData->font_name.c_str());
         sprintf(buffer, "body{ background-color: %s; color: %s; font-size: %dpt; font-weight: %d; font-family: %s }\r\n", 
@@ -351,6 +358,9 @@ void LogsProcessor::prepare(int id)
         header.append(".u { text-decoration: underline; }\r\n.b { border: 1px solid; }\r\n.i { font-style: italic; }\r\n");
         header.append("</style>\r\n<body><pre>");
         write(l->hfile, header);
+        std::string date;
+        getHeader(&date);
+        write(l->hfile, date);
     }
 }
 
@@ -369,12 +379,18 @@ void LogsProcessor::closeReqLogs()
         log *l = m_logs[i];
         if (l && l->close)
         {
+            std::string finish;
+            getHeader(&finish);
+            std::string closed(TW2U(L"Лог закрыт.\r\n"));
+            if (l->opened)
+            {
+                write(l->hfile, finish);
+                write(l->hfile, closed);
+            }
             if (l->opened && l->htmlformat)
             {
                 std::string close = "</pre></body></html>";
-                DWORD towrite = close.length();
-                DWORD written = 0;
-                WriteFile(l->hfile, close.c_str(), towrite, &written, NULL);
+                write(l->hfile, close);
             }
             CloseHandle(l->hfile);
             m_logs[i] = NULL;
@@ -489,10 +505,13 @@ void LogsProcessor::getHeader(std::string* out)
 {
     tstring tu;
     tu.assign(m_propData->title);
+    size_t pos = tu.rfind(L"-");
+    if (pos != tstring::npos)
+        tu = tu.substr(0, pos);
     SYSTEMTIME tm;
     GetLocalTime(&tm);
     tchar buffer[64];
-    swprintf(buffer, L" - %d %s %d, %d:%2d:%2d\r\n", tm.wDay, month[tm.wMonth], tm.wYear, tm.wHour, tm.wMinute, tm.wSecond);
+    swprintf(buffer, L"- %d %s %d, %d:%02d:%02d\r\n", tm.wDay, month[tm.wMonth], tm.wYear, tm.wHour, tm.wMinute, tm.wSecond);
     tu.append(buffer);
     out->assign(TW2U(tu.c_str()));
 }
