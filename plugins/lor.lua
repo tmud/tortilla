@@ -28,7 +28,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.06'
+  return '1.07'
 end
 
 local function print(s)
