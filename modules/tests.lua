@@ -1,7 +1,7 @@
 ﻿-- tests.lua
 -- тестовый код для проверки функционала клиента и модулей, юнит тесты
 -- запускаются при старте клиента
-
+--[[
 dofile 'modules.lua'
 
 local dlib = extra.declension()
@@ -127,3 +127,4 @@ dict = nil
 
 --local maj,min = getVersion()
 --print("Версия: "..maj.."."..min)
+]]

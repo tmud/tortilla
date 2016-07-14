@@ -756,7 +756,7 @@ public:
     }
     bool getData(std::wstring *str)
     {
-        runcmd("createRef");
+        runcmd("createViewString");
         if (luaT_check(L, 1, LUAT_VIEWSTRING))
         {
             luaT_ViewString vs;
@@ -794,7 +794,7 @@ private:
         if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
         else res->clear();
         lua_pop(L, 1);
-    }    
+    }
 };
 
 // active objects api

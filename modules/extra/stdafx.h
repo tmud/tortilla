@@ -15,9 +15,11 @@
 #include <set>
 #include <unordered_map>
 #include <functional>
+#include <deque>
 
 typedef std::wstring tstring;
 typedef wchar_t tchar;
 
 #include "common.h"
 #include "../common/memoryBuffer.h"
+#include "../common/dataQueue.h"
