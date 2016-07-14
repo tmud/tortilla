@@ -113,8 +113,10 @@ public:
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
+    void processQueueCommand();
     void makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds);
     void runCommands(InputCommands& cmds);
+    void runCommand(InputCommand cmd, InputCommands& inserts);
     bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void recognizeSystemCommand(tstring* cmd, tstring* error);

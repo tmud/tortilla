@@ -117,9 +117,17 @@ public:
             {
                 InputCommand c = at(i);
                 size_t ci = k*size+i;
-                at(ci) = c;
+                at(ci) = std::make_shared<InputCommandData>(*c);
             }
         }
+    }
+    void append(InputCommands& cmds, int from)
+    {
+        base::insert(end(), cmds.begin()+from, cmds.end());
+    }
+    void swap(InputCommands& cmds)
+    {
+        base::swap(cmds);
     }
 };
 
