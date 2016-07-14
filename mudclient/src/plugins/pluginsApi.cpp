@@ -1173,7 +1173,7 @@ int flashWindow(lua_State *L)
 
 int regUnloadFunction(lua_State *L);
 
-int clear(lua_State *L)
+int clearView(lua_State *L)
 {
     EXTRA_CP;
     if (luaT_check(L, 1, LUA_TNUMBER))
@@ -1185,7 +1185,7 @@ int clear(lua_State *L)
             return 0;
         }
     }
-    return pluginInvArgs(L, L"clear");
+    return pluginInvArgs(L, L"clearView");
 }
 
 int print(lua_State *L)
@@ -1327,7 +1327,7 @@ bool initPluginsSystem()
     lua_register(L, "regUnloadFunction", regUnloadFunction);
     lua_register(L, "print", print);
     lua_register(L, "vprint", vprint);
-    lua_register(L, "clear", clear);
+    lua_register(L, "clearView", clearView);
     lua_register(L, "translateColors", translateColors);
     lua_register(L, "getVersion", getVersion);
 
