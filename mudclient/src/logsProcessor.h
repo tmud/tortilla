@@ -15,15 +15,19 @@ public:
     void writeLog(int id, const parseData& pdata);
     tstring getLogFile(int id);
     void updateProps(PropertiesData *pdata);
+    void calcFileName(tstring& filename);
 
 private:
     void threadProc();
     void closeAllLogs();
     void saveAll();
     void prepare(int id);
+    void prepare_txt(int id);
     void write(HANDLE file, const std::string &data);
     void closeReqLogs();
     void convertString(MudViewString* str, std::string* out);
+    void convertString_txt(MudViewString* str, std::string* out);
+    void getHeader(std::string* out);
     MudViewString* getFreeString();
     const char* color(COLORREF c);
     const char* color2(COLORREF c);
@@ -36,13 +40,14 @@ private:
 
     struct log
     {
-        log() : hfile(INVALID_HANDLE_VALUE), close(false), newlog(false), append(false), opened(false) {}
+        log() : hfile(INVALID_HANDLE_VALUE), close(false), newlog(false), append(false), opened(false), htmlformat(true) {}
         HANDLE hfile;
         tstring filename;
         bool close;
         bool newlog;
         bool append;
         bool opened;
+        bool htmlformat;
     };
     std::vector<log*> m_logs;
 

@@ -439,7 +439,7 @@ private:
     PropertiesData& operator=(const PropertiesData&) {}
 
 public:
-    PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
+    PropertiesData() : codepage(L"win"), logformat(L"html"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
@@ -470,6 +470,7 @@ public:
         messages = p.messages;
         // skip cmd_history
         codepage = p.codepage;
+        logformat = p.logformat;
 
         memcpy(&colors, p.colors, sizeof(colors));
         memcpy(&osc_colors, p.osc_colors, sizeof(osc_colors));
@@ -536,6 +537,7 @@ public:
     std::vector<tstring> cmd_history;
 
     tstring  codepage;
+    tstring  logformat;
 
     COLORREF colors[16];
     COLORREF osc_colors[16];

@@ -786,13 +786,13 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id != -1)
     {
          tstring oldfile(m_logs.getLogFile(id));
-         m_logs.closeLog(id);
-         m_wlogs[log] = -1;
          if (log == 0)
             swprintf(pb.buffer, pb.buffer_len, L"Ћог закрыт: '%s'.", oldfile.c_str());
          else
              swprintf(pb.buffer, pb.buffer_len, L"Ћог в окне %d закрыт: '%s'.", log, oldfile.c_str());
          tmcLog(pb.buffer);
+         m_wlogs[log] = -1;
+         m_logs.closeLog(id);
          if (file.empty())
              return;
     }
@@ -810,15 +810,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    int pos = logfile.rfind(L'.');
-    if (pos == -1)
-        logfile.append(L".html");
-    else
-    {
-        tstring ext(logfile.substr(pos+1));
-        if (ext != L"htm" && ext != L"html")
-            logfile.append(L".html");
-    }
+    m_logs.calcFileName(logfile);
 
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)

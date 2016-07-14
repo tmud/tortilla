@@ -106,6 +106,7 @@
 #define IDC_CHECK_DISABLE_OSC           1120
 #define IDC_EDIT_NEWWORLD_PROFILE       1121
 #define IDC_COMBO_CODEPAGE              1122
+#define IDC_COMBO_LOGFORMAT             1123
 #define IDC_RADIO_PROMT_GA              1124
 #define IDC_RADIO_PROMT_PCRE            1125
 #define IDC_CHECK_DONTSHOW              1126
