@@ -228,7 +228,7 @@ public:
         {
           r->start = start_data;
           r->title_len = written1;
-          r->data_len = written2;
+          r->data_len = written2 + written3;
         }
         return true;
     }
@@ -317,8 +317,11 @@ public:
     bool update(const lua_ref& r, tstring *error)
     {
         bool result = true;
+
+        // save current words table
+        std::vector<worddata> savewt;
+        savewt.swap(m_words_table);
         std::vector<DWORD> new_files_size(m_files.size(), 0);
-        std::vector<worddata> newt;
 
         for (int i=0,e=m_files.size();i<e;++i)
         {
@@ -330,14 +333,14 @@ public:
                  error->append(fi.path);
                  result = false;
                  break;
-             }      
+             }
              if (fi.size != lf.size())
              {
                  error->assign(L"Файл изменен другой программой: ");
                  error->append(fi.path);
                  error->append(L". Перезапустите плагин.");
                  result = false;
-                 break;            
+                 break;
              }
              tstring newfile_path(fi.path);
              newfile_path.append(L".new");
@@ -362,7 +365,7 @@ public:
                          name.assign(t);
                      else
                          data.write(str.data(), str.length());
-                     continue;                
+                     continue;
                  }
                  if (name.empty())
                  {
@@ -395,155 +398,38 @@ public:
                   }
                   lua_pop(L, 1);
 
-                  // write file
+                  // write file, make index
                   Tokenizer tk(TU2W(name.c_str()), L";");
+                  const MemoryBuffer &mb = data.getMemoryBuffer();
                   database_file_writer::WriteResult r;
-                  if (!fw.write(tk[0], data.getMemoryBuffer(), tegs, &r))
+                  if (!fw.write(tk[0], mb, tegs, &r))
                   {
                       error->assign(L"Ошибка при записи файла: ");
                       error->append(newfile_path);
                       result = false;
                       break;
                   }
-                  /*new_index *ni = new new_index;
-                  ni->pos = r.start; ni->title_len=r.title_len; ni->data_len = r.data_len;
-                  tegs.push_back(i->name);
-                  ni->tegs.swap(tegs);
-                  new_indexes[i] = ni;
-                  new_files_size[ft->first] = r.start + (r.data_len+r.title_len);
-                  */
 
+                  index_ptr ix = std::make_shared<index>();
+                  ix->file = i;
+                  ix->name = tk[0];
+                  ix->pos_in_file = r.start;
+                  ix->name_tegs_len = r.title_len;
+                  ix->data_len = r.data_len;
 
-                  //tegs.clear();
+                  add_index(ix->name, ix, false, false);
+                  for (int i=0,e=tegs.size();i<e;++i)
+                    add_index(tegs[i], ix, true, false);
+
+                  new_files_size[ix->file] = r.start + (r.data_len+r.title_len);
+
                   name.clear();
                   data.clear();
              }
         }
-        return result;
 
-
-
-
-        /*typedef std::set<index_ptr> indexes_set;
-        std::map<int, indexes_set> cat;
-        indexes_set empty;
-        for (int i=0,e=m_files.size(); i<e; ++i) {
-            cat[i] = empty;
-        }
-        iterator it = m_indexes.begin(), it_end = m_indexes.end();
-        for (; it!=it_end; ++it)
-        {
-            indexes &x = it->second;
-            for (int i=0,e=x.size();i<e;++i)
-            {
-                if (x[i]->manual) continue;
-                int file = x[i]->file;
-                indexes_set &c = cat[file];
-                c.insert(x[i]);
-            }
-        }
-
-        MemoryBuffer mb;
-        std::vector<tstring> tegs;
-        struct new_index { DWORD pos; DWORD title_len; DWORD data_len; std::vector<tstring> tegs; };
-        std::unordered_map<index_ptr, new_index*> new_indexes;
-        std::vector<DWORD> new_files_size(m_files.size(), 0);
-
-        bool result = true;
-        std::map<int, indexes_set>::iterator ft = cat.begin(), ft_end = cat.end();
-        for (; ft!=ft_end; ++ft)
-        {
-            fileinfo& fi = m_files[ ft->first ];
-            const indexes_set &s = ft->second;
-            filereader fr;
-            if (!fr.open(fi.path))
-            {
-                error->assign(L"Ошибка при открытии файла: ");
-                error->append(fi.path);
-                result = false;
-                break;
-            }
-
-            if (fi.size != fr.size())
-            {
-                error->assign(L"Файл изменен другой программой: ");
-                error->append(fi.path);
-                error->append(L". Перезапустите плагин.");
-                result = false;
-                break;            
-            }
-
-            tstring newfile_path(fi.path);
-            newfile_path.append(L".new");
-            database_file_writer fw;
-            if (!fw.open(newfile_path))
-            {
-                error->assign(L"Ошибка при открытии файла на запись: ");
-                error->append(newfile_path);
-                result = false;
-                break;
-            }
-
-            indexes_set::iterator si = s.begin(), si_end = s.end();
-            for (;si != si_end; ++si)
-            {
-                index_ptr i = (*si);
-                DWORD pos = i->pos_in_file+i->name_tegs_len;
-                DWORD len = i->data_len;
-                if (!fr.read(pos, len, &mb))
-                {
-                    error->assign(L"Ошибка при чтении файла: ");
-                    error->append(fi.path);
-                    result = false;
-                    break;
-                }
-
-                u8string data(mb.getData(), mb.getSize());
-                r.pushValue(L);
-                lua_pushstring(L, data.c_str());
-                if (lua_pcall(L, 1, 1, 0))
-                {
-                    error->assign(lua_toerror(L));
-                    result = false;
-                    break;
-                }
-
-                tegs.clear();
-                if (lua_istable(L, -1))
-                {
-                    lua_pushnil(L);                     // first key
-                    while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
-                    {
-                        if (lua_isstring(L, -1))
-                        {
-                            tstring teg(luaT_towstring(L, -1));
-                            tegs.push_back(teg);
-                        }
-                        lua_pop(L, 1);
-                    }
-                }
-                lua_pop(L, 1);
-                database_file_writer::WriteResult r;
-                if (!fw.write(i->name, mb, tegs, &r))
-                {
-                    error->assign(L"Ошибка при записи файла: ");
-                    error->append(newfile_path);
-                    result = false;
-                    break;
-                }
-                new_index *ni = new new_index;
-                ni->pos = r.start; ni->title_len=r.title_len; ni->data_len = r.data_len;
-                tegs.push_back(i->name);
-                ni->tegs.swap(tegs);
-                new_indexes[i] = ni;
-                new_files_size[ft->first] = r.start + (r.data_len+r.title_len);
-            }
-            if (!result) 
-            {
-                fw.remove();
-                break;
-            }
-        }
+        if (!result)
+            savewt.swap(m_words_table);
 
         if (result)
         {
@@ -590,56 +476,11 @@ public:
                 m_files[i].size = new_files_size[i];
             }
 
-            // пересчитываем индексы и теги
-            m_indexes.clear();
-            m_phrases.clear();
-            m_objects.clear();
-            std::map<tstring, manual_tegs_ptr> new_manual_tegs;
-            std::unordered_map<index_ptr, new_index*>::iterator it = new_indexes.begin(), it_end = new_indexes.end();
-            for (; it!=it_end; ++it)
-            {
-                index_ptr i = it->first;
-                new_index* ni = it->second;
-                i->pos_in_file = ni->pos;
-                i->name_tegs_len = ni->title_len;
-                i->data_len = ni->data_len;
-                std::vector<tstring>& new_tegs = ni->tegs;
-                for (int k=0,e=new_tegs.size();k<e;++k)
-                    add_index(new_tegs[k], i);
-                m_objects[i->name] = i;
-
-                manual_tegs_iterator mt = m_manual_tegs.find(i->name);
-                if (mt != m_manual_tegs.end())
-                {
-                    manual_tegs_ptr newmt = std::make_shared<manual_tegs>();
-                    manual_tegs_ptr p = mt->second;
-                    for (int j=0,e=p->size(); j<e; ++j) 
-                    {
-                       const tstring& manual_teg = p->at(j);
-                       if (std::find(new_tegs.begin(), new_tegs.end(), manual_teg) == new_tegs.end())
-                           newmt->push_back(manual_teg);
-                    }
-                    if (!newmt->empty())
-                    {
-                        index_ptr mi = std::make_shared<index>(*i);
-                        mi->manual = true;
-                        for (int j=0,e=newmt->size(); j<e; ++j)
-                        {
-                            const tstring& manual_teg = newmt->at(j);
-                            add_index(manual_teg, mi);
-                        }
-                        new_manual_tegs[i->name] = newmt;
-                    }
-                }
-                delete ni;
-            }
-            new_indexes.clear();
-            m_manual_tegs.swap(new_manual_tegs);
+            // перечитываем ручные теги
+            load_manual_tegs();
             m_manual_tegs_changed = true;
-            save_manual_tegs();
         }
-        return result;*/
-        return true;
+        return result;
     }
 
     void wipe()
