@@ -252,8 +252,8 @@ namespace base {
     inline void print(lua_State* L, const wchar_t* message) {
         luaT_run(L, "print", "s", message);
     }
-    inline void clear(lua_State* L, int view) {
-        luaT_run(L, "clear", "d", view);
+    inline void clearView(lua_State* L, int view) {
+        luaT_run(L, "clearView", "d", view);
     }
     inline void terminate(lua_State *L) {
         luaT_run(L, "terminate", "");
