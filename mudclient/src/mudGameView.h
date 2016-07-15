@@ -472,7 +472,7 @@ private:
         if (m_manager.isFirstStartup())
             PostMessage(WM_USER+3);
 
-        SetTimer(1, 40);
+        SetTimer(1, 25);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -713,7 +713,7 @@ private:
     {
         static int count = 0;
         count = count + 1;
-        if (count == 5)
+        if (count == 8)
         {
             count = 0;
             m_processor.processTick();

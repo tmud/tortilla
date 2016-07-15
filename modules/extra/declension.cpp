@@ -77,7 +77,7 @@ int declension_load(lua_State *L)
         {
             d->clear();
             u8string str;
-            while (lf.readNextString(&str))
+            while (lf.readNextString(&str, true))
             {
                 if (!str.empty()) {
                     tstring t(TU2W(str.c_str()));

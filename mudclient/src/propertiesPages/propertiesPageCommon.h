@@ -16,6 +16,7 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CButton m_soft_scroll;
     CEdit   m_plugins_logs_window;
     CComboBox m_codepage;
+    CComboBox m_logformat;
     CButton m_prompt_iacga;
     CButton m_prompt_pcre;
     CEdit   m_prompt_pcre_template;
@@ -38,6 +39,7 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_SOFTSCROLL, OnSoftScroll)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
         COMMAND_HANDLER(IDC_COMBO_CODEPAGE, CBN_SELCHANGE, OnCodePage)
+        COMMAND_HANDLER(IDC_COMBO_LOGFORMAT, CBN_SELCHANGE, OnLogFormat)
         COMMAND_ID_HANDLER(IDC_RADIO_PROMT_GA, OnPromptGA)
         COMMAND_ID_HANDLER(IDC_RADIO_PROMT_PCRE, OnPromptPcre)
         COMMAND_HANDLER(IDC_EDIT_PROMPT_PCRE, EN_KILLFOCUS, OnPromptTemplate)        
@@ -82,6 +84,14 @@ private:
             m_codepage.SetCurSel(1);
         else
             m_codepage.SetCurSel(0);
+
+        m_logformat.Attach(GetDlgItem(IDC_COMBO_LOGFORMAT));
+        m_logformat.AddString(L"html");
+        m_logformat.AddString(L"txt");
+        if (propData->logformat == L"txt")
+            m_logformat.SetCurSel(1);
+        else
+            m_logformat.SetCurSel(0);
 
         wchar_t buffer[8];
         _itow(propData->view_history_size, buffer, 10);
@@ -212,6 +222,13 @@ private:
         int item = m_codepage.GetCurSel();
         if (item == 0) propData->codepage = L"win";
         else propData->codepage = L"utf8";
+        return 0;
+    }
+    LRESULT OnLogFormat(WORD, WORD, HWND, BOOL&)
+    {
+        int item = m_logformat.GetCurSel();
+        if (item == 0) propData->logformat = L"html";
+        else propData->logformat = L"txt";
         return 0;
     }
 

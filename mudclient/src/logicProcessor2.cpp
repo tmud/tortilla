@@ -423,7 +423,7 @@ IMPL(math)
             { p->invalidvars(); return; }
 
         if (vp->setVar(p->at(0), result))
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
         else
             swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         helper->tmcLog(pb.buffer);
@@ -445,7 +445,7 @@ IMPL(var)
             helper->tmcLog(L"Переменные(vars):");
         else
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменные с {%s}:", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
 
@@ -456,7 +456,7 @@ IMPL(var)
             const property_value& v = pdata->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", v.key.c_str(), v.value.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", v.key.c_str(), v.value.c_str());
             helper->simpleLog(pb.buffer);
             found = true;
         }
@@ -473,7 +473,7 @@ IMPL(var)
         else
         {
             if (vp->setVar(p->at(0), p->at(1)))
-                swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", p->c_str(0), p->c_str(1));
+                swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), p->c_str(1));
             else
                 swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         }
@@ -786,13 +786,13 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id != -1)
     {
          tstring oldfile(m_logs.getLogFile(id));
-         m_logs.closeLog(id);
-         m_wlogs[log] = -1;
          if (log == 0)
             swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
          else
              swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
          tmcLog(pb.buffer);
+         m_wlogs[log] = -1;
+         m_logs.closeLog(id);
          if (file.empty())
              return;
     }
@@ -810,15 +810,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    int pos = logfile.rfind(L'.');
-    if (pos == -1)
-        logfile.append(L".html");
-    else
-    {
-        tstring ext(logfile.substr(pos+1));
-        if (ext != L"htm" && ext != L"html")
-            logfile.append(L".html");
-    }
+    m_logs.calcFileName(logfile);
 
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)
@@ -949,7 +941,7 @@ IMPL(whide)
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -991,7 +983,10 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params)
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, view);
+    int flags = SKIP_SUBS|GAME_LOG;
+    if (!enable_actions)
+        flags |= SKIP_ACTIONS;
+    printIncoming(data, flags, view);
 }
 
 IMPL(wprint)
@@ -1005,7 +1000,7 @@ IMPL(wprint)
         std::vector<tstring> data;
         for (int i=1; i<n; ++i)
             data.push_back(p->at(i));
-        return printex(window, data);
+        return printex(window, data, false);
     }
     p->invalidargs();
 }
@@ -1018,7 +1013,7 @@ IMPL(print)
         std::vector<tstring> data;
         for (int i=0; i<n; ++i)
             data.push_back(p->at(i));
-        return printex(0, data);
+        return printex(0, data, true);
     }
     p->invalidargs();
 }

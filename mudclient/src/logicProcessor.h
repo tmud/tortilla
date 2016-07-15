@@ -45,6 +45,7 @@ public:
     virtual bool getConnectionState() = 0;
     virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
     virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
+    virtual void windowClear(int window) = 0;
 };
 
 class parser;
@@ -106,13 +107,16 @@ public:
     bool addSystemCommand(const tstring& cmd);
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
+    void windowClear(int window);
     void windowOutput(int window, const std::vector<tstring>& msgs);
     void pluginsOutput(int window, const MudViewStringBlocks& v);
 private:
     void processCommand(const tstring& cmd);
     void processCommands(const InputPlainCommands& cmds);
+    void processQueueCommand();
     void makeCommands(const InputPlainCommands& cmds, InputCommands* rcmds);
     void runCommands(InputCommands& cmds);
+    void runCommand(InputCommand cmd, InputCommands& inserts);
     bool processAliases(InputCommands& cmds);
     void syscmdLog(const tstring& cmd);
     void recognizeSystemCommand(tstring* cmd, tstring* error);
@@ -165,7 +169,7 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
-    void printex(int view, const std::vector<tstring>& params);
+    void printex(int view, const std::vector<tstring>& params, bool enable_actions);
     DEF(wprint);
     DEF(print);
     DEF(message);

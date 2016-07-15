@@ -28,7 +28,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.04'
+  return '1.07'
 end
 
 local function print(s)
@@ -66,7 +66,7 @@ local function end_output()
   if count > 0 then
     lor_output_pages = math.ceil( count / lor_output_perpage )
     lor_output_page = 1
-    if lor_output_page ~= lor_output_pages then
+    if lor_output_pages ~= 1 then
       print('Страница: '..lor_output_page..'/'..lor_output_pages)
     end
   end
@@ -83,7 +83,7 @@ local function next_ouput_page()
   for i=from,to do
     _G.print(lor_output[i])
   end
-  if lor_output_page ~= lor_output_pages then
+  if lor_output_pages ~= 1 then
     print('Страница: '..lor_output_page..'/'..lor_output_pages)
   end
   return true
@@ -478,23 +478,22 @@ function lor.before(v, vd)
     vd:select(i)
     if vd:isPrompt() then
       lor_catch_mode = false
-      local res,error = save_lor_strings()
-      if error then
+      local _,result = save_lor_strings()
+      if result then
         vd:insertString(true, false)
         vd:select(i)
         vd:setBlocksCount(1)
-        vd:setBlockText(1, '[lor] '..error)
+        vd:setBlockText(1, '[lor] '..result)
       end
       break
     end
     if not vd:isSystem() and not vd:isGameCmd() and vd:getTextLen() > 0 then
-      local ref = vd:createRef()
-      local item
-      ref, item = lor_check(ref)
+      local vs = vd:createViewString()
+      local result, item = lor_check(vs)
       if item then lor_strings.name = item end
-      if ref then
-        lor_strings[#lor_strings+1] = ref
-      elseif ref == nil then  -- nil -> drop object
+      if result then
+        lor_strings[#lor_strings+1] = vs
+      elseif result == nil then  -- nil -> drop object
         lor_catch_mode = false
         break
       end
