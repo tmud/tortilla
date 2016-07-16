@@ -138,6 +138,12 @@ void LogicHelper::resetTimers()
     m_ticker.sync();
 }
 
+int LogicHelper::getLeftTime(int timer)
+{
+    int count = m_timers.size();
+    return (timer >= 0 && timer < count) ? m_timers[timer]->left() : 0;
+}
+
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 {
      m_if_regexp.find(param);

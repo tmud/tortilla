@@ -100,6 +100,7 @@ public:
     void makeCommands(InputCommands *cmds);
     bool tick(int dt);
     void reset();
+    int  left();
     tstring id;
 
 private:

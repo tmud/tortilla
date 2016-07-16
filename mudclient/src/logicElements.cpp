@@ -391,3 +391,10 @@ void Timer::reset()
 {
     timer = 0;
 }
+
+int Timer::left()
+{
+    int dt = period - timer;
+    if (dt < 0) dt = 0;
+    return dt;
+}

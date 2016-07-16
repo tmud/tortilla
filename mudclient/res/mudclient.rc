@@ -193,9 +193,9 @@ BEGIN
     LTEXT           "История команд:",IDC_STATIC,6,37,67,8
     LTEXT           "строк",IDC_STATIC,156,23,27,8
     LTEXT           "шт",IDC_STATIC,156,37,27,8
-    LTEXT           "Кодировка клиента:",IDC_STATIC,208,23,70,9
+    LTEXT           "Кодировка клиента:",IDC_STATIC,209,23,70,9
     GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,141,204,51
-    LTEXT           "Формат записи логов:",IDC_STATIC,199,50,79,9
+    LTEXT           "Формат записи логов:",IDC_STATIC,201,50,76,9
     COMBOBOX        IDC_COMBO_LOGFORMAT,283,48,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 

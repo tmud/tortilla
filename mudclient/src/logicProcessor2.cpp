@@ -1103,8 +1103,18 @@ IMPL(timer)
         {
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
-            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
-                pt.cmd.c_str(), v.group.c_str());
+            if (!pdata->timers_on)
+            {
+                swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
+                  pt.cmd.c_str(), v.group.c_str());
+            }
+            else
+            {
+                int left = m_helper.getLeftTime(i);
+                double dleft = static_cast<double>(left); dleft /= 1000.0f;
+                swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
+                    pt.cmd.c_str(), v.group.c_str());
+            }
             helper->simpleLog(pb.buffer);
         }
         return;
@@ -1150,8 +1160,19 @@ IMPL(timer)
         const PropertiesValues &t  = pdata->timers;
         const property_value &v = t.get(index);
         PropertiesTimer pt; pt.convertFromString(v.value);
-        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
+
+        if (!pdata->timers_on)
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
+        }
+        else
+        {
+            int left = m_helper.getLeftTime(index);
+            double dleft = static_cast<double>(left); dleft /= 1000.0f;
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
+                pt.cmd.c_str(), v.group.c_str());
+        }
         helper->simpleLog(pb.buffer);
         return;
     }
@@ -1162,7 +1183,7 @@ IMPL(timer)
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
         double delay = p->toNumber(1);
-        if (delay < 0 || delay > 999.9f)
+        if (delay < 0 || delay > 9999.9f)
             return p->invalidargs();
 
          tchar tmp[16];
