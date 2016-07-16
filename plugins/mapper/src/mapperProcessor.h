@@ -10,7 +10,6 @@ public:
     bool init(const tstring& macro);
     void reset();
     bool findData(const tchar* data, int datalen);
-
     void truncate() { key = 0; }
     int  getKey() const { return key; }
     int  getKeyLen() const { return keylen; }
@@ -19,7 +18,6 @@ public:
         int size = keydata.size();
         return (size > 0 && keylen == size) ? true : false;
     }
-
 private:
     tstring keydata;
     int  key;
@@ -29,10 +27,10 @@ private:
 class MapperDataQueue
 {
 public:
-    void write(const tchar* data, int datalen)  {    buffer.write(data, datalen * sizeof(tchar));  }
+    void write(const tchar* data, int datalen)  {  buffer.write(data, datalen * sizeof(tchar));  }
     void truncate(int datalen) {  buffer.truncate(datalen * sizeof(tchar)); }
     void clear() {  buffer.clear(); }
-    int getDataLen() const  {  return buffer.getSize() / sizeof(WCHAR); } 
+    int getDataLen() const  {  return buffer.getSize() / sizeof(tchar); } 
     const tchar* getData() const { return (tchar*)buffer.getData(); }
 private:
     DataQueue buffer;
@@ -44,7 +42,6 @@ public:
     MapperProcessor();
     void updateProps(PropertiesMapper *props);
     bool processNetworkData(const tchar* text, int textlen, RoomData* result);
-
 private:
     bool searchData(const tchar* data, int datalen, RoomData* result);
     void checkBufferLimit();
@@ -58,4 +55,16 @@ private:
     MapperKeyElement ed;        // end description
     MapperKeyElement be;        // begin exits
     MapperKeyElement ee;        // end exits
+};
+
+class MapperPrompt
+{
+public:
+    MapperPrompt();
+    void updateProps(PropertiesMapper *props);
+    bool processNetworkData(const WCHAR* text, int textlen);
+private:
+    MapperKeyElement bp;       // begin prompt
+    MapperKeyElement ep;       // end prompt
+    MapperDataQueue m_network_buffer;
 };

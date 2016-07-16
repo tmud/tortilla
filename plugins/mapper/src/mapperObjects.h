@@ -77,7 +77,7 @@ struct Room
     int special;                    // special internal value for algoritms (don't save)
 };
 
-struct RoomCursor
+/*struct RoomCursor
 {
     RoomCursor();
     void reset();
@@ -90,10 +90,11 @@ struct RoomCursor
     Room* new_room;
     int   x,y,z;
 };
+*/
 
 struct ViewMapPosition
 {
-    ViewMapPosition() { reset();  }
+    ViewMapPosition() { reset(); }
     void reset() { room = NULL; level = NULL; cursor = 0; }
     Room* room;
     RoomsLevel *level;
@@ -116,7 +117,7 @@ public:
     {
         rooms.push_back(new row);        
     }
-    ~RoomsLevel() { autodel<row> z(rooms); }
+    ~RoomsLevel() { std::for_each(rooms.begin(), rooms.end(), [](row *r){delete r;}); }
     bool  addRoom(Room* r, int x, int y);
     Room* detachRoom(int x, int y);
     void  deleteRoom(int x, int y);

@@ -1,5 +1,5 @@
 //  loaded from http://www.codeproject.com/Articles/1493/A-Powerfull-Ownerdraw-Menu
-//  Modified by me :) for mapper
+//  Modified by me
 #pragma once
 
 //The ownerdraw data

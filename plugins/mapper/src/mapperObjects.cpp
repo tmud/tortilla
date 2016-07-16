@@ -2,7 +2,7 @@
 #include "mapperObjects.h"
 
 const wchar_t* RoomDirName[] = { L"north", L"south", L"west", L"east", L"up", L"down" };
-RoomCursor::RoomCursor() { reset(); }
+/*RoomCursor::RoomCursor() { reset(); }
 void RoomCursor::reset() { current_room = NULL; new_room = NULL; x=y=z=0; }
 
 RoomsLevel* RoomCursor::getOffsetLevel() const
@@ -51,7 +51,7 @@ void RoomCursor::move(int dir)
     else if (dir == RD_DOWN)
         z -= 1;
     else { assert(false); }
-}
+}*/
 
 int RoomsLevel::height() const
 {
