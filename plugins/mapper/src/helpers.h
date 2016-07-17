@@ -1,6 +1,6 @@
 #pragma once
 
-class RoomHelper
+/*class RoomHelper
 {
 public:
     RoomHelper(Room *room) : m_room(room) {}
@@ -89,3 +89,4 @@ private:
     }
     Room* m_room;
 };
+*/

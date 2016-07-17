@@ -2,7 +2,7 @@
 
 #include "mapperObjects.h"
 
-class MapperHashTable
+/*class MapperHashTable
 {
 public:
     MapperHashTable();
@@ -16,3 +16,4 @@ private:
     std::map<uint, rooms_list*> rooms;
     typedef std::map<uint, rooms_list*>::iterator iterator;    
 };
+*/

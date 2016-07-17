@@ -334,7 +334,7 @@ void MapperRender::mouseLeave()
 
 void MapperRender::mouseRightButtonDown()
 {
-    POINT pt; GetCursorPos(&pt);
+    /*todo! POINT pt; GetCursorPos(&pt);
     int cursor_x = pt.x; 
     int cursor_y = pt.y;
     ScreenToClient(&pt);
@@ -352,6 +352,7 @@ void MapperRender::mouseRightButtonDown()
     m_menu.SetItemState(MENU_NEWZONE_DOWN, rh.isExplored(RD_DOWN));
 
     m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+    */
 }
 
 void MapperRender::createMenu()

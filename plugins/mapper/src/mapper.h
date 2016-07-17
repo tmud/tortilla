@@ -3,7 +3,6 @@
 #include "splitterEx.h"
 #include "mapperObjects.h"
 #include "mapperProcessor.h"
-#include "mapperPrompt.h"
 #include "mapperRender.h"
 #include "mapperHashTable.h"
 #include "mapperToolbar.h"
@@ -56,18 +55,23 @@ private:
     void onZoneChanged();
 
 private:
+    void  popDir();
+    Room* findRoom(const RoomData& room);
     Zone* addNewZone();
+
+    /*Zone* addNewZone();
+
     Room* findRoomCached(const RoomData& room);
     Room* findRoom(const RoomData& room);
     Room* addNewRoom(const RoomData& room);
     Room* createNewRoom(const RoomData& room);
     void  deleteRoom(Room* room);
     void  changeLevelOrZone(Room *old, Room* curr);
-    void  checkExits(Room *room);
+    void  checkExits(Room *room);*/
     int   revertDir(int dir);
-    void  popDir();
-    Room* getNextRoom(Room *room, int dir);
-    void  redrawPosition();
+
+    /*Room* getNextRoom(Room *room, int dir);
+    void  redrawPosition();*/
 
 private:
     // properties
@@ -84,13 +88,21 @@ private:
     DirsVector m_dirs;
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
-    MapperHashTable m_table;
+    //todo! MapperHashTable m_table;
     //todo! MapperRoomsCache m_cache;
 
     std::deque<int> m_path;
     int m_lastDir;
     Room *m_pCurrentRoom;
+
+    std::map<RoomVnum, Room*> m_rooms;
+    typedef std::map<RoomVnum, Room*>::iterator room_iterator;
+
+
+
     std::vector<Zone*> m_zones;
-    RoomCursor m_rpos;
-    ViewMapPosition m_viewpos;
+    int m_lastzone_id;
+    
+    /*RoomCursor m_rpos;
+    ViewMapPosition m_viewpos;*/
 };

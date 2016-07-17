@@ -1,6 +1,6 @@
 #pragma once
 
-class MapperRoomsCache
+/*class MapperRoomsCache
 {
 public:
     MapperRoomsCache() {}
@@ -40,4 +40,4 @@ private:
 private:
     std::vector<Room*> m_rooms;
 
-};
+};*/

@@ -7,16 +7,18 @@ struct Room;
 class RoomsLevel;
 class Zone;
 
+typedef tstring RoomVnum;
 struct RoomData
 {
+    RoomVnum vnum;
     tstring name;
-    tstring vnum;
     tstring descr;
     tstring exits;
-    uint    hash;
-    uint    dhash;
 
-    bool equal(const RoomData& rd) const
+    //todo! uint    hash;
+    //uint    dhash;
+
+    /*bool equal(const RoomData& rd) const
     {
         assert(hash && rd.hash);
         return (hash == rd.hash && dhash == rd.dhash) ? true : false;
@@ -53,7 +55,7 @@ struct RoomData
             dhash = dcrc.getCRC32();
         }
     }
-    RoomData() : hash(0), dhash(0) {}
+    RoomData() : hash(0), dhash(0) {}*/
 };
 
 struct RoomExit
@@ -66,15 +68,15 @@ struct RoomExit
 
 struct Room
 {
-    Room() : level(NULL), x(0), y(0), icon(0), use_color(0), color(0), special(0) {}
+    Room() : level(NULL), x(0), y(0), icon(0), use_color(0), color(0) {} //, special(0) {}
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
-    RoomsLevel *level;              // callback ptr to parent level (owner of room)
+    RoomsLevel *level;              // parent level (owner of room)
     int x, y;                       // position in level
     int icon;                       // icon if exist
     int use_color;                  // flag for use background color
     COLORREF color;                 // background color
-    int special;                    // special internal value for algoritms (don't save)
+    //int special;                    // special internal value for algoritms (don't save)
 };
 
 /*struct RoomCursor
@@ -170,7 +172,7 @@ class Zone
 {
 public:
     Zone(const tstring& zonename) : start_index(0), m_name(zonename), m_original_name(zonename) {}
-    ~Zone() { autodel<RoomsLevel> z(m_levels); }
+    ~Zone() { std::for_each(m_levels.begin(), m_levels.end(), [](RoomsLevel* rl) {delete rl;}); }
     RoomsLevel* getLevel(int level, bool create_if_notexist);
     RoomsLevel* getDefaultLevel();
     int width() const;

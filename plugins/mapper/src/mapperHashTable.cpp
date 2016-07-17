@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "mapperHashTable.h"
 
-MapperHashTable::MapperHashTable()
+/*MapperHashTable::MapperHashTable()
 {
 }
 
@@ -66,3 +66,4 @@ void MapperHashTable::findRooms(const RoomData& room, std::vector<Room*> *vr)
             vr->push_back(r);
     }
 }
+*/
