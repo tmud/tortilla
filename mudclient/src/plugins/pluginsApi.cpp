@@ -1261,6 +1261,29 @@ int getVersion(lua_State *L)
     }
     return pluginInvArgs(L, L"getVersion");
 }
+
+int isGroupActive(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring group(luaT_towstring(L, 1));
+        PropertiesData* pdata = tortilla::getProperties();
+        for (int i = 0, e = pdata->groups.size(); i < e; ++i)
+        {
+            const property_value &v = pdata->groups.get(i);
+            if (v.key == group)
+            {
+                int state = (v.value == L"1") ? 1 : 0;
+                lua_pushboolean(L, state);
+                return 1;            
+            }
+        }
+        lua_pushnil(L);
+        return 1;
+    }
+    return pluginInvArgs(L, L"isGroupActive");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -1330,6 +1353,7 @@ bool initPluginsSystem()
     lua_register(L, "clearView", clearView);
     lua_register(L, "translateColors", translateColors);
     lua_register(L, "getVersion", getVersion);
+    lua_register(L, "isGroupActive", isGroupActive);
 
     reg_props(L);
     reg_activeobjects(L);

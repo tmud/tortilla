@@ -28,6 +28,8 @@ local function in_trigger(vd)
 end
 
 function triggers.init()
+  log(tostring(isGroupActive("off")))
+
   -- создаем триггер
   createTrigger("^%1 сражается с %2", in_trigger)
 
