@@ -123,8 +123,8 @@ private:
     void processSystemCommand(InputCommand cmd);
     void processGameCommand(InputCommand cmd);
     enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
-           SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24,
-           GAME_LOG = 32, GAME_CMD = 64, FROM_STACK = 128, FROM_TIMER = 256, NEW_LINE = 512 };
+           SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24, WORK_OFFLINE = 32,
+           GAME_LOG = 64, GAME_CMD = 128, FROM_STACK = 256, FROM_TIMER = 512, NEW_LINE = 1024 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);

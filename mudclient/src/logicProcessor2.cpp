@@ -983,7 +983,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    int flags = SKIP_SUBS|GAME_LOG;
+    int flags = SKIP_SUBS|GAME_LOG|WORK_OFFLINE;
     if (!enable_actions)
         flags |= SKIP_ACTIONS;
     printIncoming(data, flags, view);

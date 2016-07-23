@@ -339,7 +339,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
     if (parse_data.strings.empty())
         return;
-    if (!m_connected)
+    if (!m_connected && !(flags & WORK_OFFLINE))
         flags = flags | SKIP_ACTIONS | SKIP_SUBS;
 
     parseDataStrings &pds = parse_data.strings;
