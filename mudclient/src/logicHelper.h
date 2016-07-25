@@ -58,7 +58,7 @@ public:
     }
     void init(PropertiesValues *values, const std::vector<tstring>& active_groups, const InputTemplateParameters& p)
     {
-        std::vector<int> timers;
+        std::map<int, int> timers;
         for (int i=0,e=values->size(); i<e; ++i)
         {
             const property_value &v = values->get(i);
@@ -69,11 +69,14 @@ public:
                 continue;
             if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
                 continue;
-            timers.push_back(i);
+            timers[id] = i;
         }
 
-        for (int i=0,e=timers.size(); i<e; ++i)
+        std::vector<Timer*> newtimers;
+        std::map<int, int>::iterator it = timers.begin(); 
+        for (int k=0,ke=timers.size(); k<ke; ++k, ++it)
         {
+            int i = it->second;
             const property_value &v = values->get(timers[i]);
             int index = -1;
             for (int j=0,je=size(); j<je; ++j)
@@ -81,10 +84,11 @@ public:
                 if (!v.key.compare(at(j)->id))
                     { index = j; break; }
             }
+
             Timer *t = (index == -1) ? new Timer() : at(index);
             if (index == -1)
-                push_back(t);
-            t->init(v, p);
+               t->init(v, p);
+            newtimers[i] = t;
         }
 
         std::vector<int> todelete;
@@ -109,6 +113,8 @@ public:
             erase(begin() + id);
             delete t;
         }
+        //std::sort(newtimers.begin(), newtimers.end(),[](Timer* t1, Timer *t2){ t1 < t2-> } );
+        swap(newtimers);
     }
 };
 
