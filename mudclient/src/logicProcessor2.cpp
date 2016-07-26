@@ -1288,6 +1288,32 @@ IMPL(untimer)
     p->invalidargs();
 }
 
+IMPL(uptimer)
+{
+    if (tortilla::isPropertiesOpen())
+        return p->blockedbyprops();
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        int key = p->toInteger(0);
+        if (key < 1 || key > TIMERS_COUNT)
+            return p->invalidargs();
+        tchar tmp[16];
+        _itow(key, tmp, 10);
+        tstring id(tmp);
+
+        if (m_helper.upTimer(id))
+        {
+            ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
+            MethodsHelper* helper = ph;
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s перезапущен.", id.c_str());
+            helper->tmcLog(pb.buffer);
+            return;
+        }
+    }
+    p->invalidargs();
+}
+
 IMPL(hidewindow)
 {
     if (p->size() == 0)
@@ -1426,6 +1452,7 @@ bool LogicProcessor::init()
     regCommand("untab", untab);
     regCommand("timer", timer);
     regCommand("untimer", untimer);
+    regCommand("uptimer", uptimer);
 
     regCommand("hidewindow", hidewindow);
     regCommand("showwindow", showwindow);

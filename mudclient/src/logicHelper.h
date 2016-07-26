@@ -183,6 +183,7 @@ public:
     void processTimers(InputCommands* newcmds);
     void resetTimers();
     int  getLeftTime(const tstring& timer_id);
+    bool upTimer(const tstring& timer_id);
 
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);

@@ -150,6 +150,21 @@ int LogicHelper::getLeftTime(const tstring& timer_id)
     return 0;
 }
 
+bool LogicHelper::upTimer(const tstring& timer_id)
+{
+    int count = m_timers.size();
+    for (int i=0;i<count;++i)
+    {
+        Timer *t = m_timers[i];
+        if (t->id == timer_id)
+        {
+           t->reset();
+           return true;
+        }
+    }
+    return false;
+}
+
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 {
      m_if_regexp.find(param);

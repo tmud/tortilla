@@ -50,6 +50,8 @@ bool InputCommandsVarsFilter::checkFilter(InputCommand cmd)
         return true;
     if (!c.compare(0, 3, L"untimer", 3))
         return true;
+    if (!c.compare(0, 3, L"uptimer", 3))
+        return true;
     return false;
 }
 
