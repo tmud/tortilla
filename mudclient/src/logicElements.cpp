@@ -136,7 +136,8 @@ public:
     }
 };
 
-Alias::Alias(const property_value& v, const InputTemplateParameters& p)
+Alias::Alias() {}
+void Alias::init(const property_value& v, const InputTemplateParameters& p)
 {
     m_compare.initOnlyVars(v.key);
     InputPlainCommands plain(v.value);
@@ -175,8 +176,10 @@ bool Alias::processing(const InputCommand cmd, InputCommands *newcmds)
     return true;
 }
 
-Hotkey::Hotkey(const property_value& v, const InputTemplateParameters& p) : m_key(v.key)
+Hotkey::Hotkey() {}
+void Hotkey::init(const property_value& v, const InputTemplateParameters& p)
 {
+    m_key = v.key;
     InputPlainCommands plain(v.value);
     m_cmds.init(plain, p);
     m_cmds.makeTemplates();
@@ -202,7 +205,8 @@ public:
     }
 };
 
-Action::Action(const property_value& v, const InputTemplateParameters& p)
+Action::Action() {}
+void Action::init(const property_value& v, const InputTemplateParameters& p)
 {
     m_compare.init(v.key, true);
     InputPlainCommands plain(v.value);
@@ -226,8 +230,10 @@ bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newc
     return true;
 }
 
-Sub::Sub(const property_value& v) : m_value(v.value)
+Sub::Sub() {}
+void Sub::init(const property_value& v)
 {
+    m_value = v.value;
     m_compare.init(v.key, false);
 }
 
@@ -265,7 +271,8 @@ bool Sub::processing(CompareData& data)
     return true;
 }
 
-AntiSub::AntiSub(const property_value& v)
+AntiSub::AntiSub(){}
+void AntiSub::init(const property_value& v)
 {
     m_compare.init(v.key, false);
 }
@@ -287,7 +294,8 @@ bool AntiSub::processing(CompareData& data)
     return true;
 }
 
-Gag::Gag(const property_value& v)
+Gag::Gag(){}
+void Gag::init(const property_value& v)
 {
     m_compare.init(v.key, false);
 }
@@ -320,7 +328,8 @@ bool Gag::processing(CompareData& data)
     return true;
 }
 
-Highlight::Highlight(const property_value& v)
+Highlight::Highlight(){}
+void Highlight::init(const property_value& v)
 {
     m_compare.init(v.key, false);
     m_hl.convertFromString(v.value);

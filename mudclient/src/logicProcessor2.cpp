@@ -582,12 +582,12 @@ IMPL(group)
         helper->simpleLog(pb.buffer);
         return;
     }
-    
+
     if (op == L"вкл" || op == L"enable" || op == L"on" || op == L"1")
     {
         property_value &v = pdata->groups.getw(index);
         v.value = L"1";
-        updateProps();
+        updateProps(1, LogicHelper::UPDATE_GROUPS);
         swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} включена.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
@@ -597,11 +597,11 @@ IMPL(group)
     {
         property_value &v = pdata->groups.getw(index);
         v.value = L"0";
-        updateProps();
+        updateProps(1, LogicHelper::UPDATE_GROUPS);
         swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} выключена.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
-    }   
+    }
 
     swprintf(pb.buffer, pb.buffer_len, L"Неизвестная операция %s.", op.c_str());
     helper->tmcLog(pb.buffer);
@@ -1090,17 +1090,28 @@ IMPL(timer)
     if (n == 0)
     {
         helper->skipCheckMode();
-        if (!pdata->timers_on)
-            helper->tmcLog(L"Таймеры выключены.");
         const PropertiesValues &t  = pdata->timers;
         if (t.size() == 0)
         {
-            helper->tmcLog(L"Таймеры не созданы.");
+            helper->tmcLog(L"Не создано ни одного таймера.");
             return;
         }
-        helper->tmcLog(L"Таймеры:");
+        if (!pdata->timers_on)
+            helper->tmcLog(L"Таймеры (выключены):");
+        else
+            helper->tmcLog(L"Таймеры:");
+
+        std::map<tstring, int> sorted_map;
         for (int i=0,e=t.size(); i<e; ++i)
         {
+            const property_value &v = t.get(i);
+            sorted_map[v.key] = i;
+        }
+
+        std::map<tstring, int>::iterator it = sorted_map.begin(), it_end = sorted_map.end();
+        for (; it!=it_end; ++it)
+        {
+            int i = it->second;
             const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
             if (!pdata->timers_on)
@@ -1110,7 +1121,7 @@ IMPL(timer)
             }
             else
             {
-                int left = m_helper.getLeftTime(i);
+                int left = m_helper.getLeftTime(v.key);
                 double dleft = static_cast<double>(left); dleft /= 1000.0f;
                 swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
                     pt.cmd.c_str(), v.group.c_str());
@@ -1122,6 +1133,7 @@ IMPL(timer)
 
     if (n == 1 && !p->isInteger(0))
     {
+        helper->skipCheckMode();
         tstring op(p->at(0));
         if (op == L"disable" || op == L"off" || op == L"выкл") {
             pdata->timers_on = 0;
@@ -1143,6 +1155,7 @@ IMPL(timer)
 
     if (n == 1 && p->isInteger(0))
     {
+        helper->skipCheckMode();
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
@@ -1168,7 +1181,7 @@ IMPL(timer)
         }
         else
         {
-            int left = m_helper.getLeftTime(index);
+            int left = m_helper.getLeftTime(v.key);
             double dleft = static_cast<double>(left); dleft /= 1000.0f;
             swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
                 pt.cmd.c_str(), v.group.c_str());
@@ -1192,7 +1205,8 @@ IMPL(timer)
         int index = pdata->timers.find(id);
         if (index == -1 && n == 2)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Ошибка. Таймер #%s не существует.", id.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не cоздан.", id.c_str());
+            helper->skipCheckMode();
             helper->tmcLog(pb.buffer);
             return;
         }
@@ -1232,7 +1246,9 @@ IMPL(timer)
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
         helper->simpleLog(pb.buffer);
-        return updateProps(1, LogicHelper::UPDATE_TIMERS);
+
+        int timer_id = LogicHelper::UPDATE_TIMER1+key-1;
+        return updateProps(1, timer_id);
     }
     p->invalidargs();
 }
@@ -1244,6 +1260,8 @@ IMPL(untimer)
     int n = p->size();
     if (n == 1 && p->isInteger(0))
     {
+        ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
+        MethodsHelper* helper = ph;
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
@@ -1252,8 +1270,6 @@ IMPL(untimer)
         tstring id(tmp);
 
         PropertiesData *pdata = tortilla::getProperties();
-        ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
-        MethodsHelper* helper = ph;
 
         int index = pdata->timers.find(id);
         if (index == -1)
@@ -1265,7 +1281,9 @@ IMPL(untimer)
         pdata->timers.del(index);
         swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s удален.", id.c_str());
         helper->tmcLog(pb.buffer);
-        return updateProps(1, LogicHelper::UPDATE_TIMERS);
+
+        int timer_id = LogicHelper::UPDATE_TIMER1+key-1;
+        return updateProps(1, timer_id);
     }
     p->invalidargs();
 }

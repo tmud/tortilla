@@ -164,7 +164,17 @@ bool PropertiesManager::loadProfileData()
     loadArray(sd, L"asubs/asub", false, true, &m_propData.antisubs);
     loadArray(sd, L"gags/gag", false, true, &m_propData.gags);
     loadArray(sd, L"highlights/highlight", true, true, &m_propData.highlights);
-    loadArray(sd, L"timers/timer", true, true, &m_propData.timers);
+    PropertiesValues timers;
+    loadArray(sd, L"timers/timer", true, true, &timers);
+    PropertiesValues& t = m_propData.timers;
+    for (int i=0,e=timers.size();i<e;++i)
+    {
+        const property_value& v = timers.get(i);
+        int id = 0;
+        if (w2int(v.key, &id) && id >= 1 && id <= TIMERS_COUNT)
+            t.add(-1, v.key, v.value, v.group);
+    }
+
     loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
     loadArray(sd, L"variables/var", true, false, &m_propData.variables);
 

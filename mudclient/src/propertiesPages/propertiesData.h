@@ -16,15 +16,20 @@ struct Profile
 
 struct PropertiesHighlight
 {
-    PropertiesHighlight() : textcolor(RGB(192,192,192)), bkgcolor(RGB(0,0,0)),
-        underlined(0), border(0), italic(0) {}
-    PropertiesHighlight(COLORREF text_color, COLORREF bgnd_color) : textcolor(text_color), bkgcolor(bgnd_color),
-        underlined(0), border(0), italic(0) {}
+    PropertiesHighlight() { reset(); }
+    PropertiesHighlight(COLORREF text_color, COLORREF bgnd_color) { reset(); textcolor = text_color; bkgcolor = bgnd_color; }
     COLORREF textcolor;
     COLORREF bkgcolor;
     int underlined;
     int border;
     int italic;
+
+    void reset()
+    {
+        underlined = border = italic = 0;
+        textcolor = RGB(192,192,192);
+        bkgcolor = RGB(0,0,0);
+    }
 
     void convertToString(tstring *value) const
     {
@@ -36,6 +41,7 @@ struct PropertiesHighlight
 
     void convertFromString(const tstring& str)
     {
+        reset();
         value v; COLORREF color;
         if (parseString(str, L"txt[", &v) && checkColor(v, &color))
             textcolor = color;
