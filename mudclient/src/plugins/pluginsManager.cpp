@@ -270,7 +270,7 @@ void PluginsManager::processGameCmd(InputCommand cmd)
     p.insert(p.end(), cmd->parameters_list.begin(), cmd->parameters_list.end());
     tstring error_msg;
     PluginsManager::TableMethodResult result = (cmd->system) ? doPluginsTableMethod("syscmd", &p, &error_msg) : doPluginsTableMethod("gamecmd", &p, &error_msg);
-    if (result == TM_PROCESSED)
+    if (result == TM_CHANGED)
         concatCommand(p, cmd->system, cmd);
     if (result == TM_DROPPED)
     {
@@ -282,6 +282,11 @@ void PluginsManager::processGameCmd(InputCommand cmd)
             swprintf(plugin_buffer(), L"%s (%s)", error_msg.c_str(), src.c_str());
             pluginOut(plugin_buffer());
         }
+    }
+    if (result == TM_PROCESSED)
+    {
+        cmd->changed = true;
+        cmd->command.clear();
     }
 }
 
@@ -653,16 +658,16 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
             result = TM_NOTPROCESSED;
         }
         if (!not_supported)
-            result = TM_PROCESSED;
+            result = TM_CHANGED;
         if (lua_isnil(L, -1)) 
         {
-            result = TM_DROPPED;
+            result = TM_PROCESSED;
             break;
         }
         if (lua_isboolean(L, -1))
         {
             int res = lua_toboolean(L, -1);
-            result = (!res) ? TM_DROPPED : TM_NOTPROCESSED;
+            result = (!res) ? TM_DROPPED : TM_PROCESSED;
             break;
         }
         if (lua_isstring(L, -1))
@@ -677,7 +682,7 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
              break;
         }
     }
-    if (lua_istable(L, -1) && result == TM_PROCESSED)
+    if (lua_istable(L, -1) && result == TM_CHANGED)
     {
         lua_len(L, -1);
         int len = lua_tointeger(L, -1);

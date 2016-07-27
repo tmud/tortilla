@@ -35,7 +35,7 @@ function speedwalk.description()
   return table.concat(s, '\r\n')
 end
 function speedwalk.version()
-  return '1.0'
+  return '1.01'
 end
 
 local recorddb = {}
@@ -421,14 +421,13 @@ function speedwalk.syscmd(t)
     end
     local p = props.cmdPrefix()
     print(p..'swalk start|stop|save|return|go|play|list|delete|show|add ('..p..'help speedwalk)')
-    return {}
+    return
   end
   if (#t > 3 and c ~= 'add') or #t > 4 then
     print('В команде слишком много параметров.')
   else
     f(t[3], t[4])
   end
-  return {}
 end
 
 local function collect_record_path()

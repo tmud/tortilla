@@ -15,7 +15,7 @@ function autowrap.name()
 end
 
 function autowrap.version()
-  return '1.04'
+  return '1.05'
 end
 
 function autowrap.description()
@@ -163,20 +163,19 @@ function autowrap.syscmd(t)
     end
     if #t ~= 3 or not isnumber(t[2]) or not isnumber(t[3]) then
         log("Некорретный набор параметров: "..cmdstr(t))
-        return false
+        return
     end
     local window = tonumber(t[2])
     local newlen = tonumber(t[3])
     if window < 0 or window > 6 then
         log("Указан неверный номер окна: "..window..", "..cmdstr(t))
-        return false
+        return
     end
     if newlen < 60 then
         log("Указан неверный размер строки: "..newlen..", "..cmdstr(t))
-        return false
+        return
     end
     updateView(window, function(v) update_view(v,newlen) end)
-    return nil
 end
 
 return autowrap
