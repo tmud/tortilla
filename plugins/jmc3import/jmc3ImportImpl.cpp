@@ -281,7 +281,21 @@ bool Jmc3Import::convert(std::wstring *str)
         else
         {
             std::wstring new_cmd(cmdsymbol);
-            if (!ifcmd.find(s.c_str())) 
+            if (varcmd.find(s.c_str()))
+            {
+                new_cmd.append(L"var ");
+                std::wstring tmp;
+                varcmd.get(1, &tmp);
+                new_cmd.append(tmp);
+                new_cmd.append(L" ");
+                varcmd.get(2, &tmp);
+                new_cmd.append(tmp);
+                varcmd.get(3, &tmp);
+                if (!tmp.empty()) {
+                new_cmd.append(L" ");
+                new_cmd.append(tmp); }
+            }
+            else if (!ifcmd.find(s.c_str()))
             {
                 if (!base.find(s.c_str()))
                     new_cmd.append(s.substr(p.length()));
@@ -430,6 +444,7 @@ void Jmc3Import::initLegacy()
     c[L"tabdel"] = L"untab";
     c[L"variable"] = L"var";
     c[L"output"] = L"wout 1";
+    c[L"flash"] = L"showwindow";
 }
 
 void Jmc3Import::initPcre()
@@ -437,6 +452,7 @@ void Jmc3Import::initPcre()
     base.init(L"^(\\W)(.*?) +(.*) *");
     param.init(L"\\{((?:(?>[^{}]+)|(?R))*)\\}");
     ifcmd.init(L"^.if .*");
+    varcmd.init(L"^.var {?([^ }]+)}? *=? *{?([^}]+)}?(.*)");
     disable_group.init(L"disable (.*)");
     params.init(L"(%[0-9]){1}");
 }
