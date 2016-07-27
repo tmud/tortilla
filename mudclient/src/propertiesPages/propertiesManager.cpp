@@ -109,6 +109,7 @@ bool PropertiesManager::loadProfileData()
     loadValue(sd, L"plogs", 0, 1, &m_propData.plugins_logs);
     loadValue(sd, L"plogswnd", 0, OUTPUT_WINDOWS, &m_propData.plugins_logs_window);
     loadValue(sd, L"softscroll", 0, 1, &m_propData.soft_scroll);
+    loadValue(sd, L"unknowncmd", 0, 1, &m_propData.unknown_cmd);
     tstring cp;
     loadString(sd, L"codepage", &cp);
     if (cp != L"win" && cp != L"utf8")
@@ -217,6 +218,7 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, L"plogs", m_propData.plugins_logs);
     saveValue(sd, L"plogswnd", m_propData.plugins_logs_window);
     saveValue(sd, L"softscroll", m_propData.soft_scroll);
+    saveValue(sd, L"unknowncmd", m_propData.unknown_cmd);
     saveString(sd, L"codepage", m_propData.codepage);
     saveString(sd, L"logformat", m_propData.logformat);
     saveValue(sd, L"prompt", m_propData.recognize_prompt);

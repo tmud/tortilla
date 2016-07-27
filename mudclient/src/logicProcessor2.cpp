@@ -57,7 +57,7 @@ void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
            //пробуем подобрать по сокращенному имени
            int len = main_cmd.size();
            if (len < 3)
-               error->append(L"Неизвестная команда");
+               error->append(L"Короткое имя команды");
            else
            {
                std::vector<tstring> cmds;
@@ -93,6 +93,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
+    bool unknown_cmd = false;
     bool fullcmd_loged = false;
     if (error.empty())
     {
@@ -149,7 +150,10 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
                 piterator p_end = m_plugins_cmds.end();
                 piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
                 if (p == p_end)
+                {
+                    unknown_cmd = true;
                     error.append(L"Неизвестная команда");
+                }
             }
         }
     }
@@ -165,21 +169,24 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
             syscmdLog(fullcmd);
         }
 
-        tstring msg(L"Ошибка: ");
-        msg.append(error);
-        msg.append(L" [");
-        bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
-        if (cmd->changed) msg.append(prefix);
-        msg.append(usesrc ? cmd->srccmd : cmd->command);
-        if (!hide_cmd)
-            msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
-        msg.append(L"]");
-        if (!cmd->alias.empty())
-        {
-            msg.append(L", макрос: ");
-            msg.append(cmd->alias);
+        if (unknown_cmd && pdata->unknown_cmd && !cmd->user) {}
+        else {
+            tstring msg(L"Ошибка: ");
+            msg.append(error);
+            msg.append(L" [");
+            bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
+            if (cmd->changed) msg.append(prefix);
+            msg.append(usesrc ? cmd->srccmd : cmd->command);
+            if (!hide_cmd)
+                msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
+            msg.append(L"]");
+            if (!cmd->alias.empty())
+            {
+                msg.append(L", макрос: ");
+                msg.append(cmd->alias);
+            }
+            tmcLog(msg);
         }
-        tmcLog(msg);
     }
 }
 

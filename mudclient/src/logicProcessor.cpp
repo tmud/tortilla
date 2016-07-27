@@ -63,7 +63,10 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
 
 void LogicProcessor::processUserCommand(const InputPlainCommands& cmds)
 {
-    processCommands(cmds);
+    InputCommands result;
+    makeCommands(cmds, &result);
+    result.mark_user();
+    runCommands(result);
 }
 
 void LogicProcessor::processPluginCommand(const tstring& cmd)

@@ -14,6 +14,7 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CButton m_history_tab;
     CButton m_plugins_logs;
     CButton m_soft_scroll;
+    CButton m_unknown_cmd;
     CEdit   m_plugins_logs_window;
     CComboBox m_codepage;
     CComboBox m_logformat;
@@ -37,6 +38,7 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_HISTORYTAB, OnHistoryTab)
         COMMAND_ID_HANDLER(IDC_CHECK_PLUGINSLOGS, OnPluginsLogs)
         COMMAND_ID_HANDLER(IDC_CHECK_SOFTSCROLL, OnSoftScroll)
+        COMMAND_ID_HANDLER(IDC_CHECK_UNKNOWNCMD, OnUnknownCmd)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
         COMMAND_HANDLER(IDC_COMBO_CODEPAGE, CBN_SELCHANGE, OnCodePage)
         COMMAND_HANDLER(IDC_COMBO_LOGFORMAT, CBN_SELCHANGE, OnLogFormat)
@@ -62,6 +64,7 @@ private:
         m_plugins_logs_window.Attach(GetDlgItem(IDC_EDIT_PLUGINSLOGS));
         m_plugins_logs_window.SetLimitText(1);
         m_soft_scroll.Attach(GetDlgItem(IDC_CHECK_SOFTSCROLL));
+        m_unknown_cmd.Attach(GetDlgItem(IDC_CHECK_UNKNOWNCMD));
 
         m_prompt_iacga.Attach(GetDlgItem(IDC_RADIO_PROMT_GA));
         m_prompt_pcre.Attach(GetDlgItem(IDC_RADIO_PROMT_PCRE));
@@ -105,6 +108,7 @@ private:
         m_disable_osc.SetCheck(propData->disable_osc ? BST_CHECKED : BST_UNCHECKED);
         m_plugins_logs.SetCheck(propData->plugins_logs ? BST_CHECKED : BST_UNCHECKED);
         m_soft_scroll.SetCheck(propData->soft_scroll ? BST_CHECKED : BST_UNCHECKED);
+        m_unknown_cmd.SetCheck(propData->unknown_cmd ? BST_CHECKED : BST_UNCHECKED);
         _itow(propData->plugins_logs_window, buffer, 10);
         m_plugins_logs_window.SetWindowText(buffer);
         if (!propData->plugins_logs)
@@ -189,6 +193,13 @@ private:
     {
         int state = (m_soft_scroll.GetCheck() == BST_CHECKED) ? 1 : 0;
         propData->soft_scroll = state;
+        return 0;
+    }
+
+    LRESULT OnUnknownCmd(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_unknown_cmd.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->unknown_cmd = state;
         return 0;
     }
 

@@ -55,7 +55,7 @@ struct InputTemplateParameters
 
 struct InputCommandData
 {
-    InputCommandData() : dropped(false), system(false), changed(false) {}
+    InputCommandData() : dropped(false), system(false), changed(false), user(false) {}
                                             // full command as is = command + parameters
     tstring srccmd;                         // only command name with prefix as is
     tstring srcparameters;                  // original parameters as is without changes    
@@ -66,6 +66,7 @@ struct InputCommandData
     bool dropped;
     bool system;
     bool changed;
+    bool user;
 };
 typedef std::shared_ptr<InputCommandData> InputCommand;
 
@@ -89,6 +90,9 @@ public:
     void push_back(InputCommands& cmds) {
         base::insert(end(), cmds.begin(), cmds.end());
         cmds.resize(0);
+    }
+    void mark_user() {
+        std::for_each(begin(), end(), [](InputCommand c) {c->user = true; });
     }
     void clear() {
         base::clear();
