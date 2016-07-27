@@ -39,6 +39,34 @@ local fullresc = {}
 local klon = {}
 local fullklon = {}
 
+-- Функция очищает все рески
+local function clear_rescs()
+  resc = {}
+  fullresc = {}
+  klon = {}
+  fullklon = {}
+  print('АВТОРЕСКИ ОЧИЩЕНЫ')
+end
+
+-- Отображение ресков
+local function show_rescs()
+  local t = {}
+  local st = { resc, fullresc, klon, fullklon }
+  for i,s in ipairs(st) do
+    for n,_ in pairs(s) do
+	  local nt = t[n]
+	  if not nt then nt = {} t[n] = nt end
+	  if i==1 then nt[#nt+1] = 'реск' end
+	  if i==2 then nt[#nt+1] = 'фул реск' end
+	  if i==3 then nt[#nt+1] = 'реск клон' end
+	  if i==4 then nt[#nt+1] = 'фул реск клон' end
+	end
+  end
+  for n,nt in pairs(t) do
+    print('[реск] '..n..': '..table.concat(nt,', '))
+  end
+end
+
 -- Функция получает из vd имя цели и проверяет по списку разрешенных имен,
 -- переводит из винительного в именительный падеж
 local function get_name(vd)
@@ -143,9 +171,6 @@ function autoresc.init()
 
   -- выключаем триггеры изначально
   disable()
-
-  -- проверяем триггер тестовой строкой
-  --runCommand("#output Огненный демон сражается с Иваном.")
 end
 
 -- обрабатывем команды
@@ -166,7 +191,7 @@ local function run(p1, p2, link)
       t[name] = true
       m = m..' '..name..' вкл'
     else
-      t[name] = true
+      t[name] = nil
       m = m..' '..name..' выкл'
     end
     print('[реск] '..m)
@@ -177,11 +202,13 @@ function autoresc.gamecmd(t)
   if cmdrxp:find(t[1]) then
     if t[1] == 'рескаю' then enable() return end
     if t[1] == 'нерескаю' then disable() return end
+	if t[1] == 'рескиочистить' then clear_rescs() return end
+	if t[1] == 'рески' then show_rescs() return end
     local p1 = cmdrxp:get(1)  -- часть команды до реск
     local p2 = cmdrxp:get(2)  -- часть команды после реск
     if p1 == '' or p1 == 'мини' or p1 == 'миник' or p1 == 'к' then
       if p2 ~= '+' and p2 ~= '-' then
-        print('[реск] формат: [мини|миник|к]реск(+|-) цель, рескаю, нерескаю.')
+        print('[реск] формат: [мини|миник|к]реск(+|-) цель, рескаю, нерескаю, рески, рескиочистить')
         return
       end
       local link = t[2]
