@@ -10,8 +10,7 @@ template <class T>
 class LogicWrapper : public std::vector<T*>
 {
 public:
-    ~LogicWrapper() { clear(); }
-    void clear() { std::for_each(begin(), end(), [](T* t) { delete t; }); }
+    ~LogicWrapper() { std::for_each(begin(), end(), [](T* t) { delete t; }); }
     void init(PropertiesValues *values, const std::set<tstring>& active_groups)
     {
         int count = values->size();
@@ -38,8 +37,7 @@ template <class T>
 class LogicWrapperParams : public std::vector<T*>
 {
 public:
-    ~LogicWrapperParams() { clear(); }
-    void clear() {  std::for_each(begin(), end(), [](T* t) { delete t; }); }
+    ~LogicWrapperParams() { std::for_each(begin(), end(), [](T* t) { delete t; });  }
     void init(InputTemplateParameters &p, PropertiesValues *values, const std::set<tstring>& active_groups)
     {
         int count = values->size();
