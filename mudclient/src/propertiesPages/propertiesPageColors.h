@@ -54,10 +54,12 @@ public:
         }
     }
 
-    void onSelectFont()
+    void onSelectFont(bool any_fonts)
     {
         LOGFONT lf = m_logfont;
-        CFontDialog dlg(&lf, CF_FIXEDPITCHONLY|CF_SCREENFONTS, NULL, GetParent());
+        DWORD dwFlags = CF_SCREENFONTS;
+        if (!any_fonts) dwFlags|= CF_FIXEDPITCHONLY;
+        CFontDialog dlg(&lf, dwFlags, NULL, GetParent());
         if (dlg.DoModal() == IDOK)
         {
             propData->font_name.assign(lf.lfFaceName);
@@ -273,7 +275,7 @@ class PropertyColors :  public CDialogImpl<PropertyColors>
     ColorExampleWindow m_colors;
     CBevelLine m_bl1, m_bl2;
     CButton m_reset_osc;
-
+    CButton m_any_font;
 public:
     enum { IDD = IDD_PROPERTY_COLORS_FONT };
     PropertyColors(PropertiesData *data) : propData(data), m_colors(data) {}
@@ -285,6 +287,7 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_COLOR_RESET, OnResetColors)
        COMMAND_ID_HANDLER(IDC_BUTTON_FONT, OnSelectFont)
        COMMAND_ID_HANDLER(IDC_BUTTON_COLOR_RESETOSC, OnResetOscColors)
+       COMMAND_ID_HANDLER(IDC_CHECK_ANYFONTS, OnAnyFont)
        MESSAGE_HANDLER(WM_USER, OnChangedOscColor)
     END_MSG_MAP()
 
@@ -293,6 +296,7 @@ private:
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_reset_osc.Attach(GetDlgItem(IDC_BUTTON_COLOR_RESETOSC));
+        m_any_font.Attach(GetDlgItem(IDC_CHECK_ANYFONTS));
 
         RECT pos;
         CStatic colorspos(GetDlgItem(IDC_STATIC_COLORS_WINDOW));
@@ -300,6 +304,8 @@ private:
         ScreenToClient(&pos);
         colorspos.ShowWindow(SW_HIDE);
         m_colors.Create(m_hWnd, pos, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN, WS_EX_CLIENTEDGE);
+
+        m_any_font.SetCheck(propData->any_font ? BST_CHECKED : BST_UNCHECKED);
 
         setResetOscButtonState();
         return 0;
@@ -328,6 +334,8 @@ private:
 
     LRESULT OnResetColors(WORD, WORD, HWND, BOOL&)
     {
+        propData->any_font = 0;
+        m_any_font.SetCheck(BST_UNCHECKED);
         m_colors.onResetColors();
         return 0;
     }
@@ -340,7 +348,16 @@ private:
 
     LRESULT OnSelectFont(WORD, WORD, HWND, BOOL&)
     {
-        m_colors.onSelectFont();
+        bool any_font = (propData->any_font == 1) ? true : false;
+        m_colors.onSelectFont(any_font);
         return 0;
     }
+
+    LRESULT OnAnyFont(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_any_font.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->any_font = state;
+        return 0;
+    }
+
 };

@@ -444,7 +444,7 @@ public:
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
-       , soft_scroll(0), unknown_cmd(0)
+       , soft_scroll(0), unknown_cmd(0), any_font(false)
     {
         initDefaultColorsAndFont();
         initDisplay();
@@ -500,6 +500,7 @@ public:
 
         soft_scroll = p.soft_scroll;
         unknown_cmd = p.unknown_cmd;
+        any_font = p.any_font;
         //skip title
     }
 
@@ -568,6 +569,7 @@ public:
 
     int      soft_scroll;
     int      unknown_cmd;
+    int      any_font;
 
     tstring title;        // name of main window (dont need to save)
 
