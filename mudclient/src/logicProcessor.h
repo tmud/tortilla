@@ -177,6 +177,7 @@ public: // system commands
     DEF(untab);
     DEF(timer);
     DEF(untimer);
+    DEF(uptimer);
     DEF(hidewindow);
     DEF(showwindow);
     void wlogf_main(int log, const tstring& file, bool newlog);

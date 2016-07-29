@@ -1252,7 +1252,7 @@ off<br>
 <h4>#timer</h4>
 Таймер позволяет выполнять нужные команды с определенным периодом. Клиент обладает возможностью создавать до 10 таймеров.
 <br>Синтаксис команды:<br>
-<div class="t">#timer 'номер таймера' 'период' 'команды' ['группа']</div><br>
+<div class="t">#timer 'номер таймера' ['период' ['команды' ['группа']]]</div><br>
 - 'номер таймера' - числовой идентификатор таймера от 1 до 10.<br>
 - 'период' - величина периода таймера секундах.<br>
 - 'команды' - команда или набор команд, которые нужно выполнять каждый период.<br>
@@ -1264,8 +1264,7 @@ off<br>
 <br><div class="t">#timer</div><br>
 Команда без параметров показывает список всех текущих активных таймеров и состояние таймеров в целом:
 <div class="ee">
-[tortilla] Таймеры:<br>
-Таймеры выключены<br>
+[tortilla] Таймеры (выключены):<br>
 #1 60 сек: '#woutput red Tick' 'Tick'<br>
 </div>
 <br><div class="t">#timer 'номер таймера'</div><br>
@@ -1275,8 +1274,12 @@ off<br>
 <br><div class="t">#timer off/disable/выкл</div><br>
 Выключает все таймеры.<br>
 <br><div class="t">#timer on/enable/вкл</div><br>
-Включает все таймеры. Для включения требуется наличие подключение к мад-серверу.<br>
-<br>См.также: <a href="#untimer" class="cmd">#untimer</a>, <a href="#wait" class="cmd">#wait</a>
+Включает все таймеры. Для включения требуется наличие подключение к мад-серверу.<br><br>
+<div class="cmd">Важно!</div> Таймеры автоматически выключаются при обрыве соединения. При подключении к серверу таймеры нужно включать вручную или триггером, 
+так как клиент не знает, когда вы войдете в саму игру. Если задать интервал 0, то таймер срабатывать не будет (выключен). Запустить таймер сначала, до 
+его завершения можно командой <div class="cmd">#timer номер период</div>, или командой <a href="#uptimer" class="cmd">#uptimer</a>.
+
+<br>См.также: <a href="#untimer" class="cmd">#untimer</a>, <a href="#uptimer" class="cmd">#uptimer</a>, <a href="#wait" class="cmd">#wait</a>
 <p align="right"><a href="#top">В начало</a></p>
 <hr>
 <a name="unaction"></a>
@@ -1367,7 +1370,14 @@ off<br>
 Команда удаляет таймер.
 <br>Синтаксис команды:<br>
 <div class="t">#untimer 'номер таймера'</div><br>
-<br>См.также: <a href="#timer" class="cmd">#timer</a>, <a href="#wait" class="cmd">#wait</a>
+<br>См.также: <a href="#timer" class="cmd">#timer</a>, <a href="#uptimer" class="cmd">#uptimer</a>, <a href="#wait" class="cmd">#wait</a>
+<hr>
+<a name="uptimer"></a>
+<h4>#uptimer</h4>
+Команда перезапускает таймер сначала.
+<br>Синтаксис команды:<br>
+<div class="t">#uptimer 'номер таймера'</div><br>
+<br>См.также: <a href="#timer" class="cmd">#timer</a>, <a href="#untimer" class="cmd">#untimer</a>, <a href="#wait" class="cmd">#wait</a>
 <hr>
 <a name="unvar"></a>
 <h4>#unvar</h4>

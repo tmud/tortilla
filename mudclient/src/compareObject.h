@@ -23,7 +23,7 @@ private:
     void createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template);
     void checkVars(tstring *pcre_template);
     void maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow);
-
+    void reset();
 private:
     Pcre16  m_pcre;
     tstring m_key;

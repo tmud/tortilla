@@ -7,6 +7,7 @@ CompareObject::~CompareObject() {}
 
 bool CompareObject::init(const tstring& key, bool endline_mode)
 {
+    reset();
     if (key.empty())
         return false;
 
@@ -39,6 +40,7 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
 
 bool CompareObject::initOnlyVars(const tstring& key)
 {
+    reset();
     if (key.empty())
        return false;
     tstring regexp(key);
@@ -266,4 +268,14 @@ void CompareObject::maskRegexpSpecialSymbols(tstring *pcre_template, bool use_fi
     }
     tmp.append(b);
     pcre_template->swap(tmp);
+}
+
+void CompareObject::reset()
+{
+    m_pcre.clear();
+    m_key.clear();
+    m_str.clear();
+    m_vars_pcre_parts.clear();
+    m_fullstr_req = true;
+    m_std_regexp = false;
 }

@@ -10,20 +10,26 @@ template <class T>
 class LogicWrapper : public std::vector<T*>
 {
 public:
-    ~LogicWrapper() { clear(); }
-    void clear() { autodel<T> z(*this); }
-    void init(PropertiesValues *values, const std::vector<tstring>& active_groups)
+    ~LogicWrapper() { std::for_each(begin(), end(), [](T* t) { delete t; }); }
+    void init(PropertiesValues *values, const std::set<tstring>& active_groups)
     {
-        clear();
         int count = values->size();
+        int current = size();
+        if (current < count)
+            resize(count, NULL);
+        int pos = 0;
         for (int i=0; i<count; ++i)
         {
             const property_value &v = values->get(i);
-            if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
+            if (active_groups.find(v.group) == active_groups.end())
                 continue;
-            T *s = new T(v);
-            push_back(s);
+            T *s = operator[](pos);
+            if (!s) { s = new T(); operator[](pos) = s; }
+            s->init(v);
+            pos++;
         }
+        std::for_each(begin()+pos, end(), [](T* t) { delete t; });
+        resize(pos);
     }
 };
 
@@ -31,84 +37,126 @@ template <class T>
 class LogicWrapperParams : public std::vector<T*>
 {
 public:
-    ~LogicWrapperParams() { clear(); }
-    void clear() { autodel<T> z(*this); }
-    void init(InputTemplateParameters &p, PropertiesValues *values, const std::vector<tstring>& active_groups)
+    ~LogicWrapperParams() { std::for_each(begin(), end(), [](T* t) { delete t; });  }
+    void init(InputTemplateParameters &p, PropertiesValues *values, const std::set<tstring>& active_groups)
     {
-        clear();
         int count = values->size();
+        int current = size();
+        if (current < count)
+            resize(count, NULL);
+        int pos = 0;
         for (int i=0; i<count; ++i)
         {
             const property_value &v = values->get(i);
-            if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
+            if (active_groups.find(v.group) == active_groups.end())
                 continue;
-            T *s = new T(v, p);
-            push_back(s);
+            T *s = operator[](pos);
+            if (!s) { s = new T(); operator[](pos) = s; }
+            s->init(v, p);
+            pos++;
         }
+        std::for_each(begin()+pos, end(), [](T* t) { delete t; });
+        resize(pos);
     }
 };
 
 class LogicWrapperTimers : public std::vector<Timer*>
 {
+    int find(const tstring& key) const {
+      for (int i=0,e=size(); i<e; ++i) {
+        Timer *t = operator[](i);
+        if (t->id == key) { return i; }
+      }
+      return -1;
+    }
+    void del(const tstring& key) {
+       int index = find(key);
+       if (index == -1) return;
+       Timer *t = operator[](index);
+       delete t;
+       erase(begin()+index);
+    }
 public:
     LogicWrapperTimers() {}
     ~LogicWrapperTimers() 
     {
         autodel<Timer> z(*this);
     }
-    void init(PropertiesValues *values, const std::vector<tstring>& active_groups, const InputTemplateParameters& p)
+    void update(int id, PropertiesValues *values, const std::set<tstring>& active_groups, const InputTemplateParameters& p )
     {
-        std::vector<int> timers;
+        tstring key;
+        int2w(id, &key);
+        int i = values->find(key);
+        if (i == -1)
+            del(key);
+        else
+        {
+            const property_value &v = values->get(i);
+            if (active_groups.find(v.group) == active_groups.end())
+                del(key);
+            else
+            {
+                int index = find(key);
+                Timer *t = (index == -1) ? new Timer() : operator[](index);
+                t->init(v, p);
+                if (index == -1)
+                    push_back(t);
+            }
+        }
+    }
+
+    void updateall(PropertiesValues *values, const std::set<tstring>& active_groups, const InputTemplateParameters& p)
+    {
+        std::vector<Timer*> newtimers;
         for (int i=0,e=values->size(); i<e; ++i)
         {
             const property_value &v = values->get(i);
-            if (!isInt(v.key))
+            if (active_groups.find(v.group) == active_groups.end())
                 continue;
-            int id = _wtoi(v.key.c_str());
-            if (id < 1 || id > TIMERS_COUNT)
-                continue;
-            if (std::find(active_groups.begin(), active_groups.end(), v.group) == active_groups.end())
-                continue;
-            timers.push_back(i);
-        }
-
-        for (int i=0,e=timers.size(); i<e; ++i)
-        {
-            const property_value &v = values->get(timers[i]);
-            int index = -1;
-            for (int j=0,je=size(); j<je; ++j)
-            {
-                if (!v.key.compare(at(j)->id))
-                    { index = j; break; }
-            }
-            Timer *t = (index == -1) ? new Timer() : at(index);
+            int index = find(v.key);
             if (index == -1)
-                push_back(t);
-            t->init(v, p);
-        }
-
-        std::vector<int> todelete;
-        for (int j=0,je=size(); j<je; ++j)
-        {
-            bool exist = false;
-            for (int i=0,e=timers.size(); i<e; ++i)
             {
-                const property_value &v = values->get(timers[i]);
-                if (!v.key.compare( at(j)->id))
-                    { exist = true; break; }
+                Timer *t = new Timer();
+                t->init(v, p);
+                newtimers.push_back(t);
+            } 
+            else
+            {
+                Timer *t = operator[](index);
+                erase(begin()+index);
+                newtimers.push_back(t);
             }
-            if (!exist)
-                todelete.push_back(j);
+        }
+        swap(newtimers);
+        std::for_each(newtimers.begin(), newtimers.end(), [](Timer*t) {delete t;});
+    }
+
+    void init(PropertiesValues *values, const std::set<tstring>& active_groups, const InputTemplateParameters& p)
+    {
+        std::map<int, int> timers;
+        for (int i=0,e=values->size(); i<e; ++i)
+        {
+            const property_value &v = values->get(i);
+            int id = 0;
+            if (!w2int(v.key, &id) || id < 1 || id > TIMERS_COUNT)
+                continue;
+            if (active_groups.find(v.group) == active_groups.end())
+                continue;
+            timers[id] = i;
         }
 
-        int last=todelete.size()-1;
-        for (int i=last; i>=0; --i)
+        std::vector<Timer*> newtimers;
+        std::map<int, int>::iterator it = timers.begin(); 
+        for (int k=0,ke=timers.size(); k<ke; ++k, ++it)
         {
-            int id = todelete[i];
-            Timer *t = at(id);
-            erase(begin() + id);
-            delete t;
+            int i = it->second;
+            const property_value &v = values->get(i);
+            Timer *t = new Timer();
+            t->init(v, p);
+            newtimers.push_back(t);
         }
+        swap(newtimers);
+        std::for_each(newtimers.begin(), newtimers.end(), [](Timer*t) {delete t;});
     }
 };
 
@@ -117,7 +165,9 @@ class LogicHelper
 {
 public:
     enum { UPDATE_ALL =0, UPDATE_ALIASES, UPDATE_ACTIONS, UPDATE_HOTKEYS, UPDATE_SUBS, UPDATE_ANTISUBS, 
-           UPDATE_GAGS, UPDATE_HIGHLIGHTS, UPDATE_TIMERS, UPDATE_VARS, UPDATE_GROUPS, UPDATE_TABS };
+           UPDATE_GAGS, UPDATE_HIGHLIGHTS, UPDATE_TIMERS, UPDATE_VARS, UPDATE_GROUPS, UPDATE_TABS,
+           UPDATE_TIMER1 /* UPDATE_TIMER1 + TIMERS_COUNT */
+    };
 
     LogicHelper();
     void updateProps(int what = UPDATE_ALL);
@@ -130,7 +180,8 @@ public:
     void processHighlights(parseData *parse_data);
     void processTimers(InputCommands* newcmds);
     void resetTimers();
-    int  getLeftTime(int timer);
+    int  getLeftTime(const tstring& timer_id);
+    bool upTimer(const tstring& timer_id);
 
     enum IfResult { IF_SUCCESS = 0, IF_FAIL, IF_ERROR };
     IfResult compareIF(const tstring& param);
