@@ -21,6 +21,7 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CButton m_prompt_iacga;
     CButton m_prompt_pcre;
     CEdit   m_prompt_pcre_template;
+    CButton m_disable_alt;
 
 public:
     enum { IDD = IDD_PROPERTY_COMMON };
@@ -39,6 +40,7 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_PLUGINSLOGS, OnPluginsLogs)
         COMMAND_ID_HANDLER(IDC_CHECK_SOFTSCROLL, OnSoftScroll)
         COMMAND_ID_HANDLER(IDC_CHECK_UNKNOWNCMD, OnUnknownCmd)
+        COMMAND_ID_HANDLER(IDC_CHECK_DISABLEALT, OnDisableAlt)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
         COMMAND_HANDLER(IDC_COMBO_CODEPAGE, CBN_SELCHANGE, OnCodePage)
         COMMAND_HANDLER(IDC_COMBO_LOGFORMAT, CBN_SELCHANGE, OnLogFormat)
@@ -56,7 +58,7 @@ private:
         m_cmd_size.Attach(GetDlgItem(IDC_EDIT_CMD_HISTORY));
         m_cmd_size.SetLimitText(3);
         m_show_system_cmds.Attach(GetDlgItem(IDC_CHECK_SHOW_SYSTEM_CMDS));
-        m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));        
+        m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));
         m_history_tab.Attach(GetDlgItem(IDC_CHECK_HISTORYTAB));
         m_disable_ya.Attach(GetDlgItem(IDC_CHECK_DISABLE_DOUBLE_YA));
         m_disable_osc.Attach(GetDlgItem(IDC_CHECK_DISABLE_OSC));
@@ -65,6 +67,7 @@ private:
         m_plugins_logs_window.SetLimitText(1);
         m_soft_scroll.Attach(GetDlgItem(IDC_CHECK_SOFTSCROLL));
         m_unknown_cmd.Attach(GetDlgItem(IDC_CHECK_UNKNOWNCMD));
+        m_disable_alt.Attach(GetDlgItem(IDC_CHECK_DISABLEALT));
 
         m_prompt_iacga.Attach(GetDlgItem(IDC_RADIO_PROMT_GA));
         m_prompt_pcre.Attach(GetDlgItem(IDC_RADIO_PROMT_PCRE));
@@ -109,6 +112,7 @@ private:
         m_plugins_logs.SetCheck(propData->plugins_logs ? BST_CHECKED : BST_UNCHECKED);
         m_soft_scroll.SetCheck(propData->soft_scroll ? BST_CHECKED : BST_UNCHECKED);
         m_unknown_cmd.SetCheck(propData->unknown_cmd ? BST_CHECKED : BST_UNCHECKED);
+        m_disable_alt.SetCheck(propData->disable_alt ? BST_CHECKED : BST_UNCHECKED);
         _itow(propData->plugins_logs_window, buffer, 10);
         m_plugins_logs_window.SetWindowText(buffer);
         if (!propData->plugins_logs)
@@ -200,6 +204,13 @@ private:
     {
         int state = (m_unknown_cmd.GetCheck() == BST_CHECKED) ? 1 : 0;
         propData->unknown_cmd = state;
+        return 0;
+    }
+
+    LRESULT OnDisableAlt(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_disable_alt.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->disable_alt = state;
         return 0;
     }
 

@@ -82,6 +82,10 @@ public:
                 if (pMsg->wParam != VK_MENU && pMsg->wParam != VK_F4)
                     return TRUE;
             }
+            if (pMsg->wParam == VK_MENU && m_propData->disable_alt)
+            {
+               return TRUE;
+            }
             if (processKey(pMsg->wParam))
                 return TRUE;
         }
@@ -963,7 +967,7 @@ private:
             return true;
         }
 
-        if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
+        if ((vkey == VK_PRIOR || vkey == VK_NEXT) && checkKeysState(false, false, false)) // PAGEUP & PAGEDOWN
         {
             if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
             {

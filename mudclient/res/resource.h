@@ -125,6 +125,7 @@
 #define IDC_RADIO_BEGIN_END             1141
 #define IDC_CHECK_UNKNOWNCMD            1142
 #define IDC_CHECK_ANYFONTS              1143
+#define IDC_CHECK_DISABLEALT            1144
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -148,7 +149,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        224
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1144
+#define _APS_NEXT_CONTROL_VALUE         1145
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

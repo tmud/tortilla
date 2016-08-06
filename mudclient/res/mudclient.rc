@@ -173,7 +173,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,55,126,9
     CONTROL         "Очищать строку ввода команд",IDC_CHECK_CLEAR_BAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,119,9
     CONTROL         "Не показывать для триггеров ошибку Неизвестная команда",IDC_CHECK_UNKNOWNCMD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,77,225,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,77,225,9
     CONTROL         "Использовать историю команд в автоподстановках",IDC_CHECK_HISTORYTAB,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,88,189,9
     CONTROL         "Не удваивать букву 'я' при отправке на сервер",IDC_CHECK_DISABLE_DOUBLE_YA,
@@ -185,10 +185,12 @@ BEGIN
     CONTROL         "Показывать лог работы плагинов в окне:",IDC_CHECK_PLUGINSLOGS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,132,168,9
     EDITTEXT        IDC_EDIT_PLUGINSLOGS,169,131,20,12,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Не переходить в меню по клавише Alt",IDC_CHECK_DISABLEALT,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,143,143,9
     CONTROL         "Использовать IAC GA (нужна поддержка сервера)",IDC_RADIO_PROMT_GA,
-                    "Button",BS_AUTORADIOBUTTON,8,158,184,8
-    CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,168,90,10
-    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,180,167,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTORADIOBUTTON,8,168,184,8
+    CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,178,90,10
+    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,190,167,12,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_CODEPAGE,283,21,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CTEXT           "Общие настройки",IDC_STATIC,135,6,70,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,134,8
@@ -198,7 +200,7 @@ BEGIN
     LTEXT           "строк",IDC_STATIC,156,23,27,8
     LTEXT           "шт",IDC_STATIC,156,37,27,8
     LTEXT           "Кодировка клиента:",IDC_STATIC,207,23,70,9
-    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,147,204,51
+    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,157,204,51
     LTEXT           "Формат записи логов:",IDC_STATIC,201,50,76,9
     COMBOBOX        IDC_COMBO_LOGFORMAT,283,48,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END

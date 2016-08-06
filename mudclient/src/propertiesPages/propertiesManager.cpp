@@ -111,6 +111,7 @@ bool PropertiesManager::loadProfileData()
     loadValue(sd, L"softscroll", 0, 1, &m_propData.soft_scroll);
     loadValue(sd, L"unknowncmd", 0, 1, &m_propData.unknown_cmd);
     loadValue(sd, L"anyfont", 0, 1, &m_propData.any_font);
+    loadValue(sd, L"disablealt", 0, 1, &m_propData.disable_alt);
     tstring cp;
     loadString(sd, L"codepage", &cp);
     if (cp != L"win" && cp != L"utf8")
@@ -231,6 +232,7 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, L"softscroll", m_propData.soft_scroll);
     saveValue(sd, L"unknowncmd", m_propData.unknown_cmd);
     saveValue(sd, L"anyfont", m_propData.any_font);
+    saveValue(sd, L"disablealt", m_propData.disable_alt);
     saveString(sd, L"codepage", m_propData.codepage);
     saveString(sd, L"logformat", m_propData.logformat);
     saveValue(sd, L"prompt", m_propData.recognize_prompt);
