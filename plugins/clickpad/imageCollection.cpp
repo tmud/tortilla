@@ -229,9 +229,9 @@ ClickpadImage* ImageCollection::load(const std::wstring& path, int x, int y)
 void ImageCollection::save(ClickpadImage* image, std::wstring* params)
 {
     if (!image) { params->clear(); return; }
-    const ClickpadImageParams& p = image->params();    
+    const ClickpadImageParams& p = image->params();
     wchar_t buffer[32];
-    wsprintf(buffer, L"%d,%d,", p.atlas_x, p.atlas_y);
+    swprintf(buffer, L"%d,%d,", p.atlas_x, p.atlas_y);
     params->assign(buffer);
     params->append(p.atlas_filename);
 }
