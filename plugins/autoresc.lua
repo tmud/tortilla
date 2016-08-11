@@ -54,13 +54,13 @@ local function show_rescs()
   local st = { resc, fullresc, klon, fullklon }
   for i,s in ipairs(st) do
     for n,_ in pairs(s) do
-	  local nt = t[n]
-	  if not nt then nt = {} t[n] = nt end
-	  if i==1 then nt[#nt+1] = 'реск' end
-	  if i==2 then nt[#nt+1] = 'фул реск' end
-	  if i==3 then nt[#nt+1] = 'реск клон' end
-	  if i==4 then nt[#nt+1] = 'фул реск клон' end
-	end
+      local nt = t[n]
+      if not nt then nt = {} t[n] = nt end
+      if i==1 then nt[#nt+1] = 'реск' end
+      if i==2 then nt[#nt+1] = 'фул реск' end
+      if i==3 then nt[#nt+1] = 'реск клон' end
+      if i==4 then nt[#nt+1] = 'фул реск клон' end
+    end
   end
   for n,nt in pairs(t) do
     print('[реск] '..n..': '..table.concat(nt,', '))
@@ -202,8 +202,8 @@ function autoresc.gamecmd(t)
   if cmdrxp:find(t[1]) then
     if t[1] == 'рескаю' then enable() return end
     if t[1] == 'нерескаю' then disable() return end
-	if t[1] == 'рескиочистить' then clear_rescs() return end
-	if t[1] == 'рески' then show_rescs() return end
+    if t[1] == 'рескиочистить' then clear_rescs() return end
+    if t[1] == 'рески' then show_rescs() return end
     local p1 = cmdrxp:get(1)  -- часть команды до реск
     local p2 = cmdrxp:get(2)  -- часть команды после реск
     if p1 == '' or p1 == 'мини' or p1 == 'миник' or p1 == 'к' then
@@ -231,7 +231,7 @@ function autoresc.description()
   return 'Автореск, в этом плагине нужно указать имена кого нужно спасать.'
 end
 function autoresc.version()
-  return '-'
+  return '1.0'
 end
 
 return autoresc
