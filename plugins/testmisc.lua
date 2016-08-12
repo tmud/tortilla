@@ -3,7 +3,7 @@
 
 local testmisc = {}
 function testmisc.name()
-  -- плагин отключен в клиенте
+  -- плагин отключен
   -- return 'Тесты команд и скриптов'
 end
 
@@ -28,7 +28,7 @@ function testmisc.syscmd(t)
     else
       showView(v)
     end]]
-	clear(0)
+    clear(0)
     return nil
   end
   return t

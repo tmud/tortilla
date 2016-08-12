@@ -5,23 +5,42 @@ local sym_no = '-'
 -- цвет заголовка окна общего состояния сбора
 local title_color = 'rgb240,120,80'
 
+-- качества в падежах
 local level_s = { 'наилучшую', 'отличную', 'хорошую', 'среднюю', 'посрдественную', 'худшую' }
 local level_m = { 'наилучшие', 'отличные', 'хорошие', 'средние', 'посрдественные', 'худшие' }
+local male = { 'наилучший', 'отличный', 'хороший', 'средний', 'посредственный', 'худший' }
+local female = { 'наилучшая', 'отличная', 'хорошая', 'средняя', 'посредственная', 'худшая' }
 
--- мн.число, ед.число(вин.пад), цвет
+-- мн.число, ед.число(вин.пад), ед.число(им.падеж), пол, цвет
 local ingrs = {
-  { 'ветки', 'ветку', level=level_m, color='light green' },
-  { 'грибы', 'гриб', level=level_m, color='light red' },
-  { 'жидкости', 'жидкость', level=level_m, color='light magenta' },
-  { 'крупы', 'крупу', level=level_m, color='light cyan' },
-  { 'металлы', 'металл', level=level_m, color='light green' },
-  { 'минералы', 'минерал', level=level_m, color='light red' },
-  { 'овощи', 'овощ', level=level_m, color='light magenta' },
-  { 'посуда', 'посуду', level=level_s, color='light cyan' },
-  { 'твари', 'тварь', level=level_m, color='light green' },
-  { 'трава', 'траву', level=level_s, color='light red' },
-  { 'ягоды', 'ягоду', level=level_m, color='light magenta' }
+  { 'ветки', 'ветку', 'ветка', gender=female, level=level_m, color='light green' },
+  { 'грибы', 'гриб', 'гриб', gender=male, level=level_m, color='light red' },
+  { 'жидкости', 'жидкость', 'жидкость', gender=female, level=level_m, color='light magenta' },
+  { 'крупы', 'крупу', 'крупа', gender=female, level=level_m, color='light cyan' },
+  { 'металлы', 'металл', 'металл', gender=male, level=level_m, color='light green' },
+  { 'минералы', 'минерал', 'минерал', gender=male, level=level_m, color='light red' },
+  { 'овощи', 'овощ', 'овощ', gender=male, level=level_m, color='light magenta' },
+  { 'посуда', 'посуду', 'посуда', gender=female, level=level_s, color='light cyan' },
+  { 'твари', 'тварь', 'тварь', gender=female, level=level_m, color='light green' },
+  { 'трава', 'траву', 'трава', gender=female, level=level_s, color='light red' },
+  { 'ягоды', 'ягоду', 'ягода', gender=female, level=level_m, color='light magenta' }
 }
+
+local function addinfo(vd, ingr, quality)
+  vd:select(1)
+  local idx = vd:blocks()+1
+  vd:setBlocksCount(idx)
+  vd:setBlockText(idx, ' [test]')
+  vd:set(idx, 'textcolor', props.paletteColor(5))
+end
+
+local triggers_vetka = {
+   key = 'Отломанная ветка %1 сохнет здесь.', 
+   func = function(vd)
+     
+   end
+}
+
 
 local function f(x) 
   return x and sym_yes or sym_no
@@ -41,7 +60,8 @@ function autosbor.init()
   if not extra or not extra.declension then
     terminate('Для работы плагина нужен модуль extra.declension')
   end
-  decl =  extra.declension() 
+  decl = extra.declension() 
+  sbor = false
   for _,t in ipairs(ingrs) do
     decl:add(t[1])
     local v = {}
@@ -51,15 +71,49 @@ function autosbor.init()
     local len = 12-t[1]:len(); local n = {}; for j=1,len do n[j] = ' ' end; n[2] = t[1]
     t.tablename = table.concat(n)
   end
+  -- загружаем настройки сбора
+  local function read(t, p)
+    return t[p] == true and true or false
+  end 
+  local vars = loadTable(getProfile()..".lua")
+  if vars then
+    local j=1
+    while vars['i'..j] do
+      local v = vars['i'..j]
+      if v.name then
+        local ingr
+        for _,it in ipairs(ingrs) do
+          if it[1] == v.name then ingr = it break end
+        end
+        if ingr then
+          ingr.state = read(v, 'on')
+          for i=1,6 do ingr.val[i] = read(v, 'q'..i) end
+        end
+      end
+      j=j+1
+    end
+    sbor = read(vars, 'on')
+  end
   cmdrxp = createPcre('сбор(.*)')
   cmdrxp2 = createPcre('^(_[^+-]+)?([+-])$')
   cmdrxp3 = createPcre('^_?([^0-9_]+)([0-9]|_все)?$')
 end
 
 function autosbor.release()
-  
+  -- сохраняем настройки сбора
+  local vars = {}
+  vars.on = sbor
+  for idx,t in ipairs(ingrs) do
+    local s = {}
+    s.on = t.state
+    s.name = t[1]
+    for i=1,6 do s['q'..i] = t.val[i] end
+    vars['i'..idx] = s
+  end
+  saveTable(vars, getProfile()..".lua")
 end
 
+-- работа с падежами
 local function l1(ingr, mode)
   if ingr.level == level_s then
     return mode and 'НЕКОТОРУЮ '..ingr[2] or ingr[2]
@@ -98,8 +152,8 @@ local function runcmd(p)
   if cmdrxp2:get(1) == '' then
     -- весь сбор вкл/выкл
     sbor = mode
-    if mode then print('БУДУ СОБИРАТЬ')
-    else print('НЕ БУДУ СОБИРАТЬ') end
+    local text = mode and '' or 'НЕ '
+    print(text..'БУДУ СОБИРАТЬ РЕСУРСЫ')
     return true
   end
   if cmdrxp3:find(cmdrxp2:get(1)) then

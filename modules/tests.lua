@@ -8,6 +8,10 @@ end
 
 dofile 'modules.lua'
 
+local maj,min = getVersion()
+print("Версия клиента: "..maj.."."..min)
+print ('Автотесты для модулей extra.declension и extra.dictonary')
+
 local dlib = extra.declension()
 
 local function assert(s1, s2, r)
@@ -128,6 +132,7 @@ assert3('п св', {'перстень света'} )
 
 dict:wipe()
 dict = nil
+print ('Автотесты для модулей extra.declension и extra.dictonary - КОНЕЦ')
 
-local maj,min = getVersion()
-print("Версия: "..maj.."."..min)
+-- автотесты для плагинов
+runCommand("#wait 2 { #plugin loadsave on }")

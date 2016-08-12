@@ -52,6 +52,15 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
     pluginLogOut(plugin_buffer());
     return 0;
 }
+int pluginNotDeclared(lua_State* L, const tchar* fname)
+{
+    luaT_push_args(L, TW2A(fname));
+    tstring error(luaT_towstring(L, -1));
+    tstring p( L"Вызов не из плагина" );
+    swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
+    pluginLogOut(plugin_buffer());
+    return 0;
+}
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
@@ -82,7 +91,7 @@ int pluginOut(const tchar* msg)
 
 void pluginLoadError(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"Ошибка загрузки! %s", msg);
+    swprintf(plugin_buffer(), L"%s: Ошибка загрузки! %s", plugin_name(), msg);
     pluginLogOut(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -175,7 +184,7 @@ int addMenu(lua_State *L)
     CAN_DO;
     EXTRA_CP;
     if (!_cp)
-         return pluginInvArgs(L, L"addMenu");
+         return pluginNotDeclared(L, L"addMenu");
     int code = -1;
     bool params_ok = false;
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -273,7 +282,7 @@ int addButton(lua_State *L)
     CAN_DO;
     EXTRA_CP;
     if (!_cp) 
-        return pluginInvArgs(L, L"addButton");
+        return pluginNotDeclared(L, L"addButton");
     int image = -1, code = -1; tstring hover;
     if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
     {
@@ -305,7 +314,7 @@ int addToolbar(lua_State *L)
     CAN_DO;
     EXTRA_CP;
     if (!_cp)
-        return pluginInvArgs(L, L"addToolbar");
+        return pluginNotDeclared(L, L"addToolbar");
     if (luaT_check(L, 1, LUA_TSTRING))
         tbar()->addToolbar(luaT_towstring(L, 1), 15);
     else if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
@@ -383,7 +392,7 @@ int getResource(lua_State* L)
 {
     EXTRA_CP;
     if (!_cp)
-        return pluginInvArgs(L, L"getResource");
+        return pluginNotDeclared(L, L"getResource");
 
     if (luaT_check(L, 1, LUA_TSTRING))
     {
@@ -512,7 +521,9 @@ int loadTableLua(lua_State* L, const tstring& filename)
 int loadTable(lua_State *L)
 {
     EXTRA_CP;
-    if (!_cp || !luaT_check(L, 1, LUA_TSTRING))
+    if (!_cp)
+        return pluginNotDeclared(L, L"loadTable");        
+    if (!luaT_check(L, 1, LUA_TSTRING))
         return pluginInvArgs(L, L"loadTable");
 
     tstring filename(luaT_towstring(L, 1));
@@ -681,6 +692,7 @@ public:
         endline();
         addtabs();
         r.append(L"}");
+        if (brackets_layer == 1 ) { first_param = true; endline(); }
      }
 private:
     void beginparam() {
@@ -709,7 +721,9 @@ private:
 int saveTable(lua_State *L)
 {
     EXTRA_CP;
-    if (!_cp || !luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
+    if (!_cp)
+        return pluginNotDeclared(L, L"saveTable");
+    if (!luaT_check(L, 2, LUA_TTABLE, LUA_TSTRING))
         return pluginInvArgs(L, L"saveTable");
 
     tstring filename(luaT_towstring(L, 2));
@@ -973,7 +987,7 @@ int createWindow(lua_State *L)
 {
     EXTRA_CP;
     if (!_cp)
-        return pluginInvArgs(L, L"createWindow");
+        return pluginNotDeclared(L, L"createWindow");
     PluginData &p = find_plugin();
     OutputWindow w;
 
@@ -1302,7 +1316,7 @@ void reg_mt_trigger(lua_State *L);
 bool initPluginsSystem()
 {
     tortilla::init();
-    lua_State*L = tortilla::getLua();    
+    lua_State*L = tortilla::getLua();
     if (!L)
         return false;
 
