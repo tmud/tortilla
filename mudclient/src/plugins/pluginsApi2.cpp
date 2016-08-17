@@ -632,6 +632,7 @@ int vd_set(lua_State *L)
                 ok = vsp_setparam(p, type, v);
             }
         }
+        if (ok) str->changed = true;
         lua_pushboolean(L, ok ? 1 : 0);
         return 1;
     }
@@ -667,6 +668,8 @@ int vd_setBlockText(lua_State *L)
             if (index >= 1 && index <= size)
             {
                 str->blocks[index-1].assign(lua_tostring(L, 3));
+                MudViewString *vs = pdata->getselected();
+                vs->changed = true;
                 ok = true;
             }
         }
@@ -689,6 +692,7 @@ int vd_setBlocksCount(lua_State *L)
             str->blocks.resize(newsize);
             MudViewString *vs = pdata->getselected();
             vs->blocks.resize(newsize);
+            vs->changed = true;
             ok = true;
         }
         lua_pushboolean(L, ok ? 1 : 0);
@@ -714,6 +718,7 @@ int vd_deleteBlock(lua_State *L)
                 str->blocks.erase(str->blocks.begin() + index);
                 MudViewString *vs = pdata->getselected();
                 vs->blocks.erase(vs->blocks.begin() + index);
+                vs->changed = true;
                 ok = true;
             }
         }
@@ -737,6 +742,7 @@ int vd_deleteAllBlocks(lua_State *L)
             vs->blocks.clear();
             if (pdata->selected == 0)
                 pdata->pdata->update_prev_string = false;
+            vs->changed = true;
             ok = true;
         }
         lua_pushboolean(L, ok ? 1 : 0);

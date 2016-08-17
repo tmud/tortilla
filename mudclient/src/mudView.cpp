@@ -283,6 +283,7 @@ void MudView::calcStringsSizes(mudViewStrings& pds)
     HFONT oldfont = dc.SelectFont(propElements->standard_font);
     for (int i=0,e=pds.size(); i<e; ++i) {
     MudViewString *string = pds[i];
+    string->changed = false;
     std::vector<MudViewStringBlock> &b = string->blocks;
     for (int j=0,je=b.size(); j<je; ++j)
     {
@@ -319,10 +320,25 @@ void MudView::renderView()
     if (m_last_visible_line == -1)
         return;
 
-    int line_heigth = propElements->font_height;
     int index = m_last_visible_line; // - (m_last_string_updated ? 1 : 0);
     int count = m_lines_count + 1;
+
+    // check changed strings
+    mudViewStrings changed;
+    while (index >= 0 && count > 0)
+    {
+        MudViewString *s = m_strings[index];
+        if (s->changed)
+           changed.push_back(s);
+        index--; count--;
+    }
+    calcStringsSizes(changed);
+
+    // render
+    int line_heigth = propElements->font_height;
     int y = pos.bottom;
+    index = m_last_visible_line;
+    count = m_lines_count + 1;
     while (index >= 0 && count > 0)
     {
         renderString(&mdc, m_strings[index], 0, y, index);

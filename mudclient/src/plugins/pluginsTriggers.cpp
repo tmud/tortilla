@@ -141,23 +141,24 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
 void PluginsTrigger::run()
 {
     m_trigger_func_ref.pushValue(L);
-
-    PluginsParseData ppd(&m_parseData, &m_triggerParseData);
-    luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
     Plugin *oldcp = _cp;
     _cp = p;
-    if (lua_pcall(L, 1, 0, 0))
-    {
-        //error
-        if (luaT_check(L, 1, LUA_TSTRING))
+    {   // вызов деструктора PluginsParseData - обратная перекодировка строк
+        PluginsParseData ppd(&m_parseData, &m_triggerParseData);
+        luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
+        if (lua_pcall(L, 1, 0, 0))
         {
-            pluginOut(lua_toerror(L));
+            //error
+            if (luaT_check(L, 1, LUA_TSTRING))
+            {
+                pluginOut(lua_toerror(L));
+            }
+            else
+            {
+                pluginLog(L"неизвестная ошибка");
+            }
+            lua_settop(L, 0);
         }
-        else
-        {
-            pluginLog(L"неизвестная ошибка");
-        }
-        lua_settop(L, 0);
     }
     _cp = oldcp;
     reset();

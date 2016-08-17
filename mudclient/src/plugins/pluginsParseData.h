@@ -132,6 +132,7 @@ public:
             s->gamecmd = gamecmd;
             s->system = system;
             ss.insert(ss.begin() + selected + delta, s);
+            s->changed = true;
         }
     }
 
@@ -159,6 +160,7 @@ public:
                 }
                 dst_pvs->blocks[dst_block - 1] = src_pvs->blocks[block - 1];
                 dst->blocks[dst_block - 1] = src->blocks[block - 1];
+                dst->changed = true;
                 return true;
             }
         }
