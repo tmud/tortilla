@@ -5,6 +5,31 @@ local sym_no = '-'
 -- цвет заголовка окна общего состояния сбора
 local title_color = 'rgb240,120,80'
 
+-- триггеры на ресурсы
+------------------------------------------------------------------------------------
+-- q6 худшие, q5 посредственные, q4 средние, q3 хорошие, q2 отличные, q1 наилучшие
+local vetki = {
+  ingr = 'ветки',
+  trigger = 'Отломанная ветка %1 сохнет здесь.',
+  q6 = { 'ольхи' },
+  q5 = { 'ели', 'клена' },
+  q4 = { 'липы', 'пихты', 'черемухи' },
+  q3 = { 'бука', 'вяза', 'груши', 'яблони', 'ясеня' },
+  q2 = { 'дуба', 'карагача', 'кедра', 'кипариса', 'тиса' },
+  q1 = { 'ильма', 'каштана', 'платана', 'самшита' }
+}
+local griby = {
+  ingr = 'грибы',
+  trigger = 'Гриб (%1) растет здесь.',
+}
+local griby2 = {
+  ingr = 'грибы',
+  trigger = '%1 растут на пеньке.',
+  q6 = { 'опята' }
+}
+-- общий список всех триггеров
+local triggers = { vetki } --, griby, griby2 }
+------------------------------------------------------------------------------------
 -- качества в падежах
 local level_s = { 'наилучшую', 'отличную', 'хорошую', 'среднюю', 'посрдественную', 'худшую' }
 local level_m = { 'наилучшие', 'отличные', 'хорошие', 'средние', 'посрдественные', 'худшие' }
@@ -26,22 +51,6 @@ local ingrs = {
   { 'ягоды', 'ягоду', 'ягода', gender=female, level=level_m, color='light magenta' }
 }
 
-local function addinfo(vd, ingr, quality)
-  vd:select(1)
-  local idx = vd:blocks()+1
-  vd:setBlocksCount(idx)
-  vd:setBlockText(idx, ' [test]')
-  vd:set(idx, 'textcolor', props.paletteColor(5))
-end
-
-local triggers_vetka = {
-   key = 'Отломанная ветка %1 сохнет здесь.', 
-   func = function(vd)
-     
-   end
-}
-
-
 local function f(x) 
   return x and sym_yes or sym_no
 end
@@ -51,6 +60,43 @@ end
 local function printc(x, ...)
   if not x then _G.print(...) return end
   _G.print(x, ...)
+end
+
+-- добавление тега в строку с ресурсом
+local function addteg(vd, ingr, quality)
+  local idx = vd:blocks()+1
+  vd:setBlocksCount(idx)
+  vd:setBlockText(idx, ' [test]')
+  --vd:set(idx, 'textcolor', props.paletteColor(5))
+  vd:set(idx-1, 'textcolor', 5)
+end
+
+-- запуск команды на сбор ингредиента
+local function collect(name, ingr, quality)
+  print('сбор '..name..' !')
+end
+
+-- обработка триггера на ингредиент
+local function ingr_trigger(vd, ingr, qt)
+  vd:select(1)
+  local name = vd:getParameter(1)
+  if not name then return end
+  -- определяем качество ресурса
+  local quality
+  for i=1,6 do
+    local t = qt['q'..i]
+    if t then
+      for _,l in pairs(t) do
+        if l == name then quality = i break end
+      end
+    end
+  end
+  if not quality then return end
+  -- добавляем тег на ресурс
+  addteg(vd, ingr, quality)
+  -- проверяем что мы вообще собираем этот ресурс и собираем нужного качества
+  if not ingr.state or not ingr.val[quality] then return end
+  collect(name, ingr, quality)
 end
 
 local sbor = false
@@ -97,6 +143,18 @@ function autosbor.init()
   cmdrxp = createPcre('сбор(.*)')
   cmdrxp2 = createPcre('^(_[^+-]+)?([+-])$')
   cmdrxp3 = createPcre('^_?([^0-9_]+)([0-9]|_все)?$')
+
+  -- создает триггеры на ресурсы
+  for _,t in pairs(triggers) do
+    local ingr
+    for _,i in ipairs(ingrs) do
+      if t.ingr == i[1] then ingr = i break end
+    end
+    if not ingr then log('Не найден игредиент: '..tostring(t.ingr)) goto next end
+    local tr = createTrigger(t.trigger, function(vd) ingr_trigger(vd, ingr, t) end)
+    if not tr then log('Не создан триггер: '..tostring(t.trigger)) end
+    ::next::
+  end
 end
 
 function autosbor.release()
@@ -183,6 +241,9 @@ local function runcmd(p)
         if count == '_все' then
           local text = mode and '' or 'НЕ '
           text = text..'БУДУ СОБИРАТЬ '..l2(ingr,mode)
+          if mode and not ingr.state then
+            text = text.." (общий сбор выключен!)"
+          end
           print(text)
           for i=1,6 do ingr.val[i] = mode end
           return true
@@ -191,6 +252,9 @@ local function runcmd(p)
         if quality >=1 and quality <= 6 then
           local text = mode and '' or 'НЕ '
           text = text..'БУДУ СОБИРАТЬ '..l3(ingr,quality)
+          if mode and not ingr.state then
+            text = text.." (общий сбор выключен!)"
+          end
           print(text)
           ingr.val[quality] = mode
           return true
