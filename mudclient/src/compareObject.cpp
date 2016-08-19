@@ -15,18 +15,15 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     if (key.at(0) == L'$')      // regexp marker
     {
        ParamsHelper ph(key, ParamsHelper::DETECT_ANYID);
-       if (ph.getSize() == 0)
+       if (ph.getSize() == 0)  // нет %0, %1 и т.д.
        {
-           const tchar *k = key.c_str();
-           //.*,[^, +,]+
-           if (wcsstr(k, L".*") || wcsstr(k, L" +") || wcsstr(k, L"]+") || wcsstr(k, L"[^"))
-           {
-               if (m_pcre.setRegExp(key.substr(1), true))
-               {
-                   m_std_regexp = true;
-                   return true;
-               }
-           }
+          tstring regexp(key.substr(1));
+          checkVars(&regexp);
+          if (m_pcre.setRegExp(regexp, true))
+          {
+              m_std_regexp = true;
+              return true;
+          }
        }
     }
 
@@ -159,6 +156,8 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
 
 void CompareObject::checkVars(tstring *pcre_template)
 {
+    m_vars_pcre_parts.clear();
+
     //find vars like $var
     Pcre16 vars;
     vars.setRegExp(L"\\$[a-zA-Z0-9_]+");
