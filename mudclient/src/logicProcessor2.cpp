@@ -57,7 +57,7 @@ void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
            //пробуем подобрать по сокращенному имени
            int len = main_cmd.size();
            if (len < 3)
-               error->append(L" ороткое им€ команды");
+               error->append(L" ороткое им€ дл€ команды");
            else
            {
                std::vector<tstring> cmds;

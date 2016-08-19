@@ -833,9 +833,15 @@ private:
         PropertiesData tmp;
         tmp.copy(data);
 
+        bool font_updated = false;
         PropertiesDlg propDlg(&tmp);
         if (propDlg.DoModal() == IDOK)
         {
+            if (data.font_name != tmp.font_name || data.font_bold != tmp.font_bold ||
+                data.font_heigth != tmp.font_heigth || data.font_italic != tmp.font_italic)
+            {
+                font_updated = true;
+            }
             data.copy(tmp);
             updateProps();
             if (!m_manager.saveProfile())
@@ -847,6 +853,8 @@ private:
         }
         m_settings_mode = false;
         m_plugins.processPluginsMethod("propsupdated", 0);
+        if (font_updated)
+            m_plugins.processPluginsMethod("fontupdated", 0);
         return 0;
     }
 
@@ -866,7 +874,7 @@ private:
         PropertiesWindow *find_window = m_propData->displays.find_window();
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         if (ctx->Side == DOCK_HIDDEN)
-        {            
+        {
             RECT& p = find_window->pos;
             SIZE sz =  m_find_dlg.getSize();
             int w = 0; int h = 0;
@@ -888,7 +896,7 @@ private:
         find_window->visible = false;
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         //m_propData->find_window = ctx->rcWindow;
-        m_dock.HideWindow(m_find_dlg);        
+        m_dock.HideWindow(m_find_dlg);
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)
             m_history.clearFind();

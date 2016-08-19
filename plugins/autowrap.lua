@@ -13,33 +13,38 @@ local autowrap = {}
 function autowrap.name()
   return 'Автоперенос строк'
 end
-
 function autowrap.version()
-  return '1.05'
+  return '1.06'
+end
+function autowrap.description()
+  local p = ''
+  if not autowrap_maxlen_main or autowrap_maxlen_main == 0 then p = 'автоперенос выключен'
+  elseif autowrap_maxlen_main == -1 then p = 'включен режим авторасчета максимальной длины строки'
+  else p = 'задана максимальная длина '..autowrap_maxlen_main..' символов'
+  end
+  local p2 = ''
+  if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then p2 = 'автоперенос выключен'
+  elseif autowrap_maxlen_out == -1 then p2 = 'включен режим авторасчета максимальной длины строки'
+  else p2 = 'задана максимальная длина '..autowrap_maxlen_out..' символов'
+  end
+  local s = { 'Плагин автопереноса длинных строк. Строки длиннее, чем заданное число символов, будут',
+  'разбиты на две строки или более. Строки разбиваются по словам, если это возможно.',
+  'Для главного окна сейчас: '..p..'.',
+  'Для дополнительных окон сейчас: '..p2..'.',
+  'Настройки максимальной длины задаются прямо в файле плагина plugins/autowrap.lua.',
+  'Плагин позволяет изменять ширину текста в символах в окнах клиента командой:',
+  props.cmdPrefix()..'linebreak окно ширина. Команда не включена в автоподстановку, так как не предназначена',
+  'для использования в триггерах. Без параметров команда пересчитывает автоперенос',
+  'по ширине окна.'
+  }
+  return table.concat(s, '\r\n')
 end
 
-function autowrap.description()
-local s = 'Плагин автопереноса длинных строк. Строки длиннее, чем заданное число символов, будут\r\nразбиты на две строки или более. Строки разбиваются по словам, если это возможно.\r\n'
-  s = s..'Для главного окна сейчас '
-if not autowrap_maxlen_main or autowrap_maxlen_main == 0 then
-  s = s..'автоперенос выключен'
-elseif autowrap_maxlen_main == -1 then
-  s = s..'включен режим авторасчета максимальной длины строки'
-else
-  s = s..'задана максимальная длина '..autowrap_maxlen_main..' символов'
+local function print(s)
+  _G.print('[автоперенос] '..s)
 end
-  s = s ..'.\r\nДля дополнительных окон сейчас '
-if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then
-  s = s..'автоперенос выключен'
-elseif autowrap_maxlen_out == -1 then
-  s = s..'включен режим авторасчета максимальной длины строки'
-else
-  s = s..'задана максимальная длина '..autowrap_maxlen_out..' символов'
-end
-  s = s..'.\r\n'
-  s = s..'Настройки максимальной длины задаются прямо в файле плагина plugins/autowrap.lua.\r\nПлагин позволяет изменять ширину текста в символах в окнах клиента командой:\r\n'
-  s = s..props.cmdPrefix()..'linewidth окно ширина. Команда не включена в автоподстановку, так как не предназначена\r\nдля использования в триггерах.'
-  return s
+local function print0(s)
+  _G.print(s)
 end
 
 local function div(v, maxlen)
@@ -149,10 +154,13 @@ local function update_view(v, newlen)
     divall(v, newlen)
 end
 
+local function recalc_window(window, newlen)
+  if not newlen then newlen = getViewSize(window) end
+  updateView(window, function(v) update_view(v,newlen) end)
+end
+
 function autowrap.syscmd(t)
-    if t[1] ~= 'linewidth' then
-        return t
-    end
+    if t[1] ~= 'linebreak' then return t end
     local function isnumber(s)
         if type(s) == 'number' then return true end
         if type(s) ~= 'string' then return false end
@@ -161,21 +169,42 @@ function autowrap.syscmd(t)
     local function cmdstr(t) 
         return "'"..props.cmdPrefix()..table.concat(t, " ").."'"
     end
-    if #t ~= 3 or not isnumber(t[2]) or not isnumber(t[3]) then
-        log("Некорретный набор параметров: "..cmdstr(t))
-        return
+    if #t == 1 then
+      autowrap_maxlen_main = -1
+      autowrap_maxlen_out = -1
+      for i=0,6 do recalc_window(i) end
+      return
     end
     local window = tonumber(t[2])
-    local newlen = tonumber(t[3])
     if window < 0 or window > 6 then
-        log("Указан неверный номер окна: "..window..", "..cmdstr(t))
+      print("Указан неверный номер окна: "..window)
+      return
+    end
+    if #t == 2 then
+      if window == 0 then autowrap_maxlen_main = -1
+      else autowrap_maxlen_out = -1 end
+      recalc_window(window)
+      return
+    end
+    if #t ~= 3 or not isnumber(t[2]) or not isnumber(t[3]) then
+        print("Некорретный набор параметров: "..cmdstr(t))
         return
     end
-    if newlen < 60 then
-        log("Указан неверный размер строки: "..newlen..", "..cmdstr(t))
-        return
+    local newlen = tonumber(t[3])
+    local minlen = 40
+    if newlen < minlen then
+      print("Указан неверный размер строки, минимально "..minlen.." символов.")
+      return
     end
-    updateView(window, function(v) update_view(v,newlen) end)
+    if window == 0 then autowrap_maxlen_main = newlen
+    else autowrap_maxlen_out = newlen end
+    recalc_window(window, newlen)
+end
+
+function autowrap.fontupdated()
+  print('Изменился шрифт. Если нужно пересчитать переносы,')
+  print0('выполните команду #linebreak. Эта операция может занять заметное')
+  print0('время. Время зависит от количества текста в клиенте.')
 end
 
 return autowrap

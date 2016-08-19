@@ -434,23 +434,30 @@ nil или true - если команда была успешно обработ
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: нет<br></div><br>
 Функция вызывается клиентом, когда соединение по протоколу MSDP закрылось. Тут можно произвести сброс плагина.
-См. <a href="#msdpon" class="cmd">msdpon</a>.
+<br>См. <a href="#msdpon" class="cmd">msdpon</a>.
 <hr>
 <a name="propsblocked"></a>
 <h4>void propsblocked()</h4>
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: нет<br></div><br>
-Функция используется для оповещения плагинов, о том, что было открыто окно настроек. Используется для разрешения проблемы конфликта, если 
-триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>запрещает</b> изменять триггеры до прихода события <a href="#propsupdated" class="cmd">propsupdated</a>.<br>
-См. <a href="#props" class="cmd">isPropertiesOpen</a>.
+Функция используется для оповещения плагинов о том, что было открыто окно настроек. Используется для разрешения проблемы конфликта, если 
+триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>запрещает</b> изменять триггеры до прихода события <a href="#propsupdated" class="cmd">propsupdated</a>.
+<br>См. <a href="#props" class="cmd">isPropertiesOpen</a>.
 <hr>
 <a name="propsupdated"></a>
 <h4>void propsupdated()</h4>
 <div class="m">Параметры: нет</div><br>
 <div class="m">Результат: нет<br></div><br>
-Функция используется для оповещения плагинов, о том, что окно настроек было закрыто. Используется для разрешения проблемы конфликта, если 
+Функция используется для оповещения плагинов о том, что окно настроек было закрыто. Используется для разрешения проблемы конфликта, если 
 триггеры макросы и др. элементы могут быть изменены в плагине. Данное событие <b>снимает запрет</b> на изменение триггеров.
-См. <a href="#propsblocked" class="cmd">propsblocked</a>, <a href="#props" class="cmd">isPropertiesOpen</a>.
+<br>См. <a href="#propsblocked" class="cmd">propsblocked</a>, <a href="#fontupdated" class="cmd">fontupdated</a>, <a href="#props" class="cmd">isPropertiesOpen</a>.
+<hr>
+<a name="fontupdated"></a>
+<h4>void fontupdated()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для оповещения плагинов о том, что изменился шрифт (его имя, размер, начертание и др.) в клиенте. Данное событие приходит после события <div class="cmd">propsupdated</div>.
+<br>См. <a href="#propsblocked" class="cmd">propsblocked</a>, <a href="#propsupdated" class="cmd">propsupdated</a>, <a href="#props" class="cmd">isPropertiesOpen</a>.
 <hr>
 <a name="clientapi"></a>
 <h2>Функции взаимодействия плагина с клиентом, API клиента</h2>
