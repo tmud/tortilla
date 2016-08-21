@@ -57,9 +57,11 @@ public:
     void onSelectFont(bool any_fonts)
     {
         LOGFONT lf = m_logfont;
-        DWORD dwFlags = CF_SCREENFONTS;
+        DWORD dwFlags = CF_SCREENFONTS|CF_LIMITSIZE;
         if (!any_fonts) dwFlags|= CF_FIXEDPITCHONLY;
         CFontDialog dlg(&lf, dwFlags, NULL, GetParent());
+        dlg.m_cf.nSizeMin = 8;
+        dlg.m_cf.nSizeMax = 26;
         if (dlg.DoModal() == IDOK)
         {
             propData->font_name.assign(lf.lfFaceName);
@@ -243,10 +245,33 @@ private:
         RECT pos; GetClientRect(&pos);
         int free_width = pos.right - (text_label_width * 2);
         if (free_width < 0)
-            free_width = 0;
-        int free_heigth = pos.bottom - ((8 * text_label_heigth) + (7 * delimeter));
+        {
+            text_label_width -= delimeter*2;
+            free_width = pos.right - (text_label_width * 2);
+            if (free_width < -220)
+            {
+                int new_width = (text_label_width / 3) * 2;
+                for (int i = 0; i < 16; ++i)
+                  m_labels[i].pos.right = new_width;
+                text_label_width = new_width;
+                free_width = pos.right - (text_label_width * 2);
+            }
+        }
+
+        std::function<int(int)> fh = [pos, text_label_heigth](int delimeter) {
+            return pos.bottom - ((8 * text_label_heigth) + (7 * delimeter));
+        };
+        int free_heigth = fh(delimeter);
         if (free_heigth < 0)
-            free_heigth = 0;
+        {
+            delimeter = delimeter / 2; 
+            free_heigth = fh(delimeter);
+            if (free_heigth < 0)  {
+                delimeter = delimeter / 2;
+                free_heigth = fh(delimeter);
+                if (free_heigth < 0) { delimeter = 0; free_heigth = fh(delimeter); }
+            }
+        }
 
         pos.left = free_width / 3;
         pos.top = free_heigth / 2;
