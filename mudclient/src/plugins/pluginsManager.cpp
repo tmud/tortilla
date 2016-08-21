@@ -504,6 +504,11 @@ void PluginsManager::processTick()
     }
 }
 
+void PluginsManager::processSecondTick()
+{
+    doPluginsMethod("tick", 0);
+}
+
 void PluginsManager::processPluginsMethod(const char* method, int args)
 {
      doPluginsMethod(method, args);

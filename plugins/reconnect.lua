@@ -4,29 +4,37 @@
 -- Количество попыток переподключения (0 - бесконечное количество)
 local max_count = 10
 
+-- Таймаут, при котором обрывается связь, если не поступают игровые данные от мад сервера
+local timeout = 180
+
 local reconnect = {}
 function reconnect.name() 
     return 'Автореконнект'
 end
 
 function reconnect.description()
-  local s = 'Плагин переподключает клиент к серверу в случае обрыва связи.\r\nНастройки задаются прямо в файле плагина plugins/reconnect.lua\r\nТекущие настройки:\r\n'
+  local n = 'Количество попыток переподключения - бесконечно'
   if max_count and max_count > 0 then
-    s = s..'Количество попыток переподключения - '..max_count
-  else
-    s = s..'Количество попыток переподключения - бесконечно'
+    n = 'Количество попыток переподключения - '..max_count
   end
-  return s
+  local s = { 'Плагин переподключает клиент к серверу в случае обрыва связи.',
+  'Настройки задаются прямо в файле плагина plugins/reconnect.lua',
+  'Текущие настройки:', n, 
+  'Автоматическое передподключение - через '..timeout..' секунд, если нет игровых данных.'
+  }
+  return table.concat(s, '\r\n')
 end
 
 function reconnect.version()
-    return '1.05'
+    return '1.06'
 end
 
 local connected = false
 local address = nil
 local port = nil
 local attempts = 0
+local timeout_seconds = 0
+local timeout_disconnect = false
 local function flash()
   if not props.activated() then
     flashWindow()
@@ -35,7 +43,10 @@ end
 
 function reconnect.syscmd(t)
   if #t == 1 and (t[1] == 'zap' or t[1] == 'disconnect') then
-    connected = false
+    if not timeout_disconnect then
+      connected = false
+    end
+    timeout_disconnect = false
   end
   return t
 end
@@ -47,7 +58,7 @@ function reconnect.connect()
 end
 
 function reconnect.disconnect()
-  if not connected then 
+  if not connected then
     return
   end
   if attempts == 0 then
@@ -83,6 +94,22 @@ function reconnect.getaddress()
   else
     address = nil
     port = nil
+  end
+end
+
+function reconnect.streamdata(stream)
+  timeout_seconds = 0
+  return stream
+end
+
+function reconnect.tick()
+  timeout_seconds = timeout_seconds + 1
+  if timeout_seconds > timeout then
+    timeout_seconds = 0
+    timeout_disconnect = true
+    print('[автореконнект] Таймаут по отсутсвию игровых данных. Переподключение...')
+    local p = props.cmdPrefix()
+    runCommand(p..'disconnect')
   end
 end
 

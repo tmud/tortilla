@@ -724,6 +724,14 @@ private:
             m_plugins.processTick();
         }
 
+        static int seconds_count = 0;
+        seconds_count = seconds_count + 1;
+        if (seconds_count == 40)
+        {
+            seconds_count = 0;
+            m_plugins.processSecondTick();
+        }
+
         m_processor.processStackTick();
         m_view.updateSoftScrolling();
         for (int i=0,e=m_views.size();i<e;++i)

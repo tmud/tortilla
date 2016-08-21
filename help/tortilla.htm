@@ -1412,7 +1412,22 @@ off<br>
 <div class="t">#var</div><br>
 Команда без параметров выводит список всех переменных.<br>
 <div class="t">#var 'строка'</div><br>
-Команда выводит все переменные, которые в своем имени содержат заданную строку.<br>
+Команда выводит все переменные, которые в своем имени содержат заданную строку.<br><br>
+Существует встроенные переменные, которые отвечают за дату и время (все буквы заглавные):<br>
+<ul>
+<li><div class="m">$DATE</div> - текущая дата (день, месяц, год).</li>
+<li><div class="m">$TIME</div> - текущее время (часы, минуты, секунды).</li>
+<li><div class="m">$DAY</div> - текущий день.</li>
+<li><div class="m">$MONTH</div> - текущий месяц.</li>
+<li><div class="m">$YEAR</div> - текущий год.</li>
+<li><div class="m">$HOUR</div> - текущий час.</li>
+<li><div class="m">$MINUTE</div> - текущая минута.</li>
+<li><div class="m">$SECOND</div> - текущая секунда.</li>
+<li><div class="m">$MILLISECOND</div> - текущая милисекунда.</li>
+<li><div class="m">$TIMESTAMP</div> - общее время в секудах от 1 января 1970 года.</li>
+</ul>
+Значение переменной можно посмотреть, например: <div class="m">#out $DATE</div>.<br>
+
 <br>См.также: <a href="#unvar" class="cmd">#unvar</a>, <a href="#if" class="cmd">#if</a>, <a href="#math" class="cmd">#math</a>.<br><br>
 <hr>
 <a name="wait"></a>

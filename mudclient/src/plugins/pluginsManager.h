@@ -29,8 +29,9 @@ public:
     void processConnectEvent();
     void processDisconnectEvent();
     void processTick();
+    void processSecondTick();
     void processPluginsMethod(const char* method, int args);
-    void processPluginMethod(Plugin *p, char* method, int args);   
+    void processPluginMethod(Plugin *p, char* method, int args);
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
