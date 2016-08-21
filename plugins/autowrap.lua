@@ -9,6 +9,8 @@ local autowrap_maxlen_main = -1
 -- Максимально допустимая длина строк для output-окон
 local autowrap_maxlen_out = -1
 
+local autowrap_minlen = 30
+
 local autowrap = {}
 function autowrap.name()
   return 'Автоперенос строк'
@@ -113,7 +115,9 @@ function autowrap.after(window, v)
         maxlen = autowrap_maxlen_out
     end
   end
-  if maxlen < 60 then maxlen = 60 end
+  if maxlen < autowrap_minlen then
+    maxlen = autowrap_minlen
+  end
   divall(v, maxlen)
 end
 
@@ -191,9 +195,8 @@ function autowrap.syscmd(t)
         return
     end
     local newlen = tonumber(t[3])
-    local minlen = 40
-    if newlen < minlen then
-      print("Указан неверный размер строки, минимально "..minlen.." символов.")
+    if newlen < autowrap_minlen then
+      print("Указан неверный размер строки, минимально "..autowrap_minlen.." символов.")
       return
     end
     if window == 0 then autowrap_maxlen_main = newlen
@@ -202,9 +205,11 @@ function autowrap.syscmd(t)
 end
 
 function autowrap.fontupdated()
-  print('Изменился шрифт. Если нужно пересчитать переносы,')
-  print0('выполните команду #linebreak. Эта операция может занять заметное')
-  print0('время. Время зависит от количества текста в клиенте.')
+  print('Изменился шрифт.')
+  print('Если нужно пересчитать переносы, то')
+  print0('выполните команду #linebreak. Эта операция может')
+  print0('занять заметное время. Время зависит от количества')
+  print0('текста в клиенте.')
 end
 
 return autowrap

@@ -67,6 +67,29 @@ public:
         return false;
     }
 
+    bool getselected_sympos(int symbol, std::pair<int, int>* blockpos)
+    {
+        assert(blockpos);
+        PluginViewString *str = getselected_pvs();
+        int block = 0; int pos = 0;
+        if (str && symbol > 0)
+        {
+            symbol -= 1;
+            for (int i = 0, e = str->blocks.size(); i < e; ++i)
+            {
+                int size = u8string_len(str->blocks[i]);
+                if (size > symbol)
+                {
+                    blockpos->first = i + 1;
+                    blockpos->second = symbol + 1;
+                    return true;
+                }
+                symbol -= size;
+            }
+        }
+        return false;
+    }
+
     bool getselected_block(int block, u8string* str)
     {
         PluginViewString* vs = getselected_pvs();

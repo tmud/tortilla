@@ -61,6 +61,31 @@ public:
         blocks.resize(count);
     }
 
+    int insertBlock(int abspos)
+    {
+        int len = getTextLen();
+        if (abspos > 0 && abspos <= len)
+        {
+            int block = 0; int pos = 0;
+            while (abspos > 0)
+            {
+                abspos--;
+                for (int i = 0, e = blocks.size(); i < e; ++i)
+                {
+                    int size = blocks[i].string.size();
+                    if (size > abspos)
+                    {
+                        block = i + 1;
+                        pos = abspos + 1;
+                        break;
+                    }
+                }
+            }
+
+
+        }
+        return -1;
+    }
     void serialize(tstring *data);
     void deserialize(const tstring& data);
 private:

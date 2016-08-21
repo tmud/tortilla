@@ -888,39 +888,65 @@ int vd_find(lua_State *L)
     return pluginInvArgs(L, L"viewdata:find");
 }
 
+int vd_insertBlock(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        int abspos = lua_tointeger(L, 2);
+        std::pair<int, int> block_and_pos;
+        if (!pdata->getselected_sympos(abspos, &block_and_pos))
+        {
+            return 0;
+        }
+        int block = block_and_pos.first;
+        int pos = block_and_pos.second - 1;
+        if (pos == 0)
+        {
+            block = block-1;
+            PluginViewString *pvs = pdata->getselected_pvs();
+            pvs->blocks.insert(pvs->blocks.begin()+block, u8string() );
+            MudViewString *vs = pdata->getselected();
+            vs->blocks.insert( vs->blocks.begin()+block, MudViewStringBlock() );
+            lua_pushinteger(L, block+1);
+            return 1;
+        }
+
+        PluginViewString *pvs = pdata->getselected_pvs();
+        u8string text =  pvs->blocks[block-1];
+
+        u8string p1(text);
+        u8string_substr(&p1, 0, pos);
+        pvs->blocks[block-1] = p1;
+
+        pvs->blocks.insert(pvs->blocks.begin()+block, u8string());
+        pvs->blocks.insert(pvs->blocks.begin()+block, u8string());
+        MudViewString *vs = pdata->getselected();
+        vs->blocks.insert(vs->blocks.begin() + block, MudViewStringBlock());
+        vs->blocks.insert(vs->blocks.begin() + block, MudViewStringBlock());
+
+        u8string p2(text);
+        u8string_substr(&p2, pos, u8string_len(text));
+        pvs->blocks[block+1] = p2;
+        vs->blocks[block+1].params = vs->blocks[block-1].params;
+
+        lua_pushinteger(L, block+1);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:insertBlock");
+}
+
 int vd_getBlockPos(lua_State *L)
 {
     if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         int abspos = lua_tointeger(L, 2);
-        PluginViewString *str = pdata->getselected_pvs();
-        int block = 0; int pos = 0;
-        if (str && abspos > 0) 
-        {
-            abspos-=1;
-            for (int i=0,e=str->blocks.size();i<e;++i)
-            {
-                int size = u8string_len(str->blocks[i]);
-                if (size > abspos)
-                {
-                    block = i+1;
-                    pos = abspos+1;
-                    break;
-                }
-                abspos -= size;
-            }
-        }
-        if (block > 0)
-        {
-            lua_pushinteger(L, block);
-            lua_pushinteger(L, pos);
-        }
-        else
-        {
-            lua_pushnil(L);
-            lua_pushnil(L);
-        }
+        std::pair<int, int> block_and_pos;
+        if (!pdata->getselected_sympos(abspos, &block_and_pos))
+           return 0;
+        lua_pushinteger(L, block_and_pos.first);
+        lua_pushinteger(L, block_and_pos.second);
         return 2;
     }
     return pluginInvArgs(L, L"viewdata:getBlockPos");
@@ -1185,6 +1211,7 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "deleteBlock", vd_deleteBlock);
     regFunction(L, "deleteAllBlocks", vd_deleteAllBlocks);
     regFunction(L, "copyBlock", vd_copyBlock);
+    regFunction(L, "insertBlock", vd_insertBlock);
     regFunction(L, "deleteString", vd_deleteString);
     regFunction(L, "deleteStrings", vd_deleteStrings);
     regFunction(L, "dropString", vd_dropString);
@@ -1302,6 +1329,20 @@ int vs_deleteBlock(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, L"viewstring:deleteBlock");
+}
+
+int vs_insertBlock(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);        
+        int pos = lua_tointeger(L, 2);
+        s->insertBlock(pos);
+        int result = s->deleteBlock(index - 1) ? 1 : 0;
+        lua_pushboolean(L, result);
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewstring:insertBlock");
 }
 
 int vs_set(lua_State *L)
@@ -1492,6 +1533,7 @@ void reg_mt_viewstring(lua_State *L)
     regFunction(L, "setBlockText", vs_setBlockText);
     regFunction(L, "getBlockText", vs_getBlockText);
     regFunction(L, "deleteBlock", vs_deleteBlock);
+    regFunction(L, "insertBlock", vs_insertBlock);
     regFunction(L, "set", vs_set);
     regFunction(L, "get", vs_get);
     regFunction(L, "print", vs_print);
