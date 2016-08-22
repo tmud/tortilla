@@ -33,7 +33,7 @@ public:
     int selected;
 public:
     PluginsParseData(parseData *data, triggerParseData *trdata) : pdata(data), tdata(trdata), selected(-1) { convert(); }
-    ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
+    ~PluginsParseData() { convert_back(); std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) { delete s; }); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
     bool select(int index)
@@ -65,6 +65,19 @@ public:
             return true;
         }
         return false;
+    }
+
+    bool getselected_len(int *len)
+    {
+        assert(len);
+        PluginViewString *str = getselected_pvs();
+        if (!str)
+            return false;
+        int s = 0;
+        for (int i = 0, e = str->blocks.size(); i < e; ++i)
+            s += u8string_len(str->blocks[i]);
+        *len = s;
+        return true;
     }
 
     bool getselected_sympos(int symbol, std::pair<int, int>* blockpos)
@@ -229,7 +242,9 @@ public:
         }
         return ISC_UNKNOWN;
     }
-
+    void synctexts() {
+        convert_back();
+    }
 private:
     void convert()
     {

@@ -47,7 +47,16 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Некорректные параметры" ); // (_cp ? L"Некорректные параметры" : L"Параметры");
+    tstring p( L"Некорректный тип в параметрах" ); // (_cp ? L"Некорректные параметры" : L"Параметры");
+    swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
+    pluginLogOut(plugin_buffer());
+    return 0;
+}
+int pluginInvArgsValues(lua_State *L, const tchar* fname)
+{
+    luaT_push_args(L, TW2A(fname));
+    tstring error(luaT_towstring(L, -1));
+    tstring p( L"Некорректное значение в параметрах" );
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -1096,6 +1105,7 @@ int updateView(lua_State *L)
             h->update();
             return 0;
         }
+        return pluginInvArgsValues(L, L"updateView");
     }
     return pluginInvArgs(L, L"updateView");
 }
@@ -1114,6 +1124,7 @@ int getViewSize(lua_State *L)
             lua_pushinteger(L, sz.cy);
             return 2;
         }
+        return pluginInvArgsValues(L, L"getViewSize");
     }
     return pluginInvArgs(L, L"getViewSize");
 }
@@ -1130,6 +1141,7 @@ int isViewVisible(lua_State *L)
             lua_pushboolean(L, visible ? 1 : 0);
             return 1;
         }
+        return pluginInvArgsValues(L, L"isViewVisible");
     }
     return pluginInvArgs(L, L"isViewVisible");
 }
@@ -1145,6 +1157,7 @@ int showView(lua_State *L)
             _wndMain.m_gameview.showView(view, true);
             return 0;
         }
+        return pluginInvArgsValues(L, L"showView");
     }
     return pluginInvArgs(L, L"showView");
 }
@@ -1160,6 +1173,7 @@ int hideView(lua_State *L)
             _wndMain.m_gameview.showView(view, false);
             return 0;
         }
+        return pluginInvArgsValues(L, L"hideView");
     }
     return pluginInvArgs(L, L"hideView");
 }
@@ -1198,6 +1212,7 @@ int clearView(lua_State *L)
             lp()->windowClear(window);
             return 0;
         }
+        return pluginInvArgsValues(L, L"clearView");
     }
     return pluginInvArgs(L, L"clearView");
 }
@@ -1229,7 +1244,7 @@ int vprint(lua_State *L)
             view = n;
     }
     if (view == -1)
-        return pluginInvArgs(L, L"vprint");
+        return pluginInvArgsValues(L, L"vprint");
 
     std::vector<tstring> params;
     int n = lua_gettop(L);
@@ -1252,7 +1267,7 @@ int translateColors(lua_State *L)
         tstring p(luaT_towstring(L, 1));
         HighlightHelper hh;
         if (!hh.checkText(&p))
-            return 0;
+            return pluginInvArgsValues(L, L"translateColors");
         COLORREF text = lua_tounsigned(L, 2);
         COLORREF bgnd = lua_tounsigned(L, 3);
         PropertiesHighlight ph(text, bgnd);
@@ -1451,7 +1466,7 @@ int string_substr(lua_State *L)
         lua_pushstring(L, s.c_str());
         return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:substr");
 }
 
 int string_strstr(lua_State *L)
@@ -1486,7 +1501,7 @@ int string_strstr(lua_State *L)
             return 1;
          }
      }
-     return 0;
+     return pluginInvArgs(L, L"string:strstr");
 }
 
 int string_strall(lua_State *L)
@@ -1521,7 +1536,7 @@ int string_strall(lua_State *L)
          }
          return 1;
      }
-     return 0;
+     return pluginInvArgs(L, L"string:strall");
 }
 
 int string_lower(lua_State *L)
@@ -1533,7 +1548,7 @@ int string_lower(lua_State *L)
          luaT_pushwstring(L, s.c_str());
          return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:lower");
 }
 
 int string_upper(lua_State *L)
@@ -1545,7 +1560,7 @@ int string_upper(lua_State *L)
          luaT_pushwstring(L, s.c_str());
          return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:upper");
 }
 
 int string_lfup(lua_State *L)
@@ -1563,7 +1578,7 @@ int string_lfup(lua_State *L)
          luaT_pushwstring(L, news.c_str());
          return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:lfup");
 }
 
 int string_tokenize(lua_State *L)
@@ -1585,7 +1600,7 @@ int string_tokenize(lua_State *L)
          }
          return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:tokenize");
 }
 
 int string_trim(lua_State *L)
@@ -1597,7 +1612,7 @@ int string_trim(lua_State *L)
         luaT_pushwstring(L, s.c_str());
         return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:trim");
 }
 
 int string_only(lua_State *L)
@@ -1610,7 +1625,7 @@ int string_only(lua_State *L)
          lua_pushboolean(L, result);
          return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:only");
 }
 
 int string_clone(lua_State *L)
@@ -1621,7 +1636,7 @@ int string_clone(lua_State *L)
          lua_pushstring(L, s.c_str());
          return 1;
     }
-    return 0;
+    return pluginInvArgs(L, L"string:clone");
 }
 
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
@@ -1659,6 +1674,7 @@ int props_paletteColor(lua_State *L)
             lua_pushunsigned(L, tortilla::getPalette()->getColor(index));
             return 1;
         }
+        return pluginInvArgsValues(L, L"props.paletteColor");
     }
     return pluginInvArgs(L, L"props.paletteColor");
 }
@@ -1724,9 +1740,9 @@ int props_serverHost(lua_State *L)
         {
             const NetworkConnectData *cdata = _wndMain.m_gameview.getConnectData();
             lua_pushstring(L, cdata->address.c_str());
+            return 1;
         }
-        else
-            lua_pushnil(L);
+        lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, L"props.serverHost");
@@ -1742,9 +1758,9 @@ int props_serverPort(lua_State *L)
             WCHAR buffer[8];
             _itow(cdata->port, buffer, 10);
             lua_pushstring(L, TW2U(buffer));
+            return 1;
         }
-        else
-            lua_pushnil(L);
+        lua_pushnil(L);
         return 1;
     }
     return pluginInvArgs(L, L"props.serverPort");

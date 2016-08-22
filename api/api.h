@@ -479,6 +479,12 @@ public:
         runcmdint("deleteBlock", block);
         return boolresult();
     }
+    int insertBlock(int position)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "insertBlock", "od", position);
+        return intresult();
+    }
     void print(int view)
     {
         runcmdint("print", view);
@@ -648,6 +654,12 @@ public:
     {
         runcmd("deleteAllBlocks");
         return boolresult();
+    }
+    int insertBlock(int position)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "insertBlock", "od", position);
+        return intresult();
     }
     bool createString()
     {
