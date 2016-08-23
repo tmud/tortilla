@@ -614,7 +614,7 @@ int vd_copyBlock(lua_State *L)
             int dst_block = lua_tointeger(L, 4);
             PluginsViewString *d = (PluginsViewString *)luaT_toobject(L, 3);
             if (dst_block >= 1 && dst_block <= d->count())
-            {                
+            {
                 MudViewString *vs = pdata->getselected();
                 int vs_count = vs->blocks.size();
                 if (src_block >= 1 && src_block <= vs_count)
@@ -623,9 +623,8 @@ int vd_copyBlock(lua_State *L)
                     const MudViewStringBlock &sb = vs->blocks[src_block-1];
                     MudViewStringBlock &db = d->get(dst_block-1);
                     db.params = sb.params;
-                    //db.string = sb.string;
-                    db.subs_protected = 0;                    
-                    db.string = TU2W(pvs->blocks[dst_block-1].c_str());
+                    db.subs_protected = 0;
+                    db.string = TU2W(pvs->blocks[src_block-1].c_str());
                     ok = true;
                 }
             }

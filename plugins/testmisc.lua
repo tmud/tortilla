@@ -135,7 +135,13 @@ function testmisc.before(v, vd)
   vd:print(0)
   assert(vd:getText(),  'vd_textb5-b6-xyz456Blockqwe', 'vs:getText')
   
-  
+  vd:copyBlock(1, 1, 5)
+  vd:print(0)
+  assert(vd:getBlockText(5), 'vd_text', 'vd:text=vd_text')
+
+  vd:copyBlock(6, vs, 1)
+  vs:print(0)
+  assert(vs:getBlockText(1), 'Block', 'vs:text=Block')
 
 end
 

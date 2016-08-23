@@ -645,6 +645,12 @@ public:
         luaT_run(L, "copyBlock", "oddd", block, dst_string, dst_block);
         return boolresult();
     }
+    bool copyBlock(int block, void* dst_string, int dst_block)
+    {
+        luaT_pushobject(L, dst_string, LUAT_VIEWDATA);
+        luaT_run(L, "copyBlock", "odtd", block, dst_string, dst_block);
+        return boolresult();
+    }
     bool deleteBlock(int block)
     {
         runcmdint("deleteBlock", block);
