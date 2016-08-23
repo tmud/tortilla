@@ -729,7 +729,8 @@ private:
         if (seconds_count == 40)
         {
             seconds_count = 0;
-            m_plugins.processSecondTick();
+            if (m_processor.getConnectionState())
+              m_plugins.processSecondTick();
         }
 
         m_processor.processStackTick();

@@ -89,7 +89,8 @@ public:
             }
             if (block > 0)
             {
-                if (pos == 1) {
+                pos = pos - 1;
+                if (pos == 0) {
                     blocks.insert(blocks.begin()+block-1, MudViewStringBlock() );
                     return block;
                 }               

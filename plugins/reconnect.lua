@@ -55,6 +55,7 @@ function reconnect.connect()
   connected = true
   reconnect.getaddress()
   attempts = 0
+  timeout_seconds = 0
 end
 
 function reconnect.disconnect()
@@ -107,7 +108,7 @@ function reconnect.tick()
   if timeout_seconds > timeout then
     timeout_seconds = 0
     timeout_disconnect = true
-    print('[автореконнект] Таймаут по отсутсвию игровых данных. Переподключение...')
+    print('[автореконнект] Таймаут по отсутствию игровых данных. Переподключение...')
     local p = props.cmdPrefix()
     runCommand(p..'disconnect')
   end

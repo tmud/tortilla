@@ -599,10 +599,37 @@ int vd_get(lua_State *L)
 
 int vd_copyBlock(lua_State *L)
 {
-    if (luaT_check(L, 4, LUAT_VIEWDATA, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    if (luaT_check(L, 4, LUAT_VIEWDATA, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER)||
+        luaT_check(L, 4, LUAT_VIEWDATA, LUA_TNUMBER, LUAT_VIEWSTRING, LUA_TNUMBER))
     {
+        bool ok = false;
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        bool ok = pdata->copy_block(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));
+        if (lua_type(L, 3) == LUA_TNUMBER)
+        {
+            ok = pdata->copy_block(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tointeger(L, 4));           
+        }
+        else
+        {
+            int src_block = lua_tointeger(L, 2);
+            int dst_block = lua_tointeger(L, 4);
+            PluginsViewString *d = (PluginsViewString *)luaT_toobject(L, 3);
+            if (dst_block >= 1 && dst_block <= d->count())
+            {                
+                MudViewString *vs = pdata->getselected();
+                int vs_count = vs->blocks.size();
+                if (src_block >= 1 && src_block <= vs_count)
+                {
+                    PluginViewString *pvs = pdata->getselected_pvs();
+                    const MudViewStringBlock &sb = vs->blocks[src_block-1];
+                    MudViewStringBlock &db = d->get(dst_block-1);
+                    db.params = sb.params;
+                    //db.string = sb.string;
+                    db.subs_protected = 0;                    
+                    db.string = TU2W(pvs->blocks[dst_block-1].c_str());
+                    ok = true;
+                }
+            }
+        }
         if (!ok)
             pluginInvArgsValues(L, L"viewdata:copyBlock");
         lua_pushboolean(L, (ok) ? 1 : 0);
@@ -1429,7 +1456,8 @@ int vs_copyBlock(lua_State *L)
             MudViewString*vs = pdata->getselected();
             const MudViewStringBlock &sb = s->ref(src_block-1);
             MudViewStringBlock &db = vs->blocks[dst_block-1];
-            db = sb;
+            db.params = sb.params;
+            db.string = sb.string;
             db.subs_protected = 0;
             pvs->blocks[dst_block-1] = TW2U(sb.string.c_str());
         }        
