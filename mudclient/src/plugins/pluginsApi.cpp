@@ -1305,11 +1305,10 @@ int isGroupActive(lua_State *L)
             {
                 int state = (v.value == L"1") ? 1 : 0;
                 lua_pushboolean(L, state);
-                return 1;            
+                return 1;
             }
         }
-        lua_pushnil(L);
-        return 1;
+        return pluginInvArgsValues(L, L"isGroupActive");
     }
     return pluginInvArgs(L, L"isGroupActive");
 }

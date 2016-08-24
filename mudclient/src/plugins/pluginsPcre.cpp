@@ -11,7 +11,7 @@ int luapcre_create(lua_State *L)
         else
         {
             delete p;
-            lua_pushnil(L);
+            return pluginInvArgsValues(L, L"createPcre");
         }
         return 1;
     }
@@ -60,10 +60,11 @@ int luapcre_first(lua_State *L)
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         int first = p->first(lua_tointeger(L, 2));
         if (first >= 0)
+        {
             lua_pushinteger(L, first+1);
-        else
-            lua_pushnil(L);
-        return 1;
+            return 1;
+        }
+        return pluginInvArgsValues(L, L"pcre:first");
     }
     return pluginInvArgs(L, L"pcre:first");
 }
@@ -75,10 +76,11 @@ int luapcre_last(lua_State *L)
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         int last = p->last(lua_tointeger(L, 2));
         if (last >= 0)
+        {
             lua_pushinteger(L, last+1);
-        else
-            lua_pushnil(L);
-        return 1;
+            return 1;
+        }
+        return pluginInvArgsValues(L, L"pcre:last");
     }
     return pluginInvArgs(L, L"pcre:last");
 }
@@ -89,11 +91,12 @@ int luapcre_get(lua_State *L)
     {
         Pcre *p = (Pcre*)luaT_toobject(L, 1);
         tstring str;
-        if (!p->get(lua_tointeger(L, 2), &str))
-            lua_pushnil(L);
-        else
+        if (p->get(lua_tointeger(L, 2), &str))
+        {
             luaT_pushwstring(L, str.c_str());
-        return 1;
+            return 1;
+        }
+        return pluginInvArgsValues(L, L"pcre:get");
     }
     return pluginInvArgs(L, L"pcre:get");
 }

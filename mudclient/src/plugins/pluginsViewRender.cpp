@@ -302,10 +302,11 @@ int render_createPen(lua_State *L)
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         CPen *p = r->createPen(L);
         if (p)
+        {
             luaT_pushobject(L, p, LUAT_PEN);
-        else
-            lua_pushnil(L);
-        return 1;
+            return 1;
+        }
+        return pluginInvArgsValues(L, L"render:createPen");
     }
     return pluginInvArgs(L, L"render:createPen");
 }
@@ -317,10 +318,11 @@ int render_createBrush(lua_State *L)
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         CBrush *b = r->createBrush(L);
         if (b)
+        {
             luaT_pushobject(L, b, LUAT_BRUSH);
-        else
-            lua_pushnil(L);
-        return 1;
+            return 1;
+        }
+        return pluginInvArgsValues(L, L"render:createBrush");
     }
     return pluginInvArgs(L, L"render:createBrush");
 }
@@ -332,10 +334,11 @@ int render_createFont(lua_State *L)
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         CFont *f = r->createFont(L);
         if (f)
+        {
             luaT_pushobject(L, f, LUAT_FONT);
-        else
-            lua_pushnil(L);
-        return 1;
+            return 1;
+        }        
+        return pluginInvArgsValues(L, L"render:createFont");
     }
     return pluginInvArgs(L, L"render:createFont");
 }
@@ -373,7 +376,8 @@ int render_rect(lua_State *L)
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         RECT rc;
         ParametersReader pr(L);
-        pr.getrect(&rc);
+        if (!pr.getrect(&rc))
+            return pluginInvArgsValues(L, L"render:rect");
         r->drawRect(rc);
         return 0;
     }
@@ -387,7 +391,8 @@ int render_solidRect(lua_State *L)
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         RECT rc;
         ParametersReader pr(L);
-        pr.getrect(&rc);
+        if (!pr.getrect(&rc))
+             return pluginInvArgsValues(L, L"render:solidRect");
         COLORREF color;
         if (pr.getcolor(&color))
             r->drawSolidRect(rc, &color);
@@ -416,7 +421,8 @@ int render_print(lua_State *L)
         
         RECT rc;
         ParametersReader pr(L);
-        pr.getrect(&rc);
+        if (!pr.getrect(&rc))
+             return pluginInvArgsValues(L, L"render:print");
 
         int width = r->print(rc, text);
         lua_pushinteger(L, width);
@@ -471,9 +477,7 @@ int render_createImage(lua_State *L)
         if (!img->load(path.c_str(), param))
         {
             delete img;
-            pluginLoadFail(L, L"render:createImage", luaT_towstring(L, 2));
-            lua_pushnil(L);
-            return 1;
+            return pluginLoadFail(L, L"render:createImage", luaT_towstring(L, 2));
         }
         PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
         r->regImage(img);
@@ -518,6 +522,7 @@ int render_drawImage(lua_State *L)
             r->drawImage(img, x, y);
             return 0;
         }
+        return pluginInvArgsValues(L, L"render::drawImage");
     }
     return pluginInvArgs(L, L"render::drawImage");
 }

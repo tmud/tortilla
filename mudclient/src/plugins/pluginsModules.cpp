@@ -92,6 +92,7 @@ int regUnloadFunction(lua_State *L)
 {
     if (!lua_isfunction(L, -1))
     {
+        pluginInvArgsValues(L, L"regUnloadFunction");
         lua_pushboolean(L, 0);
         return 1;
     }

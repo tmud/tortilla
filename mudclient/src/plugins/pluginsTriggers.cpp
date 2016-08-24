@@ -164,14 +164,19 @@ void PluginsTrigger::run()
 
 int trigger_create(lua_State *L)
 {
-    PluginsTrigger *t = new PluginsTrigger();
-    if (t->init(L, _cp))
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
+        luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
-        _cp->triggers.push_back(t);
-        luaT_pushobject(L, t, LUAT_TRIGGER);
-        return 1;
+        PluginsTrigger *t = new PluginsTrigger();
+        if (t->init(L, _cp))
+        {
+            _cp->triggers.push_back(t);
+            luaT_pushobject(L, t, LUAT_TRIGGER);
+            return 1;
+        }
+        delete t;
+        return pluginInvArgsValues(L, L"createTrigger");
     }
-    delete t;
     return pluginInvArgs(L, L"createTrigger");
 }
 
