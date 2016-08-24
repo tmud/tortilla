@@ -674,6 +674,53 @@ int vd_set(lua_State *L)
     return pluginInvArgs(L, L"viewdata:set");
 }
 
+int vd_setBlockColor(lua_State *L)
+{
+    if (luaT_check(L, 3, LUAT_VIEWDATA, LUA_TNUMBER, LUA_TSTRING))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *vs = pdata->getselected();
+        if (vs)
+        {
+            int block = lua_tointeger(L, 2);
+            int blocks = vs->blocks.size();
+            if (block >= 1 && block <= blocks)
+            {
+                tstring color(luaT_towstring(L, 3));
+                PluginColorSerialize pcs;
+                int result = pcs.deserialize(color.c_str(), &vs->blocks[block-1]);
+                if (result!=-1) return 0;
+            }
+        }
+        return pluginInvArgsValues(L, L"viewdata:setBlockColor");
+    }
+    return pluginInvArgs(L, L"viewdata:setBlockColor");
+}
+
+int vd_getBlockColor(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        MudViewString *vs = pdata->getselected();
+        if (vs)
+        {
+            int block = lua_tointeger(L, 2);
+            int blocks = vs->blocks.size();
+            if (block >= 1 && block <= blocks)
+            {
+                PluginColorSerialize pcs;
+                tstring color;
+                pcs.serialize(vs->blocks[block-1], &color);
+                luaT_pushwstring(L, color.c_str());
+                return 1;
+            }
+        }
+        return pluginInvArgsValues(L, L"viewdata:getBlockColor");
+    }
+    return pluginInvArgs(L, L"viewdata:getBlockColor");
+}
+
 int vd_getBlockText(lua_State *L)
 {
     if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TNUMBER))
@@ -1263,6 +1310,8 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "blocks", vd_blocks);
     regFunction(L, "get", vd_get);
     regFunction(L, "set", vd_set);
+    regFunction(L, "setBlockColor", vd_setBlockColor);
+    regFunction(L, "getBlockColor", vd_getBlockColor);
     regFunction(L, "setBlockText", vd_setBlockText);
     regFunction(L, "getBlockText", vd_getBlockText);
     regFunction(L, "setBlocksCount", vd_setBlocksCount);
@@ -1466,6 +1515,43 @@ int vs_copyBlock(lua_State *L)
     return pluginInvArgs(L, L"viewstring:copyBlock");
 }
 
+int vs_setBlockColor(lua_State *L)
+{
+    if (luaT_check(L, 3, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TSTRING))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int block = lua_tointeger(L, 2);
+        if (block >= 1 && block <= s->count())
+        {
+            tstring color(luaT_towstring(L, 3));
+            PluginColorSerialize pcs;
+            int result = pcs.deserialize(color.c_str(), &s->get(block-1));
+            if (result!=-1) return 0;
+        }
+        return pluginInvArgsValues(L, L"viewstring:setBlockColor");
+    }
+    return pluginInvArgs(L, L"viewstring:setBlockColor");
+}
+
+int vs_getBlockColor(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWSTRING, LUA_TNUMBER))
+    {
+        PluginsViewString *s = (PluginsViewString *)luaT_toobject(L, 1);
+        int block = lua_tointeger(L, 2);
+        if (block >= 1 && block <= s->count())
+        {
+            PluginColorSerialize pcs;
+            tstring color;
+            pcs.serialize(s->ref(block-1), &color);
+            luaT_pushwstring(L, color.c_str());
+            return 1;
+        }
+        return pluginInvArgsValues(L, L"viewstring:getBlockColor");
+    }
+    return pluginInvArgs(L, L"viewstring:getBlockColor");
+}
+
 int vs_set(lua_State *L)
 {
     if (luaT_check(L, 4, LUAT_VIEWSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER) || 
@@ -1659,6 +1745,8 @@ void reg_mt_viewstring(lua_State *L)
     regFunction(L, "copyBlock", vs_copyBlock);
     regFunction(L, "set", vs_set);
     regFunction(L, "get", vs_get);
+    regFunction(L, "setBlockColor", vs_setBlockColor);
+    regFunction(L, "getBlockColor", vs_getBlockColor);
     regFunction(L, "print", vs_print);
     regFunction(L, "getData", vs_getData);
     regFunction(L, "setData", vs_setData);

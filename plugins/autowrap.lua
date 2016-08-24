@@ -10,6 +10,8 @@ local autowrap_maxlen_main = -1
 local autowrap_maxlen_out = -1
 -- Минимальная длина строки
 local autowrap_minlen = 25
+-- Склеивать параграфы (возможность тестируется)
+local concat_paragraphs = true
 
 local autowrap = {}
 function autowrap.name()
@@ -85,7 +87,24 @@ local function div(v, maxlen)
   v:setPrev(true)
 end
 
+local function paragraph(v)
+  local i,size = 1,v:size()
+  while i < size do
+    v:select(i)
+    if v:blocks() == 1 then
+      v:select(i+1)
+      if v:blocks() == 1 then
+        
+      end
+    end
+    i = i + 1
+  end
+end
+
 local function divall(v, maxlen)
+  if concat_paragraphs then
+    paragraph(v)
+  end
   local i,size = 1,v:size()
   while i <= size do
     v:select(i)
@@ -106,7 +125,6 @@ function autowrap.after(window, v)
     else
         maxlen = autowrap_maxlen_main 
     end
-
   else
     if not autowrap_maxlen_out or autowrap_maxlen_out == 0 then return; end
     if autowrap_maxlen_out == -1 then

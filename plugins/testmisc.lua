@@ -142,6 +142,17 @@ function testmisc.before(v, vd)
   vd:copyBlock(6, vs, 1)
   vs:print(0)
   assert(vs:getBlockText(1), 'Block', 'vs:text=Block')
+  
+  local c1 = vs:getBlockColor(1)
+  log(c1)
+  assert(c1, '31,226,1;64,64,64;;', 'vs:getBlockColor')
+  
+  local c2 = vd:getBlockColor(4)
+  log(c2)
+  vs:setBlockColor(2, c2)
+  vs:print(0)
+  
+  vd:setBlockColor(1, c1)
 
 end
 
