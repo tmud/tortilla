@@ -21,6 +21,7 @@ m_id(id)
 MudView::~MudView()
 {
     std::for_each(m_strings.begin(),m_strings.end(),[](MudViewString*s){delete s;});
+    clearDropped();
 }
 
 void MudView::accLastString(parseData *parse_data)
@@ -271,9 +272,15 @@ void MudView::removeDropped(parseData* parse_data)
         if (string->dropped)
         {
             pds.erase(pds.begin() + i);
-            delete string;
+            m_dropped_strings.push_back(string);
         }
     }
+}
+
+void MudView::clearDropped()
+{
+    std::for_each(m_dropped_strings.begin(), m_dropped_strings.end(), [](MudViewString*s){delete s;} );
+    m_dropped_strings.clear();
 }
 
 void MudView::calcStringsSizes(mudViewStrings& pds)

@@ -28,6 +28,7 @@ public:
     virtual void setOscColor(int index, COLORREF color) = 0;
     virtual void resetOscColors() = 0;
     virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
+    virtual void clearDropped(int view) = 0;
 };
 
 class LogicProcessorMethods

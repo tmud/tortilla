@@ -11,7 +11,7 @@ PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_current_compare_pos(0), m
 
 PluginsTrigger::~PluginsTrigger()
 {
-    m_parseData.strings.clear();
+    m_parseData.detach();
     m_trigger_func_ref.unref(L);
 }
 
@@ -68,9 +68,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
 void PluginsTrigger::reset()
 {
     m_current_compare_pos = 0;
-    m_parseData.strings.clear();
-    m_parseData.update_prev_string = false;
-    m_parseData.last_finished = true;
+    m_parseData.detach();
     m_triggerParseData.reset();
     m_triggered = false;
 }

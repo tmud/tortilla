@@ -1110,6 +1110,17 @@ private:
         return &m_plugins;
     }
 
+    void clearDropped(int view)
+    {
+        if (view == 0)
+            m_view.clearDropped();
+        if (view >= 1 && view <= OUTPUT_WINDOWS)
+        {
+            MudView* v = m_views[view-1];
+            v->clearDropped();
+        }
+    }
+
     void addText(int view, parseData* parse_data)
     {
         if (view == 0)

@@ -402,6 +402,7 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
         e = e2;
     }
     m_pipeline.freeElement(e);
+    m_pHost->clearDropped(window);
 }
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
