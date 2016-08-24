@@ -3,7 +3,7 @@
 
 local luatrigger = {}
 function luatrigger.name() 
-    return 'Lua Trigger'
+    --return 'Lua Trigger'
 end
 
 function luatrigger.description()

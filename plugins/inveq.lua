@@ -8,7 +8,7 @@ function inveq.description()
   return 'Плагин отображает экипировку, которая одета на персонаже и инвентарь\r\nперсонажа в отдельном окне.'
 end
 function inveq.version()
-  return '1.0'
+  return '1.01'
 end
 
 local initialized = false
@@ -388,6 +388,15 @@ function inveq.disconnect()
   equipment.clear()
   inventory.clear()
   update()
+end
+
+function inveq.fontupdated()
+  local maxw = 0
+  for s in equipment.iterator() do
+    local w = r:textWidth(s.name)
+    if w > maxw then maxw = w end
+  end
+  delta_eq = maxw + 10
 end
 
 return inveq

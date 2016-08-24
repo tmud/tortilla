@@ -1,6 +1,6 @@
 ﻿local triggers = {}
 function triggers.name()
-  return 'Набор триггеров'
+  --return 'Набор триггеров'
 end
 function triggers.description()
   return 'Сложные триггеры.'

@@ -31,7 +31,7 @@ end
 lvoice,err = prequire ('voice')
 if lvoice then
   if lvoice.init() then
-    regUnloadFunction(lvoice.free)
+    regUnloadFunction(lvoice.release)
   else
     lvoice = nil
     print("[lvoice] Ошибка при инициализации модуля.")

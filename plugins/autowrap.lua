@@ -8,8 +8,8 @@
 local autowrap_maxlen_main = -1
 -- Максимально допустимая длина строк для output-окон
 local autowrap_maxlen_out = -1
-
-local autowrap_minlen = 30
+-- Минимальная длина строки
+local autowrap_minlen = 25
 
 local autowrap = {}
 function autowrap.name()
@@ -160,6 +160,9 @@ end
 
 local function recalc_window(window, newlen)
   if not newlen then newlen = getViewSize(window) end
+  if newlen < autowrap_minlen then
+    newlen = autowrap_minlen
+  end
   updateView(window, function(v) update_view(v,newlen) end)
 end
 
