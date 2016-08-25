@@ -71,7 +71,7 @@ function bmap.before(v, vd)
     player_y = nil
     for  i,s in ipairs(map) do
       local t = s:getText()
-      if t:find('@') then player_y = i break end
+      if t:strstr('@') then player_y = i break end
     end
     r:update()
   end

@@ -88,30 +88,33 @@ local function div(v, maxlen)
 end
 
 local block_color = '7;0;;'
+local blocking_symbols = '[]<>*#'
 local function paragraph(v)
   local i,size = 1,v:size()
   while i < size do
     v:select(i)
-    if v:blocks() == 1  and v:getBlockColor(1) == block_color then
+    if v:blocks() == 1 and v:getBlockColor(1) == block_color then
       if v:isDropped() or v:isGameCmd() or v:isSystem() or v:isPrompt() then goto next end
       v:select(i+1)
       if v:blocks() == 1 and v:getBlockColor(1) == block_color then
         if v:isDropped() or v:isGameCmd() or v:isSystem() or v:isPrompt() then goto next end
         local t = v:getText()
         local first = t:substr(1, 1)
-        if first:only('абвгдеёжзийклмнопрстуфкцчшщъыьэюя') then
+        if first:only('абвгдеёжзийклмнопрстуфкцчшщъыьэюя') and not t:contain(blocking_symbols) then
           v:select(i)
           local t0 = v:getBlockText(1)
-          local last = t0:substr(t0:len(), 1)
-          if last ~= ' ' then 
-            v:setBlockText(1, t0..' '..t)
-          else
-            v:setBlockText(1, t0..t)
+          if not t0:contain(blocking_symbols) then
+            local last = t0:substr(t0:len(), 1)
+            if last ~= ' ' then 
+              v:setBlockText(1, t0..' '..t)
+            else
+              v:setBlockText(1, t0..t)
+            end
+            v:select(i+1)
+            v:deleteString()
+            size = v:size()
+            goto again
           end
-          v:select(i+1)
-          v:deleteString()
-          size = v:size()
-          goto again
         end
       end
       ::next::

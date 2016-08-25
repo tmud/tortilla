@@ -1468,7 +1468,7 @@ int string_substr(lua_State *L)
     return pluginInvArgs(L, L"string:substr");
 }
 
-int string_strstr(lua_State *L)
+int string_strstr_impl(lua_State *L, const tchar* fname)
 {
      if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING) ||
          luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TNUMBER))
@@ -1499,8 +1499,19 @@ int string_strstr(lua_State *L)
             lua_pushinteger(L, find_pos);
             return 1;
          }
+         return 0;
      }
-     return pluginInvArgs(L, L"string:strstr");
+     return pluginInvArgs(L,fname);
+}
+
+int string_strstr(lua_State *L)
+{
+    return string_strstr_impl(L, L"string:strstr");
+}
+
+int string_find(lua_State *L)
+{
+    return string_strstr_impl(L, L"string:find");
 }
 
 int string_strall(lua_State *L)
@@ -1627,39 +1638,26 @@ int string_only(lua_State *L)
     return pluginInvArgs(L, L"string:only");
 }
 
+
+int string_contain(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    {
+         tstring s(luaT_towstring(L, 1));
+         tstring tokens(luaT_towstring(L, 2));
+         int result = isExistSymbols(s, tokens) ? 1 : 0;
+         lua_pushboolean(L, result);
+         return 1;
+    }
+    return pluginInvArgs(L, L"string:contain");
+}
+
 int string_clone(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
     {
          std::string s(lua_tostring(L, 1));
          lua_pushstring(L, s.c_str());
-         return 1;
-    }
-    return pluginInvArgs(L, L"string:clone");
-}
-
-int string_find(lua_State *L)
-{
-    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING)||
-        luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TNUMBER))
-    {
-         tstring s(luaT_towstring(L, 1));
-         tstring f(luaT_towstring(L, 2));
-         size_t pos = tstring::npos;
-         if (lua_gettop(L)==3)
-         {
-            int startpos = lua_tointeger(L, 3);
-            if (startpos < 1)
-                return pluginInvArgsValues(L, L"string:find");
-            pos = s.find(f, startpos-1);
-         }
-         else {
-            pos = s.find(f);
-         }
-         if (pos == std::string::npos)
-             return 0;
-         int result = static_cast<int>(pos);
-         lua_pushinteger(L, result+1);
          return 1;
     }
     return pluginInvArgs(L, L"string:clone");
@@ -1682,6 +1680,7 @@ void reg_string(lua_State *L)
     regFunction(L, "only", string_only);
     regFunction(L, "clone", string_clone);
     regFunction(L, "find", string_find);
+    regFunction(L, "contain", string_contain);
     regIndexMt(L);
 
     // set metatable for lua string type

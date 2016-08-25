@@ -361,7 +361,7 @@ local function runcmd(p)
   end
   if not cmdrxp2:find(p) then
     print('НЕПРАВИЛЬНАЯ КОМАНДА')
-    return
+    return true
   end
   local mode=cmdrxp2:get(2)=='+' and true or false
   if cmdrxp2:get(1) == '' then
@@ -382,7 +382,7 @@ local function runcmd(p)
         if t[1] == ingr_name then ingr = t break end
       end
       if ingr then
-        local count = cmdrxp3:get(2)
+        local count = cmdrxp3:size()==3 and cmdrxp3:get(2) or nil
         if not count then 
           -- отдельный ресурс вкл/выкл
           local text = mode and '' or 'НЕ '

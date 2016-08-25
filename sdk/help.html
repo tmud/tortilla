@@ -1486,7 +1486,9 @@ local l = s:len() -- l = 17
 local s1 = s:substr(3) -- s1 = "Мад"
 local s2 = s:substr(5, 8) -- s2 = "отличная"
 </div>
-<div class="cmd">int strstr(string what [,int from])</div> - ищет подстроку в строке. Можно указать с какого символа нужно искать.
+<div class="cmd">int strstr(string what [,int from])</div> - ищет подстроку в строке. Можно указать с какого символа нужно искать. 
+Если подстрока не найдена, то возвращется nil.
+<div class="cmd">int find(string what[, int from])</div> - ищет в строке подстроку, синоним команды strstr.
 <div class="cmd">table strall(string what)</div> - ищет все вхождения подстроки в строке. Возвращает таблицу индексов с которых начинается 
 заданная подстрока (nil - ничего не найдено).
 <div class="cmd">string lower()</div> - возвращает новую строку - это текущая строка в нижнем регистре.
@@ -1508,10 +1510,9 @@ local t = s:tokenize(",")
 </div>
 <div class="cmd">string trim()</div> - обрезает пробелы в начале и конце строки.
 <div class="cmd">bool only(string symbols)</div> - проверяет, что в строке только символы из параметра.
+<div class="cmd">bool contain(string symbols)</div> - проверяет есть ли в строке символы из параметра.
 <div class="cmd">string clone()</div> - создает новую строку - копию текущей строки. Используется, если нужно не разделять одну и ту же 
 строку ссылкой, как это сделано в Lua, а получить отдельную независимую строку.
-<div class="cmd">string find(string what[, int pos])</div> - ищет в строке подстроку, можно указать начальную позицию для поиска.
-Если подстрока не найдена, то возраащется nil.
 </pre>
 <hr>
 <a name="triggers"></a>
