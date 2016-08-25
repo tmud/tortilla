@@ -689,7 +689,14 @@ int vd_setBlockColor(lua_State *L)
                 tstring color(luaT_towstring(L, 3));
                 PluginColorSerialize pcs;
                 int result = pcs.deserialize(color.c_str(), &vs->blocks[block-1]);
-                if (result!=-1) return 0;
+                if (result!=-1)
+                {
+                    lua_pushboolean(L, 1);
+                    return 1;
+                }
+                pluginInvArgsValues(L, L"viewdata:setBlockColor");
+                lua_pushboolean(L, 1);
+                return 0;
             }
         }
         return pluginInvArgsValues(L, L"viewdata:setBlockColor");
@@ -1526,7 +1533,14 @@ int vs_setBlockColor(lua_State *L)
             tstring color(luaT_towstring(L, 3));
             PluginColorSerialize pcs;
             int result = pcs.deserialize(color.c_str(), &s->get(block-1));
-            if (result!=-1) return 0;
+            if (result!=-1)
+            {
+                lua_pushboolean(L, 1);
+                return 1;
+            }
+            pluginInvArgsValues(L, L"viewstring:setBlockColor");
+            lua_pushboolean(L, 0);
+            return 1;
         }
         return pluginInvArgsValues(L, L"viewstring:setBlockColor");
     }

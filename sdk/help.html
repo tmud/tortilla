@@ -612,14 +612,16 @@ nil или true - если команда была успешно обработ
 <div class="cmd">void getPrompt(std::Wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
-<div class="cmd">void getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
+<div class="cmd">bool getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество отдельных блоков в текущей строке.
 <div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в текущей строке. Удаляет лишние или добавляет новые.
 <div class="cmd">bool get(int block, int param, unsigned int *value)</div> - значение параметра блока текущей строки. Допустимые значения параметра:
 <div class="m">TEXTCOLOR</div>, <div class="m">BKGCOLOR</div>, <div class="m">UNDERLINE</div>, <div class="m">ITALIC</div>, <div class="m">BLINK</div>, <div class="m">REVERSE</div>, <div class="m">EXTTEXTCOLOR</div>, <div class="m">EXTBKGCOLOR</div>.
 <div class="cmd">bool set(int block, int param, unsigned int value)</div> - устанавливает значение параметра блока текущей строки.
-<div class="cmd">void getBlockText(int block, std::wstring* str)</div> - текст блока текущей строки.
+<div class="cmd">bool getBlockText(int block, std::wstring* str)</div> - текст блока текущей строки.
 <div class="cmd">bool setBlockText(int block, const wchar_t* text)</div> - задает новый текст блоку текущей строки.
+<div class="cmd">bool getBlockColor(int block, std::wstring* str)</div> - цвет блока текущей строки, сюда входят атрибуты курсив, подчеркивание и др.
+<div class="cmd">bool setBlockColor(int block, const wchar_t* text)</div> - задает новый цвет блоку текущей строки, в том числе атрибуты.
 <div class="cmd">bool copyBlock(int block, int dst_string|viewstring, int dst_block)</div> - копирует заданный блок строки в другую строку.
 Копирование возможно в строку <div class="cmd">viewstring</div> или в массив строк <div class="cmd">viewdata</div> (в ее текущую строку).
 <div class="cmd">int  insertBlock(int position)</div> - вставляет в заданную позицию (индекс символа в общей строке) новый пустой блок.
@@ -1342,6 +1344,8 @@ render:rect(r2)
 <div class="cmd">bool set(int index, string attr, uint value)</div> - задает значение атрибута блока. Возможные варианты атрибута см. в <div class="m">get</div>.
 <div class="cmd">string getBlockText(int index)</div> - текст блока по заданному индексу.
 <div class="cmd">bool setBlockText(int index, string text)</div> - задает новый текст блоку по индексу.
+<div class="cmd">string getBlockColor(int block)</div> - цвет блока текущей строки, сюда входят атрибуты курсив, подчеркивание и др.
+<div class="cmd">bool setBlockColor(int block, string text)</div> - задает новый цвет блоку текущей строки, в том числе атрибуты.
 <div class="cmd">bool copyBlock(int block, int dst_string|viewstring, int dst_block)</div> - копирует заданный блок текущей строки в другую строку. 
 В качестве строки назначения можно указать <div class="cmd">viewstring</div>.
 <div class="cmd">int|nil insertBlock(int position)</div> - вставляет в заданную позицию (индекс символа в общей строке) новый пустой блок.
@@ -1392,6 +1396,8 @@ Lua-триггере. Если вернуть значение невозмож�
 <div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в строке. Удаляет лишние или добавляет новые.
 <div class="cmd">string getBlockText(int index)</div> - текст блока по заданному индексу.
 <div class="cmd">bool setBlockText(int index, string text)</div> - задает новый текст блоку по индексу.
+<div class="cmd">string getBlockColor(int block)</div> - цвет блока, сюда входят атрибуты курсив, подчеркивание и др.
+<div class="cmd">bool setBlockColor(int block, string text)</div> - задает новый цвет блоку, в том числе атрибуты.
 <div class="cmd">int|nil insertBlock(int position)</div> - вставляет в заданную позицию (индекс символа в общей строке) новый пустой блок.
 Возращает индекс нового блока или nil, если не удалось вставить новый блок.
 <div class="cmd">bool copyBlock(int block, viewstring|viewdata, int dst_block)</div> - копирует заданный блок строки в другую строку. 

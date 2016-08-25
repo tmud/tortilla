@@ -448,11 +448,6 @@ public:
         runcmdint("setBlocksCount", count);
         return boolresult();
     }
-    void getBlockText(int block, std::wstring* str)
-    {
-        runcmdint("getBlockText", block);
-        strresult(str);
-    }
     bool get(int block, vparam param, unsigned int *value)
     {
         luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
@@ -468,10 +463,26 @@ public:
         luaT_run(L, "set", "oddu", block, (int)param, value);
         return boolresult();
     }
+    bool getBlockText(int block, std::wstring* str)
+    {
+        runcmdint("getBlockText", block);
+        return strresult(str);
+    }
     bool setBlockText(int block, const wchar_t* text)
     {
         luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
         luaT_run(L, "setBlockText", "ods", block, text);
+        return boolresult();
+    }
+    bool getBlockColor(int block, std::wstring* str)
+    {
+        runcmdint("getBlockColor", block);
+        return strresult(str);
+    }
+    bool setBlockColor(int block, const wchar_t* color)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "setBlockColor", "ods", block, color);
         return boolresult();
     }
     bool deleteBlock(int block)
@@ -522,11 +533,13 @@ private:
         lua_pop(L, 1);
         return result;
     }
-    void strresult(std::wstring *res)
+    bool strresult(std::wstring *res)
     {
-        if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
+        bool result = false;
+        if (lua_isstring(L, -1)) { res->assign(luaT_towstring(L, -1)); result = true; }
         else res->clear();
         lua_pop(L, 1);
+        return result;
     }
 };
 
@@ -598,10 +611,10 @@ public:
         runcmd("getTextLen");
         return intresult();
     }
-    void getHash(std::wstring* str)
+    bool getHash(std::wstring* str)
     {
         runcmd("getHash");
-        strresult(str);
+        return strresult(str);
     }
     int blocks()            // count of blocks for selected string
     { 
@@ -612,11 +625,6 @@ public:
     {
         runcmdint("setBlocksCount", count);
         return boolresult();
-    }
-    void getBlockText(int block, std::wstring* str)
-    {
-        runcmdint("getBlockText", block);
-        strresult(str);
     }
     bool get(int block, vparam param, unsigned int *value)
     {
@@ -633,10 +641,26 @@ public:
         luaT_run(L, "set", "oddu", block, (int)param, value);
         return boolresult();
     }
+    bool getBlockText(int block, std::wstring* str)
+    {
+        runcmdint("getBlockText", block);
+        return strresult(str);
+    }
     bool setBlockText(int block, const wchar_t* text)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "setBlockText", "ods", block, text);
+        return boolresult();
+    }
+    bool getBlockColor(int block, std::wstring* str)
+    {
+        runcmdint("getBlockColor", block);
+        return strresult(str);
+    }
+    bool setBlockColor(int block, const wchar_t* text)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setBlockColor", "ods", block, text);
         return boolresult();
     }
     bool copyBlock(int block, int dst_string, int dst_block)
@@ -807,11 +831,13 @@ private:
         lua_pop(L, 1);
         return result;
     }
-    void strresult(std::wstring *res)
+    bool strresult(std::wstring *res)
     {
-        if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
+        bool result = false;
+        if (lua_isstring(L, -1)) { res->assign(luaT_towstring(L, -1)); result = true; }
         else res->clear();
         lua_pop(L, 1);
+        return result;
     }
 };
 
