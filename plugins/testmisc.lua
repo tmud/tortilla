@@ -154,13 +154,16 @@ function testmisc.before(v, vd)
   
   vd:setBlockColor(1, c1)
 
-end
+  local s = 'Абра @кадабра'
+  local p = s:find('@')
+  assert(p, 6, 'string:find 1')
+  
+  local p2 = s:find('бр')
+  assert(p2, 2, 'string:find 2')
+  
+  local p3 = s:find('бр', p2+1)
+  assert(p3, 11, 'string:find 3')
 
-function testmisc.syscmd(t)
-  local c = t[1]
-  if c == 'testvd' then
-  end
-  return t
 end
 
 return testmisc

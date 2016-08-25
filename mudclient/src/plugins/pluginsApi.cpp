@@ -1638,6 +1638,33 @@ int string_clone(lua_State *L)
     return pluginInvArgs(L, L"string:clone");
 }
 
+int string_find(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING)||
+        luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TNUMBER))
+    {
+         tstring s(luaT_towstring(L, 1));
+         tstring f(luaT_towstring(L, 2));
+         size_t pos = tstring::npos;
+         if (lua_gettop(L)==3)
+         {
+            int startpos = lua_tointeger(L, 3);
+            if (startpos < 1)
+                return pluginInvArgsValues(L, L"string:find");
+            pos = s.find(f, startpos-1);
+         }
+         else {
+            pos = s.find(f);
+         }
+         if (pos == std::string::npos)
+             return 0;
+         int result = static_cast<int>(pos);
+         lua_pushinteger(L, result+1);
+         return 1;
+    }
+    return pluginInvArgs(L, L"string:clone");
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
 void reg_string(lua_State *L)
@@ -1654,6 +1681,7 @@ void reg_string(lua_State *L)
     regFunction(L, "trim", string_trim);
     regFunction(L, "only", string_only);
     regFunction(L, "clone", string_clone);
+    regFunction(L, "find", string_find);
     regIndexMt(L);
 
     // set metatable for lua string type
