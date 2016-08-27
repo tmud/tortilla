@@ -110,7 +110,6 @@ local function kick(vd)
   if not name then return end  -- имя не из списка, ничего не делаем
   if resc[name] then
     runCommand('спасти '..name)
-    runCommand('пнуть '..name)
   end
 end
 

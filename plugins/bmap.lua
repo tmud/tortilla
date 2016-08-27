@@ -9,7 +9,7 @@ function bmap.description()
   return 'Плагин отображает встроенную карту Былин в отдельном окне.'
 end
 function bmap.version()
-  return '1.0'
+  return '1.01'
 end
 
 local t
@@ -39,8 +39,14 @@ local function render()
   local dh = r:fontHeight()
   local y = (r:height() - dh)/2
   y = y - (player_y-1)*dh
+  local x0 = 2
+  local fl = map[1]
+  if fl then 
+    x0 = (r:width() - r:textWidth(fl:getText())) / 2
+    x0 = x0 - 10
+  end
   for _,s in ipairs(map) do
-    local x = 4
+    local x = x0
     for b=1,s:blocks() do
       local t = s:getBlockText(b)
       local c = s:get(b, 'textcolor')
