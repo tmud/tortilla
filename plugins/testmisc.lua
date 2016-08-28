@@ -166,4 +166,12 @@ function testmisc.before(v, vd)
 
 end
 
+function testmisc.syscmd(t)
+  if t[1] == 'test' then
+    --aliases:add("есть", "съесть хлеб", "default")
+    return
+  end
+  return t
+end
+
 return testmisc
