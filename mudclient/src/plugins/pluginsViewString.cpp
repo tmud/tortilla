@@ -15,6 +15,7 @@ void PluginsViewString::serialize(tstring *data)
         tstring colors;
         PluginColorSerialize pcs;
         pcs.serialize(b, &colors);
+        data->append(colors);
 
         int count = 1;
         tstring delimeter;

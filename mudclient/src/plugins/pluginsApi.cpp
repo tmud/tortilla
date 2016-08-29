@@ -538,7 +538,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     else {
         lua_pop(L, 1);
     }
-    env.clear();
+    //env.clear();
     return 1;
 }
 

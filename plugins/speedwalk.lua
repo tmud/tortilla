@@ -35,7 +35,7 @@ function speedwalk.description()
   return table.concat(s, '\r\n')
 end
 function speedwalk.version()
-  return '1.01'
+  return '1.02'
 end
 
 local recorddb = {}
@@ -75,6 +75,9 @@ function speedwalk.init()
   end
   local routes = loadTable('routes.lua')
   if routes then
+    for k,v in pairs(routes) do
+      if type(v)~='string' or type(k) ~= 'string' then routes[k] = nil end
+    end
     recorddb = routes
   end
 end

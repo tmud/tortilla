@@ -19,7 +19,7 @@ end
 
 local function assert(s1, s2, m)
   if s1 ~= s2 then
-    log("unit test ("..m..") faled: ["..tostring(s1).."],["..tostring(s2).."]")
+    log("unit test ("..m..") FAILED: ["..tostring(s1).."],["..tostring(s2).."]")
   end
 end
 
@@ -152,6 +152,14 @@ function testmisc.before(v, vd)
   vs:setBlockColor(2, c2)
   vs:print(0)
   
+  local data = vs:getData()
+  assert(data, '31,226,1;64,64,64;;1Block;2;0;f;1xyz;7;0;f;1b5-;3;0;;1abc;2;0;;1 ins;7;0;;1ewstring;2;0;;1end;', 'vs:getData')
+  
+  local newvs = createViewString()
+  newvs:setData(data)
+  newvs:set(1, 'textcolor', 1)
+  newvs:print(0)
+
   vd:setBlockColor(1, c1)
 
   local s = 'Абра @кадабра'
