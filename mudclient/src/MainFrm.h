@@ -19,8 +19,10 @@ public:
     ToolbarEx<CMainFrame> m_toolBar;
     MudGameView m_gameview;
     DECLARE_FRAME_WND_CLASS(MAINWND_CLASS_NAME, IDR_MAINFRAME)
-    CMainFrame() {}
-
+    CMainFrame() : m_trayIconSet(0),m_maximized(false) {}
+private:
+    int  m_trayIconSet;
+    bool m_maximized;
 public:
     BEGIN_UPDATE_UI_MAP(CMainFrame)
         UPDATE_ELEMENT(ID_VIEW_TOOLBAR, UPDUI_MENUPOPUP)
@@ -56,8 +58,10 @@ private:
         COMMAND_ID_HANDLER(ID_MUDCLIENT_EXIT, OnAppExit)
         MESSAGE_HANDLER(WM_USER, OnSetMenuCheck);
         MESSAGE_HANDLER(WM_USER+1, OnSetMenuText);
+        MESSAGE_HANDLER(WM_USER+2, OnTrayIcon);
         COMMAND_ID_HANDLER(ID_MUDCLIENT_HELP, OnHelp)
         COMMAND_ID_HANDLER(ID_CHECK_UPDATES, OnCheckUpdates)
+        MESSAGE_HANDLER(WM_SIZE, OnSize);
         CHAIN_MSG_MAP_ALT_MEMBER(m_gameview, 1)
         MESSAGE_HANDLER(WM_CLOSE, OnClose)
         CHAIN_MSG_MAP(CUpdateUI<CMainFrame>)
@@ -113,6 +117,79 @@ private:
         MINMAXINFO *minmax = (MINMAXINFO*) lparam;
         minmax->ptMinTrackSize.x = 300;
         minmax->ptMinTrackSize.y = 250;
+        return 0;
+    }
+
+    void showTrayIcon()
+    {
+        NOTIFYICONDATA niData; 
+        ZeroMemory(&niData,sizeof(NOTIFYICONDATA));
+        niData.cbSize = sizeof(NOTIFYICONDATA);
+        niData.uID = 0;
+        niData.uFlags = NIF_ICON|NIF_MESSAGE|NIF_TIP;
+        niData.hIcon = LoadIcon(_Module.GetResourceInstance(), MAKEINTRESOURCE(IDR_MAINFRAME));
+        niData.hWnd = m_hWnd;
+        niData.uCallbackMessage = WM_USER+2;
+
+        PropertiesManager *pmgr = m_gameview.getPropManager();
+        tstring tip;
+        tip.append(pmgr->getProfileGroup());
+        tip.append(L" - ");
+        tip.append(pmgr->getProfileName());
+        wcscpy(niData.szTip, tip.c_str());
+        Shell_NotifyIcon(NIM_ADD,&niData);
+        m_trayIconSet = 1;
+    }
+
+    void hideTrayIcon()
+    {
+        NOTIFYICONDATA niData; 
+        ZeroMemory(&niData,sizeof(NOTIFYICONDATA));
+        niData.cbSize = sizeof(NOTIFYICONDATA);
+        niData.uID = 0;
+        niData.hWnd = m_hWnd;
+        Shell_NotifyIcon(NIM_DELETE,&niData);
+        m_trayIconSet = 0;
+    }
+
+    LRESULT OnTrayIcon(UINT, WPARAM, LPARAM lparam, BOOL&)
+    {
+        WORD event = LOWORD(lparam);
+        if (event == WM_LBUTTONDOWN)
+        {
+            int set = m_trayIconSet;
+            hideTrayIcon();
+            if (set == 2)
+                ShowWindow(SW_SHOWMAXIMIZED);
+            else
+                ShowWindow(SW_SHOWDEFAULT);
+            SetForegroundWindow(m_hWnd);
+        }
+        return 0;
+    }
+
+    LRESULT OnSize(UINT, WPARAM wparam, LPARAM, BOOL&bHandled)
+    {
+        bool mode = (m_gameview.getPropData()->move_totray) ? true : false;
+        if (wparam == SIZE_MINIMIZED)
+        {
+            if (!m_trayIconSet && mode)
+            {
+                WINDOWPLACEMENT wp;
+                GetWindowPlacement(&wp);
+                ShowWindow(SW_HIDE);
+                showTrayIcon();
+                if (m_maximized) m_trayIconSet = 2;
+            }
+            m_maximized = false;
+        }
+        else
+        {
+            m_maximized = (wparam == SIZE_MAXIMIZED) ? true : false;
+            if (m_trayIconSet)
+                hideTrayIcon();
+        }
+        bHandled = FALSE;
         return 0;
     }
 
