@@ -9,12 +9,13 @@ function bmap.description()
   return 'Плагин отображает встроенную карту Былин в отдельном окне.'
 end
 function bmap.version()
-  return '1.01'
+  return '1.02'
 end
 
 local t
 local map = {}
 local player_y
+local delta = 0
 local last = false
 local function filter(vs)
   if vs:blocks() == 0 then
@@ -39,12 +40,9 @@ local function render()
   local dh = r:fontHeight()
   local y = (r:height() - dh)/2
   y = y - (player_y-1)*dh
-  local x0 = 2
-  local fl = map[1]
-  if fl then 
-    x0 = (r:width() - r:textWidth(fl:getText())) / 2
-    x0 = x0 - 10
-  end
+  local t=map[player_y]:getText()
+  local x0 = (r:width() - r:textWidth(t)) / 2
+  x0 = x0 - delta
   for _,s in ipairs(map) do
     local x = x0
     for b=1,s:blocks() do
@@ -68,6 +66,7 @@ function bmap.init()
   r = w:setRender(render)
   r:setBackground( props.backgroundColor() )
   r:select(props.currentFont())
+  delta = r:textWidth(":")
 end
 
 function bmap.before(v, vd)
@@ -91,6 +90,7 @@ function bmap.propsupdated()
   if r then 
     r:setBackground( props.backgroundColor() )
     r:select(props.currentFont())
+    delta = r:textWidth(":")
     r:update()
   end
 end
