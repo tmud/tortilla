@@ -238,7 +238,7 @@ local function ingr_trigger(vd, ingr, qt)
   end
   if not quality then return end
   -- проверяем что мы вообще собираем этот ресурс и собираем нужного качества
-  local sbor_flag = ingr.state and ingr.val[quality]
+  local sbor_flag = sbor and ingr.state and ingr.val[quality]
   -- добавляем тег на ресурс
   addteg(vd, ingr, quality, sbor_flag)
   -- проверяем что мы вообще собираем этот ресурс и собираем нужного качества
@@ -299,7 +299,7 @@ function autosbor.init()
       if t.ingr == i[1] then ingr = i break end
     end
     if not ingr then log('Не найден игредиент: '..tostring(t.ingr)) goto next end
-    local tr = createTrigger(t.trigger, function(vd) if sbor then ingr_trigger(vd, ingr, t) end end)
+    local tr = createTrigger(t.trigger, function(vd) ingr_trigger(vd, ingr, t) end)
     if not tr then log('Не создан триггер: '..tostring(t.trigger)) end
     ::next::
   end

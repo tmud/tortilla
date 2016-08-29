@@ -462,6 +462,7 @@ int getParent(lua_State *L)
 class LuaEnviroment
 {
     lua_State *L;
+    std::vector<std::string> env_list;
 public:
     LuaEnviroment(lua_State *pl) : L(pl)
     {
@@ -473,6 +474,19 @@ public:
         lua_getglobal(L, global_func);
         assert(lua_isfunction(L, -1) || lua_istable(L, -1));
         lua_settable(L, -3);
+        env_list.push_back(global_func);
+    }
+    void clear()
+    {
+        assert(lua_istable(L, -1));
+        if (!lua_istable(L, -1))
+            return;
+        for (int i=0,e=env_list.size();i<e;++i)
+        {
+            lua_pushstring(L, env_list[i].c_str());
+            lua_pushnil(L);
+            lua_settable(L, -3);
+        }
     }
 };
 
@@ -524,6 +538,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     else {
         lua_pop(L, 1);
     }
+    env.clear();
     return 1;
 }
 

@@ -1338,6 +1338,7 @@ IMPL(showwindow)
     {
         CWindow w(m_pHost->getMainWindow());
         w.ShowWindow(SW_RESTORE);
+        SetForegroundWindow(w);
         return;
     }
     p->invalidargs();
