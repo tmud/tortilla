@@ -57,7 +57,7 @@ void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
            //пробуем подобрать по сокращенному имени
            int len = main_cmd.size();
            if (len < 3)
-               error->append(L"Неизвестная команда");
+               error->append(L"Короткое имя для команды");
            else
            {
                std::vector<tstring> cmds;
@@ -93,6 +93,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;
 
+    bool unknown_cmd = false;
     bool fullcmd_loged = false;
     if (error.empty())
     {
@@ -149,7 +150,10 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
                 piterator p_end = m_plugins_cmds.end();
                 piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
                 if (p == p_end)
+                {
+                    unknown_cmd = true;
                     error.append(L"Неизвестная команда");
+                }
             }
         }
     }
@@ -165,21 +169,24 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
             syscmdLog(fullcmd);
         }
 
-        tstring msg(L"Ошибка: ");
-        msg.append(error);
-        msg.append(L" [");
-        bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
-        if (cmd->changed) msg.append(prefix);
-        msg.append(usesrc ? cmd->srccmd : cmd->command);
-        if (!hide_cmd)
-            msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
-        msg.append(L"]");
-        if (!cmd->alias.empty())
-        {
-            msg.append(L", макрос: ");
-            msg.append(cmd->alias);
+        if (unknown_cmd && pdata->unknown_cmd && !cmd->user) {}
+        else {
+            tstring msg(L"Ошибка: ");
+            msg.append(error);
+            msg.append(L" [");
+            bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
+            if (cmd->changed) msg.append(prefix);
+            msg.append(usesrc ? cmd->srccmd : cmd->command);
+            if (!hide_cmd)
+                msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
+            msg.append(L"]");
+            if (!cmd->alias.empty())
+            {
+                msg.append(L", макрос: ");
+                msg.append(cmd->alias);
+            }
+            tmcLog(msg);
         }
-        tmcLog(msg);
     }
 }
 
@@ -423,7 +430,7 @@ IMPL(math)
             { p->invalidvars(); return; }
 
         if (vp->setVar(p->at(0), result))
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = '%s'", p->c_str(0), result.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
         else
             swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         helper->tmcLog(pb.buffer);
@@ -445,7 +452,7 @@ IMPL(var)
             helper->tmcLog(L"Переменные(vars):");
         else
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменные с {%s}:", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
 
@@ -456,7 +463,7 @@ IMPL(var)
             const property_value& v = pdata->variables.get(i);
             if (n == 1 && v.key.find(p->at(0)) == -1)
                 continue;
-            swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", v.key.c_str(), v.value.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", v.key.c_str(), v.value.c_str());
             helper->simpleLog(pb.buffer);
             found = true;
         }
@@ -473,7 +480,7 @@ IMPL(var)
         else
         {
             if (vp->setVar(p->at(0), p->at(1)))
-                swprintf(pb.buffer, pb.buffer_len, L"$%s = {%s}", p->c_str(0), p->c_str(1));
+                swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), p->c_str(1));
             else
                 swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
         }
@@ -582,12 +589,12 @@ IMPL(group)
         helper->simpleLog(pb.buffer);
         return;
     }
-    
+
     if (op == L"вкл" || op == L"enable" || op == L"on" || op == L"1")
     {
         property_value &v = pdata->groups.getw(index);
         v.value = L"1";
-        updateProps();
+        updateProps(1, LogicHelper::UPDATE_GROUPS);
         swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} включена.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
@@ -597,11 +604,11 @@ IMPL(group)
     {
         property_value &v = pdata->groups.getw(index);
         v.value = L"0";
-        updateProps();
+        updateProps(1, LogicHelper::UPDATE_GROUPS);
         swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} выключена.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
-    }   
+    }
 
     swprintf(pb.buffer, pb.buffer_len, L"Неизвестная операция %s.", op.c_str());
     helper->tmcLog(pb.buffer);
@@ -786,13 +793,13 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id != -1)
     {
          tstring oldfile(m_logs.getLogFile(id));
-         m_logs.closeLog(id);
-         m_wlogs[log] = -1;
          if (log == 0)
             swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
          else
              swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
          tmcLog(pb.buffer);
+         m_wlogs[log] = -1;
+         m_logs.closeLog(id);
          if (file.empty())
              return;
     }
@@ -810,15 +817,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    int pos = logfile.rfind(L'.');
-    if (pos == -1)
-        logfile.append(L".html");
-    else
-    {
-        tstring ext(logfile.substr(pos+1));
-        if (ext != L"htm" && ext != L"html")
-            logfile.append(L".html");
-    }
+    m_logs.calcFileName(logfile);
 
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)
@@ -991,7 +990,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    int flags = SKIP_SUBS|GAME_LOG;
+    int flags = SKIP_SUBS|GAME_LOG|WORK_OFFLINE;
     if (!enable_actions)
         flags |= SKIP_ACTIONS;
     printIncoming(data, flags, view);
@@ -1098,21 +1097,42 @@ IMPL(timer)
     if (n == 0)
     {
         helper->skipCheckMode();
-        if (!pdata->timers_on)
-            helper->tmcLog(L"Таймеры выключены.");
         const PropertiesValues &t  = pdata->timers;
         if (t.size() == 0)
         {
-            helper->tmcLog(L"Таймеры не созданы.");
+            helper->tmcLog(L"Не создано ни одного таймера.");
             return;
         }
-        helper->tmcLog(L"Таймеры:");
+        if (!pdata->timers_on)
+            helper->tmcLog(L"Таймеры (выключены):");
+        else
+            helper->tmcLog(L"Таймеры:");
+
+        std::map<tstring, int> sorted_map;
         for (int i=0,e=t.size(); i<e; ++i)
         {
             const property_value &v = t.get(i);
+            sorted_map[v.key] = i;
+        }
+
+        std::map<tstring, int>::iterator it = sorted_map.begin(), it_end = sorted_map.end();
+        for (; it!=it_end; ++it)
+        {
+            int i = it->second;
+            const property_value &v = t.get(i);
             PropertiesTimer pt; pt.convertFromString(v.value);
-            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
-                pt.cmd.c_str(), v.group.c_str());
+            if (!pdata->timers_on)
+            {
+                swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
+                  pt.cmd.c_str(), v.group.c_str());
+            }
+            else
+            {
+                int left = m_helper.getLeftTime(v.key);
+                double dleft = static_cast<double>(left); dleft /= 1000.0f;
+                swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
+                    pt.cmd.c_str(), v.group.c_str());
+            }
             helper->simpleLog(pb.buffer);
         }
         return;
@@ -1120,6 +1140,7 @@ IMPL(timer)
 
     if (n == 1 && !p->isInteger(0))
     {
+        helper->skipCheckMode();
         tstring op(p->at(0));
         if (op == L"disable" || op == L"off" || op == L"выкл") {
             pdata->timers_on = 0;
@@ -1141,6 +1162,7 @@ IMPL(timer)
 
     if (n == 1 && p->isInteger(0))
     {
+        helper->skipCheckMode();
         int key = p->toInteger(0);
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
@@ -1158,8 +1180,19 @@ IMPL(timer)
         const PropertiesValues &t  = pdata->timers;
         const property_value &v = t.get(index);
         PropertiesTimer pt; pt.convertFromString(v.value);
-        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
+
+        if (!pdata->timers_on)
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
+        }
+        else
+        {
+            int left = m_helper.getLeftTime(v.key);
+            double dleft = static_cast<double>(left); dleft /= 1000.0f;
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
+                pt.cmd.c_str(), v.group.c_str());
+        }
         helper->simpleLog(pb.buffer);
         return;
     }
@@ -1170,7 +1203,7 @@ IMPL(timer)
         if (key < 1 || key > TIMERS_COUNT)
             return p->invalidargs();
         double delay = p->toNumber(1);
-        if (delay < 0 || delay > 999.9f)
+        if (delay < 0 || delay > 9999.9f)
             return p->invalidargs();
 
          tchar tmp[16];
@@ -1179,7 +1212,8 @@ IMPL(timer)
         int index = pdata->timers.find(id);
         if (index == -1 && n == 2)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Ошибка. Таймер #%s не существует.", id.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не cоздан.", id.c_str());
+            helper->skipCheckMode();
             helper->tmcLog(pb.buffer);
             return;
         }
@@ -1219,12 +1253,49 @@ IMPL(timer)
         swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
         helper->simpleLog(pb.buffer);
-        return updateProps(1, LogicHelper::UPDATE_TIMERS);
+
+        int timer_id = LogicHelper::UPDATE_TIMER1+key-1;
+        return updateProps(1, timer_id);
     }
     p->invalidargs();
 }
 
 IMPL(untimer)
+{
+    if (tortilla::isPropertiesOpen())
+        return p->blockedbyprops();
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
+        MethodsHelper* helper = ph;
+        int key = p->toInteger(0);
+        if (key < 1 || key > TIMERS_COUNT)
+            return p->invalidargs();
+        tchar tmp[16];
+        _itow(key, tmp, 10);
+        tstring id(tmp);
+
+        PropertiesData *pdata = tortilla::getProperties();
+
+        int index = pdata->timers.find(id);
+        if (index == -1)
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
+            helper->tmcLog(pb.buffer);
+            return;
+        }
+        pdata->timers.del(index);
+        swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s удален.", id.c_str());
+        helper->tmcLog(pb.buffer);
+
+        int timer_id = LogicHelper::UPDATE_TIMER1+key-1;
+        return updateProps(1, timer_id);
+    }
+    p->invalidargs();
+}
+
+IMPL(uptimer)
 {
     if (tortilla::isPropertiesOpen())
         return p->blockedbyprops();
@@ -1238,21 +1309,14 @@ IMPL(untimer)
         _itow(key, tmp, 10);
         tstring id(tmp);
 
-        PropertiesData *pdata = tortilla::getProperties();
-        ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
-        MethodsHelper* helper = ph;
-
-        int index = pdata->timers.find(id);
-        if (index == -1)
+        if (m_helper.upTimer(id))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
+            ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
+            MethodsHelper* helper = ph;
+            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s перезапущен.", id.c_str());
             helper->tmcLog(pb.buffer);
             return;
         }
-        pdata->timers.del(index);
-        swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s удален.", id.c_str());
-        helper->tmcLog(pb.buffer);
-        return updateProps(1, LogicHelper::UPDATE_TIMERS);
     }
     p->invalidargs();
 }
@@ -1274,6 +1338,7 @@ IMPL(showwindow)
     {
         CWindow w(m_pHost->getMainWindow());
         w.ShowWindow(SW_RESTORE);
+        SetForegroundWindow(w);
         return;
     }
     p->invalidargs();
@@ -1395,6 +1460,7 @@ bool LogicProcessor::init()
     regCommand("untab", untab);
     regCommand("timer", timer);
     regCommand("untimer", untimer);
+    regCommand("uptimer", uptimer);
 
     regCommand("hidewindow", hidewindow);
     regCommand("showwindow", showwindow);

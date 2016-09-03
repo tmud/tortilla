@@ -101,16 +101,22 @@ public:
             result->append(L"nil");
             break;
         case LUA_TNUMBER:
-            swprintf(dbuf, L"number: %d", lua_tointeger(L, i));
+            { double n = lua_tonumber(L, i);
+            if (n == (int)n)
+              swprintf(dbuf, L"number: %d", (int)n);
+            else
+              swprintf(dbuf, L"number: %f", n);
             result->append(dbuf);
             break;
+            }
         case LUA_TBOOLEAN:
             swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
             result->append(dbuf);
             break;
         case LUA_TSTRING:
-            result->append(L"string: ");
+            result->append(L"string: '");
             result->append(lua_towstring(L, i));
+            result->append(L"'");
             break;
         case LUA_TUSERDATA:
             swprintf(dbuf, L"userdata: 0x%p", lua_topointer(L, i));
@@ -217,7 +223,7 @@ class load_file
     HANDLE hfile;
     typedef unsigned char uchar;
     std::string current_string;
-    const DWORD buffer_size = 256;
+    const DWORD buffer_size = 1024;
     uchar* buffer;
     DWORD  file_size;
     DWORD  not_readed;
@@ -258,13 +264,14 @@ public:
     DWORD getPosition() {
         return file_size-(not_readed+in_buffer);
     }
-    bool readNextString(std::string *string, DWORD* startpos = NULL)
+    bool readNextString(std::string *string, bool trim_rn, DWORD* startpos = NULL)
     {
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
         if (startpos)
             *startpos = getPosition();
 
+        int ed = (trim_rn) ? 1 : 0;
         while (not_readed > 0 || in_buffer > 0)
         {
             DWORD readed = 0;
@@ -295,8 +302,7 @@ public:
                 uchar c = *p; p++;
                 if (c == 0xa)
                 {
-                    if (!last_0d)
-                       current_string.append((char*)b, p-b-1);
+                    current_string.append((char*)b, p-b-ed);
                     string->assign(current_string);
                     current_string.clear();
                     last_0d = false;
@@ -306,7 +312,7 @@ public:
                 }
                 if (c == 0xd)
                 {
-                    current_string.append((char*)b, p-b-1);
+                    current_string.append((char*)b, p-b-ed);
                     in_buffer = e-p;
                     memcpy(buffer, p, in_buffer);
                     if (last_0d)
@@ -342,6 +348,17 @@ public:
     {
         if (hfile != INVALID_HANDLE_VALUE)
             CloseHandle(hfile);
-        hfile = INVALID_HANDLE_VALUE;    
+        hfile = INVALID_HANDLE_VALUE;
+    }
+
+    DWORD size()
+    {
+        if (hfile == INVALID_HANDLE_VALUE)
+            return 0;
+        DWORD hsize = 0;
+        DWORD size = GetFileSize(hfile, &hsize);
+        if (hsize != 0)
+            return 0;
+        return size;
     }
 };

@@ -11,6 +11,7 @@ void unloadModules();
 void tmcLog(const tstring& msg);
 void pluginLoadError(const tchar* msg);
 int  pluginInvArgs(lua_State *L, const tchar* fname);
+int  pluginInvArgsValues(lua_State *L, const tchar* fname);
 int  pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file);
 int  pluginMethodError(const tchar* method, const tchar* error);
 int  pluginLog(const tchar* msg);

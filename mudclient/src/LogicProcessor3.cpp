@@ -4,15 +4,7 @@
 
 void LogicProcessor::processStackTick()
 {
-    if (!m_commands_queue.empty())
-    {
-        InputCommand cmd = m_commands_queue.pop_front();
-        if (cmd->system)
-            processSystemCommand(cmd);
-        else
-            processGameCommand(cmd);
-    }
-
+    processQueueCommand();
     if (!m_plugins_log_cache.empty())
     {
         PropertiesData *pdata = tortilla::getProperties();
@@ -347,7 +339,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 {
     if (parse_data.strings.empty())
         return;
-    if (!m_connected)
+    if (!m_connected && !(flags & WORK_OFFLINE))
         flags = flags | SKIP_ACTIONS | SKIP_SUBS;
 
     parseDataStrings &pds = parse_data.strings;
@@ -410,6 +402,7 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
         e = e2;
     }
     m_pipeline.freeElement(e);
+    m_pHost->clearDropped(window);
 }
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)

@@ -23,7 +23,7 @@ function bell.streamdata(s)
     p = s:strstr(sym, p+1)
   end
   if count > 0 then
-    system.beep(10, 20)			-- для разгона звука, не убирать
+    system.beep(10, 20)	        -- для разгона звука, не убирать
   end
   for i=1,count do
     system.beep(2000, 150)

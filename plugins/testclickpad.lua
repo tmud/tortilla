@@ -1,7 +1,8 @@
 ﻿local testclickpad = {}
 
 function testclickpad.name()
-  return 'Тестирование api плагина clickpad'
+  -- плагин отключен
+  -- return 'Тестирование api плагина clickpad'
 end
 function testclickpad.description()
   return 'Плагин для тестирования api плагина clickpad.'

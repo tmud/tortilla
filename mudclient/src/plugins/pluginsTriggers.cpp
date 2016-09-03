@@ -11,7 +11,7 @@ PluginsTrigger::PluginsTrigger() : L(NULL), p(NULL), m_current_compare_pos(0), m
 
 PluginsTrigger::~PluginsTrigger()
 {
-    m_parseData.strings.clear();
+    m_parseData.detach();
     m_trigger_func_ref.unref(L);
 }
 
@@ -68,9 +68,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
 void PluginsTrigger::reset()
 {
     m_current_compare_pos = 0;
-    m_parseData.strings.clear();
-    m_parseData.update_prev_string = false;
-    m_parseData.last_finished = true;
+    m_parseData.detach();
     m_triggerParseData.reset();
     m_triggered = false;
 }
@@ -141,23 +139,24 @@ bool PluginsTrigger::compare(const CompareData& cd, bool incompl_flag)
 void PluginsTrigger::run()
 {
     m_trigger_func_ref.pushValue(L);
-
-    PluginsParseData ppd(&m_parseData, &m_triggerParseData);
-    luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
     Plugin *oldcp = _cp;
     _cp = p;
-    if (lua_pcall(L, 1, 0, 0))
-    {
-        //error
-        if (luaT_check(L, 1, LUA_TSTRING))
+    {   // вызов деструктора PluginsParseData - обратная перекодировка строк
+        PluginsParseData ppd(&m_parseData, &m_triggerParseData);
+        luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
+        if (lua_pcall(L, 1, 0, 0))
         {
-            pluginOut(lua_toerror(L));
+            //error
+            if (luaT_check(L, 1, LUA_TSTRING))
+            {
+                pluginOut(lua_toerror(L));
+            }
+            else
+            {
+                pluginLog(L"неизвестная ошибка");
+            }
+            lua_settop(L, 0);
         }
-        else
-        {
-            pluginLog(L"неизвестная ошибка");
-        }
-        lua_settop(L, 0);
     }
     _cp = oldcp;
     reset();
@@ -165,14 +164,19 @@ void PluginsTrigger::run()
 
 int trigger_create(lua_State *L)
 {
-    PluginsTrigger *t = new PluginsTrigger();
-    if (t->init(L, _cp))
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
+        luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
-        _cp->triggers.push_back(t);
-        luaT_pushobject(L, t, LUAT_TRIGGER);
-        return 1;
+        PluginsTrigger *t = new PluginsTrigger();
+        if (t->init(L, _cp))
+        {
+            _cp->triggers.push_back(t);
+            luaT_pushobject(L, t, LUAT_TRIGGER);
+            return 1;
+        }
+        delete t;
+        return pluginInvArgsValues(L, L"createTrigger");
     }
-    delete t;
     return pluginInvArgs(L, L"createTrigger");
 }
 

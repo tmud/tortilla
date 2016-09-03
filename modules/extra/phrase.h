@@ -64,26 +64,8 @@ public:
               if (p1.size() < p2.size())
                   { result = false; break; }
               int len = p2.size();
-              for (int i=0;i<len;++i) {
-                 if (p1[i] != p2[i])
-                  {  result = false; break; }
-              }
-              /*int delta = p1.size() - len;
-              int compared = 0;
-              for (int i=0;i<len;++i) {
-                  if (p1[i] != p2[i]) break;
-                  compared++;
-              }
-              int notcompared = len - compared;
-              if (notcompared > compared)
+              if (p1.compare(0, p2.size(), p2))
                   { result = false; break; }
-              if (notcompared)
-              {
-                  notcompared = notcompared + delta;
-                  if (notcompared >= compared*2) {
-                      result = false; break;
-                  }
-              }*/
         }
         return result;
     }
@@ -146,6 +128,10 @@ public:
                 e = index;
             }
        }
+
+       int dsize = m_phrases.capacity() - m_phrases.size();
+       if (dsize == 0)
+           m_phrases.reserve(m_phrases.size()+1000);
        m_phrases.insert(m_phrases.begin()+index, p);
        return true;
     }
@@ -202,7 +188,7 @@ private:
         }
         if (begin == -1) return;
         int end = m_phrases.size();
-        for (int i=begin,e=m_phrases.size();i<e;++i)
+        for (int i=begin,e=end;i<e;++i)
         {
             tchar c2 = m_phrases[i]->get(0).at(0);
             if (c != c2) { end = i; break; }
@@ -247,7 +233,7 @@ public:
             m_changed = true;
         return result;
     }
-    bool findPhrase(const tstring& t, std::vector<tstring>* result) const
+    bool findPhrase(const tstring& t, bool strong_mode, std::vector<tstring>* result) const
     {
         Phrase p(t);
         int len = p.len();
@@ -256,7 +242,7 @@ public:
         iterator it = m_data.find(len);
         if (it == m_data.end())
             return false;
-        it->second->findPhrase(p, false, result);
+        it->second->findPhrase(p, strong_mode, result);
         return !result->empty();
     }
     bool deletePhrase(const tstring& t)
@@ -270,7 +256,6 @@ public:
             return false;
         return it->second->deletePhrase(p, true);
     }
-
     void clear() 
     {
         std::for_each(m_data.begin(), m_data.end(), [](std::pair<int, PhrasesList*> p){ delete p.second; });

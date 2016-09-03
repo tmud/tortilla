@@ -109,11 +109,21 @@ bool PropertiesManager::loadProfileData()
     loadValue(sd, L"plogs", 0, 1, &m_propData.plugins_logs);
     loadValue(sd, L"plogswnd", 0, OUTPUT_WINDOWS, &m_propData.plugins_logs_window);
     loadValue(sd, L"softscroll", 0, 1, &m_propData.soft_scroll);
+    loadValue(sd, L"unknowncmd", 0, 1, &m_propData.unknown_cmd);
+    loadValue(sd, L"anyfont", 0, 1, &m_propData.any_font);
+    loadValue(sd, L"disablealt", 0, 1, &m_propData.disable_alt);
+    loadValue(sd, L"tray", 0, 1, &m_propData.move_totray);
     tstring cp;
     loadString(sd, L"codepage", &cp);
     if (cp != L"win" && cp != L"utf8")
         cp = L"win";
     m_propData.codepage = cp;
+    tstring logformat;
+    loadString(sd, L"logformat", &logformat);
+    if (logformat != L"html" && logformat != L"txt")
+        logformat = L"html";
+    m_propData.logformat = logformat;
+
     loadValue(sd, L"prompt", 0, 1, &m_propData.recognize_prompt);
     loadString(sd, L"ptemplate", &m_propData.recognize_prompt_template);
     if (m_propData.recognize_prompt_template.empty())
@@ -158,7 +168,17 @@ bool PropertiesManager::loadProfileData()
     loadArray(sd, L"asubs/asub", false, true, &m_propData.antisubs);
     loadArray(sd, L"gags/gag", false, true, &m_propData.gags);
     loadArray(sd, L"highlights/highlight", true, true, &m_propData.highlights);
-    loadArray(sd, L"timers/timer", true, true, &m_propData.timers);
+    PropertiesValues timers;
+    loadArray(sd, L"timers/timer", true, true, &timers);
+    PropertiesValues& t = m_propData.timers;
+    for (int i=0,e=timers.size();i<e;++i)
+    {
+        const property_value& v = timers.get(i);
+        int id = 0;
+        if (w2int(v.key, &id) && id >= 1 && id <= TIMERS_COUNT)
+            t.add(-1, v.key, v.value, v.group);
+    }
+
     loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
     loadArray(sd, L"variables/var", true, false, &m_propData.variables);
 
@@ -211,7 +231,12 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, L"plogs", m_propData.plugins_logs);
     saveValue(sd, L"plogswnd", m_propData.plugins_logs_window);
     saveValue(sd, L"softscroll", m_propData.soft_scroll);
+    saveValue(sd, L"unknowncmd", m_propData.unknown_cmd);
+    saveValue(sd, L"anyfont", m_propData.any_font);
+    saveValue(sd, L"disablealt", m_propData.disable_alt);
+    saveValue(sd, L"tray", m_propData.move_totray);
     saveString(sd, L"codepage", m_propData.codepage);
+    saveString(sd, L"logformat", m_propData.logformat);
     saveValue(sd, L"prompt", m_propData.recognize_prompt);
     saveString(sd, L"ptemplate", m_propData.recognize_prompt_template);
 

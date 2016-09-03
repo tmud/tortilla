@@ -142,7 +142,7 @@ private:
                 m_pcre.get(i, &tmp);
 
                 WCHAR buffer[16];
-                wsprintf(buffer, L"%%%d=[", i);
+                swprintf(buffer, L"%%%d=[", i);
                 result.append(buffer);
                 result.append(tmp);
                 result.append(L"]\r\n");

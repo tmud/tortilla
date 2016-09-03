@@ -61,6 +61,53 @@ public:
         blocks.resize(count);
     }
 
+    int insertBlock(int abspos)
+    {
+        int len = getTextLen();
+        if (abspos == len+1) {
+           blocks.push_back(MudViewStringBlock());
+           return blocks.size();
+        }
+        if (abspos > 0 && abspos <= len)
+        {
+            int block = 0; int pos = 0;
+            while (abspos > 0)
+            {
+                abspos--;
+                for (int i = 0, e = blocks.size(); i < e; ++i)
+                {
+                    int size = blocks[i].string.size();
+                    if (size > abspos)
+                    {
+                        block = i + 1;
+                        pos = abspos + 1;
+                        break;
+                    }
+                    abspos -= size;
+                }
+                if (block) break;
+            }
+            if (block > 0)
+            {
+                pos = pos - 1;
+                if (pos == 0) {
+                    blocks.insert(blocks.begin()+block-1, MudViewStringBlock() );
+                    return block;
+                }               
+                tstring text =  blocks[block-1].string;
+                tstring p1(text.substr(0, pos));
+                blocks[block-1].string = p1;
+                blocks.insert(blocks.begin()+block, MudViewStringBlock());
+                blocks.insert(blocks.begin()+block, MudViewStringBlock());
+
+                tstring p2(text.substr(pos));
+                blocks[block+1].string = p2;
+                blocks[block+1].params = blocks[block-1].params;
+                return block + 1;
+            }
+        }
+        return 0;
+    }
     void serialize(tstring *data);
     void deserialize(const tstring& data);
 private:

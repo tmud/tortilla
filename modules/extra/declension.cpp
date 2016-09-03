@@ -41,14 +41,43 @@ int declension_find(lua_State *L)
         Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
         tstring p(luaT_towstring(L, 2));
         std::vector<tstring> result;
-        if (d->findPhrase(p, &result) && result.size() == 1)
+        if (d->findPhrase(p, true, &result))
         {
-            luaT_pushwstring(L, result[0].c_str());
+            lua_newtable(L);
+            for (int i=0,e=result.size();i<e;++i)
+            {
+                lua_pushinteger(L, i+1);
+                luaT_pushwstring(L, result[i].c_str());
+                lua_settable(L, -3);
+            }
             return 1;
         }
         return 0;
     }
     return declension_invalidargs(L, "find");
+}
+
+int declension_similar(lua_State *L)
+{
+    if (luaT_check(L, 2, gettype(L), LUA_TSTRING))
+    {
+        Dictonary *d = (Dictonary *)luaT_toobject(L, 1);
+        tstring p(luaT_towstring(L, 2));
+        std::vector<tstring> result;
+        if (d->findPhrase(p, false, &result) && result.size() == 1)
+        {
+            lua_newtable(L);
+            for (int i=0,e=result.size();i<e;++i)
+            {
+                lua_pushinteger(L, i+1);
+                luaT_pushwstring(L, result[i].c_str());
+                lua_settable(L, -3);
+            }
+            return 1;
+        }
+        return 0;
+    }
+    return declension_invalidargs(L, "similar");
 }
 
 int declension_remove(lua_State *L)
@@ -77,7 +106,7 @@ int declension_load(lua_State *L)
         {
             d->clear();
             u8string str;
-            while (lf.readNextString(&str))
+            while (lf.readNextString(&str, true))
             {
                 if (!str.empty()) {
                     tstring t(TU2W(str.c_str()));
@@ -206,6 +235,7 @@ int declension_new(lua_State *L)
         luaL_newmetatable(L, "declension");
         regFunction(L, "add", declension_add );
         regFunction(L, "find", declension_find );
+        regFunction(L, "similar", declension_similar );
         regFunction(L, "remove", declension_remove );
         regFunction(L, "load", declension_load );
         regFunction(L, "save", declension_save );

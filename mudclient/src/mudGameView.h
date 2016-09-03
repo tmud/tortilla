@@ -82,6 +82,10 @@ public:
                 if (pMsg->wParam != VK_MENU && pMsg->wParam != VK_F4)
                     return TRUE;
             }
+            if (pMsg->wParam == VK_MENU && m_propData->disable_alt)
+            {
+               return TRUE;
+            }
             if (processKey(pMsg->wParam))
                 return TRUE;
         }
@@ -472,7 +476,7 @@ private:
         if (m_manager.isFirstStartup())
             PostMessage(WM_USER+3);
 
-        SetTimer(1, 40);
+        SetTimer(1, 25);
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         pLoop->AddIdleHandler(this);
         return 0;
@@ -713,11 +717,20 @@ private:
     {
         static int count = 0;
         count = count + 1;
-        if (count == 5)
+        if (count == 8)
         {
             count = 0;
             m_processor.processTick();
             m_plugins.processTick();
+        }
+
+        static int seconds_count = 0;
+        seconds_count = seconds_count + 1;
+        if (seconds_count == 40)
+        {
+            seconds_count = 0;
+            if (m_processor.getConnectionState())
+              m_plugins.processSecondTick();
         }
 
         m_processor.processStackTick();
@@ -829,9 +842,15 @@ private:
         PropertiesData tmp;
         tmp.copy(data);
 
+        bool font_updated = false;
         PropertiesDlg propDlg(&tmp);
         if (propDlg.DoModal() == IDOK)
         {
+            if (data.font_name != tmp.font_name || data.font_bold != tmp.font_bold ||
+                data.font_heigth != tmp.font_heigth || data.font_italic != tmp.font_italic)
+            {
+                font_updated = true;
+            }
             data.copy(tmp);
             updateProps();
             if (!m_manager.saveProfile())
@@ -843,6 +862,8 @@ private:
         }
         m_settings_mode = false;
         m_plugins.processPluginsMethod("propsupdated", 0);
+        if (font_updated)
+            m_plugins.processPluginsMethod("fontupdated", 0);
         return 0;
     }
 
@@ -862,7 +883,7 @@ private:
         PropertiesWindow *find_window = m_propData->displays.find_window();
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         if (ctx->Side == DOCK_HIDDEN)
-        {            
+        {
             RECT& p = find_window->pos;
             SIZE sz =  m_find_dlg.getSize();
             int w = 0; int h = 0;
@@ -884,7 +905,7 @@ private:
         find_window->visible = false;
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
         //m_propData->find_window = ctx->rcWindow;
-        m_dock.HideWindow(m_find_dlg);        
+        m_dock.HideWindow(m_find_dlg);
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)
             m_history.clearFind();
@@ -963,7 +984,7 @@ private:
             return true;
         }
 
-        if (vkey == VK_PRIOR || vkey == VK_NEXT) // PAGEUP & PAGEDOWN
+        if ((vkey == VK_PRIOR || vkey == VK_NEXT) && checkKeysState(false, false, false)) // PAGEUP & PAGEDOWN
         {
             if (vkey == VK_PRIOR && !m_history.IsWindowVisible())
             {
@@ -1087,6 +1108,17 @@ private:
     PluginsTriggersHandler* getPluginsTriggers() 
     {
         return &m_plugins;
+    }
+
+    void clearDropped(int view)
+    {
+        if (view == 0)
+            m_view.clearDropped();
+        if (view >= 1 && view <= OUTPUT_WINDOWS)
+        {
+            MudView* v = m_views[view-1];
+            v->clearDropped();
+        }
     }
 
     void addText(int view, parseData* parse_data)

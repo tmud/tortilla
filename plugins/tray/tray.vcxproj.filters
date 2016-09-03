@@ -55,7 +55,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tray.rc">
-      <Filter>Main Files</Filter>
+      <Filter>Source Files</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -33,7 +33,7 @@ public:
     int selected;
 public:
     PluginsParseData(parseData *data, triggerParseData *trdata) : pdata(data), tdata(trdata), selected(-1) { convert(); }
-    ~PluginsParseData() { convert_back(); autodel<PluginViewString> _z(plugins_strings); }
+    ~PluginsParseData() { convert_back(); std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) { delete s; }); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
     bool select(int index)
@@ -63,6 +63,42 @@ public:
             w2u.convert(text.c_str(), text.length());
             str->assign(w2u);
             return true;
+        }
+        return false;
+    }
+
+    bool getselected_len(int *len)
+    {
+        assert(len);
+        PluginViewString *str = getselected_pvs();
+        if (!str)
+            return false;
+        int s = 0;
+        for (int i = 0, e = str->blocks.size(); i < e; ++i)
+            s += u8string_len(str->blocks[i]);
+        *len = s;
+        return true;
+    }
+
+    bool getselected_sympos(int symbol, std::pair<int, int>* blockpos)
+    {
+        assert(blockpos);
+        PluginViewString *str = getselected_pvs();
+        int block = 0; int pos = 0;
+        if (str && symbol > 0)
+        {
+            symbol -= 1;
+            for (int i = 0, e = str->blocks.size(); i < e; ++i)
+            {
+                int size = u8string_len(str->blocks[i]);
+                if (size > symbol)
+                {
+                    blockpos->first = i + 1;
+                    blockpos->second = symbol + 1;
+                    return true;
+                }
+                symbol -= size;
+            }
         }
         return false;
     }
@@ -132,6 +168,7 @@ public:
             s->gamecmd = gamecmd;
             s->system = system;
             ss.insert(ss.begin() + selected + delta, s);
+            s->changed = true;
         }
     }
 
@@ -159,6 +196,7 @@ public:
                 }
                 dst_pvs->blocks[dst_block - 1] = src_pvs->blocks[block - 1];
                 dst->blocks[dst_block - 1] = src->blocks[block - 1];
+                dst->changed = true;
                 return true;
             }
         }
@@ -204,7 +242,9 @@ public:
         }
         return ISC_UNKNOWN;
     }
-
+    void synctexts() {
+        convert_back();
+    }
 private:
     void convert()
     {

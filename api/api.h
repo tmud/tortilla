@@ -252,8 +252,8 @@ namespace base {
     inline void print(lua_State* L, const wchar_t* message) {
         luaT_run(L, "print", "s", message);
     }
-    inline void clear(lua_State* L, int view) {
-        luaT_run(L, "clear", "d", view);
+    inline void clearView(lua_State* L, int view) {
+        luaT_run(L, "clearView", "d", view);
     }
     inline void terminate(lua_State *L) {
         luaT_run(L, "terminate", "");
@@ -448,11 +448,6 @@ public:
         runcmdint("setBlocksCount", count);
         return boolresult();
     }
-    void getBlockText(int block, std::wstring* str)
-    {
-        runcmdint("getBlockText", block);
-        strresult(str);
-    }
     bool get(int block, vparam param, unsigned int *value)
     {
         luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
@@ -468,16 +463,38 @@ public:
         luaT_run(L, "set", "oddu", block, (int)param, value);
         return boolresult();
     }
+    bool getBlockText(int block, std::wstring* str)
+    {
+        runcmdint("getBlockText", block);
+        return strresult(str);
+    }
     bool setBlockText(int block, const wchar_t* text)
     {
         luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
         luaT_run(L, "setBlockText", "ods", block, text);
         return boolresult();
     }
+    bool getBlockColor(int block, std::wstring* str)
+    {
+        runcmdint("getBlockColor", block);
+        return strresult(str);
+    }
+    bool setBlockColor(int block, const wchar_t* color)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "setBlockColor", "ods", block, color);
+        return boolresult();
+    }
     bool deleteBlock(int block)
     {
         runcmdint("deleteBlock", block);
         return boolresult();
+    }
+    int insertBlock(int position)
+    {
+        luaT_pushobject(L, view_string, LUAT_VIEWSTRING);
+        luaT_run(L, "insertBlock", "od", position);
+        return intresult();
     }
     void print(int view)
     {
@@ -516,11 +533,13 @@ private:
         lua_pop(L, 1);
         return result;
     }
-    void strresult(std::wstring *res)
+    bool strresult(std::wstring *res)
     {
-        if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
+        bool result = false;
+        if (lua_isstring(L, -1)) { res->assign(luaT_towstring(L, -1)); result = true; }
         else res->clear();
         lua_pop(L, 1);
+        return result;
     }
 };
 
@@ -592,10 +611,10 @@ public:
         runcmd("getTextLen");
         return intresult();
     }
-    void getHash(std::wstring* str)
+    bool getHash(std::wstring* str)
     {
         runcmd("getHash");
-        strresult(str);
+        return strresult(str);
     }
     int blocks()            // count of blocks for selected string
     { 
@@ -606,11 +625,6 @@ public:
     {
         runcmdint("setBlocksCount", count);
         return boolresult();
-    }
-    void getBlockText(int block, std::wstring* str)
-    {
-        runcmdint("getBlockText", block);
-        strresult(str);
     }
     bool get(int block, vparam param, unsigned int *value)
     {
@@ -627,16 +641,38 @@ public:
         luaT_run(L, "set", "oddu", block, (int)param, value);
         return boolresult();
     }
+    bool getBlockText(int block, std::wstring* str)
+    {
+        runcmdint("getBlockText", block);
+        return strresult(str);
+    }
     bool setBlockText(int block, const wchar_t* text)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "setBlockText", "ods", block, text);
         return boolresult();
     }
+    bool getBlockColor(int block, std::wstring* str)
+    {
+        runcmdint("getBlockColor", block);
+        return strresult(str);
+    }
+    bool setBlockColor(int block, const wchar_t* text)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "setBlockColor", "ods", block, text);
+        return boolresult();
+    }
     bool copyBlock(int block, int dst_string, int dst_block)
     {
         luaT_pushobject(L, view_data, LUAT_VIEWDATA);
         luaT_run(L, "copyBlock", "oddd", block, dst_string, dst_block);
+        return boolresult();
+    }
+    bool copyBlock(int block, void* dst_string, int dst_block)
+    {
+        luaT_pushobject(L, dst_string, LUAT_VIEWDATA);
+        luaT_run(L, "copyBlock", "odtd", block, dst_string, dst_block);
         return boolresult();
     }
     bool deleteBlock(int block)
@@ -648,6 +684,12 @@ public:
     {
         runcmd("deleteAllBlocks");
         return boolresult();
+    }
+    int insertBlock(int position)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "insertBlock", "od", position);
+        return intresult();
     }
     bool createString()
     {
@@ -756,7 +798,7 @@ public:
     }
     bool getData(std::wstring *str)
     {
-        runcmd("createRef");
+        runcmd("createViewString");
         if (luaT_check(L, 1, LUAT_VIEWSTRING))
         {
             luaT_ViewString vs;
@@ -789,12 +831,14 @@ private:
         lua_pop(L, 1);
         return result;
     }
-    void strresult(std::wstring *res)
+    bool strresult(std::wstring *res)
     {
-        if (lua_isstring(L, -1)) res->assign(luaT_towstring(L, -1));
+        bool result = false;
+        if (lua_isstring(L, -1)) { res->assign(luaT_towstring(L, -1)); result = true; }
         else res->clear();
         lua_pop(L, 1);
-    }    
+        return result;
+    }
 };
 
 // active objects api

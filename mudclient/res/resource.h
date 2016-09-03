@@ -106,6 +106,7 @@
 #define IDC_CHECK_DISABLE_OSC           1120
 #define IDC_EDIT_NEWWORLD_PROFILE       1121
 #define IDC_COMBO_CODEPAGE              1122
+#define IDC_COMBO_LOGFORMAT             1123
 #define IDC_RADIO_PROMT_GA              1124
 #define IDC_RADIO_PROMT_PCRE            1125
 #define IDC_CHECK_DONTSHOW              1126
@@ -122,6 +123,10 @@
 #define IDC_COMBO_FINDWINDOW            1139
 #define IDC_RADIO_END_BEGIN             1140
 #define IDC_RADIO_BEGIN_END             1141
+#define IDC_CHECK_UNKNOWNCMD            1142
+#define IDC_CHECK_ANYFONTS              1143
+#define IDC_CHECK_DISABLEALT            1144
+#define IDC_CHECK_MOVETOTRAY            1145
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -145,7 +150,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        224
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1142
+#define _APS_NEXT_CONTROL_VALUE         1146
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

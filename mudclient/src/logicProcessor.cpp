@@ -19,7 +19,7 @@ void LogicProcessor::processTick()
 {
     std::vector<tstring> cmds;
     m_waitcmds.tick(&cmds);
-    if (!cmds.empty()) 
+    if (!cmds.empty())
     {
         InputPlainCommands wait_cmds;
         for (int i=0,e=cmds.size();i<e;++i)
@@ -28,7 +28,7 @@ void LogicProcessor::processTick()
             wait_cmds.move(tmp);
         }
         processCommands(wait_cmds);
-    }    
+    }
     if (!m_connected || !tortilla::getProperties()->timers_on)
         return;
     InputCommands timers_cmds;
@@ -63,7 +63,10 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
 
 void LogicProcessor::processUserCommand(const InputPlainCommands& cmds)
 {
-    processCommands(cmds);
+    InputCommands result;
+    makeCommands(cmds, &result);
+    result.mark_user();
+    runCommands(result);
 }
 
 void LogicProcessor::processPluginCommand(const tstring& cmd)
@@ -91,6 +94,17 @@ void LogicProcessor::makeCommands(const InputPlainCommands& cmds, InputCommands*
     tcmds.makeCommands(rcmds, NULL);
 }
 
+void LogicProcessor::processQueueCommand()
+{
+    if (m_commands_queue.empty())
+        return;
+    InputCommand cmd = m_commands_queue.pop_front();
+    InputCommands inserts;
+    runCommand(cmd, inserts);
+    if (!inserts.empty())
+        m_commands_queue.insert(0, inserts);
+}
+
 void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 {
     InputCommands result;
@@ -102,74 +116,81 @@ void LogicProcessor::runCommands(InputCommands& cmds)
 {
     if (!processAliases(cmds))
         return;
-    InputCommandVarsProcessor vp;
-    InputCommandsVarsFilter vf;
     int i=0,e=cmds.size();
     for (; i<e; ++i)
     {
-        InputCommand cmd = cmds[i];
-        if (!vf.checkFilter(cmd))
-        {
-          while (vp.makeCommand(cmd))
-          {
-             // found $var in cmd name -> run aliases again
-             cmds.erase(i);
-             InputCommands alias;
-             alias.push_back(cmd);
-             bool result = processAliases(alias);
-             cmds.insert(i, alias);
-             e = cmds.size();
-             cmd = cmds[i];
-             if (!result) return;
-             if (vf.checkFilter(cmd))
-                 break;
-          }
-        }
-
-        // check repeat commands
-        if (cmd->system && isOnlyDigits( cmd->command))
-        {
-            int repeats = 0;
-            w2int(cmd->command, &repeats);
-            std::vector<tstring>& p = cmd->parameters_list;
-            if (repeats == 0)
-            {
-                m_commands_queue.clear();
-                continue;
-            }
-            if (p.empty() || repeats < 0)
-                continue;
-            if (repeats > 100)
-            {
-                tstring error(L"Ошибка: Слишком большое количество повторов [");
-                error.append(cmd->srccmd);
-                error.append(cmd->srcparameters);
-                error.append(L"]");
-                tmcLog(error);
-                continue;
-            }
-
-            InputPlainCommands t;
-            for (int j=0,je=cmd->parameters_list.size();j<je;++j)
-                t.push_back(cmd->parameters_list[j]);
-            InputCommands queue_cmds;
-            makeCommands(t, &queue_cmds);
-            queue_cmds.repeat(repeats);
-            m_commands_queue.push_back(queue_cmds);
-            continue;
-        }
+        // move commands in queue
         if (!m_commands_queue.empty())
         {
-            cmds.erase(i);
-            e = cmds.size();
-            m_commands_queue.push_back(cmd);
-            continue;
+            m_commands_queue.append(cmds, i);
+            break;
         }
-        if (cmd->system)
-            processSystemCommand(cmd); //it is system command for client
-        else
-            processGameCommand(cmd);   // it is game command
+        InputCommand cmd = cmds[i];
+        InputCommands inserts;
+        runCommand(cmd, inserts);
+        if (!inserts.empty())
+        {
+            cmds.insert(i+1, inserts);
+            e = cmds.size();
+        }
     }
+}
+
+void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
+{
+    // check repeat commands
+    if (cmd->system && isOnlyDigits( cmd->command))
+    {
+        int repeats = 0;
+        w2int(cmd->command, &repeats);
+        std::vector<tstring>& p = cmd->parameters_list;
+        if (repeats == 0)
+        {
+            m_commands_queue.clear();
+            return;
+        }
+        if (p.empty() || repeats < 0)
+            return;
+        if (repeats > 100)
+        {
+            tstring error(L"Ошибка: Слишком большое количество повторов [");
+            error.append(cmd->srccmd);
+            error.append(cmd->srcparameters);
+            error.append(L"]");
+            tmcLog(error);
+            return;
+        }
+
+        InputPlainCommands t;
+        for (int j=0,je=cmd->parameters_list.size();j<je;++j)
+            t.push_back(cmd->parameters_list[j]);
+        InputCommands queue_cmds;
+        makeCommands(t, &queue_cmds);
+        queue_cmds.repeat(repeats);
+        m_commands_queue.push_back(queue_cmds);
+        return;
+    }
+
+    InputCommandVarsProcessor vp;
+    InputCommandsVarsFilter vf;
+    if (!vf.checkFilter(cmd))
+    {
+        if (vp.makeCommand(cmd))
+        {
+           // found $var in cmd name -> run aliases again
+           InputCommands alias;
+           alias.push_back(cmd);
+           if (!processAliases(alias))
+              return;
+           cmd = alias[0];
+           alias.pop_front();
+           inserts.swap(alias);
+        }
+    }
+    if (cmd->system)
+        processSystemCommand(cmd); //it is system command for client
+    else
+        processGameCommand(cmd);   // it is game command
 }
 
 bool LogicProcessor::processAliases(InputCommands& cmds)
@@ -406,7 +427,7 @@ void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)
        new_string->blocks[i] = v[i];
     new_string->system = true;
     data.strings.push_back(new_string);
-    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, window);
+    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG/*|SKIP_PLUGINS*/, window);
     }
 }
 

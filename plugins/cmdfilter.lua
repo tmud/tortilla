@@ -15,7 +15,7 @@ function cmdfilter.description()
   return table.concat(s, '\r\n')
 end
 function cmdfilter.version()
-  return '1.03'
+  return '1.04'
 end
 
 function cmdfilter.init()
@@ -43,6 +43,7 @@ end
 local function check_cmd(v)
   if not v:isGameCmd() then return end
   local last=v:blocks()
+  if last == 0 then return false end
   local cmd = v:getBlockText(last)
   return cmd_list[cmd] and true or false
 end

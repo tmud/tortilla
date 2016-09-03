@@ -27,7 +27,8 @@ private:
 class Alias
 {
 public:
-    Alias(const property_value& v, const InputTemplateParameters& p);
+    Alias();
+    void init(const property_value& v, const InputTemplateParameters& p);
     bool processing(const InputCommand cmd, InputCommands *newcmds);
 private:
     CompareObject m_compare;
@@ -37,7 +38,8 @@ private:
 class Hotkey
 {
 public:
-    Hotkey(const property_value& v, const InputTemplateParameters& p);
+    Hotkey();
+    void init(const property_value& v, const InputTemplateParameters& p);
     bool processing(const tstring& key, InputCommands *newcmds);
 private:
     tstring m_key;
@@ -47,7 +49,8 @@ private:
 class Action
 {
 public:
-    Action(const property_value& v, const InputTemplateParameters& p);
+    Action();
+    void init(const property_value& v, const InputTemplateParameters& p);
     bool processing(CompareData& data, bool incompl_flag, InputCommands* newcmds);
 private:
     CompareObject m_compare;
@@ -57,7 +60,8 @@ private:
 class Sub
 {
 public:
-    Sub(const property_value& v);
+    Sub();
+    void init(const property_value& v);
     bool processing(CompareData& data);
 private:
     CompareObject m_compare;
@@ -67,7 +71,8 @@ private:
 class AntiSub
 {
 public:
-    AntiSub(const property_value& v);
+    AntiSub(); 
+    void init(const property_value& v);
     bool processing(CompareData& data);
 private:
     CompareObject m_compare;
@@ -76,7 +81,8 @@ private:
 class Gag
 {
 public:
-    Gag(const property_value& v);
+    Gag();
+    void init(const property_value& v);
     bool processing(CompareData& data);
 private:
     CompareObject m_compare;
@@ -85,7 +91,8 @@ private:
 class Highlight
 {
 public:
-    Highlight(const property_value& v);
+    Highlight();
+    void init(const property_value& v);
     bool processing(CompareData& data);
 private:
     CompareObject m_compare;
@@ -100,6 +107,7 @@ public:
     void makeCommands(InputCommands *cmds);
     bool tick(int dt);
     void reset();
+    int  left();
     tstring id;
 
 private:

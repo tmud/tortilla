@@ -26,6 +26,8 @@ class MudView : public CWindowImpl<MudView>
 
     int m_id;
 
+    std::vector<MudViewString*> m_dropped_strings;
+
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
     MudView(PropertiesElements *elements, int id);
@@ -51,6 +53,7 @@ public:
     int  findAndSelectText(int from, int direction, const tstring& text);
     int  getCurrentFindString();
     void clearFind();
+    void clearDropped();
 
 private:
 	BEGIN_MSG_MAP(MudView)

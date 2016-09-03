@@ -43,6 +43,7 @@ int luaimage_cut(lua_State *L)
             lua_pushnil(L);
             return 1;
         }
+        return pluginInvArgsValues(L, L"image:cut");
     }
     return pluginInvArgs(L, L"image:cut");
 }

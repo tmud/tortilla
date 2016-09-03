@@ -16,15 +16,20 @@ struct Profile
 
 struct PropertiesHighlight
 {
-    PropertiesHighlight() : textcolor(RGB(192,192,192)), bkgcolor(RGB(0,0,0)),
-        underlined(0), border(0), italic(0) {}
-    PropertiesHighlight(COLORREF text_color, COLORREF bgnd_color) : textcolor(text_color), bkgcolor(bgnd_color),
-        underlined(0), border(0), italic(0) {}
+    PropertiesHighlight() { reset(); }
+    PropertiesHighlight(COLORREF text_color, COLORREF bgnd_color) { reset(); textcolor = text_color; bkgcolor = bgnd_color; }
     COLORREF textcolor;
     COLORREF bkgcolor;
     int underlined;
     int border;
     int italic;
+
+    void reset()
+    {
+        underlined = border = italic = 0;
+        textcolor = RGB(192,192,192);
+        bkgcolor = RGB(0,0,0);
+    }
 
     void convertToString(tstring *value) const
     {
@@ -36,6 +41,7 @@ struct PropertiesHighlight
 
     void convertFromString(const tstring& str)
     {
+        reset();
         value v; COLORREF color;
         if (parseString(str, L"txt[", &v) && checkColor(v, &color))
             textcolor = color;
@@ -105,7 +111,7 @@ struct PropertiesTimer
     void setTimer(double timer_delay)
     {
         if (timer_delay <= 0) timer_delay = 0;
-        if (timer_delay >= 1000.0f) timer_delay = 999.9f;
+        if (timer_delay >= 10000.0f) timer_delay = 9999.9f;
         bool mod = (getMod(timer_delay) >= 0.09f) ? true : false;
         double2w(timer_delay, (mod) ? 1 : 0, &timer);
     }
@@ -439,12 +445,12 @@ private:
     PropertiesData& operator=(const PropertiesData&) {}
 
 public:
-    PropertiesData() : codepage(L"win"), cmd_separator(L';'), cmd_prefix(L'#'),
+    PropertiesData() : codepage(L"win"), logformat(L"html"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
-       , soft_scroll(0)
+       , soft_scroll(0), unknown_cmd(0), any_font(0), disable_alt(0), move_totray(0)
     {
         initDefaultColorsAndFont();
         initDisplay();
@@ -470,6 +476,7 @@ public:
         messages = p.messages;
         // skip cmd_history
         codepage = p.codepage;
+        logformat = p.logformat;
 
         memcpy(&colors, p.colors, sizeof(colors));
         memcpy(&osc_colors, p.osc_colors, sizeof(osc_colors));
@@ -498,6 +505,10 @@ public:
         recognize_prompt_template = p.recognize_prompt_template;
 
         soft_scroll = p.soft_scroll;
+        unknown_cmd = p.unknown_cmd;
+        any_font = p.any_font;
+        disable_alt = p.disable_alt;
+        move_totray = p.move_totray;
         //skip title
     }
 
@@ -536,6 +547,7 @@ public:
     std::vector<tstring> cmd_history;
 
     tstring  codepage;
+    tstring  logformat;
 
     COLORREF colors[16];
     COLORREF osc_colors[16];
@@ -564,6 +576,10 @@ public:
     tstring  recognize_prompt_template;
 
     int      soft_scroll;
+    int      unknown_cmd;
+    int      any_font;
+    int      disable_alt;
+    int      move_totray;
 
     tstring title;        // name of main window (dont need to save)
 
