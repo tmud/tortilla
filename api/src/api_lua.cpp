@@ -68,10 +68,19 @@ int luaT_push_args(lua_State *L, const char* func)
                     known_user_data = true;
                 }
             }
-            if (!known_user_data)
-                log.append(lua_types_str[t]);
+            if (t == LUA_TNUMBER || t == LUA_TBOOLEAN || t == LUA_TSTRING)
+            {
+                std::wstring str;
+                lua_format lf;
+                lf.format(L, i, &str);
+                log.append(str);
+            } else 
+            {
+                if (!known_user_data)
+                  log.append(lua_types_str[t]);
+            }
         }
-        else 
+        else
         {
             log.append(L"unknown");
         }

@@ -152,6 +152,15 @@ protected:
         actobj->add(index, key, value, group);
     }
 
+    void add3group(int index, const tchar* key, const tchar* value, const tchar* group)
+    {
+        if (wcslen(group) == 0) {
+            const property_value& v = pdata->groups.get(0);
+            group = v.key.c_str();
+        }
+        add3(index, key, value, group);
+    }
+
     PropertiesData* pdata;
     PropertiesValues* actobj;
     tstring m_type;
@@ -171,13 +180,13 @@ public:
     {
         if (find(key) != -1)
             return false;
-        add3(-1, key, value, group);
+        add3group(-1, key, value, group);
         return true;
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         int index = find(key);
-        add3(index, key, value, group);
+        add3group(index, key, value, group);
         return true;
     }
 };
@@ -192,13 +201,13 @@ public:
     {
         if (find(key) != -1)
             return false;
-        add3(-1, key, value, group);
+        add3group(-1, key, value, group);
         return true;
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         int index = find(key);
-        add3(index, key, value, group);
+        add3group(index, key, value, group);
         return true;
     }
 };
@@ -213,13 +222,13 @@ public:
     {
         if (find(key) != -1)
             return false;
-        add3(-1, key, L"", group);
+        add3group(-1, key, L"", group);
         return true;
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         int index = find(key);
-        add3(index, key, L"", group);
+        add3group(index, key, L"", group);
         return true;
     }
 };
@@ -234,13 +243,13 @@ public:
     {
         if (find(key) != -1)
             return false;
-        add3(-1, key, value, group);
+        add3group(-1, key, value, group);
         return true;
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         int index = find(key);
-        add3(index, key, value, group);
+        add3group(index, key, value, group);
         return true;
     }
 };
@@ -281,8 +290,7 @@ private:
         tstring_replace(&color, L",", L" "); 
         if (!hh.checkText(&color))  // Highlight helper
             return false;
-        pdata->addGroup(group);
-        actobj->add(index, key, color, group);
+        add3group(index, key, color.c_str(), group);
         return true;
     }
 };
@@ -323,8 +331,7 @@ private:
         int index = find(normkey.c_str());
         if (index != -1 && !replace_mode)
             return false;
-        pdata->addGroup(group);
-        actobj->add(index, normkey, value, group);
+        add3group(index, normkey.c_str(), value, group);
         return true;
     }
 };
@@ -339,13 +346,13 @@ public:
     {
         if (find(key) != -1)
             return false;
-        add3(-1, key, L"", group);
+        add3group(-1, key, L"", group);
         return true;
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         int index = find(key);
-        add3(index, key, L"", group);
+        add3group(index, key, L"", group);
         return true;
     }
 };
@@ -428,7 +435,7 @@ private:
             int index = find(key);
             if (index != -1 && !replace_mode)
                 return false;
-            add3(index, key, value, group);
+            add3group(index, key, value, group);
             return true;
         }
         return false;

@@ -29,8 +29,9 @@ public:
     void processConnectEvent();
     void processDisconnectEvent();
     void processTick();
+    void processSecondTick();
     void processPluginsMethod(const char* method, int args);
-    void processPluginMethod(Plugin *p, char* method, int args);   
+    void processPluginMethod(Plugin *p, char* method, int args);
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
 
 private:
@@ -38,7 +39,7 @@ private:
     void concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);
-    enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED };
+    enum TableMethodResult { TM_NOTPROCESSED = 0, TM_PROCESSED, TM_DROPPED, TM_CHANGED };
     TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg);
     void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const tchar* error, int plugin_index);

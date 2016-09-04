@@ -233,7 +233,7 @@ public:
             m_changed = true;
         return result;
     }
-    bool findPhrase(const tstring& t, std::vector<tstring>* result) const
+    bool findPhrase(const tstring& t, bool strong_mode, std::vector<tstring>* result) const
     {
         Phrase p(t);
         int len = p.len();
@@ -242,7 +242,7 @@ public:
         iterator it = m_data.find(len);
         if (it == m_data.end())
             return false;
-        it->second->findPhrase(p, false, result);
+        it->second->findPhrase(p, strong_mode, result);
         return !result->empty();
     }
     bool deletePhrase(const tstring& t)

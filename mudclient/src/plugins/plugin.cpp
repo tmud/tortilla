@@ -90,9 +90,9 @@ void Plugin::setOn(bool on)
             dockpanes[i]->resetRenderErrorState();
         for (int i = 0, e = panels.size(); i < e; ++i)
             panels[i]->resetRenderErrorState();
+        current_state = true;
         if (!runMethod("init", 0, 0))
             error_state = true;
-        current_state = true;
     }
     else if (current_state && !on) {
         current_state = false;

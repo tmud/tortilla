@@ -138,6 +138,33 @@ void LogicHelper::resetTimers()
     m_ticker.sync();
 }
 
+int LogicHelper::getLeftTime(const tstring& timer_id)
+{
+    int count = m_timers.size();
+    for (int i=0;i<count;++i)
+    {
+        Timer *t = m_timers[i];
+        if (t->id == timer_id)
+            return t->left();
+    }
+    return 0;
+}
+
+bool LogicHelper::upTimer(const tstring& timer_id)
+{
+    int count = m_timers.size();
+    for (int i=0;i<count;++i)
+    {
+        Timer *t = m_timers[i];
+        if (t->id == timer_id)
+        {
+           t->reset();
+           return true;
+        }
+    }
+    return false;
+}
+
 LogicHelper::IfResult LogicHelper::compareIF(const tstring& param)
 {
      m_if_regexp.find(param);
@@ -252,17 +279,29 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
 void LogicHelper::updateProps(int what)
 {
     PropertiesData *pdata = tortilla::getProperties();
-    std::vector<tstring> active_groups;
+    std::set<tstring> active_groups;
     for (int i=0,e=pdata->groups.size(); i<e; i++)
     {
         const property_value& v = pdata->groups.get(i);
         if (v.value == L"1")
-            active_groups.push_back(v.key);
+            active_groups.insert(v.key);
     }
 
     InputTemplateParameters p;
     p.separator = pdata->cmd_separator;
     p.prefix = pdata->cmd_prefix;
+
+    const int last = UPDATE_TIMER1+TIMERS_COUNT;
+    if (what >= UPDATE_TIMER1 && what < last)
+    {
+        int id = what-UPDATE_TIMER1+1;
+        m_timers.update(id, &pdata->timers, active_groups, p);
+        return;
+    }
+
+    bool update_groups = (what == UPDATE_GROUPS);
+    if (update_groups)
+        what = UPDATE_ALL;
 
     if (what == UPDATE_ALL || what == UPDATE_ALIASES)
         m_aliases.init(p, &pdata->aliases, active_groups);
@@ -279,5 +318,10 @@ void LogicHelper::updateProps(int what)
     if (what == UPDATE_ALL || what == UPDATE_HIGHLIGHTS)
         m_highlights.init(&pdata->highlights, active_groups);
     if (what == UPDATE_ALL || what == UPDATE_TIMERS)
-        m_timers.init(&pdata->timers, active_groups, p);
+    {
+        if (!update_groups)
+            m_timers.init(&pdata->timers, active_groups, p);
+        else
+            m_timers.updateall(&pdata->timers, active_groups, p);
+    }
 }

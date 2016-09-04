@@ -13,7 +13,7 @@ return 'Плагин изменяет цвет игровых и системн�
 end
 
 function colorgamecmd.version()
-    return '1.0'
+    return '1.01'
 end
 
 function colorgamecmd.after(window, v)
@@ -22,7 +22,7 @@ if window ~= 0 then return end
     v:select(i)
     if v:isGameCmd() then
       local last=v:blocks()
-      v:set(last,"textcolor",color)
+      if last > 0 then v:set(last,"textcolor",color) end
     end
   end
 end

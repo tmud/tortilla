@@ -19,3 +19,10 @@ private:
     int first_id;
     int last_id;
 };
+
+class PluginColorSerialize
+{
+public:
+     void serialize(const MudViewStringBlock &b, tstring* color);
+     int  deserialize(const tchar* color, MudViewStringBlock *out);
+};

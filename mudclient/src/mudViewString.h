@@ -63,7 +63,7 @@ typedef std::vector<MudViewStringBlock> MudViewStringBlocks;
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false), system(false), triggered(false), prompt(0), next(false), prev(false) {}
+   MudViewString() : dropped(false), gamecmd(false), system(false), triggered(false), prompt(0), next(false), prev(false), changed(true) {}
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
@@ -160,7 +160,7 @@ struct MudViewString
        }
        return s;
    }
-   
+
    MudViewStringBlocks blocks;              // all string blocks
    bool dropped;                            // flag for dropping string from view
    bool gamecmd;                            // flag - game cmd
@@ -169,6 +169,7 @@ struct MudViewString
    int  prompt;                             // prompt-string, index of last symbol of prompt
    bool next;                               // flag - next string in MudView is part of that string
    bool prev;                               // flag - prev string in MudView is part of that string
+   bool changed;                            // flag - to recalc string dc (changed in triggers)
 };
 
 typedef std::vector<MudViewString*> mudViewStrings;

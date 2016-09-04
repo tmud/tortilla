@@ -101,16 +101,22 @@ public:
             result->append(L"nil");
             break;
         case LUA_TNUMBER:
-            swprintf(dbuf, L"number: %d", lua_tointeger(L, i));
+            { double n = lua_tonumber(L, i);
+            if (n == (int)n)
+              swprintf(dbuf, L"number: %d", (int)n);
+            else
+              swprintf(dbuf, L"number: %f", n);
             result->append(dbuf);
             break;
+            }
         case LUA_TBOOLEAN:
             swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
             result->append(dbuf);
             break;
         case LUA_TSTRING:
-            result->append(L"string: ");
+            result->append(L"string: '");
             result->append(lua_towstring(L, i));
+            result->append(L"'");
             break;
         case LUA_TUSERDATA:
             swprintf(dbuf, L"userdata: 0x%p", lua_topointer(L, i));

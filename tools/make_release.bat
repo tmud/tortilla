@@ -79,4 +79,13 @@ xcopy ..\modules\modules.txt sdk /Y
 rd tortilla /s /q
 rd sdk /s /q
 
+md plugins
+xcopy ..\plugins\autosbor.lua plugins /Y
+xcopy ..\plugins\autoresc.lua plugins /Y
+xcopy ..\plugins\bmap.lua plugins /Y
+
+7za.exe a -tzip bylins_plugins.zip plugins
+
+rd plugins /s /q
+
 pause

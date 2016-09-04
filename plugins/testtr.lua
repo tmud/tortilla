@@ -2,13 +2,14 @@
 local view = 2
 
 function testtr.name()
-  return 'Плагин тестирования функции prompt_trigger'
+  -- плагин отключен
+  -- return 'Плагин тестирования функции prompt_trigger'
 end
 function testtr.description()
   return 'Плагин для тестирования модуля prompt_trigger (trprompt.lua).'
 end
 function testtr.version()
-  --off return '-'
+  return '-'
 end
 
 local t

@@ -15,6 +15,11 @@ struct parseData
         update_prev_string = false;
         last_finished = true;
     }
+    void detach() {
+        strings.clear();
+        update_prev_string = false;
+        last_finished = true;
+    }
 };
 
 #ifdef MARKERS_IN_VIEW

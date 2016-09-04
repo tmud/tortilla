@@ -49,7 +49,7 @@ function prompt_trigger(key_string, filter_function)
       if vd:find(self.pcre) then
         self.collect_mode = true
         self.strings = {}
-        local vs = vd:createRef()
+        local vs = vd:createViewString()
         if self.filter then
           local ref,drop = self.filter(vs)
           if not ref then vs = nil end
@@ -75,7 +75,7 @@ function prompt_trigger(key_string, filter_function)
         self.collect_mode = false
         return true
       end
-      local vs = vd:createRef()
+      local vs = vd:createViewString()
       if self.filter then
         local ref,drop = self.filter(vs)
         if not ref then vs = nil end

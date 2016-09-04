@@ -23,6 +23,7 @@ int createpanel(lua_State *L)
             luaT_pushobject(L, window, LUAT_PANEL);
             return 1;
         }
+        return pluginInvArgsValues(L, L"createPanel");
     }
     return pluginInvArgs(L, L"createPanel");
 }
@@ -45,7 +46,7 @@ int pn_setRender(lua_State *L)
     {
         PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
         if (v->isChildAttached())
-            lua_pushnil(L);
+            return pluginInvArgsValues(L, L"panel:setRender");
         else
         {
             PluginsViewRender* r = v->setRender(L);

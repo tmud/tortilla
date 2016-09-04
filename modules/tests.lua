@@ -1,8 +1,16 @@
 ﻿-- tests.lua
 -- тестовый код для проверки функционала клиента и модулей, юнит тесты
 -- запускаются при старте клиента
---[[
+
+do
+--return
+end
+
 dofile 'modules.lua'
+
+local maj,min = getVersion()
+print("Версия клиента: "..maj.."."..min)
+print ('Автотесты для модулей extra.declension и extra.dictonary')
 
 local dlib = extra.declension()
 
@@ -48,8 +56,8 @@ for i,s in ipairs(sorted) do
 end
 
 local function assert2(s1, s2)
-  local s = dlib:find(s1)
-  if s ~= s2 then
+  local s = dlib:similar(s1)
+  if #s ~= 1 or s[1] ~= s2 then
      print("unit test (find) faled: ["..s1.."]:["..s2.."]")
   end
 end
@@ -124,7 +132,7 @@ assert3('п св', {'перстень света'} )
 
 dict:wipe()
 dict = nil
+print ('Автотесты для модулей extra.declension и extra.dictonary - КОНЕЦ')
 
---local maj,min = getVersion()
---print("Версия: "..maj.."."..min)
-]]
+-- автотесты для плагинов
+runCommand("#wait 2 { #plugin loadsave on }")

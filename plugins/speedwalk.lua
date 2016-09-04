@@ -35,7 +35,7 @@ function speedwalk.description()
   return table.concat(s, '\r\n')
 end
 function speedwalk.version()
-  return '1.0'
+  return '1.02'
 end
 
 local recorddb = {}
@@ -75,6 +75,9 @@ function speedwalk.init()
   end
   local routes = loadTable('routes.lua')
   if routes then
+    for k,v in pairs(routes) do
+      if type(v)~='string' or type(k) ~= 'string' then routes[k] = nil end
+    end
     recorddb = routes
   end
 end
@@ -421,14 +424,13 @@ function speedwalk.syscmd(t)
     end
     local p = props.cmdPrefix()
     print(p..'swalk start|stop|save|return|go|play|list|delete|show|add ('..p..'help speedwalk)')
-    return {}
+    return
   end
   if (#t > 3 and c ~= 'add') or #t > 4 then
     print('В команде слишком много параметров.')
   else
     f(t[3], t[4])
   end
-  return {}
 end
 
 local function collect_record_path()

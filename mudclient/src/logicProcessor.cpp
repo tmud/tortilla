@@ -63,7 +63,10 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
 
 void LogicProcessor::processUserCommand(const InputPlainCommands& cmds)
 {
-    processCommands(cmds);
+    InputCommands result;
+    makeCommands(cmds, &result);
+    result.mark_user();
+    runCommands(result);
 }
 
 void LogicProcessor::processPluginCommand(const tstring& cmd)
@@ -424,7 +427,7 @@ void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)
        new_string->blocks[i] = v[i];
     new_string->system = true;
     data.strings.push_back(new_string);
-    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG, window);
+    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG/*|SKIP_PLUGINS*/, window);
     }
 }
 

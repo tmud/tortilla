@@ -1,5 +1,13 @@
 ﻿-- affects
 -- Плагин для Tortilla mud client
+
+-- ширина панели в пикселях
+local panel_width = 150
+
+-- сторона расположение панели left или right
+local panel_side = 'right'
+
+
 local affects = {}
 local initialized = false
 local colors, good_affects, bad_affects
@@ -11,7 +19,7 @@ function affects.description()
   return 'Плагин отображает аффекты, которые висят на персонаже.'
 end
 function affects.version()
-  return '1.0'
+  return '1.01'
 end
 
 -- рендер
@@ -98,7 +106,7 @@ end
 
 function affects.init()
   colors = { good_active = 10, good_inactive = 2, bad_active = 9, bad_inactive = 1 }
-  local p = createPanel("right", 100)
+  local p = createPanel(panel_side, panel_width)
   r = p:setRender(render)
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
