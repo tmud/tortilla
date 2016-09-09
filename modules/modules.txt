@@ -18,6 +18,8 @@ table system.loadTextFile(filepath) - загружает текстовый файл в таблицу отдельн
 string system.convertFromWin(string) - конвертация строки из win-кодировки(ansi) в utf8-кодировку
 string system.convertToWin(string) - конвертация из utf8-кодировки в win-кодировку
 void system.beep(int freq, int duration) - проигрывание звука заданной частоты и длительности
+seconds, minutes, hour = system.getTime() - текущее время
+day, month, year = system.getDate() - текущая дата
 ------------------------------------------------------------------------------------------------------------
 rnd - генератор случайных чисел и строк
 void rnd.seed(uint seed) - сброс ключа генератора на другое значение.

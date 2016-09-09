@@ -262,8 +262,35 @@ int system_beep(lua_State *L)
         g_background_beep_tasks->runTask( lua_tounsigned(L, 1), lua_tounsigned(L, 2) );
         return 0;
     }
-    lua_pushstring(L, "Incorrect parameters system.beep");
-    return lua_error(L);
+    return luaT_error(L, L"Incorrect parameters system.beep");
+}
+
+int system_getTime(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        SYSTEMTIME st;
+        ::GetLocalTime(&st);
+        lua_pushinteger(L, st.wSecond);
+        lua_pushinteger(L, st.wMinute);
+        lua_pushinteger(L, st.wHour);
+        return 3;
+    }
+    return luaT_error(L, L"Incorrect parameters system.getTime");
+}
+
+int system_getDate(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        SYSTEMTIME st;
+        ::GetLocalTime(&st);
+        lua_pushinteger(L, st.wDay);
+        lua_pushinteger(L, st.wMonth);
+        lua_pushinteger(L, st.wYear);
+        return 3;
+    }
+    return luaT_error(L, L"Incorrect parameters system.getDate");
 }
 
 static const luaL_Reg system_methods[] =
@@ -277,6 +304,8 @@ static const luaL_Reg system_methods[] =
     { "convertFromWin", system_convertFromWin },
     { "convertToWin", system_convertToWin },
     { "beep", system_beep },
+    { "getTime", system_getTime },
+    { "getDate", system_getDate },
     { NULL, NULL }
 };
 

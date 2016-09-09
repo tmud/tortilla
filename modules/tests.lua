@@ -136,3 +136,9 @@ print ('Автотесты для модулей extra.declension и extra.dicto
 
 -- автотесты для плагинов
 runCommand("#wait 2 { #plugin loadsave on }")
+
+local s,m,h = system.getTime()
+print(h..":"..m..":"..s)
+
+local day,mon,year = system.getDate()
+print(day.."."..mon.."."..year)
