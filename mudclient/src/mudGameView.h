@@ -1120,7 +1120,8 @@ private:
             v->clearDropped();
         }
     }
-
+    void loadProfile(const tstring& name, const tstring& group, tstring* error);
+    
     void addText(int view, parseData* parse_data)
     {
         if (view == 0)

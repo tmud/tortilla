@@ -1397,6 +1397,23 @@ IMPL(wait)
      p->invalidargs();
 }
 //-------------------------------------------------------------------
+IMPL(load)
+{
+    int n = p->size();
+    if (n == 1 || n == 2)
+    {
+        tstring profile(p->at(0));
+        tstring group;
+        if (n==2) group.assign(p->at(1));
+        tstring error;
+        m_pHost->loadProfile(profile, group, &error);
+        if (!error.empty())
+            tmcLog(error);
+        return;
+    }
+    p->invalidargs();
+}
+//-------------------------------------------------------------------
 void LogicProcessor::regCommand(const char* name, syscmd_fun f)
 {
     PropertiesData *pdata = tortilla::getProperties();
@@ -1472,5 +1489,6 @@ bool LogicProcessor::init()
     regCommand("wname", wname);
 
     regCommand("plugin", plugin);
+    regCommand("load", load);
     return true;
 }

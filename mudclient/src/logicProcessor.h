@@ -29,6 +29,7 @@ public:
     virtual void resetOscColors() = 0;
     virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
     virtual void clearDropped(int view) = 0;
+    virtual void loadProfile(const tstring& profile, const tstring& group, tstring* error) = 0;
 };
 
 class LogicProcessorMethods
@@ -194,4 +195,5 @@ public: // system commands
     DEF(unvar);
     DEF(wait);
     DEF(plugin);
+    DEF(load);
 };

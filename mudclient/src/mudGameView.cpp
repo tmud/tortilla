@@ -88,6 +88,42 @@ void MudGameView::onNewProfile()
     }
 }
 
+void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring* error)
+{
+    assert(error);
+    Profile current(m_manager.getProfile());
+    if (current.group == group && current.name == name)
+    {
+        error->assign(L"Попытка загрузить текущий профиль.");
+        return;
+    }
+    saveClientWindowPos();
+    savePluginWindowPos();
+    unloadPlugins();
+    if (!m_manager.saveProfile())
+    {
+        error->assign(L"Не получилось сохранить текущий профиль, чтобы загрузить новый.");
+        loadClientWindowPos();
+        loadPlugins();
+        return;
+    }
+    Profile profile;
+    profile.name = name;
+    if (group.empty())
+        profile.group = current.group;
+    else
+        profile.group = group;
+    if (!m_manager.loadProfile(profile))
+    {
+        error->assign(L"Не получилось загрузить профиль.");
+        m_manager.loadProfile(current);
+    }
+    updateProps();
+    loadClientWindowPos();
+    loadPlugins();
+    m_bar.reset();
+}
+
 void MudGameView::onLoadProfile()
 {
     LoadProfileDlg dlg;
