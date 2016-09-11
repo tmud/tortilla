@@ -3,7 +3,6 @@
 
 local testmisc = {}
 function testmisc.name()
-  -- плагин отключен
   return 'Тесты viewdata и viewstring'
 end
 function testmisc.version()

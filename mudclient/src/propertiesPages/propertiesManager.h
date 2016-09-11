@@ -18,6 +18,7 @@ public:
     bool createEmptyProfile(const Profile& profile);
     bool copyProfile(const Profile& src, const Profile& dst);
     bool loadProfile(const Profile& profile);
+    bool checkProfile(const Profile& profile);
 
 private:
     bool loadSettings();

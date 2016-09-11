@@ -92,9 +92,19 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
 {
     assert(error);
     Profile current(m_manager.getProfile());
-    if (current.group == group && current.name == name)
+    if ((current.group == group || group.empty()) && current.name == name)
     {
         error->assign(L"Попытка загрузить текущий профиль.");
+        return;
+    }
+    Profile profile;
+    profile.name = name;
+    profile.group = current.group;
+    if (!group.empty())
+        profile.group = group;
+    if (!m_manager.checkProfile(profile))
+    {
+        error->assign(L"Нет такого профиля.");
         return;
     }
     saveClientWindowPos();
@@ -107,12 +117,6 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
         loadPlugins();
         return;
     }
-    Profile profile;
-    profile.name = name;
-    if (group.empty())
-        profile.group = current.group;
-    else
-        profile.group = group;
     if (!m_manager.loadProfile(profile))
     {
         error->assign(L"Не получилось загрузить профиль.");

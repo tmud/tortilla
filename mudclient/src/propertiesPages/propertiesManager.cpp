@@ -567,3 +567,15 @@ bool PropertiesManager::loadProfile(const Profile& profile)
     }
     return false;
 }
+
+bool PropertiesManager::checkProfile(const Profile& profile)
+{
+    tstring path(L"profiles\\");
+    path.append(profile.name);
+    path.append(L".xml");
+    xml::node sd;
+    ProfilePath config(profile.group, path);
+    bool result = sd.load(config);
+    sd.deletenode();
+    return result;
+}
