@@ -3,7 +3,7 @@
 class SharedMemoryHandler
 {
 public:
-    virtual void onInitSharedMemory(void* buffer, size_t size) = 0;         // called for initializaion purposes (for first process)
+    virtual size_t onInitSharedMemory(void* buffer, size_t size) = 0;         // called for initializaion purposes (for first process)
 };
 
 struct SharedMemoryData
@@ -45,7 +45,7 @@ class SharedMemory
 public:
     SharedMemory() : m_map_file(NULL), m_pbuf(NULL), m_datasize(NULL), m_maxsize(NULL), m_pdata(NULL), m_mutex(NULL), m_change_event(NULL) {}
     ~SharedMemory() { close(); }    
-    bool create(SharedMemoryHandler* handler, const wchar_t* global_name, size_t size)
+    bool create(const wchar_t* global_name, size_t size, SharedMemoryHandler* handler = NULL)
     {
          assert(handler && global_name && size > 0);
 
@@ -86,8 +86,9 @@ public:
          {
              char *data = (char*)(m_pbuf);
              *m_maxsize = size;
-             *m_datasize = 0;
-             handler->onInitSharedMemory(m_pdata, size);
+             memset(data, 0, size);
+             if (handler)
+               *m_datasize = handler->onInitSharedMemory(m_pdata, size);
          }
          ac.turnoff();
          SetEvent(m_change_event);

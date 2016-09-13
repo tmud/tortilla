@@ -78,7 +78,6 @@ private:
 private:
     void tryRunMoveAnimation();
     void tryShowQueue();
-    void onInitSharedMemory();
 
     CFont m_font;
     std::vector<PopupWindow*> m_windows;

@@ -2,9 +2,9 @@
 #include "sharingController.h"
 
 const wchar_t *global_share_name = L"TortillaTray";
-const int global_share_size = 65536;
+const int global_share_size = 65500;
 
-SharingController::SharingController() : m_shared_revision(-1), m_locked(false)
+SharingController::SharingController() : m_shared_revision(0) //, m_locked(false)
 {
 }
 
@@ -14,7 +14,7 @@ SharingController::~SharingController()
 
 bool SharingController::init()
 {
-    if (!m_shared_memory.open(this, global_share_name, global_share_size))
+    if (!m_shared_memory.create(global_share_name, global_share_size, this))
         return false;
     {   // gen id
         wchar_t buffer[MAX_PATH];
@@ -22,6 +22,11 @@ bool SharingController::init()
         m_id.assign(&buffer[1]);
     }
     return pushCommand(new RegTrayCommand(m_id));
+}
+
+size_t SharingController::onInitSharedMemory(void* buffer, size_t size)
+{
+    return 0;
 }
 
 void SharingController::release()
@@ -45,20 +50,21 @@ bool SharingController::pushCommand(SharingCommand* cmd)
 
 bool SharingController::lock()
 {
-    m_shared_memory.lock();
+/*    m_shared_memory.lock();
     if (read(m_shared_memory.ptr(), m_shared_memory.size()))       
         return true;
-    m_shared_memory.unlock();
+    m_shared_memory.unlock();*/
     return false;
 }
 
 bool SharingController::unlock()
 {
-    bool result = write();
+    /*bool result = write();
     m_shared_memory.unlock();
     if (result)
         m_shared_memory.sendChangeEvent();
-    return result;
+    return result;*/
+    return false;
 }
 
 bool SharingController::write()
@@ -67,12 +73,13 @@ bool SharingController::write()
     DataQueue d;
     Serialize s(d);
     s.write(m_shared_revision);
-    m_shared_data.serialize(s);
-    if ((unsigned int)d.getSize() <= m_shared_memory.size())
+    m_shared_data.serialize(d);
+    
+    /*if ((unsigned int)d.getSize() <= m_shared_memory.size())
     {
         memcpy(m_shared_memory.ptr(), d.getData(), d.getSize());
         return true;
-    }
+    }*/
     return false;
 }
 
@@ -92,7 +99,7 @@ bool SharingController::read(void *p, unsigned int size)
     DataQueue d1;
     d1.write(p, size);
     Serialize s1(d1);
-    if (!m_shared_data.deserialize(s1))
+    if (!m_shared_data.deserialize(d1))
     {
         m_shared_revision = -1;
         return false;

@@ -171,15 +171,15 @@ struct UnregTrayCommand : public SharingCommand
     }
 };
 
-struct SharingData
+struct SharedData
 {
     std::wstring main_tray_id;
     std::wstring new_tray_id;
     std::vector<SharingDataMessage*> windows;
     std::vector<SharingCommand*> commands;
 
-    SharingData() {}
-    ~SharingData() { clear(); }
+    SharedData() {}
+    ~SharedData() { clear(); }
 
     void serialize(DataQueue &d)
     {
