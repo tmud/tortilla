@@ -113,7 +113,7 @@ void LogsProcessor::writeLog(int id, const parseData& pdata)
     {
         MudViewString *src = pdata.strings[i];
         if (src->dropped) continue;
-        if (i == 0 && pdata.update_prev_string)
+        if (i == 0 && pdata.update_prev_string && !m_msgs.empty())
         {
             int last = m_msgs.size()-1;
             MudViewString* s = m_msgs[last].str;
@@ -161,9 +161,16 @@ void LogsProcessor::threadProc()
             {
                 int last = m_msgs.size() - 1;
                 msg m = m_msgs[last];
-                m_msgs.pop_back();
-                m_msgs.swap(m_towrite);
-                m_msgs.push_back(m);
+                if (!m.str->system)
+                {
+                  m_msgs.pop_back();
+                  m_msgs.swap(m_towrite);
+                  m_msgs.push_back(m);
+                }
+                else
+                {
+                   m_msgs.swap(m_towrite);
+                }
             }
         }
         if (m_towrite.empty())
@@ -209,14 +216,14 @@ void LogsProcessor::saveAll()
             msg &m = m_towrite[j];
             if (m.log != id) continue;
             m.log = -1;
-            if (!m.str->dropped) {
+            if (m.str->dropped)
+                continue;
             std::string out;
             if (htmlformat)
                 convertString(m.str, &out);
             else
                 convertString_txt(m.str, &out);
             write(m_logs[id]->hfile, out);
-            }
         }
     }
 
@@ -441,7 +448,7 @@ void LogsProcessor::convertString(MudViewString* str, std::string* out)
             }
             COLORREF c1 = p.ext_text_color; COLORREF c2 = p.ext_bkg_color;
             if (p.reverse_video) { c1 = p.ext_bkg_color;  c2 = p.ext_text_color; }
-            sprintf(buffer, "<font color=%s background=%s>%s</font>", color(c1), color2(c2), text.c_str());
+            sprintf(buffer, "<span style=\"color:%s;background-color:%s\">%s</span>", color(c1), color2(c2), text.c_str());
         }
         else
         {
