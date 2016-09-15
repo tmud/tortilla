@@ -82,7 +82,7 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
         if (id < params_count)
         {
             tstring param(params_list[id]);
-            values.cut(i, &param);
+            values.cutParameter(i, &param);
             result.append(param);
         }
         pos = values.getLast(i);

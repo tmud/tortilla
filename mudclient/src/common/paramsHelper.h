@@ -10,10 +10,12 @@ public:
     int getLast(int index) const;
     int getId(int index) const;
     int getMaxId() const;
-    void cut(int index, tstring* param);
+    void cutParameter(int index, tstring* param);
 private:
     Pcre16 pcre;
     std::vector<int> m_ids;
     std::map<int,tstring> m_cuts;
     int m_maxid;
+    static Pcre16 cut;
+    static bool m_cutinitialized;
 };

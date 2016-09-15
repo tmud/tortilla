@@ -1,10 +1,12 @@
 #include "stdafx.h"
 #include "paramsHelper.h"
 
+Pcre16 ParamsHelper::cut;
+bool ParamsHelper::m_cutinitialized = false;
 ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1)
 {
     if (mode == EXTENDED)
-      pcre.setRegExp(L"%(?:\\(.*\\))?[0-9]", true);
+        pcre.setRegExp(L"%(?:\\(.*\\))?[0-9]", true);
     else
       pcre.setRegExp( (mode == DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}", true);
     pcre.findAllMatches(param);
@@ -70,11 +72,48 @@ int ParamsHelper::getMaxId() const
     return m_maxid;
 }
 
-void ParamsHelper::cut(int index, tstring* param)
+void ParamsHelper::cutParameter(int index, tstring* param)
 {
     if (m_cuts.empty())
         return;
     std::map<int,tstring>::iterator it = m_cuts.find(index);
     if (it == m_cuts.end())
         return;
+    if (!m_cutinitialized)
+    {
+        m_cutinitialized=true;
+        cut.setRegExp(L"(?:(-?[0-9]+),)?(-?[0-9]+)", true);
+    }
+    cut.find(it->second);
+    int sz = cut.getSize();
+    if (sz != 3)
+        return;
+    tstring from, len;
+    cut.getString(1, &from);
+    cut.getString(2, &len);
+    int f = 0; int l = 0;
+    if (!from.empty())
+    {
+        if (!w2int(from, &f))
+            return;
+        if (f <= 0) { f = 0; }
+        else f = f - 1;
+    }
+    if (!w2int(len, &l))
+        return;
+    if (l == 0)
+        { param->clear(); return; }
+    if (l < 0)
+    {
+        l = -l;
+        int param_len = param->length();
+        if (param_len <= l)
+            { param->clear(); return; }    
+        l = param_len - l;
+        tstring tmp(param->substr(0, l));
+        param->assign(tmp.substr(f));
+        return;
+    }
+    tstring tmp(param->substr(f, l));
+    param->swap(tmp);
 }
