@@ -1015,7 +1015,7 @@ IMPL(wprint)
 IMPL(print)
 {
     int n = p->size();
-    if (n > 0)
+    if (n >= 0)
     {
         std::vector<tstring> data;
         for (int i=0; i<n; ++i)
