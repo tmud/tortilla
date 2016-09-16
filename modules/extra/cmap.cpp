@@ -555,6 +555,16 @@ public:
         return MD_OK;
     }
 
+    bool del(const tstring& name)
+    {
+         if (name.empty()) return false;
+         index_ptr p = find_name(name);
+         if (!p) return true;
+
+
+         return false;
+    }
+
     bool find(const tstring& name, MapDictonaryMap* values)
     {
         Phrase p(name);
@@ -1027,6 +1037,19 @@ int dict_add(lua_State *L)
     return dict_invalidargs(L, "add");
 }
 
+int dict_delete(lua_State *L)
+{
+    if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring id(luaT_towstring(L, 2));
+        bool result = d->del(id);
+        lua_pushboolean(L, result?1:0);
+        return 1;
+    }
+    return dict_invalidargs(L, "delete");
+}
+
 int dict_find(lua_State *L)
 {
     if (luaT_check(L, 2, get_dict(L), LUA_TSTRING))
@@ -1166,6 +1189,7 @@ int dict_new(lua_State *L)
         luaL_newmetatable(L, "dictonary");
         regFunction(L, "add", dict_add);
         regFunction(L, "find", dict_find);
+        regFunction(L, "delete", dict_delete);
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
         regFunction(L, "teg", dict_teg);
