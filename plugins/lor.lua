@@ -28,7 +28,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.08'
+  return '1.09'
 end
 
 local function print(s)
@@ -198,6 +198,8 @@ local function save_lor_strings()
       local errtext = err and ' Ошибка: '..err..'.' or ''
       return false, "Предмет не добавлен в базу из-за ошибки: "..name..errtext
     end
+    lor_last = name
+    return true, "Предмет в базе был обновлен: "..name
   end
   lor_last = name
   return true, "Предмет добавлен в базу: "..name

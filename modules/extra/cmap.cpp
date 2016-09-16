@@ -234,6 +234,16 @@ public:
     }
 };
 
+class database_file_copier : public new_filewriter
+{
+public:
+    bool write( const MemoryBuffer& data)
+    {
+        DWORD written = 0;
+        return write_tofile(data, &written);        
+    }    
+};
+
 struct MapDictonaryData
 {
     std::string data;
@@ -247,8 +257,10 @@ class MapDictonary
 {
     struct fileinfo
     {
+        fileinfo() : size(0), repack(false) {}
         tstring path;
         DWORD size;
+        bool repack;
     };
     std::vector<fileinfo> m_files;
     struct index
@@ -310,6 +322,8 @@ public:
     }
     ~MapDictonary() 
     {
+        tstring error;
+        save_db(&error);
         save_manual_tegs();
     }
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
@@ -555,14 +569,34 @@ public:
         return MD_OK;
     }
 
+    void del_indexes(index_ptr ix, const tstring name)
+    {
+        Phrase p(name);
+        for (int j = 0, je = p.len(); j < je; ++j)
+        {
+            int pos = 0;
+            if (find_pos(p.get(j), &pos))
+            {
+                positions_vector& pv = *m_words_table[pos].positions;
+                for (int i = 0, e = pv.size(); i < e; ++i) {
+                    if (pv[i].idx == ix){
+                        pv.erase(pv.begin() + i); break;
+                    }
+                }
+            }
+        }
+    }
+
     bool del(const tstring& name)
     {
          if (name.empty()) return false;
-         index_ptr p = find_name(name);
-         if (!p) return true;
-
-
-         return false;
+         index_ptr ix = find_name(name);
+         if (!ix) return true;
+         m_files[ix->file].repack = true;
+         del_indexes(ix, ix->name);
+         for (int i=0,e=ix->manual_tegs.size();i<e;++i)
+             del_indexes(ix, ix->manual_tegs[i]);
+         return true;
     }
 
     bool find(const tstring& name, MapDictonaryMap* values)
@@ -823,7 +857,6 @@ private:
             m_current_file = m_files.size();
             fileinfo f;
             f.path = filename;
-            f.size = 0;
             m_files.push_back(f);
         }
         fileinfo &f = m_files[m_current_file];
@@ -861,9 +894,9 @@ private:
                     name = name.substr(0,len);
                     if (!isOnlyDigits(name))
                         continue;
-                    fileinfo f;
                     tstring path(m_base_dir);
                     path.append(fd.cFileName);
+                    fileinfo f;
                     f.path = path;
                     f.size = fd.nFileSizeLow;
                     m_files.push_back(f);
@@ -900,8 +933,14 @@ private:
                         Tokenizer tk(TU2W(name.c_str()), L";");
                         ix->name = tk[0];
                         {
+                           index_ptr copy = find_name(tk[0]);
+                           if (!copy) {
                            for (int i=0,e=tk.size();i<e;++i)
                                add_index(tk[i], ix, (i!=0), false);
+                           } else {
+                             //repack file
+                             m_files[i].repack = true;
+                           }
                         }
                         ix = std::make_shared<index>();
                         ix->file = i;
@@ -916,6 +955,79 @@ private:
                     ix->pos_in_file = start_pos;
                     ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
+            }
+        }
+    }
+
+    void save_db(tstring *error)
+    {
+        std::vector<tstring> processed;
+        MemoryBuffer buffer;
+        for (int f=0,fe=m_files.size(); f<fe; ++f)
+        {
+            if (!error->empty()) break;
+            if (!m_files[f].repack) continue;
+            fileinfo& fi = m_files[f];
+            filereader fr;
+            if (!fr.open(fi.path))
+            {
+                error->assign(L"Ошибка при открытии файла на чтение: ");
+                error->append(fi.path);
+                break;
+            }
+
+            tstring newfile_path(fi.path);
+            newfile_path.append(L".new");
+            database_file_copier fw;
+            if (!fw.open(newfile_path))
+            {
+                error->assign(L"Ошибка при открытии файла на запись: ");
+                error->append(newfile_path);
+                break;
+            }
+            processed.push_back(fi.path);
+            words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
+            for (; it != it_end; ++it)
+            {
+                positions_vector &pv = *it->positions;
+                for (int i = 0, e=pv.size(); i<e; ++i)
+                {
+                    index_ptr ix = pv[i].idx;
+                    if (ix->file != f || pv[i].word_idx != 0 || pv[i].word_type != name_teg ) continue;
+                    if (!fr.read(ix->pos_in_file, ix->name_tegs_len+ix->data_len, &buffer))
+                    {
+                        fw.remove();
+                        error->assign(L"Ошибка при чтении файла: ");
+                        error->append(fi.path);
+                        break;
+                    }
+                    if (!fw.write(buffer))
+                    {
+                        fw.remove();
+                        error->assign(L"Ошибка при записи файла: ");
+                        error->append(newfile_path);
+                        break;                    
+                    }
+                }
+                if (!error->empty()) break;
+            }
+        }
+        if (error->empty())
+        {
+            // переименование старых файлов
+            for (int i = 0, e = processed.size(); i < e; ++i)
+            {
+                tstring name(processed[i]);
+                tstring oldname(name);
+                oldname.append(L".old");
+                tstring newname(name);
+                newname.append(L".new");
+                if (!MoveFile(name.c_str(), oldname.c_str()) || !MoveFile(newname.c_str(), name.c_str()) ) 
+                {
+                    error->assign(L"Ошибка при переименовании файлов. Переименуйте их вручную.");
+                    break;
+                }
+                DeleteFile(oldname.c_str());
             }
         }
     }
