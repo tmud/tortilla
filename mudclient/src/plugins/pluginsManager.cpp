@@ -48,7 +48,7 @@ void PluginsManager::initPlugins()
             {
                 if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
-                    if (Plugin::isPlugin(fd.cFileName))
+                    if (Plugin::isPluginEnabled(fd.cFileName))
                         files.push_back(fd.cFileName);
                 }
             } while (::FindNextFile(file, &fd));

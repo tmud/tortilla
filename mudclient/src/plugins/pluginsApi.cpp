@@ -1088,7 +1088,7 @@ int terminatePlugin(lua_State *L)
     _cp->setErrorState();
 
     if (log.empty())
-        log.assign(L"TERMINATE");
+        log.assign(L"terminated");
     lua_settop(L, 0);
     luaT_pushwstring(L, log.c_str());
     lua_error(L);

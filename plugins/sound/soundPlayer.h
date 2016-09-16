@@ -27,9 +27,13 @@ class SoundPlayer : public SoundPlayerCallback
     SoundPlayerCallback *m_pcb;
     int m_replay_sound_id;
     SoundPlayerRecordParams m_recording_params;
-
+    bool m_initialized;
 public:
-    SoundPlayer(lua_State* l) : L(l), perror(NULL), m_playing_music(-2), m_pcb(NULL), m_replay_sound_id(-1)
+    SoundPlayer(lua_State* l) : L(l), perror(NULL), m_playing_music(-2), m_pcb(NULL), m_replay_sound_id(-1), m_initialized(false)
+    {
+    }
+
+    void init()
     {
         if (base::loadTable(L, L"config.xml"))
         {
@@ -62,10 +66,13 @@ public:
             }
             lua_pop(L, 2);
         }
+        m_initialized = true;
     }
 
     ~SoundPlayer()
     {
+       if (!m_initialized)
+           return;
        stopMusic();
        lua_newtable(L);
        lua_pushstring(L, "sensitivity");

@@ -42,7 +42,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.02");
+    luaT_pushwstring(L, L"1.03");
     return 1;
 }
 
@@ -55,6 +55,7 @@ int init(lua_State *L)
         base::terminate(L);
         return 0;
     }
+    player->init();
     base::addMenu(L, L"Плагины/Записать звук...", 1);
     base::addCommand(L, L"sound");
     base::addCommand(L, L"play");
