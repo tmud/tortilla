@@ -28,7 +28,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.08'
+  return '1.09'
 end
 
 local function print(s)
@@ -184,15 +184,22 @@ local function save_lor_strings()
     info[k] = s:getData()
   end
   local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'), tegs)
-  local name = lor_strings.name..'.'
+  local basename = lor_strings.name
+  local name = basename..'.'
   lor_strings = {}
   if not res then
     if err == 'exist' then
-      lor_last = name
-      return false, 'Предмет уже есть в базе: '..name
+      if not lor_dictonary:delete(basename) then
+        return false, 'Предмет не удалось обновить в базе на новый: '..name
+      end
+      res,err = lor_dictonary:add(basename, table.concat(info,'\n'), tegs)
     end
-    local errtext = err and ' Ошибка: '..err..'.' or ''
-    return false, "Предмет не добавлен в базу из-за ошибки: "..name..errtext
+    if not res then
+      local errtext = err and ' Ошибка: '..err..'.' or ''
+      return false, "Предмет не добавлен в базу из-за ошибки: "..name..errtext
+    end
+    lor_last = name
+    return true, "Предмет в базе был обновлен: "..name
   end
   lor_last = name
   return true, "Предмет добавлен в базу: "..name

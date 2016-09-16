@@ -3,7 +3,7 @@
 -- запускаются при старте клиента
 
 do
---return
+return
 end
 
 dofile 'modules.lua'
