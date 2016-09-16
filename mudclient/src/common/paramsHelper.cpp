@@ -8,7 +8,7 @@ ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1
     if (mode == EXTENDED)
         pcre.setRegExp(L"%(?:\\(.*\\))?[0-9]", true);
     else
-      pcre.setRegExp( (mode == DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}", true);
+      pcre.setRegExp( (mode & DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}", true);
     pcre.findAllMatches(param);
     for (int i=1,e=pcre.getSize(); i<e; ++i)
     {
@@ -32,7 +32,7 @@ ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1
     }
     if (m_maxid == -1)
         return;
-    if (mode == BLOCK_DOUBLEID)
+    if (mode & BLOCK_DOUBLEID)
     {
         std::vector<int> indexes(m_maxid+1, 0);
         for (int i=m_ids.size()-1; i >= 0; --i)
@@ -82,25 +82,31 @@ void ParamsHelper::cutParameter(int index, tstring* param)
     if (!m_cutinitialized)
     {
         m_cutinitialized=true;
-        cut.setRegExp(L"(?:(-?[0-9]+),)?(-?[0-9]+)", true);
+        cut.setRegExp(L"^(?:(-?[0-9]+),)?(-?[0-9]+)$", true);
     }
     cut.find(it->second);
     int sz = cut.getSize();
     if (sz != 3)
+    {
+        tstring skipped(L"%("), id;
+        skipped.append(it->second);
+        skipped.append(L")");
+        int2w(getId(index), &id);
+        skipped.append(id);
+        param->assign(skipped);
         return;
+    }
     tstring from, len;
     cut.getString(1, &from);
     cut.getString(2, &len);
     int f = 0; int l = 0;
     if (!from.empty())
     {
-        if (!w2int(from, &f))
-            return;
+        w2int(from, &f);
         if (f <= 0) { f = 0; }
         else f = f - 1;
     }
-    if (!w2int(len, &l))
-        return;
+    w2int(len, &l);
     if (l == 0)
         { param->clear(); return; }
     if (l < 0)
@@ -108,12 +114,24 @@ void ParamsHelper::cutParameter(int index, tstring* param)
         l = -l;
         int param_len = param->length();
         if (param_len <= l)
-            { param->clear(); return; }    
+            { param->clear(); return; }
         l = param_len - l;
         tstring tmp(param->substr(0, l));
-        param->assign(tmp.substr(f));
+        int tmp_len = tmp.length();
+        if (f < tmp_len)
+            param->assign(tmp.substr(f));
+        else
+            param->clear();
         return;
     }
-    tstring tmp(param->substr(f, l));
-    param->swap(tmp);
+    int param_len = param->length();
+    if (f < param_len)
+    {
+        tstring tmp(param->substr(f, l));
+        param->swap(tmp);
+    }
+    else
+    {
+        param->clear();
+    }
 }
