@@ -16,7 +16,8 @@ class MapperDirCommand
 public:
     MapperDirCommand(int d, const tstring& main_part, const tstring& rel_part) : dir(d), main(main_part), rel(rel_part) 
     {
-        main_size = main.size(); rel_size = rel.size();
+        main_size = main.size();
+        rel_size = rel.size();
     }
     int check(const tstring& cmd) const;
 };
@@ -34,7 +35,7 @@ public:
     void loadMaps(lua_State *L);
 
     // operations
-    void newZone(Room *room, RoomDir dir);
+    //void newZone(Room *room, RoomDir dir);
 
 private:
     BEGIN_MSG_MAP(Mapper)
@@ -57,7 +58,7 @@ private:
 private:
     void  popDir();
     Room* findRoom(const RoomData& room);
-    Zone* addNewZone();
+    Zone* getZone(const RoomData& room);
 
     /*Zone* addNewZone();
 
@@ -66,12 +67,12 @@ private:
     Room* addNewRoom(const RoomData& room);
     Room* createNewRoom(const RoomData& room);
     void  deleteRoom(Room* room);
-    void  changeLevelOrZone(Room *old, Room* curr);
-    void  checkExits(Room *room);*/
+    void  changeLevelOrZone(Room *old, Room* curr);*/
+    void  checkExits(Room *room);
     int   revertDir(int dir);
 
-    /*Room* getNextRoom(Room *room, int dir);
-    void  redrawPosition();*/
+    /*Room* getNextRoom(Room *room, int dir);*/
+    void  redrawPosition();
 
 private:
     // properties
@@ -98,11 +99,9 @@ private:
     std::map<RoomVnum, Room*> m_rooms;
     typedef std::map<RoomVnum, Room*>::iterator room_iterator;
 
-
-
-    std::vector<Zone*> m_zones;
-    int m_lastzone_id;
+    std::map<tstring, Zone*> m_zones;
+    typedef std::map<tstring, Zone*>::iterator zone_iterator;
+    int m_nextzone_id;
     
-    /*RoomCursor m_rpos;
-    ViewMapPosition m_viewpos;*/
+    ViewMapPosition m_viewpos;
 };

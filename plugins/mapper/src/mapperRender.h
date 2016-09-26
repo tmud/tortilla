@@ -8,12 +8,14 @@ class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;
     ViewMapPosition viewpos;
+    RoomsLevel* notroom_level;
     MapperRoomRender rr;
-    
-    struct room_pos { 
+
+    struct room_pos {
     room_pos() : x(-1), y(-1) {}
     bool valid() const { return (x >= 0) ? true : false; }
-    int x,y; };
+    int x,y;
+    };
 
     int m_hscroll_pos;
     int m_hscroll_size;    
@@ -105,4 +107,5 @@ private:
     }
     void createMenu();
     bool runMenuPoint(int id);
+    RoomsLevel* getViewRoomLevel() const;
 };

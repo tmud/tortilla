@@ -16,7 +16,7 @@ public:
     {
     }
     
-    void roomChanged(const ViewMapPosition& pos)
+  /*  void roomChanged(const ViewMapPosition& pos)
     {
         if (!pos.level)
         {
@@ -88,17 +88,17 @@ private:
         WCHAR *textbuffer = (WCHAR*)buffer.getData();
         m_list.GetItemText(item, textbuffer, len);
         text->assign(textbuffer);
-    }
+    }*/
 
 private:
     BEGIN_MSG_MAP(MapperToolbar)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
+		/*MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
-        MESSAGE_HANDLER(WM_USER, OnSelectItem)
+        MESSAGE_HANDLER(WM_USER, OnSelectItem)*/
 	END_MSG_MAP()
 
-	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
+	/*LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{
         m_list.SubclassWindow(GetDlgItem(IDC_LIST_ZONES));
         RECT rc;
@@ -158,5 +158,5 @@ private:
             zones[item]->setName(text);
         }
         return 0;
-    }
+    }*/
 };

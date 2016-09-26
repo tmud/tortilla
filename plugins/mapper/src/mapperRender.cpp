@@ -20,7 +20,14 @@
 
 extern Mapper* m_mapper_window;
 
-MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
+RoomsLevel* MapperRender::getViewRoomLevel() const
+{
+    if (notroom_level)
+        return notroom_level;
+    return viewpos.room ? viewpos.room->level : NULL;
+}
+
+MapperRender::MapperRender() : notroom_level(NULL), rr(ROOM_SIZE, 5)
 {
     m_hscroll_pos = -1;
     m_hscroll_size = 0;
@@ -61,7 +68,7 @@ void MapperRender::onPaint()
     CMemoryDC mdc(dc, pos);
     mdc.FillRect(&pos, m_background);
 
-    RoomsLevel* level = viewpos.level;
+    RoomsLevel* level = getViewRoomLevel();
     if (!level) return;
 
     int x = getRenderX();
@@ -137,7 +144,7 @@ MapperRender::room_pos MapperRender::findRoomPos(Room* room)
 
 Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
 {
-    RoomsLevel *level = viewpos.level;
+    RoomsLevel *level = getViewRoomLevel();
     if (!level) return NULL;
 
     int sx = level->width() * ROOM_SIZE;
@@ -247,7 +254,7 @@ void MapperRender::updateScrollbars(bool center)
         hmin, hmax, GetScrollPos(SB_HORZ), m_hscroll_pos);
     OutputDebugStringA(buffer);*/
     
-    RoomsLevel *level = viewpos.level;
+    RoomsLevel *level = getViewRoomLevel();
     if (!level) return;
 
     int width = level->width();
@@ -427,7 +434,7 @@ bool MapperRender::runMenuPoint(int id)
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
         RoomDir dir = (RoomDir)(id - MENU_NEWZONE_NORTH);
-        m_mapper_window->newZone(m_menu_tracked_room, dir);
+        //m_mapper_window->newZone(m_menu_tracked_room, dir);
         return true;
     }
     

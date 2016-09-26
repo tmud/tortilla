@@ -1,58 +1,6 @@
 #include "stdafx.h"
 #include "mapperObjects.h"
 
-const wchar_t* RoomDirName[] = { L"north", L"south", L"west", L"east", L"up", L"down" };
-/*RoomCursor::RoomCursor() { reset(); }
-void RoomCursor::reset() { current_room = NULL; new_room = NULL; x=y=z=0; }
-
-RoomsLevel* RoomCursor::getOffsetLevel() const
-{
-    if (!current_room) return NULL;
-    int pz = current_room->level->getLevel() + z;
-    Zone *zone = current_room->level->getZone();
-    return zone->getLevel(pz, true);
-}
-
-Room* RoomCursor::getOffsetRoom() const
-{
-    RoomsLevel *rlevel = getOffsetLevel();
-    if (!rlevel)
-        return NULL;
-    int rx = current_room->x + x;
-    int ry = current_room->y + y;
-    return rlevel->getRoom(rx, ry);
-}
-
-bool RoomCursor::setOffsetRoom(Room* room) const
-{
-    RoomsLevel *rlevel = getOffsetLevel();
-    if (!rlevel)
-        return false;
-    int rx = current_room->x + x;
-    int ry = current_room->y + y;
-    if (rlevel->getRoom(rx, ry))
-        return false;
-    rlevel->addRoom(room, rx, ry);
-    return true;    
-}
-
-void RoomCursor::move(int dir)
-{
-    if (dir == RD_NORTH)
-        y -= 1;
-    else if (dir == RD_SOUTH)
-        y += 1;
-    else if (dir == RD_WEST)
-        x -= 1;
-    else if (dir == RD_EAST)
-        x += 1;
-    else if (dir == RD_UP)
-        z += 1;
-    else if (dir == RD_DOWN)
-        z -= 1;
-    else { assert(false); }
-}*/
-
 int RoomsLevel::height() const
 {
     return rooms.size();    
@@ -274,7 +222,6 @@ RoomsLevel* Zone::getDefaultLevel()
 
 void Zone::getParams(ZoneParams* params) const
 {
-    params->name = m_name;
     params->original_name = m_original_name;
     if (m_levels.empty())
         { params->empty = true; return; }
@@ -292,7 +239,7 @@ void Zone::resizeLevels(int x, int y)
 
 bool Zone::isChanged() const
 {
-    if (m_name != m_original_name) return true;
+    //if (m_name != m_original_name) return true;
     for (int i = 0, e = m_levels.size(); i < e; ++i)
     {
         if (m_levels[i]->isChanged())

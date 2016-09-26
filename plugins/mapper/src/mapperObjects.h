@@ -1,8 +1,6 @@
 #pragma once
+#include "mapperObjects2.h"
 
-#define ROOM_DIRS_COUNT 6
-enum RoomDir { RD_NORTH=0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN };
-extern const wchar_t* RoomDirName[];
 struct Room;
 class RoomsLevel;
 class Zone;
@@ -14,6 +12,7 @@ struct RoomData
     tstring name;
     tstring descr;
     tstring exits;
+    tstring zonename;   // if known
 
     //todo! uint    hash;
     //uint    dhash;
@@ -79,27 +78,10 @@ struct Room
     //int special;                    // special internal value for algoritms (don't save)
 };
 
-/*struct RoomCursor
-{
-    RoomCursor();
-    void reset();
-    RoomsLevel*  getOffsetLevel() const;
-    Room* getOffsetRoom() const;
-    bool  setOffsetRoom(Room* room) const;
-    void  move(int dir);
-
-    Room* current_room;
-    Room* new_room;
-    int   x,y,z;
-};
-*/
-
 struct ViewMapPosition
 {
-    ViewMapPosition() { reset(); }
-    void reset() { room = NULL; level = NULL; cursor = 0; }
+    ViewMapPosition() : room(NULL), cursor(0) {}
     Room* room;
-    RoomsLevel *level;
     int cursor;
 };
 
@@ -164,14 +146,13 @@ struct ZoneParams
     int minl;
     int maxl;
     bool empty;
-    tstring name;
     tstring original_name;
 };
 
 class Zone
 {
 public:
-    Zone(const tstring& zonename) : start_index(0), m_name(zonename), m_original_name(zonename) {}
+    Zone(const tstring& zonename) : start_index(0), m_original_name(zonename) {}
     ~Zone() { std::for_each(m_levels.begin(), m_levels.end(), [](RoomsLevel* rl) {delete rl;}); }
     RoomsLevel* getLevel(int level, bool create_if_notexist);
     RoomsLevel* getDefaultLevel();
@@ -179,11 +160,9 @@ public:
     int height() const;
     void getParams(ZoneParams* params) const;
     void resizeLevels(int x, int y);
-    void setName(const tstring& newname) { m_name = newname; }
     bool isChanged() const;
 private:
     std::vector<RoomsLevel*> m_levels;
     int start_index;
-    tstring m_name;
     tstring m_original_name;
 };

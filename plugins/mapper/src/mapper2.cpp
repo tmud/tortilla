@@ -2,9 +2,9 @@
 #include "mapper.h"
 #include "helpers.h"
 //-------------------------------------------------------------------------------------
-void Mapper::newZone(Room *room, RoomDir dir)
+/*void Mapper::newZone(Room *room, RoomDir dir)
 {   
-/*    RoomHelper rh(room);
+    RoomHelper rh(room);
     if (rh.isCycled())
     {
         MessageBox(L"Невозможно создать новую зону из-за цикла!", L"Ошибка", MB_OK | MB_ICONERROR);
@@ -50,8 +50,8 @@ void Mapper::newZone(Room *room, RoomDir dir)
     }
 
     m_zones_control.addNewZone(new_zone);
-    m_view.Invalidate();*/
-}
+    m_view.Invalidate();
+}*/
 
 void Mapper::saveMaps(lua_State *L)
 {

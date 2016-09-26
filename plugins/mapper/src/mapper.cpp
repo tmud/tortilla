@@ -4,13 +4,13 @@
 #include "debugHelpers.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
-m_lastDir(-1), m_pCurrentRoom(NULL), m_lastzone_id(0)
+m_lastDir(-1), m_pCurrentRoom(NULL), m_nextzone_id(1)
 {
 }
 
 Mapper::~Mapper()
 {
-    std::for_each(m_zones.begin(),m_zones.end(),[](Zone* p){delete p;});
+    std::for_each(m_zones.begin(),m_zones.end(),[](std::pair<const tstring, Zone*> &p){delete p.second;});
     std::for_each(m_rooms.begin(), m_rooms.end(),[](std::pair<const RoomVnum, Room*> &rt){delete rt.second;});
 }
 
@@ -23,14 +23,11 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
             popDir();
         return;
     }
-    if (room.descr.empty())
-        room.descr.append(L"empty");
-    else
-    {
-        tstring &dark = m_propsData->dark_room;
-        if (!dark.empty() && dark == room.descr)
-            room.descr.clear();
-    }
+
+    const tstring &dark = m_propsData->dark_room;
+    if (!dark.empty() && dark == room.descr)
+        room.descr.clear();
+    
     popDir();
 
     DEBUGOUT(L"------");
@@ -41,20 +38,23 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     Room *new_room = findRoom(room);
     if (!new_room)
     {
-        Room *new_room = new Room();
+        new_room = new Room();
         new_room->roomdata = room;
+        checkExits(new_room);
         if (!m_pCurrentRoom) {
-            Zone* new_zone = addNewZone();
-        
+            Zone* new_zone = getZone(room);
+            RoomsLevel *level = new_zone->getLevel(0, true);
+            level->addRoom(new_room, 0, 0);
         }
-
-    
+        else 
+        {
+            RoomsLevel *level = m_pCurrentRoom->level;
+            //level->addRoom(new_room, )
+        }
+        m_rooms[room.vnum] = new_room;
     }
-    else
-    {
-    
-    }
-
+    m_pCurrentRoom = new_room;
+ 
 
     /*bool cached = m_cache.isExistRoom(m_pCurrentRoom);
 
@@ -97,29 +97,35 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     m_viewpos.level = croom->level;
     redrawPosition();
     m_pCurrentRoom = new_room;*/
+    m_viewpos.room = m_pCurrentRoom;
+    redrawPosition();
 }
 
-Zone* Mapper::addNewZone()
+Zone* Mapper::getZone(const RoomData& room)
 {
-    m_lastzone_id++;
-    ZoneParams zp;
+    if (!room.zonename.empty())
+    {
+        const tstring& zone_name = room.zonename;
+        zone_iterator it = m_zones.find(zone_name);
+        if (it != m_zones.end())
+            return it->second;
+        Zone *new_zone = new Zone(zone_name);
+        m_zones[zone_name] = new_zone;
+        return new_zone;
+    }
+
     tchar buffer[32];
     while (true)
     {
-        swprintf(buffer, L"Новая зона %d", m_lastzone_id);
-        bool found = false;
-        for (int j = 0, e = m_zones.size(); j < e; ++j)
-        {
-            m_zones[j]->getParams(&zp);
-            if (!zp.name.compare(buffer)) { found = true; break; }
-        }
-        if (!found)
+        swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
+        zone_iterator zt = m_zones.find(buffer);
+        if (zt == m_zones.end())
             break;
-        m_lastzone_id++;
-    }
-    Zone *new_zone = new Zone(buffer);
-    m_zones.push_back(new_zone);
-    return new_zone;
+   }
+   tstring zone_name(buffer);
+   Zone* new_zone = new Zone(zone_name);
+   m_zones[zone_name] = new_zone;
+   return new_zone;
 }
 
 int MapperDirCommand::check(const tstring& cmd) const
@@ -410,7 +416,7 @@ void Mapper::deleteRoom(Room* room)
     }
     room->level->deleteRoom(room->x, room->y);
     delete room;
-}
+}*/
 
 void Mapper::checkExits(Room *room)
 {
@@ -428,7 +434,7 @@ void Mapper::checkExits(Room *room)
         room->dirs[RD_UP].exist = true;
     if (e.find(m_propsData->down_exit) != -1)
         room->dirs[RD_DOWN].exist = true;
-}*/
+}
 
 int Mapper::revertDir(int dir)
 {
@@ -506,11 +512,11 @@ void Mapper::updateProps()
     h.make(RD_DOWN, m_propsData->down_cmd);
 }
 
-/*void Mapper::redrawPosition()
+void Mapper::redrawPosition()
 {
-    m_zones_control.roomChanged(m_viewpos);
+    //m_zones_control.roomChanged(m_viewpos);
     m_view.roomChanged(m_viewpos);
-}*/
+}
 
 void Mapper::onCreate()
 {
@@ -535,7 +541,7 @@ void Mapper::onCreate()
     m_zones_control.Create(m_vSplitter, pane_left, style);
     m_view.Create(m_vSplitter, pane_right, NULL, style | WS_VSCROLL | WS_HSCROLL);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_view);
-    m_zones_control.setNotifications(m_hWnd, WM_USER);
+//    m_zones_control.setNotifications(m_hWnd, WM_USER);
 
     updateProps();
 }
