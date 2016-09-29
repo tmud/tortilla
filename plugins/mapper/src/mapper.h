@@ -11,15 +11,15 @@
 
 class MapperDirCommand
 {
-    int dir; tstring main, rel;
+    RoomDir dir; tstring main, rel;
     int main_size, rel_size;
 public:
-    MapperDirCommand(int d, const tstring& main_part, const tstring& rel_part) : dir(d), main(main_part), rel(rel_part) 
+    MapperDirCommand(RoomDir d, const tstring& main_part, const tstring& rel_part) : dir(d), main(main_part), rel(rel_part) 
     {
         main_size = main.size();
         rel_size = rel.size();
     }
-    int check(const tstring& cmd) const;
+    RoomDir check(const tstring& cmd) const;
 };
 typedef std::vector<MapperDirCommand> DirsVector;
 
@@ -92,8 +92,8 @@ private:
     //todo! MapperHashTable m_table;
     //todo! MapperRoomsCache m_cache;
 
-    std::deque<int> m_path;
-    int m_lastDir;
+    std::deque<RoomDir> m_path;
+    RoomDir m_lastDir;
     Room *m_pCurrentRoom;
 
     std::map<RoomVnum, Room*> m_rooms;

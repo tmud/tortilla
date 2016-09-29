@@ -4,7 +4,7 @@
 #include "debugHelpers.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
-m_lastDir(-1), m_pCurrentRoom(NULL), m_nextzone_id(1)
+m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL), m_nextzone_id(1)
 {
 }
 
@@ -41,15 +41,22 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         new_room = new Room();
         new_room->roomdata = room;
         checkExits(new_room);
-        if (!m_pCurrentRoom) {
+        if (!m_pCurrentRoom) 
+        {
             Zone* new_zone = getZone(room);
             RoomsLevel *level = new_zone->getLevel(0, true);
             level->addRoom(new_room, 0, 0);
         }
         else 
         {
-            RoomsLevel *level = m_pCurrentRoom->level;
-            //level->addRoom(new_room, )
+            RoomCursor c(m_pCurrentRoom);
+            if (c.getRoom(m_lastDir))
+            {
+                //todo
+                delete new_room;
+                return;            
+            }
+            c.addRoom(m_lastDir, new_room);
         }
         m_rooms[room.vnum] = new_room;
     }
@@ -128,26 +135,26 @@ Zone* Mapper::getZone(const RoomData& room)
    return new_zone;
 }
 
-int MapperDirCommand::check(const tstring& cmd) const
+RoomDir MapperDirCommand::check(const tstring& cmd) const
 {
     int size = cmd.size();
-    if (size < main_size) return -1;
+    if (size < main_size) return RD_UNKNOWN;
     if (size == main_size)
-        return (cmd == main) ? dir : -1;
+        return (cmd == main) ? dir : RD_UNKNOWN;
     tstring main_part(cmd.substr(0, main_size));
-    if (main_part != main) return -1;
-    if (rel.empty()) return -1;
+    if (main_part != main) return RD_UNKNOWN;
+    if (rel.empty()) return RD_UNKNOWN;
     tstring rel_part(cmd.substr(main_size));
     int rel_part_size = rel_part.size();
-    if (rel_part_size > rel_size) return -1;
-    return rel.find(rel_part)==0 ? dir : -1;
+    if (rel_part_size > rel_size) return RD_UNKNOWN;
+    return rel.find(rel_part)==0 ? dir : RD_UNKNOWN;
 }
 
 void Mapper::processCmd(const tstring& cmd)
 {
     if (cmd.empty())
         return;
-    int dir = -1;
+    RoomDir dir = RD_UNKNOWN;
     for (int i=0,e=m_dirs.size();i<e;++i)
     {
         dir = m_dirs[i].check(cmd);
@@ -175,7 +182,7 @@ void Mapper::processCmd(const tstring& cmd)
 void Mapper::popDir()
 {
     if (m_path.empty())
-        m_lastDir = -1;
+        m_lastDir = RD_UNKNOWN;
     else {
         m_lastDir = *m_path.begin();
         m_path.pop_front();
@@ -466,7 +473,7 @@ class InitDirVector {
     Pcre r1, r2; DirsVector& m;
  public:
     InitDirVector(DirsVector& p) : m(p) { r1.init(L","); r2.init(L"\\|"); m.clear(); }
-    bool make(int dir, const tstring& key) {
+    bool make(RoomDir dir, const tstring& key) {
        bool result = true;
        r1.findall(key.c_str());
        int b = 0;
@@ -481,7 +488,7 @@ class InitDirVector {
        return result;
     }
 private:
-    bool set(int dir, const tstring& dkey) {
+    bool set(RoomDir dir, const tstring& dkey) {
         if (dkey.empty()) return true;
         if (!r2.find(dkey.c_str())) {
           MapperDirCommand k(dir, dkey, L"");

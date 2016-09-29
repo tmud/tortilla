@@ -18,7 +18,7 @@ RoomDir RoomDirHelper::revertDir(RoomDir dir)
     if (dir == RD_DOWN)
         return RD_UP;
     assert(false);
-    return RD_ERROR;
+    return RD_UNKNOWN;
 }
 const wchar_t* RoomDirHelper::getDirName(RoomDir dir)
 {
@@ -35,7 +35,7 @@ RoomDir RoomDirHelper::getDirByName(const wchar_t* dirname)
         if (!name.compare(RoomDirName[index]))
             return static_cast<RoomDir>(index);    
     }
-    return RD_ERROR;
+    return RD_UNKNOWN;
 }
 
 RoomCursor::RoomCursor(Room* current_room) : 
