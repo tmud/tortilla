@@ -12,13 +12,14 @@ public:
     bool findData(const tchar* data, int datalen);
     void truncate() { key = 0; }
     int  getKey() const { return key; }
-    int  getKeyLen() const { return keylen; }
+    //int  getKeyLen() const { return keylen; }
     int  getAfterKey() const { return key + keylen; }
     bool isKeyFull() const {
         int size = keydata.size();
         return (size > 0 && keylen == size) ? true : false;
     }
 private:
+    bool compare(tchar keydata, tchar symbol) const;
     tstring keydata;
     int  key;
     int  keylen;

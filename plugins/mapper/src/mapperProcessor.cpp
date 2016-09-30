@@ -1,6 +1,9 @@
 #include "stdafx.h"
 #include "mapperProcessor.h"
 
+#define MASK_NUMBER 1
+#define MASK_NUMBER_LETTER 2
+
 MapperKeyElement::MapperKeyElement()
 {
     reset();
@@ -46,6 +49,12 @@ bool MapperKeyElement::init(const tstring& macro)
         case L'\\':
             s[0] = L'\\';
         break;
+        case L'd':
+            s[0] = MASK_NUMBER;
+        break;
+        case L'w':
+            s[0] = MASK_NUMBER_LETTER;
+        break;
         }
         keydata.append(s);
         spec_sym = false;
@@ -65,7 +74,7 @@ bool MapperKeyElement::findData(const tchar *data, int datalen)
         // find first symbol
         while (datalen)
         {
-            if (s == *data)
+            if (compare(s, *data))
                 break;
             data++;
             datalen--;
@@ -82,7 +91,7 @@ bool MapperKeyElement::findData(const tchar *data, int datalen)
         int i = 1;
         for (; i<len; ++i)
         {
-            if (keydata.at(i) != data[i])
+            if (!compare(keydata.at(i), data[i]))
                 { compared = false; break; }
         }
         if (compared)
@@ -96,6 +105,21 @@ bool MapperKeyElement::findData(const tchar *data, int datalen)
     } while (datalen);
 
     return false;
+}
+
+bool MapperKeyElement::compare(tchar keydata, tchar symbol) const
+{
+    if (keydata == MASK_NUMBER)
+        return (symbol >= L'0' && symbol <= L'9');
+    if (keydata == MASK_NUMBER_LETTER)
+    {
+        if ((symbol >= L'0' && symbol <= L'9') || (symbol >= L'a' && symbol <= L'z') || (symbol >= L'A' && symbol <= L'Z'))
+            return true;
+        if ((symbol >= L'à' && symbol <= L'ÿ') || (symbol >= 'À' && symbol <= L'ß'))
+            return true;
+        return false;        
+    }
+    return keydata == symbol;
 }
 
 MapperProcessor::MapperProcessor()
@@ -132,7 +156,7 @@ bool MapperProcessor::processNetworkData(const tchar* text, int textlen, RoomDat
         datalen = m_network_buffer.getDataLen();
     }
     
-    //todo!
+    //todo! remove
     tstring tmp_data(data, datalen);
 
     // 2. now find ee
@@ -144,14 +168,21 @@ bool MapperProcessor::processNetworkData(const tchar* text, int textlen, RoomDat
     datalen = ee.getKey();
     
     // 3. now check bn2 between bn and ee
-    // if bn2 exist, find LAST bn2
-    while (bn2.findData(data, datalen))
+    // if bn2 and en exist, find LAST bn2
+    const tchar* data2 = data;
+    int datalen2 = datalen;
+    while (bn2.findData(data2, datalen2))
     {
         int newpos = bn2.getKey() + 1;
         if (bn2.isKeyFull())
            newpos = bn2.getAfterKey();
-        data += newpos;
-        datalen -= newpos;
+        data2 += newpos;
+        datalen2 -= newpos;
+        if (en.findData(data2, datalen2))
+        {
+            data = data2; datalen = datalen2;
+            break;
+        }
     }
 
     bool r = searchData(data, datalen, result);
