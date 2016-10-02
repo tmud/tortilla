@@ -11,7 +11,7 @@ m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL), m_nextzone_id(1)
 Mapper::~Mapper()
 {
     std::for_each(m_zones.begin(),m_zones.end(),[](std::pair<const tstring, Zone*> &p){delete p.second;});
-    std::for_each(m_rooms.begin(), m_rooms.end(),[](std::pair<const RoomVnum, Room*> &rt){delete rt.second;});
+    //std::for_each(m_rooms.begin(), m_rooms.end(),[](std::pair<const RoomVnum, Room*> &rt){delete rt.second;});
 }
 
 void Mapper::processNetworkData(const tchar* text, int text_len)

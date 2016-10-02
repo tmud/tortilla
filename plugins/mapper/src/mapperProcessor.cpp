@@ -290,6 +290,19 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
         int msg_len = p - msg;
         //OutputDebugStringW(x.c_str());
 
+        //todo
+        bool p1 = bp.findData(msg, msg_len);
+        bool p2 = ep.findData(msg, msg_len);
+
+        if (p1)
+        {
+            int x = 1;
+        }
+        if (p2)
+        {
+            int x = 1;
+        }
+
         if (bp.findData(msg, msg_len) && ep.findData(msg, msg_len))
         {
             const WCHAR* buffer = m_network_buffer.getData();

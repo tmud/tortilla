@@ -121,7 +121,7 @@ private:
     bool checkCoords(int x, int y) const;    
     struct row {
     row() : left(-1), right(-1) {}
-    ~row() { autodel<Room> z(rr); }
+    ~row() { std::for_each(rr.begin(), rr.end(), [](Room* r) { delete r;}); }
     void recalc_leftright() {
     left = -1; right = -1;
     for (int i = 0, e = rr.size(); i < e; ++i)
