@@ -13,7 +13,7 @@ public:
     void truncate() { key = 0; }
     int  getKey() const { return key; }
     //int  getKeyLen() const { return keylen; }
-    int  getAfterKey() const { return key + keylen; }
+    int  getAfterKey() const { return key + keylen-keylen_minus; }
     bool isKeyFull() const {
         int size = keydata.size();
         return (size > 0 && keylen == size) ? true : false;
@@ -23,6 +23,7 @@ private:
     tstring keydata;
     int  key;
     int  keylen;
+    int  keylen_minus;
 };
 
 class MapperDataQueue

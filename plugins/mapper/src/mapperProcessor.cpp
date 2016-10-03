@@ -13,6 +13,7 @@ void MapperKeyElement::reset()
 {
     key = -1;
     keylen = 0;
+    keylen_minus = 0;
 }
 
 bool MapperKeyElement::init(const tstring& macro)
@@ -59,7 +60,18 @@ bool MapperKeyElement::init(const tstring& macro)
         keydata.append(s);
         spec_sym = false;
     }
-    return (keydata.empty()) ? false : true;
+    if (keydata.empty())
+        return false;
+    int last = keydata.size()-1;
+    for (;last>=0; last--)
+    {
+        tchar s = keydata.at(last);
+        if (s == MASK_NUMBER || s == MASK_NUMBER_LETTER)
+          { keylen_minus++;}
+        else
+         { break; }
+    }
+    return true;
 }
 
 bool MapperKeyElement::findData(const tchar *data, int datalen)
@@ -113,9 +125,9 @@ bool MapperKeyElement::compare(tchar keydata, tchar symbol) const
         return (symbol >= L'0' && symbol <= L'9');
     if (keydata == MASK_NUMBER_LETTER)
     {
-        if ((symbol >= L'0' && symbol <= L'9') || (symbol >= L'a' && symbol <= L'z') || (symbol >= L'A' && symbol <= L'Z'))
-            return true;
         if ((symbol >= L'à' && symbol <= L'ÿ') || (symbol >= 'À' && symbol <= L'ß'))
+            return true;
+        if ((symbol >= L'0' && symbol <= L'9') || (symbol >= L'a' && symbol <= L'z') || (symbol >= L'A' && symbol <= L'Z'))
             return true;
         return false;        
     }
@@ -157,7 +169,7 @@ bool MapperProcessor::processNetworkData(const tchar* text, int textlen, RoomDat
     }
     
     //todo! remove
-    tstring tmp_data(data, datalen);
+    //tstring tmp_data(data, datalen);
 
     // 2. now find ee
     bool ee_result = ee.findData(data, datalen);
@@ -277,22 +289,23 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
 
     while (data != data_end)
     {
-        const WCHAR *p = data;
+        /*const WCHAR *p = data;
         while (p != data_end && *p != 0xd && *p != 0xa)
             p++;
-
-        const WCHAR* msg = data;
-        int dt = (p == data_end) ? 0 : 1;
+        */
+        const WCHAR* p = data;
+/*        int dt = (p == data_end) ? 0 : 1;
         data = p + dt;
         if (msg == p)
-            continue;
+            continue;*/
 
-        int msg_len = p - msg;
+        //int msg_len = p - msg;
         //OutputDebugStringW(x.c_str());
+        int len = data_end - data;
 
         //todo
-        bool p1 = bp.findData(msg, msg_len);
-        bool p2 = ep.findData(msg, msg_len);
+        /*bool p1 = bp.findData(p, len);
+        bool p2 = ep.findData(p, len);
 
         if (p1)
         {
@@ -301,17 +314,17 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
         if (p2)
         {
             int x = 1;
-        }
+        }*/
 
-        if (bp.findData(msg, msg_len) && ep.findData(msg, msg_len))
+        if (bp.findData(p, len) && ep.findData(p, len))
         {
             const WCHAR* buffer = m_network_buffer.getData();
             int processed = p - buffer;
             m_network_buffer.truncate(processed);
             return true;
         }
+        data += len;
     }
-
     m_network_buffer.clear();
     return false;
 }
