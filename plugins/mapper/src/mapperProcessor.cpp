@@ -4,7 +4,7 @@
 #define MASK_NUMBER 1
 #define MASK_NUMBER_LETTER 2
 
-MapperKeyElement::MapperKeyElement()
+MapperKeyElement::MapperKeyElement() : keylen_minus(0)
 {
     reset();
 }
@@ -13,13 +13,13 @@ void MapperKeyElement::reset()
 {
     key = -1;
     keylen = 0;
-    keylen_minus = 0;
 }
 
 bool MapperKeyElement::init(const tstring& macro)
 {
     reset();
     keydata.clear();
+    keylen_minus = 0;
     const tchar *p = macro.c_str();
     bool spec_sym = false;
     for (;*p; ++p)
@@ -31,8 +31,8 @@ bool MapperKeyElement::init(const tstring& macro)
             spec_sym = false;
         }
         if (!spec_sym)
-           { keydata.append(p, 1); continue; }        
-        
+           { keydata.append(p, 1); continue; }
+
         tchar s[2] = { *p, 0};
         switch (*p) {
         case L'$':
@@ -75,10 +75,10 @@ bool MapperKeyElement::init(const tstring& macro)
 }
 
 bool MapperKeyElement::findData(const tchar *data, int datalen)
-{    
+{
     if (keydata.empty())
         return false;
-    
+
     const tchar *data0 = data;
     tchar s = keydata.at(0);
     do
@@ -93,7 +93,7 @@ bool MapperKeyElement::findData(const tchar *data, int datalen)
         }
         if (datalen == 0)
             return false;
-                
+
         // check next symbols
         int len = keydata.size();
         if (len > datalen)
@@ -125,11 +125,11 @@ bool MapperKeyElement::compare(tchar keydata, tchar symbol) const
         return (symbol >= L'0' && symbol <= L'9');
     if (keydata == MASK_NUMBER_LETTER)
     {
-        if ((symbol >= L'à' && symbol <= L'ÿ') || (symbol >= 'À' && symbol <= L'ß'))
+        if ((symbol >= L'à' && symbol <= L'ÿ') || (symbol >= L'À' && symbol <= L'ß'))
             return true;
         if ((symbol >= L'0' && symbol <= L'9') || (symbol >= L'a' && symbol <= L'z') || (symbol >= L'A' && symbol <= L'Z'))
             return true;
-        return false;        
+        return false;
     }
     return keydata == symbol;
 }
@@ -289,33 +289,8 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
 
     while (data != data_end)
     {
-        /*const WCHAR *p = data;
-        while (p != data_end && *p != 0xd && *p != 0xa)
-            p++;
-        */
         const WCHAR* p = data;
-/*        int dt = (p == data_end) ? 0 : 1;
-        data = p + dt;
-        if (msg == p)
-            continue;*/
-
-        //int msg_len = p - msg;
-        //OutputDebugStringW(x.c_str());
         int len = data_end - data;
-
-        //todo
-        /*bool p1 = bp.findData(p, len);
-        bool p2 = ep.findData(p, len);
-
-        if (p1)
-        {
-            int x = 1;
-        }
-        if (p2)
-        {
-            int x = 1;
-        }*/
-
         if (bp.findData(p, len) && ep.findData(p, len))
         {
             const WCHAR* buffer = m_network_buffer.getData();
