@@ -696,6 +696,7 @@ nil или true - если команда была успешно обработ
 <div class="cmd">void serverPort(std::wstring* str)</div> - адрес порта подключения (пустая строка, если нет подключения).
 <div class="cmd">bool connected()</div> - признак, что клиент подключен к маду.
 <div class="cmd">HFONT currentFont()</div> - хэндл текущего шрифта клиента.
+<div class="cmd">int currentFontHeight()</div> - высота текущего шрифта в пикселях.
 <div class="cmd">bool activated()</div> - признак, что окно клиента активно и игрок работает с ним.
 <div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
 <div class="cmd">int pluginsLogWindow()</div> - номер окна, куда выводятся логи плагинов. Если вывод логов отключен возвращается -1.
@@ -1268,6 +1269,7 @@ render:rect(r2)
 <div class="ee">local color = props.paletteColor(7)</div>
 <div class="cmd">uint backgroundColor()</div> - цвет фона всех окон клиента.
 <div class="cmd">font currentFont()</div> - текущий шрифт в клиенте.
+<div class="cmd">int currentFontHeight()</div> - высота текущего шрифта в пикселях.
 <div class="cmd">string cmdPrefix()</div> - символ-префикс для системной команды. Не используйте в плагинах 'жестко' заданный символ команды (он может поменяться).
 <div class="cmd">string cmdSeparator()</div> - символ-разделитель для команд. Не используйте 'жестко' заданный символ сепаратора в плагинах (он может поменяться).
 <div class="cmd">string serverHost()</div> - возвращает адрес сервера, к которому подключен клиент или nil, если нет подключения.

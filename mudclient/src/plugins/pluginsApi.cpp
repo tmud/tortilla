@@ -1740,6 +1740,17 @@ int props_currentFont(lua_State *L)
     return pluginInvArgs(L, L"props.currentFont");
 }
 
+int props_currentFontHeight(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int height = tortilla::getCurrentFontHeight();
+        lua_pushinteger(L, height);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.currentFontHeight");
+}
+
 int props_currentFontHandle(lua_State *L)
 {
     if (luaT_check(L, 0))
@@ -1861,6 +1872,7 @@ void reg_props(lua_State *L)
     regFunction(L, "paletteColor", props_paletteColor);
     regFunction(L, "backgroundColor", props_backgroundColor);
     regFunction(L, "currentFont", props_currentFont);
+    regFunction(L, "currentFontHeight", props_currentFontHeight);
     regFunction(L, "currentFontHandle", props_currentFontHandle);
     regFunction(L, "cmdPrefix", props_cmdPrefix);
     regFunction(L, "cmdSeparator", props_cmdSeparator);
@@ -1869,6 +1881,6 @@ void reg_props(lua_State *L)
     regFunction(L, "connected", props_connected);
     regFunction(L, "activated", props_activated);
     regFunction(L, "isPropertiesOpen", props_isPropertiesOpen);
-    regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);    
+    regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);
     lua_setglobal(L, "props");
 }

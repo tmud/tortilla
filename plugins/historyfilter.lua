@@ -1,6 +1,7 @@
 ﻿-- historyfilter
 -- Плагин Tortilla mud client
 local cmds_list_for_block = {}
+local cmds_list_info = ""
 
 local historyfilter = {}
 function historyfilter.name() 
@@ -10,7 +11,8 @@ end
 function historyfilter.description()
   local desc = {
   'Плагин блокирует попадание отдельных команд в историю.',
-  'Настройки задаются в файле: '..getPath('config.lua')
+  'Настройки задаются в файле: '..getPath('config.lua'),
+  cmds_list_info
   }
   return table.concat(desc, '\r\n')
 end
@@ -27,6 +29,7 @@ function historyfilter.init()
   if not t.cmdlist or type(t.cmdlist) ~= 'table' then
     terminate('Ошибка в настройках '..getPath('config.lua')..', нет списка команд cmdlist.')
   end
+  cmds_list_info = table.concat(t.cmdlist, ',')
   cmds_list_for_block = {}
   for _,cmd in pairs(t.cmdlist) do
     cmds_list_for_block[cmd] = true

@@ -107,6 +107,7 @@ void Plugin::setOn(bool on)
         current_state = true;
         if (!runMethod("init", 0, 0))
             error_state = true;
+        getparam("description", &description);
     }
     else if (current_state && !on) {
         current_state = false;

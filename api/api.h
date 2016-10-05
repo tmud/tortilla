@@ -972,6 +972,12 @@ public:
             return NULL;
         return (HFONT)uintresult();
     }
+    int currentFontHeight()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "currentFontHeight", "t");
+        return intresult();
+    }
     void cmdPrefix(std::wstring* str)
     {
         lua_getglobal(L, obj);
@@ -1034,6 +1040,12 @@ private:
     unsigned int uintresult()
     {
         int result = (lua_isnumber(L, -1)) ? lua_tounsigned(L, -1) : 0;
+        lua_pop(L, 1);
+        return result;
+    }
+    int intresult()
+    {
+        int result = (lua_isnumber(L, -1)) ? lua_tointeger(L, -1) : 0;
         lua_pop(L, 1);
         return result;
     }
