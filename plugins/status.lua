@@ -3,23 +3,23 @@
 
 local status = {}
 function status.name()
-    return 'Панель статусов'
+  return 'Панель статусов'
 end
 
 local count = 0
 function status.description()
-    local p=props.cmdPrefix()
-    local s = { 'Плагин создает панель с миниокнами, куда можно выводить дополнительную информацию.',
-    'Добавляет команду '..p..'status {номер окна} {text} [{цвет}]',
-    'Цвет - это не обязательный параметр. Он задается в формате клиента (см. справку #help color).',
-    'Плагин повторяет функционал панели статусов мад-клиента jmc3.',
-    'Он также умеет отчитывать время между тиками. Количество миниокон: '..count..'.',
-    'Настройки задаются в файле: '..getPath('config.lua') }
-    return table.concat(s, '\r\n')
+  local p=props.cmdPrefix()
+  local s = { 'Плагин создает панель с миниокнами, куда можно выводить дополнительную информацию.',
+  'Добавляет команду '..p..'status {номер окна} {text} [{цвет}]',
+  'Цвет - это не обязательный параметр. Он задается в формате клиента (см. справку #help color).',
+  'Плагин повторяет функционал панели статусов мад-клиента jmc3.',
+  'Он также умеет отчитывать время между тиками. Количество миниокон: '..count..'.',
+  'Настройки задаются в файле: '..getPath('config.lua') }
+  return table.concat(s, '\r\n')
 end
 
 function status.version()
-    return '1.03'
+  return '1.03'
 end
 
 local r
@@ -96,9 +96,27 @@ local function start_new_tick()
   counter = ticker_seconds
 end
 
+local delta
+local function getdt()
+  if not delta then
+    delta = system.getTime()
+    return 1
+  end
+  local delta2 = system.getTime()
+  if delta > delta2 then
+    local result = 60 - delta + delta2
+    delta = delta2
+    return result
+  end
+  local result = delta2 - delta
+  delta = delta2
+  return result
+end
+
 function status.tick()
   if counter > 0 then
-    counter = counter - 1
+    local dt = getdt()
+    counter = counter - dt
     set_ticker(''..counter)
   end
 end
