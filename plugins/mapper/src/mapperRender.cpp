@@ -341,7 +341,7 @@ void MapperRender::mouseLeave()
 
 void MapperRender::mouseRightButtonDown()
 {
-    /*todo! POINT pt; GetCursorPos(&pt);
+    POINT pt; GetCursorPos(&pt);
     int cursor_x = pt.x; 
     int cursor_y = pt.y;
     ScreenToClient(&pt);
@@ -350,16 +350,14 @@ void MapperRender::mouseRightButtonDown()
     if (!room)
         return;
     m_menu_tracked_room = room;
-    RoomHelper rh(room);
-    m_menu.SetItemState(MENU_NEWZONE_NORTH, rh.isExplored(RD_NORTH));
-    m_menu.SetItemState(MENU_NEWZONE_SOUTH, rh.isExplored(RD_SOUTH));
-    m_menu.SetItemState(MENU_NEWZONE_WEST, rh.isExplored(RD_WEST));
-    m_menu.SetItemState(MENU_NEWZONE_EAST, rh.isExplored(RD_EAST));
-    m_menu.SetItemState(MENU_NEWZONE_UP, rh.isExplored(RD_UP));
-    m_menu.SetItemState(MENU_NEWZONE_DOWN, rh.isExplored(RD_DOWN));
-
+    RoomCursor c(room);
+    m_menu.SetItemState(MENU_NEWZONE_NORTH, c.isExplored(RD_NORTH));
+    m_menu.SetItemState(MENU_NEWZONE_SOUTH, c.isExplored(RD_SOUTH));
+    m_menu.SetItemState(MENU_NEWZONE_WEST, c.isExplored(RD_WEST));
+    m_menu.SetItemState(MENU_NEWZONE_EAST, c.isExplored(RD_EAST));
+    m_menu.SetItemState(MENU_NEWZONE_UP, c.isExplored(RD_UP));
+    m_menu.SetItemState(MENU_NEWZONE_DOWN, c.isExplored(RD_DOWN));
     m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
-    */
 }
 
 void MapperRender::createMenu()
@@ -382,7 +380,7 @@ void MapperRender::createMenu()
         }
         m_menu.AppendODPopup(pictures, new CMenuXPText(0, L"«начок"));
         m_menu.AppendSeparator();
-    }            
+    }
     m_menu.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"÷вет..."));
     m_menu.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"—бросить цвет"));
     m_menu.AppendSeparator();

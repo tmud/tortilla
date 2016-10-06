@@ -61,7 +61,6 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         m_rooms[room.vnum] = new_room;
     }
     m_pCurrentRoom = new_room;
- 
 
     /*bool cached = m_cache.isExistRoom(m_pCurrentRoom);
 

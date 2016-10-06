@@ -18,6 +18,7 @@ public:
     RoomCursor(Room* current_room);
     Room* getRoom(RoomDir dir);
     bool  addRoom(RoomDir dir, Room* room);
+    bool  isExplored(RoomDir dir);
 private:
     bool  move(RoomDir dir);
     Room* m_current_room;

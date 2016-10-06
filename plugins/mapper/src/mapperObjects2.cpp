@@ -82,3 +82,11 @@ bool RoomCursor::move(RoomDir dir)
     }
     return true;
 }
+
+bool RoomCursor::isExplored(RoomDir dir)
+{
+    Room *r = m_current_room->dirs[dir].next_room;
+    if (r && m_current_room->level->getZone() == r->level->getZone())      
+       return true;
+    return false;
+}
