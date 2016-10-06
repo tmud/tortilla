@@ -26,11 +26,6 @@ local r
 local delta = 8
 local panels = {}
 
-function status.connect()
-  panels = {}
-  r:update()
-end
-
 local function render()
   local h = r:fontHeight()
   local w = (r:width() - delta*2 - (count-1)*delta) / count;
@@ -117,8 +112,15 @@ function status.tick()
   if counter > 0 then
     local dt = getdt()
     counter = counter - dt
+    if counter < 0 then counter = 0 end
     set_ticker(''..counter)
   end
+end
+
+function status.connect()
+  panels = {}
+  counter = 0
+  set_ticker('ticker')
 end
 
 function status.disconnect()
