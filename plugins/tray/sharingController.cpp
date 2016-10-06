@@ -2,9 +2,22 @@
 #include "sharingController.h"
 
 const wchar_t *global_share_name = L"TortillaTray";
-const int global_share_size = 65500;
+const int global_share_size = sizeof(SharingHeader) * 100*sizeof(SharingWindow);
 
-SharingController::SharingController() : m_shared_revision(0) //, m_locked(false)
+class SharedMemoryInitializer : public SharedMemoryHandler
+{
+    void onInitSharedMemory(SharedMemoryData *d)
+    {
+        SharingHeader sh;
+        size_t datalen = sizeof(SharingHeader);
+        sh.counter_id = 1;
+        sh.messages = 0;
+        memcpy(d->data, &sh, datalen);
+        d->data_size = datalen;
+    }
+};
+
+SharingController::SharingController() : m_id(0) 
 {
 }
 
@@ -14,96 +27,118 @@ SharingController::~SharingController()
 
 bool SharingController::init()
 {
-    if (!m_shared_memory.create(global_share_name, global_share_size, this))
+    // get id
+    SharedMemoryData smd;
+    if (!lock(&smd))
         return false;
-    {   // gen id
-        wchar_t buffer[MAX_PATH];
-        GetTempFileName(L"", L"", 0, buffer);
-        m_id.assign(&buffer[1]);
-    }
-    return pushCommand(new RegTrayCommand(m_id));
-}
-
-size_t SharingController::onInitSharedMemory(void* buffer, size_t size)
-{
-    return 0;
-}
-
-void SharingController::release()
-{
-     pushCommand(new UnregTrayCommand(m_id));
-}
-
-bool SharingController::pushCommand(SharingCommand* cmd)
-{
-    bool result = false;
-    if (cmd && lock())
-    {
-        m_shared_data.commands.push_back(cmd);
-        result = unlock();
-    }
-    else {
-        delete cmd;
-    }
-    return result;
-}
-
-bool SharingController::lock()
-{
-/*    m_shared_memory.lock();
-    if (read(m_shared_memory.ptr(), m_shared_memory.size()))       
-        return true;
-    m_shared_memory.unlock();*/
-    return false;
-}
-
-bool SharingController::unlock()
-{
-    /*bool result = write();
-    m_shared_memory.unlock();
-    if (result)
-        m_shared_memory.sendChangeEvent();
-    return result;*/
-    return false;
-}
-
-bool SharingController::write()
-{
-    m_shared_revision++;
-    DataQueue d;
-    Serialize s(d);
-    s.write(m_shared_revision);
-    m_shared_data.serialize(d);
-    
-    /*if ((unsigned int)d.getSize() <= m_shared_memory.size())
-    {
-        memcpy(m_shared_memory.ptr(), d.getData(), d.getSize());
-        return true;
-    }*/
-    return false;
-}
-
-bool SharingController::read(void *p, unsigned int size)
-{
-    // check revision of shared memory
-    DataQueue d;
-    d.write(p, sizeof(int));
-
-    int revision = 0;
-    Serialize s(d);
-    if (!s.read(revision))
-        return false;
-    if (m_shared_revision == revision)
-        return true;
-
-    DataQueue d1;
-    d1.write(p, size);
-    Serialize s1(d1);
-    if (!m_shared_data.deserialize(d1))
-    {
-        m_shared_revision = -1;
-        return false;
-    }
-    m_shared_revision = revision;
+    SharingHeader* sh = getHeader(&smd);
+    m_id = sh->counter_id;
+    sh->counter_id = m_id+1;
+    unlock(&smd);
     return true;
 }
+
+bool SharingController::tryAddWindow(const SharingWindow& sw)
+{
+    SharedMemoryData smd;
+    if (!lock(&smd)) 
+        return false;
+    if (smd.data_size+sizeof(SharingWindow) > smd.max_size)
+    {
+        unlock(&smd);
+        return false;
+    }
+    SharingHeader* sh = getHeader(&smd);
+    SharingWindow* w = (SharingWindow*)(sh+1);
+
+
+
+    unlock(&smd);
+}
+
+void SharingController::deleteWindow(const SharingWindow& sw)
+{
+}
+
+void SharingController::deleteAll()
+{
+}
+
+void SharingController::setPosition(const SharingWindow& sw, int oldx, int oldy)
+{
+}
+
+/*void SharingController::threadProc()
+{
+    SharedMemoryInitializer smi;
+    if (!m_shared_memory.create(global_share_name, global_share_size, &smi))
+        return;
+    SharedMemoryData smd;
+
+    // get id
+    if (!lock(&smd)) 
+        return;
+    SharingHeader* sh = getHeader(&smd);
+    m_id = sh->counter_id;
+    sh->counter_id = m_id+1;
+    unlock(&smd);
+
+    SharingControllerCleaner c(this);
+
+    if (!lock(&smd)) 
+        return;
+
+    unlock(&smd);
+}*/
+
+bool SharingController::lock(SharedMemoryData *d)
+{
+    return m_shared_memory.lock(d, 100);
+}
+
+void SharingController::unlock(SharedMemoryData *d)
+{
+    m_shared_memory.unlock(d->data_size);
+}
+
+SharingHeader* SharingController::getHeader(SharedMemoryData *d)
+{
+    return (SharingHeader*)d->data;
+}
+
+SharingWindow* SharingController::getWindow(int index, SharedMemoryData* d)
+{
+    SharingHeader *h = getHeader(d);
+    if (index >= 0 && index < h->messages)
+    {
+        SharingWindow* w = (SharingWindow*)(h+1);
+        return &w[index];
+    }
+    return NULL;
+}
+
+void SharingController::deleteWindow(int index, SharedMemoryData* d)
+{
+    SharingHeader *h = getHeader(d);
+    if (index >= 0 && index < h->messages)
+    {
+        
+    }
+}
+
+/*bool SharingController::addWindow(const SharingWindow& sw, SharedMemoryData* d)
+{
+
+}
+
+void SharingController::clear()
+{
+    SharedMemoryData smd;
+    if (!m_shared_memory.lock(&smd))
+        return;
+
+
+
+    m_shared_memory.unlock();
+}
+*/

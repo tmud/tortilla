@@ -1,27 +1,38 @@
 #pragma once
 
 #include "sharedMemory.h"
-#include "sharingData.h"
+#include "../common/tempThread.h"
 
-class SharingController : public SharedMemoryHandler
+struct SharingHeader {
+  int counter_id;
+  int messages;
+};
+
+struct SharingWindow {
+  SharingWindow() : id(0), x(0), y(0), w(0), h(0) {}
+  int id, x, y, w, h;
+};
+
+class SharingController
 {
 public:
     SharingController();
     ~SharingController();
     bool init();
-    void release();
-    bool pushCommand(SharingCommand* cmd);
-    //bool addMessage(const SharingDataMessage& msg);
+    bool tryAddWindow(const SharingWindow& sw);
+    void deleteWindow(const SharingWindow& sw);
+    void deleteAll();
+    void setPosition(const SharingWindow& sw, int oldx, int oldy);
 private:
-    bool lock();
-    bool unlock();
-    bool write();
-    bool read(void *p, unsigned int size);
+    //void threadProc();
+    bool lock(SharedMemoryData *d);
+    void unlock(SharedMemoryData *d);
+    //void clear();
+    SharingHeader* getHeader(SharedMemoryData *d);
+    SharingWindow* getWindow(int index, SharedMemoryData *d);
+    void deleteWindow(int index, SharedMemoryData *d);
+    //bool addWindow(const SharingWindow& sw, SharedMemoryData *d);
 private:
-    size_t onInitSharedMemory(void* buffer, size_t size);
-    std::wstring m_id;
-    int m_shared_revision;
     SharedMemory m_shared_memory;
-    SharedData m_shared_data;
-    //bool m_locked;
+    int m_id;
 };

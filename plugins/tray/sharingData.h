@@ -4,7 +4,7 @@
 #include "dataQueue.h"
 #include <algorithm>
 
-class Serialize
+/*class Serialize
 {
     DataQueue &d;
 public:
@@ -57,9 +57,9 @@ public:
         }
         return true;
     }
-};
+};*/
 
-struct SharingDataMessage
+/*struct SharingDataMessage
 {
     SharingDataMessage() : background(0), text(0), showtime(0), windowpos(RECT()) {}
     std::vector<std::wstring> textlines;
@@ -234,3 +234,4 @@ private:
         std::for_each(commands.begin(), commands.end(), [](SharingCommand* obj) { delete obj; });
     }
 };
+*/
