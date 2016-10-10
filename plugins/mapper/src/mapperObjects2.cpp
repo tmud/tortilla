@@ -43,11 +43,31 @@ m_current_room(current_room), x(0), y(0), level(0)
 {
 }
 
+bool RoomCursor::isValid(RoomDir dir)
+{
+    if (!m_current_room || !move(dir))
+        return false;
+    if (!m_current_room || !m_current_room->level)
+        return false;
+    Zone *zone = m_current_room->level->getZone();
+    if (!zone)
+        return false;
+    return true;
+}
+
 Room* RoomCursor::getRoom(RoomDir dir)
 {
     if (!move(dir))
         return NULL;
+    if (!m_current_room || !m_current_room->level) {
+        assert(false);
+        return NULL; 
+    }
     Zone *zone = m_current_room->level->getZone();
+    if (!zone) { 
+        assert(false);
+        return NULL;
+    }
     RoomsLevel *rl = zone->getLevel(level, false);
     if (!rl)
         return NULL;
@@ -60,7 +80,13 @@ bool RoomCursor::addRoom(RoomDir dir, Room* room)
         return false;
     Zone *zone = m_current_room->level->getZone();
     RoomsLevel *rl = zone->getLevel(level, true);
-    return rl->addRoom(room, x, y);
+    bool result = rl->addRoom(room, x, y);
+    if (result) {
+        m_current_room->dirs[dir].next_room = room;
+        RoomDirHelper h;        
+        room->dirs[h.revertDir(dir)].next_room = m_current_room;
+    }
+    return result;
 }
 
 bool RoomCursor::move(RoomDir dir)

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <mapper>
   <usemsdp value="0"/>
-  <darkroom label=""/>
+  <darkroom label="Слишком темно..."/>
   <name begin="\$[1;36m\w" end="\s[\d"/>
   <descr begin="\$[0;37m\r\n" end="\r\n\$["/>
   <exits begin="\sВых:" end="&gt;\s\$"/>

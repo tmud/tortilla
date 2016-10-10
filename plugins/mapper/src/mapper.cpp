@@ -41,7 +41,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         new_room = new Room();
         new_room->roomdata = room;
         checkExits(new_room);
-        if (!m_pCurrentRoom) 
+        if (!m_pCurrentRoom)
         {
             Zone* new_zone = getZone(room);
             RoomsLevel *level = new_zone->getLevel(0, true);
@@ -50,15 +50,30 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         else 
         {
             RoomCursor c(m_pCurrentRoom);
-            if (c.getRoom(m_lastDir))
+            if (!c.isValid(m_lastDir))
             {
-                //todo
                 delete new_room;
-                return;            
+                new_room = NULL;
+                assert(false);
             }
-            c.addRoom(m_lastDir, new_room);
+            else 
+            {
+                if (c.getRoom(m_lastDir))
+                {
+                    //todo
+                    delete new_room;
+                    new_room = NULL;
+                }
+                else if (!c.addRoom(m_lastDir, new_room))
+                {
+                    delete new_room;
+                    new_room = NULL;
+                    assert(false);
+                }
+            }
         }
-        m_rooms[room.vnum] = new_room;
+        if (new_room)
+            m_rooms[room.vnum] = new_room;
     }
     m_pCurrentRoom = new_room;
 

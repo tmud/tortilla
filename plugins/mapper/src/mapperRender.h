@@ -8,7 +8,7 @@ class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;
     ViewMapPosition viewpos;
-    RoomsLevel* notroom_level;
+    ViewMapPosition lastpos;
     MapperRoomRender rr;
 
     struct room_pos {
@@ -107,5 +107,6 @@ private:
     }
     void createMenu();
     bool runMenuPoint(int id);
-    RoomsLevel* getViewRoomLevel() const;
+    const ViewMapPosition& getViewRoom() const;
+    RoomsLevel* getViewRoomLevel() const;    
 };

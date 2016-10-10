@@ -20,14 +20,18 @@
 
 extern Mapper* m_mapper_window;
 
-RoomsLevel* MapperRender::getViewRoomLevel() const
+const ViewMapPosition& MapperRender::getViewRoom() const
 {
-    if (notroom_level)
-        return notroom_level;
-    return viewpos.room ? viewpos.room->level : NULL;
+    return (viewpos.room) ? viewpos : lastpos;       
 }
 
-MapperRender::MapperRender() : notroom_level(NULL), rr(ROOM_SIZE, 5)
+RoomsLevel* MapperRender::getViewRoomLevel() const
+{
+    const ViewMapPosition& vr = getViewRoom();
+    return (vr.room) ? vr.room->level : NULL;
+}
+
+MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
 {
     m_hscroll_pos = -1;
     m_hscroll_size = 0;
@@ -50,6 +54,8 @@ void MapperRender::onCreate()
 
 void MapperRender::roomChanged(const ViewMapPosition& pos)
 {
+    if (viewpos.room)
+        { lastpos = viewpos; lastpos.cursor = 2; }
     viewpos = pos;
     updateScrollbars(false);
     Invalidate();
@@ -78,14 +84,15 @@ void MapperRender::onPaint()
     rr.setIcons(&m_icons);
     renderMap(level, x, y);
 
-    if (viewpos.room)
+    const ViewMapPosition& vr = getViewRoom();
+    if (vr.room)
     {
-        room_pos p = findRoomPos(viewpos.room);
+        room_pos p = findRoomPos(vr.room);
         if (p.valid())
         {
             int dx = x + p.x * ROOM_SIZE;
             int dy = y + p.y * ROOM_SIZE;
-            rr.renderCursor(dx, dy, viewpos.cursor);
+            rr.renderCursor(dx, dy, vr.cursor);
         }
     }
 }

@@ -16,6 +16,7 @@ class RoomCursor
 {
 public:
     RoomCursor(Room* current_room);
+    bool  isValid(RoomDir dir);
     Room* getRoom(RoomDir dir);
     bool  addRoom(RoomDir dir, Room* room);
     bool  isExplored(RoomDir dir);
