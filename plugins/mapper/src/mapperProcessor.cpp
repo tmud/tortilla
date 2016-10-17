@@ -278,22 +278,22 @@ void MapperPrompt::updateProps(PropertiesMapper *props)
     m_network_buffer.clear();
 }
 
-bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
+bool MapperPrompt::processNetworkData(const tchar* text, int textlen)
 {
     m_network_buffer.write(text, textlen);
     int datalen = m_network_buffer.getDataLen();
     if (!datalen)
         return false;
-    const WCHAR* data = m_network_buffer.getData();
-    const WCHAR* data_end = data + datalen;
+    const tchar* data = m_network_buffer.getData();
+    const tchar* data_end = data + datalen;
 
     while (data != data_end)
     {
-        const WCHAR* p = data;
+        const tchar* p = data;
         int len = data_end - data;
         if (bp.findData(p, len) && ep.findData(p, len))
         {
-            const WCHAR* buffer = m_network_buffer.getData();
+            const tchar* buffer = m_network_buffer.getData();
             int processed = p - buffer;
             m_network_buffer.truncate(processed);
             return true;
@@ -302,4 +302,60 @@ bool MapperPrompt::processNetworkData(const WCHAR* text, int textlen)
     }
     m_network_buffer.clear();
     return false;
+}
+
+MapperDarkRoom::MapperDarkRoom()
+{
+}
+void MapperDarkRoom::updateProps(PropertiesMapper *props)
+{
+    m_dark_room = props->dark_room;
+}
+
+bool MapperDarkRoom::processNetworkData(const tchar* text, int textlen)
+{
+    if (m_dark_room.empty())
+        return false;
+    m_network_buffer.write(text, textlen);
+    if (!m_network_buffer.getDataLen())
+        return false;
+    if (compare())
+        return true;
+    int dark_len = m_dark_room.size();
+    while (m_network_buffer.getDataLen() >= dark_len)
+    {
+        if (compare())
+            return true;    
+    }
+    return false;
+}
+
+bool MapperDarkRoom::compare()
+{
+    const tchar* data = m_network_buffer.getData();
+    int datalen = m_network_buffer.getDataLen();
+    const tchar* data_end = data + datalen;
+    tchar b = m_dark_room[0];
+    while (data != data_end) {
+       if (*data == b) break;
+       data++;
+    }
+    int processed = data - m_network_buffer.getData();
+    if (processed > 0) {
+      m_network_buffer.truncate(processed);
+      datalen = m_network_buffer.getDataLen();
+      data = m_network_buffer.getData();
+      data_end = data + datalen;
+    }
+    int dark_len = m_dark_room.size();
+    if (datalen < dark_len)
+        return false;
+    int result = wcsncmp(data, m_dark_room.c_str(), dark_len);
+    if (result != 0)
+    {
+        m_network_buffer.truncate(1);
+        return false;
+    }
+    m_network_buffer.truncate(dark_len);
+    return true;
 }

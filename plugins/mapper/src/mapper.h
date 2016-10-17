@@ -68,11 +68,12 @@ private:
     Room* createNewRoom(const RoomData& room);
     void  deleteRoom(Room* room);
     void  changeLevelOrZone(Room *old, Room* curr);*/
+    void  checkExit(Room *room, RoomDir dir, const tstring& exit);
     void  checkExits(Room *room);
     int   revertDir(int dir);
 
     /*Room* getNextRoom(Room *room, int dir);*/
-    void  redrawPosition();
+    void  redrawPosition(int cursor);
 
 private:
     // properties
@@ -89,6 +90,8 @@ private:
     DirsVector m_dirs;
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
+    MapperDarkRoom m_dark;
+
     //todo! MapperHashTable m_table;
     //todo! MapperRoomsCache m_cache;
 
@@ -101,6 +104,4 @@ private:
     int m_nextzone_id;
     std::map<RoomVnum, Room*> m_rooms;
     typedef std::map<RoomVnum, Room*>::iterator room_iterator;
-    
-    ViewMapPosition m_viewpos;
 };

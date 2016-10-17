@@ -82,11 +82,16 @@ bool RoomCursor::addRoom(RoomDir dir, Room* room)
     RoomsLevel *rl = zone->getLevel(level, true);
     bool result = rl->addRoom(room, x, y);
     if (result) {
-        m_current_room->dirs[dir].next_room = room;
-        RoomDirHelper h;        
-        room->dirs[h.revertDir(dir)].next_room = m_current_room;
+        addLink(dir, room);
+        //RoomDirHelper h;        
+        //room->dirs[h.revertDir(dir)].next_room = m_current_room;
     }
     return result;
+}
+
+void RoomCursor::addLink(RoomDir dir, Room *room)
+{
+    m_current_room->dirs[dir].next_room = room;
 }
 
 bool RoomCursor::move(RoomDir dir)

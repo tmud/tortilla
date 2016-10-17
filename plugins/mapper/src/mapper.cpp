@@ -11,23 +11,35 @@ m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL), m_nextzone_id(1)
 Mapper::~Mapper()
 {
     std::for_each(m_zones.begin(),m_zones.end(),[](std::pair<const tstring, Zone*> &p){delete p.second;});
-    //std::for_each(m_rooms.begin(), m_rooms.end(),[](std::pair<const RoomVnum, Room*> &rt){delete rt.second;});
 }
 
 void Mapper::processNetworkData(const tchar* text, int text_len)
 {
+    bool in_dark = false;
     RoomData room;
     if (!m_processor.processNetworkData(text, text_len, &room))
     {
         if (m_prompt.processNetworkData(text, text_len))
+        {
             popDir();
+            if (m_dark.processNetworkData(text, text_len) && m_pCurrentRoom)
+            {
+                // move in dark to direction
+                Room *next = m_pCurrentRoom->dirs[m_lastDir].next_room;
+                //if (next)
+                {
+                    m_pCurrentRoom = next;
+                    redrawPosition(2);
+                }
+            }            
+        }
         return;
     }
-
-    const tstring &dark = m_propsData->dark_room;
-    if (!dark.empty() && dark == room.descr)
-        room.descr.clear();
-    
+    else
+    {
+        if (m_dark.processNetworkData(text, text_len))
+            in_dark = true;
+    }
     popDir();
 
     DEBUGOUT(L"------");
@@ -56,13 +68,15 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                 new_room = NULL;
                 assert(false);
             }
-            else 
+            else
             {
                 if (c.getRoom(m_lastDir))
                 {
-                    //todo
-                    delete new_room;
-                    new_room = NULL;
+                    // конфликт новая зона
+                    Zone* new_zone = getZone(room);
+                    RoomsLevel *level = new_zone->getLevel(0, true);
+                    level->addRoom(new_room, 0, 0);
+                    c.addLink(m_lastDir, new_room);
                 }
                 else if (!c.addRoom(m_lastDir, new_room))
                 {
@@ -118,8 +132,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     m_viewpos.level = croom->level;
     redrawPosition();
     m_pCurrentRoom = new_room;*/
-    m_viewpos.room = m_pCurrentRoom;
-    redrawPosition();
+    redrawPosition(0);
 }
 
 Zone* Mapper::getZone(const RoomData& room)
@@ -439,22 +452,28 @@ void Mapper::deleteRoom(Room* room)
     delete room;
 }*/
 
+void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
+{
+    const tstring& e = room->roomdata.exits; 
+    if (e.find(exit) != -1) {
+        room->dirs[dir].exist = true;
+        tstring door(L"(");
+        door.append(exit);
+        door.append(L")");
+        if (e.find(door) != -1)
+            room->dirs[dir].door = true;
+    }
+}
+
 void Mapper::checkExits(Room *room)
 {
     // parse room->roomdata.exits to room->dirs
-    tstring e = room->roomdata.exits;
-    if (e.find(m_propsData->north_exit) != -1)
-        room->dirs[RD_NORTH].exist = true;
-    if (e.find(m_propsData->south_exit) != -1)
-        room->dirs[RD_SOUTH].exist = true;
-    if (e.find(m_propsData->west_exit) != -1)
-        room->dirs[RD_WEST].exist = true;
-    if (e.find(m_propsData->east_exit) != -1)
-        room->dirs[RD_EAST].exist = true;
-    if (e.find(m_propsData->up_exit) != -1)
-        room->dirs[RD_UP].exist = true;
-    if (e.find(m_propsData->down_exit) != -1)
-        room->dirs[RD_DOWN].exist = true;
+    checkExit(room,  RD_NORTH, m_propsData->north_exit);
+    checkExit(room,  RD_SOUTH, m_propsData->south_exit);
+    checkExit(room,  RD_WEST, m_propsData->west_exit);
+    checkExit(room,  RD_EAST, m_propsData->east_exit);
+    checkExit(room,  RD_UP, m_propsData->up_exit);
+    checkExit(room,  RD_DOWN, m_propsData->down_exit);
 }
 
 int Mapper::revertDir(int dir)
@@ -524,6 +543,7 @@ void Mapper::updateProps()
 {
     m_processor.updateProps(m_propsData);
     m_prompt.updateProps(m_propsData);
+    m_dark.updateProps(m_propsData);
     InitDirVector h(m_dirs);
     h.make(RD_NORTH, m_propsData->north_cmd);
     h.make(RD_SOUTH, m_propsData->south_cmd);
@@ -533,10 +553,13 @@ void Mapper::updateProps()
     h.make(RD_DOWN, m_propsData->down_cmd);
 }
 
-void Mapper::redrawPosition()
+void Mapper::redrawPosition(int cursor)
 {
+    ViewMapPosition vp;
+    vp.cursor = cursor;
+    vp.room = m_pCurrentRoom;
+    m_view.roomChanged(vp);
     //m_zones_control.roomChanged(m_viewpos);
-    m_view.roomChanged(m_viewpos);
 }
 
 void Mapper::onCreate()

@@ -64,9 +64,21 @@ class MapperPrompt
 public:
     MapperPrompt();
     void updateProps(PropertiesMapper *props);
-    bool processNetworkData(const WCHAR* text, int textlen);
+    bool processNetworkData(const tchar* text, int textlen);
 private:
     MapperKeyElement bp;       // begin prompt
     MapperKeyElement ep;       // end prompt
     MapperDataQueue m_network_buffer;
+};
+
+class MapperDarkRoom
+{
+public:
+    MapperDarkRoom();
+    void updateProps(PropertiesMapper *props);
+    bool processNetworkData(const tchar* text, int textlen);
+private:
+    bool compare();
+    MapperDataQueue m_network_buffer;
+    tstring m_dark_room;
 };
