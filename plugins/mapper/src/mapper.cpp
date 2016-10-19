@@ -29,7 +29,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                 //if (next)
                 {
                     m_pCurrentRoom = next;
-                    redrawPosition(2);
+                    redrawPosition(RCC_LOST);
                 }
             }            
         }
@@ -55,9 +55,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         checkExits(new_room);
         if (!m_pCurrentRoom)
         {
-            Zone* new_zone = getZone(room);
-            RoomsLevel *level = new_zone->getLevel(0, true);
-            level->addRoom(new_room, 0, 0);
+            createNewZone(new_room);
         }
         else 
         {
@@ -72,10 +70,8 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
             {
                 if (c.getRoom(m_lastDir))
                 {
-                    // конфликт новая зона
-                    Zone* new_zone = getZone(room);
-                    RoomsLevel *level = new_zone->getLevel(0, true);
-                    level->addRoom(new_room, 0, 0);
+                    // конфликт -> новая зона
+                    createNewZone(new_room);
                     c.addLink(m_lastDir, new_room);
                 }
                 else if (!c.addRoom(m_lastDir, new_room))
@@ -88,6 +84,12 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         }
         if (new_room)
             m_rooms[room.vnum] = new_room;
+    }
+    else
+    {
+        RoomCursor c(m_pCurrentRoom);
+        c.addLink(m_lastDir, new_room);
+    
     }
     m_pCurrentRoom = new_room;
 
@@ -132,7 +134,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     m_viewpos.level = croom->level;
     redrawPosition();
     m_pCurrentRoom = new_room;*/
-    redrawPosition(0);
+    redrawPosition(RCC_NORMAL);
 }
 
 Zone* Mapper::getZone(const RoomData& room)
@@ -160,6 +162,23 @@ Zone* Mapper::getZone(const RoomData& room)
    Zone* new_zone = new Zone(zone_name);
    m_zones[zone_name] = new_zone;
    return new_zone;
+}
+
+void Mapper::createNewZone(Room *room)
+{
+    assert(!room->level);
+    tchar buffer[32];
+    while (true)
+    {
+        swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
+        zone_iterator zt = m_zones.find(buffer);
+        if (zt == m_zones.end())
+            break;
+    }
+    tstring zone_name(buffer);
+    RoomCursorNewZone nz;
+    m_zones[zone_name] = nz.createNewZone(zone_name, room);
+
 }
 
 RoomDir MapperDirCommand::check(const tstring& cmd) const
@@ -219,9 +238,7 @@ void Mapper::popDir()
 Room* Mapper::findRoom(const RoomData& room)
 {
     room_iterator rt = m_rooms.find(room.vnum);
-    if (rt == m_rooms.end()) 
-      return NULL;
-    return rt->second;
+    return (rt != m_rooms.end()) ? rt->second : NULL;
 }
 
 
@@ -455,7 +472,8 @@ void Mapper::deleteRoom(Room* room)
 void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
 {
     const tstring& e = room->roomdata.exits; 
-    if (e.find(exit) != -1) {
+    if (e.find(exit) != -1) 
+    {
         room->dirs[dir].exist = true;
         tstring door(L"(");
         door.append(exit);
@@ -553,7 +571,7 @@ void Mapper::updateProps()
     h.make(RD_DOWN, m_propsData->down_cmd);
 }
 
-void Mapper::redrawPosition(int cursor)
+void Mapper::redrawPosition(ViewCursorColor cursor)
 {
     ViewMapPosition vp;
     vp.cursor = cursor;

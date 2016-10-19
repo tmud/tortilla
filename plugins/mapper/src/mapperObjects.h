@@ -78,11 +78,12 @@ struct Room
     //int special;                    // special internal value for algoritms (don't save)
 };
 
+enum ViewCursorColor { RCC_NORMAL = 0, RCC_LOST };
 struct ViewMapPosition
 {
-    ViewMapPosition() : room(NULL), cursor(0) {}
+    ViewMapPosition() : room(NULL), cursor(RCC_NORMAL) {}
     Room* room;
-    int cursor;
+    ViewCursorColor cursor;
 };
 
 struct RoomsLevelBox

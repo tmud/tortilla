@@ -55,7 +55,7 @@ void MapperRender::onCreate()
 void MapperRender::roomChanged(const ViewMapPosition& pos)
 {
     if (viewpos.room)
-        { lastpos = viewpos; lastpos.cursor = 2; }
+        { lastpos = viewpos; lastpos.cursor = RCC_NORMAL; }
     viewpos = pos;
     updateScrollbars(false);
     Invalidate();

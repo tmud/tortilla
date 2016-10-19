@@ -59,6 +59,8 @@ private:
     void  popDir();
     Room* findRoom(const RoomData& room);
     Zone* getZone(const RoomData& room);
+    void createNewZone(Room *room);
+
 
     /*Zone* addNewZone();
 
@@ -73,7 +75,7 @@ private:
     int   revertDir(int dir);
 
     /*Room* getNextRoom(Room *room, int dir);*/
-    void  redrawPosition(int cursor);
+    void  redrawPosition(ViewCursorColor cursor);
 
 private:
     // properties
