@@ -92,13 +92,13 @@ private:
 
 private:
     BEGIN_MSG_MAP(MapperToolbar)
-		/*MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
+		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
-        MESSAGE_HANDLER(WM_USER, OnSelectItem)*/
+        //NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
+        //MESSAGE_HANDLER(WM_USER, OnSelectItem)
 	END_MSG_MAP()
 
-	/*LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
+	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{
         m_list.SubclassWindow(GetDlgItem(IDC_LIST_ZONES));
         RECT rc;
@@ -122,7 +122,7 @@ private:
         bHandled = FALSE;
         return 0;
     }
-
+    /*
     LRESULT OnSelectItem(UINT, WPARAM, LPARAM, BOOL&)
     {
         if (::IsWindow(m_parent))

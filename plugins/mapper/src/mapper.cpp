@@ -60,26 +60,17 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         else 
         {
             RoomCursor c(m_pCurrentRoom);
-            if (!c.isValid(m_lastDir))
+            if (c.getRoom(m_lastDir))
+            {
+                // конфликт -> новая зона
+                createNewZone(new_room);
+                c.addLink(m_lastDir, new_room);
+            }
+            else if (!c.addRoom(m_lastDir, new_room))
             {
                 delete new_room;
                 new_room = NULL;
                 assert(false);
-            }
-            else
-            {
-                if (c.getRoom(m_lastDir))
-                {
-                    // конфликт -> новая зона
-                    createNewZone(new_room);
-                    c.addLink(m_lastDir, new_room);
-                }
-                else if (!c.addRoom(m_lastDir, new_room))
-                {
-                    delete new_room;
-                    new_room = NULL;
-                    assert(false);
-                }
             }
         }
         if (new_room)
@@ -87,53 +78,13 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     }
     else
     {
-        RoomCursor c(m_pCurrentRoom);
-        c.addLink(m_lastDir, new_room);
-    
-    }
-    m_pCurrentRoom = new_room;
-
-    /*bool cached = m_cache.isExistRoom(m_pCurrentRoom);
-
-    // can be return NULL (if cant find or create new) so it is mean -> lost position
-    Room* new_room = (cached) ? findRoomCached(room) : findRoom(room);
-    if (!new_room)
-    {
-        if (m_lastDir == -1)
-        {
-            m_rpos.reset();
-            m_pCurrentRoom = NULL;
-        }
-        else
-        {
-            if (m_pCurrentRoom)
-            {
-                m_rpos.reset();
-                m_rpos.current_room = m_pCurrentRoom;
-            }
-            if (m_rpos.current_room)
-                m_rpos.move(m_lastDir);
-        }
-    }
-    else
-    {
         if (m_pCurrentRoom) 
         {
-            RoomExit &e = m_pCurrentRoom->dirs[m_lastDir];
-            if (!e.next_room)
-                e.next_room = new_room;
-        }
-
-        m_rpos.reset();
-        m_rpos.current_room = m_pCurrentRoom;
-        m_rpos.new_room = new_room;
+            RoomCursor c(m_pCurrentRoom);
+            c.addLink(m_lastDir, new_room);
+        }    
     }
-
-    Room* croom = m_rpos.new_room ? m_rpos.new_room : m_rpos.current_room;    
-    m_viewpos.room = croom;
-    m_viewpos.level = croom->level;
-    redrawPosition();
-    m_pCurrentRoom = new_room;*/
+    m_pCurrentRoom = new_room;
     redrawPosition(RCC_NORMAL);
 }
 
@@ -179,21 +130,6 @@ void Mapper::createNewZone(Room *room)
     RoomCursorNewZone nz;
     m_zones[zone_name] = nz.createNewZone(zone_name, room);
 
-}
-
-RoomDir MapperDirCommand::check(const tstring& cmd) const
-{
-    int size = cmd.size();
-    if (size < main_size) return RD_UNKNOWN;
-    if (size == main_size)
-        return (cmd == main) ? dir : RD_UNKNOWN;
-    tstring main_part(cmd.substr(0, main_size));
-    if (main_part != main) return RD_UNKNOWN;
-    if (rel.empty()) return RD_UNKNOWN;
-    tstring rel_part(cmd.substr(main_size));
-    int rel_part_size = rel_part.size();
-    if (rel_part_size > rel_size) return RD_UNKNOWN;
-    return rel.find(rel_part)==0 ? dir : RD_UNKNOWN;
 }
 
 void Mapper::processCmd(const tstring& cmd)
@@ -583,28 +519,28 @@ void Mapper::redrawPosition(ViewCursorColor cursor)
 void Mapper::onCreate()
 {
     DWORD style = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-    m_toolbar.Create(m_hWnd, rcDefault, style);
 
     RECT rc;
-    m_toolbar.GetClientRect(&rc);
-    m_toolbar_height = rc.bottom;
-
     GetClientRect(&rc);
-    rc.top = m_toolbar_height;
     m_vSplitter.Create(m_hWnd, rc);
     m_vSplitter.m_cxySplitBar = 3;
-    m_vSplitter.SetSplitterRect();
-    m_vSplitter.SetDefaultSplitterPos();
 
     RECT pane_left, pane_right;
     m_vSplitter.GetSplitterPaneRect(0, &pane_left); pane_left.right -= 3;
     m_vSplitter.GetSplitterPaneRect(1, &pane_right);
 
     m_zones_control.Create(m_vSplitter, pane_left, style);
-    m_view.Create(m_vSplitter, pane_right, NULL, style | WS_VSCROLL | WS_HSCROLL);
-    m_vSplitter.SetSplitterPanes(m_zones_control, m_view);
-//    m_zones_control.setNotifications(m_hWnd, WM_USER);
+    m_container.Create(m_vSplitter, pane_right, L"", style);
 
+    m_toolbar.Create(m_container, rcDefault, style);
+    m_view.Create(m_container, rcDefault, NULL, style | WS_VSCROLL | WS_HSCROLL, WS_EX_STATICEDGE);
+
+    m_container.attach(40, m_toolbar, m_view);
+    m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
+
+//    m_zones_control.setNotifications(m_hWnd, WM_USER);
+    m_vSplitter.SetSplitterRect();
+    m_vSplitter.SetDefaultSplitterPos();
     updateProps();
 }
 
@@ -612,9 +548,9 @@ void Mapper::onSize()
 {
     RECT rc;
     GetClientRect(&rc);
-    int height = rc.bottom; rc.bottom = m_toolbar_height;
+    /*int height = rc.bottom; rc.bottom = m_toolbar_height;
     m_toolbar.MoveWindow(&rc);
-    rc.top = rc.bottom; rc.bottom = height;
+    rc.top = rc.bottom; rc.bottom = height;*/
     m_vSplitter.MoveWindow(&rc, FALSE);
     m_vSplitter.SetSplitterRect();
 }

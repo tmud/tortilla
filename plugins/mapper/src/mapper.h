@@ -9,19 +9,37 @@
 #include "mapperZoneControl.h"
 #include "mapperRoomsCache.h"
 
-class MapperDirCommand
+class ToolbarViewContainer : public CWindowImpl<ToolbarViewContainer>
 {
-    RoomDir dir; tstring main, rel;
-    int main_size, rel_size;
+    int m_size;
+    CWindow m_first, m_second;
 public:
-    MapperDirCommand(RoomDir d, const tstring& main_part, const tstring& rel_part) : dir(d), main(main_part), rel(rel_part) 
-    {
-        main_size = main.size();
-        rel_size = rel.size();
+    ToolbarViewContainer() : m_size(0) {}
+    void attach(int size, HWND first, HWND second) {
+        m_size = size;
+        m_first.Attach(first);
+        m_second.Attach(second);
+        Invalidate();
     }
-    RoomDir check(const tstring& cmd) const;
+private:
+    BEGIN_MSG_MAP(ToolbarViewContainer)
+        MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
+    END_MSG_MAP()
+    LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
+    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
+    void onSize() {
+        RECT rc; GetClientRect(&rc);
+        int bottom = rc.bottom;
+        rc.bottom = m_size;
+        if (m_first.IsWindow())
+            m_first.MoveWindow(&rc);
+        rc.top = rc.bottom;
+        rc.bottom = bottom;
+        if (m_second.IsWindow())
+           m_second.MoveWindow(&rc);
+    }
 };
-typedef std::vector<MapperDirCommand> DirsVector;
 
 class Mapper : public CWindowImpl<Mapper>
 {
@@ -82,10 +100,12 @@ private:
     PropertiesMapper *m_propsData;
 
     // ui, windows and toolbars
+    
     MapperToolbar m_toolbar;
-    CSplitterWindowExT<true, 1, 4> m_vSplitter;
-    MappeZoneControl m_zones_control;
     MapperRender m_view;
+    ToolbarViewContainer m_container;
+    CSplitterWindowExT<true, 1, 4> m_vSplitter;
+    MappeZoneControl m_zones_control;    
     int m_toolbar_height;
 
     // logic
