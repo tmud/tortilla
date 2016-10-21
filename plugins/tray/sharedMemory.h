@@ -149,3 +149,23 @@ private:
         m_map_file = NULL;
     }
 };
+
+class SharedMemoryLocker
+{
+    SharedMemory* m_sm;
+    SharedMemoryData m_data;
+    bool locked;
+public:
+    operator bool() const { return locked; }
+    SharedMemoryLocker(SharedMemory* sm, DWORD wait_mseconds = 0) : m_sm(sm) 
+    {
+        locked = m_sm->lock(&m_data, wait_mseconds);    
+    }
+    ~SharedMemoryLocker() 
+    {
+        if (locked)
+            m_sm->unlock(m_data.data_size);
+    }
+    //operator SharedMemoryData*() { return &m_data; }
+    SharedMemoryData* memory() { return &m_data; }
+};

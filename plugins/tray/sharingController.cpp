@@ -2,7 +2,7 @@
 #include "sharingController.h"
 
 const wchar_t *global_share_name = L"TortillaTray";
-const int global_share_size = sizeof(SharingHeader) * 100*sizeof(SharingWindow);
+const int global_share_size = sizeof(SharingHeader) + 100*sizeof(SharingWindow);
 
 class SharedMemoryInitializer : public SharedMemoryHandler
 {
@@ -27,78 +27,65 @@ SharingController::~SharingController()
 
 bool SharingController::init()
 {
-    // get id
-    SharedMemoryData smd;
-    if (!lock(&smd))
+    SharedMemoryInitializer smi;
+    if (!m_shared_memory.create(global_share_name, global_share_size, &smi))
         return false;
-    SharingHeader* sh = getHeader(&smd);
+    // get id
+    SharedMemoryLocker l(&m_shared_memory);
+    SharedMemoryData* m = l.memory();
+    SharingHeader* sh = getHeader(m);
     m_id = sh->counter_id;
     sh->counter_id = m_id+1;
-    unlock(&smd);
     return true;
 }
 
 bool SharingController::tryAddWindow(const SharingWindow& sw)
 {
-    SharedMemoryData smd;
-    if (!lock(&smd)) 
-        return false;
-    if (smd.data_size+sizeof(SharingWindow) > smd.max_size)
-    {
-        unlock(&smd);
-        return false;
-    }
-    SharingHeader* sh = getHeader(&smd);
-    SharingWindow* w = (SharingWindow*)(sh+1);
-
-
-
-    unlock(&smd);
+    SharedMemoryLocker l(&m_shared_memory);
+    SharedMemoryData* m = l.memory();
+    if (m->data_size+sizeof(SharingWindow) > m->max_size)
+       return false;
+    SharingHeader* h = getHeader(m);
+    int count = h->messages;
+    SharingWindow* w = getWindow(count, m);
+    *w = sw;
+    h->messages = count + 1;
+    return true;
 }
 
 void SharingController::deleteWindow(const SharingWindow& sw)
 {
+    SharedMemoryLocker l(&m_shared_memory);
+    SharedMemoryData* m = l.memory();
+    SharingHeader* h = getHeader(m);
+    int count = h->messages;
+    SharingWindow* w = getWindow(0, m);
+    for (int i=0; i<count; ++i)
+    {
+        SharingWindow& c = w[i];
+        if (c.x == sw.x && c.y == sw.y && c.w == sw.w && c.h == sw.h) {
+            memcpy(&w[i], &w[i+1], sizeof(SharingWindow)*(count-i-1));
+            h->messages = count - 1;
+            break;
+        }
+    }
 }
 
-void SharingController::deleteAll()
+void SharingController::updateWindow(const SharingWindow& sw, int newx, int newy)
 {
-}
-
-void SharingController::setPosition(const SharingWindow& sw, int oldx, int oldy)
-{
-}
-
-/*void SharingController::threadProc()
-{
-    SharedMemoryInitializer smi;
-    if (!m_shared_memory.create(global_share_name, global_share_size, &smi))
-        return;
-    SharedMemoryData smd;
-
-    // get id
-    if (!lock(&smd)) 
-        return;
-    SharingHeader* sh = getHeader(&smd);
-    m_id = sh->counter_id;
-    sh->counter_id = m_id+1;
-    unlock(&smd);
-
-    SharingControllerCleaner c(this);
-
-    if (!lock(&smd)) 
-        return;
-
-    unlock(&smd);
-}*/
-
-bool SharingController::lock(SharedMemoryData *d)
-{
-    return m_shared_memory.lock(d, 100);
-}
-
-void SharingController::unlock(SharedMemoryData *d)
-{
-    m_shared_memory.unlock(d->data_size);
+    SharedMemoryLocker l(&m_shared_memory);
+    SharedMemoryData* m = l.memory();
+    SharingHeader* h = getHeader(m);
+    int count = h->messages;
+    SharingWindow* w = getWindow(0, m);
+    for (int i=0; i<count; ++i)
+    {
+        SharingWindow& c = w[i];
+        if (c.x == sw.x && c.y == sw.y && c.w == sw.w && c.h == sw.h) {
+            c.x = newx; c.y = newy;
+            break;
+        }
+    }
 }
 
 SharingHeader* SharingController::getHeader(SharedMemoryData *d)
@@ -109,36 +96,6 @@ SharingHeader* SharingController::getHeader(SharedMemoryData *d)
 SharingWindow* SharingController::getWindow(int index, SharedMemoryData* d)
 {
     SharingHeader *h = getHeader(d);
-    if (index >= 0 && index < h->messages)
-    {
-        SharingWindow* w = (SharingWindow*)(h+1);
-        return &w[index];
-    }
-    return NULL;
+    SharingWindow* w = (SharingWindow*)(h+1);
+    return &w[index];
 }
-
-void SharingController::deleteWindow(int index, SharedMemoryData* d)
-{
-    SharingHeader *h = getHeader(d);
-    if (index >= 0 && index < h->messages)
-    {
-        
-    }
-}
-
-/*bool SharingController::addWindow(const SharingWindow& sw, SharedMemoryData* d)
-{
-
-}
-
-void SharingController::clear()
-{
-    SharedMemoryData smd;
-    if (!m_shared_memory.lock(&smd))
-        return;
-
-
-
-    m_shared_memory.unlock();
-}
-*/
