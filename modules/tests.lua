@@ -3,7 +3,9 @@
 -- запускаются при старте клиента
 
 do
-return
+--runCommand("#wait 2 { #plugin loadsave off }")
+--runCommand("#wait 2 { #plugin testmisc off }")
+--return
 end
 
 dofile 'modules.lua'
@@ -136,6 +138,7 @@ print ('Автотесты для модулей extra.declension и extra.dicto
 
 -- автотесты для плагинов
 runCommand("#wait 2 { #plugin loadsave on }")
+runCommand("#wait 2 { #plugin testmisc on }")
 
 local s,m,h = system.getTime()
 print(h..":"..m..":"..s)

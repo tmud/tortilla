@@ -176,6 +176,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
             msg.append(L" [");
             bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
             if (cmd->changed) msg.append(prefix);
+            if (!usesrc && cmd->system) msg.append(prefix);
             msg.append(usesrc ? cmd->srccmd : cmd->command);
             if (!hide_cmd)
                 msg.append(usesrc ? cmd->srcparameters : cmd->parameters);

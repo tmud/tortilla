@@ -148,7 +148,10 @@ void InputTemplateCommands::makeTemplates()
     for (int i=0,e=size(); i<e; ++i)
     {
         if (at(i).system)   // маркируем только системные
-            markbrackets(&at(i).templ);
+        { 
+            bool markered = markbrackets(&at(i).templ);
+            at(i).markered = markered;
+        }
     }
 }
 
@@ -219,7 +222,11 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
         }
 
         if (cmd->system)
+        {
+            if (!subcmd.markered)
+                markbrackets(&cmd->parameters);
             fillsyscmd(cmd);
+        }
         else
             fillgamecmd(cmd);
         cmds->push_back(cmd);
@@ -357,8 +364,9 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
     }
 }
 
-void InputTemplateCommands::markbrackets(tstring *cmd) const
+bool InputTemplateCommands::markbrackets(tstring *cmd) const
 {
+    bool marker_used = false;
     const tchar marker[2] = { MARKER , 0 };
     const tchar *b0 = cmd->c_str();
     const tchar *p = b0;
@@ -408,6 +416,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
             {
                stack.clear();
                // mark pair brackets
+               marker_used = true;
                newp.append(b, bracket_begin-b);
                newp.append(marker);
                newp.append(bracket_begin, p-bracket_begin);
@@ -429,6 +438,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
     if (b != e)
         newp.append(b);
     cmd->swap(newp);
+    return marker_used;
 }
 
 void InputTemplateCommands::unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const
