@@ -148,13 +148,13 @@ struct ZoneParams
     int minl;
     int maxl;
     bool empty;
-    tstring original_name;
+    tstring name;
 };
 
 class Zone
 {
 public:
-    Zone(const tstring& zonename) : start_index(0), m_original_name(zonename) {}
+    Zone(const tstring& zonename) : start_index(0), m_name(zonename) {}
     ~Zone() { std::for_each(m_levels.begin(), m_levels.end(), [](RoomsLevel* rl) {delete rl;}); }
     RoomsLevel* getLevel(int level, bool create_if_notexist);
     RoomsLevel* getDefaultLevel();
@@ -163,8 +163,9 @@ public:
     void getParams(ZoneParams* params) const;
     void resizeLevels(int x, int y);
     bool isChanged() const;
+    void setName(const tstring& name);
 private:
     std::vector<RoomsLevel*> m_levels;
     int start_index;
-    tstring m_original_name;
+    tstring m_name;
 };

@@ -16,9 +16,9 @@ public:
     {
     }
     
-  /*  void roomChanged(const ViewMapPosition& pos)
+    void roomChanged(const ViewMapPosition& pos)
     {
-        if (!pos.level)
+       /* if (!pos.level)
         {
             m_list.SelectItem(-1);
             return;
@@ -32,7 +32,7 @@ public:
             for (int i = 0, e = zones.size(); i < e; ++i)
                  { if (zones[i] == newzone) { index = i; break; }}
             m_list.SelectItem(index);
-        }
+        }*/
     }
     
     int addNewZone(Zone *zone)
@@ -52,12 +52,12 @@ public:
         return index;
     }
 
-    Zone* getCurrentZone()
+    /*Zone* getCurrentZone()
     {
         int id = m_list.GetCurSel();
         if (id == -1) return NULL;
         return zones[id];
-    }
+    }*/
 
     void setNotifications(HWND wnd, UINT msg)
     {
@@ -88,14 +88,14 @@ private:
         WCHAR *textbuffer = (WCHAR*)buffer.getData();
         m_list.GetItemText(item, textbuffer, len);
         text->assign(textbuffer);
-    }*/
+    }
 
 private:
     BEGIN_MSG_MAP(MapperToolbar)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
-        //NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
-        //MESSAGE_HANDLER(WM_USER, OnSelectItem)
+        NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
+        MESSAGE_HANDLER(WM_USER, OnSelectItem)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
@@ -122,7 +122,7 @@ private:
         bHandled = FALSE;
         return 0;
     }
-    /*
+
     LRESULT OnSelectItem(UINT, WPARAM, LPARAM, BOOL&)
     {
         if (::IsWindow(m_parent))
@@ -158,5 +158,5 @@ private:
             zones[item]->setName(text);
         }
         return 0;
-    }*/
+    }
 };

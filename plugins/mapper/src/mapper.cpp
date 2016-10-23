@@ -513,7 +513,7 @@ void Mapper::redrawPosition(ViewCursorColor cursor)
     vp.cursor = cursor;
     vp.room = m_pCurrentRoom;
     m_view.roomChanged(vp);
-    //m_zones_control.roomChanged(m_viewpos);
+    m_zones_control.roomChanged(vp);
 }
 
 void Mapper::onCreate()
@@ -538,7 +538,7 @@ void Mapper::onCreate()
     m_container.attach(40, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
 
-//    m_zones_control.setNotifications(m_hWnd, WM_USER);
+    m_zones_control.setNotifications(m_hWnd, WM_USER);
     m_vSplitter.SetSplitterRect();
     m_vSplitter.SetDefaultSplitterPos();
     updateProps();
@@ -548,18 +548,18 @@ void Mapper::onSize()
 {
     RECT rc;
     GetClientRect(&rc);
-    /*int height = rc.bottom; rc.bottom = m_toolbar_height;
-    m_toolbar.MoveWindow(&rc);
-    rc.top = rc.bottom; rc.bottom = height;*/
     m_vSplitter.MoveWindow(&rc, FALSE);
     m_vSplitter.SetSplitterRect();
 }
 
-void Mapper::onZoneChanged()
+/*void Mapper::onZoneChanged()
 {
-    /*m_viewpos.reset();
+    //m_viewpos.reset();
     Zone *zone = m_zones_control.getCurrentZone();
     if (zone)
+        
         m_viewpos.level = zone->getDefaultLevel();
-    redrawPosition();*/
-}
+    redrawPosition();
+    int c=1;
+}*/
+

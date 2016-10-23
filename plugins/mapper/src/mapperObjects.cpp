@@ -222,7 +222,7 @@ RoomsLevel* Zone::getDefaultLevel()
 
 void Zone::getParams(ZoneParams* params) const
 {
-    params->original_name = m_original_name;
+    params->name = m_name;
     if (m_levels.empty())
         { params->empty = true; return; }
     int lc = m_levels.size();
@@ -246,6 +246,11 @@ bool Zone::isChanged() const
             return true;
     }
     return false;
+}
+
+void Zone::setName(const tstring& name)
+{
+    m_name = name;
 }
 
 int Zone::width() const
