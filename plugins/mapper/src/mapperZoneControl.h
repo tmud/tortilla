@@ -6,9 +6,10 @@ class MappeZoneControl : public CDialogImpl<MappeZoneControl>
 {
     CEditListBox m_list;
     RECT rc_list;
-    std::vector<Zone*> zones;
+    //std::vector<Zone*> zones;
     HWND m_parent;
     UINT m_msg;
+    //Zone* m_pCurrentZone;
 
 public:
     enum { IDD = IDD_MAPPER_ZONES };
@@ -16,9 +17,9 @@ public:
     {
     }
     
-    void roomChanged(const ViewMapPosition& pos)
+    /*void roomChanged(const ViewMapPosition& pos)
     {
-       /* if (!pos.level)
+        if (!pos.level)
         {
             m_list.SelectItem(-1);
             return;
@@ -32,12 +33,25 @@ public:
             for (int i = 0, e = zones.size(); i < e; ++i)
                  { if (zones[i] == newzone) { index = i; break; }}
             m_list.SelectItem(index);
-        }*/
-    }
+        }
+    }*/
     
-    int addNewZone(Zone *zone)
-    {
-        int selection = m_list.GetCurSel();
+    int selectZone(const tstring& zone, bool select)
+    {        
+        MemoryBuffer b;
+        int index = m_list.GetCurSel();
+        if (index == -1)
+        {
+            for (int i=0,e=m_list.GetItemCount();i<e;++i)
+            {
+                int len = m_list.GetItemTextLen(i);
+                b.alloc((len+1)*sizeof(tchar));
+                tchar* buffer = (tchar*)b.getData();
+                m_list.GetItemText(i, buffer, len);
+            }
+        }
+
+        /*int selection = m_list.GetCurSel();
         int index = findZone(zone);
         if (index == -1)
         {
@@ -46,9 +60,15 @@ public:
             index = m_list.GetItemCount();
             m_list.InsertItem(index, zp.name.c_str());
             zones.push_back(zone);
+            index = m_list.GetItemCount()-1;
         }
-        if (selection == -1)
-            m_list.SelectItem(-1);
+        if (select) {
+                m_list.SelectItem(index);
+        } else {
+            if (selection == -1)
+                m_list.SelectItem(-1);
+        }
+        */
         return index;
     }
 
@@ -66,7 +86,7 @@ public:
     }
 
 private:
-    int findZone(Zone *zone) 
+    /*int findZone(Zone *zone) 
     {
         ZoneParams zp;
         zone->getParams(&zp);
@@ -78,7 +98,7 @@ private:
                 return i;
         }
         return -1;
-    }
+    }*/
 
     void getItemText(int item, tstring* text)
     {
@@ -132,7 +152,7 @@ private:
 
     LRESULT OnChanged(int, LPNMHDR pnmh, BOOL&)
     {
-        NMEDITLIST *list = (NMEDITLIST*)pnmh;
+       /* NMEDITLIST *list = (NMEDITLIST*)pnmh;
         int item = list->iIndex;
         tstring text;
         getItemText(item, &text);
@@ -156,7 +176,7 @@ private:
         else
         {
             zones[item]->setName(text);
-        }
+        }*/
         return 0;
     }
 };

@@ -85,6 +85,12 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         }    
     }
     m_pCurrentRoom = new_room;
+    /*if (m_pCurrentRoom && m_pCurrentRoom->level)
+        m_zones_control.selectZone(m_pCurrentRoom->level->getZone(), true);
+    else 
+    {
+        int x = 1;
+    }*/
     redrawPosition(RCC_NORMAL);
 }
 
@@ -126,10 +132,13 @@ void Mapper::createNewZone(Room *room)
         if (zt == m_zones.end())
             break;
     }
-    tstring zone_name(buffer);
+    tstring zone_name(buffer);    
     RoomCursorNewZone nz;
-    m_zones[zone_name] = nz.createNewZone(zone_name, room);
-
+    Zone *z = nz.createNewZone(zone_name, room);
+    if (z) {
+      m_zones_control.selectZone(zone_name, true);
+      m_zones[zone_name] = z;
+    }
 }
 
 void Mapper::processCmd(const tstring& cmd)
@@ -513,7 +522,13 @@ void Mapper::redrawPosition(ViewCursorColor cursor)
     vp.cursor = cursor;
     vp.room = m_pCurrentRoom;
     m_view.roomChanged(vp);
-    m_zones_control.roomChanged(vp);
+    if (vp.room)
+    {
+        Zone* z = vp.room->level->getZone();
+        ZoneParams zp;
+        z->getParams(&zp);
+        m_zones_control.selectZone(zp.name, true);
+    }
 }
 
 void Mapper::onCreate()

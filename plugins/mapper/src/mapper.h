@@ -77,7 +77,7 @@ private:
     void  popDir();
     Room* findRoom(const RoomData& room);
     Zone* getZone(const RoomData& room);
-    void createNewZone(Room *room);
+    void  createNewZone(Room *room);
 
 
     /*Zone* addNewZone();
