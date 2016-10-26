@@ -89,6 +89,13 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
     tstring error, main_cmd(cmd->command);
     recognizeSystemCommand(&main_cmd, &error);
 
+    if (error.empty() && (main_cmd == L"output" || main_cmd == L"woutput"))
+    {
+        Tokenizer t(cmd->parameters.c_str(), L" ");
+        t.trimempty();
+        t.moveto(&cmd->parameters_list);
+    }
+
     PropertiesData *pdata = tortilla::getProperties();
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
     bool hide_cmd = (!main_cmd.compare(L"hide")) ? true : false;

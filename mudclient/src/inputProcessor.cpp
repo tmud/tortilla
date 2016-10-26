@@ -253,6 +253,13 @@ void InputTemplateCommands::fillgamecmd(InputCommand cmd)
        cmd->parameters_list.push_back(tstring(p, s-p));
        p = s;
     }
+    if (!cmd->parameters_list.empty())
+    {
+        tstring &p = cmd->parameters_list[0];
+        if (p.at(0) == L' ') {
+            p = p.substr(1);
+        }
+    }
 }
 
 void InputTemplateCommands::parsecmd(const tstring& cmd)
