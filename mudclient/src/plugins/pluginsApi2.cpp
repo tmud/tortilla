@@ -694,6 +694,21 @@ int vd_setBlockColor(lua_State *L)
                     lua_pushboolean(L, 1);
                     return 1;
                 }
+                HighlightHelper hh;
+                if (hh.checkText(&color))
+                {
+                    PropertiesHighlight hl;
+                    hl.convertFromString(color);
+                    MudViewStringParams &p = vs->blocks[block-1].params;
+                    p.ext_text_color = hl.textcolor;
+                    p.ext_bkg_color = hl.bkgcolor;
+                    p.blink_status = hl.border;
+                    p.italic_status = hl.italic;
+                    p.underline_status = hl.underlined;
+                    p.use_ext_colors = 1;
+                    lua_pushboolean(L, 1);
+                    return 1;
+                }
                 pluginInvArgsValues(L, L"viewdata:setBlockColor");
                 lua_pushboolean(L, 1);
                 return 0;
@@ -1535,6 +1550,21 @@ int vs_setBlockColor(lua_State *L)
             int result = pcs.deserialize(color.c_str(), &s->get(block-1));
             if (result!=-1)
             {
+                lua_pushboolean(L, 1);
+                return 1;
+            }
+            HighlightHelper hh;
+            if (hh.checkText(&color))
+            {
+                PropertiesHighlight hl;
+                hl.convertFromString(color);
+                MudViewStringParams &p = s->get(block-1).params;
+                p.ext_text_color = hl.textcolor;
+                p.ext_bkg_color = hl.bkgcolor;
+                p.blink_status = hl.border;
+                p.italic_status = hl.italic;
+                p.underline_status = hl.underlined;
+                p.use_ext_colors = 1;
                 lua_pushboolean(L, 1);
                 return 1;
             }

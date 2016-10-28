@@ -293,6 +293,48 @@ int system_getDate(lua_State *L)
     return luaT_error(L, L"Incorrect parameters system.getDate");
 }
 
+int system_appendStringToFile(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        HANDLE file = CreateFile(filename.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file == INVALID_HANDLE_VALUE)
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        AutoCloseHandle auto_close(file);
+        if (SetFilePointer(file, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        std::string text( lua_tostring(L, 2));
+        DWORD len = text.length();
+        DWORD written = 0;
+        if (!WriteFile(file, text.c_str(), len, &written, NULL))
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    return luaT_error(L, L"Incorrect parameters system.appendStringToFile");
+}
+
+int system_deleteFile(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        DeleteFile(filename.c_str());
+        return 0;
+    }
+    return luaT_error(L, L"Incorrect parameters system.deleteFile");
+}
+
 static const luaL_Reg system_methods[] =
 {
     { "dbgstack", system_debugstack},
@@ -306,6 +348,8 @@ static const luaL_Reg system_methods[] =
     { "beep", system_beep },
     { "getTime", system_getTime },
     { "getDate", system_getDate },
+    { "appendStringToFile", system_appendStringToFile },
+    { "deleteFile", system_deleteFile },
     { NULL, NULL }
 };
 

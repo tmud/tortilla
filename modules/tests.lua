@@ -145,3 +145,17 @@ print(h..":"..m..":"..s)
 
 local day,mon,year = system.getDate()
 print(day.."."..mon.."."..year)
+
+system.appendStringToFile("test.txt", "строка1\r\n")
+system.appendStringToFile("test.txt", "строка2\r\n")
+
+local t = system.loadTextFile("test.txt")
+if not t then
+  print("unit test (appendStringToFile+loadTextFile) faled")
+end
+if t[1] ~= 'строка1' or t[2] ~= 'строка2' then
+  print("unit test loadTextFile faled")
+end
+
+system.deleteFile("test.txt")
+
