@@ -1,12 +1,8 @@
 #include "stdafx.h"
 #include "logsProcessor.h"
-WCHAR* month[12] = { L"ßíâ", L"Ôåâ", L"Ìàð", L"Àïð", L"Ìàé", L"Èþí", L"Èþë", L"Àâã", L"Ñåí", L"Îêò", L"Íîÿ", L"Äåê" };
 
-LogsProcessor::LogsProcessor() : m_palette(NULL)
+LogsProcessor::LogsProcessor() 
 {
-    m_buffer.alloc(4096);
-    m_color_buffer.alloc(32);
-    m_color_buffer2.alloc(32);
 }
 
 LogsProcessor::~LogsProcessor()
@@ -15,7 +11,6 @@ LogsProcessor::~LogsProcessor()
     stop();
     wait();
     std::for_each(m_free.begin(),m_free.end(),[](MudViewString* s) {delete s;});
-    delete m_palette;
 }
 
 bool LogsProcessor::init()
@@ -238,7 +233,7 @@ void LogsProcessor::saveAll()
 
 void LogsProcessor::prepare_txt(int id)
 {
-    log *l = m_logs[id];
+    /*log *l = m_logs[id];
     l->opened = true;
 
     if (l->append)
@@ -270,12 +265,12 @@ void LogsProcessor::prepare_txt(int id)
         getHeader(&date);
         bin.append(date);
         write(l->hfile, bin);
-    }
+    }*/
 }
 
 void LogsProcessor::prepare(int id)
 {
-    log *l = m_logs[id];
+    /*log *l = m_logs[id];
     l->opened = true;
 
     bool result = true;
@@ -368,7 +363,7 @@ void LogsProcessor::prepare(int id)
         std::string date;
         getHeader(&date);
         write(l->hfile, date);
-    }
+    }*/
 }
 
 void LogsProcessor::write(HANDLE file, const std::string &data)
@@ -386,20 +381,8 @@ void LogsProcessor::closeReqLogs()
         log *l = m_logs[i];
         if (l && l->close)
         {
-            std::string finish;
-            getHeader(&finish);
-            std::string closed(TW2U(L"Ëîã çàêðûò.\r\n"));
-            if (l->opened)
-            {
-                write(l->hfile, finish);
-                write(l->hfile, closed);
-            }
-            if (l->opened && l->htmlformat)
-            {
-                std::string close = "</pre></body></html>";
-                write(l->hfile, close);
-            }
-            CloseHandle(l->hfile);
+            l->ff->close();
+            delete l->ff;
             m_logs[i] = NULL;
             delete l;
         }
@@ -476,12 +459,12 @@ void LogsProcessor::convertString(MudViewString* str, std::string* out)
 
 void LogsProcessor::updateProps(PropertiesData *pdata)
 {
-    CSectionLock _lock(m_cs_logs);
+   /* CSectionLock _lock(m_cs_logs);
     m_propData = pdata;
     if (!m_palette)
         m_palette = new Palette256(pdata);
     else
-        m_palette->updateProps(pdata);
+        m_palette->updateProps(pdata);*/
 }
 
 MudViewString* LogsProcessor::getFreeString()
@@ -494,7 +477,7 @@ MudViewString* LogsProcessor::getFreeString()
     return s;
 }
 
-const char* LogsProcessor::color(COLORREF c)
+/*const char* LogsProcessor::color(COLORREF c)
 {
     char *buffer = m_color_buffer.getData();
     sprintf(buffer, "#%.2x%.2x%.2x", GetRValue(c), GetGValue(c), GetBValue(c));
@@ -522,3 +505,4 @@ void LogsProcessor::getHeader(std::string* out)
     tu.append(buffer);
     out->assign(TW2U(tu.c_str()));
 }
+*/

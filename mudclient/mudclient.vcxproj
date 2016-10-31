@@ -161,6 +161,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />
     <ClInclude Include="src\logicPipeline.h" />
+    <ClInclude Include="src\logsFormatter.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />
@@ -236,6 +237,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\highlightHelper.cpp" />
     <ClCompile Include="src\inputProcessorTests.cpp" />
     <ClCompile Include="src\LogicProcessor3.cpp" />
+    <ClCompile Include="src\logsFormatter.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
     <ClCompile Include="src\msdp\msdpNetwork.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
