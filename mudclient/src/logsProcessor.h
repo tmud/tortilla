@@ -22,18 +22,18 @@ private:
     void threadProc();
     void closeAllLogs();
     void saveAll();
-    void prepare(int id);
-    void prepare_txt(int id);
+    //void prepare(int id);
+    //void prepare_txt(int id);
     void write(HANDLE file, const std::string &data);
     void closeReqLogs();
-    void convertString(MudViewString* str, std::string* out);
-    void convertString_txt(MudViewString* str, std::string* out);
+    //void convertString(MudViewString* str, std::string* out);
+    //void convertString_txt(MudViewString* str, std::string* out);
     //void getHeader(std::string* out);
     MudViewString* getFreeString();
     //const char* color(COLORREF c);
     //const char* color2(COLORREF c);
 
-    WideToUtf8 m_converter;
+    //WideToUtf8 m_converter;
     CriticalSection m_cs_logs;
     CriticalSection m_cs;
     //Palette256     *m_palette;
@@ -41,14 +41,13 @@ private:
 
     struct log
     {
-        log() : ff(NULL), close(false), newlog(false), append(false), opened(false), htmlformat(true) {}
+        log() : ff(NULL), close(false) {} //, newlog(false), append(false), opened(false) {} //, htmlformat(true) {}
         LogsFormatter* ff;
-        tstring filename;
         bool close;
-        bool newlog;
-        bool append;
-        bool opened;
-        bool htmlformat;
+        //bool newlog;
+        //bool append;
+        //bool opened;
+        //bool htmlformat;
     };
     std::vector<log*> m_logs;
 

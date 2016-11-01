@@ -37,7 +37,15 @@ bool LogsFormatter::open(const tstring& filename, PrepareMode pmode)
             return false;
         }
     }
+    m_mode = pmode;
     return true;
+}
+
+void LogsFormatter::writeString(const MudViewString* str)
+{
+    std::string data;
+    convertString(str, &data);
+    write(data);
 }
 
 void LogsFormatter::write(const std::string &data)
@@ -91,10 +99,10 @@ void LogsFormatterHtml::close()
     hfile = INVALID_HANDLE_VALUE;
 }
 
-void LogsFormatterHtml::prepare(PrepareMode pmode)
+void LogsFormatterHtml::prepare()
 {
     bool result = true;
-    if (pmode == PM_APPEND)
+    if (m_mode == PM_APPEND)
     {
         DWORD inbuffer = 0;
         DWORD hsize = 0;
@@ -156,7 +164,7 @@ void LogsFormatterHtml::prepare(PrepareMode pmode)
         }
     }
 
-    if (pmode == PM_NEW || !result)
+    if (m_mode == PM_NEW || !result)
     {
         if (!result)
         {
@@ -281,9 +289,9 @@ void LogsFormatterTxt::close()
     hfile = INVALID_HANDLE_VALUE;
 }
 
-void LogsFormatterTxt::prepare(PrepareMode pmode)
+void LogsFormatterTxt::prepare()
 {
-    if (pmode == PM_APPEND)
+    if (m_mode == PM_APPEND)
     {
         // append
         ::SetFilePointer(hfile, 0, NULL, FILE_END);
@@ -300,7 +308,7 @@ void LogsFormatterTxt::prepare(PrepareMode pmode)
         bin.append(date);
         write(bin);
     }
-    if (pmode == PM_NEW)
+    if (m_mode == PM_NEW)
     {   // new
         SetFilePointer(hfile, 0, NULL, FILE_BEGIN);
         SetEndOfFile(hfile);

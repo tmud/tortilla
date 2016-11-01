@@ -10,8 +10,10 @@ public:
     LogsFormatter(PropertiesData *pd);
     virtual ~LogsFormatter();
     bool open(const tstring& filename, PrepareMode pmode);
+    const tstring& getFilename() const { return m_filename; }
     virtual void close() = 0;
-    virtual void prepare(PrepareMode pmode) = 0;
+    virtual void prepare() = 0;
+    virtual void writeString(const MudViewString* str);
     virtual void convertString(const MudViewString* str, std::string* out) = 0;
 protected:
     void getHeader(std::string* out);
@@ -19,6 +21,8 @@ protected:
     PropertiesData* m_propData;
     HANDLE hfile;
     WideToUtf8 m_converter;
+    tstring m_filename;
+    PrepareMode m_mode;
 };
 
 class LogsFormatterHtml : public LogsFormatter
@@ -30,7 +34,7 @@ class LogsFormatterHtml : public LogsFormatter
 public:
     LogsFormatterHtml(PropertiesData *pd);
     ~LogsFormatterHtml();
-    void prepare(PrepareMode pmode);
+    void prepare();
     void convertString(const MudViewString* str, std::string* out);
     void close();
 private:    
@@ -44,7 +48,7 @@ class LogsFormatterTxt : public LogsFormatter
 public:
     LogsFormatterTxt(PropertiesData *pd);
     ~LogsFormatterTxt();
-    void prepare(PrepareMode pmode);
+    void prepare();
     void convertString(const MudViewString* str, std::string* out);
     void close();
 };
