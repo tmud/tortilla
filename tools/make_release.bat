@@ -58,6 +58,7 @@ xcopy ..\plugins\inveq.lua tortilla\plugins /Y
 xcopy ..\plugins\affects.lua tortilla\plugins /Y
 xcopy ..\plugins\cmdfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\speedwalk.lua tortilla\plugins /Y
+xcopy ..\plugins\spit.lua tortilla\plugins /Y
 
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
