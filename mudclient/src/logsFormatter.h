@@ -9,12 +9,13 @@ public:
     enum PrepareMode { PM_NEW = 0, PM_APPEND };
     LogsFormatter(PropertiesData *pd);
     virtual ~LogsFormatter();
-    bool open(const tstring& filename, PrepareMode pmode);
     const tstring& getFilename() const { return m_filename; }
-    virtual void close() = 0;
-    virtual void prepare() = 0;
+    virtual bool open(const tstring& filename, PrepareMode pmode);
+    virtual bool prepare() { return true; };
+    virtual void close();
     virtual void writeString(const MudViewString* str);
-    virtual void convertString(const MudViewString* str, std::string* out) = 0;
+    virtual void flushStrings();
+    virtual void convertString(const MudViewString* str, std::string* out);
 protected:
     void getHeader(std::string* out);
     void write(const std::string &data);
@@ -34,10 +35,10 @@ class LogsFormatterHtml : public LogsFormatter
 public:
     LogsFormatterHtml(PropertiesData *pd);
     ~LogsFormatterHtml();
-    void prepare();
+    bool prepare();
     void convertString(const MudViewString* str, std::string* out);
     void close();
-private:    
+private:
     const char* color(COLORREF c);
     const char* color2(COLORREF c);
 };
@@ -48,7 +49,7 @@ class LogsFormatterTxt : public LogsFormatter
 public:
     LogsFormatterTxt(PropertiesData *pd);
     ~LogsFormatterTxt();
-    void prepare();
+    bool prepare();
     void convertString(const MudViewString* str, std::string* out);
     void close();
 };

@@ -38,7 +38,14 @@ bool LogsFormatter::open(const tstring& filename, PrepareMode pmode)
         }
     }
     m_mode = pmode;
+    m_filename = filename;
     return true;
+}
+
+void LogsFormatter::close()
+{
+    CloseHandle(hfile);
+    hfile = INVALID_HANDLE_VALUE;
 }
 
 void LogsFormatter::writeString(const MudViewString* str)
@@ -46,6 +53,16 @@ void LogsFormatter::writeString(const MudViewString* str)
     std::string data;
     convertString(str, &data);
     write(data);
+}
+
+void LogsFormatter::flushStrings()
+{
+    FlushFileBuffers(hfile);
+}
+
+void LogsFormatter::convertString(const MudViewString* str, std::string* out)
+{
+    assert(false);
 }
 
 void LogsFormatter::write(const std::string &data)
@@ -74,8 +91,8 @@ LogsFormatterHtml::LogsFormatterHtml(PropertiesData *pd) : LogsFormatter(pd)
 {
     m_palette = new Palette256(pd);
     m_buffer.alloc(4096);
-    m_color_buffer.alloc(32);
-    m_color_buffer2.alloc(32);
+    m_color_buffer.alloc(10);
+    m_color_buffer2.alloc(10);
 }
 
 LogsFormatterHtml::~LogsFormatterHtml()
@@ -91,15 +108,14 @@ void LogsFormatterHtml::close()
     if (hfile != INVALID_HANDLE_VALUE)
     {
         write(finish);
-        write(closed);    
+        write(closed);
         std::string close = "</pre></body></html>";
         write(close);
     }
-    CloseHandle(hfile);
-    hfile = INVALID_HANDLE_VALUE;
+    LogsFormatter::close();
 }
 
-void LogsFormatterHtml::prepare()
+bool LogsFormatterHtml::prepare()
 {
     bool result = true;
     if (m_mode == PM_APPEND)
@@ -192,6 +208,7 @@ void LogsFormatterHtml::prepare()
         getHeader(&date);
         write(date);
     }
+    return true;
 }
 
 void LogsFormatterHtml::convertString(const MudViewString* str, std::string* out)
@@ -235,18 +252,34 @@ void LogsFormatterHtml::convertString(const MudViewString* str, std::string* out
             tbyte bkg = p.bkg_color;
             if (p.reverse_video) { tbyte x = txt; txt = bkg; bkg = x; }
             if (txt <= 7 && p.intensive_status) { txt += 8; } // txt >= 0 always
-            if (!eff.empty())
-                sprintf(buffer, "%s c%d", eff.c_str(), txt);
-            else
-                sprintf(buffer, "c%d", txt);
-
-            std::string tmp(buffer);
-            if (p.bkg_color != 0)
+            if (txt < 16 && p.bkg_color < 16)
             {
-                sprintf(buffer, "%s b%d", tmp.c_str(), bkg);
-                tmp.assign(buffer);
+                if (!eff.empty())
+                    sprintf(buffer, "%s c%d", eff.c_str(), txt);
+                else
+                    sprintf(buffer, "c%d", txt);
+                std::string tmp(buffer);
+                if (p.bkg_color != 0)  {
+                    sprintf(buffer, "%s b%d", tmp.c_str(), bkg);
+                    tmp.assign(buffer);
+                }
+                sprintf(buffer, "<a class=\"%s\">%s</a>", tmp.c_str(), (const char*)m_converter);
             }
-            sprintf(buffer, "<a class=\"%s\">%s</a>", tmp.c_str(), (const char*)m_converter);
+            else
+            {
+                std::string text(m_converter);
+                if (!eff.empty()) {
+                    sprintf(buffer, "<a class=\"%s\">%s</a>", eff.c_str(), text.c_str());
+                    text.assign(buffer);
+                }
+                COLORREF c1 = m_palette->getColor(txt);
+                if (p.bkg_color != 0) {
+                   COLORREF c2 = m_palette->getColor(p.bkg_color);
+                   sprintf(buffer, "<span style=\"color:%s;background-color:%s\">%s</span>", color(c1), color2(c2), text.c_str());
+                } else {
+                   sprintf(buffer, "<span style=\"color:%s\">%s</span>", color(c1), text.c_str());
+                }
+            }
         }
         out->append(buffer);
     }
@@ -285,11 +318,10 @@ void LogsFormatterTxt::close()
         write(finish);
         write(closed);
     }
-    CloseHandle(hfile);
-    hfile = INVALID_HANDLE_VALUE;
+    LogsFormatter::close();
 }
 
-void LogsFormatterTxt::prepare()
+bool LogsFormatterTxt::prepare()
 {
     if (m_mode == PM_APPEND)
     {
@@ -320,6 +352,7 @@ void LogsFormatterTxt::prepare()
         bin.append(date);
         write(bin);
     }
+    return true;
 }
 
 void LogsFormatterTxt::convertString(const MudViewString* str, std::string* out)
@@ -330,4 +363,3 @@ void LogsFormatterTxt::convertString(const MudViewString* str, std::string* out)
     out->assign(m_converter);
     out->append("\r\n");
 }
-
