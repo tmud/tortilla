@@ -15,15 +15,13 @@ int system.msgbox([string caption,] string text [,string buttons_and_icons] ) - 
 table system.loadTextFile(filepath) - загружает текстовый файл в таблицу отдельными строками. 
 Индексы строк начинаютя от 1. Возвращает nul, если файл прочитать не удалось. Непечатаемые символы 
 с кодом до 32 (кроме \r\n) заменяются на пробелы.
-bool system.appendStringToFile(filepath, file) - добавляет в конец файла текстовую строку (байты 2 параметра).
+bool system.appendStringToFile(filepath, file) - добавляет в конец файла текстовую строку данные из 2 параметра.
 void system.deleteFile(filepath) - удаляет файл.
-
 string system.convertFromWin(string) - конвертация строки из win-кодировки(ansi) в utf8-кодировку
 string system.convertToWin(string) - конвертация из utf8-кодировки в win-кодировку
 void system.beep(int freq, int duration) - проигрывание звука заданной частоты и длительности
 seconds, minutes, hour = system.getTime() - текущее время
 day, month, year = system.getDate() - текущая дата
-
 ------------------------------------------------------------------------------------------------------------
 rnd - генератор случайных чисел и строк
 void rnd.seed(uint seed) - сброс ключа генератора на другое значение.

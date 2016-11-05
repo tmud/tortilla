@@ -1306,6 +1306,28 @@ int getVersion(lua_State *L)
     return pluginInvArgs(L, L"getVersion");
 }
 
+int checkVersion(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        int major = lua_tointeger(L, 1);
+        int minor = lua_tointeger(L, 2);
+
+        if (major < TORTILLA_VERSION_MAJOR) {
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        if (major == TORTILLA_VERSION_MAJOR && minor <= TORTILLA_VERSION_MINOR) {
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"checkVersion");
+}
+
 int isGroupActive(lua_State *L)
 {
     EXTRA_CP;
@@ -1396,6 +1418,7 @@ bool initPluginsSystem()
     lua_register(L, "clearView", clearView);
     lua_register(L, "translateColors", translateColors);
     lua_register(L, "getVersion", getVersion);
+    lua_register(L, "checkVersion", checkVersion);
     lua_register(L, "isGroupActive", isGroupActive);
 
     reg_props(L);

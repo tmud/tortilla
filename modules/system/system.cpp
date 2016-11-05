@@ -232,6 +232,54 @@ int system_loadTextFile(lua_State *L)
     return 0;
 }
 
+int system_saveTextFile(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TTABLE))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        HANDLE file = CreateFile(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            bool error = false;
+            AutoCloseHandle auto_close(file);
+            {
+                unsigned char bom[3] = {  0xEF, 0xBB, 0xBF };
+                DWORD written = 0;
+                if (!WriteFile(file, bom, 3, &written, NULL))
+                    error = true;
+            }
+
+            std::string text;
+            int index = 1;
+            while (!error)
+            {
+                lua_pushinteger(L, index++);
+                lua_gettable(L, -2);                
+                if (lua_isstring(L, -1))
+                    text.assign(lua_tostring(L, -1));
+                else if lua_isnil(L, -1)  {
+                    lua_pop(L, 1);
+                    break;
+                }
+                else {
+                    text.clear();
+                }
+                lua_pop(L, 1);
+                text.append("\r\n");
+                DWORD written = 0;
+                if (!WriteFile(file, text.c_str(), text.length(), &written, NULL))
+                    error = true;
+            }
+            if (!error) {
+            lua_pushboolean(L, 1);
+            return 1;
+            }
+        }
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
+
 int system_convertFromWin(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -348,6 +396,7 @@ static const luaL_Reg system_methods[] =
     { "beep", system_beep },
     { "getTime", system_getTime },
     { "getDate", system_getDate },
+    { "saveTextFile", system_saveTextFile },
     { "appendStringToFile", system_appendStringToFile },
     { "deleteFile", system_deleteFile },
     { NULL, NULL }

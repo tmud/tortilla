@@ -825,8 +825,13 @@ u8string x( TW2U(L"строка") );
 <hr>
 <h4>int,int getVersion()</h4>
 <div class="m">Параметры: нет</div><br>
-<div class="m">Результат: int major, int minor<br></div><br>
+<div class="m">Результат: int major, int minor</div><br><br>
 Функция возвращает 2 целочисленных значения - старшую и младшую часть версии клиента. Предназначена для проверки плагинами, что версия клиента достаточная для их работы.
+<hr>
+<h4>bool checkVersion(int major, int minor)</h4>
+<div class="m">Параметры: major, minor - требуемая версия клиента.</div><br>
+<div class="m">Результат: bool</div><br><br>
+Функция проверяет версию клиента с заданным значением. Предназначена для проверки плагинами, что версия клиента достаточная для их работы.
 <hr>
 <h4>void addCommand(string cmd)</h4>
 <div class="m">Параметры: cmd - системная команда</div><br>
