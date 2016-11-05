@@ -10,13 +10,11 @@ public:
     LogsProcessor();
     ~LogsProcessor();
     bool init();
-    int  openLog(const tstring& filename, bool newlog);
+    int  openLog(tstring& filename, bool newlog);
     void closeLog(int id);
     void writeLog(int id, const parseData& pdata);
     tstring getLogFile(int id);
     void updateProps(PropertiesData *pdata);
-    void calcFileName(tstring& filename);
-
 private:
     void threadProc();
     void closeAllLogs();

@@ -18,47 +18,27 @@ bool LogsProcessor::init()
     return run();
 }
 
-void LogsProcessor::calcFileName(tstring& filename)
+int LogsProcessor::openLog(tstring& filename, bool newlog)
 {
     bool htmlformat = true;
     tstring format(m_propData->logformat);
     if (format == L"txt")
         htmlformat = false;
-    int pos = filename.rfind(L'.');
-    if (pos == -1)
-    {
-        filename.append(htmlformat ? L".html" : L".txt");
-    }
-    else
-    {
-        tstring ext(filename.substr(pos + 1));
-        if (htmlformat) 
-        {
-            if (ext != L"htm" && ext != L"html")
-                filename.append(L".html");
-        }
-        else
-        {
-            if (ext != L"txt")
-                filename.append(L".txt");
-        }
-    }
-}
 
-int LogsProcessor::openLog(const tstring& filename, bool newlog)
-{
+    LogsFormatter *ff = NULL;
+    if (htmlformat) ff = new LogsFormatterHtml(m_propData);
+    else ff = new LogsFormatterTxt(m_propData);
+    ff->normFilename(filename);
+
     int index = -1;
     CSectionLock _lock(m_cs_logs);
     for (int i=0,e=m_logs.size(); i<e; ++i)
         if (m_logs[i] && m_logs[i]->ff->getFilename() == filename) { index = i; break; }
  
-    bool htmlformat = true;
-    tstring format(m_propData->logformat);
-    if (format == L"txt")
-        htmlformat = false;
     LogsFormatter::PrepareMode pm = (newlog) ? LogsFormatter::PM_NEW : LogsFormatter::PM_APPEND;
     if (index != -1) 
     {
+        delete ff;
         log *l = m_logs[index];
         if (!l->ff->open(filename, pm)) 
         {
@@ -68,10 +48,6 @@ int LogsProcessor::openLog(const tstring& filename, bool newlog)
         l->close = false;
         return index;
     }
-
-    LogsFormatter *ff = NULL;
-    if (htmlformat) ff = new LogsFormatterHtml(m_propData);
-    else ff = new LogsFormatterTxt(m_propData);
 
     if (!ff->open(filename, pm) || !ff->prepare())
     {

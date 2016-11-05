@@ -10,6 +10,7 @@ public:
     LogsFormatter(PropertiesData *pd);
     virtual ~LogsFormatter();
     const tstring& getFilename() const { return m_filename; }
+    virtual void normFilename(tstring &name) {}
     virtual bool open(const tstring& filename, PrepareMode pmode);
     virtual bool prepare() { return true; };
     virtual void close();
@@ -35,6 +36,7 @@ class LogsFormatterHtml : public LogsFormatter
 public:
     LogsFormatterHtml(PropertiesData *pd);
     ~LogsFormatterHtml();
+    void normFilename(tstring &filename);
     bool prepare();
     void convertString(const MudViewString* str, std::string* out);
     void close();
@@ -49,6 +51,7 @@ class LogsFormatterTxt : public LogsFormatter
 public:
     LogsFormatterTxt(PropertiesData *pd);
     ~LogsFormatterTxt();
+    void normFilename(tstring &filename);
     bool prepare();
     void convertString(const MudViewString* str, std::string* out);
     void close();

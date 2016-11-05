@@ -115,6 +115,19 @@ void LogsFormatterHtml::close()
     LogsFormatter::close();
 }
 
+void LogsFormatterHtml::normFilename(tstring &filename)
+{
+    int pos = filename.rfind(L'.');
+    if (pos == -1)
+        filename.append(L".html");
+    else
+    {
+        tstring ext(filename.substr(pos + 1));
+        if (ext != L"htm" && ext != L"html")
+           filename.append(L".html");
+    }
+}
+
 bool LogsFormatterHtml::prepare()
 {
     bool result = true;
@@ -319,6 +332,19 @@ void LogsFormatterTxt::close()
         write(closed);
     }
     LogsFormatter::close();
+}
+
+void LogsFormatterTxt::normFilename(tstring &filename)
+{
+    int pos = filename.rfind(L'.');
+    if (pos == -1)
+        filename.append(L".txt");
+    else
+    {
+        tstring ext(filename.substr(pos + 1));
+        if (ext != L"txt")
+           filename.append(L".text");
+    }
 }
 
 bool LogsFormatterTxt::prepare()
