@@ -48,9 +48,9 @@ end
 
 local files = {}
 local function writeFile(filename)
-  local t = files[filename]
+  local f = files[filename]
   if not f then return end
-  writeFileTable(filename, t)
+  writeFileTable(filename, f)
 end
 
 function textdb.release()
@@ -66,26 +66,39 @@ local function read(t)
   local filename = t[3]
   local f = files[filename]
   if not f then
-    if not system.loadTextFile(filename) then
-      f = {}
-      if not writeFileTable(filename, f) then
-        log('Ошибка при чтении файла: '..filename)
-        return true
-      end
+    f = system.loadTextFile(filename)
+    if not f then
+      print('[textdb] Файл не найден: '..filename)
+      return true
     end
     files[filename] = f
   end
   if index >= 1 and index <= #f then
-    vars.replace(t[5], f[index])
+    vars:replace(t[5], f[index])
   else
-    vars.replace(t[5], '')
+    vars:replace(t[5], '')
   end
   return true
 end
 
 local function write(t)
   if #t ~= 5 then return false end
-  return true
+  local index = tonumber(t[4])
+  if not index then return false end
+  local filename = t[3]
+  local f = files[filename]
+  if not f then
+    f = system.loadTextFile(filename) 
+    if not f then f = {} end
+    files[filename] = f
+  end
+  if index >= 1 then
+    local from = #f+1
+    for i=from,index-1 do f[i] = '' end
+    f[index] = t[5]
+    return true
+  end
+  return false
 end
 
 function textdb.syscmd(t)
