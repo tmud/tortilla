@@ -1800,6 +1800,24 @@ void reg_mt_viewstring(lua_State *L)
     lua_pop(L, 1);
 }
 //--------------------------------------------------------------------
+void ao_log_change(bool result, ActiveObjects *ao)
+{
+    if (!result || !ao->showmessage()) return;
+    tstring v;
+    ao->format(&v);
+    if (!v.empty())
+        tmcLog(v);
+}
+
+void ao_log_delete(bool result, ActiveObjects *ao)
+{
+    if (!result || !ao->showmessage()) return;
+    tstring v;
+    ao->formatdel(&v);
+    if (!v.empty())
+        tmcLog(v);
+}
+//--------------------------------------------------------------------
 int ao_inv_args(lua_State *L, const tchar* fname)
 {
     if (!luaT_isobject(L, LUAT_ACTIVEOBJS, 1))
@@ -1880,6 +1898,7 @@ int ao_set(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->set(lua_tointeger(L, 2), luaT_towstring(L, 3));
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1890,6 +1909,7 @@ int ao_set(lua_State *L)
         {
             ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
             bool result = ao->set(type, luaT_towstring(L, 3));
+            ao_log_change(result, ao);
             lua_pushboolean(L, result ? 1 : 0);
             return 1;
         }
@@ -1903,6 +1923,7 @@ int ao_add(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->add(luaT_towstring(L, 2), luaT_towstring(L, 3), luaT_towstring(L, 4));
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1910,6 +1931,7 @@ int ao_add(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->add(luaT_towstring(L, 2), L"", luaT_towstring(L, 4));
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1918,6 +1940,7 @@ int ao_add(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->add(luaT_towstring(L, 2), luaT_towstring(L, 3), L"");
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1925,6 +1948,7 @@ int ao_add(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->add(luaT_towstring(L, 2), L"", L"");
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1937,6 +1961,7 @@ int ao_replace(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->replace(luaT_towstring(L, 2), luaT_towstring(L, 3), luaT_towstring(L, 4));
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1944,6 +1969,7 @@ int ao_replace(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->replace(luaT_towstring(L, 2), L"", luaT_towstring(L, 4));
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1952,6 +1978,7 @@ int ao_replace(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->replace(luaT_towstring(L, 2), luaT_towstring(L, 3), L"");
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1959,6 +1986,7 @@ int ao_replace(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->replace(luaT_towstring(L, 2), L"", L"");
+        ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
@@ -1971,6 +1999,7 @@ int ao_delete(lua_State *L)
     {
         ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
         bool result = ao->del();
+        ao_log_delete(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
