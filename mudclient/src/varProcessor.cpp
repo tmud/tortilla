@@ -9,6 +9,7 @@ class VarProcessorImpl
     typedef std::map<tstring, int>::const_iterator citerator;
     enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP };
     Pcre16 m_vars_regexp;
+    Pcre16 m_var_regexp;
 public:
     VarProcessorImpl();
     bool canset(const tstring& var) const
@@ -72,7 +73,8 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"SECOND"] = SECOND;
     v[L"MILLISECOND"] = MILLISECOND;
     v[L"TIMESTAMP"] = TIMESTAMP;
-    m_vars_regexp.setRegExp(L"\\$[0-9a-zA-Z_]+", true);
+    m_vars_regexp.setRegExp(L"\\$[a-zA-Z_][0-9a-zA-Z_.]*", true);
+    m_var_regexp.setRegExp(L"^[a-zA-Z_][0-9a-zA-Z_.]*$", true);
 }
 
 bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result)
@@ -131,8 +133,8 @@ bool VarProcessorImpl::setVar(PropertiesValues &vars, const tstring& var, const 
 {
     if (var.empty())
         return false;
-    tchar b = var.at(0);
-    if ((b >= L'a' && b <= L'z') || (b >= L'A' && b <= L'Z'))
+    m_var_regexp.find(var);
+    if (m_var_regexp.getSize() != 0)
     {
         int index = vars.find(var);
         vars.add(index, var, value, L"");

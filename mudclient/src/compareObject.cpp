@@ -14,7 +14,7 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     m_key = key;
     if (key.at(0) == L'$')      // regexp marker
     {
-       ParamsHelper ph(key, ParamsHelper::DETECT_ANYID);
+       ParamsHelper ph(key, false);
        if (ph.getSize() == 0)  // нет %0, %1 и т.д.
        {
           tstring regexp(key.substr(1));
@@ -96,7 +96,7 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
         return;
     }
 
-    ParamsHelper keys(m_key, ParamsHelper::BLOCK_DOUBLEID);
+    ParamsHelper keys(m_key, true);
     int maxid = keys.getMaxId()+1;
     if (maxid <= 0)
         maxid = 1;
@@ -139,7 +139,7 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
 
     // replace parameters, like %0 etc. to regexp
     int pos = 0; int len = tmp.length();
-    ParamsHelper ph(tmp, ParamsHelper::DETECT_ANYID|ParamsHelper::BLOCK_DOUBLEID);
+    ParamsHelper ph(tmp, true);
     for (int i=0,e=ph.getSize(); i<e; ++i)
     {
         prce_template->append(tmp.substr(pos, ph.getFirst(i) - pos));
@@ -160,7 +160,7 @@ void CompareObject::checkVars(tstring *pcre_template)
 
     //find vars like $var
     Pcre16 vars;
-    vars.setRegExp(L"\\$[a-zA-Z0-9_]+");
+    vars.setRegExp(L"\\$[a-zA-Z_][0-9a-zA-Z_.]*");
     vars.findAllMatches(*pcre_template);
     if (vars.getSize() == 0)
         return;

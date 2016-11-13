@@ -1,46 +1,51 @@
 #include "stdafx.h"
 #include "paramsHelper.h"
 
+Pcre16 ParamsHelper::pcre;
 Pcre16 ParamsHelper::cut;
-bool ParamsHelper::m_cutinitialized = false;
-ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1)
+bool ParamsHelper::m_static_init = false;
+ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles) : m_maxid(-1)
 {
-    if (mode == EXTENDED)
-        pcre.setRegExp(L"%(?:\\(.*\\))?[0-9]", true);
-    else
-      pcre.setRegExp( (mode & DETECT_ANYID) ?  L"(%[0-9%]){1}" : L"(%[0-9]){1}", true);
+    if (!m_static_init) {
+        m_static_init = true;
+        pcre.setRegExp(L"%(?:\\(.*\\))?[0-9%]", true);
+        cut.setRegExp(L"^(?:(-?[0-9]+),)?(-?[0-9]+)$", true);
+    }
     pcre.findAllMatches(param);
     for (int i=1,e=pcre.getSize(); i<e; ++i)
     {
-        tstring cut;
-        int pos = pcre.getFirst(i) + 1;
+        param_values pv;
+        pv.first = pcre.getFirst(i);
+        pv.last = pcre.getLast(i);
+        int pos = pv.first + 1;
         tchar symbol = param.at(pos);
-        if (symbol == L'%')
-            { m_ids.push_back(-1); continue; }
-        else if (symbol == L'(')
+        if (symbol == L'(')
         {
             int end = param.find(L')');
-            cut.assign(param.substr(pos+1, end-pos-1));
+            pv.cut.assign(param.substr(pos+1, end-pos-1));
             symbol = param.at(end+1);
         }
-        int id = symbol - L'0';
-        m_ids.push_back(id);
-        if (id > m_maxid)
-            m_maxid = id;
-        if (!cut.empty())
-            m_cuts[i-1] = cut;
+        if (symbol == L'%')
+            pv.id = -1;
+        else
+        {
+            pv.id = symbol - L'0';
+            if (pv.id > m_maxid)
+                m_maxid = pv.id;
+        }
+        m_ids.push_back(pv);
     }
     if (m_maxid == -1)
         return;
-    if (mode & BLOCK_DOUBLEID)
+    if (block_doubles)
     {
         std::vector<int> indexes(m_maxid+1, 0);
         for (int i=m_ids.size()-1; i >= 0; --i)
         {
-            int index = m_ids[i];
+            int index = m_ids[i].id;
             if (index == -1) continue;
             if (indexes[index] != 0)
-                m_ids[i] = -1;
+                m_ids[i].id = -1;
             indexes[index]++;
         }
     }
@@ -48,23 +53,27 @@ ParamsHelper::ParamsHelper(const tstring& param, unsigned int mode) : m_maxid(-1
 
 int ParamsHelper::getSize() const 
 {
-    int size = pcre.getSize();
-    return (size > 0) ? size-1 : 0;
+    return m_ids.size();
 }
 
 int ParamsHelper::getFirst(int index) const
 {
-    return pcre.getFirst(index+1);
+    return m_ids[index].first;
 }
 
 int ParamsHelper::getLast(int index) const 
 {
-    return pcre.getLast(index+1);
+    return m_ids[index].last;
 }
 
 int ParamsHelper::getId(int index) const              // return index of parameter [0-9]
 {
-    return m_ids[index];
+    return m_ids[index].id;
+}
+
+void ParamsHelper::getCutValue(int index, tstring* cutvalue)
+{
+    cutvalue->assign(m_ids[index].cut);
 }
 
 int ParamsHelper::getMaxId() const
@@ -74,22 +83,15 @@ int ParamsHelper::getMaxId() const
 
 void ParamsHelper::cutParameter(int index, tstring* param)
 {
-    if (m_cuts.empty())
+    const tstring& cutvalue = m_ids[index].cut;
+    if (cutvalue.empty())
         return;
-    std::map<int,tstring>::iterator it = m_cuts.find(index);
-    if (it == m_cuts.end())
-        return;
-    if (!m_cutinitialized)
-    {
-        m_cutinitialized=true;
-        cut.setRegExp(L"^(?:(-?[0-9]+),)?(-?[0-9]+)$", true);
-    }
-    cut.find(it->second);
+    cut.find(cutvalue);
     int sz = cut.getSize();
     if (sz != 3)
     {
         tstring skipped(L"%("), id;
-        skipped.append(it->second);
+        skipped.append(cutvalue);
         skipped.append(L")");
         int2w(getId(index), &id);
         skipped.append(id);
