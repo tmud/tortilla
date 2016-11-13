@@ -37,6 +37,8 @@ function loadsave.init()
   assert(t2.c.d[1] == 'вложенная таблица', 't2.c.d[1] == "вложенная таблица"')
   assert(t2.b.p == 4, 't2.b.p == 4')
   assert(t2.b.b == false, 't2.b.b == false')
+  
+  system.deleteFile(getPath('unittests.lua'))
 end
 
 return loadsave

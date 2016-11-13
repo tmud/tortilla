@@ -9,7 +9,7 @@ function timeline.name()
   return 'Время в каждую строчку'
 end
 function timeline.description()
-  return 'Плагин добавляет время в каждую строчку игровой информации.'
+  return 'Плагин добавляет текущее время в каждую строчку игровой информации.'
 end
 function timeline.version()
   return '1.0'
