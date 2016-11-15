@@ -6,6 +6,7 @@ class PadButton : public CWindowImpl<PadButton>
 {
     std::wstring m_text;
     std::wstring m_command;
+    std::wstring m_tooltip;
     UINT m_click_msg;
     WPARAM m_click_param;
     bool m_pushed;
@@ -31,6 +32,9 @@ public:
     }
     void getCommand(std::wstring *cmd) const { cmd->assign(m_command); }
     void setCommand(const std::wstring& cmd) { m_command = cmd; }
+    void getTooltip(std::wstring *ttip) const { ttip->assign(m_tooltip); }
+    void setTooltip(const std::wstring& ttip) { m_tooltip = ttip; }
+
     bool isEmptyButton() const {
         if (m_text.empty() && m_command.empty()) 
         {

@@ -322,14 +322,17 @@ void ClickpadMainWnd::save(xml::node& node)
       if (b->isEmptyButton())
           continue;
 
-      std::wstring cmd, text;
+      std::wstring cmd, text, ttip;
       b->getCommand(&cmd);
       b->getText(&text);
+      b->getTooltip(&ttip);
       node.create(L"button");
       node.set(L"x", x);
       node.set(L"y", y);
       node.set(L"text", text);
       node.set(L"command", cmd);
+      if (!ttip.empty())
+        node.set(L"tooltip", ttip);
       node.set(L"template", b->getTemplate() ? 1 : 0);
       ClickpadImage *image = b->getImage();
       if (image)
@@ -403,6 +406,12 @@ void ClickpadMainWnd::load(xml::node& node)
             {
                 ClickpadImage *image = m_image_collection->load(image_params);
                 b->setImage(image);
+            }
+            std::wstring ttip;
+            if (n.get(L"tooltip", &ttip)) {
+                b->setTooltip(ttip);
+            } else {
+                b->setTooltip(L"");
             }
         }
     }

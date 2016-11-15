@@ -47,6 +47,7 @@ public:
 
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_USER, OnClickButton)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -58,6 +59,9 @@ private:
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { onDestroy(); return 0; }        
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
+    LRESULT OnMouseMove(UINT, WPARAM wparam, LPARAM lparam, BOOL&) {
+        return 0;
+    }
     LRESULT OnClickButton(UINT, WPARAM wparam, LPARAM lparam, BOOL&) {
         onClickButton(LOWORD(wparam), HIWORD(wparam), (lparam==0) ? false : true);
         return 0;
