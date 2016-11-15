@@ -609,7 +609,7 @@ nil или true - если команда была успешно обработ
 <div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
 <div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
-<div class="cmd">void getPrompt(std::Wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
+<div class="cmd">void getPrompt(std::wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
 <div class="cmd">bool getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
@@ -671,6 +671,9 @@ nil или true - если команда была успешно обработ
 <div class="cmd">luaT_ActiveObjects(lua_State *pL, const char* type)</div> - инициализация (конструктор), возможные типы см. выше.
 <div class="cmd">int  size()</div> - количество элементов.
 <div class="cmd">bool select(int index)</div> - выбор нужного элемента по индексу.
+<div class="cmd">bool select(const wchar_t* key)</div> - выбор нужного элемента по ключу. Может быть несколько элементов с одним ключом, но в разных 
+группах. Данная команда выбирает первый элемент.
+<div class="cmd">bool selectNext(const wchar_t* key)</div> - выбор нужного элемента по ключу. Выбирается следующий элемент после текущего.
 <div class="cmd">bool add(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - добавление нового элемента. Если элемент существует, 
 то выходит с ошибкой.
 <div class="cmd">bool replace(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - заменяет текущий элемент. Если элемент не существует, 
@@ -1309,6 +1312,9 @@ render:rect(r2)
 <pre>
 <div class="cmd">int  size()</div> - возвращает число элементов.
 <div class="cmd">bool select(int index)</div> - выбор элемента для работы.
+<div class="cmd">bool select(string key)</div> - выбор нужного элемента по ключу. Может быть несколько элементов с одним ключом, но в разных 
+группах. Данная команда выбирает первый элемент.
+<div class="cmd">bool selectNext(string key)</div> - выбор нужного элемента по ключу. Выбирается следующий элемент после текущего.
 <div class="cmd">bool set(string type, string value)</div> - задает значение атрибута для текущего элемента.
 Возможные варианты атрибута: 'key', 'value', 'group'.
 <div class="cmd">string get(string type)</div> - возвращает значения атрибута. Если атрибут неверный, возвращается nul.

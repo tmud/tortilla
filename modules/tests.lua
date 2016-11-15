@@ -140,6 +140,8 @@ print ('Автотесты для модулей extra.declension и extra.dicto
 runCommand("#wait 2 { #plugin loadsave on }")
 runCommand("#wait 2 { #plugin testmisc on }")
 
+runCommand("#wait 2 { #message all on }")
+
 local s,m,h = system.getTime()
 print(h..":"..m..":"..s)
 
@@ -159,3 +161,8 @@ end
 
 system.deleteFile("test.txt")
 
+if aliases:select('abc') then
+  aliases:delete()
+end
+aliases:add('abc', 'cde')
+aliases:replace('abc', '123')

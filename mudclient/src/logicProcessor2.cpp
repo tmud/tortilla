@@ -272,7 +272,7 @@ IMPL(action)
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
     int update = script.process(p, &pdata->actions, &pdata->groups, 
-            L"Триггеры(actions)", L"Триггеры", L"Новый триггер", &ph);
+            L"Триггеры(actions)", L"Триггеры", L"action", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
@@ -282,7 +282,7 @@ IMPL(unaction)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
-    int update = script.process(p, &pdata->actions, L"Удаление триггера", &ph);
+    int update = script.process(p, &pdata->actions, L"Удаление триггера", L"action", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
@@ -294,7 +294,7 @@ IMPL(alias)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
     AliasTestControl control;
     int update = script.process(p, &pdata->aliases, &pdata->groups,
-        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph, &control);
+        L"Макросы(aliases)", L"Макросы", L"alias", &ph, &control);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -304,7 +304,7 @@ IMPL(unalias)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
-    int update = script.process(p, &pdata->aliases, L"Удаление макроса", &ph);
+    int update = script.process(p, &pdata->aliases, L"Удаление макроса", L"alias", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -315,7 +315,7 @@ IMPL(sub)
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
     int update = script.process(p, &pdata->subs, &pdata->groups,
-        L"Замены(subs)", L"Замены", L"Новая замена", &ph);
+        L"Замены(subs)", L"Замены", L"sub", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
@@ -325,7 +325,7 @@ IMPL(unsub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
-    int update = script.process(p, &pdata->subs, L"Удаление замены", &ph);
+    int update = script.process(p, &pdata->subs, L"Удаление замены", L"sub", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
@@ -337,7 +337,7 @@ IMPL(hotkey)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
     HotkeyTestControl control;
     int update = script.process(p, &pdata->hotkeys, &pdata->groups,
-        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"Новая горячая клавиша", &ph,
+        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"hotkey", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
@@ -348,7 +348,7 @@ IMPL(unhotkey)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
-    int update = script.process(p, &pdata->hotkeys, L"Удаление горячей клавиши", &ph);
+    int update = script.process(p, &pdata->hotkeys, L"Удаление горячей клавиши", L"hotkey", &ph);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
 
@@ -360,7 +360,7 @@ IMPL(highlight)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
     HighlightTestControl control;
     int update = script.process(p, &pdata->highlights, &pdata->groups,
-        L"Подсветки(highlights)", L"Подсветка", L"Новая подсветка", &ph,
+        L"Подсветки(highlights)", L"Подсветка", L"highlight", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
@@ -371,7 +371,7 @@ IMPL(unhighlight)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
-    int update = script.process(p, &pdata->highlights, L"Удаление подсветки", &ph);
+    int update = script.process(p, &pdata->highlights, L"Удаление подсветки", L"highlight", &ph);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
 
@@ -381,7 +381,7 @@ IMPL(gag)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &pdata->gags, &pdata->groups, L"Фильтры (gags)", L"Фильтр", &ph);
+    int update = script.process(p, &pdata->gags, &pdata->groups, L"Фильтры (gags)", L"gag", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
@@ -391,7 +391,7 @@ IMPL(ungag)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &pdata->gags, L"Удаление фильтра", &ph);
+    int update = script.process(p, &pdata->gags, L"Удаление фильтра", L"gag", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
@@ -401,7 +401,7 @@ IMPL(antisub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"Антизамены (antisubs)", L"Антизамена", &ph);
+    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"Антизамены (antisubs)", L"antisub", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -411,7 +411,7 @@ IMPL(unantisub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &pdata->antisubs, L"Удаление антизамены", &ph);
+    int update = script.process(p, &pdata->antisubs, L"Удаление антизамены", L"antisub", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -1062,7 +1062,7 @@ IMPL(tab)
         int index = pdata->tabwords.find(tab);
         if (index == -1)
             pdata->tabwords.add(index, tab);
-        swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка {%s} добавлена.", tab.c_str());        
+        swprintf(pb.buffer, pb.buffer_len, L"+tab {%s}", tab.c_str());        
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -1081,12 +1081,14 @@ IMPL(untab)
     {
         const tstring &tab = p->at(0);
         int index = pdata->tabwords.find(tab);
-        if (index == -1)
-            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановки {%s} не существует.", tab.c_str());
+        if (index == -1) {
+            helper->tmcLog(L"Варианты не найдены.");
+            return;
+        }
         else
         {
             pdata->tabwords.del(index);
-            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановкa {%s} удалена.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"-tab {%s}", tab.c_str());
         }
         helper->tmcLog(pb.buffer);
         return;
