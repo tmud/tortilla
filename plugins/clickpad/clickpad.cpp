@@ -282,6 +282,15 @@ bool readButton(lua_State *L, int index, ButtonParams* p)
     }
     lua_pop(L, 1);
 
+    lua_pushstring(L, "tooltip");
+    lua_gettable(L, index);
+    if (lua_isstring(L, -1))
+    {
+        p->tooltip = luaT_towstring(L, -1);
+        p->update |= ButtonParams::TOOLTIP;
+    }
+    lua_pop(L, 1);
+
     lua_pushstring(L, "image");
     lua_gettable(L, index);
     if (lua_isstring(L, -1))
@@ -345,6 +354,12 @@ bool writeButton(lua_State *L, int index, const ButtonParams& p)
     {
         lua_pushstring(L, "command");
         luaT_pushwstring(L, p.cmd.c_str());
+        lua_settable(L, index);
+    }
+    if (p.update & ButtonParams::TOOLTIP)
+    {
+        lua_pushstring(L, "tooltip");
+        luaT_pushwstring(L, p.tooltip.c_str());
         lua_settable(L, index);
     }
     if (p.update & ButtonParams::IMAGE)

@@ -17,10 +17,12 @@ class PadButton : public CWindowImpl<PadButton>
     ClickpadImage* m_image;
     COLORREF m_background_color;
     HFONT m_font;
+    bool m_mouseleave;
+    CToolTipCtrl m_tooltipCtrl;
 
 public:
     PadButton(UINT msg, WPARAM param) : m_click_msg(msg), m_click_param(param), m_pushed(false), m_selected(false), m_template(false),
-        m_image(NULL),m_background_color(0), m_font(0) {}
+        m_image(NULL),m_background_color(0), m_font(0), m_mouseleave(false) {}
     ~PadButton() { delete m_image; }
     void getText(std::wstring *text) const { text->assign(m_text); }
     void setText(const std::wstring& text)
@@ -78,12 +80,50 @@ public:
     void setBackgroundColor(COLORREF color) { m_background_color = color; }
 private:
     BEGIN_MSG_MAP(PadButton)
+      MESSAGE_HANDLER(WM_CREATE, OnCreate)
+      MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
+      MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
       MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)
       MESSAGE_HANDLER(WM_LBUTTONUP, OnClickUp)
       MESSAGE_HANDLER(WM_PAINT, OnPaint)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
     END_MSG_MAP()
+
+    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        /*RECT r;
+        r.left = r.top = 0;
+        r.right = 200; r.bottom = 48;
+        m_tooltipCtrl.Create(m_hWnd, r, L"TEST", TTS_ALWAYSTIP);
+        m_tooltipCtrl.Activate(TRUE);
+        m_tooltipCtrl.AddTool()
+        /*m_tooltipCtrl.SetDelayTime(TTDT_AUTOPOP, -1);
+        m_tooltipCtrl.SetDelayTime(TTDT_INITIAL, 0);
+        m_tooltipCtrl.SetDelayTime(TTDT_RESHOW, 0);*/
+        return 0;
+    }
+
+    LRESULT OnMouseMove(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        /*if (!m_mouseleave)
+        {
+            TRACKMOUSEEVENT tme = { 0 };
+            tme.cbSize = sizeof(tme);
+            tme.dwFlags = TME_LEAVE;
+            tme.hwndTrack = m_hWnd;
+            TrackMouseEvent(&tme);
+            m_mouseleave = true;
+           m_tooltipCtrl.Pop();
+        }*/
+        return 0;
+    }
+
+    LRESULT OnMouseLeave(UINT, WPARAM, LPARAM, BOOL&)
+    {
+        m_mouseleave = false;
+        return 0;
+    }
 
     LRESULT OnClick(UINT, WPARAM, LPARAM, BOOL&bHandled)
     { 

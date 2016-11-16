@@ -21,10 +21,11 @@ struct ButtonParams
     ButtonParams() : imagex(0), imagey(0), templ(false), update(0) {}
     std::wstring text;
     std::wstring cmd;
+    std::wstring tooltip;
     std::wstring imagefile;
     int imagex, imagey;
     bool templ;
-    enum { TEXT = 1, CMD = 2, IMAGE = 4, IMAGEXY = 8, TEMPLATE = 16 };
+    enum { TEXT = 1, CMD = 2, TOOLTIP = 4, IMAGE = 8, IMAGEXY = 16, TEMPLATE = 32 };
     DWORD update;
 };
 
@@ -101,4 +102,5 @@ private:
     COLORREF m_backgroundColor;
     LOGFONT m_logfont;
     CFont m_buttons_font;
+    CToolTipCtrl m_tooltips;
 };

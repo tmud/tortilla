@@ -88,6 +88,7 @@ bool ClickpadMainWnd::setButton(int row, int column, const ButtonParams& p)
         return false;
     pb->setText(p.text);
     pb->setCommand(p.cmd);
+    pb->setTooltip(p.tooltip);
     pb->setTemplate(p.templ);
     ClickpadImage *image = m_image_collection->load(p.imagefile, p.imagex, p.imagey);
     pb->setImage(image);
@@ -106,6 +107,8 @@ bool ClickpadMainWnd::updateButton(int row, int column, const ButtonParams& p)
         pb->setText(p.text);
     if (p.update & ButtonParams::CMD)
         pb->setCommand(p.cmd);
+    if (p.update & ButtonParams::TOOLTIP)
+        pb->setText(p.tooltip);
     if (p.update & ButtonParams::IMAGE)
     {
         int x = 0; int y = 0;
@@ -136,6 +139,9 @@ bool ClickpadMainWnd::getButton(int row, int column, ButtonParams* p)
     pb->getCommand(&p->cmd);
     if (!p->cmd.empty())
         p->update |= ButtonParams::CMD;
+    pb->getTooltip(&p->tooltip);
+    if (!p->tooltip.empty())
+        p->update |= ButtonParams::TOOLTIP;
     ClickpadImage *image = pb->getImage();
     if (image)
     {
@@ -262,6 +268,7 @@ void ClickpadMainWnd::setButtonSize(int size)
 
 void ClickpadMainWnd::onCreate()
 {
+    m_tooltips.Create(m_hWnd, rcDefault, L"tooltips", TTS_ALWAYSTIP);
 }
 
 void ClickpadMainWnd::onDestroy()
