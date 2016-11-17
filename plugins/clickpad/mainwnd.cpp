@@ -92,6 +92,7 @@ bool ClickpadMainWnd::setButton(int row, int column, const ButtonParams& p)
     pb->setTemplate(p.templ);
     ClickpadImage *image = m_image_collection->load(p.imagefile, p.imagex, p.imagey);
     pb->setImage(image);
+    //TTSetTxt(pb->m_hWnd, L"Test");
     showButton(column-1,row-1,true);
     return true;
 }
@@ -268,7 +269,6 @@ void ClickpadMainWnd::setButtonSize(int size)
 
 void ClickpadMainWnd::onCreate()
 {
-    m_tooltips.Create(m_hWnd, rcDefault, L"tooltips", TTS_ALWAYSTIP);
 }
 
 void ClickpadMainWnd::onDestroy()
@@ -296,6 +296,8 @@ void ClickpadMainWnd::onPaint(HDC dc)
 void ClickpadMainWnd::showButton(int x, int y, bool show)
 {
     getButton(x, y)->ShowWindow(show ? SW_SHOWNOACTIVATE : SW_HIDE);
+    if (show)
+        TTSetTxt(getButton(x, y)->m_hWnd, L"YET");
 }
 
 void ClickpadMainWnd::updated()
