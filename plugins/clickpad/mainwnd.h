@@ -83,7 +83,8 @@ private:
     void onPaint(HDC dc);
 private:
     PadButton* getButton(int x, int y);
-    void showButton(int x, int y, bool show);
+    void showButton(PadButton*b, bool show);
+    void updateTooltip(PadButton*b, bool show);
     void setWorkWindowSize();
     void setColumns(int count);
     int  getColumns() const;

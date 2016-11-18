@@ -44,7 +44,7 @@ protected:
 	UINT m_uTTStyle;
 	UINT m_uToolFlags;
 // Construction
-	CToolTipDialog( UINT uTTSTyle= TTS_NOPREFIX | TTS_BALLOON , UINT uToolFlags = TTF_IDISHWND | TTF_SUBCLASS ) 
+	CToolTipDialog( UINT uTTSTyle= TTS_NOPREFIX | TTS_ALWAYSTIP , UINT uToolFlags = TTF_IDISHWND | TTF_SUBCLASS ) 
 		: m_TT( NULL ), m_uTTStyle( uTTSTyle ), 
 		m_uToolFlags( uToolFlags | TTF_SUBCLASS )
 		{}
@@ -84,7 +84,7 @@ public:
 // Message map and handlers
 	BEGIN_MSG_MAP(CToolTipDialog)
 		MESSAGE_RANGE_HANDLER(WM_MOUSEFIRST,WM_MOUSELAST, OnMouse)
-		MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
+		//MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
 	END_MSG_MAP()
 		
 	LRESULT OnInitDialog(UINT , WPARAM , LPARAM, BOOL& bHandled)

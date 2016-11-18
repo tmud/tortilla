@@ -33,6 +33,15 @@ void ClickpadMainWnd::setEditMode(bool mode)
     if (b->isEmptyButton())
         b->ShowWindow(mode ? SW_SHOWNOACTIVATE : SW_HIDE);
     }}
+    if (mode) {
+        TTActivate(FALSE);
+    } else {
+        for (int y = 0; y < m_rows; ++y) {
+        for (int x = 0; x < m_columns; ++x) {
+           updateTooltip(getButton(x, y), true);
+        }}
+        TTActivate(TRUE);
+    }
 }
 
 void ClickpadMainWnd::onClickButton(int x, int y, bool up)
@@ -92,8 +101,7 @@ bool ClickpadMainWnd::setButton(int row, int column, const ButtonParams& p)
     pb->setTemplate(p.templ);
     ClickpadImage *image = m_image_collection->load(p.imagefile, p.imagex, p.imagey);
     pb->setImage(image);
-    //TTSetTxt(pb->m_hWnd, L"Test");
-    showButton(column-1,row-1,true);
+    showButton(pb,true);
     return true;
 }
 
@@ -123,7 +131,7 @@ bool ClickpadMainWnd::updateButton(int row, int column, const ButtonParams& p)
     }
     if (p.update & ButtonParams::TEMPLATE)
         pb->setTemplate(p.templ);
-    showButton(column-1,row-1,true);
+    showButton(pb,true);
     return true;
 }
 
@@ -176,7 +184,7 @@ bool ClickpadMainWnd::clearButton(int row, int column)
     if (!pb)
         return false;
     pb->clear();
-    showButton(column-1,row-1,false);
+    showButton(pb,false);
     return true;
 }
 
@@ -206,13 +214,13 @@ void ClickpadMainWnd::showRows(int count)
     {
         for (int y=m_rows; y<count; ++y)
          for (int x = 0; x < m_columns; ++x)
-           showButton(x, y, true);
+           showButton(getButton(x, y), true);
     }
     else
     {
         for (int y = count; y < m_rows; ++y)
          for (int x = 0; x < m_columns; ++x)
-           showButton(x, y, false);
+           showButton(getButton(x, y), false);
     }
     m_rows = count; 
 }
@@ -224,13 +232,13 @@ void ClickpadMainWnd::showColumns(int count)
     {
         for (int x = m_columns; x < count; ++x)
          for (int y = 0; y < m_rows; ++y)
-           showButton(x, y, true);
+           showButton(getButton(x, y), true);
     }
     else
     {
         for (int x = count; x < m_columns; ++x)
          for (int y = 0; y < m_rows; ++y)
-           showButton(x, y, false);
+           showButton(getButton(x, y), false);
     }
     m_columns = count;
 }
@@ -269,6 +277,7 @@ void ClickpadMainWnd::setButtonSize(int size)
 
 void ClickpadMainWnd::onCreate()
 {
+    TTInit();
 }
 
 void ClickpadMainWnd::onDestroy()
@@ -293,11 +302,22 @@ void ClickpadMainWnd::onPaint(HDC dc)
     hdc.FillSolidRect(&rc, m_backgroundColor);
 }
 
-void ClickpadMainWnd::showButton(int x, int y, bool show)
+void ClickpadMainWnd::showButton(PadButton*b, bool show)
 {
-    getButton(x, y)->ShowWindow(show ? SW_SHOWNOACTIVATE : SW_HIDE);
-    if (show)
-        TTSetTxt(getButton(x, y)->m_hWnd, L"YET");
+    b->ShowWindow(show ? SW_SHOWNOACTIVATE : SW_HIDE);
+    updateTooltip(b, show);
+}
+
+void ClickpadMainWnd::updateTooltip(PadButton*b, bool show)
+{
+    std::wstring tooltip;
+    b->getTooltip(&tooltip);
+    HWND button = b->m_hWnd;
+    TTRemove(button);
+    if (show && !tooltip.empty()) {
+        TTAdd(button);
+        TTSetTxt(button, tooltip.c_str());
+    }
 }
 
 void ClickpadMainWnd::updated()
