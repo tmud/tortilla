@@ -11,6 +11,7 @@ public:
     int getMaxId() const;
     void cutParameter(int index, tstring* param);
     void getCutValue(int index, tstring* cutvalue);
+    const tstring& getWithoutCut() const { return m_param_without_cuts; }
 private:
     static Pcre16 pcre;
     static Pcre16 cut;
@@ -23,4 +24,5 @@ private:
     };
     std::vector<param_values> m_ids;
     int m_maxid;
+    tstring m_param_without_cuts;
 };

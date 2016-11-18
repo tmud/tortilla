@@ -3,9 +3,9 @@
 -- запускаются при старте клиента
 
 do
---runCommand("#wait 2 { #plugin loadsave off }")
---runCommand("#wait 2 { #plugin testmisc off }")
---return
+runCommand("#wait 2 { #plugin loadsave off }")
+runCommand("#wait 2 { #plugin testmisc off }")
+return
 end
 
 dofile 'modules.lua'

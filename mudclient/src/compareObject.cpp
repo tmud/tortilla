@@ -134,6 +134,9 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
         }
     }
 
+    ParamsHelper ph0(tmp, true);
+    int x = 1;
+
     //mask regexp special symbols
     maskRegexpSpecialSymbols(&tmp, true);
 

@@ -11,6 +11,7 @@ ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles) : m_maxid(-
         pcre.setRegExp(L"%(?:\\(.*\\))?[0-9%]", true);
         cut.setRegExp(L"^(?:(-?[0-9]+),)?(-?[0-9]+)$", true);
     }
+    tstring &c = m_param_without_cuts;
     pcre.findAllMatches(param);
     for (int i=1,e=pcre.getSize(); i<e; ++i)
     {
