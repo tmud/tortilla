@@ -4,14 +4,24 @@
 Pcre16 ParamsHelper::pcre;
 Pcre16 ParamsHelper::cut;
 bool ParamsHelper::m_static_init = false;
-ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles) : m_maxid(-1)
+ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles)
 {
+    init(param, block_doubles, NULL);
+}
+
+ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles, tstring *param_without_cuts)
+{
+    init(param, block_doubles, param_without_cuts);
+}
+
+void ParamsHelper::init(const tstring& param, bool block_doubles, tstring *nocuts)
+{
+    m_maxid = -1;
     if (!m_static_init) {
         m_static_init = true;
-        pcre.setRegExp(L"%(?:\\(.*\\))?[0-9%]", true);
+        pcre.setRegExp(L"%(?:\\([^%]+\\)[0-9%]|[0-9%])", true);
         cut.setRegExp(L"^(?:(-?[0-9]+),)?(-?[0-9]+)$", true);
     }
-    tstring &c = m_param_without_cuts;
     pcre.findAllMatches(param);
     for (int i=1,e=pcre.getSize(); i<e; ++i)
     {
@@ -22,9 +32,9 @@ ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles) : m_maxid(-
         tchar symbol = param.at(pos);
         if (symbol == L'(')
         {
-            int end = param.find(L')');
-            pv.cut.assign(param.substr(pos+1, end-pos-1));
-            symbol = param.at(end+1);
+            int end = pv.last-1;
+            pv.cut.assign(param.substr(pos+1, end-pos-2));
+            symbol = param.at(end);
         }
         if (symbol == L'%')
             pv.id = -1;
@@ -35,6 +45,20 @@ ParamsHelper::ParamsHelper(const tstring& param, bool block_doubles) : m_maxid(-
                 m_maxid = pv.id;
         }
         m_ids.push_back(pv);
+    }
+    if (nocuts) {
+        if (m_ids.empty())
+            nocuts->assign(param);
+        else {
+          nocuts->assign(param.substr(0, m_ids[0].first+1));
+          int last = m_ids.size() - 1;
+          for (int i=0;i<last;++i) {
+              int from = m_ids[i].last-1;
+              int to =  m_ids[i+1].first+1;
+              nocuts->append(param.substr(from, to-from));
+          }
+          nocuts->append(param.substr(m_ids[last].last-1));
+        }
     }
     if (m_maxid == -1)
         return;
@@ -72,9 +96,9 @@ int ParamsHelper::getId(int index) const              // return index of paramet
     return m_ids[index].id;
 }
 
-void ParamsHelper::getCutValue(int index, tstring* cutvalue)
+const tstring& ParamsHelper::getCutValue(int index)
 {
-    cutvalue->assign(m_ids[index].cut);
+    return m_ids[index].cut;
 }
 
 int ParamsHelper::getMaxId() const
@@ -138,3 +162,80 @@ void ParamsHelper::cutParameter(int index, tstring* param)
         param->clear();
     }
 }
+
+#ifdef _DEBUG
+bool ParamsHelperUnitTests::testCutValue(ParamsHelper& ph, int index, const tchar* value) {
+    const tstring& v = ph.getCutValue(index);
+    return (v.compare(value) == 0);
+}
+
+bool ParamsHelperUnitTests::testCutParameter(ParamsHelper& ph, int index, const tchar* srcparam, const tchar* testparam){
+    tstring p(srcparam);
+    ph.cutParameter(index, &p);
+    return (p.compare(testparam) == 0);
+}
+
+void ParamsHelperUnitTests::run()  {
+    tstring cuts;
+    ParamsHelper h1(L"%1 %(dfgdf) %2 %(fff)3", true, &cuts);
+    assert(h1.getSize() == 3);
+    assert(testCutValue(h1, 0, L""));
+    assert(testCutValue(h1, 1, L""));
+    assert(testCutValue(h1, 2, L"fff"));
+    assert(cuts == L"%1 %(dfgdf) %2 %3");
+    assert(h1.getId(0) == 1);
+    assert(h1.getId(1) == 2);
+    assert(h1.getId(2) == 3);
+
+    cuts.clear();
+    ParamsHelper h2(L"%(dfgdfg)1 %2 fff %1", true, &cuts);
+    assert(h2.getSize() == 3);
+    assert(testCutValue(h2, 0, L"dfgdfg"));
+    assert(testCutValue(h2, 1, L""));
+    assert(testCutValue(h2, 2, L""));
+    assert(cuts == L"%1 %2 fff %1");
+    assert(h2.getId(0) == -1);
+    assert(h2.getId(1) == 2);
+    assert(h2.getId(2) == 1);
+
+    cuts.clear();
+    ParamsHelper h3(L"%(dfgdfg)1 %2 fff %1", false, &cuts);
+    assert(cuts == L"%1 %2 fff %1");
+    assert(h3.getId(0) == 1);
+    assert(h3.getId(1) == 2);
+    assert(h3.getId(2) == 1);
+
+    cuts.clear();
+    ParamsHelper h4(L"%(%fgfg)2 %(doit checkit)% %($var)4 ggg", true, &cuts);
+    assert(h4.getSize() == 2);
+    assert(h4.getMaxId() == 4);
+    assert(testCutValue(h4, 0, L"doit checkit"));
+    assert(testCutValue(h4, 1, L"$var"));
+    assert(h4.getId(0) == -1);
+    assert(h4.getId(1) == 4);
+
+    ParamsHelper h5(L"%(-1)1 abc", true);
+    assert(testCutParameter(h5, 0, L"тест", L"тес"));
+
+    ParamsHelper h6(L"%(5)1 abc", true);
+    assert(testCutParameter(h6, 0, L"тест", L"тест"));
+
+    ParamsHelper h7(L"%(2)1 abc", true);
+    assert(testCutParameter(h7, 0, L"тест", L"те"));
+
+    ParamsHelper h8(L"%(2,2)1 abc", true);
+    assert(testCutParameter(h8, 0, L"тecт", L"ec"));
+
+    ParamsHelper h9(L"%(3,-2)1 abc", true);
+    assert(testCutParameter(h9, 0, L"тест", L""));
+
+    ParamsHelper h10(L"%(2,-2)1 abc", true);
+    assert(testCutParameter(h10, 0, L"тест", L"е"));
+
+    ParamsHelper h11(L"abc", true);
+    assert(h11.getSize() == 0);
+
+    ParamsHelper h12(L"abc %%", true);
+    assert(h12.getSize() == 1);
+}
+#endif

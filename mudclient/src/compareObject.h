@@ -24,11 +24,13 @@ private:
     void checkVars(tstring *pcre_template);
     void maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow);
     void reset();
+    bool checkCuts();
 private:
     Pcre16  m_pcre;
     tstring m_key;
     tstring m_str;
-    std::vector<tstring> m_vars_pcre_parts;
+    std::vector<tstring> m_vars_pcre_parts;    
     bool m_fullstr_req;
     bool m_std_regexp;
+    ParamsHelper *ph;
 };

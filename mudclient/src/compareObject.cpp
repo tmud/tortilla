@@ -2,8 +2,8 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
-CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false) {}
-CompareObject::~CompareObject() {}
+CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false), ph(NULL) {}
+CompareObject::~CompareObject() { delete ph; }
 
 bool CompareObject::init(const tstring& key, bool endline_mode)
 {
@@ -12,23 +12,22 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
         return false;
 
     m_key = key;
-    if (key.at(0) == L'$')      // regexp marker
+
+    tstring nocuts;
+    ph = new ParamsHelper(key, true, &nocuts);
+    if (key.at(0) == L'$' && ph->getSize() == 0)      // regexp marker, нет %0, %1 и т.д.
     {
-       ParamsHelper ph(key, false);
-       if (ph.getSize() == 0)  // нет %0, %1 и т.д.
-       {
-          tstring regexp(key.substr(1));
-          checkVars(&regexp);
-          if (m_pcre.setRegExp(regexp, true))
-          {
-              m_std_regexp = true;
-              return true;
-          }
+        tstring regexp(key.substr(1));
+        checkVars(&regexp);
+        if (m_pcre.setRegExp(regexp, true))
+        {
+            m_std_regexp = true;
+            return true;
        }
     }
 
     tstring regexp;
-    createCheckPcre(key, endline_mode, &regexp);
+    createCheckPcre(nocuts, endline_mode, &regexp);
     checkVars(&regexp);
     bool result = m_pcre.setRegExp(regexp, true);
     assert(result);
@@ -77,7 +76,22 @@ bool CompareObject::compare(const tstring& str)
     m_pcre.find(str);
     if (m_pcre.getSize() == 0)
         return false;
+    if (!checkCuts())
+        return false;
+
     m_str = str;
+    return true;
+}
+
+bool CompareObject::checkCuts()
+{
+    for (int i=0,e=ph->getSize(); i<e; ++i) 
+    {
+        const tstring& cut = ph->getCutValue(i);
+        if (cut.empty()) continue;
+        //todo! translate cut
+
+    }
     return true;
 }
 
@@ -96,11 +110,9 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
         return;
     }
 
-    ParamsHelper keys(m_key, true);
-    int maxid = keys.getMaxId()+1;
-    if (maxid <= 0)
-        maxid = 1;
-    p.resize(maxid);
+    int count = ph->getMaxId()+1;
+    if (count <= 0) count = 1;
+    p.resize(count);
 
     int begin =  m_pcre.getFirst(0);
     int end =  m_pcre.getLast(0);
@@ -108,9 +120,9 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
 
     // pcre find values of %1
     int pi = 1;
-    for (int i=0,e=keys.getSize(); i<e; ++i)
+    for (int i=0,e=ph->getSize(); i<e; ++i)
     {
-        int id = keys.getId(i);
+        int id = ph->getId(i);
         if (id == -1) continue;
         int begin = m_pcre.getFirst(pi);
         int end = m_pcre.getLast(pi);
@@ -133,9 +145,6 @@ void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstri
             k = k.substr(0, last);
         }
     }
-
-    ParamsHelper ph0(tmp, true);
-    int x = 1;
 
     //mask regexp special symbols
     maskRegexpSpecialSymbols(&tmp, true);
@@ -280,4 +289,5 @@ void CompareObject::reset()
     m_vars_pcre_parts.clear();
     m_fullstr_req = true;
     m_std_regexp = false;
+    delete ph; ph = NULL;
 }
