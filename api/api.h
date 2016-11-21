@@ -864,6 +864,18 @@ public:
         luaT_run(L, "select", "od", index);
         return boolresult();
     }
+    bool select(const wchar_t* key)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "select", "os", key);
+        return boolresult();
+    }
+    bool selectNext(const wchar_t* key)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "selectNext", "os", key);
+        return boolresult();
+    }
     bool add(const wchar_t* key, const wchar_t* value, const wchar_t* group)
     {
         if (!getao()) return false;

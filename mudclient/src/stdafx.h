@@ -58,6 +58,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <sstream>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;

@@ -27,6 +27,11 @@ public:
     virtual bool setindex(int index) = 0;
     virtual void update() = 0;
     virtual bool del() = 0;
+    virtual bool showmessage() const = 0;
+    virtual void format(tstring *fmt) = 0;
+    virtual void formatdel(tstring *fmt) = 0;
+    virtual int find(const tchar* key) = 0;
+    virtual int findnext(const tchar* key) = 0;
 };
 
 class ActiveObjectsEx : public ActiveObjects
@@ -132,11 +137,20 @@ public:
     {
         return true; 
     }
-
-protected:
     int find(const tchar* key)
     {
-        for (int i = 0, e = actobj->size(); i < e; ++i)
+        return find(key, 0);
+    }
+    int findnext(const tchar* key)
+    {
+        if (selected == -1)
+            return find(key, 0);
+        return find(key, selected+1);
+    }
+protected:
+    int find(const tchar* key, int from)
+    {
+        for (int i = from, e = actobj->size(); i < e; ++i)
         {
             const property_value &v = actobj->get(i);
             if (!v.key.compare(key))
@@ -144,12 +158,15 @@ protected:
         }
         return -1;
     }
-
     void add3(int index, const tchar* key, const tchar* value, const tchar* group)
     {
         if (wcslen(group) > 0)
             pdata->addGroup(group);
         actobj->add(index, key, value, group);
+        if (index == -1)
+            selected = size()-1;
+        else
+            selected = index;
     }
 
     void add3group(int index, const tchar* key, const tchar* value, const tchar* group)
@@ -189,6 +206,26 @@ public:
         add3group(index, key, value, group);
         return true;
     }
+    bool showmessage() const
+    {
+        return pdata->messages.aliases ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"+alias {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-alias {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
 };
 
 class AO_Subs : public ActiveObjectsEx
@@ -209,6 +246,26 @@ public:
         int index = find(key);
         add3group(index, key, value, group);
         return true;
+    }
+    bool showmessage() const
+    {
+        return pdata->messages.subs ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"+action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
     }
 };
 
@@ -231,6 +288,26 @@ public:
         add3group(index, key, L"", group);
         return true;
     }
+    bool showmessage() const
+    {
+        return pdata->messages.antisubs ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"+antisub {" << v.key << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-antisub {" << v.key << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
 };
 
 class AO_Actions : public ActiveObjectsEx
@@ -251,6 +328,26 @@ public:
         int index = find(key);
         add3group(index, key, value, group);
         return true;
+    }
+    bool showmessage() const
+    {
+        return pdata->messages.actions ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"+action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
     }
 };
 
@@ -275,10 +372,29 @@ public:
     {
         return add(key, value, group, false);
     }
-
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, true);
+    }
+    bool showmessage() const
+    {
+        return pdata->messages.highlights ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"+highlight {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-highlight {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
     }
 private:
     bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
@@ -316,12 +432,30 @@ public:
     {
         return add(key, value, group, false);
     }
-
     bool replace(const tchar* key, const tchar* value, const tchar* group)
     {
         return add(key, value, group, true);
     }
-
+    bool showmessage() const
+    {
+        return pdata->messages.hotkeys ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"+hotkey {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-hotkey {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
 private:
     bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
@@ -355,6 +489,26 @@ public:
         add3group(index, key, L"", group);
         return true;
     }
+    bool showmessage() const
+    {
+        return pdata->messages.gags ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->variables.get(selected);
+        std::wstringstream ss;
+        ss << L"+gag {" << v.key << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }    
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-gag {" << v.key << L"} [" << v.group << L"]";
+        fmt->assign(ss.str());
+    }
 };
 
 class AO_Vars : public ActiveObjectsEx
@@ -384,6 +538,26 @@ public:
         if (param == luaT_ActiveObjects::KEY && m_pFilter)
             return m_pFilter->canset(value.c_str());
         return true;
+    }
+    bool showmessage() const
+    {
+        return pdata->messages.variables ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->variables.get(selected);
+        std::wstringstream ss;
+        ss << L"$" << v.key << L"='" << v.value << L"'";
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->aliases.get(selected);
+        std::wstringstream ss;
+        ss << L"-$" << v.key;
+        fmt->assign(ss.str());
     }
 };
 
@@ -419,7 +593,27 @@ public:
     {
         return add(key, value, group, true);
     }
-
+    bool showmessage() const
+    {
+        return pdata->messages.timers ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value &v = pdata->timers.get(selected);
+        PropertiesTimer pt; pt.convertFromString(v.value);
+        std::wstringstream ws;
+        ws << L"+timer #" << v.key << L" " << pt.timer << L" сек: {" << pt.cmd << L"} [" << v.group << L"]";
+        fmt->assign(ws.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value& v = pdata->groups.get(selected);
+        std::wstringstream ss;
+        ss << L"-timer #" << v.key;
+        fmt->assign(ss.str());
+    }
 private:
     bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
@@ -479,6 +673,33 @@ public:
     {
         return false;
     }
+    bool showmessage() const
+    {
+        return pdata->messages.groups ? true : false;
+    }
+    void format(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value& v = pdata->groups.get(selected);
+        std::wstringstream ss;
+        ss << L"group {" << v.key << L"} ";
+        if (v.value == L"0")
+            ss << L"on";
+        else if (v.value == L"1")
+            ss << L"off";
+        else {
+            return;
+        }
+        fmt->assign(ss.str());
+    }
+    void formatdel(tstring *fmt)
+    {
+        if (selected == -1) return;
+        const property_value& v = pdata->groups.get(selected);
+        std::wstringstream ss;
+        ss << L"-group {" << v.key << L"}";
+        fmt->assign(ss.str());
+    }
 private:
     bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
@@ -510,6 +731,27 @@ public:
     {
         if (index >= 1 && index <= size()) { selected = index-1; return true; }
         return false;
+    }
+    int find(const tchar* key)
+    {
+        return find(key, 0);
+    }
+    int findnext(const tchar* key)
+    {
+        if (selected == -1)
+            return find(key, 0);
+        return find(key, selected + 1);
+    }
+protected:
+    int find(const tchar* key, int from)
+    {
+        for (int i = from, e = data->tabwords.size(); i < e; ++i)
+        {
+            const tstring &v =  data->tabwords.get(i);
+            if (!v.compare(key))
+                return i;
+        }
+        return -1;
     }
     bool get(int param, tstring* value)
     {
@@ -570,5 +812,15 @@ public:
 
     void update()
     {
+    }
+    void format(tstring *fmt)
+    {
+    }
+    void formatdel(tstring *fmt)
+    {
+    }
+    bool showmessage() const
+    {
+        return false;
     }
 };
