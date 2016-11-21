@@ -825,8 +825,6 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    m_logs.calcFileName(logfile);
-
     id = m_logs.openLog(logfile, newlog);
     if (id == -1)
     {
@@ -1422,6 +1420,33 @@ IMPL(load)
     p->invalidargs();
 }
 //-------------------------------------------------------------------
+IMPL(savelog)
+{
+    int n = p->size();
+    if (n == 1 || n == 2)
+    {
+        tstring window( (n==1) ? L"0" : p->at(0));
+        tstring filename( (n==1) ? p->at(0) : p->at(1));
+        int v = 0;
+        if (w2int(window, &v) && v >= 0 && v < OUTPUT_WINDOWS)
+        {
+            if (!m_pHost->saveViewData(v, filename))
+            {
+                tstring error(L"Ошибка при сохранении лог-файла: ");
+                error.append(filename);
+                tmcLog(error);
+            }
+            else
+            {
+                tstring error(L"Лог сохранен.");
+                tmcLog(error);
+            }
+            return;
+        }
+    }
+    p->invalidargs();
+}
+//-------------------------------------------------------------------
 void LogicProcessor::regCommand(const char* name, syscmd_fun f)
 {
     PropertiesData *pdata = tortilla::getProperties();
@@ -1498,5 +1523,8 @@ bool LogicProcessor::init()
 
     regCommand("plugin", plugin);
     regCommand("load", load);
+
+    regCommand("savelog", savelog);
+
     return true;
 }
