@@ -70,7 +70,6 @@ xcopy ..\%prod%\lua.dll tortilla /Y
 if %windbg% == 1 xcopy ..\sdk\decoda\dbghelp.dll tortilla /Y
 xcopy ..\mudclient\readme.txt tortilla /Y
 xcopy ..\mudclient\changelog.txt tortilla /Y
-xcopy ..\mudclient\off.lst tortilla /Y
 
 xcopy ..\sdk\*.* sdk /E /Y
 xcopy ..\modules\modules.txt sdk /Y
