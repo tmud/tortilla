@@ -139,7 +139,6 @@ print ('Автотесты для модулей extra.declension и extra.dicto
 -- автотесты для плагинов
 runCommand("#wait 2 { #plugin loadsave on }")
 runCommand("#wait 2 { #plugin testmisc on }")
-
 runCommand("#wait 2 { #message all on }")
 
 local s,m,h = system.getTime()
@@ -166,3 +165,17 @@ if aliases:select('abc') then
 end
 aliases:add('abc', 'cde')
 aliases:replace('abc', '123')
+
+if aliases:select('abc') then
+  if aliases:get('value') ~= '123' then
+    print('aliases failed')
+  end
+  aliases:delete()
+end
+
+tabs:add('xyz')
+if tabs:select('xyz') then
+  tabs:delete()
+end
+
+subs:add('%%', '$HOUR:$MINUTE:$SECOND %0')

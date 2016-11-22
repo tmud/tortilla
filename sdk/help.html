@@ -678,7 +678,8 @@ nil или true - если команда была успешно обработ
 то выходит с ошибкой.
 <div class="cmd">bool replace(const wchar_t* key, const wchar_t* value, const wchar_t* group)</div> - заменяет текущий элемент. Если элемент не существует, 
 то добавляет новый.
-<div class="cmd">bool del()</div> - удаление текущего элемента.
+<div class="cmd">bool del()</div> - удаление текущего элемента.  Удаления по ключу нет, т.к. может быть несколько одинаковых 
+элементов, но в разных группах.
 <div class="cmd">int  getIndex()</div> - получение позиции текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - переместить текущий элемент в нужную позицию.
 <div class="cmd">bool get(int param, std::wstring* value)</div> - получить параметр текущего элемента. Возможные варианты параметра:
@@ -1322,7 +1323,8 @@ render:rect(r2)
 элемент добавляется в первую группу. Если элемент существует, то происходит ошибка и добавление не происходит.
 <div class="cmd">bool replace(string key[ ,string value, string group])</div> - заменяет текущий элемент. Если элемент не 
 существует, то он добавляется.
-<div class="cmd">bool delete()</div> - удаляет текущий элемент.
+<div class="cmd">bool delete()</div> - удаляет текущий элемент. Удаления по ключу нет, т.к. может быть несколько одинаковых 
+элементов, но в разных группах.
 <div class="cmd">int  getIndex()</div> - возвращает индекс-приоритет текущего элемента.
 <div class="cmd">bool setIndex(int index)</div> - установка текущего приоритета у текущего элемента.
 </pre>

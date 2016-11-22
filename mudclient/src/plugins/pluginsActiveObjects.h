@@ -254,7 +254,7 @@ public:
     void format(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->subs.get(selected);
         std::wstringstream ss;
         ss << L"+action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -262,7 +262,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->subs.get(selected);
         std::wstringstream ss;
         ss << L"-action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -295,7 +295,7 @@ public:
     void format(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->antisubs.get(selected);
         std::wstringstream ss;
         ss << L"+antisub {" << v.key << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -303,7 +303,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->antisubs.get(selected);
         std::wstringstream ss;
         ss << L"-antisub {" << v.key << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -336,7 +336,7 @@ public:
     void format(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->actions.get(selected);
         std::wstringstream ss;
         ss << L"+action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -344,7 +344,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->actions.get(selected);
         std::wstringstream ss;
         ss << L"-action {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -383,7 +383,7 @@ public:
     void format(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->highlights.get(selected);
         std::wstringstream ss;
         ss << L"+highlight {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -391,7 +391,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->highlights.get(selected);
         std::wstringstream ss;
         ss << L"-highlight {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -443,7 +443,7 @@ public:
     void format(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->hotkeys.get(selected);
         std::wstringstream ss;
         ss << L"+hotkey {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -451,7 +451,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->hotkeys.get(selected);
         std::wstringstream ss;
         ss << L"-hotkey {" << v.key << L"} {" << v.value << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -496,7 +496,7 @@ public:
     void format(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->variables.get(selected);
+        const property_value &v = pdata->gags.get(selected);
         std::wstringstream ss;
         ss << L"+gag {" << v.key << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -504,7 +504,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->gags.get(selected);
         std::wstringstream ss;
         ss << L"-gag {" << v.key << L"} [" << v.group << L"]";
         fmt->assign(ss.str());
@@ -554,7 +554,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value &v = pdata->aliases.get(selected);
+        const property_value &v = pdata->variables.get(selected);
         std::wstringstream ss;
         ss << L"-$" << v.key;
         fmt->assign(ss.str());
@@ -609,7 +609,7 @@ public:
     void formatdel(tstring *fmt)
     {
         if (selected == -1) return;
-        const property_value& v = pdata->groups.get(selected);
+        const property_value& v = pdata->timers.get(selected);
         std::wstringstream ss;
         ss << L"-timer #" << v.key;
         fmt->assign(ss.str());
@@ -788,7 +788,7 @@ protected:
         PropertiesList &tabs = data->tabwords;
         if (tabs.find(new_tab) != -1)
             return false;
-        tabs.add(-1, new_tab);
+        selected = tabs.add(-1, new_tab);
         return true;
     }
     bool replace(const tchar* key, const tchar* value, const tchar* group)
@@ -798,7 +798,7 @@ protected:
             return false;
         PropertiesList &tabs = data->tabwords;
         int index = tabs.find(new_tab);
-        tabs.add(index, new_tab);
+        selected = tabs.add(index, new_tab);
         return true;
     }
     bool del()
@@ -813,14 +813,26 @@ protected:
     void update()
     {
     }
+
     void format(tstring *fmt)
     {
+        if (selected == -1) return;
+        const tstring &v = data->tabwords.get(selected);
+        std::wstringstream ws;
+        ws << L"+tab " << v;
+        fmt->assign(ws.str());
     }
     void formatdel(tstring *fmt)
     {
+        if (selected == -1) return;
+        const tstring& v = data->tabwords.get(selected);
+        std::wstringstream ss;
+        ss << L"-tab " << v;
+        fmt->assign(ss.str());
     }
+
     bool showmessage() const
     {
-        return false;
+        return data->messages.tabwords ? true : false;
     }
 };

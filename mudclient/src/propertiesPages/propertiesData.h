@@ -246,10 +246,12 @@ public:
         return -1;
     }
 
-    void add(int index, const tstring& key)
+    int add(int index, const tstring& key)
     {
-        if (index == -1)
+        if (index == -1) {
+            index = m_values.size();
             m_values.push_back(key);
+        }
         else
         {
             int size = m_values.size();
@@ -258,6 +260,7 @@ public:
             else
                 { assert(false); }
         }
+        return index;
     }
 
     void del(int index)
