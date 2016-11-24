@@ -7,6 +7,15 @@ struct CompareRange
     int end;
 };
 
+class CompareObjectVarsHelper {
+public:
+    CompareObjectVarsHelper(const tstring& name, bool multivar);
+    bool next(tstring *val);
+private:
+    tstring pred;
+    bool multflag;
+};
+
 class CompareObject
 {
 public:
@@ -24,12 +33,21 @@ private:
     void checkVars(tstring *pcre_template);
     void maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow);
     void reset();
+
+    struct cutdata {
+        int index;
+        tstring pred;
+        std::vector<tstring> vars;                
+    };
+
+
     bool checkCuts();
+    bool oneCutTest();
 private:
     Pcre16  m_pcre;
     tstring m_key;
     tstring m_str;
-    std::vector<tstring> m_vars_pcre_parts;    
+    std::vector<tstring> m_vars_pcre_parts;
     bool m_fullstr_req;
     bool m_std_regexp;
     ParamsHelper *ph;

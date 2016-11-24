@@ -420,6 +420,9 @@
     <ClCompile Include="src\propertiesPages\propertiesDisplay.cpp">
       <Filter>Source Files\PropertiesPages</Filter>
     </ClCompile>
+    <ClCompile Include="src\compareObject2.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">

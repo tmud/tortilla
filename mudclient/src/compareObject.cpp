@@ -2,6 +2,22 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
+class CutRegexp {
+public:
+    static Pcre16& get() {
+        static Pcre16 rxp;
+        if (!rxp.valid()) {
+            rxp.setRegExp(L"\\$[a-zA-Z_][0-9a-zA-Z_.]*\\*?;?", true);
+        }
+        return rxp;
+    }
+private:
+    CutRegexp() {}
+    ~CutRegexp() {}
+    CutRegexp(CutRegexp const&);
+    CutRegexp& operator= (CutRegexp const&);
+};
+
 CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false), ph(NULL) {}
 CompareObject::~CompareObject() { delete ph; }
 
@@ -89,10 +105,95 @@ bool CompareObject::checkCuts()
     {
         const tstring& cut = ph->getCutValue(i);
         if (cut.empty()) continue;
-        //todo! translate cut
+        tstring param;
+        if (!m_pcre.getString(i+1, &param))
+            return false;
 
+        // translate cut
+        Pcre16 &r = CutRegexp::get();
+        r.findAllMatches(cut);
+        int vars_count = r.getSize();
+        if (vars_count < 2) {
+           if (cut != param)
+               return false;
+           continue;
+        }
+
+        /*cutdata cd;
+        cd.vars.resize(vars_count-1);
+        for (int i=1;i<vars_count;++i)
+            r.getString(i, &cd.vars[i-1]);*/
+ 
+        struct el {
+           tstring pred;
+           tstring lastvar;
+        };
+
+       std::vector<el> stack;
+       do {
+         int i = stack.size();
+         int from = (i==0) ? 0 : stack[i-1].pred.length();
+         tstring pred( cut.substr(from, r.getFirst(i+1)) );
+       
+       } while (true);
+        
+        
+        tstring pred( cut.substr(0, r.getFirst(1)) );
+        if (!pred.empty() && param.compare(0, pred.length(), pred))
+           return false;
+
+       
+
+
+        for (int i=1;i<vars_count;++i)
+        {
+           tstring var;
+           r.getString(i, &var);
+           if (var.empty()) 
+               return false;
+           int last = var.size() - 1;
+           if (var.at(last) == L';')
+               last = last - 1;
+           bool multivar = false;
+           if (var.at(last) == L'*')
+             { multivar = true; last = last - 1; }
+           tstring id(var.substr(1, last));
+           CompareObjectVarsHelper h(var, multivar);
+           var.clear();
+           while (h.next(&var)) {
+              if (param.compare(pred.length(), var.length(), var))
+              {
+                  int x = 1;
+              }
+           }
+        }
     }
     return true;
+}
+
+bool CompareObject::oneCutTest()
+{
+    /*tstring var;
+    vars.getString(i, &var);
+           if (var.empty()) 
+               return false;
+           int last = var.size() - 1;
+           if (var.at(last) == L';')
+               last = last - 1;
+           bool multivar = false;
+           if (var.at(last) == L'*')
+             { multivar = true; last = last - 1; }
+           tstring id(var.substr(1, last));
+           CompareObjectVarsHelper h(var, multivar);
+           var.clear();
+           while (h.next(&var)) {
+              if (param.compare(pred.length(), var.length(), var))
+              {
+                  int x = 1;
+              }
+           }*/
+    return true;
+
 }
 
 void CompareObject::getParameters(std::vector<tstring>* params) const
