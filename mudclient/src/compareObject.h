@@ -33,16 +33,7 @@ private:
     void checkVars(tstring *pcre_template);
     void maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow);
     void reset();
-
-    struct cutdata {
-        int index;
-        tstring pred;
-        std::vector<tstring> vars;                
-    };
-
-
     bool checkCuts();
-    bool oneCutTest();
 private:
     Pcre16  m_pcre;
     tstring m_key;
