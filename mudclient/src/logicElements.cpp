@@ -256,7 +256,20 @@ bool Sub::processing(CompareData& data)
             return false;
     }
 
-    int pos = data.fold(range);
+    // new blocks collection
+    tstring value(m_value);
+    InputVarsAccessor va;
+    va.translateVars(&value);
+
+    std::vector<MudViewStringBlock> newb;
+    newb.resize(1);
+    newb[0].string = value;
+
+    std::vector<CompareRange> pr;
+    m_compare.getParametersRange(&pr);
+    ActionParameters ap(&m_compare); //same adapter for subs
+
+    /*int pos = data.fold(range);
     if (pos == -1) return false;
 
     ActionParameters ap(&m_compare); //same adapter for subs
@@ -268,7 +281,8 @@ bool Sub::processing(CompareData& data)
     va.translateVars(&value);
     data.string->blocks[pos].string = value;
     data.start = pos+1;
-    return true;
+    return true;*/
+    return false;
 }
 
 AntiSub::AntiSub(){}

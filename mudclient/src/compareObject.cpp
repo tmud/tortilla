@@ -2,9 +2,19 @@
 #include "compareObject.h"
 #include "inputProcessor.h"
 
-CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false) {}
-CompareObject::~CompareObject() {}
-
+CompareObject::CompareObject() : m_pkey_helper(NULL), m_fullstr_req(true), m_std_regexp(false) {}
+CompareObject::~CompareObject() { delete m_pkey_helper; }
+CompareObject::CompareObject(const CompareObject& co) { cthis(co); }
+CompareObject& CompareObject::operator=(const CompareObject& co) { cthis(co); return *this; }
+void CompareObject::cthis(const CompareObject& co) {
+    tstring regexp;
+    co.m_pcre.getRegexp(&regexp);
+    m_pcre.setRegExp(regexp, true);
+    m_key = co.m_key;
+    m_fullstr_req = co.m_fullstr_req;
+    m_std_regexp = co.m_std_regexp;    
+    m_pkey_helper = NULL;
+}
 bool CompareObject::init(const tstring& key, bool endline_mode)
 {
     reset();
@@ -96,7 +106,7 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
         return;
     }
 
-    ParamsHelper keys(m_key, ParamsHelper::BLOCK_DOUBLEID);
+    const ParamsHelper& keys = getKeyHelper();
     int maxid = keys.getMaxId()+1;
     if (maxid <= 0)
         maxid = 1;
@@ -117,6 +127,48 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
         pi++;
         p[id] = m_str.substr(begin, end-begin);
     }
+}
+
+void CompareObject::getParametersRange(std::vector<CompareRange>* ranges) const
+{
+    assert(ranges);
+    int count = m_pcre.getSize();
+    if (count == 0) { ranges->clear(); return; }
+    if (m_std_regexp)
+    {
+        ranges->resize(count);
+        for (int i = 0; i < count; ++i) {
+            CompareRange &r = ranges->at(i);
+            r.begin = m_pcre.getFirst(i);
+            r.end = m_pcre.getLast(i);
+        }
+        return;
+    }
+    const ParamsHelper& keys = getKeyHelper();
+    int maxid = keys.getMaxId() + 1;
+    if (maxid <= 0)
+        maxid = 1;
+    ranges->resize(maxid);
+    CompareRange &c0 = ranges->at(0);
+    c0.begin = m_pcre.getFirst(0);
+    c0.end = m_pcre.getLast(0);
+    int pi = 1;
+    for (int i = 0, e = keys.getSize(); i < e; ++i)
+    {
+        int id = keys.getId(i);
+        if (id == -1) continue;
+        CompareRange &c = ranges->at(id);
+        c.begin = m_pcre.getFirst(pi);
+        c.end = m_pcre.getLast(pi);
+        pi++;
+    }
+}
+
+const ParamsHelper& CompareObject::getKeyHelper() const {
+    if (!m_pkey_helper) {
+        m_pkey_helper = new ParamsHelper(m_key, ParamsHelper::BLOCK_DOUBLEID);
+    }
+    return *m_pkey_helper;
 }
 
 void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template)

@@ -178,4 +178,4 @@ if tabs:select('xyz') then
   tabs:delete()
 end
 
-subs:add('%%', '$HOUR:$MINUTE:$SECOND %0')
+--subs:add('%%', '$HOUR:$MINUTE:$SECOND %0')
