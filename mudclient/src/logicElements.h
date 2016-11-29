@@ -11,6 +11,9 @@ public:
     CompareData(MudViewString *s);
     void reinit();
     void fullinit();
+    void copy(int pos, MudViewStringBlock &b);
+    void insert(int pos, int count);
+    void del(int pos, int count);
     void del(CompareRange& range);
     int  fold(CompareRange& range);
     bool cut(CompareRange& range); // distinguish in individual blocks
@@ -61,11 +64,13 @@ class Sub
 {
 public:
     Sub();
+    ~Sub();
     void init(const property_value& v);
     bool processing(CompareData& data);
 private:
     CompareObject m_compare;
     tstring m_value;
+    ParamsHelper* m_phelper;
 };
 
 class AntiSub

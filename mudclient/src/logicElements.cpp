@@ -21,6 +21,42 @@ void CompareData::fullinit()
     reinit();
 }
 
+void CompareData::copy(int pos, MudViewStringBlock &b)
+{
+    std::vector<MudViewStringBlock> &vb = string->blocks;
+    int size = vb.size();
+    if (pos >=0 && pos < size)
+    {
+         vb[pos] = b;
+         return;
+    }
+    assert(false);
+}
+
+void CompareData::insert(int pos, int count)
+{
+    std::vector<MudViewStringBlock> &vb = string->blocks;
+    int size = vb.size();
+    if (pos >=0 && pos < size && count > 0)
+    {
+        vb.insert(vb.begin()+pos, count);
+        return;
+    }
+    assert(false);
+}
+
+void CompareData::del(int pos, int count)
+{
+    std::vector<MudViewStringBlock> &vb = string->blocks;
+    int size = vb.size();
+    if (pos >=0 && pos < size && count > 0 && (pos+count) <= size)
+    {
+        vb.erase(vb.begin()+pos, vb.begin()+pos+count);
+        return;
+    }
+    assert(false);
+}
+
 void CompareData::del(CompareRange& range)
 {
     if (!cut(range))
@@ -54,6 +90,7 @@ bool CompareData::cut(CompareRange& range)
         range.end = cutpos(range.end, 1);
         return true;
     }
+    assert(false);
     return false;
 }
 
@@ -230,9 +267,13 @@ bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newc
     return true;
 }
 
-Sub::Sub() {}
+Sub::Sub() : m_phelper(NULL) {}
+Sub::~Sub() { delete m_phelper; }
+
 void Sub::init(const property_value& v)
 {
+    delete m_phelper;
+    m_phelper = new ParamsHelper(v.value, ParamsHelper::EXTENDED);
     m_value = v.value;
     m_compare.init(v.key, false);
 }
@@ -256,18 +297,51 @@ bool Sub::processing(CompareData& data)
             return false;
     }
 
-    // new blocks collection
-    tstring value(m_value);
-    InputVarsAccessor va;
-    va.translateVars(&value);
-
+    // generate new blocks to insert
     std::vector<MudViewStringBlock> newb;
-    newb.resize(1);
-    newb[0].string = value;
+    int vars_count = m_phelper->getSize();
+    if (vars_count == 0)
+    {
+        // no vars
+        newb.resize(1);
+        newb[0].string = m_value;
+        newb[0].params = b[range.begin].params;
+    }
+    else 
+    {   
+        int blocks_count = vars_count - 1;
+        newb.resize(blocks_count);
 
-    std::vector<CompareRange> pr;
-    m_compare.getParametersRange(&pr);
-    ActionParameters ap(&m_compare); //same adapter for subs
+        
+        //newb[0].string = m_value;
+        //ActionParameters ap(&m_compare); //same adapter for subs
+            //std::vector<CompareRange> pr;
+        //m_compare.getParametersRange(&pr);
+
+        //todo!
+        newb[0].string = m_value;
+    }
+
+    // translate vars
+    InputVarsAccessor va;
+    for (int i=0,e=newb.size();i<e;++i)
+        va.translateVars(&newb[i].string);
+    
+    // insert new blocks in result string
+    if (!data.cut(range))
+        return false;
+    int cut_blocks_count = range.end - range.begin + 1;
+    int blocks = newb.size();
+    int db = cut_blocks_count - blocks;
+    if (db > 0)
+        data.del(range.begin, db);
+    else if (db < 0)
+        data.insert(range.begin, -db);
+    for (int i=0; i<blocks; ++i) {
+        data.copy(range.begin+i, newb[i]);
+    }
+    data.start = range.begin+blocks;
+    return true;
 
     /*int pos = data.fold(range);
     if (pos == -1) return false;
@@ -282,7 +356,6 @@ bool Sub::processing(CompareData& data)
     data.string->blocks[pos].string = value;
     data.start = pos+1;
     return true;*/
-    return false;
 }
 
 AntiSub::AntiSub(){}
