@@ -11,19 +11,21 @@ public:
     CompareData(MudViewString *s);
     void reinit();
     void fullinit();
-    void copy(int pos, MudViewStringBlock &b);
-    void insert(int pos, int count);
-    void del(int pos, int count);
+    void setBlock(int blockpos, MudViewStringBlock &b);
+    void insertBlocks(int blockpos, int count);
+    void delBlocks(int blockpos, int count);
     void del(CompareRange& range);
     int  fold(CompareRange& range);
+    void appendto(CompareRange& range, std::vector<MudViewStringBlock>& b);
     bool cut(CompareRange& range); // distinguish in individual blocks
-    bool find(CompareRange& range);
+    bool findBlocks(CompareRange& range);
 
     MudViewString *string;
     tstring fullstr;
     int  start;
 private:
     int  cutpos(int pos, int d);
+    void cutblock(int pos, int d, MudViewStringBlock& b);
     int  findpos(int pos, int d);
 };
 
