@@ -25,8 +25,8 @@ public:
     int  start;
 private:
     int  cutpos(int pos, int d);
-    void cutblock(int pos, int d, MudViewStringBlock& b);
-    int  findpos(int pos, int d);
+    int  findblockpos(int &pos, int d);
+    int  findblock(int pos, int d);
 };
 
 class Alias

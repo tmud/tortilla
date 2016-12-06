@@ -87,16 +87,26 @@ void CompareData::appendto(CompareRange& range, std::vector<MudViewStringBlock>&
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-
-
-        MudViewStringBlock newb;
-        newb.string = L"<apto>";
-        b.push_back(newb);
-
-
-        range.begin = cutpos(range.begin, 0);
-        range.end = cutpos(range.end, 1);
-        return true;
+        std::vector<MudViewStringBlock> &vb = string->blocks;
+        int begin = range.begin;
+        int end = range.end;
+        int begin_block = findblockpos(begin, 0);
+        int end_block = findblockpos(end, 1);
+        if (begin_block == end_block) {
+            MudViewStringBlock newb(vb[begin_block]);
+            newb.string = newb.string.substr(begin, end-begin+1);
+            b.push_back(newb);
+        } else {
+            MudViewStringBlock newb(vb[begin_block]);
+            newb.string = newb.string.substr(begin);
+            b.push_back(newb);
+            for (int i=begin_block+1,e=end_block-1;i<=e;++i)
+                b.push_back(vb[i]);
+            newb = vb[end_block];
+            newb.string = newb.string.substr(0, end+1);
+            b.push_back(newb);
+        }
+        return;
     }
     assert(false);
 }
@@ -121,8 +131,8 @@ bool CompareData::findBlocks(CompareRange& range)
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = findpos(range.begin, 0);
-        range.end = findpos(range.end, 1);
+        range.begin = findblock(range.begin, 0);
+        range.end = findblock(range.end, 1);
         return true;
     }
     return false;
@@ -158,12 +168,7 @@ int CompareData::cutpos(int pos, int d)
     return bi+(1-d);
 }
 
-void CompareData::cutblock(int pos, int d, MudViewStringBlock& b)
-{
-
-}
-
-int CompareData::findpos(int pos, int d)
+int CompareData::findblockpos(int& pos, int d)
 {
     std::vector<MudViewStringBlock> &vb = string->blocks;
     int p = 0; int bi = start; pos -= d;
@@ -173,10 +178,16 @@ int CompareData::findpos(int pos, int d)
         int len = b.string.length();
         int last = p + len - 1;
         if (pos >= p && pos <= last)
-            { bi = i; break; }
+            { bi = i; pos=pos-p; break; }
         p = p + len;
     }
     return bi;
+}
+
+int CompareData::findblock(int pos, int d)
+{
+    int p = pos;
+    return findblockpos(p, d);
 }
 
 class AliasParameters : public InputParameters
@@ -331,7 +342,7 @@ bool Sub::processing(CompareData& data)
         // no parameters %x
         newb.resize(1);
         newb[0].string = m_value;
-        newb[0].params = b[range.begin].params;
+        newb[0].params = b[check.begin].params;
     }
     else 
     {
@@ -378,20 +389,6 @@ bool Sub::processing(CompareData& data)
         data.setBlock(range.begin+i, newb[i]);
     data.start = range.begin+blocks;
     return true;
-
-    /*int pos = data.fold(range);
-    if (pos == -1) return false;
-
-    ActionParameters ap(&m_compare); //same adapter for subs
-    InputTranslateParameters tp;
-    tstring value(m_value);
-    tp.doit(&ap, &value);
-
-    InputVarsAccessor va;
-    va.translateVars(&value);
-    data.string->blocks[pos].string = value;
-    data.start = pos+1;
-    return true;*/
 }
 
 AntiSub::AntiSub(){}
