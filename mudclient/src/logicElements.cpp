@@ -108,7 +108,6 @@ void CompareData::appendto(CompareRange& range, std::vector<MudViewStringBlock>&
         }
         return;
     }
-    assert(false);
 }
 
 bool CompareData::cut(CompareRange& range)
@@ -348,6 +347,7 @@ bool Sub::processing(CompareData& data)
     {
         std::vector<CompareRange> pr;
         m_compare.getParametersRange(&pr);
+        int parameters_count = pr.size();
 
         MudViewStringBlock b;
         b.string = m_value.substr(0, m_phelper->getFirst(0));
@@ -355,8 +355,8 @@ bool Sub::processing(CompareData& data)
         for (int i=0,e=m_phelper->getSize()-1;i<=e;++i) {
             int id = m_phelper->getId(i);
             if (id != -1) {
-                const CompareRange& cr = pr[id];
-                data.appendto(pr[id], newb);
+                if (id < parameters_count) 
+                    data.appendto(pr[id], newb);
             }
             if (i == e) {
                 int from = m_phelper->getLast(i);
