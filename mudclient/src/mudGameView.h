@@ -1069,6 +1069,39 @@ private:
         m_network.connect(m_networkData);
     }
 
+    bool saveViewData(int view, tstring& filename)
+    {
+        if (view >= 0 && view <= OUTPUT_WINDOWS)
+        {
+            PropertiesData* pdata = tortilla::getProperties();
+            MudView *v = (view == 0) ? &m_view : m_views[view-1];
+            LogsFormatter *f = NULL;
+            int pos = filename.rfind(L'.');
+            if (pos != -1) {
+              tstring ext(filename.substr(pos + 1));
+              if (ext == L"txt") f = new LogsFormatterTxt(pdata);
+              if (ext == L"htm" || ext == L"html") f = new LogsFormatterHtml(pdata);
+            }
+            if (!f) {
+                if (pdata->logformat == L"txt")
+                    f = new LogsFormatterTxt(pdata);
+                else
+                    f = new LogsFormatterHtml(pdata);
+                f->normFilename(filename);
+            }
+            if (f->open(filename, LogsFormatter::PM_NEW) && f->prepare())
+            {
+                for (int i=0,e=v->getStringsCount();i<e;++i) {
+                    f->writeString(v->getString(i));
+                }
+                f->close();
+            }
+            delete f;
+            return true;
+        }
+        return false;
+    }
+
     MudViewString* getLastString(int view)
     {
         MudViewString *s = NULL;

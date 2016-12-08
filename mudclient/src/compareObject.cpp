@@ -18,9 +18,19 @@ private:
     CutRegexp& operator= (CutRegexp const&);
 };
 
-CompareObject::CompareObject() : m_fullstr_req(true), m_std_regexp(false), ph(NULL) {}
-CompareObject::~CompareObject() { delete ph; }
-
+CompareObject::CompareObject() : m_pkey_helper(NULL), m_fullstr_req(true), m_std_regexp(false) {}
+CompareObject::~CompareObject() { delete m_pkey_helper; }
+CompareObject::CompareObject(const CompareObject& co) { cthis(co); }
+CompareObject& CompareObject::operator=(const CompareObject& co) { cthis(co); return *this; }
+void CompareObject::cthis(const CompareObject& co) {
+    tstring regexp;
+    co.m_pcre.getRegexp(&regexp);
+    m_pcre.setRegExp(regexp, true);
+    m_key = co.m_key;
+    m_fullstr_req = co.m_fullstr_req;
+    m_std_regexp = co.m_std_regexp;    
+    m_pkey_helper = NULL;
+}
 bool CompareObject::init(const tstring& key, bool endline_mode)
 {
     reset();
@@ -29,9 +39,8 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
 
     m_key = key;
 
-    tstring nocuts;
-    ph = new ParamsHelper(key, true, &nocuts);
-    if (key.at(0) == L'$' && ph->getSize() == 0)      // regexp marker, нет %0, %1 и т.д.
+    const ParamsHelper& keys = getKeyHelper();
+    if (key.at(0) == L'$' && keys.getSize() == 0)      // regexp marker, нет %0, %1 и т.д.
     {
         tstring regexp(key.substr(1));
         checkVars(&regexp);
@@ -43,7 +52,7 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     }
 
     tstring regexp;
-    createCheckPcre(nocuts, endline_mode, &regexp);
+    createCheckPcre(m_key_nocuts, endline_mode, &regexp);
     checkVars(&regexp);
     bool result = m_pcre.setRegExp(regexp, true);
     assert(result);
@@ -92,8 +101,9 @@ bool CompareObject::compare(const tstring& str)
     m_pcre.find(str);
     if (m_pcre.getSize() == 0)
         return false;
-    if (!checkCuts())
-        return false;
+   
+    /*if (!checkCuts())
+        return false;*/
 
     m_str = str;
     return true;
@@ -101,9 +111,10 @@ bool CompareObject::compare(const tstring& str)
 
 bool CompareObject::checkCuts()
 {
-    for (int i=0,e=ph->getSize(); i<e; ++i) 
+    const ParamsHelper& keys = getKeyHelper();
+    for (int i=0,e=keys.getSize(); i<e; ++i) 
     {
-        const tstring& cut = ph->getCutValue(i);
+        const tstring& cut = keys.getCutValue(i);
         if (cut.empty()) continue;
 
         // text on the cut position
@@ -158,15 +169,15 @@ bool CompareObject::checkCuts()
 
          CompareObjectVarsHelper h(var, multivar);
          var.clear();
-         while (h.next(&var)) {
+         /*while (h.next(&var)) {
             if (param.compare(pred.length(), var.length(), var))
             {
                   int x = 1;
             }
-         }
+         }*/
 
 
-       } while (!stack.empty());        
+       } while (!stack.empty());
     }
     return true;
 }
@@ -186,9 +197,11 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
         return;
     }
 
-    int count = ph->getMaxId()+1;
-    if (count <= 0) count = 1;
-    p.resize(count);
+    const ParamsHelper& keys = getKeyHelper();
+    int maxid = keys.getMaxId()+1;
+    if (maxid <= 0)
+        maxid = 1;
+    p.resize(maxid);
 
     int begin =  m_pcre.getFirst(0);
     int end =  m_pcre.getLast(0);
@@ -196,15 +209,56 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
 
     // pcre find values of %1
     int pi = 1;
-    for (int i=0,e=ph->getSize(); i<e; ++i)
+    for (int i=0,e=keys.getSize(); i<e; ++i)
     {
-        int id = ph->getId(i);
+        int id = keys.getId(i);
         if (id == -1) continue;
         int begin = m_pcre.getFirst(pi);
         int end = m_pcre.getLast(pi);
         pi++;
         p[id] = m_str.substr(begin, end-begin);
     }
+}
+
+void CompareObject::getParametersRange(std::vector<CompareRange>* ranges) const
+{
+    assert(ranges);
+    int count = m_pcre.getSize();
+    if (count == 0) { ranges->clear(); return; }
+    if (m_std_regexp)
+    {
+        ranges->resize(count);
+        for (int i = 0; i < count; ++i) {
+            CompareRange &r = ranges->at(i);
+            r.begin = m_pcre.getFirst(i);
+            r.end = m_pcre.getLast(i);
+        }
+        return;
+    }
+    const ParamsHelper& keys = getKeyHelper();
+    int maxid = keys.getMaxId() + 1;
+    if (maxid <= 0)
+        maxid = 1;
+    ranges->resize(maxid);
+    CompareRange &c0 = ranges->at(0);
+    c0.begin = m_pcre.getFirst(0);
+    c0.end = m_pcre.getLast(0);
+    int pi = 1;
+    for (int i = 0, e = keys.getSize(); i < e; ++i)
+    {
+        int id = keys.getId(i);
+        if (id == -1) continue;
+        CompareRange &c = ranges->at(id);
+        c.begin = m_pcre.getFirst(pi);
+        c.end = m_pcre.getLast(pi);
+        pi++;
+    }
+}
+
+const ParamsHelper& CompareObject::getKeyHelper() const {
+    if (!m_pkey_helper)
+        m_pkey_helper = new ParamsHelper(m_key, true, &m_key_nocuts);
+    return *m_pkey_helper;
 }
 
 void CompareObject::createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template)
@@ -365,5 +419,6 @@ void CompareObject::reset()
     m_vars_pcre_parts.clear();
     m_fullstr_req = true;
     m_std_regexp = false;
-    delete ph; ph = NULL;
+    delete m_pkey_helper;
+    m_pkey_helper = NULL;
 }

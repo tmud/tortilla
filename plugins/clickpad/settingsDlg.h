@@ -92,6 +92,7 @@ class SettingsDlg : public CDialogImpl<SettingsDlg>
     HHOOK m_hHook;
     CEdit m_edit_text;
     CEdit m_edit_command;
+    CEdit m_edit_tooltip;
     CComboBox m_rows, m_columns, m_bsize;
     CButton m_del_hotkey, m_del_button;
     CListViewCtrl m_list;
@@ -130,6 +131,7 @@ private:
         COMMAND_HANDLER(IDC_COMBO_BUTTON_SIZE, CBN_SELCHANGE, OnBSizeChanged);
         COMMAND_HANDLER(IDC_EDIT_TEXT, EN_CHANGE, OnTextChanged)
         COMMAND_HANDLER(IDC_EDIT_COMMAND, EN_CHANGE, OnCommandChanged)
+        COMMAND_HANDLER(IDC_EDIT_TOOLTIP, EN_CHANGE, OnTooltipChanged)
         COMMAND_ID_HANDLER(IDC_BUTTON_EXIT, OnButtonExit)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELBUTTON, OnDelButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_DELHOTKEY, OnDelHotkey)
@@ -151,6 +153,7 @@ private:
         m_bsize.Attach(GetDlgItem(IDC_COMBO_BUTTON_SIZE));
         m_edit_text.Attach(GetDlgItem(IDC_EDIT_TEXT));
         m_edit_command.Attach(GetDlgItem(IDC_EDIT_COMMAND));
+        m_edit_tooltip.Attach(GetDlgItem(IDC_EDIT_TOOLTIP));
         m_del_hotkey.Attach(GetDlgItem(IDC_BUTTON_DELHOTKEY));
         m_del_button.Attach(GetDlgItem(IDC_BUTTON_DELBUTTON));
         m_list.Attach(GetDlgItem(IDC_LIST_HOTKEYS));
@@ -218,6 +221,7 @@ private:
     LRESULT OnBSizeChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnTextChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnCommandChanged(WORD, WORD, HWND, BOOL&);
+    LRESULT OnTooltipChanged(WORD, WORD, HWND, BOOL&);
     LRESULT OnButtonExit(WORD, WORD, HWND, BOOL&);
     LRESULT OnDelButton(WORD, WORD, HWND, BOOL&);
     LRESULT OnDelHotkey(WORD, WORD, HWND, BOOL&);

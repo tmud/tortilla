@@ -280,6 +280,9 @@
     <ClInclude Include="src\propertiesPages\propertiesDisplay.h">
       <Filter>Source Files\PropertiesPages</Filter>
     </ClInclude>
+    <ClInclude Include="src\logsFormatter.h">
+      <Filter>Source Files\Logs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -422,6 +425,9 @@
     </ClCompile>
     <ClCompile Include="src\compareObject2.cpp">
       <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logsFormatter.cpp">
+      <Filter>Source Files\Logs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

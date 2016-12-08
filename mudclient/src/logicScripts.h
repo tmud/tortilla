@@ -146,7 +146,7 @@ public:
 
             int index = values->find(pattern, group);
             values->add(index, pattern, text, group);
-            swprintf(buffer, buffer_len, L"%s: {%s} {%s} [%s]", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str());
+            swprintf(buffer, buffer_len, L"+%s {%s} {%s} [%s]", label3.c_str(), pattern.c_str(), text.c_str(), group.c_str());
             helper->updateLog(buffer);
             return 1;
         }
@@ -159,19 +159,19 @@ class DeleteParams3 : public ParamsBuffer
 {
 public:
     int process(parser *p, PropertiesValues *values,
-        const tstring& label,
+        const tstring& label, const tstring& type,
         MethodsHelper* helper, TestControl* control = NULL)
     {
         int n = p->size();
         if (n == 1 || n == 2)
         {
             tstring pattern(p->at(0));
-            if (n==1)
+            /*if (n==1)
                 swprintf(buffer, buffer_len, L"%s {%s}",label.c_str(), pattern.c_str());
             else
                 swprintf(buffer, buffer_len, L"%s {%s} [%s]",label.c_str(), pattern.c_str(), p->c_str(1));
+            helper->tmcLog(buffer);*/
 
-            helper->tmcLog(buffer);
             if (control && !control->checkPattern(&pattern))
             {
                 swprintf(buffer, buffer_len, L"Недопустимое значение: %s", pattern.c_str());
@@ -183,8 +183,8 @@ public:
             if (index != -1)
             {
                 const property_value& v = values->get(index);
-                swprintf(buffer, buffer_len, L"Удалено {%s} {%s} [%s]", v.key.c_str(), v.value.c_str(), v.group.c_str());
-                helper->simpleLog(buffer);
+                swprintf(buffer, buffer_len, L"-%s {%s} {%s} [%s]", type.c_str(), v.key.c_str(), v.value.c_str(), v.group.c_str());
+                helper->tmcLog(buffer);
                 values->del(index);
             }
             else
@@ -238,9 +238,9 @@ public:
 
             int index = values->find(pattern, group);
             values->add(index, pattern, L"", group);
-            swprintf(buffer, buffer_len, L"%s: {%s} [%s]", label2.c_str(), pattern.c_str(), group.c_str());
+            swprintf(buffer, buffer_len, L"+%s {%s} [%s]", label2.c_str(), pattern.c_str(), group.c_str());
             helper->updateLog(buffer);
-            return 1;  
+            return 1;
         }
         p->invalidargs();
         return 0;
@@ -250,25 +250,24 @@ public:
 class DeleteParams2 : public ParamsBuffer
 {
 public:
-    int process(parser *p, PropertiesValues *values, const tstring& label, MethodsHelper* helper)
+    int process(parser *p, PropertiesValues *values, const tstring& label, const tstring& type, MethodsHelper* helper)
     {
         int n = p->size();
         if (n == 1 || n == 2)
         {
             tstring pattern(p->at(0));
-            if (n==1)
+            /*if (n==1)
               swprintf(buffer, buffer_len, L"%s {%s}", label.c_str(), pattern.c_str());
             else
               swprintf(buffer, buffer_len, L"%s {%s} [%s]", label.c_str(), pattern.c_str(), p->c_str(1));
-            helper->tmcLog(buffer);
+            helper->tmcLog(buffer);*/
 
-            int index = (n==1) ? values->find(pattern) : values->find(pattern, p->at(1));
-
+           int index = (n==1) ? values->find(pattern) : values->find(pattern, p->at(1));
            if (index != -1)
            {
                const property_value& v = values->get(index);
-               swprintf(buffer, buffer_len, L"Удалено {%s} [%s]", v.key.c_str(), v.group.c_str());
-               helper->simpleLog(buffer);
+               swprintf(buffer, buffer_len, L"-%s {%s} [%s]", type.c_str(), v.key.c_str(), v.group.c_str());
+               helper->tmcLog(buffer);
                values->del(index);
            }
            else

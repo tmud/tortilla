@@ -96,7 +96,7 @@ int ParamsHelper::getId(int index) const              // return index of paramet
     return m_ids[index].id;
 }
 
-const tstring& ParamsHelper::getCutValue(int index)
+const tstring& ParamsHelper::getCutValue(int index) const
 {
     return m_ids[index].cut;
 }

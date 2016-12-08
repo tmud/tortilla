@@ -11,17 +11,22 @@ public:
     CompareData(MudViewString *s);
     void reinit();
     void fullinit();
+    void setBlock(int blockpos, MudViewStringBlock &b);
+    void insertBlocks(int blockpos, int count);
+    void delBlocks(int blockpos, int count);
     void del(CompareRange& range);
     int  fold(CompareRange& range);
+    void appendto(CompareRange& range, std::vector<MudViewStringBlock>& b);
     bool cut(CompareRange& range); // distinguish in individual blocks
-    bool find(CompareRange& range);
+    bool findBlocks(CompareRange& range);
 
     MudViewString *string;
     tstring fullstr;
     int  start;
 private:
     int  cutpos(int pos, int d);
-    int  findpos(int pos, int d);
+    int  findblockpos(int &pos, int d);
+    int  findblock(int pos, int d);
 };
 
 class Alias
@@ -61,11 +66,13 @@ class Sub
 {
 public:
     Sub();
+    ~Sub();
     void init(const property_value& v);
     bool processing(CompareData& data);
 private:
     CompareObject m_compare;
     tstring m_value;
+    ParamsHelper* m_phelper;
 };
 
 class AntiSub

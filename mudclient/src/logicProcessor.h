@@ -15,6 +15,7 @@ public:
     virtual void disconnectFromNetwork() = 0;
     virtual void sendToNetwork(const tstring& data) = 0;
     virtual MudViewString* getLastString(int view) = 0;
+    virtual bool saveViewData(int view, tstring& filename) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
     virtual void postprocessText(int view, parseData* parse_data) = 0;
@@ -196,4 +197,5 @@ public: // system commands
     DEF(wait);
     DEF(plugin);
     DEF(load);
+    DEF(savelog);
 };

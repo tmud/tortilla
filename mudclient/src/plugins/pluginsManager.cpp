@@ -648,7 +648,10 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется table|nil|boolean|string", i);
+            tstring msg(L"Неверный тип результата из метода '");
+            msg.append(TA2W(method));
+            msg.append(L"'. Требуется table|nil|boolean|string");
+            turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)

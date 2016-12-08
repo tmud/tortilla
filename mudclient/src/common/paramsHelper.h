@@ -11,7 +11,7 @@ public:
     int getId(int index) const;
     int getMaxId() const;
     void cutParameter(int index, tstring* param);
-    const tstring& getCutValue(int index);
+    const tstring& getCutValue(int index) const;
 private:
     void init(const tstring& param, bool block_doubles, tstring *nocuts);
     static Pcre16 pcre;
