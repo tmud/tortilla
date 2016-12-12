@@ -89,12 +89,13 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
     tstring error, main_cmd(cmd->command);
     recognizeSystemCommand(&main_cmd, &error);
 
-    if (error.empty() && (main_cmd == L"output" || main_cmd == L"woutput"))
+    //todo!
+    /*if (error.empty() && (main_cmd == L"output" || main_cmd == L"woutput"))
     {
         Tokenizer t(cmd->parameters.c_str(), L" ");
         t.trimempty();
         t.moveto(&cmd->parameters_list);
-    }
+    }*/
 
     PropertiesData *pdata = tortilla::getProperties();
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
@@ -1011,8 +1012,9 @@ IMPL(wprint)
         if (window < 0 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 0, window);
         std::vector<tstring> data;
+        data.resize(n-1);
         for (int i=1; i<n; ++i)
-            data.push_back(p->at(i));
+            data[i-1].assign(p->at(i));
         return printex(window, data, false);
     }
     p->invalidargs();
@@ -1024,8 +1026,9 @@ IMPL(print)
     if (n >= 0)
     {
         std::vector<tstring> data;
+        data.resize(n);
         for (int i=0; i<n; ++i)
-            data.push_back(p->at(i));
+            data[i].assign(p->at(i));
         return printex(0, data, true);
     }
     p->invalidargs();

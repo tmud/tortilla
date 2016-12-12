@@ -101,10 +101,8 @@ bool CompareObject::compare(const tstring& str)
     m_pcre.find(str);
     if (m_pcre.getSize() == 0)
         return false;
-   
-    /*if (!checkCuts())
-        return false;*/
-
+    if (!checkCuts())
+        return false;
     m_str = str;
     return true;
 }
