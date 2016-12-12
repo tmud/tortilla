@@ -438,6 +438,13 @@ public:
         return true;
     }
 
+    int getState(const tstring& state) {
+        int stateid = recognizeState(state);
+        if (stateid == -1)
+            return -1;
+        return getState(stateid); 
+    }
+
     void getStateString(const tstring& state, tstring *str)
     {
         static const tchar* cmds[] = { L"Триггеры (actions)", L"Макросы (aliases)", L"Замены (subs)", L"Aнтизамены (antisubs)", L"Фильтры (gags)",

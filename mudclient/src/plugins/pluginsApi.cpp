@@ -1889,6 +1889,19 @@ int props_pluginsLogWindow(lua_State *L)
     return pluginInvArgs(L, L"props.pluginsLogWindow");
 }
 
+int props_component(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        ModeCmdHelper ch(tortilla::getProperties());
+        tstring state(luaT_towstring(L, 1));
+        int flag = ch.getState(state);
+        lua_pushboolean(L, (flag != 0) ? 1 : 0 );
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.component");
+}
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
@@ -1905,5 +1918,6 @@ void reg_props(lua_State *L)
     regFunction(L, "activated", props_activated);
     regFunction(L, "isPropertiesOpen", props_isPropertiesOpen);
     regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);
+    regFunction(L, "component", props_component);
     lua_setglobal(L, "props");
 }

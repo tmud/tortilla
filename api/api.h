@@ -1042,6 +1042,12 @@ public:
             { int w = lua_tointeger(L, -1); lua_pop(L, 1); return w; }
         return -1;
     }
+    bool component(const wchar_t* id) 
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "component", "ts", id);
+        return boolresult();
+    }
 private:
     bool boolresult()
     {

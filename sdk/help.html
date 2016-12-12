@@ -460,6 +460,12 @@ nil или true - если команда была успешно обработ
 Функция используется для оповещения плагинов о том, что изменился шрифт (его имя, размер, начертание и др.) в клиенте. Данное событие приходит после события <div class="cmd">propsupdated</div>.
 <br>См. <a href="#propsblocked" class="cmd">propsblocked</a>, <a href="#propsupdated" class="cmd">propsupdated</a>, <a href="#props" class="cmd">isPropertiesOpen</a>.
 <hr>
+<a name="compsupdated"></a>
+<h4>void compsupdated()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: нет<br></div><br>
+Функция используется для оповещения плагинов о том, что изменилось состояние компонентов клиента.
+<hr>
 <a name="tick"></a>
 <h4>void tick()</h4>
 <div class="m">Параметры: нет</div><br>
@@ -705,6 +711,7 @@ nil или true - если команда была успешно обработ
 <div class="cmd">bool activated()</div> - признак, что окно клиента активно и игрок работает с ним.
 <div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
 <div class="cmd">int pluginsLogWindow()</div> - номер окна, куда выводятся логи плагинов. Если вывод логов отключен возвращается -1.
+<div class="cmd">bool component(const wchar_t *name)</div> - возвращает статус компонента (включен или выключен) по имени, см. <a href="#compsupdated" class="cmd">compsupdated</a>.
 </pre>
 <hr>
 <a name="cppmsdp"></a>
@@ -1288,6 +1295,7 @@ render:rect(r2)
 <div class="cmd">bool activated()</div> -  признак, что окно клиента активно и игрок работает с ним.
 <div class="cmd">bool isPropertiesOpen()</div> - признак, что открыто окно настроек клиента, см. <a href="#propsblocked" class="cmd">propsblocked</a>.
 <div class="cmd">false|int pluginsLogWindow()</div> - возращает номер окна, куда выводится лог плагинов. Если вывод логов отключен, то возвращается false.
+<div class="cmd">bool component(string name)</div> - возращает статус компонента (включен или выключен) по имени, см. <a href="#compsupdated" class="cmd">compsupdated</a>.
 </pre>
 <hr>
 <a name="luaactobj"></a>

@@ -838,7 +838,10 @@ private:
     LRESULT OnMode(WORD, WORD, HWND, BOOL&)
     {
         ModeDlg dlg(m_propData);
-        dlg.DoModal();
+        if (dlg.DoModal() == IDOK)
+        {
+            m_plugins.processPluginsMethod("compsupdated", 0);
+        }
         return 0;
     }
 
