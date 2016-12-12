@@ -125,9 +125,12 @@ private:
     void recognizeSystemCommand(tstring* cmd, tstring* error);
     void processSystemCommand(InputCommand cmd);
     void processGameCommand(InputCommand cmd);
-    enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
-           SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24, WORK_OFFLINE = 32,
-           GAME_LOG = 64, GAME_CMD = 128, FROM_STACK = 256, FROM_TIMER = 512, NEW_LINE = 1024 };
+    enum { SKIP_NONE = 0, SKIP_ACTIONS = 0x1, SKIP_SUBS = 0x2, SKIP_HIGHLIGHTS = 0x4,
+           SKIP_PLUGINS_BEFORE = 0x8, SKIP_PLUGINS_AFTER = 0x10, SKIP_PLUGINS = 0x18,
+           SKIP_COMPONENT_GAGS = 0x20, SKIP_COMPONENT_SUBS = 0x40,
+           SKIP_COMPONENT_ANTISUBS = 0x80, SKIP_COMPONENT_PLUGINS = 0x100,
+           WORK_OFFLINE = 0x200, GAME_LOG = 0x400, GAME_CMD = 0x800, FROM_STACK = 0x1000,
+           FROM_TIMER = 0x2000, NEW_LINE = 0x4000 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f);
@@ -176,6 +179,7 @@ public: // system commands
     DEF(wprint);
     DEF(print);
     DEF(message);
+    DEF(component);
     DEF(tab);
     DEF(untab);
     DEF(timer);

@@ -283,6 +283,9 @@
     <ClInclude Include="src\logsFormatter.h">
       <Filter>Source Files\Logs</Filter>
     </ClInclude>
+    <ClInclude Include="src\modeDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">

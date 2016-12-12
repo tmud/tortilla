@@ -477,6 +477,8 @@ public:
         dlg = p.dlg;
         // skip displays
         messages = p.messages;
+        // dont copy mode
+        mode.initDefault();
         // skip cmd_history
         codepage = p.codepage;
         logformat = p.logformat;
@@ -546,6 +548,19 @@ public:
     int variables;
     int tabwords;
     } messages;
+
+    struct working_mode { 
+    working_mode() { initDefault();  }
+    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = antisubs = gags = plugins = val; }
+    int actions;
+    int aliases;
+    int subs;
+    int hotkeys;
+    int highlights;
+    int antisubs;
+    int gags;
+    int plugins;
+    } mode;
 
     std::vector<tstring> cmd_history;
 
@@ -634,6 +649,7 @@ public:
         initDefaultColorsAndFont();
         initDisplay();
         messages.initDefault();
+        mode.initDefault();
         timers_on = 0;
         recognize_prompt = 0;
         recognize_prompt_template.clear();

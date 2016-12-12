@@ -1388,6 +1388,43 @@ IMPL(message)
     p->invalidargs();
 }
 //-------------------------------------------------------------------
+IMPL(component)
+{
+    int n = p->size();
+    if (n == 0)
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        ModeCmdHelper mh(pdata);
+        tstring str;
+        mh.getStrings(&str);
+        tmcLog(L"Компоненты:");
+        simpleLog(str);
+        return;
+    }
+
+    if (n == 1 || n == 2)
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        ModeCmdHelper mh(pdata);
+        if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
+        {
+            if (n == 1)
+                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
+            else
+                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
+            tmcLog(pb.buffer);
+        }
+        else
+        {
+            tstring str;
+            mh.getStateString(p->at(0), &str);
+            tmcLog(str);
+        }
+        return;
+    }
+    p->invalidargs();
+}
+//-------------------------------------------------------------------
 IMPL(wait)
 {
      if (p->size() == 2 && isOnlySymbols(p->at(0), L"0123456789."))
@@ -1507,6 +1544,7 @@ bool LogicProcessor::init()
     regCommand("output", print);
     regCommand("message", message);
     regCommand("echo", message);
+    regCommand("component", component);
 
     regCommand("tab", tab);
     regCommand("untab", untab);

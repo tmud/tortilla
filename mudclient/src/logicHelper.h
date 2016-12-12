@@ -169,6 +169,9 @@ public:
            UPDATE_TIMER1 /* UPDATE_TIMER1 + TIMERS_COUNT */
     };
 
+    enum { MODE_ALIASES =1, MODE_ACTIONS, MODE_HOTKEYS, MODE_SUBS, MODE_ANTISUBS, MODE_GAGS, MODE_HIGHLIGHTS, MODE_PLUGINS    
+    };
+
     LogicHelper();
     void updateProps(int what = UPDATE_ALL);
     bool processAliases(const InputCommand cmd, InputCommands* newcmds);
@@ -343,6 +346,142 @@ private:
             LogicHelper::UPDATE_ANTISUBS, LogicHelper::UPDATE_GAGS, LogicHelper::UPDATE_HIGHLIGHTS, LogicHelper::UPDATE_HOTKEYS,
             LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS,
             LogicHelper::UPDATE_ALL };
+
+        int stateid = -1;
+        int len = state.length();
+        for (int i = 0; cmds[i]; ++i)
+        {
+            if (!wcsncmp(state.c_str(), cmds[i], len))
+            {
+                stateid = ids[i]; break;
+            }
+        }
+        return stateid;
+    }
+
+    void removeLastRN(tstring *str)
+    {
+        int len = str->length();
+        if (len > 0)
+        {
+            tstring tmp(str->substr(0, len - 2));
+            str->swap(tmp);
+        }
+    }
+};
+
+class ModeCmdHelper
+{
+   PropertiesData *propData;
+public:
+    ModeCmdHelper(PropertiesData *pd) : propData(pd) {}
+    int getState(int state)
+    {
+        int flag = -1;
+        switch (state) 
+        {
+            case LogicHelper::MODE_ACTIONS: flag = propData->mode.actions; break;
+            case LogicHelper::MODE_ALIASES: flag = propData->mode.aliases; break;
+            case LogicHelper::MODE_ANTISUBS: flag = propData->mode.antisubs; break;
+            case LogicHelper::MODE_HIGHLIGHTS: flag = propData->mode.highlights; break;
+            case LogicHelper::MODE_HOTKEYS: flag = propData->mode.hotkeys; break;
+            case LogicHelper::MODE_GAGS: flag = propData->mode.gags; break;
+            case LogicHelper::MODE_SUBS: flag = propData->mode.subs; break;
+            case LogicHelper::MODE_PLUGINS: flag = propData->mode.plugins; break;
+        }
+        return flag;
+    }
+    bool setState(int state, int value)
+    {
+        bool ok = true;
+        switch (state)
+        {
+            case LogicHelper::MODE_ACTIONS: propData->mode.actions = value; break;
+            case LogicHelper::MODE_ALIASES: propData->mode.aliases = value; break;
+            case LogicHelper::MODE_ANTISUBS: propData->mode.antisubs = value; break;
+            case LogicHelper::MODE_HIGHLIGHTS: propData->mode.highlights = value; break;
+            case LogicHelper::MODE_HOTKEYS: propData->mode.hotkeys = value; break;
+            case LogicHelper::MODE_GAGS: propData->mode.gags = value; break;
+            case LogicHelper::MODE_SUBS: propData->mode.subs = value; break;
+            case LogicHelper::MODE_PLUGINS: propData->mode.plugins = value; break;
+            default: ok = false; break;
+        }
+        return ok;
+    }
+
+    void getStrings(tstring *str)
+    {
+        PropertiesData::working_mode &md = propData->mode;
+        str->append(L"Триггеры (actions)"); str->append(stateStr(md.actions));
+        str->append(L"Макросы (aliases)"); str->append(stateStr(md.aliases));
+        str->append(L"Замены (subs)"); str->append(stateStr(md.subs));
+        str->append(L"Aнтизамены (antisubs)"); str->append(stateStr(md.antisubs));
+        str->append(L"Фильтры (gags)"); str->append(stateStr(md.gags));
+        str->append(L"Подсветки (highlights)"); str->append(stateStr(md.highlights));
+        str->append(L"Горячие клавиши (hotkeys)"); str->append(stateStr(md.hotkeys));
+        str->append(L"Плагины (plugins)"); str->append(stateStr(md.plugins));
+        removeLastRN(str);
+    }
+
+    bool setMode(const tstring& state, const tstring& mode_value)
+    {
+        int stateid = recognizeState(state);
+        if (stateid == -1)
+            return false;
+
+        int newstate = recognizeValue(mode_value);
+        if (newstate == -1)
+        {
+            return true;
+        }
+        setState(stateid, newstate);
+        return true;
+    }
+
+    void getStateString(const tstring& state, tstring *str)
+    {
+        static const tchar* cmds[] = { L"Триггеры (actions)", L"Макросы (aliases)", L"Замены (subs)", L"Aнтизамены (antisubs)", L"Фильтры (gags)",
+            L"Подсветки (highlights)", L"Горячие клавиши (hotkeys)", L"Плагины (plugins)" };
+        static const int ids[] = { LogicHelper::MODE_ACTIONS, LogicHelper::MODE_ALIASES, LogicHelper::MODE_SUBS,
+            LogicHelper::MODE_ANTISUBS, LogicHelper::MODE_GAGS, LogicHelper::MODE_HIGHLIGHTS, LogicHelper::MODE_HOTKEYS,
+            LogicHelper::MODE_PLUGINS, 0 };        
+        int stateid = recognizeState(state);       
+        for (int i = 0; ids[i]; ++i)
+        {
+            if (stateid == ids[i])
+            { 
+                str->assign(cmds[i]);
+                str->append(stateStr(getState(stateid)));
+                removeLastRN(str);
+                break;
+            }
+        }
+    }
+private:
+    const tchar* stateStr(int state)
+    {
+        return (state ? L" - Вкл\r\n" : L" - Выкл\r\n");
+    }
+
+    int recognizeValue(const tstring& value)
+    {
+        const tstring& n = value;
+        if (n.empty())
+            return -1;
+        if (n == L"вкл" || n == L"enable" || n == L"on" || n == L"1")
+            return 1;
+        if (n == L"выкл" || n == L"disable" || n == L"off" || n == L"0")
+            return 0;
+        return -1;
+    }
+
+    int recognizeState(const tstring& state)
+    {
+        static const tchar* cmds[] = { L"actions", L"aliases", L"subs", L"antisubs", L"gags",
+            L"highlights", L"hotkeys", L"plugins", NULL };
+        static const int ids[] = { LogicHelper::MODE_ACTIONS, LogicHelper::MODE_ALIASES, LogicHelper::MODE_SUBS,
+            LogicHelper::MODE_ANTISUBS, LogicHelper::MODE_GAGS, LogicHelper::MODE_HIGHLIGHTS, LogicHelper::MODE_HOTKEYS,
+            LogicHelper::MODE_PLUGINS };
 
         int stateid = -1;
         int len = state.length();

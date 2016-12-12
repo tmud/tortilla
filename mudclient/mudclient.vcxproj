@@ -164,6 +164,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\logsFormatter.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
+    <ClInclude Include="src\modeDlg.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />
     <ClInclude Include="src\mudCommandBar.h" />
     <ClInclude Include="src\mudGameView.h" />

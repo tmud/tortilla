@@ -407,6 +407,21 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
 {
+    PropertiesData *pdata = tortilla::getProperties();
+    const PropertiesData::working_mode &m = pdata->mode;
+    if (!m.actions)
+        flags |= SKIP_ACTIONS;
+    if (!m.antisubs)
+        flags |= SKIP_COMPONENT_ANTISUBS;
+    if (!m.gags)
+        flags |= SKIP_COMPONENT_GAGS;
+    if (!m.subs)
+        flags |= SKIP_COMPONENT_SUBS;
+    if (!m.highlights)
+        flags |= SKIP_HIGHLIGHTS;
+    if (!m.plugins)
+        flags |= SKIP_COMPONENT_PLUGINS;
+
     // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
     m_plugins_log_tocache = true;
 
@@ -421,8 +436,10 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
         bool triggered = false;
-        if (!skip_actions)
-            triggered = luatriggers->processTriggers(parse_data, j, pe);
+        if (!skip_actions) {
+            if (!(flags & SKIP_COMPONENT_PLUGINS))
+              triggered = luatriggers->processTriggers(parse_data, j, pe);
+        }
         bool actions = false;
         if (!skip_actions) {
             actions = m_helper.processActions(&parse_data, j, pe);
@@ -444,9 +461,12 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     if (!(flags & SKIP_SUBS))
     {
-        m_helper.processAntiSubs(&parse_data);
-        m_helper.processGags(&parse_data);
-        m_helper.processSubs(&parse_data);
+        if (!(flags & SKIP_COMPONENT_ANTISUBS))
+            m_helper.processAntiSubs(&parse_data);
+        if (!(flags & SKIP_COMPONENT_GAGS))
+            m_helper.processGags(&parse_data);
+        if (!(flags & SKIP_COMPONENT_SUBS))
+            m_helper.processSubs(&parse_data);
     }
 
     if (!(flags & SKIP_HIGHLIGHTS))

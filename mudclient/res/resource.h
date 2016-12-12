@@ -38,6 +38,7 @@
 #define IDD_PASSWORD                    221
 #define IDD_STARTUP_WORLD               222
 #define IDD_FIND                        223
+#define IDD_MODE                        224
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
@@ -127,6 +128,8 @@
 #define IDC_CHECK_ANYFONTS              1143
 #define IDC_CHECK_DISABLEALT            1144
 #define IDC_CHECK_MOVETOTRAY            1145
+#define IDC_LIST1                       1146
+#define IDC_LIST_COMPONENTS             1146
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -143,14 +146,15 @@
 #define ID_MUDCLIENT_HELP               32798
 #define ID_NEWWORLD                     32799
 #define ID_CHECK_UPDATES                32800
+#define ID_MODE                         32801
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        224
-#define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1146
+#define _APS_NEXT_RESOURCE_VALUE        225
+#define _APS_NEXT_COMMAND_VALUE         32802
+#define _APS_NEXT_CONTROL_VALUE         1147
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

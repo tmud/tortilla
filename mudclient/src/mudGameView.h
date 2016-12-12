@@ -7,6 +7,7 @@
 #include "mudView.h"
 #include "mudCommandBar.h"
 #include "findDlg.h"
+#include "modeDlg.h"
 #include "logicProcessor.h"
 
 #include "plugins/pluginsApi.h"
@@ -385,6 +386,7 @@ private:
         COMMAND_ID_HANDLER(ID_LOADPROFILE, OnLoadProfile)
         COMMAND_ID_HANDLER(ID_NEWWORLD, OnNewWorld)
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
+        COMMAND_ID_HANDLER(ID_MODE, OnMode)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
         COMMAND_ID_HANDLER(ID_VIEW_FIND, OnViewFind)
         MESSAGE_HANDLER(WM_DOCK_PANE_CLOSE, OnCloseWindow)
@@ -830,6 +832,13 @@ private:
     LRESULT OnNewWorld(WORD, WORD, HWND, BOOL&)
     {
         onNewWorld();
+        return 0;
+    }
+
+    LRESULT OnMode(WORD, WORD, HWND, BOOL&)
+    {
+        ModeDlg dlg(m_propData);
+        dlg.DoModal();
         return 0;
     }
 

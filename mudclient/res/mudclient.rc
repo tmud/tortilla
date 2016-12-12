@@ -364,6 +364,17 @@ BEGIN
     LTEXT           "Направление:",IDC_STATIC,7,43,48,10
 END
 
+IDD_MODE DIALOGEX 0, 0, 356, 165
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Компоненты"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_LIST_COMPONENTS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,342,131
+    PUSHBUTTON      "Вкл/Выкл",IDC_BUTTON_ONOFF,7,144,61,14
+    DEFPUSHBUTTON   "OK",IDOK,248,144,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,299,144,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -488,6 +499,14 @@ BEGIN
         RIGHTMARGIN, 249
         TOPMARGIN, 7
     END
+
+    IDD_MODE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 349
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 158
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -506,6 +525,7 @@ BEGIN
         MENUITEM "Новый мир...",                ID_NEWWORLD
         MENUITEM SEPARATOR
         MENUITEM "Н&астройки...\tShift+F12",    ID_SETTINGS
+        MENUITEM "&Компоненты...",              ID_MODE
         MENUITEM SEPARATOR
         MENUITEM "&Выход",                      ID_MUDCLIENT_EXIT
     END
@@ -586,6 +606,7 @@ BEGIN
     SEPARATOR
     BUTTON      ID_SETTINGS
     BUTTON      ID_PLUGINS
+    BUTTON      ID_MODE
     SEPARATOR
     BUTTON      ID_MUDCLIENT_HELP
 END
@@ -664,6 +685,16 @@ BEGIN
                             "Ошибка при загрузке профиля. Файл профиля поврежден."
     IDS_ERROR_LASTLOAD_FAILED 
                             "Ошибка при загрузке последнего игрового профиля. Файл профиля отсутствует или поврежден. Загрузить профиль по умолчанию?"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MODE                 "\nКомпоненты"
+END
+
+STRINGTABLE
+BEGIN
+    ID_HELP                 "\nСправка"
 END
 
 #endif    // Russian (Russia) resources
