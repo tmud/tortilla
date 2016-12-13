@@ -10,10 +10,13 @@ struct CompareRange
 class CompareObjectVarsHelper {
 public:
     CompareObjectVarsHelper(const tstring& name, bool multivar);
-    bool next(tstring *val);
+    bool next(tstring *value);
+    const tstring& predicate() const { return pred; }
 private:
     tstring pred;
-    bool multflag;
+    bool multiflag;
+    bool multiflag_used;
+    int last;
 };
 
 class CompareObject

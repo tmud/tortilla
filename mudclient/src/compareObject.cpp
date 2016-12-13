@@ -109,73 +109,71 @@ bool CompareObject::compare(const tstring& str)
 
 bool CompareObject::checkCuts()
 {
+    int from = 0;
     const ParamsHelper& keys = getKeyHelper();
     for (int i=0,e=keys.getSize(); i<e; ++i) 
     {
         const tstring& cut = keys.getCutValue(i);
-        if (cut.empty()) continue;
+        if (cut.empty()) 
+            continue;
 
-        // text on the cut position
+        // get text on the cut position
         tstring param;
         if (!m_pcre.getString(i+1, &param))
+        {
+            assert(false);
             return false;
+        }
 
-        // translate cut - find all vars
+        // translate cut
         Pcre16 &r = CutRegexp::get();
         r.findAllMatches(cut);
         int vars_count = r.getSize();
+
+        // no vars in cut
         if (vars_count == 0) {
            if (cut != param)
                return false;
            continue;
         }
 
-        /*cutdata cd;
-        cd.vars.resize(vars_count-1);
-        for (int i=1;i<vars_count;++i)
-            r.getString(i, &cd.vars[i-1]);*/
- 
-        struct el {
-           tstring pred;
-           tstring lastvar;
-        };
-
-       std::vector<el> stack;
-       do {
-         int i = stack.size();
-         int from = (i==0) ? 0 : stack[i-1].pred.length();  
-         tstring prefix( cut.substr(from, r.getFirst(i+1)) );
-
-         // check part before var
-         if (!prefix.empty() && param.compare(from, prefix.length(), prefix)) {
-             // pop from stack
-             continue;
-         }
-         // compare var
-         from += prefix.length();
-         tstring var;
-         r.getString(i+1, &var);
-         if (var.empty())
-             continue;
-         int last = var.size() - 1;
-         if (var.at(last) == L';')
-             last = last - 1;
-         bool multivar = false;
-         if (var.at(last) == L'*')
-            { multivar = true; last = last - 1; }
-         tstring name(var.substr(1, last));
-
-         CompareObjectVarsHelper h(var, multivar);
-         var.clear();
-         /*while (h.next(&var)) {
-            if (param.compare(pred.length(), var.length(), var))
-            {
-                  int x = 1;
+        for (int j=1; j<vars_count; ++j)
+        {
+            // compare part before var
+            tstring prefix( cut.substr(from, r.getFirst(j)) );
+            if (!prefix.empty() && param.compare(from, prefix.length(), prefix)) {            
+               return false;
             }
-         }*/
+            from += prefix.length();
 
+            tstring var;
+            r.getString(i+1, &var);
+            int last = var.size() - 1;
+            if (var.at(last) == L';')
+                last = last - 1;
+            bool multivar = false;
+            if (var.at(last) == L'*')
+                { multivar = true; last = last - 1; }
 
-       } while (!stack.empty());
+             tstring var_name(var.substr(1, last));
+             CompareObjectVarsHelper h(var_name, multivar);
+             var.clear();
+
+             bool compared = false;
+             while (h.next(&var))
+             {
+                if (!param.compare(from, var.length(), var))
+                {
+                    compared = true;
+                    break;
+                }
+             }
+             if (!compared)
+                 return false;
+        }
+
+        // check suffix after all vars
+
     }
     return true;
 }

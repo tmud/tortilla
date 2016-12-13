@@ -60,6 +60,27 @@ bool VarProcessor::delVar(const tstring& var)
     return vars_processor.delVar(getVars(), var);
 }
 
+bool VarProcessor::iterateVar(const tstring& pred, int& last, tstring* value)
+{
+    if (last+1 < 0)
+        return false;
+    const PropertiesValues &vars = getVars();
+    int count = vars.size();
+    if (last < count)
+    {
+       for (int i=last+1;i<count;++i) {
+           const tstring& var_name = vars.get(i).key;
+           if (var_name.find(pred) == 0) {
+               last = i;
+               if (value)
+                 value->assign(vars.get(i).value);
+               return true;
+           }
+       }
+    }
+    return false;
+}
+
 VarProcessorImpl::VarProcessorImpl()
 {
     std::map<tstring, int> &v = m_specvars;
