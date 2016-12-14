@@ -35,7 +35,4 @@ private:
     static bool testCutValue(ParamsHelper& ph, int index, const tchar* value);
     static bool testCutParameter(ParamsHelper& ph, int index, const tchar* srcparam, const tchar* testparam);
 };
-#define RUN_PARAMSHELPER_TESTS ParamsHelperUnitTests::run();
-#else
-#define RUN_PARAMSHELPER_TESTS
 #endif

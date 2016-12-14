@@ -18,3 +18,15 @@ bool CompareObjectVarsHelper::next(tstring *value)
     VarProcessor *vp = tortilla::getVars();
     return vp->iterateVar(pred, last, value);
 }
+
+
+#ifdef _DEBUG
+void CompareObjectUnitTests::run()
+{
+    CompareObject co;
+    co.init(L"", false);
+
+
+
+}
+#endif

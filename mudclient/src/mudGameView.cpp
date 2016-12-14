@@ -9,8 +9,11 @@ bool MudGameView::initialize()
         return false;
     }
 
-    RUN_INPUTPROCESSOR_TESTS;
-    RUN_PARAMSHELPER_TESTS;
+#ifdef _DEBUG
+    InputCommandTemplateUnitTests::run();
+    ParamsHelperUnitTests::run();
+    CompareObjectUnitTests::run();
+#endif
 
     if (!m_processor.init())
     {

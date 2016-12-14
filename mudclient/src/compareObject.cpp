@@ -109,7 +109,6 @@ bool CompareObject::compare(const tstring& str)
 
 bool CompareObject::checkCuts()
 {
-    int from = 0;
     const ParamsHelper& keys = getKeyHelper();
     for (int i=0,e=keys.getSize(); i<e; ++i) 
     {
@@ -137,6 +136,8 @@ bool CompareObject::checkCuts()
            continue;
         }
 
+        // compare vars
+        int from = 0;
         for (int j=1; j<vars_count; ++j)
         {
             // compare part before var
@@ -148,7 +149,8 @@ bool CompareObject::checkCuts()
 
             tstring var;
             r.getString(i+1, &var);
-            int last = var.size() - 1;
+            int varname_size = var.size();
+            int last = varname_size - 1;
             if (var.at(last) == L';')
                 last = last - 1;
             bool multivar = false;
@@ -164,6 +166,7 @@ bool CompareObject::checkCuts()
              {
                 if (!param.compare(from, var.length(), var))
                 {
+                    from += var.length(); //varname_size;
                     compared = true;
                     break;
                 }
@@ -171,9 +174,20 @@ bool CompareObject::checkCuts()
              if (!compared)
                  return false;
         }
-
+        
         // check suffix after all vars
+        int suffix_from = r.getLast(vars_count-1);
+        tstring suffix( cut.substr(suffix_from) );
+        if (!suffix.empty() ) {
+            if (param.compare(from, suffix.length(), suffix)) {
+                return false;
+            }
+            from += suffix.length();
+        } 
 
+        int len = param.length();
+        if  (from != len)
+             return false;
     }
     return true;
 }

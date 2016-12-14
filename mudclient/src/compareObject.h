@@ -52,3 +52,13 @@ private:
     bool m_fullstr_req;
     bool m_std_regexp;
 };
+
+#ifdef _DEBUG
+
+class CompareObjectUnitTests
+{
+public:
+    static void run();
+};
+
+#endif
