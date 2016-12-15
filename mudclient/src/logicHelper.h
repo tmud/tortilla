@@ -438,6 +438,15 @@ public:
         return true;
     }
 
+    bool setMode(const tstring& state, bool mode_value)
+    {
+        int stateid = recognizeState(state);
+        if (stateid == -1)
+            return false;
+        setState(stateid, mode_value ? 1 : 0);
+        return true;
+    }
+
     int getState(const tstring& state) {
         int stateid = recognizeState(state);
         if (stateid == -1)

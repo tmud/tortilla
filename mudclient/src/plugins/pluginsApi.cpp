@@ -1349,6 +1349,22 @@ int isGroupActive(lua_State *L)
     }
     return pluginInvArgs(L, L"isGroupActive");
 }
+
+int setComponent(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TBOOLEAN))
+    {
+        tstring component(luaT_towstring(L, 1));
+        bool mode = (lua_toboolean(L, 2) == 0) ? false : true;
+        bool result = lp()->setComponent(component, mode);
+        if (!result)
+            pluginInvArgsValues(L, L"setComponent");
+        lua_pushboolean(L, (result) ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"setComponent");
+}
 //---------------------------------------------------------------------
 // Metatables for all types
 void reg_mt_window(lua_State *L);
@@ -1420,6 +1436,7 @@ bool initPluginsSystem()
     lua_register(L, "getVersion", getVersion);
     lua_register(L, "checkVersion", checkVersion);
     lua_register(L, "isGroupActive", isGroupActive);
+    lua_register(L, "setComponent", setComponent);
 
     reg_props(L);
     reg_activeobjects(L);

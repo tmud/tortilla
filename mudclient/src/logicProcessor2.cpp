@@ -242,6 +242,12 @@ void LogicProcessor::updateProps(int update, int options)
     m_updatelog.clear();
 }
 //------------------------------------------------------------------
+bool LogicProcessor::setComponent(const tstring& name, bool mode)
+{
+    ModeCmdHelper ch(tortilla::getProperties());
+    return ch.setMode(name, mode);
+}
+//------------------------------------------------------------------
 IMPL(drop)
 {
     if (p->size() != 0)

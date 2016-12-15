@@ -49,6 +49,7 @@ public:
     virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
     virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
     virtual void windowClear(int window) = 0;
+    virtual bool setComponent(const tstring& name, bool mode) = 0;
 };
 
 class parser;
@@ -125,6 +126,7 @@ private:
     void recognizeSystemCommand(tstring* cmd, tstring* error);
     void processSystemCommand(InputCommand cmd);
     void processGameCommand(InputCommand cmd);
+    bool setComponent(const tstring& name, bool mode);
     enum { SKIP_NONE = 0, SKIP_ACTIONS = 0x1, SKIP_SUBS = 0x2, SKIP_HIGHLIGHTS = 0x4,
            SKIP_PLUGINS_BEFORE = 0x8, SKIP_PLUGINS_AFTER = 0x10, SKIP_PLUGINS = 0x18,
            SKIP_COMPONENT_GAGS = 0x20, SKIP_COMPONENT_SUBS = 0x40,
