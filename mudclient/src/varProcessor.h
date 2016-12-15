@@ -10,4 +10,5 @@ public:
     bool setVar(const tstring& var, const tstring& value);
     bool delVar(const tstring& var);
     bool iterateVar(const tstring& pred, int& last, tstring* value);
+    void deleteAll();
 };

@@ -81,6 +81,12 @@ bool VarProcessor::iterateVar(const tstring& pred, int& last, tstring* value)
     return false;
 }
 
+void VarProcessor::deleteAll()
+{
+    PropertiesValues &vars = getVars();
+    vars.clear();
+}
+
 VarProcessorImpl::VarProcessorImpl()
 {
     std::map<tstring, int> &v = m_specvars;

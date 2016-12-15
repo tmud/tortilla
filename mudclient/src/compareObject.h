@@ -33,7 +33,8 @@ public:
     void getParameters(std::vector<tstring>* params) const;
     void getParametersRange(std::vector<CompareRange>* ranges) const;
     bool isFullstrReq() const;
-    void getKey(tstring* key) const;
+    const tstring& getKey() const;
+    const tstring& getKeyNoCuts() const;
 private:
     void cthis(const CompareObject& co);
     void createCheckPcre(const tstring& key, bool endline_mode, tstring *prce_template);

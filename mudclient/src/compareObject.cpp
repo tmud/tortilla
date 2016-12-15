@@ -28,7 +28,7 @@ void CompareObject::cthis(const CompareObject& co) {
     m_pcre.setRegExp(regexp, true);
     m_key = co.m_key;
     m_fullstr_req = co.m_fullstr_req;
-    m_std_regexp = co.m_std_regexp;    
+    m_std_regexp = co.m_std_regexp;
     m_pkey_helper = NULL;
 }
 bool CompareObject::init(const tstring& key, bool endline_mode)
@@ -137,20 +137,22 @@ bool CompareObject::checkCuts()
         }
 
         // compare vars
-        int from = 0;
+        int from_param = 0;
+        int from_cut = 0;
         for (int j=1; j<vars_count; ++j)
         {
             // compare part before var
-            tstring prefix( cut.substr(from, r.getFirst(j)) );
-            if (!prefix.empty() && param.compare(from, prefix.length(), prefix)) {            
+            tstring prefix( cut.substr(from_cut, r.getFirst(j)-from_cut) );
+            if (!prefix.empty() && param.compare(from_param, prefix.length(), prefix)) {            
                return false;
             }
-            from += prefix.length();
+            from_param += prefix.length();
+            from_cut += prefix.length();
 
             tstring var;
-            r.getString(i+1, &var);
-            int varname_size = var.size();
-            int last = varname_size - 1;
+            r.getString(j, &var);
+            int varname_len = var.size();
+            int last = varname_len - 1;
             if (var.at(last) == L';')
                 last = last - 1;
             bool multivar = false;
@@ -164,9 +166,10 @@ bool CompareObject::checkCuts()
              bool compared = false;
              while (h.next(&var))
              {
-                if (!param.compare(from, var.length(), var))
+                if (!param.compare(from_param, var.length(), var))
                 {
-                    from += var.length(); //varname_size;
+                    from_param += var.length();
+                    from_cut += varname_len;
                     compared = true;
                     break;
                 }
@@ -174,19 +177,19 @@ bool CompareObject::checkCuts()
              if (!compared)
                  return false;
         }
-        
+
         // check suffix after all vars
         int suffix_from = r.getLast(vars_count-1);
         tstring suffix( cut.substr(suffix_from) );
         if (!suffix.empty() ) {
-            if (param.compare(from, suffix.length(), suffix)) {
+            if (param.compare(from_param, suffix.length(), suffix)) {
                 return false;
             }
-            from += suffix.length();
-        } 
+            from_param += suffix.length();
+        }
 
         int len = param.length();
-        if  (from != len)
+        if  (from_param != len)
              return false;
     }
     return true;
@@ -211,6 +214,8 @@ void CompareObject::getParameters(std::vector<tstring>* params) const
     int maxid = keys.getMaxId()+1;
     if (maxid <= 0)
         maxid = 1;
+
+    p.clear(); //if not empty
     p.resize(maxid);
 
     int begin =  m_pcre.getFirst(0);
@@ -380,9 +385,14 @@ bool CompareObject::isFullstrReq() const
     return m_fullstr_req;
 }
 
-void CompareObject::getKey(tstring* key) const
+const tstring& CompareObject::getKey() const
 {
-    key->assign(m_key);
+    return m_key;
+}
+
+const tstring& CompareObject::getKeyNoCuts() const
+{
+    return m_key_nocuts;
 }
 
 void CompareObject::maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow)

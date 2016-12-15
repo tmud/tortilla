@@ -22,7 +22,7 @@ public:
         m_strings.resize(count, NULL);
         for (int i=0;i<count;++i) { m_strings[i] = new triggerParseDataString;  }
         m_keys.resize(count);
-        for (int i=0;i<count;++i) { cobjs[i].getKey(&m_keys[i]); }
+        for (int i=0;i<count;++i) { m_keys[i].assign(cobjs[i].getKey()); }
         resetindex();
     }
     void reset()
