@@ -180,7 +180,7 @@ public:
 };
 
 #ifdef _DEBUG
-class InputCommandTemplateUnitTest
+class InputCommandTemplateUnitTests
 {
     static bool test1(const tstring& str, int n, ...);
     static bool test2(const tstring& str, int params, InputCommands *ref);
@@ -189,7 +189,4 @@ class InputCommandTemplateUnitTest
 public:
     static void run();
 };
-#define RUN_INPUTPROCESSOR_TESTS InputCommandTemplateUnitTest::run();
-#else
-#define RUN_INPUTPROCESSOR_TESTS
 #endif

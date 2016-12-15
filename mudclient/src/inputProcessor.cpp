@@ -73,13 +73,13 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
 
     tstring result;
     int pos = 0;
-    ParamsHelper values(*cmd, ParamsHelper::EXTENDED);
+    ParamsHelper values(*cmd, false);
     int values_count = values.getSize();
     for (int i = 0; i < values_count; ++i)
     {
         result.append(cmd->substr(pos, values.getFirst(i) - pos));
         int id = values.getId(i);
-        if (id < params_count)
+        if (id < params_count && id >= 0)
         {
             tstring param(params_list[id]);
             values.cutParameter(i, &param);

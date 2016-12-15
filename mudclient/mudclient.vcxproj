@@ -234,6 +234,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\common\md5.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
+    <ClCompile Include="src\compareObject2.cpp" />
     <ClCompile Include="src\helpManager.cpp" />
     <ClCompile Include="src\highlightHelper.cpp" />
     <ClCompile Include="src\inputProcessorTests.cpp" />

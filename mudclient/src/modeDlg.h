@@ -55,6 +55,7 @@ private:
        add(L"Плагины (plugins), триггеры, препост обработка", m.plugins);
 
        CenterWindow(GetParent());
+       m_list.SetFocus();
        return 0;
     }
 

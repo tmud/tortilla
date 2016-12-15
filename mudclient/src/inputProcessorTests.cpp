@@ -41,7 +41,7 @@ public:
     }
 };
 
-bool InputCommandTemplateUnitTest::test1(const tstring& str, int n, ...)
+bool InputCommandTemplateUnitTests::test1(const tstring& str, int n, ...)
 {
     InputPlainCommands cmds(str);
     InputTemplateParameters p; 
@@ -71,7 +71,7 @@ bool InputCommandTemplateUnitTest::test1(const tstring& str, int n, ...)
     return result;
 }
 
-bool InputCommandTemplateUnitTest::test2(const tstring& str, int params, InputCommands *ref)
+bool InputCommandTemplateUnitTests::test2(const tstring& str, int params, InputCommands *ref)
 {
     InputPlainCommands cmds(str);
     InputTemplateParameters p;
@@ -105,7 +105,7 @@ bool InputCommandTemplateUnitTest::test2(const tstring& str, int params, InputCo
     return true;
 }
 
-InputCommand InputCommandTemplateUnitTest::makecmd(bool system, const tstring& srccmd, const tstring& srcparams,
+InputCommand InputCommandTemplateUnitTests::makecmd(bool system, const tstring& srccmd, const tstring& srcparams,
     const tstring& cmd, int n, ...)
 {
     InputCommand c =  std::make_shared<InputCommandData>();
@@ -125,7 +125,7 @@ InputCommand InputCommandTemplateUnitTest::makecmd(bool system, const tstring& s
     return c;
 }
 
-void InputCommandTemplateUnitTest::run()
+void InputCommandTemplateUnitTests::run()
 {
     assert( test1(L"", 1, L"") );
     assert( test1(L"aaaa;#bbbb dd ff gg;cccc", 3, L"aaaa", L"#bbbb dd ff gg", L"cccc") );
