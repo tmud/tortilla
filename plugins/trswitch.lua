@@ -26,7 +26,6 @@ function trswitch.init()
     terminate('Для работы плагина требуется клиент версии 1.0+')
   end
   addButton("plugins/trswitch.bmp", 0, 1, "Триггеры")
-  addMenu("Плагины/Триггеры", 1, "plugins/trswitch.bmp", 0 )
   update()
 end
 
@@ -39,9 +38,9 @@ function trswitch.menucmd()
   mode = not mode
   setComponent("actions", mode)
   if mode then
-    print("[actions] Триггеры включены.")
+    print("[!] Триггеры(actions) включены.")
   else
-    print("[actions] Триггеры отключены.")
+    print("[!] Триггеры(actions) отключены.")
   end
 end
 
