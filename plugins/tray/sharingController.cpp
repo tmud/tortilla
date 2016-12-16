@@ -10,14 +10,13 @@ class SharedMemoryInitializer : public SharedMemoryHandler
     {
         SharingHeader sh;
         size_t datalen = sizeof(SharingHeader);
-        sh.counter_id = 1;
         sh.messages = 0;
         memcpy(d->data, &sh, datalen);
         d->data_size = datalen;
     }
 };
 
-SharingController::SharingController() : m_id(0) 
+SharingController::SharingController()
 {
 }
 
@@ -30,12 +29,9 @@ bool SharingController::init()
     SharedMemoryInitializer smi;
     if (!m_shared_memory.create(global_share_name, global_share_size, &smi))
         return false;
-    // get id
-    SharedMemoryLocker l(&m_shared_memory);
+   /* SharedMemoryLocker l(&m_shared_memory);
     SharedMemoryData* m = l.memory();
-    SharingHeader* sh = getHeader(m);
-    m_id = sh->counter_id;
-    sh->counter_id = m_id+1;
+    SharingHeader* sh = getHeader(m);*/
     return true;
 }
 
@@ -86,6 +82,19 @@ void SharingController::updateWindow(const SharingWindow& sw, int newx, int newy
             break;
         }
     }
+}
+
+bool SharingController::getLastWindow(SharingWindow* sw)
+{
+    SharedMemoryLocker l(&m_shared_memory);
+    SharedMemoryData* m = l.memory();
+    SharingHeader* h = getHeader(m);
+    int count = h->messages;
+    if (count == 0)
+        return false;
+    SharingWindow* w = getWindow(count-1, m);
+    *sw = *w;
+    return true;
 }
 
 SharingHeader* SharingController::getHeader(SharedMemoryData *d)

@@ -4,7 +4,6 @@
 #include "../common/tempThread.h"
 
 struct SharingHeader {
-  int counter_id;
   int messages;
 };
 
@@ -22,10 +21,10 @@ public:
     bool tryAddWindow(const SharingWindow& sw);
     void deleteWindow(const SharingWindow& sw);
     void updateWindow(const SharingWindow& sw, int newx, int newy);
+    bool getLastWindow(const SharingWindow* sw); 
 private:
     SharingHeader* getHeader(SharedMemoryData *d);
     SharingWindow* getWindow(int index, SharedMemoryData *d);
 private:
     SharedMemory m_shared_memory;
-    int m_id;
 };

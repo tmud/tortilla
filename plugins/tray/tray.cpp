@@ -57,10 +57,16 @@ void parse_color(const std::wstring& text, COLORREF *color)
 
 int init(lua_State *L)
 {
+    if (!g_tray.create())
+    {
+        base::log(L, L"Критическая ошибка.");
+        base::terminate(L);
+        return 0;
+    }
+
     base::addCommand(L, L"tray");
     base::addMenu(L, L"Плагины/Оповещения (tray)...", 1);
 
-    g_tray.create();
     luaT_Props p(L);
     g_tray.setFont(p.currentFont());
     g_tray.setAlarmWnd(base::getParent(L));
