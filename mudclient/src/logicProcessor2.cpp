@@ -245,7 +245,11 @@ void LogicProcessor::updateProps(int update, int options)
 bool LogicProcessor::setComponent(const tstring& name, bool mode)
 {
     ModeCmdHelper ch(tortilla::getProperties());
-    return ch.setMode(name, mode);
+    bool result = ch.setMode(name, mode);
+    if (result) {
+        tortilla::getPluginsManager()->processPluginsMethod("compsupdated", 0);
+    }
+    return result;
 }
 //------------------------------------------------------------------
 IMPL(drop)

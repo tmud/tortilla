@@ -90,6 +90,8 @@ xcopy ..\plugins\bmap.lua plugins /Y
 del plugins\*.* /q
 xcopy ..\plugins\spit.lua plugins /Y
 xcopy ..\plugins\timeline.lua plugins /Y
+xcopy ..\plugins\trswitch.lua plugins /Y
+xcopy ..\plugins\trswitch.bmp plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 
