@@ -1812,7 +1812,7 @@ void ao_log_change(bool result, ActiveObjects *ao)
         tmcLog(v);
 }
 
-void ao_log_delete(bool result, const tstring& msg)
+void ao_log_delete(bool result, const tstring& msg, ActiveObjects *ao)
 {
     if (!result) return;
 #ifndef _DEBUG
@@ -1997,7 +1997,7 @@ int ao_replace(lua_State *L)
         tstring fmt;
         ao->formatdel(&fmt);
         bool result = ao->replace(luaT_towstring(L, 2), luaT_towstring(L, 3), luaT_towstring(L, 4));
-        ao_log_delete(result, fmt);
+        ao_log_delete(result, fmt, ao);
         ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
@@ -2008,7 +2008,7 @@ int ao_replace(lua_State *L)
         tstring fmt;
         ao->formatdel(&fmt);
         bool result = ao->replace(luaT_towstring(L, 2), L"", luaT_towstring(L, 4));
-        ao_log_delete(result, fmt);
+        ao_log_delete(result, fmt, ao);
         ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
@@ -2020,7 +2020,7 @@ int ao_replace(lua_State *L)
         tstring fmt;
         ao->formatdel(&fmt);
         bool result = ao->replace(luaT_towstring(L, 2), luaT_towstring(L, 3), L"");
-        ao_log_delete(result, fmt);
+        ao_log_delete(result, fmt, ao);
         ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
@@ -2031,7 +2031,7 @@ int ao_replace(lua_State *L)
         tstring fmt;
         ao->formatdel(&fmt);
         bool result = ao->replace(luaT_towstring(L, 2), L"", L"");
-        ao_log_delete(result, fmt);
+        ao_log_delete(result, fmt, ao);
         ao_log_change(result, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
@@ -2047,7 +2047,7 @@ int ao_delete(lua_State *L)
         tstring fmt;
         ao->formatdel(&fmt);
         bool result = ao->del();
-        ao_log_delete(result, fmt);
+        ao_log_delete(result, fmt, ao);
         lua_pushboolean(L, result ? 1 : 0);
         return 1;
     }
