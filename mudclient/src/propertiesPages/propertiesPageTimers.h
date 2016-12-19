@@ -280,10 +280,7 @@ private:
             m_list.addItem(i, 3, v.group);
         }
 
-        tstring number;
-        getWindowText(m_number, &number);
-        int index = m_list_values.find(number);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(3);
     }
 
     void loadValues()

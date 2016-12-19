@@ -400,8 +400,8 @@ struct PluginsDataValues : public std::vector<PluginData>
 
 struct PropertiesDlgPageState
 {
-    PropertiesDlgPageState() : item(-1), topitem(-1), filtermode(false), cansave(false) {}
-    int item;
+    PropertiesDlgPageState() : topitem(-1), filtermode(false), cansave(false) {}
+    tstring item;
     int topitem;
     bool filtermode;
     bool cansave;

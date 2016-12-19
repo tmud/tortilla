@@ -12,6 +12,7 @@
 #include "propertiesPageColors.h"
 #include "propertiesPageCommon.h"
 #include "propertiesPageTabwords.h"
+#include "propertiesPageVars.h"
 #include "propertiesPageTimers.h"
 
 class PropertiesDlg :  public CDialogImpl<PropertiesDlg>
@@ -28,6 +29,7 @@ class PropertiesDlg :  public CDialogImpl<PropertiesDlg>
     PropertyColors m_colors;
     PropertyCommon m_common;
     PropertyTabwords m_tabwords;
+    PropertyVars m_vars;
     PropertyTimers m_timers;
 
     int m_width;
@@ -62,6 +64,7 @@ private:
         COMMAND_ID_HANDLER(IDC_BUTTON_PROP_COLORS, onColors)
         COMMAND_ID_HANDLER(IDC_BUTTON_PROP_COMMON, onCommon)
         COMMAND_ID_HANDLER(IDC_BUTTON_PROP_TABWORDS, onTabwords)
+        COMMAND_ID_HANDLER(IDC_BUTTON_PROP_VARS, onVars)
         COMMAND_ID_HANDLER(IDC_BUTTON_PROP_TIMERS, onTimers)
     END_MSG_MAP()
 
@@ -76,7 +79,8 @@ private:
     LRESULT onColors(WORD, WORD id, HWND, BOOL&) { selectPage(8); return 0; }
     LRESULT onCommon(WORD, WORD id, HWND, BOOL&) { selectPage(9); return 0; }
     LRESULT onTabwords(WORD, WORD id, HWND, BOOL&) { selectPage(10); return 0; }
-    LRESULT onTimers(WORD, WORD id, HWND, BOOL&) { selectPage(11); return 0; }
+    LRESULT onVars(WORD, WORD id, HWND, BOOL&) { selectPage(11); return 0; }
+    LRESULT onTimers(WORD, WORD id, HWND, BOOL&) { selectPage(12); return 0; }
 
     void selectPage(int page)
     {
@@ -107,7 +111,8 @@ private:
         case 8: return m_colors;
         case 9: return m_common;
         case 10: return m_tabwords;
-        case 11: return m_timers;
+        case 11: return m_vars;
+        case 12: return m_timers;
         }
         return NULL;
     }
@@ -129,7 +134,7 @@ private:
 	LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
         PropertiesDlgData& d = propData->dlg;
-        d.pages.resize(10);
+        d.pages.resize(11);
 
         // add pages
         PropertyTwoConfig c;
@@ -167,7 +172,10 @@ private:
         m_tabwords.setParams(&propData->tabwords, &d.pages[8]);
         m_tabwords.Create(m_hWnd);
 
-        m_timers.setParams(&propData->timers, &propData->groups, &d.pages[9]);
+        m_vars.setParams(&propData->variables, &d.pages[9]);
+        m_vars.Create(m_hWnd);
+
+        m_timers.setParams(&propData->timers, &propData->groups, &d.pages[10]);
         m_timers.Create(m_hWnd);
 
         // line delimeter
@@ -212,6 +220,7 @@ private:
         setPosition(m_common);
         setPosition(m_tabwords);
         setPosition(m_timers);
+        setPosition(m_vars);
         selectPage(d.current_page);
 		return TRUE;
 	}

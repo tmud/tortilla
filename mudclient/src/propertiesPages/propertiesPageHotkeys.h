@@ -415,12 +415,7 @@ private:
             m_list.addItem(i, 2, v.group);
         }
 
-        int index = -1;
-        tstring hotkey;
-        getWindowText(m_hotkey, &hotkey);
-        if (!hotkey.empty())
-            index = m_list_values.find(hotkey, m_currentGroup);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(2);
     }
 
     void updateButtons()

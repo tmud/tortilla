@@ -539,12 +539,7 @@ private:
             m_list.addItem(i, 4, hv.group);
         }
 
-        int index = -1;
-        tstring pattern;
-        getWindowText(m_pattern, &pattern);
-        if (!pattern.empty())
-            index = m_list_values.find(pattern, m_currentGroup);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(4);
     }
 
     void updateButtons()

@@ -203,6 +203,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\propertiesPages\propertiesPageTabwords.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageTimers.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageTwoParams.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageVars.h" />
     <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h" />
     <ClInclude Include="src\propertiesPages\propertyList.h" />
     <ClInclude Include="src\stdafx.h" />

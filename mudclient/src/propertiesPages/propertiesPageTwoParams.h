@@ -424,13 +424,7 @@ private:
             m_list.addItem(i, 1, v.value);
             m_list.addItem(i, 2, v.group);
         }
-
-        int index = -1;
-        tstring pattern;
-        getWindowText(m_pattern, &pattern);
-        if (!pattern.empty())
-            index = m_list_values.find(pattern, m_currentGroup);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(2);
     }
 
     void updateButtons()
