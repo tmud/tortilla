@@ -189,6 +189,11 @@ int CompareData::findblock(int pos, int d)
     return findblockpos(p, d);
 }
 
+int CompareData::findBlockBySymbol(int pos)
+{
+    return findblock(pos, 0);
+}
+
 class AliasParameters : public InputParameters
 {
     const InputCommand m_pCmd;
@@ -326,10 +331,10 @@ bool Sub::processing(CompareData& data)
     if (!data.findBlocks(check))
         return false;
 
-    std::vector<MudViewStringBlock> &b = data.string->blocks;
+    std::vector<MudViewStringBlock> &sb = data.string->blocks;
     for (int i=check.begin; i<=check.end; ++i)
     {
-        if (b[i].subs_protected)
+        if (sb[i].subs_protected)
             return false;
     }
 
@@ -341,7 +346,7 @@ bool Sub::processing(CompareData& data)
         // no parameters %x
         newb.resize(1);
         newb[0].string = m_value;
-        newb[0].params = b[check.begin].params;
+        newb[0].params = sb[check.begin].params;
     }
     else 
     {
@@ -358,13 +363,19 @@ bool Sub::processing(CompareData& data)
                 if (id < parameters_count) 
                     data.appendto(pr[id], newb);
             }
+
+            int after_param = pr[id].end + 1;
+            int block_index = data.findBlockBySymbol(after_param);
             if (i == e) {
                 int from = m_phelper->getLast(i);
                 b.string = m_value.substr(from);
+                if (!b.string.empty())
+                    b.params = sb[block_index].params;
             } else {
                 int from = m_phelper->getLast(i);
                 int to = m_phelper->getFirst(i+1);
                 b.string = m_value.substr(from, to-from);
+                b.params = sb[block_index].params;
             }
             newb.push_back(b);
         }

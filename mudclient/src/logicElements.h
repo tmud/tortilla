@@ -19,6 +19,7 @@ public:
     void appendto(CompareRange& range, std::vector<MudViewStringBlock>& b);
     bool cut(CompareRange& range); // distinguish in individual blocks
     bool findBlocks(CompareRange& range);
+    int  findBlockBySymbol(int pos);
 
     MudViewString *string;
     tstring fullstr;
