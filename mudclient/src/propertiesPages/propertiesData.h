@@ -477,8 +477,8 @@ public:
         dlg = p.dlg;
         // skip displays
         messages = p.messages;
-        // dont copy mode
-        mode.initDefault();
+        // copy mode
+        mode = p.mode;
         // skip cmd_history
         codepage = p.codepage;
         logformat = p.logformat;
