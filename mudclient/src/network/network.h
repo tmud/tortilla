@@ -34,6 +34,8 @@
 #define TELOPT_GMCP     201 // c9
 #define TELOPT_NAWS      31 // 1f
 #define TELOPT_CHARSET   42 // 2a
+//other symbols
+#define TAB              9
 
 enum NetworkEvent
 {

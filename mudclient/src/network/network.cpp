@@ -346,11 +346,16 @@ int Network::read_data()
         }
         else
         {
+            if (processed == 1 && in[0] == TAB) {
+                static unsigned char tab_spaces[4] = { 0x20, 0x20, 0x20, 0x20 };
+                m_receive_data.write(tab_spaces, 4);
+            }
+
             if (processed == 2 && in[0] == IAC && in[1] == IAC)
                 m_receive_data.write(in, 1);
             else if (processed == 2 && in[0] == IAC && in[1] == GA)
             {
-                unsigned char bytes[2] = { 0x1b, 0x5c };
+                static unsigned char bytes[2] = { 0x1b, 0x5c };
                 m_receive_data.write(bytes, 2);
             }
             else
@@ -366,12 +371,12 @@ int Network::read_data()
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
 {
     const tbyte* b = buffer;
-    if (*b != IAC && *b != 0)     // find iac symbol or zero
+    if (*b != IAC && *b != 0 && *b != TAB )     // find iac symbol or zero or tab
     {
         const tbyte* e = b + len;
         while(b != e)
         {
-            if (*b == IAC || *b == 0)
+            if (*b == IAC || *b == 0 || *b == TAB)
                 break;
             b++;
         }
@@ -380,6 +385,9 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (*b == 0)                 // protect from incorrect data
         return -1;
+
+    if (*b == TAB)
+        return 1;
 
     if (len < 2)
         return 0;
