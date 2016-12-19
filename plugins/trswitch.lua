@@ -37,11 +37,6 @@ function trswitch.menucmd()
   local mode = props.component("actions")
   mode = not mode
   setComponent("actions", mode)
-  if mode then
-    print("[!] Триггеры(actions) включены.")
-  else
-    print("[!] Триггеры(actions) отключены.")
-  end
 end
 
 return trswitch

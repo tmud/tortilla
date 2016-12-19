@@ -247,7 +247,10 @@ bool LogicProcessor::setComponent(const tstring& name, bool mode)
     ModeCmdHelper ch(tortilla::getProperties());
     bool result = ch.setMode(name, mode);
     if (result) {
-        tortilla::getPluginsManager()->processPluginsMethod("compsupdated", 0);
+       tstring str;
+       ch.getStateString(name, &str);
+       tmcLog(str);
+       tortilla::getPluginsManager()->processPluginsMethod("compsupdated", 0);
     }
     return result;
 }
@@ -1384,11 +1387,7 @@ IMPL(message)
         MessageCmdHelper mh(pdata);
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
-            if (n == 1)
-                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
-            else
-                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
-            tmcLog(pb.buffer);
+            p->invalidargs();
         }
         else
         {
@@ -1421,17 +1420,14 @@ IMPL(component)
         ModeCmdHelper mh(pdata);
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
-            if (n == 1)
-                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
-            else
-                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
-            tmcLog(pb.buffer);
+            p->invalidargs();
         }
         else
         {
             tstring str;
             mh.getStateString(p->at(0), &str);
             tmcLog(str);
+            tortilla::getPluginsManager()->processPluginsMethod("compsupdated", 0);
         }
         return;
     }

@@ -280,6 +280,8 @@ public:
         {
             if (stateid == LogicHelper::UPDATE_ALL)
                 return false;
+            if (mode_value != L"")
+                return false;
             int curstate = getState(stateid);
             newstate = curstate ? 0 : 1;
         }
@@ -294,8 +296,8 @@ public:
 
     void getStateString(const tstring& state, tstring *str)
     {
-        static const tchar* cmds[] = { L"Триггеры (actions)", L"Макросы (aliases)", L"Замены (subs)", L"Aнтизамены (antisubs)", L"Фильтры (gags)",
-            L"Подсветки (highlights)", L"Горячие клавиши (hotkeys)", L"Группы (groups)", L"Переменные (vars)", L"Таймеры (timers)", L"Подстановки (tabs)" };
+        static const tchar* cmds[] = { L"триггеров (actions)", L"макросов (aliases)", L"замен (subs)", L"антизамен (antisubs)", L"фильтров (gags)",
+            L"подсветок (highlights)", L"горячих клавиш (hotkeys)", L"групп (groups)", L"переменных (vars)", L"таймеров (timers)", L"подстановок (tabs)" };
         static const int ids[] = { LogicHelper::UPDATE_ACTIONS, LogicHelper::UPDATE_ALIASES, LogicHelper::UPDATE_SUBS,
             LogicHelper::UPDATE_ANTISUBS, LogicHelper::UPDATE_GAGS, LogicHelper::UPDATE_HIGHLIGHTS, LogicHelper::UPDATE_HOTKEYS,
             LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS, 0 };        
@@ -312,7 +314,8 @@ public:
         {
             if (stateid == ids[i])
             { 
-                str->assign(cmds[i]);
+                str->assign(L"Эхо-уведомления ");
+                str->append(cmds[i]);
                 str->append(stateStr(getState(stateid)));
                 removeLastRN(str);
                 break;
@@ -434,6 +437,11 @@ public:
         {
             return true;
         }
+        if (newstate == 2)
+        {
+            int curstate = getState(stateid);
+            newstate = (curstate == 0) ? 1 : 0;
+        }
         setState(stateid, newstate);
         return true;
     }
@@ -451,7 +459,7 @@ public:
         int stateid = recognizeState(state);
         if (stateid == -1)
             return -1;
-        return getState(stateid); 
+        return getState(stateid);
     }
 
     void getStateString(const tstring& state, tstring *str)
@@ -460,8 +468,8 @@ public:
             L"Подсветки (highlights)", L"Горячие клавиши (hotkeys)", L"Плагины (plugins)" };
         static const int ids[] = { LogicHelper::MODE_ACTIONS, LogicHelper::MODE_ALIASES, LogicHelper::MODE_SUBS,
             LogicHelper::MODE_ANTISUBS, LogicHelper::MODE_GAGS, LogicHelper::MODE_HIGHLIGHTS, LogicHelper::MODE_HOTKEYS,
-            LogicHelper::MODE_PLUGINS, 0 };        
-        int stateid = recognizeState(state);       
+            LogicHelper::MODE_PLUGINS, 0 };
+        int stateid = recognizeState(state);
         for (int i = 0; ids[i]; ++i)
         {
             if (stateid == ids[i])
@@ -488,6 +496,8 @@ private:
             return 1;
         if (n == L"выкл" || n == L"disable" || n == L"off" || n == L"0")
             return 0;
+        if (n == L"перекл" || n == L"toggle" || n == L"switch")
+            return 2;
         return -1;
     }
 
