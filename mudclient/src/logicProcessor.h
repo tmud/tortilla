@@ -135,7 +135,7 @@ private:
            FROM_TIMER = 0x2000, NEW_LINE = 0x4000 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
-    void regCommand(const char* name, syscmd_fun f);
+    void regCommand(const char* name, syscmd_fun f, bool skip_autoset = false);
     bool sendToNetwork(const tstring& cmd);
     void processNetworkError(const tstring& error);
 
@@ -204,4 +204,5 @@ public: // system commands
     DEF(plugin);
     DEF(load);
     DEF(savelog);
+    DEF(none);
 };

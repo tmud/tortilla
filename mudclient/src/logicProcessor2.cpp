@@ -1495,14 +1495,20 @@ IMPL(savelog)
     p->invalidargs();
 }
 //-------------------------------------------------------------------
-void LogicProcessor::regCommand(const char* name, syscmd_fun f)
+IMPL(none)
 {
-    PropertiesData *pdata = tortilla::getProperties();
+}
+//-------------------------------------------------------------------
+void LogicProcessor::regCommand(const char* name, syscmd_fun f, bool skip_autoset)
+{    
     AnsiToWide a2w(name);
     tstring cmd(a2w);
     m_syscmds[cmd] = f;
-    PropertiesList &p = pdata->tabwords_commands;
-    p.add(-1, cmd);
+    if (!skip_autoset) {
+        PropertiesData *pdata = tortilla::getProperties();
+        PropertiesList &p = pdata->tabwords_commands;
+        p.add(-1, cmd);
+    }
 }
 
 bool LogicProcessor::init()
@@ -1574,6 +1580,8 @@ bool LogicProcessor::init()
     regCommand("load", load);
 
     regCommand("savelog", savelog);
+
+    regCommand("none", none, true);
 
     return true;
 }
