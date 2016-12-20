@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "traymain.h"
-#include "sharingData.h"
 
 TrayMainObject::~TrayMainObject()
 {
@@ -48,32 +47,49 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
-bool TrayMainObject::showMessage(const message& msg, bool from_queue)
+ void TrayMainObject::addMessage(const message& m)
+ {
+     m_queue.push_back(m);
+     tryShowQueue();
+ }
+ 
+void TrayMainObject::tryShowQueue()
+{
+    while (!isHeightLimited() && !m_queue.empty())
+    {
+        message msg(*m_queue.begin());
+        if (showMessage(msg))
+            m_queue.pop_front();
+    }
+}
+
+bool TrayMainObject::showMessage(const message& msg)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
        return true;
 #endif
-
-    if (!from_queue)
-    {
-        if (isHeightLimited()) {
-            m_queue.push_back(msg);
-            return true;
-        }
-        if (!m_queue.empty())
-        {
-            m_queue.push_back(msg);
-            tryShowQueue();
-            return true;
-        }
-    }
-
     PopupWindow *w = getFreeWindow();
     if (!w)
         return false;
+    w->setText(msg.text);
+    SIZE sz = w->getSize();
+    
+    POINT rb =  GetTaskbarRB();
+    RECT working_area;
+    working_area.left = 0;
+    working_area.right = rb.x;
+    working_area.top = 80;
+    working_area.bottom = rb.y;
 
-    POINT rb = { -1, -1 };
+    SharingWindow sw;
+    if (!m_shared.tryAddWindow(&sw, working_area, 4))
+    {
+        freeWindow(w);
+        return false;
+    }
+
+    /*POINT rb = { -1, -1 };
     Animation a; 
     if (m_windows.empty())
     {
@@ -87,18 +103,20 @@ bool TrayMainObject::showMessage(const message& msg, bool from_queue)
         m_windows[last]->GetWindowRect(&pos);
         rb.x = GetSystemMetrics(SM_CXSCREEN);
         rb.y = pos.top;
-    }
+    }*/
 
-    w->setText(msg.text);
     const TraySettings &s = m_settings;
-    SIZE sz = w->getSize();
+   
+    Animation a;
 
-    rb.x -= 2;
+    /*rb.x -= 2;
     rb.y -= (sz.cy+4);
-    rb.x -= sz.cx;
-    a.pos = rb;
+    rb.x -= sz.cx;*/
+
+    a.pos.x = sw.x;
+    a.pos.y = sw.y;
     a.speed = 0.5f;
-    a.wait_sec = m_settings.timeout;
+    a.wait_sec = s.timeout;
     a.bkgnd_color = s.background;
     a.text_color = s.text;
     if (msg.usecolors) {
@@ -112,7 +130,7 @@ bool TrayMainObject::showMessage(const message& msg, bool from_queue)
     w->startAnimation(a);
     if (!m_activated)
       startTimer();
-   return true;
+    return true;
 }
 
 void TrayMainObject::onFinishedAnimation(PopupWindow *w)
@@ -132,7 +150,7 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
 
 void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
 {
-    assert(!m_windows.empty());
+    assert(!tryRunMoveAnimation.empty());
     int last = m_windows.size() - 1;
     if (m_windows[last] != w)
         return;
@@ -168,16 +186,6 @@ void TrayMainObject::tryRunMoveAnimation()
              ma.speed = 0.002f;
              w->startMoveAnimation(ma);
          }
-    }
-}
-
-void TrayMainObject::tryShowQueue()
-{
-    while (!isHeightLimited() && !m_queue.empty())
-    {
-        message msg(*m_queue.begin());
-        m_queue.pop_front();
-        showMessage(msg, true);
     }
 }
 

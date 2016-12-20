@@ -184,7 +184,7 @@ int syscmd(lua_State *L)
                    if (i!=0) m.text.append(L" ");
                    m.text.append(text[i]);
                 }
-                g_tray.showMessage(m, false);
+                g_tray.addMessage(m);
             }
             lua_pushnil(L);
             return 1;

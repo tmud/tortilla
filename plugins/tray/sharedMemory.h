@@ -166,6 +166,5 @@ public:
         if (locked)
             m_sm->unlock(m_data.data_size);
     }
-    //operator SharedMemoryData*() { return &m_data; }
     SharedMemoryData* memory() { return &m_data; }
 };

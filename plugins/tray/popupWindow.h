@@ -1,4 +1,5 @@
 #pragma once
+#include "sharingData.h"
 
 class Ticker
 {
@@ -23,7 +24,7 @@ public:
 
 struct Animation
 {
-    POINT pos;
+    SharingWindow pos;
     float speed;
     int   wait_sec;
     COLORREF bkgnd_color;

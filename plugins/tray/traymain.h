@@ -21,10 +21,9 @@ public:
     bool create();
     void setFont(HFONT font);
     void setAlarmWnd(HWND wnd);
-    bool showMessage(const message& msg, bool from_queue);
     void setActivated(bool activated);
     TraySettings& traySettings();
-
+    void addMessage(const message& m);
 private:
     BEGIN_MSG_MAP(TimeoutWindow)
        MESSAGE_HANDLER(WM_TIMER, OnTimer)
@@ -63,6 +62,7 @@ private:
         }
         return 0; 
     }
+    bool showMessage(const message& msg);
     void startTimer();
     void stopTimer();
     void onTimer();

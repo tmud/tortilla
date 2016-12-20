@@ -2,14 +2,10 @@
 
 #include "sharedMemory.h"
 #include "../common/tempThread.h"
+#include "sharingData.h"
 
 struct SharingHeader {
   int messages;
-};
-
-struct SharingWindow {
-  SharingWindow() : x(0), y(0), w(0), h(0) {}
-  int x, y, w, h;
 };
 
 class SharingController
@@ -18,10 +14,10 @@ public:
     SharingController();
     ~SharingController();
     bool init();
-    bool tryAddWindow(const SharingWindow& sw);
+    bool tryAddWindow(SharingWindow* sw, const RECT& working_area, int dh);
     void deleteWindow(const SharingWindow& sw);
     void updateWindow(const SharingWindow& sw, int newx, int newy);
-    bool getLastWindow(const SharingWindow* sw); 
+    //bool getLastWindow(SharingWindow* sw); 
 private:
     SharingHeader* getHeader(SharedMemoryData *d);
     SharingWindow* getWindow(int index, SharedMemoryData *d);
