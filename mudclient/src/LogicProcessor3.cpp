@@ -430,6 +430,16 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!(flags & SKIP_PLUGINS_BEFORE))
         m_pHost->preprocessText(window, &parse_data);
 
+    if (!(flags & SKIP_SUBS))
+    {
+        if (!(flags & SKIP_COMPONENT_ANTISUBS))
+            m_helper.processAntiSubs(&parse_data);
+        if (!(flags & SKIP_COMPONENT_GAGS))
+            m_helper.processGags(&parse_data);
+        if (!(flags & SKIP_COMPONENT_SUBS))
+            m_helper.processSubs(&parse_data);
+    }
+
     // process lua triggers and actions
     PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
     bool skip_actions = (flags & SKIP_ACTIONS);
@@ -457,16 +467,6 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
             parse_data.strings.resize(from);
             break;
         }
-    }
-
-    if (!(flags & SKIP_SUBS))
-    {
-        if (!(flags & SKIP_COMPONENT_ANTISUBS))
-            m_helper.processAntiSubs(&parse_data);
-        if (!(flags & SKIP_COMPONENT_GAGS))
-            m_helper.processGags(&parse_data);
-        if (!(flags & SKIP_COMPONENT_SUBS))
-            m_helper.processSubs(&parse_data);
     }
 
     if (!(flags & SKIP_HIGHLIGHTS))
