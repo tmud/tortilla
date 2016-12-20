@@ -37,7 +37,7 @@ bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipeline
         MudViewString *s = parse_data->strings[j];
         if (s->dropped) return false;
 
-        bool incomplstr = (j==je && !parse_data->last_finished);
+        bool incomplstr = (!s->prompt && j==je && !parse_data->last_finished);
         bool processed = false;
         for (int i=0, e=m_actions.size(); i<e; ++i)
         {
@@ -57,7 +57,7 @@ void LogicHelper::processSubs(parseData *parse_data)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->dropped) continue;
-        bool incomplstr = (j==je && !parse_data->last_finished);
+        bool incomplstr = (!s->prompt && j==je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
@@ -74,7 +74,7 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->dropped) continue;
-        bool incomplstr = (j == je && !parse_data->last_finished);
+        bool incomplstr = (!s->prompt && j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
         {
@@ -91,7 +91,7 @@ void LogicHelper::processGags(parseData *parse_data)
     {
         MudViewString *s = parse_data->strings[j];
         if (s->dropped) continue;
-        bool incomplstr = (j == je && !parse_data->last_finished);
+        bool incomplstr = (!s->prompt && j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
