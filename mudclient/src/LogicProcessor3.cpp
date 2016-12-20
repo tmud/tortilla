@@ -427,7 +427,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     // final step for data
     // preprocess data via plugins
-    if (!(flags & SKIP_PLUGINS_BEFORE))
+    if (!(flags & (SKIP_PLUGINS_BEFORE|SKIP_COMPONENT_PLUGINS) ))
         m_pHost->preprocessText(window, &parse_data);
 
     if (!(flags & SKIP_SUBS))
@@ -473,7 +473,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         m_helper.processHighlights(&parse_data);
 
     // postprocess data via plugins
-    if (!(flags & SKIP_PLUGINS_AFTER))
+    if (!(flags & (SKIP_PLUGINS_AFTER|SKIP_COMPONENT_PLUGINS) ))
         m_pHost->postprocessText(window, &parse_data);
 
     m_plugins_log_tocache = false;
