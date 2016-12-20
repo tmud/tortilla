@@ -128,3 +128,13 @@ void OutputTelnetOption(const void *data, const char* label);
 #define OUTPUT_BYTES(data, len, maxlen, label)
 #define OUTPUT_OPTION(data, label)
 #endif
+
+class CReBarSettings
+{
+public:
+    void Save(CReBarCtrl& ReBar, tstring *param);
+    void Load(CReBarCtrl& ReBar, const tstring& param);
+private:
+    void Save(DWORD v, tstring* sv);
+    bool Load(DWORD *v, tstring* sv);
+};

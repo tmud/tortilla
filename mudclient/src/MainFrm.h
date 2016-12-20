@@ -84,6 +84,11 @@ private:
         m_toolBar.createCmdBar(IDR_MAINFRAME);
         m_toolBar.createToolbar(IDR_MAINFRAME);
 
+        CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        PropertiesData *pdata = m_gameview.getPropData();
+        rbs.Load(rebar, pdata->rebar);
+
         m_hWndClient = m_gameview.createView(m_hWnd);
         UISetCheck(ID_VIEW_TOOLBAR, 1);
 
@@ -97,6 +102,13 @@ private:
 
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
+        CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        tstring param;
+        rbs.Save(rebar, &param);
+        PropertiesData *pdata = m_gameview.getPropData();
+        pdata->rebar = param;
+
         // unregister message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         ATLASSERT(pLoop != NULL);
