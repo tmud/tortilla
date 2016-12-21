@@ -968,7 +968,7 @@ IMPL(whide)
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions_subs)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -1010,9 +1010,9 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    int flags = SKIP_SUBS|GAME_LOG|WORK_OFFLINE;
-    if (!enable_actions)
-        flags |= SKIP_ACTIONS;
+    int flags = GAME_LOG|WORK_OFFLINE;
+    if (!enable_actions_subs)
+        flags |= (SKIP_ACTIONS|SKIP_SUBS);
     printIncoming(data, flags, view);
 }
 

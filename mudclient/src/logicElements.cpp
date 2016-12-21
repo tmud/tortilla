@@ -356,7 +356,11 @@ bool Sub::processing(CompareData& data)
 
         MudViewStringBlock b;
         b.string = m_value.substr(0, m_phelper->getFirst(0));
-        newb.push_back(b);
+        if (!b.string.empty())
+        {
+            b.params = sb[check.begin].params;
+            newb.push_back(b);
+        }
         for (int i=0,e=m_phelper->getSize()-1;i<=e;++i) {
             int id = m_phelper->getId(i);
             if (id != -1) {
