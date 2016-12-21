@@ -657,7 +657,8 @@ private:
                 data.truncate(converted);
             }
 
-            m_plugins.processStreamData(&wide);
+            if (m_propData->mode.plugins)
+                m_plugins.processStreamData(&wide);
             const WCHAR* processeddata = (const WCHAR*)wide.getData();
             m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
@@ -764,7 +765,8 @@ private:
         {
             if (process_history) {
             InputPlainCommands history;
-            m_plugins.processHistoryCmds(cmds, &history);
+            if (m_propData->mode.plugins)
+                m_plugins.processHistoryCmds(cmds, &history);
             for (int i=0,e=history.size(); i<e; ++i)
                 m_bar.addToHistory(history[i]);
             }
@@ -783,7 +785,9 @@ private:
         InputTemplateCommands tcmds;
         tcmds.init(cmds, p);
         tcmds.extract(&cmds);
-        m_plugins.processBarCmds(&cmds);
+
+        if (m_propData->mode.plugins)
+            m_plugins.processBarCmds(&cmds);
 
         m_processor.processUserCommand(cmds);
     }

@@ -224,7 +224,8 @@ void MudGameView::unloadPlugins()
 
 void MudGameView::preprocessCommand(InputCommand cmd)
 {
-    m_plugins.processGameCmd(cmd);
+    if ( m_propData->mode.plugins )
+        m_plugins.processGameCmd(cmd);
 }
 
 void MudGameView::setOscColor(int index, COLORREF color)

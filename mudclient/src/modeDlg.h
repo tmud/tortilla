@@ -52,7 +52,7 @@ private:
        add(L"Подсветки (highlights)", m.highlights);
        add(L"Антизамены (antisubs)", m.antisubs);
        add(L"Фильтры (gags)", m.gags);
-       add(L"Плагины (plugins), триггеры, препост обработка", m.plugins);
+       add(L"Плагины (plugins), их команды и триггеры, препост обработка", m.plugins);
 
        CenterWindow(GetParent());
        m_list.SetFocus();
