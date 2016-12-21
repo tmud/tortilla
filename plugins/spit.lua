@@ -27,7 +27,7 @@ function spit.description()
 end
 
 function spit.version()
-  return '1.01'
+  return '1.02'
 end
 
 local function print(s)
@@ -36,7 +36,7 @@ end
 
 local number, diapozon, templ
 function spit.init()
-  if not checkVersion(1,0) then
+  if not checkVersion or not checkVersion(1,0) then
     terminate('Для работы плагина требуется клиент версии 1.0+')
   end
   if not system then

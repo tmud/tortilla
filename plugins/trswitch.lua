@@ -22,7 +22,7 @@ local function update()
 end
 
 function trswitch.init()
-  if not checkVersion(1,0) then
+  if not checkVersion or not checkVersion(1,0) then
     terminate('Для работы плагина требуется клиент версии 1.0+')
   end
   addButton("plugins/trswitch.bmp", 0, 1, "Триггеры")
