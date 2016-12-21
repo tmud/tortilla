@@ -430,6 +430,9 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!(flags & (SKIP_PLUGINS_BEFORE|SKIP_COMPONENT_PLUGINS) ))
         m_pHost->preprocessText(window, &parse_data);
 
+    // process lua triggers
+    processActionsTriggers(parse_data, flags, pe, PROCESS_LUATRIGGERS);
+
     if (!(flags & SKIP_SUBS))
     {
         if (!(flags & SKIP_COMPONENT_ANTISUBS))
@@ -440,34 +443,8 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
             m_helper.processSubs(&parse_data);
     }
 
-    // process lua triggers and actions
-    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
-    bool skip_actions = (flags & SKIP_ACTIONS);
-    for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
-    {
-        bool triggered = false;
-        if (!skip_actions) {
-            if (!(flags & SKIP_COMPONENT_PLUGINS))
-              triggered = luatriggers->processTriggers(parse_data, j, pe);
-        }
-        bool actions = false;
-        if (!skip_actions) {
-            actions = m_helper.processActions(&parse_data, j, pe);
-        }
-        if (triggered || actions)
-        {
-            MudViewString *s = parse_data.strings[j];
-            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-            parseData &not_processed = pe->data;
-            not_processed.last_finished = parse_data.last_finished;
-            parse_data.last_finished = true;
-            not_processed.update_prev_string = false;
-            int from = j + 1;
-            not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
-            parse_data.strings.resize(from);
-            break;
-        }
-    }
+    // process actions
+    processActionsTriggers(parse_data, flags, pe, PROCESS_ACTIONS);
 
     if (!(flags & SKIP_HIGHLIGHTS))
         m_helper.processHighlights(&parse_data);
@@ -482,4 +459,38 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (log != -1)
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
+}
+
+void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, TriggersType tt)
+{
+    if (flags & SKIP_ACTIONS) return;
+    if (tt == PROCESS_LUATRIGGERS) {
+        if (flags & SKIP_COMPONENT_PLUGINS) return;
+    }
+
+    // process lua triggers or actions
+    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
+    for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
+    {
+        bool triggered = false;
+        if (tt == PROCESS_LUATRIGGERS) {
+            triggered = luatriggers->processTriggers(parse_data, j, pe);
+        }
+        if (tt == PROCESS_ACTIONS) {
+            triggered = m_helper.processActions(&parse_data, j, pe);
+        }
+        if (triggered)
+        {
+            MudViewString *s = parse_data.strings[j];
+            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+            parseData &not_processed = pe->data;
+            not_processed.last_finished = parse_data.last_finished;
+            parse_data.last_finished = true;
+            not_processed.update_prev_string = false;
+            int from = j + 1;
+            not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+            parse_data.strings.resize(from);
+            break;
+        }
+    } 
 }
