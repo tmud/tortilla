@@ -709,6 +709,8 @@ void MudView::stopDraging()
     if (drag_end == -1 && drag_begin >= 0) { drag_end = 0; drag_right = 0; }
     if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t;
     t = drag_left; drag_left = drag_right; drag_right = t; }
+    if (drag_begin < 0)
+        drag_begin = 0;
 
     tstring text, tmp;
     if (drag_begin == drag_end)
