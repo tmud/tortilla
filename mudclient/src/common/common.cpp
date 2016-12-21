@@ -608,15 +608,36 @@ void CReBarSettings::Save(CReBarCtrl& ReBar, tstring *param)
     for (UINT i = 0; i < cbBandCount; i++)
     {
         REBARBANDINFO rbi;
+        memset(&rbi, 0, sizeof(rbi));
         rbi.cbSize = sizeof(rbi);
         rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
         ReBar.GetBandInfo(i, &rbi);
         Save(rbi.wID, param);
         Save(rbi.cx, param);
-        DWORD break_line = ((rbi.fStyle & RBBS_BREAK) != 0) ? 1 : 0;
+        DWORD break_line = (rbi.fStyle & RBBS_BREAK) ? 1 : 0;
         Save(break_line, param);
+        DWORD visible = (rbi.fStyle & RBBS_HIDDEN) ? 0 : 1;
+        Save(visible, param);
     }
 }
+
+bool CReBarSettings::IsVisible(CReBarCtrl& ReBar, DWORD wID)
+{
+     DWORD cbBandCount = ReBar.GetBandCount();
+     for (UINT i = 0; i < cbBandCount; i++)
+     {
+        REBARBANDINFO rbi;
+        memset(&rbi, 0, sizeof(rbi));
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        if (wID == rbi.wID) {
+            return (rbi.fStyle & RBBS_HIDDEN) ? false : true;
+        }
+     }
+     return false;
+}
+
 
 void CReBarSettings::Load(CReBarCtrl& ReBar, const tstring& param)
 {
@@ -630,17 +651,20 @@ void CReBarSettings::Load(CReBarCtrl& ReBar, const tstring& param)
         DWORD ID;
         DWORD cx;
         bool BreakLine;
+        bool Visible;
     };
     BandInfo* bands = new BandInfo[cbBandCount];
     for (DWORD i = 0; i < cbBandCount; i++)
     {
         BandInfo &bi = bands[i];
-        DWORD brk = 0;
-        if (!Load(&bi.ID, &s) || !Load(&bi.cx, &s) || !Load(&brk, &s))
+        DWORD brk = 0; DWORD visible = 0;
+        if (!Load(&bi.ID, &s) || !Load(&bi.cx, &s) || !Load(&brk, &s) || !Load(&visible, &s))
         {
             delete []bands;
             return;
         }
+        bi.BreakLine = (brk == 0) ? false : true;
+        bi.Visible = (visible == 0) ? false : true;
     }
 
     for (DWORD i = 0; i < cbBandCount; i++)
@@ -655,6 +679,10 @@ void CReBarSettings::Load(CReBarCtrl& ReBar, const tstring& param)
             rbi.fStyle |= RBBS_BREAK;
         else
             rbi.fStyle &= (~RBBS_BREAK);
+        if (bands[i].Visible)
+            rbi.fStyle &= (~RBBS_HIDDEN);
+        else
+            rbi.fStyle |= RBBS_HIDDEN;
         ReBar.SetBandInfo(i, &rbi);
     }
     delete []bands;

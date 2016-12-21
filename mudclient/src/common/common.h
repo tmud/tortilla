@@ -134,6 +134,7 @@ class CReBarSettings
 public:
     void Save(CReBarCtrl& ReBar, tstring *param);
     void Load(CReBarCtrl& ReBar, const tstring& param);
+    bool IsVisible(CReBarCtrl& ReBar, DWORD wID);
 private:
     void Save(DWORD v, tstring* sv);
     bool Load(DWORD *v, tstring* sv);
