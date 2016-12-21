@@ -515,6 +515,7 @@ public:
         disable_alt = p.disable_alt;
         move_totray = p.move_totray;
         //skip title
+        rebar = p.rebar;
     }
 
 public:
@@ -600,6 +601,7 @@ public:
     int      move_totray;
 
     tstring title;        // name of main window (dont need to save)
+    tstring rebar;
 
     void initDefaultColorsAndFont()
     {
@@ -654,6 +656,7 @@ public:
         recognize_prompt = 0;
         recognize_prompt_template.clear();
         dlg.clear();
+        rebar.clear();
     }
 
     void initLogFont(HWND hwnd, LOGFONT *f)

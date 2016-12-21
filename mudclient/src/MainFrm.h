@@ -84,8 +84,15 @@ private:
         m_toolBar.createCmdBar(IDR_MAINFRAME);
         m_toolBar.createToolbar(IDR_MAINFRAME);
 
+        CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        PropertiesData *pdata = m_gameview.getPropData();
+        rbs.Load(rebar, pdata->rebar);
+
+        bool toolbar = rbs.IsVisible(rebar, ATL_IDW_BAND_FIRST+1);
+        UISetCheck(ID_VIEW_TOOLBAR,toolbar);
+
         m_hWndClient = m_gameview.createView(m_hWnd);
-        UISetCheck(ID_VIEW_TOOLBAR, 1);
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -97,6 +104,13 @@ private:
 
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
+        CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        tstring param;
+        rbs.Save(rebar, &param);
+        PropertiesData *pdata = m_gameview.getPropData();
+        pdata->rebar = param;
+
         // unregister message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         ATLASSERT(pLoop != NULL);
@@ -195,9 +209,9 @@ private:
 
     LRESULT OnViewToolBar(WORD, WORD, HWND, BOOL&)
     {
-        static BOOL bVisible = TRUE;	// initially visible
-        bVisible = !bVisible;
         CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        BOOL bVisible = rbs.IsVisible(rebar, ATL_IDW_BAND_FIRST + 1) ? FALSE : TRUE;
         int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 1);	// toolbar is 2nd added band
         rebar.ShowBand(nBandIndex, bVisible);
         UISetCheck(ID_VIEW_TOOLBAR, bVisible);

@@ -599,3 +599,115 @@ void OutputTelnetOption(const void *data, const char* label)
     OutputDebugStringA(tmp);
 }
 #endif
+
+void CReBarSettings::Save(CReBarCtrl& ReBar, tstring *param)
+{
+    ATLASSERT(ReBar.IsWindow());    
+    DWORD cbBandCount = ReBar.GetBandCount();
+    Save(cbBandCount, param);
+    for (UINT i = 0; i < cbBandCount; i++)
+    {
+        REBARBANDINFO rbi;
+        memset(&rbi, 0, sizeof(rbi));
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        Save(rbi.wID, param);
+        Save(rbi.cx, param);
+        DWORD break_line = (rbi.fStyle & RBBS_BREAK) ? 1 : 0;
+        Save(break_line, param);
+        DWORD visible = (rbi.fStyle & RBBS_HIDDEN) ? 0 : 1;
+        Save(visible, param);
+    }
+}
+
+bool CReBarSettings::IsVisible(CReBarCtrl& ReBar, DWORD wID)
+{
+     DWORD cbBandCount = ReBar.GetBandCount();
+     for (UINT i = 0; i < cbBandCount; i++)
+     {
+        REBARBANDINFO rbi;
+        memset(&rbi, 0, sizeof(rbi));
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        if (wID == rbi.wID) {
+            return (rbi.fStyle & RBBS_HIDDEN) ? false : true;
+        }
+     }
+     return false;
+}
+
+
+void CReBarSettings::Load(CReBarCtrl& ReBar, const tstring& param)
+{
+    ATLASSERT(ReBar.IsWindow());
+    tstring s(param);
+    DWORD cbBandCount = 0;
+    if (!Load(&cbBandCount, &s))
+        return;
+    struct BandInfo
+    {
+        DWORD ID;
+        DWORD cx;
+        bool BreakLine;
+        bool Visible;
+    };
+    BandInfo* bands = new BandInfo[cbBandCount];
+    for (DWORD i = 0; i < cbBandCount; i++)
+    {
+        BandInfo &bi = bands[i];
+        DWORD brk = 0; DWORD visible = 0;
+        if (!Load(&bi.ID, &s) || !Load(&bi.cx, &s) || !Load(&brk, &s) || !Load(&visible, &s))
+        {
+            delete []bands;
+            return;
+        }
+        bi.BreakLine = (brk == 0) ? false : true;
+        bi.Visible = (visible == 0) ? false : true;
+    }
+
+    for (DWORD i = 0; i < cbBandCount; i++)
+    {
+        ReBar.MoveBand(ReBar.IdToIndex(bands[i].ID), i);
+        REBARBANDINFO rbi;
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        rbi.cx = bands[i].cx;
+        if (bands[i].BreakLine)
+            rbi.fStyle |= RBBS_BREAK;
+        else
+            rbi.fStyle &= (~RBBS_BREAK);
+        if (bands[i].Visible)
+            rbi.fStyle &= (~RBBS_HIDDEN);
+        else
+            rbi.fStyle |= RBBS_HIDDEN;
+        ReBar.SetBandInfo(i, &rbi);
+    }
+    delete []bands;
+}
+
+void CReBarSettings::Save(DWORD v, tstring* sv)
+{
+    wchar_t buffer[16];
+    swprintf(buffer, L"%u;", v);
+    sv->append(buffer);
+}
+
+bool CReBarSettings::Load(DWORD *v, tstring* sv)
+{
+    size_t pos = sv->find(L';');
+    if (pos == tstring::npos)
+        return false;
+    tstring value(sv->substr(0, pos));
+    if (!isOnlyDigits(value))
+        return false;
+    int n = 0;
+    if (!w2int(value, &n))
+        return false;
+    *v = static_cast<DWORD>(n);
+    tstring tmp(sv->substr(pos+1));
+    sv->swap(tmp);
+    return true;
+}
