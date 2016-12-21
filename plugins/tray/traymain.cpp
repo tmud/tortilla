@@ -22,6 +22,7 @@ bool TrayMainObject::create()
     if (!m_shared.init())
         return false;
     Create(HWND_MESSAGE);
+    getWorkingArea(&m_workingarea);
 	return true;
 }
 
@@ -73,17 +74,12 @@ bool TrayMainObject::showMessage(const message& msg)
     if (!w)
         return false;
     w->setText(msg.text);
+   
     SIZE sz = w->getSize();
-    
-    POINT rb =  GetTaskbarRB();
-    RECT working_area;
-    working_area.left = 0;
-    working_area.right = rb.x;
-    working_area.top = 80;
-    working_area.bottom = rb.y;
+    SharingWindow sw; 
+    sw.w = sz.cx; sw.h = sz.cy;
 
-    SharingWindow sw;
-    if (!m_shared.tryAddWindow(&sw, working_area, 4))
+    if (!m_shared.tryAddWindow(&sw, m_workingarea, 4))
     {
         freeWindow(w);
         return false;
@@ -105,16 +101,14 @@ bool TrayMainObject::showMessage(const message& msg)
         rb.y = pos.top;
     }*/
 
-    const TraySettings &s = m_settings;
    
-    Animation a;
-
     /*rb.x -= 2;
     rb.y -= (sz.cy+4);
     rb.x -= sz.cx;*/
-
-    a.pos.x = sw.x;
-    a.pos.y = sw.y;
+    
+    const TraySettings &s = m_settings;  
+    Animation a;
+    a.pos = sw;
     a.speed = 0.5f;
     a.wait_sec = s.timeout;
     a.bkgnd_color = s.background;
@@ -150,7 +144,6 @@ void TrayMainObject::onFinishedAnimation(PopupWindow *w)
 
 void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
 {
-    assert(!tryRunMoveAnimation.empty());
     int last = m_windows.size() - 1;
     if (m_windows[last] != w)
         return;
@@ -170,12 +163,20 @@ void TrayMainObject::tryRunMoveAnimation()
         if (at == PopupWindow::ANIMATION_TOSTART || at == PopupWindow::ANIMATION_TOEND)
              return;
     }
-    POINT p = m_point0;
+    //POINT p = { m_workingarea.right, m_workingarea.bottom };
+
+
     for (int i=0,e=m_windows.size(); i<e; ++i)
     {
          PopupWindow* w = m_windows[i];
-         SIZE sz = w->getSize();
-         POINT w_pos = w->getAnimation().pos;
+         //SIZE sz = w->getSize();
+         //POINT w_pos = w->getAnimation().pos;
+         
+         const Animation &a = w->getAnimation();
+
+
+
+
 
          p.y -= (sz.cy+4);
          if (w_pos.x != p.x || w_pos.y != p.y)
@@ -212,6 +213,15 @@ void TrayMainObject::freeWindow(PopupWindow *w)
     m_free_windows.push_back(w);
 }
 
+void TrayMainObject::getWorkingArea(RECT *working_area)
+{
+    POINT rb =  GetTaskbarRB();
+    working_area->left = 0;
+    working_area->right = rb.x;
+    working_area->top = GetSystemMetrics(SM_CYSCREEN) / 5;
+    working_area->bottom = rb.y;
+}
+
 POINT TrayMainObject::GetTaskbarRB()
 {
     POINT pt = { GetSystemMetrics(SM_CXSCREEN),  GetSystemMetrics(SM_CYSCREEN) };
@@ -235,13 +245,14 @@ bool TrayMainObject::isHeightLimited() const
         return false;
     int last = m_windows.size() - 1;
     const POINT &p = m_windows[last]->getAnimation().pos;
-    return(p.y < getHeightLimit()) ? true : false;
+    return(p.y < getHeightLimit()) ? true : false;*/
+
 }
 
-int TrayMainObject::getHeightLimit() const
+/*int TrayMainObject::getHeightLimit() const
 {
     return (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
-}
+}*/
 
 TraySettings& TrayMainObject::traySettings()
 {

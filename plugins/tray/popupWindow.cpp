@@ -7,14 +7,16 @@ void PopupWindow::onTick()
     m_ticker.sync();
     if (m_animation_state == ANIMATION_MOVE)
     {
-        POINT &p = m_animation.pos;
+        const SharingWindow &curpos = m_animation.pos;
         const POINT& target = m_move_animation.pos;
 
-        float x = static_cast<float>(p.x);
-        float y = static_cast<float>(p.y);
+        float x = static_cast<float>(curpos.x);
+        float y = static_cast<float>(curpos.y);
 
         float dx = m_move_dx * m_move_animation.speed * dt;
         float dy = m_move_dy * m_move_animation.speed * dt;
+
+        POINT p = { 0, 0 };
 
         float ax = abs(dx); float ay = abs(dy);
         if (ax > 6 || ay > 6  || (ax > 0 && ax < 1) || (ay > 0 && ay < 1))
@@ -87,7 +89,7 @@ void PopupWindow::startAnimation(const Animation& a)
 
 void PopupWindow::startMoveAnimation(const MoveAnimation& a)
 {
-    const POINT &p = m_animation.pos;
+    const SharingWindow &p = m_animation.pos;
     m_move_dx = static_cast<float>(a.pos.x - p.x);
     m_move_dy = static_cast<float>(a.pos.y - p.y);
     m_move_animation = a;

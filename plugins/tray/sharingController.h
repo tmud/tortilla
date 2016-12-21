@@ -15,6 +15,8 @@ public:
     ~SharingController();
     bool init();
     bool tryAddWindow(SharingWindow* sw, const RECT& working_area, int dh);
+    bool tryMoveWindow(SharingWindow* sw);
+
     void deleteWindow(const SharingWindow& sw);
     void updateWindow(const SharingWindow& sw, int newx, int newy);
     //bool getLastWindow(SharingWindow* sw); 

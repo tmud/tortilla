@@ -72,6 +72,7 @@ private:
 class PopupWindow : public CWindowImpl<PopupWindow>
 {
     CFont *m_font;
+    std::wstring m_original_text;
     std::vector<std::wstring> m_text;
     CSize m_dc_size;
     TempDC m_src_dc;
@@ -107,6 +108,9 @@ public:
 
     void setText(const std::wstring& text)
     {
+        if (m_original_text == text)
+            return;
+        m_original_text = text;
         m_text.resize(1);
         m_text[0].assign(text);
         calcDCSize();
@@ -180,7 +184,6 @@ private:
     void setAlpha(float a);
     void onClickButton();
     void sendNotify(int state);
-
     void trimleft(std::wstring* s)
     {
         size_t pos = wcsspn(s->c_str(), L" ");

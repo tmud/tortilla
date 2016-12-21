@@ -74,10 +74,11 @@ private:
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
     bool isHeightLimited() const;
-    int  getHeightLimit() const;
-private:
+    //int  getHeightLimit() const;
+    
     void tryRunMoveAnimation();
     void tryShowQueue();
+    void getWorkingArea(RECT *working_area);
 
     CFont m_font;
     std::vector<PopupWindow*> m_windows;
@@ -86,7 +87,7 @@ private:
     bool m_activated;
     bool m_timerStarted;
     HWND m_alarmWnd;
-    POINT m_point0;
+    RECT m_workingarea;
 private:
     std::deque<message> m_queue;
     SharingController m_shared;

@@ -60,6 +60,13 @@ bool SharingController::tryAddWindow(SharingWindow* sw, const RECT& working_area
     return true;
 }
 
+bool SharingController::tryMoveWindow(SharingWindow* sw)
+{
+
+
+
+}
+
 void SharingController::deleteWindow(const SharingWindow& sw)
 {
     SharedMemoryLocker l(&m_shared_memory);
