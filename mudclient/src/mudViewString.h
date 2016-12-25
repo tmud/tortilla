@@ -63,7 +63,7 @@ typedef std::vector<MudViewStringBlock> MudViewStringBlocks;
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), gamecmd(false), system(false), triggered(false), prompt(0), next(false), prev(false), changed(true) {}
+   MudViewString() : dropped(false), show_dropped(false), gamecmd(false), system(false), triggered(false), prompt(0), next(false), prev(false), changed(true) {}
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
@@ -79,6 +79,7 @@ struct MudViewString
    {
        blocks.clear();
        dropped = false;
+       show_dropped = false;
        gamecmd = false;
        system = false;
        triggered = false;
@@ -89,6 +90,7 @@ struct MudViewString
    {
        blocks.assign(src->blocks.begin(), src->blocks.end());
        dropped = false;
+       show_dropped = false;
        gamecmd = src->gamecmd;
        system = src->system;
        triggered = src->triggered;
@@ -163,6 +165,7 @@ struct MudViewString
 
    MudViewStringBlocks blocks;              // all string blocks
    bool dropped;                            // flag for dropping string from view
+   bool show_dropped;                       // string dropped, but must be shown
    bool gamecmd;                            // flag - game cmd
    bool system;                             // flag - system cmd / log
    bool triggered;                          // flag - string triggered, after that string can insert another strings

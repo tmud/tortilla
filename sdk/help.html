@@ -615,7 +615,8 @@ Cм. <a href="#props" class="cmd">props.component()</a>, <a href="#setComponent"
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
 <div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt строка.
-<div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
+<div class="cmd">bool isDropped([bool* showdropped])</div> - строка была отброшена в одном из триггеров. Факт того будет ли она отображена в клиенте 
+можно узнать во втором параметре - showdropped.
 <div class="cmd">void getPrompt(std::wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
@@ -643,7 +644,8 @@ Cм. <a href="#props" class="cmd">props.component()</a>, <a href="#setComponent"
 <div class="cmd">bool deleteString()</div> - удаляет текущую строку.
 <div class="cmd">bool deleteStrings(const std::vector&lt;int&gt;&amp; sv)</div> - удаляет набор строк по их индексам.
 <div class="cmd">void deleteAllStrings()</div> - удаляет все строки.
-<div class="cmd">bool dropString()</div> - помечает текущую строку для удаления (не будет отображена в клиенте), но может быть обработана другими плагинами.
+<div class="cmd">bool dropString([bool showdropped])</div> - помечает текущую строку для удаления (будет ли отображена в клиенте - параметр showdropped),
+может быть обработана другими плагинами.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом. <div class="cmd">Важно!</div> Данные строки не будут
 обрабатываться заменами и триггерами.
 <div class="cmd">bool find(Pcre* p[, int from])</div> - ищет строку по регулярному выражению. Если строка найдена, то она становиться текущей.
@@ -1374,7 +1376,7 @@ render:rect(r2)
 <div class="cmd">bool isGameCmd()</div> - в строке присутствует игровая команда.
 <div class="cmd">bool isSystem()</div> - это строка со служебной информацией  (логи клиента и плагинов, команды клиента).
 <div class="cmd">bool isPrompt()</div> - это prompt-строка.
-<div class="cmd">bool isDropped()</div> - строка была отброшена в одном из триггеров и не будет отображена в клиенте.
+<div class="cmd">bool,bool isDropped()</div> - строка была отброшена в одном из триггеров. Второй результат - будет ли отображена в клиенте.
 <div class="cmd">string getPrompt()</div> - содежимое prompt-строки (без игровых команд).
 <div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных блоков).
 <div class="cmd">int  getTextLen()</div> - длина полного текста строки.
@@ -1402,7 +1404,8 @@ render:rect(r2)
 <div class="cmd">bool deleteString()</div> - удаляет строку.
 <div class="cmd">bool deleteStrings(t)</div> - удаляет набор строк по индексам из таблицы.
 <div class="cmd">void deleteAllStrings()</div> - удаляет все строки.
-<div class="cmd">bool dropString()</div> - помечает текущую строку для удаления (не будет отображена в клиенте), но может быть обработана другими плагинами.
+<div class="cmd">bool dropString([bool showdropped])</div> - помечает текущую строку для удаления (будет ли отображена в клиенте - второй параметр),
+но может быть обработана другими плагинами.
 <div class="cmd">void print(int view)</div> - печатает текущую строку в заданное output-окно с цветом. <div class="cmd">Важно!</div> Данные строки не будут
 обрабатываться заменами и триггерами.
 <div class="cmd">viewstring createViewString()</div> - создает копию текущей строки, как отдельный объект, см. <a href="#viewstring" class="cmd">viewstring</a>.

@@ -302,8 +302,13 @@ bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newc
     m_cmds.makeCommands(newcmds, &ap);
     for (int i=0,e=newcmds->size(); i<e; ++i)
     {
-        if (newcmds->operator[](i)->command == L"drop")
-                data.string->dropped = true;
+        const tstring& cmd = newcmds->operator[](i)->command;
+        if (cmd == L"drop")
+            data.string->dropped = true;
+        else if (cmd == L"stop") {
+            data.string->dropped = true;
+            data.string->show_dropped = true;
+        }
     }
     return true;
 }

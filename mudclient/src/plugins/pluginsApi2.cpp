@@ -329,10 +329,12 @@ int vd_isDropped(lua_State *L)
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString* s = pdata->getselected();
         int state = (s && s->dropped) ? 1 : 0;
+        int state_showdropped = (s && s->show_dropped) ? 1 : 0;
         if (!s)
             pluginInvArgsValues(L, L"viewdata:isDropped");
         lua_pushboolean(L, state);
-        return 1;
+        lua_pushboolean(L, state_showdropped);
+        return 2;
     }
     return pluginInvArgs(L, L"viewdata:isDropped");
 }
@@ -900,7 +902,8 @@ int vd_insertString(lua_State *L)
 
 int vd_dropString(lua_State *L)
 {
-    if (luaT_check(L, 1, LUAT_VIEWDATA))
+    if (luaT_check(L, 1, LUAT_VIEWDATA) || 
+        luaT_check(L, 2, LUAT_VIEWDATA, LUA_TBOOLEAN))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
         MudViewString *s = pdata->getselected();
@@ -908,6 +911,12 @@ int vd_dropString(lua_State *L)
             s->dropped = true;
         else
             pluginInvArgsValues(L, L"viewdata:dropString");
+        if (s && lua_gettop(L) == 2)
+        {
+            int state = lua_toboolean(L, 2);
+            if (state)
+                s->show_dropped = true;
+        }
         lua_pushboolean(L, s ? 1 : 0);
         return 1;
     }

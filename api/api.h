@@ -591,10 +591,20 @@ public:
         runcmd("isPrompt");
         return boolresult();
     }
-    bool isDropped()
+    bool isDropped(bool* showdropped = 0)
     {
         runcmd("isDropped");
-        return boolresult();
+        if (lua_gettop(L) == 1) 
+            return boolresult();
+        if (lua_gettop(L) == 2) {
+            int result = (lua_isboolean(L, 1)) ? lua_toboolean(L, 1) : 0;
+            int shdropepd = (lua_isboolean(L, 2)) ? lua_toboolean(L, 2) : 0;
+            if (showdropped)
+                *showdropped = (shdropepd == 1) ? true : false;
+            lua_pop(L, 2);
+            return result ? true : false;
+        }
+        return false;       
     }
     void getPrompt(std::wstring *str)
     {
@@ -738,6 +748,12 @@ public:
     bool dropString()
     {
         runcmd("dropString");
+        return boolresult();
+    }
+    bool dropString(bool showdropped)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "dropString", "b", showdropped);
         return boolresult();
     }
     void print(int view)

@@ -269,7 +269,7 @@ void MudView::removeDropped(parseData* parse_data)
     for (int i=pds.size()-1; i>=0; --i)
     {
         MudViewString *string = pds[i];
-        if (string->dropped)
+        if (string->dropped && !string->show_dropped)
         {
             pds.erase(pds.begin() + i);
             m_dropped_strings.push_back(string);

@@ -82,7 +82,7 @@ void LogsProcessor::writeLog(int id, const parseData& pdata)
     for (int i=0; i<=e; ++i)
     {
         MudViewString *src = pdata.strings[i];
-        if (src->dropped) continue;
+        if (src->dropped && !src->show_dropped) continue;
         if (i == 0 && pdata.update_prev_string && !m_msgs.empty())
         {
             int last = m_msgs.size()-1;
@@ -182,7 +182,7 @@ void LogsProcessor::saveAll()
             if (m.log != id)
                 continue;
             m.log = -1;
-            if (m.str->dropped)
+            if (m.str->dropped && !m.str->show_dropped)
                 continue;
             m_logs[id]->ff->writeString(m.str);
             updated.insert(id);
