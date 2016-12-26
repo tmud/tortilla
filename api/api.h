@@ -604,7 +604,7 @@ public:
             lua_pop(L, 2);
             return result ? true : false;
         }
-        return false;       
+        return false;
     }
     void getPrompt(std::wstring *str)
     {
