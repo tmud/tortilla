@@ -260,6 +260,11 @@ IMPL(drop)
     if (p->size() != 0)
         p->invalidargs();
 }
+IMPL(stop)
+{
+    if (p->size() != 0)
+        p->invalidargs();
+}
 //------------------------------------------------------------------
 class ElementsHelper : public MethodsHelper
 {
@@ -1527,7 +1532,9 @@ bool LogicProcessor::init()
     regCommand("zap", disconnect);
     regCommand("disconnect", disconnect);
 
-    regCommand("drop", drop);
+    regCommand("drop", drop, true);
+    regCommand("stop", stop, true);
+
     regCommand("action", action);
     regCommand("unaction", unaction);
     regCommand("alias", alias);

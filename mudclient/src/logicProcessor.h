@@ -151,6 +151,7 @@ private:
 
 public: // system commands
     DEF(drop);
+    DEF(stop);
     DEF(action);
     DEF(unaction);
     DEF(alias);
