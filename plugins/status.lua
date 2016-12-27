@@ -19,7 +19,7 @@ function status.description()
 end
 
 function status.version()
-  return '1.03'
+  return '1.04'
 end
 
 local r
@@ -87,25 +87,26 @@ local function set_ticker(t)
 end
 
 local counter = 0
-local function start_new_tick()
-  counter = ticker_seconds
-end
-
-local delta
+local delta_time
 local function getdt()
-  if not delta then
-    delta = system.getTime()
+  if not delta_time then
+    delta_time = system.getTime()
     return 1
   end
-  local delta2 = system.getTime()
-  if delta > delta2 then
-    local result = 60 - delta + delta2
-    delta = delta2
-    return result
+  local time_now = system.getTime()
+  if delta_time > time_now then
+    local result = delta_time - time_now
+    if result > 10 then result = 10 end
+    delta_time = time_now
+    return time_now
   end
-  local result = delta2 - delta
-  delta = delta2
+  local result = time_now - delta_time
+  delta_time = time_now
   return result
+end
+
+local function start_new_tick()
+  counter = ticker_seconds - counter
 end
 
 function status.tick()
@@ -125,11 +126,13 @@ end
 
 function status.disconnect()
   set_ticker('')
+  delta_time = nil
 end
 
 function status.init()
   local function term(t) terminate("Некорректый параметр '"..t.."', "..getPath('config.lua')) end
   ticker_on = false
+  delta_time = nil
   local t = loadTable('config.lua')
   if not t then terminate('Нет файла настроек '..getPath('config.lua')..'.') end
   if not t.position or (t.position ~= 'top' and t.position ~= 'bottom') then term('position') end

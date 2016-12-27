@@ -9,6 +9,7 @@ struct LogicPipelineElement
    parseData data;
    InputCommands commands;                  // from actions
    std::vector<PluginsTrigger*> triggers;   // from plugin's triggers
+   bool subs_processed;
 };
 
 class LogicPipeline
@@ -42,6 +43,7 @@ public:
         e->data.last_finished = true;
         e->data.update_prev_string = false;
         e->data.strings.clear();
+        e->subs_processed = false;
         m_free.push_back(e);
     }
 };
