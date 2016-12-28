@@ -22,6 +22,7 @@ string system.convertToWin(string) - конвертация из utf8-кодировки в win-кодиров
 void system.beep(int freq, int duration) - проигрывание звука заданной частоты и длительности
 seconds, minutes, hour = system.getTime() - текущее время
 day, month, year = system.getDate() - текущая дата
+int system.getTicks() - число миллисекунд прошедшее с момента включения компьютера.
 ------------------------------------------------------------------------------------------------------------
 rnd - генератор случайных чисел и строк
 void rnd.seed(uint seed) - сброс ключа генератора на другое значение.

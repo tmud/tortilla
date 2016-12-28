@@ -341,6 +341,17 @@ int system_getDate(lua_State *L)
     return luaT_error(L, L"Incorrect parameters system.getDate");
 }
 
+int system_getTicks(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        DWORD ticks = GetTickCount();
+        lua_pushunsigned(L, ticks);
+        return 1;
+    }
+    return luaT_error(L, L"Incorrect parameters system.getTicks");
+}
+
 int system_appendStringToFile(lua_State *L)
 {
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
@@ -396,6 +407,7 @@ static const luaL_Reg system_methods[] =
     { "beep", system_beep },
     { "getTime", system_getTime },
     { "getDate", system_getDate },
+    { "getTicks", system_getTicks },
     { "saveTextFile", system_saveTextFile },
     { "appendStringToFile", system_appendStringToFile },
     { "deleteFile", system_deleteFile },
