@@ -541,6 +541,26 @@ private:
 
     LRESULT OnWheel(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
     {
+        if (checkKeysState(false, true, false))
+        {
+            if (m_history.IsWindowVisible()) {
+                ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
+                bool last = (m_history.getViewString() == m_history.getLastString());
+                if (last)
+                    closeHistory();
+                return 0;
+            }
+            int delta = GET_WHEEL_DELTA_WPARAM(wparam);
+            if (delta > 0) {
+                bool canscroll = (m_view.getStringsCount() > m_view.getStringsOnDisplay());
+                if (canscroll) {
+                    int vs = m_view.getViewString();
+                    showHistory(vs, 1);
+                }
+            }
+            return 0;
+        }
+
         POINT pt; RECT rc;
         if (GetCursorPos(&pt))
         {
