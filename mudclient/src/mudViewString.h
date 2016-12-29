@@ -63,7 +63,8 @@ typedef std::vector<MudViewStringBlock> MudViewStringBlocks;
 
 struct MudViewString
 {
-   MudViewString() : dropped(false), show_dropped(false), gamecmd(false), system(false), triggered(false), prompt(0), next(false), prev(false), changed(true) {}
+   MudViewString() : dropped(false), show_dropped(false), gamecmd(false), system(false), triggered(false), prompt(0),
+       next(false), prev(false), changed(true), subs_processed(false) {}
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
@@ -73,6 +74,7 @@ struct MudViewString
        if (prompt || src->prompt)
             prompt = getTextLen();
        src->clear();
+       subs_processed = false;
    }
 
    void clear()
@@ -84,6 +86,7 @@ struct MudViewString
        system = false;
        triggered = false;
        prompt = 0;
+       subs_processed = false;
    }
 
    void copy(MudViewString* src)
@@ -95,6 +98,7 @@ struct MudViewString
        system = src->system;
        triggered = src->triggered;
        prompt = src->prompt;
+       subs_processed = src->subs_processed;
    }
 
    void getText(tstring *text) const
@@ -173,6 +177,7 @@ struct MudViewString
    bool next;                               // flag - next string in MudView is part of that string
    bool prev;                               // flag - prev string in MudView is part of that string
    bool changed;                            // flag - to recalc string dc (changed in triggers)
+   bool subs_processed;                     // flag - set after processing subs
 };
 
 typedef std::vector<MudViewString*> mudViewStrings;

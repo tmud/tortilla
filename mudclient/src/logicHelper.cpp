@@ -56,14 +56,17 @@ void LogicHelper::processSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->dropped) continue;
+        if (s->dropped || s->subs_processed) continue;
         bool incomplstr = (!s->prompt && j==je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
             CompareData cd(s);
             while (m_subs[i]->processing(cd))
+            {
                 cd.reinit();
+                s->subs_processed = true;
+            }
         }
     }
 }
@@ -73,7 +76,7 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->dropped) continue;
+        if (s->dropped || s->subs_processed) continue;
         bool incomplstr = (!s->prompt && j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
@@ -90,7 +93,7 @@ void LogicHelper::processGags(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->dropped) continue;
+        if (s->dropped || s->subs_processed) continue;
         bool incomplstr = (!s->prompt && j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_gags.size(); i<e; ++i)

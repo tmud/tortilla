@@ -397,9 +397,6 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
             runCommands(e->commands);
         }
         LogicPipelineElement *e2 = m_pipeline.createElement();
-        int new_flags = flags|SKIP_PLUGINS_BEFORE;
-        if (e->subs_processed)
-            new_flags |= SKIP_SUBS;
         printParseData(e->data, flags|SKIP_PLUGINS_BEFORE, window, e2);
         m_pipeline.freeElement(e);
         e = e2;
@@ -438,7 +435,6 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     if (!(flags & SKIP_SUBS))
     {
-        pe->subs_processed = true;
         if (!(flags & SKIP_COMPONENT_ANTISUBS))
             m_helper.processAntiSubs(&parse_data);
         if (!(flags & SKIP_COMPONENT_GAGS))
