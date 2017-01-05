@@ -4,7 +4,7 @@
  #include <Mstcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
-NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false)
+NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false), m_connecting(false)
 {
     m_recive_buffer.alloc(receive_buffer);
 }
@@ -25,12 +25,18 @@ void NetworkConnection::connect(const NetworkConnectData& cdata)
 
 void NetworkConnection::disconnect()
 {
-    if (!connected())
+    CSectionLock lock(m_cs_connect);
+    if (!m_connecting && !m_connected) 
         return;
-    stop();
-    wait();
+    if (m_connecting)
+        terminate();
+    else {
+        stop();
+        wait();
+    }
     m_send_data.clear();
     m_receive_data.clear();
+    m_connecting = false;
     m_connected = false;
 }
 
@@ -128,15 +134,24 @@ void NetworkConnection::threadProc()
         return;
     }
 
+    {
+       CSectionLock lock(m_cs_connect);
+       m_connecting = true;
+    }
+
     sendEvent(NE_CONNECTING);
     if (::connect(sock, (sockaddr*)&peer, sizeof(peer)) == SOCKET_ERROR)
     {
+        {
+            CSectionLock lock(m_cs_connect);
+            m_connecting = false;
+        }
         sendEvent(NE_ERROR_CONNECT);
         return;
     }
-
     {
         CSectionLock lock(m_cs_connect);
+        m_connecting = false;
         m_connected = true;
     }
     sendEvent(NE_CONNECT);

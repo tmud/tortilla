@@ -79,6 +79,7 @@ private:
     DataQueue m_receive_data;
     MemoryBuffer m_recive_buffer;
     bool m_connected;
+    bool m_connecting;
 };
 
 struct MccpStatus
