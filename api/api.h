@@ -210,9 +210,17 @@ namespace base {
     inline void flashWindow(lua_State *L) {
         luaT_run(L, "flashWindow", "");
     }
-    inline void saveTable(lua_State* L, const wchar_t* file) {
+    inline bool saveTable(lua_State* L, const wchar_t* file) {
         if (lua_istable(L, -1))
-            luaT_run(L, "saveTable", "rs", file);
+        {
+           luaT_run(L, "saveTable", "rs", file);
+           if (lua_isboolean(L, -1)) {
+              int result = lua_toboolean(L, -1);
+              lua_pop(L, 1);
+              return result ? true : false;
+           }
+        }
+        return false;
     }
     inline bool loadTable(lua_State* L, const wchar_t* file) {
         luaT_run(L, "loadTable", "s", file);

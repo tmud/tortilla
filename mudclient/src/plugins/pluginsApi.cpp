@@ -1066,8 +1066,10 @@ int saveTable(lua_State *L)
        swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
        tstring tmp(plugin_buffer());
        pluginMethodError(L"saveTable", tmp.c_str());
+       return 0;
     }
-    return 0;
+    lua_pushboolean(L, 1);
+    return 1;
 }
 //----------------------------------------------------------------------------
 void initVisible(lua_State *L, int index, OutputWindow *w)

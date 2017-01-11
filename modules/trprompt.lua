@@ -11,10 +11,16 @@ local function filter(vs)
   return true, false
 end
 
+local function skip_prompt(s)
+  -- функция фильтр - проверяет, подходит ли данная строка под промпт-строку
+  -- иногда нужно пропускать строчки листания страниц, которые тоже могут быть промпт-строками.
+  return false
+end
+
 local t
 function plugin.init()
-  -- создаем триггер
-  t = prompt_trigger('Вы используете:', filter)
+  -- создаем триггер, skip_prompt - необязательный параметр-функция
+  t = prompt_trigger('Вы используете:', filter, skip_prompt)
 end
 
 function plugin.before(v, vd)
@@ -33,7 +39,7 @@ function plugin.disconnect()
 end
 ]]
 
-function prompt_trigger(key_string, filter_function)
+function prompt_trigger(key_string, filter_function, skip_prompt_function)
   local pcre = createPcre(key_string)
   if not pcre then
     return nil, '[prompt_trigger] Триггер не создан. Некорректное значение key_string.'
@@ -41,8 +47,11 @@ function prompt_trigger(key_string, filter_function)
   if filter_function and type(filter_function) ~= 'function' then
     return nil, '[prompt_trigger] Триггер не создан. filter_function - не функция.'
   end
+  if skip_prompt_function and type(skip_prompt_function) ~= 'function' then
+    return nil, '[prompt_trigger] Триггер не создан. skip_prompt_function - не функция.'
+  end
 
-  local trigger = { pcre = pcre, filter = filter_function, collect_mode = false, strings ={} }
+  local trigger = { pcre = pcre, filter = filter_function, skip_prompt = skip_prompt_function, collect_mode = false, strings ={} }
 
   function trigger:check(vd)
     if not self.collect_mode then
@@ -72,8 +81,14 @@ function prompt_trigger(key_string, filter_function)
     for i=index,size do
       vd:select(i)
       if vd:isPrompt() then
-        self.collect_mode = false
-        return true
+        local skip = false
+        if self.skip_prompt then
+          skip = self.skip_prompt(vd:getText())
+        end
+        if not skip then
+          self.collect_mode = false
+          return true
+        end
       end
       local vs = vd:createViewString()
       if self.filter then

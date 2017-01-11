@@ -26,14 +26,15 @@ function statusbar.name()
 end
 
 function statusbar.description()
-return 'Плагин отображает информацию о здоровье, мане, энергии и опыте в виде полосок\r\n\z
-на отдельной панели клиента. Требует для работы режим га/автозавершения в маде.\r\n\z
-Требует также настройки. Про настройку читайте в справке к клиенту (#help statusbar).\r\n\z
-В пакете с клиентом уже есть конфигурационные файлы для основных существующих мадов.'
+  local s = { 'Плагин отображает информацию о здоровье, мане, энергии и опыте в виде полосок',
+  'на отдельной панели клиента. Требует для работы режим га/автозавершения в маде.',
+  'Требует файл с настройками. Про настройку читайте в справке к клиенту (#help statusbar).',
+  'Плагин также поддерживает систему ремортов, он отслеживает команду уровни(если актуально).' }
+  return table.concat(s, '\r\n')
 end
 
 function statusbar.version()
-    return '1.09'
+    return '1.10'
 end
 
 local objs = {}
@@ -159,8 +160,66 @@ function statusbar.xplimits()
   end 
 end
 
+local levels_trigger, levels_string_filter, levels_string_sep, level_prompt_filter_pcre
+local function levels_prompt_filter(s)
+  if level_prompt_filter_pcre:find(s) then
+    return true
+  end
+  return false
+end
+local function levels_filter(vss)
+  if levels_string_filter and levels_string_filter:find(vss:getText()) then
+    return true,false
+  end
+  return false, false
+end
+local function collect_levels(t)
+  local newlevels = {}
+  for _,s in ipairs(t) do
+    levels_string_filter:find(s:getText())
+    local s = levels_string_filter:get(1)
+    if type(s) == 'string' and s:len() > 0 then
+      s = table.concat( s:tokenize(levels_string_sep) )
+      s = tonumber(s)
+      if not s then newlevels = nil break end
+      newlevels[#newlevels+1] = s+999
+    end
+  end
+  if #newlevels > 0 then
+    local config = loadTable('config.xml')
+    if not config then
+      log("Не прочитался файл с настройками: "..getPath('config.xml'))
+      return
+    end
+    if type(config.levels) ~= 'table' then
+      log("В настройках нет раздела уровней(levels), уровни не обновлены.")
+      return
+    end
+    if #config.levels ~= #newlevels then
+      log("В настройках количество уровней не совпадает с игрой, уровни не обновлены.")
+      return
+    end
+    for i,v in ipairs(newlevels) do
+      config.levels[i] = v
+    end
+    if saveTable(config, 'config.xml') then
+      reinit =  true
+      for i,v in ipairs(newlevels) do
+        cfg.levels[i] = v
+      end
+    else
+      log("Не сохранился файл настроек, уровни не обновлены. Файл: "..getPath('config.xml'))
+    end
+  end
+end
+
 function statusbar.before(window, v)
   if window ~= 0 or not cfg then return end
+
+  if levels_trigger and levels_trigger:check(v) then
+    collect_levels( levels_trigger.strings )
+  end
+
   local update = false
   for i=1,v:size() do
     v:select(i)
@@ -312,11 +371,37 @@ function statusbar.init()
   end
 
   if #msgs ~= 0 then
-    log('Ошибки в файле настрек: '..getPath('config.xml'))
+    log('Ошибки в файле настроек: '..getPath('config.xml'))
     for _,v in ipairs(msgs) do
       log(v)
     end
     return terminate("Продолжение работы невозможно")
+  end
+
+  if cfg.levels and cfg.levregexp then
+    local r = cfg.levregexp
+    if type(r) == 'table' and r.key and r.level then
+      if r.separators then
+        levels_string_sep = r.separators
+      else
+        levels_string_sep = ''
+      end
+      level_prompt_filter_pcre = nil
+      if r.skipprompt then
+        level_prompt_filter_pcre = createPcre(r.skipprompt)
+        if not level_prompt_filter_pcre then
+          terminate('Настройка обновления уровней опыта levregexp.skipprompt задана неверно.')
+        end
+      end
+      levels_trigger = prompt_trigger(r.key, levels_filter, level_prompt_filter_pcre and levels_prompt_filter or nil)
+      if not levels_trigger then
+        terminate('Настройка обновления уровней опыта levregexp.key задана неверно.')
+      end
+      levels_string_filter = createPcre(r.level)
+      if not levels_string_filter then
+        terminate('Настройка обновления уровней опыта levregexp.level задана неверно.')
+      end
+    end
   end
 
   local p = createPanel(position, 28)

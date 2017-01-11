@@ -1,10 +1,49 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
   <baseparams>
+    <dsu value="о"/>
     <hp value="H"/>
     <mv value="M"/>
-    <dsu value="о"/>
   </baseparams>
+  <levels>
+    <array index="1" value="1000" native="1"/>
+    <array index="2" value="2999" native="1"/>
+    <array index="3" value="4999" native="1"/>
+    <array index="4" value="8999" native="1"/>
+    <array index="5" value="14999" native="1"/>
+    <array index="6" value="24999" native="1"/>
+    <array index="7" value="39999" native="1"/>
+    <array index="8" value="69999" native="1"/>
+    <array index="9" value="119999" native="1"/>
+    <array index="10" value="189999" native="1"/>
+    <array index="11" value="289999" native="1"/>
+    <array index="12" value="419999" native="1"/>
+    <array index="13" value="579999" native="1"/>
+    <array index="14" value="800999" native="1"/>
+    <array index="15" value="1070999" native="1"/>
+    <array index="16" value="1340999" native="1"/>
+    <array index="17" value="1660999" native="1"/>
+    <array index="18" value="2030999" native="1"/>
+    <array index="19" value="2450999" native="1"/>
+    <array index="20" value="2950999" native="1"/>
+    <array index="21" value="3950999" native="1"/>
+    <array index="22" value="5250999" native="1"/>
+    <array index="23" value="6750999" native="1"/>
+    <array index="24" value="8450999" native="1"/>
+    <array index="25" value="10350999" native="1"/>
+    <array index="26" value="14000999" native="1"/>
+    <array index="27" value="21000999" native="1"/>
+    <array index="28" value="31000999" native="1"/>
+    <array index="29" value="44000999" native="1"/>
+    <array index="30" value="64000999" native="1"/>
+    <array index="31" value="79000999" native="1"/>
+  </levels>
+  <levregexp>
+    <key value="^Уровень          Опыт            Макс на урв."/>
+    <level value="^\[[0-9 ]+\] +([0-9,]+)"/>
+    <separators value=","/>
+    <skipprompt value="^Листать :.*"/>
+  </levregexp>
   <maxparams>
     <hp value="1"/>
     <hpid value="r1"/>
@@ -17,37 +56,4 @@
     <r1 value="^Вы можете выдержать [0-9]+\(([0-9]+)\).*, и пройти [0-9]+\(([0-9]+)\)"/>
     <r2 value="^Ваш опыт - ([0-9]+)"/>
   </regexp>
-  <levels>
-    <array index="1" value="0"/>
-    <array index="2" value="2000"/>
-    <array index="3" value="4000"/>
-    <array index="4" value="8000"/>
-    <array index="5" value="14000"/>
-    <array index="6" value="24000"/>
-    <array index="7" value="39000"/>
-    <array index="8" value="69000"/>
-    <array index="9" value="119000"/>
-    <array index="10" value="189000"/>
-    <array index="11" value="289000"/>
-    <array index="12" value="419000"/>
-    <array index="13" value="579000"/>
-    <array index="14" value="800000"/>
-    <array index="15" value="1070000"/>
-    <array index="16" value="1340000"/>
-    <array index="17" value="1660000"/>
-    <array index="18" value="2030000"/>
-    <array index="19" value="2450000"/>
-    <array index="20" value="2950000"/>
-    <array index="21" value="3950000"/>
-    <array index="22" value="5250000"/>
-    <array index="23" value="6750000"/>
-    <array index="24" value="8450000"/>
-    <array index="25" value="10350000"/>
-    <array index="26" value="14000000"/>
-    <array index="27" value="21000000"/>
-    <array index="28" value="31000000"/>
-    <array index="29" value="44000000"/>
-    <array index="30" value="64000000"/>
-    <array index="31" value="79000000"/>
-  </levels>
 </plugindata>
