@@ -72,6 +72,12 @@ public:
     BOOL PreTranslateMessage(MSG* pMsg)
     {
         UINT msg = pMsg->message;
+        if (msg == WM_MOUSEWHEEL)
+        {
+            BOOL b = FALSE;
+            OnWheel(pMsg->message, pMsg->wParam, pMsg->lParam, b);
+            return TRUE;
+        }
         if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN)
         {
             tstring key;
