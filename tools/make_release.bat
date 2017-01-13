@@ -93,6 +93,8 @@ xcopy ..\plugins\timeline.lua plugins /Y
 xcopy ..\plugins\trswitch.lua plugins /Y
 xcopy ..\plugins\trswitch.bmp plugins /Y
 xcopy ..\plugins\write.lua plugins /Y
+xcopy ..\plugins\enterb.lua plugins /Y
+xcopy ..\plugins\enterb.bmp plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 

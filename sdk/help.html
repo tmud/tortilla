@@ -867,6 +867,12 @@ u8string x( TW2U(L"строка") );
 Функция копирует команду (или набор команд) в командную строку клиента (старое содержимое командной строки пропадает). Запуск на выполнение не производится.<br>
 См. <a href="#runCommand" class="cmd">runCommand</a>.
 <hr>
+<h4>string getCommand()</h4>
+<div class="m">Параметры: нет</div><br>
+<div class="m">Результат: строка<br></div><br>
+Функция возвращает команду, которая набрана в командной строке клиента.<br>
+См. <a href="#runCommand" class="cmd">runCommand</a>.
+<hr>
 <h4>void sendCommand(string window, string cmd [, ...])</h4>
 <div class="m">Параметры: window - имя игрового профиля или nil, cmd - игровая или системная команда, набор команд.</div><br>
 <div class="m">Результат: нет<br></div><br>
@@ -1317,6 +1323,8 @@ render:rect(r2)
 <div class="cmd">false|int pluginsLogWindow()</div> - возращает номер окна, куда выводится лог плагинов. Если вывод логов отключен, то возвращается false.
 <div class="cmd">bool component(string name)</div> - возращает статус компонента (включен или выключен) по имени, см. <a href="#compsupdated" class="cmd">compsupdated</a>, 
 <a href="#setComponent" class="cmd">setComponent</a>.
+<div class="cmd">bool isClearCommandLine()</div> - возращает настройку - нужно ли очищать командную строку или нет.
+<div class="cmd">bool isShowSystemCommand()</div> - возращает настройку - нужно ли показывать системные команды.
 </pre>
 <hr>
 <a name="luaactobj"></a>

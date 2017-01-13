@@ -356,6 +356,7 @@ public:
     }
 
     void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
+    void getCommand(tstring* cmd) { m_bar.getCommandLine(cmd); }
     void showView(int view, bool show) { showWindow(view, show); }
     bool isViewVisible(int view) { return isWindowVisible(view); }
 

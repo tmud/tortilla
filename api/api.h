@@ -289,30 +289,30 @@ class luaT_window
     void *window;
 public:
     luaT_window() : L(NULL), window(NULL) {}
-	bool create(lua_State *pL, const wchar_t* caption, int width, int height, bool visible)
-	{
-		if (!pL)
+    bool create(lua_State *pL, const wchar_t* caption, int width, int height, bool visible)
+    {
+        if (!pL)
             return false;
-		L = pL;
-		luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
-		void *wnd = luaT_toobject(L, -1);
-		if (!wnd)
-			return false;
-		window = wnd;
-		return true;
-	}
-	bool create(lua_State *pL, const wchar_t* caption, int width, int height)
-	{
-		if (!pL)
-			return false;
-		L = pL;
-		luaT_run(L, "createWindow", "sdd", caption, width, height);
-		void *wnd = luaT_toobject(L, -1);
-		if (!wnd)
-			return false;
-		window = wnd;
-		return true;
-	}
+        L = pL;
+        luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
+        void *wnd = luaT_toobject(L, -1);
+        if (!wnd)
+            return false;
+        window = wnd;
+        return true;
+    }
+    bool create(lua_State *pL, const wchar_t* caption, int width, int height)
+    {
+        if (!pL)
+            return false;
+        L = pL;
+        luaT_run(L, "createWindow", "sdd", caption, width, height);
+        void *wnd = luaT_toobject(L, -1);
+        if (!wnd)
+            return false;
+        window = wnd;
+        return true;
+    }
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
@@ -427,15 +427,15 @@ public:
     luaT_ViewString() : L(NULL), view_string(NULL) {}
     void init(lua_State *pL, void *viewstring) { L = pL; view_string = viewstring; }    
     bool create(lua_State *pL)
-	{
-		if (!pL)
+    {
+        if (!pL)
             return false;
-		L = pL;
-		luaT_run(L, "createViewString", "");
-		view_string = luaT_toobject(L, -1);
+        L = pL;
+        luaT_run(L, "createViewString", "");
+        view_string = luaT_toobject(L, -1);
         if (!view_string) L = NULL;
-		return (view_string) ? true : false;
-	}
+        return (view_string) ? true : false;
+    }
     void getText(std::wstring* str)
     {
         runcmd("getText");
@@ -1070,6 +1070,18 @@ public:
     {
         lua_getglobal(L, obj);
         luaT_run(L, "component", "ts", id);
+        return boolresult();
+    }
+    bool isShowSystemCommand()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "isShowSystemCommand", "t");
+        return boolresult();
+    }
+    bool isClearCommandLine()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "isClearCommandLine", "t");
         return boolresult();
     }
 private:

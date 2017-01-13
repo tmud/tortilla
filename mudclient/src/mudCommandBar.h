@@ -130,6 +130,11 @@ public:
         setText(cmd, -1, false);
     }
 
+    void getCommandLine(tstring *cmd)
+    {
+         getText(cmd);
+    }
+
 private:
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

@@ -199,6 +199,19 @@ int setCommand(lua_State *L)
     return pluginInvArgs(L, L"setCommand");
 }
 
+int getCommand(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 0))
+    {
+        tstring cmd;
+        _wndMain.m_gameview.getCommand(&cmd);
+        luaT_pushwstring(L, cmd.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"getCommand");
+}
+
 int sendCommand(lua_State *L)
 {
     EXTRA_CP;
@@ -1474,6 +1487,7 @@ bool initPluginsSystem()
     lua_register(L, "runCommand", runCommand);
     lua_register(L, "setCommand", setCommand);
     lua_register(L, "sendCommand", sendCommand);
+    lua_register(L, "getCommand", getCommand);
     lua_register(L, "addMenu", addMenu);
     lua_register(L, "addButton", addButton);
     lua_register(L, "addToolbar", addToolbar);
@@ -1991,6 +2005,29 @@ int props_component(lua_State *L)
     return pluginInvArgs(L, L"props.component");
 }
 
+int props_isClearCommandLine(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int status = tortilla::getProperties()->clear_bar;        
+        lua_pushboolean(L, status ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.isClearCommandLine");
+}
+
+int props_isShowSystemCommand(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int status = tortilla::getProperties()->show_system_commands;        
+        lua_pushboolean(L, status ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props._isShowSystemCommand");
+}
+
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
@@ -2008,5 +2045,7 @@ void reg_props(lua_State *L)
     regFunction(L, "isPropertiesOpen", props_isPropertiesOpen);
     regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);
     regFunction(L, "component", props_component);
+    regFunction(L, "isClearCommandLine", props_isClearCommandLine );
+    regFunction(L, "isShowSystemCommand",  props_isShowSystemCommand );
     lua_setglobal(L, "props");
 }
