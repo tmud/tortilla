@@ -173,7 +173,8 @@ void MudGameView::onLoadProfile()
                 m_manager.loadProfile(current);
         }
         updateProps();
-        loadClientWindowPos();
+        if (!reload_same_profile)
+          loadClientWindowPos();
         loadPlugins();
         m_bar.reset();
     }
