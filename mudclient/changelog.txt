@@ -4,6 +4,7 @@
 Плагин enterb
 isClearCommandLine
 isShowSystemCommand
+Колесо мыши перебирает историю команд.
 
 v1.0 beta6
 Исправлены ошибки:

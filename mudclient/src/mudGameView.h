@@ -602,6 +602,10 @@ private:
         if (PtInRect(&rc, pt))
             ::SendMessage(m_view, WM_MOUSEWHEEL, wparam, lparam);
 
+        m_bar.GetWindowRect(&rc);
+        if (PtInRect(&rc, pt))
+            ::SendMessage(m_bar, WM_MOUSEWHEEL, wparam, lparam);
+
         return 0;
     }
 

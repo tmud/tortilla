@@ -140,6 +140,7 @@ private:
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER, OnPaste)
+        MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
     END_MSG_MAP()
 
     void setText(const tstring& text, int cursor = -1, bool add_undo = true)
@@ -210,6 +211,17 @@ private:
         RECT rc; GetClientRect(&rc);
         rc.right -= 48;
         m_edit.MoveWindow(&rc);
+        return 0;
+    }
+
+    LRESULT OnMouseWheel(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
+    {
+        DWORD position = HIWORD(wparam);
+        int direction = (position & 0x8000) ? 1 : -1;
+        if (direction > 0)
+            onHistoryDown();
+        else
+            onHistoryUp();
         return 0;
     }
 
@@ -384,7 +396,8 @@ private:
 
     void onHistoryDown()
     {
-        assert (m_history_index != -1);        
+        if (m_history_index == -1)
+            return;
         std::vector<tstring> &h = propData->cmd_history;
         initHistory();
         const tstring& hc = m_history_const;
