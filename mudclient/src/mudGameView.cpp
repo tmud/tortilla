@@ -143,24 +143,34 @@ void MudGameView::onLoadProfile()
         if (profile.name.empty())
             return;
 
+        bool reload_same_profile = false;
         Profile current(m_manager.getProfile());
         if (current.group == profile.group && current.name == profile.name)
-            return;
+        {
+            int result = msgBox(m_hWnd, L"Вы действительно хотите перечитать текущий профиль ?", MB_YESNO|MB_ICONQUESTION);
+            if (result != IDYES)
+                return;
+            reload_same_profile = true;
+        }
 
         saveClientWindowPos();
         savePluginWindowPos();
         unloadPlugins();
-        if (!m_manager.saveProfile())
+        if (!reload_same_profile)
         {
-            msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
-            loadClientWindowPos();
-            loadPlugins();
-            return;
+            if (!m_manager.saveProfile())
+            {
+                msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+                loadClientWindowPos();
+                loadPlugins();
+                return;
+            }
         }
         if (!m_manager.loadProfile(profile))
         {
             msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK|MB_ICONSTOP);
-            m_manager.loadProfile(current);
+            if (!reload_same_profile)
+                m_manager.loadProfile(current);
         }
         updateProps();
         loadClientWindowPos();

@@ -5,6 +5,7 @@
 isClearCommandLine
 isShowSystemCommand
 Колесо мыши перебирает историю команд.
+Перечитка текущего профиля.
 
 v1.0 beta6
 Исправлены ошибки:
