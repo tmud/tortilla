@@ -561,7 +561,7 @@ private:
                 bool canscroll = (m_view.getStringsCount() > m_view.getStringsOnDisplay());
                 if (canscroll) {
                     int vs = m_view.getViewString();
-                    showHistory(vs, 1);
+                    showHistory(vs-1, 1);
                 }
             }
             return 0;
