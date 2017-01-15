@@ -1,6 +1,7 @@
 #pragma once
 
 #include "propertiesSaveHelper.h"
+#include "propertiesUpDown.h"
 
 struct PropertyTwoConfig
 {
@@ -165,26 +166,20 @@ private:
 
     LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
     {
-        int index = m_list.getOnlySingleSelection();
-        if (index > 0)
-        {
-            swapItems(index, index-1);
-            m_list.SelectItem(index-1);
-            m_list.SetFocus();
-        }
+        propertiesUpDown::up(m_list, m_list_values);
         return 0;
     }
 
     LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
     {
-        int index = m_list.getOnlySingleSelection();
+        /*int index = m_list.getOnlySingleSelection();
         int last = m_list.GetItemCount() - 1;
         if (index >= 0 && index != last)
         {
-            swapItems(index, index+1);
-            m_list.SelectItem(index+1);
+            swapItems(index, index + 1);
+            m_list.SelectItem(index + 1);
             m_list.SetFocus();
-        }
+        }*/
         return 0;
     }
 
@@ -326,8 +321,8 @@ private:
 
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
-        if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
-            m_list.SelectItem(-1);
+        /*if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
+            m_list.SelectItem(-1);*/
         return 0;
     }
 
@@ -465,13 +460,13 @@ private:
         {
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
-            m_up.EnableWindow(FALSE);
-            m_down.EnableWindow(FALSE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             m_replace.EnableWindow(FALSE);
         }
     }
 
-    void swapItems(int index1, int index2)
+    /*void swapItems(int index1, int index2)
     {
         const property_value& i1 = m_list_values.get(index1);
         const property_value& i2 = m_list_values.get(index2);
@@ -482,7 +477,7 @@ private:
         m_list.setItem(index2, 1, i1.value);
         m_list.setItem(index2, 2, i1.group);
         m_list_values.swap(index1, index2);
-    }
+    }*/
 
     void loadValues()
     {

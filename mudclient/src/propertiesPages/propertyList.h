@@ -87,6 +87,12 @@ public:
         std::sort(selected->rbegin(), selected->rend());
     }
 
+    void getSelectedUpSorted(std::vector<int>* selected) const
+    {
+        getSelected(selected);
+        std::reverse(selected->begin(), selected->end());
+    }
+
     int getOnlySingleSelection() const
     {
         if (GetSelectedCount() != 1)
