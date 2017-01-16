@@ -135,6 +135,11 @@ public:
         }
     }
 
+    int getItemsOnScreen() const
+    {
+        return GetCountPerPage();
+    }
+
 private:
     BEGIN_MSG_MAP(PropertyListCtrl)
        NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)

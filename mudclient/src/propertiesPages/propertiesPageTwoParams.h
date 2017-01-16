@@ -166,20 +166,13 @@ private:
 
     LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
     {
-        propertiesUpDown::up(m_list, m_list_values);
+        propertiesUpDown::up(m_list, m_list_values, false);
         return 0;
     }
 
     LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
     {
-        /*int index = m_list.getOnlySingleSelection();
-        int last = m_list.GetItemCount() - 1;
-        if (index >= 0 && index != last)
-        {
-            swapItems(index, index + 1);
-            m_list.SelectItem(index + 1);
-            m_list.SetFocus();
-        }*/
+        propertiesUpDown::down(m_list, m_list_values, false);
         return 0;
     }
 
@@ -321,8 +314,8 @@ private:
 
     LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
-        /*if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
-            m_list.SelectItem(-1);*/
+        //if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
+        //    m_list.SelectItem(-1);
         return 0;
     }
 
@@ -465,19 +458,6 @@ private:
             m_replace.EnableWindow(FALSE);
         }
     }
-
-    /*void swapItems(int index1, int index2)
-    {
-        const property_value& i1 = m_list_values.get(index1);
-        const property_value& i2 = m_list_values.get(index2);
-        m_list.setItem(index1, 0, i2.key);
-        m_list.setItem(index1, 1, i2.value);
-        m_list.setItem(index1, 2, i2.group);
-        m_list.setItem(index2, 0, i1.key);
-        m_list.setItem(index2, 1, i1.value);
-        m_list.setItem(index2, 2, i1.group);
-        m_list_values.swap(index1, index2);
-    }*/
 
     void loadValues()
     {

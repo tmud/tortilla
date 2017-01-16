@@ -4,6 +4,6 @@
 #include "propertiesData.h"
 
 namespace propertiesUpDown {
-void up(PropertyListCtrl &list, PropertiesValues& values);
-void down(PropertyListCtrl &list, PropertiesValues& values);
+void up(PropertyListCtrl &list, PropertiesValues& values, bool mode);
+void down(PropertyListCtrl &list, PropertiesValues& values, bool mode);
 }

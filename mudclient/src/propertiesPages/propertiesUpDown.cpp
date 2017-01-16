@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "propertiesUpDown.h"
 
-void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values)
+void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values, bool mode)
 {
     std::vector<int> selected;
     list.getSelectedUpSorted(&selected);
@@ -27,8 +27,13 @@ void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values)
     for (int i = begin; i <= end; ++i) {
         const property_value& v = values_list[index++];
         list.setItem(i, 0, v.key);
-        list.setItem(i, 1, v.value);
-        list.setItem(i, 2, v.group);
+        if (!mode) {
+            list.setItem(i, 1, v.value);
+            list.setItem(i, 2, v.group);
+        }
+        else {
+            list.setItem(i, 1, v.group);
+        }
         values.add(i, v.key, v.value, v.group);
     }
     list.SelectItem(-1);
@@ -36,11 +41,12 @@ void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values)
     end = begin + selected_count - 1;
     for (int i = begin; i <= end; ++i)
         list.SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
-    list.setTopItem(begin);
+    if (begin < list.getTopItem())
+        list.setTopItem(begin);
     list.SetFocus();
 }
 
-void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values)
+void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values, bool mode)
 {
     std::vector<int> selected;
     list.getSelectedUpSorted(&selected);
@@ -49,7 +55,7 @@ void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values)
     std::vector<int> not_selected;
     int last_selected = selected.size() - 1;
     int last_item = list.GetItemCount() - 1;
-    
+
     int end = selected[last_selected] + 1;
     if (end > last_item) end = last_item;
     
@@ -59,8 +65,6 @@ void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values)
             not_selected.push_back(i);
     }
     selected.insert(selected.begin(), not_selected.begin(), not_selected.end());
-
-
     std::vector<property_value> values_list;
     for (int i = 0, e = selected.size(); i < e; ++i)
     {
@@ -71,15 +75,25 @@ void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values)
     for (int i = begin; i <= end; ++i) {
         const property_value& v = values_list[index++];
         list.setItem(i, 0, v.key);
-        list.setItem(i, 1, v.value);
-        list.setItem(i, 2, v.group);
+        if (!mode) {
+            list.setItem(i, 1, v.value);
+            list.setItem(i, 2, v.group);
+        } else {
+            list.setItem(i, 1, v.group);
+        }
         values.add(i, v.key, v.value, v.group);
     }
     list.SelectItem(-1);
     int selected_count = selected.size() - not_selected.size();
-    end = begin + selected_count - 1;
+    begin = end - selected_count + 1;
     for (int i = begin; i <= end; ++i)
         list.SetItemState(i, LVIS_SELECTED, LVIS_SELECTED);
-    list.setTopItem(begin);
+    int on_screen = list.getItemsOnScreen() - 1;
+    int visible_last = list.getTopItem() + on_screen;
+    if (end > visible_last)
+    {
+        int top_visible = end - on_screen;
+        list.setTopItem(top_visible);
+    }
     list.SetFocus();
 }
