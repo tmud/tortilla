@@ -694,6 +694,7 @@ Cм. <a href="#props" class="cmd">props.component()</a>, <a href="#setComponent"
 <div class="cmd">bool get(int param, std::wstring* value)</div> - получить параметр текущего элемента. Возможные варианты параметра:
 <div class="m">KEY</div>, <div class="m">VALUE</div>, <div class="m">GROUP</div>.
 <div class="cmd">bool set(int param, const wchar_t* value)</div> - установка нужного параметра у текущего элемента.
+<div class="cmd">bool isGroupActive()</div> - возвращает активна ли группа, в которой находится текущий элемент.
 <div class="cmd">bool update()</div> - применить все изменения. Только после вызова этого оператора все изменения вступят в силу.
 </pre>
 <hr>
@@ -1363,6 +1364,7 @@ render:rect(r2)
 <div class="cmd">bool delete()</div> - удаляет текущий элемент. Удаления по ключу нет, т.к. может быть несколько одинаковых 
 элементов, но в разных группах.
 <div class="cmd">int  getIndex()</div> - возвращает индекс-приоритет текущего элемента.
+<div class="cmd">bool isGroupActive()</div> - возвращает активна ли группа, в которой находится текущий элемент.
 <div class="cmd">bool setIndex(int index)</div> - установка текущего приоритета у текущего элемента.
 </pre>
 Пример (добавить макрос есть), функция должна вызываться через двоеточие:

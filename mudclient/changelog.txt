@@ -6,6 +6,7 @@ isClearCommandLine
 isShowSystemCommand
 Колесо мыши перебирает историю команд.
 Перечитка текущего профиля.
+ao:isGroupActive
 
 v1.0 beta6
 Исправлены ошибки:

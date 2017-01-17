@@ -24,15 +24,21 @@ function autoalias.barcmd(t)
   local c = t[1]
   for i=1,aliases:size() do
     aliases:select(i)
+    -- print(aliases:get('key').."="..tostring(aliases:isGroupActive()) )
     local group = aliases:get('group')
     if groups:select(group) then
       local v = groups:get('value')
       if v == '1' then
-        
+        local alias = aliases:get('key')
+        local pos = c:find(alias)
+        if pos then
+          local len1 = pos+alias:len()
+          local len2 = c:len()
+          print('len1='..len1..',len2='..len2)
+        end
       end
     end
   end
-  
 end
 
 return autoalias

@@ -2086,6 +2086,18 @@ int ao_setIndex(lua_State *L)
     return ao_inv_args(L, L"activeobjects:setIndex");
 }
 
+int ao_isGroupActive(lua_State *L)
+{
+    if (luaT_check(L, 1, LUAT_ACTIVEOBJS))
+    {
+        ActiveObjects *ao = (ActiveObjects *)luaT_toobject(L, 1);
+        bool result = ao->isGroupActive();
+        lua_pushboolean(L, result ? 1 : 0);
+        return 1;
+    }
+    return ao_inv_args(L, L"activeobjects:isGroupActive");
+}
+
 int ao_update(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_ACTIVEOBJS))
@@ -2121,6 +2133,7 @@ void reg_mt_activeobject(lua_State *L)
     regFunction(L, "getindex", ao_getIndex);
     regFunction(L, "setindex", ao_setIndex);
     regFunction(L, "update", ao_update);
+    regFunction(L, "isGroupActive", ao_isGroupActive);
     regFunction(L, "__gc", ao_gc);
     regIndexMt(L);
     lua_pop(L, 1);

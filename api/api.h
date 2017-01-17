@@ -948,6 +948,12 @@ public:
         luaT_run(L, "update", "o");
         return true;
     }
+    bool isGroupActive()
+    {
+        if (!getao()) return false;
+        luaT_run(L, "isGroupActive", "o");
+        return boolresult();
+    }
 private:
     bool getao()
     {

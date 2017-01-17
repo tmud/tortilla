@@ -32,6 +32,7 @@ public:
     virtual void formatdel(tstring *fmt) = 0;
     virtual int find(const tchar* key) = 0;
     virtual int findnext(const tchar* key) = 0;
+    virtual bool isGroupActive() = 0;
 };
 
 class ActiveObjectsEx : public ActiveObjects
@@ -146,6 +147,20 @@ public:
         if (selected == -1)
             return find(key, 0);
         return find(key, selected+1);
+    }
+    virtual bool isGroupActive()
+    {
+        if (selected == -1)
+            return false;
+        const property_value &v = actobj->get(selected);
+        const tstring& group = v.group;
+        int index = pdata->groups.find(group);
+        if (index == -1) {
+           assert(false);
+           return false;
+        }
+        const property_value &g = pdata->groups.get(index);
+        return (g.value == L"1");
     }
 protected:
     int find(const tchar* key, int from)
@@ -700,6 +715,12 @@ public:
         ss << L"-group {" << v.key << L"}";
         fmt->assign(ss.str());
     }
+    bool isGroupActive()
+    {
+        if (selected == -1) return false;
+        const property_value& v = pdata->groups.get(selected);
+        return (v.value == L"1");
+    }
 private:
     bool add(const tchar* key, const tchar* value, const tchar* group, bool replace_mode)
     {
@@ -741,6 +762,10 @@ public:
         if (selected == -1)
             return find(key, 0);
         return find(key, selected + 1);
+    }
+    bool isGroupActive() 
+    {
+        return true;    
     }
 protected:
     int find(const tchar* key, int from)
