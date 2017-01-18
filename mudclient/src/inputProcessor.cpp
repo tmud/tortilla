@@ -77,7 +77,9 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
     int values_count = values.getSize();
     for (int i = 0; i < values_count; ++i)
     {
-        result.append(cmd->substr(pos, values.getFirst(i) - pos));
+        bool last_number = false;
+
+        result.append(cmd->substr(pos, values.getFirst(i) - pos));        
         int id = values.getId(i);
         if (id < params_count && id >= 0)
         {
@@ -85,7 +87,40 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
             values.cutParameter(i, &param);
             result.append(param);
         }
+        if (id == -1)
+        {
+            int cmdlen = cmd->length();
+            int last = values.getLast(i);
+            if (last != cmdlen)
+            {
+                tchar s = cmd->at(last);
+                if (s >= '0' && s <= '9')
+                    last_number = true;
+            }
+            if (last_number)
+            {
+                tstring p(cmd->substr(last-1, 2));
+                result.append(p);
+            }
+            else
+            {
+                if (i == values_count-1)  // last parameter
+                {
+                    int from = values.getFirst(i);
+                    tstring p(cmd->substr(from));
+                    result.append(p);
+                }
+                else
+                {
+                    int from = values.getFirst(i);
+                    int len = values.getLast(i) - from;
+                    tstring p(cmd->substr(from, len));
+                    result.append(p);
+                }
+            }
+        }
         pos = values.getLast(i);
+        if (last_number) pos++;
     }
     result.append(cmd->substr(pos));
     cmd->swap(result);
