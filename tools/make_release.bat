@@ -95,6 +95,7 @@ xcopy ..\plugins\trswitch.bmp plugins /Y
 xcopy ..\plugins\write.lua plugins /Y
 xcopy ..\plugins\enterb.lua plugins /Y
 xcopy ..\plugins\enterb.bmp plugins /Y
+xcopy ..\plugins\autoalias.lua plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 
