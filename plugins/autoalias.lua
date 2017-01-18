@@ -31,10 +31,15 @@ function autoalias.barcmd(t)
       if v == '1' then
         local alias = aliases:get('key')
         local pos = c:find(alias)
+        --print(alias.."="..tostring(pos)..","..c)
         if pos then
           local len1 = pos+alias:len()
-          local len2 = c:len()
+          local len2 = c:len()+1
           print('len1='..len1..',len2='..len2)
+          if len1 == len2 or c:substr(len1, 1) == ' ' then 
+            local newcmd = alias.." "..c:substr(len1, len2-1)
+            print ("n: "..newcmd)
+          end
         end
       end
     end
