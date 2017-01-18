@@ -289,6 +289,9 @@
     <ClInclude Include="src\propertiesPages\propertiesPageVars.h">
       <Filter>Source Files\PropertiesPages</Filter>
     </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesUpDown.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -434,6 +437,9 @@
     </ClCompile>
     <ClCompile Include="src\logsFormatter.cpp">
       <Filter>Source Files\Logs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\propertiesPages\propertiesUpDown.cpp">
+      <Filter>Source Files\PropertiesPages</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

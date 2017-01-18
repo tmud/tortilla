@@ -205,6 +205,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\propertiesPages\propertiesPageTwoParams.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageVars.h" />
     <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h" />
+    <ClInclude Include="src\propertiesPages\propertiesUpDown.h" />
     <ClInclude Include="src\propertiesPages\propertyList.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\network\network.h" />
@@ -266,6 +267,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesManager.cpp" />
     <ClCompile Include="src\mudclient.cpp" />
+    <ClCompile Include="src\propertiesPages\propertiesUpDown.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
