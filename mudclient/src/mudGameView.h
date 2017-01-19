@@ -1136,15 +1136,17 @@ private:
                     f = new LogsFormatterHtml(pdata);
                 f->normFilename(filename);
             }
+            bool result = false;
             if (f->open(filename, LogsFormatter::PM_NEW) && f->prepare())
             {
                 for (int i=0,e=v->getStringsCount();i<e;++i) {
                     f->writeString(v->getString(i));
                 }
                 f->close();
+                result = true;
             }
             delete f;
-            return true;
+            return result;
         }
         return false;
     }
