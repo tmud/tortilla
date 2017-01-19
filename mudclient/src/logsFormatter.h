@@ -11,6 +11,7 @@ public:
     virtual ~LogsFormatter();
     const tstring& getFilename() const { return m_filename; }
     virtual void normFilename(tstring &name) {}
+    virtual void checkExist(tstring& filename);
     virtual bool open(const tstring& filename, PrepareMode pmode);
     virtual bool prepare() { return true; };
     virtual void close();

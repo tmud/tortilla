@@ -1137,6 +1137,7 @@ private:
                 f->normFilename(filename);
             }
             bool result = false;
+            f->checkExist(filename);
             if (f->open(filename, LogsFormatter::PM_NEW) && f->prepare())
             {
                 for (int i=0,e=v->getStringsCount();i<e;++i) {

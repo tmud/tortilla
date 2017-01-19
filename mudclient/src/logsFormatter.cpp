@@ -15,6 +15,34 @@ LogsFormatter::~LogsFormatter()
         CloseHandle(hfile);
 }
 
+void LogsFormatter::checkExist(tstring& filename)
+{
+    tstring name(filename);
+    tstring ext;
+    int pos = name.rfind(L'.');
+    if (pos != -1)
+    {
+        ext.assign(name.substr(pos));
+        name = name.substr(0, pos);
+    }
+
+    tchar buffer[16];
+    for(int i=0;;++i)
+    {
+        tstring tmp(name);
+        if (i != 0) {
+            swprintf(buffer, L"(%d)", i);
+            tmp.append(buffer);
+        }
+        tmp.append(ext);
+        if (GetFileAttributes(tmp.c_str()) == INVALID_FILE_ATTRIBUTES)
+        {
+            filename.swap(tmp);
+            break;
+        }
+    }
+}
+
 bool LogsFormatter::open(const tstring& filename, PrepareMode pmode)
 {
     if (hfile != INVALID_HANDLE_VALUE)

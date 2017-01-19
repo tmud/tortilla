@@ -1491,8 +1491,10 @@ IMPL(savelog)
             }
             else
             {
-                tstring error(L"Лог сохранен.");
-                tmcLog(error);
+                tstring msg(L"Лог ");
+                msg.append(filename);
+                msg.append(L" сохранен.");
+                tmcLog(msg);
             }
             return;
         }
