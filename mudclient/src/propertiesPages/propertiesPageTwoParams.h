@@ -76,6 +76,7 @@ private:
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        MESSAGE_HANDLER(WM_USER, OnSetFocus)
+       MESSAGE_HANDLER(WM_USER+1, OnKeyDown)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
@@ -91,6 +92,25 @@ private:
        NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
+
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam == VK_DELETE)
+        {
+            if (m_del.IsWindowEnabled()) {
+                BOOL b = FALSE;
+                OnDeleteElement(0, 0, 0, b);
+            }
+            return 1;
+        }
+        if (wparam == VK_INSERT)
+        {
+            BOOL b = FALSE;
+            OnResetData(0, 0, 0, b);
+            return 1;
+        }
+        return 0;
+    }
 
     LRESULT OnAddElement(WORD, WORD, HWND, BOOL&)
     {
@@ -366,6 +386,7 @@ private:
         m_list.addColumn(m_config.list2, 40);
         m_list.addColumn(L"Группа", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
+        m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         if (!m_config.use_priority)
