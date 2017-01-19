@@ -205,7 +205,12 @@ public:
         if (!m_pCmd->srcparameters.empty())
             params->push_back(m_pCmd->srcparameters.substr(1));
         const std::vector<tstring>&p = m_pCmd->parameters_list;
-        params->insert(params->end(), p.begin(), p.end());
+        std::vector<tstring>::const_iterator it = p.begin(), it_end = p.end();
+        for(; it!=it_end;++it) {
+            tstring p(*it);
+            tstring_trimleft(&p);
+            params->push_back(p);
+        }
     }
     void doNoValues(tstring* cmd) const 
     {
