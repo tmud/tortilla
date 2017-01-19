@@ -35,6 +35,9 @@
     <ClInclude Include="sharingController.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -55,7 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="tray.rc">
-      <Filter>Source Files</Filter>
+      <Filter>Main Files</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>

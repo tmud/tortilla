@@ -48,7 +48,7 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
         stopTimer();
  }
 
- void TrayMainObject::addMessage(const message& m)
+ void TrayMainObject::addMessage(const Msg& m)
  {
      m_queue.push_back(m);
      tryShowQueue();
@@ -58,13 +58,13 @@ void TrayMainObject::tryShowQueue()
 {
     while (!isHeightLimited() && !m_queue.empty())
     {
-        message msg(*m_queue.begin());
+        Msg msg(*m_queue.begin());
         if (showMessage(msg))
             m_queue.pop_front();
     }
 }
 
-bool TrayMainObject::showMessage(const message& msg)
+bool TrayMainObject::showMessage(const Msg& msg)
 {
 #ifndef _DEBUG
     if (m_activated && !m_settings.showactive)
@@ -76,7 +76,7 @@ bool TrayMainObject::showMessage(const message& msg)
     w->setText(msg.text);
    
     SIZE sz = w->getSize();
-    SharingWindow sw; 
+    SharingWindow sw;
     sw.w = sz.cx; sw.h = sz.cy;
 
     if (!m_shared.tryAddWindow(&sw, m_workingarea, 4))
@@ -157,7 +157,7 @@ void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
 
 void TrayMainObject::tryRunMoveAnimation()
 {
-    for (int i=0,e=m_windows.size(); i<e; ++i)
+   /* for (int i=0,e=m_windows.size(); i<e; ++i)
     {
         int at = m_windows[i]->getAnimationState();
         if (at == PopupWindow::ANIMATION_TOSTART || at == PopupWindow::ANIMATION_TOEND)
@@ -187,7 +187,7 @@ void TrayMainObject::tryRunMoveAnimation()
              ma.speed = 0.002f;
              w->startMoveAnimation(ma);
          }
-    }
+    }*/
 }
 
 PopupWindow* TrayMainObject::getFreeWindow()
@@ -241,12 +241,13 @@ POINT TrayMainObject::GetTaskbarRB()
 
 bool TrayMainObject::isHeightLimited() const
 {
-    if (m_windows.empty())
+/*    if (m_windows.empty())
         return false;
     int last = m_windows.size() - 1;
     const POINT &p = m_windows[last]->getAnimation().pos;
-    return(p.y < getHeightLimit()) ? true : false;*/
-
+    return(p.y < getHeightLimit()) ? true : false;
+    */
+    return 0;
 }
 
 /*int TrayMainObject::getHeightLimit() const

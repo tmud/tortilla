@@ -3,9 +3,9 @@
 
 void PopupWindow::onTick()
 {
-    DWORD dt = m_ticker.getDiff();
+    /*DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
-    if (m_animation_state == ANIMATION_MOVE)
+    if (m_animation.state == Animation::ANIMATION_MOVE)
     {
         const SharingWindow &curpos = m_animation.pos;
         const POINT& target = m_move_animation.pos;
@@ -78,27 +78,27 @@ void PopupWindow::onTick()
         setAlpha(alpha);
         if (alpha == 0.0f)
             setState(ANIMATION_NONE);
-    }
+    }*/
 }
 
 void PopupWindow::startAnimation(const Animation& a)
 {
     m_animation = a;
-    setState(ANIMATION_TOEND);
+    //setState(ANIMATION_);
 }
 
-void PopupWindow::startMoveAnimation(const MoveAnimation& a)
+/*void PopupWindow::startMoveAnimation(const MoveAnimation& a)
 {
     const SharingWindow &p = m_animation.pos;
     m_move_dx = static_cast<float>(a.pos.x - p.x);
     m_move_dy = static_cast<float>(a.pos.y - p.y);
     m_move_animation = a;
     setState(ANIMATION_MOVE);
-}
+}*/
 
 void PopupWindow::setState(int newstate)
 {
-    const Animation &a = m_animation;
+   /* const Animation &a = m_animation;
     m_animation_state = newstate;
 
     switch(m_animation_state)
@@ -131,7 +131,7 @@ void PopupWindow::setState(int newstate)
         sendNotify(ANIMATION_FINISHED);
     break;
     }
-    m_ticker.sync();
+    m_ticker.sync();*/
 }
 
 void PopupWindow::calcDCSize()
@@ -207,8 +207,8 @@ void PopupWindow::setAlpha(float a)
 
 void PopupWindow::onClickButton()
 {
-    setState(ANIMATION_TOSTART);
-    sendNotify(CLICK_EVENT);
+    //setState(ANIMATION_TOSTART);
+    //sendNotify(CLICK_EVENT);
 }
 
 void PopupWindow::sendNotify(int state)

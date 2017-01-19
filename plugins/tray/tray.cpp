@@ -170,16 +170,19 @@ int syscmd(lua_State *L)
             lua_pop(L, 1);
             if (!text.empty())
             {
-                message m;
-                COLORREF text_color = g_tray.traySettings().text;
-                COLORREF bgnd_color = g_tray.traySettings().background;
+                Msg m;
+                COLORREF text_color = 0; COLORREF bgnd_color = 0;
                 if (base::translateColors(L, text[0].c_str(), &text_color, &bgnd_color))
                 {
-                    text.pop_front();
-                    m.usecolors = true;
                     m.textcolor = text_color;
                     m.bkgndcolor = bgnd_color;
                 }
+                else
+                {
+                    m.textcolor =  g_tray.traySettings().text;
+                    m.bkgndcolor = g_tray.traySettings().background;
+                }
+                text.pop_front();
                 for (int i=0,e=text.size();i<e;++i) {
                    if (i!=0) m.text.append(L" ");
                    m.text.append(text[i]);

@@ -4,12 +4,11 @@
 #include "traySettings.h"
 #include "sharingController.h"
 
-struct message {
-    message() : textcolor(0), bkgndcolor(0), usecolors(false) {}
+struct Msg {
+    Msg() : textcolor(0), bkgndcolor(0) {}
     std::wstring text;
     COLORREF textcolor;
     COLORREF bkgndcolor;
-    bool usecolors;
 };
 
 class TrayMainObject : public CWindowImpl < TrayMainObject >
@@ -23,7 +22,7 @@ public:
     void setAlarmWnd(HWND wnd);
     void setActivated(bool activated);
     TraySettings& traySettings();
-    void addMessage(const message& m);
+    void addMessage(const Msg& m);
 private:
     BEGIN_MSG_MAP(TimeoutWindow)
        MESSAGE_HANDLER(WM_TIMER, OnTimer)
@@ -48,7 +47,7 @@ private:
     }
     LRESULT OnPopupEvent(UINT, WPARAM wparam, LPARAM lparam, BOOL&) 
     {
-        PopupWindow *w = (PopupWindow*)wparam;
+        /*PopupWindow *w = (PopupWindow*)wparam;
         if (lparam == PopupWindow::ANIMATION_FINISHED)
             onFinishedAnimation(w);
         if (lparam == PopupWindow::MOVEANIMATION_FINISHED)
@@ -59,10 +58,10 @@ private:
         {
             if (::IsWindow(m_alarmWnd))
                 ::SetFocus(m_alarmWnd);
-        }
+        }*/
         return 0; 
     }
-    bool showMessage(const message& msg);
+    bool showMessage(const Msg& msg);
     void startTimer();
     void stopTimer();
     void onTimer();
@@ -89,6 +88,6 @@ private:
     HWND m_alarmWnd;
     RECT m_workingarea;
 private:
-    std::deque<message> m_queue;
+    std::deque<Msg> m_queue;
     SharingController m_shared;
 };

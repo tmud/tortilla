@@ -4,10 +4,6 @@
 #include "../common/tempThread.h"
 #include "sharingData.h"
 
-struct SharingHeader {
-  int messages;
-};
-
 class SharingController
 {
 public:

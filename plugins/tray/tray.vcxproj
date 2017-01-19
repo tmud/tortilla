@@ -88,6 +88,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="common.h" />
     <ClInclude Include="popupWindow.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sharingController.h" />

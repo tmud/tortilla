@@ -63,7 +63,7 @@ bool SharingController::tryAddWindow(SharingWindow* sw, const RECT& working_area
 bool SharingController::tryMoveWindow(SharingWindow* sw)
 {
 
-
+    return true;
 
 }
 
