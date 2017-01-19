@@ -74,18 +74,22 @@ public:
        if (!m_initialized)
            return;
        stopMusic();
-       lua_newtable(L);
-       lua_pushstring(L, "sensitivity");
-       lua_pushinteger(L, m_recording_params.sensitivity);
-       lua_settable(L, -3);
-       lua_pushstring(L, "destination");
-       lua_pushinteger(L, m_recording_params.destfolder);
-       lua_settable(L, -3);
        pushPlayer();
        if (luaT_run(L, "getVolume", "t") && lua_isnumber(L, -1))
        {
+           int volume = lua_tointeger(L, -1);
+           lua_pop(L, 1);
+
+           lua_newtable(L);
+           lua_pushstring(L, "sensitivity");
+           lua_pushinteger(L, m_recording_params.sensitivity);
+           lua_settable(L, -3);
+           lua_pushstring(L, "destination");
+           lua_pushinteger(L, m_recording_params.destfolder);
+           lua_settable(L, -3);
+
            lua_pushstring(L, "volume");
-           lua_insert(L, -2);
+           lua_pushinteger(L, volume);
            lua_settable(L, -3);
        }
        base::saveTable(L, L"config.xml");
