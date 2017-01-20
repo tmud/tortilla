@@ -1,7 +1,74 @@
 #include "stdafx.h"
 #include "popupWindow.h"
 
-void PopupWindow::onTick()
+
+
+void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeout)
+{
+    const std::wstring& text = msg.text;
+    if (m_original_text == text)
+        return;
+    m_original_text = text;
+
+    Animation &a = m_animation;
+    a.speed = 0.5f;
+    a.wait_sec = timeout;
+    a.bkgnd_color = msg.bkgndcolor;
+    a.text_color = msg.textcolor;
+    a.notify = notify;
+
+    m_text.resize(1);
+    m_text[0].assign(text);
+    calcDCSize();
+    int dx = m_dc_size.cx;
+    int wx = GetSystemMetrics(SM_CXSCREEN);
+    int p = (dx * 100) / wx;
+    if (p > 40)
+    {
+        int count = (p / 40) + 1;
+        size_t perline = text.size() / count;
+        m_text.resize(count);
+
+        std::vector<std::wstring> parts;
+        const wchar_t *p = text.c_str();
+        const wchar_t *e = p + wcslen(p);
+        while (p < e)
+        {
+            size_t len = wcscspn(p, L" ");
+            parts.push_back(std::wstring(p, len));
+            p = p + len;
+            len = wcsspn(p, L" ");
+            p = p + len;
+            for (; len > 0; --len)
+                parts.push_back(L" ");
+        }
+
+        int k = 0;
+        for (int i = 0; i < count - 1; ++i)
+        {
+            std::wstring str;
+            while (str.length() < perline)
+            {
+                str.append(parts[k++]);
+            }
+            trimleft(&str);
+            m_text[i] = str;
+        }
+        std::wstring str;
+        for (size_t i = k; i < parts.size(); ++i)
+            str.append(parts[i]);
+        trimleft(&str);
+        if (str.empty())
+            m_text.pop_back();
+        else {
+            int last = count - 1;
+            m_text[last] = str;
+        }
+        calcDCSize();
+    }
+}
+
+void PopupWindow::tick()
 {
     /*DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
@@ -81,13 +148,13 @@ void PopupWindow::onTick()
     }*/
 }
 
-void PopupWindow::startAnimation(const Animation& a)
+/*void PopupWindow::startAnimation(const Animation& a)
 {
     m_animation = a;
     //setState(ANIMATION_);
 }
 
-/*void PopupWindow::startMoveAnimation(const MoveAnimation& a)
+void PopupWindow::startMoveAnimation(const MoveAnimation& a)
 {
     const SharingWindow &p = m_animation.pos;
     m_move_dx = static_cast<float>(a.pos.x - p.x);
@@ -213,6 +280,14 @@ void PopupWindow::onClickButton()
 
 void PopupWindow::sendNotify(int state)
 {
-     if (m_animation.notify_wnd)
-            ::PostMessage(m_animation.notify_wnd, m_animation.notify_msg, m_animation.notify_param, state);
+    const NotifyParams &np = m_animation.notify;
+     if (np.wnd)
+       ::PostMessage(np.wnd, np.msg, np.wparam, state);
+}
+
+void PopupWindow::trimleft(std::wstring* s)
+{
+    size_t pos = wcsspn(s->c_str(), L" ");
+    if (pos != 0)
+        s->assign(s->substr(pos));
 }

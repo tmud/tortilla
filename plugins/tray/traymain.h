@@ -1,15 +1,7 @@
 #pragma once
-
 #include "popupWindow.h"
 #include "traySettings.h"
 #include "sharingController.h"
-
-struct Msg {
-    Msg() : textcolor(0), bkgndcolor(0) {}
-    std::wstring text;
-    COLORREF textcolor;
-    COLORREF bkgndcolor;
-};
 
 class TrayMainObject : public CWindowImpl < TrayMainObject >
 {

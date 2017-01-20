@@ -73,7 +73,14 @@ bool TrayMainObject::showMessage(const Msg& msg)
     PopupWindow *w = getFreeWindow();
     if (!w)
         return false;
-    w->setText(msg.text);
+
+    NotifyParams np; 
+    np.wnd = m_hWnd;
+    np.msg = WM_USER;
+    np.wparam = (WPARAM)w;
+
+    const TraySettings &s = m_settings;
+    w->setText(msg, np, s.timeout);
    
     SIZE sz = w->getSize();
     SharingWindow sw;
@@ -291,5 +298,5 @@ void TrayMainObject::onTimer()
 void TrayMainObject::onTickPopups()
 {
     for (int i=0,e=m_windows.size();i<e;++i)
-        m_windows[i]->onTick();
+        m_windows[i]->tick();
 }

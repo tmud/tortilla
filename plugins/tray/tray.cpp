@@ -176,15 +176,15 @@ int syscmd(lua_State *L)
                 {
                     m.textcolor = text_color;
                     m.bkgndcolor = bgnd_color;
+                    text.pop_front();
                 }
                 else
                 {
                     m.textcolor =  g_tray.traySettings().text;
                     m.bkgndcolor = g_tray.traySettings().background;
-                }
-                text.pop_front();
+                }                
                 for (int i=0,e=text.size();i<e;++i) {
-                   if (i!=0) m.text.append(L" ");
+                   if (i != 0) m.text.append(L" ");
                    m.text.append(text[i]);
                 }
                 g_tray.addMessage(m);
