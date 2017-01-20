@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "popupWindow.h"
 
-
-
 void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeout)
 {
     const std::wstring& text = msg.text;
@@ -19,8 +17,8 @@ void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeou
 
     m_text.resize(1);
     m_text[0].assign(text);
-    calcDCSize();
-    int dx = m_dc_size.cx;
+    SIZE dc_size = calcDCSize();
+    int dx = dc_size.cx;
     int wx = GetSystemMetrics(SM_CXSCREEN);
     int p = (dx * 100) / wx;
     if (p > 40)
@@ -64,8 +62,10 @@ void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeou
             int last = count - 1;
             m_text[last] = str;
         }
-        calcDCSize();
+        dc_size = calcDCSize();
     }
+    a.pos.w = dc_size.cx;
+    a.pos.h = dc_size.cy;
 }
 
 void PopupWindow::tick()
@@ -201,29 +201,30 @@ void PopupWindow::setState(int newstate)
     m_ticker.sync();*/
 }
 
-void PopupWindow::calcDCSize()
+SIZE PopupWindow::calcDCSize()
 {
     assert(m_font);
     CDC dc(GetDC());
     HFONT oldfont = dc.SelectFont(*m_font);
-    CSize size(0, 0);
-    m_dc_size = size;
+    SIZE size = { 0, 0 };
+    SIZE dc_size = size;
     for (int i = 0, e=m_text.size(); i<e; ++i)
     {
         const std::wstring& t = m_text[i];
         if (t.empty()) continue;
         GetTextExtentPoint32(dc, t.c_str(), t.length(), &size);
-        if (size.cx > m_dc_size.cx)
-            m_dc_size.cx = size.cx;
+        if (size.cx > dc_size.cx)
+            dc_size.cx = size.cx;
     }
-    m_dc_size.cy = m_text.size() * size.cy;
+    dc_size.cy = m_text.size() * size.cy;
     dc.SelectFont(oldfont);
+    return dc_size;
 }
 
 void PopupWindow::fillSrcDC()
 {
     assert(m_font);
-    SIZE sz = getSize();
+    SIZE sz = { m_animation.pos.w, m_animation.pos.h };
     CDC m_wnd_dc(GetDC());
     m_src_dc.create(m_wnd_dc, sz);
     CDCHandle pdc(m_src_dc);
@@ -243,11 +244,12 @@ void PopupWindow::fillSrcDC()
     pdc.SelectPen(old);
 
     int count = m_text.size();
+    int dc_size_y = m_animation.pos.h;
     if (count > 0)
     {
         rc.left = 4; rc.right-=4;
-        int dy = (m_dc_size.cy / count);
-        rc.top = (sz.cy - m_dc_size.cy) / 2;
+        int dy = (dc_size_y / count);
+        rc.top = (sz.cy - dc_size_y) / 2;
         rc.bottom = rc.top + dy;
         for (int i=0;i<count;++i)
         {

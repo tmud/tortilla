@@ -82,55 +82,20 @@ bool TrayMainObject::showMessage(const Msg& msg)
     const TraySettings &s = m_settings;
     w->setText(msg, np, s.timeout);
    
-    SIZE sz = w->getSize();
-    SharingWindow sw;
-    sw.w = sz.cx; sw.h = sz.cy;
-
-    if (!m_shared.tryAddWindow(&sw, m_workingarea, 4))
+    SharingWindow *sw = w->getPosition();
+    if (!m_shared.tryAddWindow(sw, m_workingarea, 4))
     {
         freeWindow(w);
         return false;
     }
 
-    /*POINT rb = { -1, -1 };
-    Animation a; 
-    if (m_windows.empty())
-    {
-        rb = GetTaskbarRB();
-        m_point0 = rb;
-    }
-    else
-    {
-        int last = m_windows.size() - 1;
-        RECT pos;
-        m_windows[last]->GetWindowRect(&pos);
-        rb.x = GetSystemMetrics(SM_CXSCREEN);
-        rb.y = pos.top;
-    }*/
-
-   
-    /*rb.x -= 2;
-    rb.y -= (sz.cy+4);
-    rb.x -= sz.cx;*/
+    w->ShowWindow(SW_SHOWNOACTIVATE);
+    w->MoveWindow(sw->x, sw->y, sw->w, sw->h);
     
-    const TraySettings &s = m_settings;  
-    Animation a;
-    a.pos = sw;
-    a.speed = 0.5f;
-    a.wait_sec = s.timeout;
-    a.bkgnd_color = s.background;
-    a.text_color = s.text;
-    if (msg.usecolors) {
-        a.bkgnd_color = msg.bkgndcolor;
-        a.text_color = msg.textcolor;
-    }
-    a.notify_wnd = m_hWnd;
-    a.notify_msg = WM_USER;
-    a.notify_param = (WPARAM)w;
-    m_windows.push_back(w);
-    w->startAnimation(a);
-    if (!m_activated)
-      startTimer();
+
+    //if (!m_activated)
+    //  startTimer();
+
     return true;
 }
 

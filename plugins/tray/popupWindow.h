@@ -38,16 +38,13 @@ class PopupWindow : public CWindowImpl<PopupWindow>
     std::wstring m_original_text;
     std::vector<std::wstring> m_text;
     CFont *m_font;
-    CSize m_dc_size;
+    //CSize m_dc_size;
     TempDC m_src_dc;
     Animation m_animation;
     int wait_timer;
     float alpha, m_move_dx, m_move_dy;    
 public:
     DECLARE_WND_CLASS(NULL)
-    //enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
-    //enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED, STARTANIMATION_FINISHED, CLICK_EVENT };
-
     PopupWindow() : m_font(NULL),
         wait_timer(0), alpha(0), m_move_dx(0), m_move_dy(0)
     {
@@ -61,21 +58,14 @@ public:
         m_font = font;
         Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE);
         return (IsWindow()) ? true : false;
-    }
+    }    
 
-    void setText(const Msg& msg, const NotifyParams& notify, int timeout);
-
-    const SharingWindow& getPosition() { 
-        return m_animation.pos;
-    }
-
-    /*const SIZE& getSize() const
+    SharingWindow* getPosition() 
     {
-        CSize sz(m_dc_size);
-        sz += CSize(16,12);
-        return sz;
-    }*/
+        return &m_animation.pos;
+    }
 
+    /*
 
 
     /*bool isAnimated() const {  return (m_animation_state==ANIMATION_NONE) ? false : true; }
@@ -84,16 +74,18 @@ public:
     const MoveAnimation& getMoveAnimation() const { return m_move_animation; }*/
     //void startAnimation(const Animation& a);
     //void startMoveAnimation(const MoveAnimation& a);
-    void onTick();
+    void setText(const Msg& msg, const NotifyParams& notify, int timeout);
+    void tick();
 private:
     void onTimer();
     void fillSrcDC();
     void setState(int newstate);
-    void calcDCSize();
+    SIZE calcDCSize();
     void setAlpha(float a);
     void onClickButton();
     void sendNotify(int state);
     void trimleft(std::wstring* s);
+    SIZE getSize() const;
 private:
     BEGIN_MSG_MAP(PopupWindow)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnClick)

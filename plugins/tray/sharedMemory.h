@@ -85,8 +85,8 @@ public:
          if (first_open)
          {
              char *data = (char*)(m_pbuf);
-             *m_maxsize = size;
              memset(data, 0, size);
+             *m_maxsize = size;             
              if (handler)
              {
                  SharedMemoryData smd;
@@ -159,7 +159,7 @@ public:
     operator bool() const { return locked; }
     SharedMemoryLocker(SharedMemory* sm, DWORD wait_mseconds = 0) : m_sm(sm) 
     {
-        locked = m_sm->lock(&m_data, wait_mseconds);    
+        locked = m_sm->lock(&m_data, wait_mseconds);
     }
     ~SharedMemoryLocker() 
     {
