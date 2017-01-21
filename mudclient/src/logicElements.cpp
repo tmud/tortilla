@@ -203,7 +203,7 @@ public:
     void getParameters(std::vector<tstring>* params) const
     {
         if (!m_pCmd->srcparameters.empty())
-            params->push_back(m_pCmd->srcparameters.substr(1));
+            params->push_back(m_pCmd->parameters.substr(1));
         const std::vector<tstring>&p = m_pCmd->parameters_list;
         std::vector<tstring>::const_iterator it = p.begin(), it_end = p.end();
         for(; it!=it_end;++it) {
@@ -215,7 +215,7 @@ public:
     void doNoValues(tstring* cmd) const 
     {
         if (m_process_not_values)
-            cmd->append(m_pCmd->srcparameters);
+            cmd->append(m_pCmd->parameters);
     }
 };
 

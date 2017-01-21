@@ -148,7 +148,7 @@ void InputCommandTemplateUnitTests::run()
     assert(test2(L"тест2 aaa  bbb  ccc  ", 4, &g3));
 
     InputCommands t1;
-    t1.push_back( makecmd(true, L"# ", L"wout 1 test test2", L"", 4, L"wout", L"1", L"test", L"test2") );
+    t1.push_back( makecmd(true, L"# wout", L" 1 test test2", L" wout", 3, L"1", L"test", L"test2") );
     assert( test2(L"# wout 1 test test2", 0, &t1) );
 
     InputCommands t2;

@@ -215,8 +215,8 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
                  cmd->srccmd.append(s); 
              }
              else {
-                 cmd->srccmd.append(s.substr(0, from));
-                 cmd->srcparameters.append(s.substr(from)); 
+                 cmd->srccmd.append(s.substr(0, pos));
+                 cmd->srcparameters.append(s.substr(pos)); 
              }
         }
         else {
@@ -238,17 +238,26 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
         else if (pos == 0)
         {
             size_t from = wcsspn(t.c_str(), L" ");
-            if (cmd->system)
-                cmd->parameters.append(t.substr(from));
-            else {
             pos = t.find(L" ", from);
-            from = 0; //не обрезаем ведущие пробелы для игровых команд
+            //if (cmd->system)
+            //    cmd->parameters.append(t.substr(from));
+            //else {
+            //pos = t.find(L" ", from);
+            /*from = 0; //не обрезаем ведущие пробелы для игровых команд
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
                  cmd->command.append(t.substr(from, pos-from));
                  cmd->parameters.append(t.substr(pos));
-            }}
+            }}*/
+
+            if (pos == -1) {
+                cmd->command.append(t);
+            }
+            else {
+                cmd->command.append(t.substr(0, pos));
+                cmd->parameters.append(t.substr(pos));
+            }
         }
         else
         {
