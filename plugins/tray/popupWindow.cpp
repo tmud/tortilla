@@ -1,6 +1,13 @@
 #include "stdafx.h"
 #include "popupWindow.h"
 
+ bool PopupWindow::create(CFont *font)
+{
+     m_font = font;
+     Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE);
+     return (IsWindow()) ? true : false;
+}    
+
 void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeout)
 {
     const std::wstring& text = msg.text;
@@ -64,15 +71,84 @@ void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeou
         }
         dc_size = calcDCSize();
     }
-    a.pos.w = dc_size.cx;
-    a.pos.h = dc_size.cy;
+    a.pos.w = dc_size.cx + 12;
+    a.pos.h = dc_size.cy + 8;
+}
+
+void PopupWindow::startAnimation(int begin_posx, int begin_posy)
+{
+    m_animation.pos.x = begin_posx;
+    m_animation.pos.y = begin_posy;
+
+    fillSrcDC();
+    const Animation &a = m_animation;
+    const SharingWindow &sw = a.pos;
+    MoveWindow(sw.x, sw.y, sw.w, sw.h);
+    
+    BLENDFUNCTION blend;
+    blend.BlendOp = AC_SRC_OVER;
+    blend.BlendFlags = 0;
+    blend.AlphaFormat = 0;
+    blend.SourceConstantAlpha = 0;
+
+    CWindow dw(GetDesktopWindow());
+    CDC dstdc(dw.GetDC());
+    POINT dstpt = {sw.x, sw.y};
+    SIZE sz =  { sw.w, sw.h };
+    POINT srcpt = { 0, 0 };
+    UpdateLayeredWindow(m_hWnd, (HDC)dstdc, &dstpt, &sz, m_src_dc, &srcpt, 0, &blend, ULW_ALPHA);
+    ShowWindow(SW_SHOWNA);
+    m_ticker.sync();
+    m_animation.state =  Animation::ANIMATION_FADE_UP;
+}
+
+bool PopupWindow::canMove() const
+{
+    return m_animation.state == Animation::ANIMATION_MOVE;
+}
+
+void PopupWindow::moveTo(const SharingWindow& pos)
+{
+
 }
 
 void PopupWindow::tick()
 {
-    /*DWORD dt = m_ticker.getDiff();
+    DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
-    if (m_animation.state == Animation::ANIMATION_MOVE)
+
+    const Animation::AnimationState& state = m_animation.state;
+    if (state == Animation::ANIMATION_NONE)
+        return;
+    if (state == Animation::ANIMATION_FADE_UP)
+    {
+        float da = static_cast<float>(dt) * m_animation.speed;
+        alpha = min(alpha+da, 255.0f);
+        setAlpha(alpha);
+        if (alpha == 255.0f)
+        {
+            m_animation.state =  Animation::ANIMATION_MOVE;
+            return;
+        }
+    }
+    if (state == Animation::ANIMATION_MOVE)
+    {
+        wait_timer += dt;
+        int end_timer = m_animation.wait_sec * 1000;
+        if (wait_timer >= end_timer)
+            m_animation.state =  Animation::ANIMATION_FADE_DOWN;
+        return;
+    }
+    if (state == Animation::ANIMATION_FADE_DOWN)
+    {
+        float da = static_cast<float>(dt) * m_animation.speed;
+        alpha = max(alpha-da, 0.0f);
+        setAlpha(alpha);
+        if (alpha == 0.0f)
+            m_animation.state =  Animation::ANIMATION_NONE;
+    }
+
+    /*if (m_animation.state == Animation::ANIMATION_MOVE)
     {
         const SharingWindow &curpos = m_animation.pos;
         const POINT& target = m_move_animation.pos;
@@ -113,21 +189,7 @@ void PopupWindow::tick()
             sendNotify(MOVEANIMATION_FINISHED);
         }
     }
-
-    if (m_animation_state == ANIMATION_NONE)
-    {
-        assert(false);
-        return;
-    }
-
-    if (m_animation_state == ANIMATION_WAIT)
-    {
-        wait_timer += dt;
-        int end_timer = m_animation.wait_sec * 1000;
-        if (wait_timer >= end_timer)
-            setState(ANIMATION_TOSTART);
-        return;
-    }
+       
     float da = static_cast<float>(dt) * m_animation.speed;
     if (m_animation_state == ANIMATION_TOEND)
     {
@@ -276,15 +338,15 @@ void PopupWindow::setAlpha(float a)
 
 void PopupWindow::onClickButton()
 {
-    //setState(ANIMATION_TOSTART);
-    //sendNotify(CLICK_EVENT);
+    m_animation.state = Animation::ANIMATION_FADE_DOWN;
+    //sendNotify(1);
 }
 
 void PopupWindow::sendNotify(int state)
 {
     const NotifyParams &np = m_animation.notify;
      if (np.wnd)
-       ::PostMessage(np.wnd, np.msg, np.wparam, state);
+       ::PostMessage(np.wnd, np.msg, np.wparam, (LPARAM)state);
 }
 
 void PopupWindow::trimleft(std::wstring* s)

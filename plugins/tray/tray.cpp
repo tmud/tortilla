@@ -102,11 +102,12 @@ int init(lua_State *L)
     }
     ld.deletenode();
 
-    Msg m;
+    /*Msg m;
     m.textcolor =  g_tray.traySettings().text;
     m.bkgndcolor = g_tray.traySettings().background;
     m.text.append(L"Test test test");
     g_tray.addMessage(m);
+    */
 
     return 0;
 }

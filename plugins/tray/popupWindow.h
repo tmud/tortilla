@@ -19,9 +19,7 @@ struct NotifyParams {
 
 struct Animation
 {
-    //enum { ANIMATION_NONE = 0, ANIMATION_TOEND, ANIMATION_TOSTART, ANIMATION_WAIT, ANIMATION_MOVE };
-    //enum { ANIMATION_FINISHED = 0, MOVEANIMATION_FINISHED, STARTANIMATION_FINISHED, CLICK_EVENT };
-    enum AnimationState { ANIMATION_NONE, ANIMATION_FADE_UP, ANIMATION_FADE_DOWN, ANIMATION_MOVE };    
+    enum AnimationState { ANIMATION_NONE, ANIMATION_FADE_UP, ANIMATION_FADE_DOWN, ANIMATION_MOVE, ANIMATION_FINISHED };
     Animation() : state(ANIMATION_NONE), speed(0), wait_sec(0), bkgnd_color(0), text_color(0) {}
     SharingWindow pos;
     AnimationState state;
@@ -38,7 +36,6 @@ class PopupWindow : public CWindowImpl<PopupWindow>
     std::wstring m_original_text;
     std::vector<std::wstring> m_text;
     CFont *m_font;
-    //CSize m_dc_size;
     TempDC m_src_dc;
     Animation m_animation;
     int wait_timer;
@@ -46,27 +43,19 @@ class PopupWindow : public CWindowImpl<PopupWindow>
 public:
     DECLARE_WND_CLASS(NULL)
     PopupWindow() : m_font(NULL),
-        wait_timer(0), alpha(0), m_move_dx(0), m_move_dy(0)
+        wait_timer(0), alpha(0), m_move_dx(0), m_move_dy(0) {}
+    ~PopupWindow() 
     {
+        if (IsWindow())
+            DestroyWindow();
     }
-    ~PopupWindow() {
-        if (IsWindow()) DestroyWindow(); 
-    }
-
-    bool create(CFont *font)
-    {
-        m_font = font;
-        Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE);
-        return (IsWindow()) ? true : false;
-    }    
-
-    SharingWindow* getPosition() 
-    {
-        return &m_animation.pos;
-    }
-
-    /*
-
+    SharingWindow getPosition() { return m_animation.pos; }
+    bool create(CFont *font);
+    void startAnimation(int begin_posx, int begin_posy);
+    void setText(const Msg& msg, const NotifyParams& notify, int timeout);
+    void tick();
+    bool canMove() const;
+    void moveTo(const SharingWindow& pos);
 
     /*bool isAnimated() const {  return (m_animation_state==ANIMATION_NONE) ? false : true; }
     int  getAnimationState() const { return m_animation_state; }
@@ -74,8 +63,8 @@ public:
     const MoveAnimation& getMoveAnimation() const { return m_move_animation; }*/
     //void startAnimation(const Animation& a);
     //void startMoveAnimation(const MoveAnimation& a);
-    void setText(const Msg& msg, const NotifyParams& notify, int timeout);
-    void tick();
+
+    
 private:
     void onTimer();
     void fillSrcDC();

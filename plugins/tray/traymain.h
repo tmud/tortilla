@@ -58,16 +58,16 @@ private:
     void stopTimer();
     void onTimer();
     void onTickPopups();
-    void onFinishedAnimation(PopupWindow *w);
+    /*void onFinishedAnimation(PopupWindow *w);
     void onFinishedMoveAnimation(PopupWindow *w);
-    void onFinishedStartAnimation(PopupWindow *w);
+    void onFinishedStartAnimation(PopupWindow *w);*/
     PopupWindow* getFreeWindow();
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
     bool isHeightLimited() const;
     //int  getHeightLimit() const;
     
-    void tryRunMoveAnimation();
+    //void tryRunMoveAnimation();
     void tryShowQueue();
     void getWorkingArea(RECT *working_area);
 
