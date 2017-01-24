@@ -14,26 +14,32 @@ function testtray.version()
   return '-'
 end
 
-local onoff = false
-local counter = 0
-local maxcounter = 5
+local counter
+local maxcounter = 3
 
 function testtray.syscmd(t)
   if t[1] ~= 'testtray' then
       return t
   end
-  if not onoff then
-    onoff = true
-    counter = 0
-    print('Тест tray Включен')
+  if t[2] then
+    local v = tonumber(t[2])
+    if v then maxcounter = v end
+    counter = 0 
   else
-    onoff = false
+    if counter then counter = nil
+    else counter = 0
+    end
+  end
+    
+  if not counter then
     print('Тест tray Выключен')
+  else
+    print('Тест tray Включен, период='..maxcounter)
   end
 end
 
-function testtray.tick()
-  if onoff then
+function testtray.debugtick()
+  if counter then
     if counter >= maxcounter then
       counter = 0
       local r = rnd.rand(0,9)
