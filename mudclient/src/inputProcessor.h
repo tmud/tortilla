@@ -138,10 +138,11 @@ public:
 class CompareObject;
 struct InputSubcmd
 {
-    InputSubcmd(const tstring& cmd, bool syscmd) : srccmd(cmd), templ(cmd), system(syscmd) {}
+    InputSubcmd(const tstring& cmd, bool syscmd) : srccmd(cmd), templ(cmd), system(syscmd), markered(false) {}
     tstring srccmd;
     tstring templ;
     bool system;
+    bool markered;
 };
 class InputTemplateCommands : private std::vector<InputSubcmd>
 {
@@ -158,7 +159,7 @@ private:
     void fillsyscmd(InputCommand cmd);
     void fillgamecmd(InputCommand cmd);
     void parsecmd(const tstring& cmd);
-    void markbrackets(tstring *cmd) const;
+    bool markbrackets(tstring *cmd) const;
     void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
     bool isbracket(const tchar *p) const;
     bool isopenorspace(const tchar *p) const;
@@ -179,7 +180,7 @@ public:
 };
 
 #ifdef _DEBUG
-class InputCommandTemplateUnitTest
+class InputCommandTemplateUnitTests
 {
     static bool test1(const tstring& str, int n, ...);
     static bool test2(const tstring& str, int params, InputCommands *ref);
@@ -188,7 +189,4 @@ class InputCommandTemplateUnitTest
 public:
     static void run();
 };
-#define RUN_INPUTPROCESSOR_TESTS InputCommandTemplateUnitTest::run();
-#else
-#define RUN_INPUTPROCESSOR_TESTS
 #endif

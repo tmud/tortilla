@@ -73,6 +73,7 @@ private:
        MESSAGE_HANDLER(WM_USER+2, OnSetFocus)
        MESSAGE_HANDLER(WM_USER, OnTextColor)
        MESSAGE_HANDLER(WM_USER+1, OnBkgColor)
+       MESSAGE_HANDLER(WM_USER+3, OnKeyDown)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged);
        COMMAND_ID_HANDLER(IDC_CHECK_HIGHLIGHTS_UNDERLINE, OnFontUnderlined)
@@ -88,6 +89,25 @@ private:
        NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
+
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam == VK_DELETE)
+        {
+            if (m_del.IsWindowEnabled()) {
+                BOOL b = FALSE;
+                OnDeleteElement(0, 0, 0, b);
+            }
+            return 1;
+        }
+        if (wparam == VK_INSERT)
+        {
+            BOOL b = FALSE;
+            OnResetData(0, 0, 0, b);
+            return 1;
+        }
+        return 0;
+    }
 
     // handler for draw item
     bool drawPropertyListItem(PropertyListItemData *pData)
@@ -410,6 +430,7 @@ private:
         m_list.addColumn(L"÷вет фона", 15);
         m_list.addColumn(L"√руппа", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+        m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+3);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_underline.Attach(GetDlgItem(IDC_CHECK_HIGHLIGHTS_UNDERLINE));
@@ -539,12 +560,7 @@ private:
             m_list.addItem(i, 4, hv.group);
         }
 
-        int index = -1;
-        tstring pattern;
-        getWindowText(m_pattern, &pattern);
-        if (!pattern.empty())
-            index = m_list_values.find(pattern, m_currentGroup);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(4);
     }
 
     void updateButtons()

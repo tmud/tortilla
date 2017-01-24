@@ -10,7 +10,7 @@ class Plugin
 {
 public:
     Plugin() : empty(0), hModule(NULL), load_state(false), current_state(false), error_state(false), render_state(false) {}
-    static bool isPlugin(const wchar_t* fname);
+    static bool isPluginEnabled(const wchar_t* fname);
     bool loadPlugin(const wchar_t* fname);
     void unloadPlugin();
     bool reloadPlugin();

@@ -41,6 +41,49 @@ void pluginsUpdateActiveObjects(int type) { lp()->updateActiveObjects(type); }
 void collectGarbage() { lua_gc(tortilla::getLua(), LUA_GCSTEP, 1); }
 const tchar* plugin_name() { return _cp ? _cp->get(Plugin::FILE) : L"?"; }
 //---------------------------------------------------------------------
+class PluginsBmpMaker {
+public:
+    HBITMAP make(const tstring& file, int param) 
+    {
+        tstring filename(file);
+        tstring_replace(&filename, L"/", L"\\");
+        int pos = filename.rfind(L'.');
+        if (pos == -1)
+            return 0;
+        tstring ext(filename.substr(pos + 1));
+        tstring_tolower(&ext);
+        bool multimap = false;
+        if (ext == L"gif" || ext == L"ico") 
+            multimap = true;
+        Image img, icon;
+        Image *src = &img;
+        if (img.load(filename.c_str(), (multimap) ? param : -1 ))
+        {
+            const int icon_size = 16;
+            if (!multimap) {
+            int width = img.width() / icon_size;
+            int y = param / width;
+            int x = param - y*width;
+            x *= icon_size; y *= icon_size;
+            if (icon.cut(img, x, y, icon_size, icon_size))
+                src = &icon;
+            }
+            CBitmap bmp;
+            CDC dc;
+            dc.CreateCompatibleDC(NULL);
+            if (bmp.CreateBitmap(icon_size, icon_size, 1, 32, NULL))
+            {
+                HBITMAP oldbmp = dc.SelectBitmap(bmp);
+                dc.FillSolidRect(0, 0, icon_size, icon_size, RGB(192,192,192));
+                src->render(dc, 0, 0);
+                dc.SelectBitmap(oldbmp);
+                return bmp.Detach();
+            }
+        }
+        return 0;
+    }
+};
+//---------------------------------------------------------------------
 MemoryBuffer pluginBuffer(16384*sizeof(tchar));
 tchar* plugin_buffer() { return (tchar*)pluginBuffer.getData(); }
 int pluginInvArgs(lua_State *L, const tchar* fname)
@@ -156,6 +199,19 @@ int setCommand(lua_State *L)
     return pluginInvArgs(L, L"setCommand");
 }
 
+int getCommand(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 0))
+    {
+        tstring cmd;
+        _wndMain.m_gameview.getCommand(&cmd);
+        luaT_pushwstring(L, cmd.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"getCommand");
+}
+
 int sendCommand(lua_State *L)
 {
     EXTRA_CP;
@@ -203,22 +259,29 @@ int addMenu(lua_State *L)
         code = lua_tointeger(L, 2);
         params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), -1, getId(code, false), NULL);
     }
-    else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
+    else if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER) ||
+        luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
     {
         code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), NULL);
-    }
-    else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
-    {
         HBITMAP bmp = NULL;
-        int bmp_id = lua_tointeger(L, 4);
+        int bmp_id = lua_tointeger(L, 3);
         if (bmp_id > 0) {
             HMODULE module = _cp->getModule();
             if (module)
                 bmp = LoadBitmap( module, MAKEINTRESOURCE(bmp_id) );
         }
-        code = lua_tointeger(L, 2);
-        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), lua_tointeger(L, 3), getId(code, false), bmp);
+        int pos = (lua_gettop(L) == 4) ? lua_tointeger(L, 4) : -1;
+        params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), pos, getId(code, false), bmp);
+    }
+    else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TSTRING, LUA_TNUMBER) ||
+        luaT_check(L, 5, LUA_TSTRING, LUA_TNUMBER, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
+    {
+         code = lua_tointeger(L, 2);
+         tstring filename(luaT_towstring(L, 3));
+         PluginsBmpMaker bmaker;
+         HBITMAP bmp = bmaker.make(filename, lua_tointeger(L, 4));
+         int pos = (lua_gettop(L) == 5) ? lua_tointeger(L, 5) : -1;
+         params_ok = tbar()->addMenuItem(luaT_towstring(L, 1), pos, getId(code, false), bmp);
     }
     else { return pluginInvArgs(L, L"addMenu"); }
     if (!params_ok) { delCode(code, false); }
@@ -290,7 +353,7 @@ int addButton(lua_State *L)
 {
     CAN_DO;
     EXTRA_CP;
-    if (!_cp) 
+    if (!_cp)
         return pluginNotDeclared(L, L"addButton");
     int image = -1, code = -1; tstring hover;
     if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
@@ -301,7 +364,24 @@ int addButton(lua_State *L)
     {
         image = lua_tointeger(L, 1); code = lua_tointeger(L, 2); hover.assign(luaT_towstring(L, 3));
     }
-    else { return pluginInvArgs(L, L"addButton"); }
+    else if (luaT_check(L, 4, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER, LUA_TSTRING))
+    {
+        code = lua_tointeger(L, 3);
+        hover.assign(luaT_towstring(L, 4));
+        if (code > 0)
+        {
+           tstring filename(luaT_towstring(L, 1));
+           PluginsBmpMaker bmaker;
+           HBITMAP bmp = bmaker.make(filename, lua_tointeger(L, 2));
+           if (tbar()->addToolbarButton(bmp, getId(code, true), hover.c_str()))
+           {
+              _cp->buttons.push_back(code);
+              return 0;
+           }
+           delCode(code, true);
+        }
+        return pluginInvArgs(L, L"addButton");
+    }
 
     if (image > 0 && code > 0)
     {
@@ -309,13 +389,15 @@ int addButton(lua_State *L)
         HBITMAP bmp = NULL;
         if (module && (bmp = LoadBitmap(module, MAKEINTRESOURCE(image))))
         {
-            if (!tbar()->addToolbarButton(bmp, getId(code, true), hover.c_str()))
-                delCode(code, true);
-            else
+            if (tbar()->addToolbarButton(bmp, getId(code, true), hover.c_str()))
+            {
                 _cp->buttons.push_back(code);
+                return 0;
+            }
+            delCode(code, true);
         }
     }
-    return 0;
+    return pluginInvArgs(L, L"addButton");
 }
 
 int addToolbar(lua_State *L)
@@ -997,8 +1079,10 @@ int saveTable(lua_State *L)
        swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
        tstring tmp(plugin_buffer());
        pluginMethodError(L"saveTable", tmp.c_str());
+       return 0;
     }
-    return 0;
+    lua_pushboolean(L, 1);
+    return 1;
 }
 //----------------------------------------------------------------------------
 void initVisible(lua_State *L, int index, OutputWindow *w)
@@ -1088,7 +1172,7 @@ int terminatePlugin(lua_State *L)
     _cp->setErrorState();
 
     if (log.empty())
-        log.assign(L"TERMINATE");
+        log.assign(L"terminated");
     lua_settop(L, 0);
     luaT_pushwstring(L, log.c_str());
     lua_error(L);
@@ -1306,6 +1390,28 @@ int getVersion(lua_State *L)
     return pluginInvArgs(L, L"getVersion");
 }
 
+int checkVersion(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        int major = lua_tointeger(L, 1);
+        int minor = lua_tointeger(L, 2);
+
+        if (major < TORTILLA_VERSION_MAJOR) {
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        if (major == TORTILLA_VERSION_MAJOR && minor <= TORTILLA_VERSION_MINOR) {
+            lua_pushboolean(L, 1);
+            return 1;
+        }
+        lua_pushboolean(L, 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"checkVersion");
+}
+
 int isGroupActive(lua_State *L)
 {
     EXTRA_CP;
@@ -1326,6 +1432,23 @@ int isGroupActive(lua_State *L)
         return pluginInvArgsValues(L, L"isGroupActive");
     }
     return pluginInvArgs(L, L"isGroupActive");
+}
+
+int setComponent(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TBOOLEAN))
+    {
+        int v = lua_toboolean(L, 2);
+        tstring component(luaT_towstring(L, 1));
+        bool mode = (lua_toboolean(L, 2) == 0) ? false : true;
+        bool result = lp()->setComponent(component, mode);
+        if (!result)
+            pluginInvArgsValues(L, L"setComponent");
+        lua_pushboolean(L, (result) ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"setComponent");
 }
 //---------------------------------------------------------------------
 // Metatables for all types
@@ -1364,6 +1487,7 @@ bool initPluginsSystem()
     lua_register(L, "runCommand", runCommand);
     lua_register(L, "setCommand", setCommand);
     lua_register(L, "sendCommand", sendCommand);
+    lua_register(L, "getCommand", getCommand);
     lua_register(L, "addMenu", addMenu);
     lua_register(L, "addButton", addButton);
     lua_register(L, "addToolbar", addToolbar);
@@ -1396,7 +1520,9 @@ bool initPluginsSystem()
     lua_register(L, "clearView", clearView);
     lua_register(L, "translateColors", translateColors);
     lua_register(L, "getVersion", getVersion);
+    lua_register(L, "checkVersion", checkVersion);
     lua_register(L, "isGroupActive", isGroupActive);
+    lua_register(L, "setComponent", setComponent);
 
     reg_props(L);
     reg_activeobjects(L);
@@ -1740,6 +1866,17 @@ int props_currentFont(lua_State *L)
     return pluginInvArgs(L, L"props.currentFont");
 }
 
+int props_currentFontHeight(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int height = tortilla::getCurrentFontHeight();
+        lua_pushinteger(L, height);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.currentFontHeight");
+}
+
 int props_currentFontHandle(lua_State *L)
 {
     if (luaT_check(L, 0))
@@ -1855,12 +1992,49 @@ int props_pluginsLogWindow(lua_State *L)
     return pluginInvArgs(L, L"props.pluginsLogWindow");
 }
 
+int props_component(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        ModeCmdHelper ch(tortilla::getProperties());
+        tstring state(luaT_towstring(L, 1));
+        int flag = ch.getState(state);       
+        lua_pushboolean(L, (flag > 0) ? 1 : 0 );
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.component");
+}
+
+int props_isClearCommandLine(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int status = tortilla::getProperties()->clear_bar;        
+        lua_pushboolean(L, status ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props.isClearCommandLine");
+}
+
+int props_isShowSystemCommand(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        int status = tortilla::getProperties()->show_system_commands;        
+        lua_pushboolean(L, status ? 1 : 0);
+        return 1;
+    }
+    return pluginInvArgs(L, L"props._isShowSystemCommand");
+}
+
+
 void reg_props(lua_State *L)
 {
     lua_newtable(L);
     regFunction(L, "paletteColor", props_paletteColor);
     regFunction(L, "backgroundColor", props_backgroundColor);
     regFunction(L, "currentFont", props_currentFont);
+    regFunction(L, "currentFontHeight", props_currentFontHeight);
     regFunction(L, "currentFontHandle", props_currentFontHandle);
     regFunction(L, "cmdPrefix", props_cmdPrefix);
     regFunction(L, "cmdSeparator", props_cmdSeparator);
@@ -1869,6 +2043,9 @@ void reg_props(lua_State *L)
     regFunction(L, "connected", props_connected);
     regFunction(L, "activated", props_activated);
     regFunction(L, "isPropertiesOpen", props_isPropertiesOpen);
-    regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);    
+    regFunction(L, "pluginsLogWindow", props_pluginsLogWindow);
+    regFunction(L, "component", props_component);
+    regFunction(L, "isClearCommandLine", props_isClearCommandLine );
+    regFunction(L, "isShowSystemCommand",  props_isShowSystemCommand );
     lua_setglobal(L, "props");
 }

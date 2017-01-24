@@ -97,6 +97,7 @@
     <ClInclude Include="selectImageDlg.h" />
     <ClInclude Include="settingsDlg.h" />
     <ClInclude Include="stdafx.h" />
+    <ClInclude Include="ToolTipDialog.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="clickpad.cpp" />

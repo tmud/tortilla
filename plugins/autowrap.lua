@@ -1,6 +1,6 @@
 ﻿-- autowrap
 -- Плагин для Tortilla mud client
--- Минимальная длина 60 символов
+-- Минимальная длина 25 символов
 -- Максимальная длина задается в параметрах ( 0 - автоперенос выключен, -1 - авторасчет максимальной длины по ширине окна ).
 -- Авторасчет ширины окна приблизительный (различная ширина букв).
 
@@ -18,7 +18,7 @@ function autowrap.name()
   return 'Автоперенос строк'
 end
 function autowrap.version()
-  return '1.06'
+  return '1.07'
 end
 function autowrap.description()
   local p = ''
@@ -100,7 +100,7 @@ local function paragraph(v)
         if v:isDropped() or v:isGameCmd() or v:isSystem() or v:isPrompt() then goto next end
         local t = v:getText()
         local first = t:substr(1, 1)
-        if first:only('абвгдеёжзийклмнопрстуфкцчшщъыьэюя') and not t:contain(blocking_symbols) then
+        if first:only('абвгдеёжзийклмнопрстуфкцчшщъыьэюя') and not t:contain(blocking_symbols) and not t:find('  ')  then
           v:select(i)
           local t0 = v:getBlockText(1)
           if not t0:contain(blocking_symbols) then

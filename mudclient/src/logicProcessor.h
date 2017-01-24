@@ -15,6 +15,7 @@ public:
     virtual void disconnectFromNetwork() = 0;
     virtual void sendToNetwork(const tstring& data) = 0;
     virtual MudViewString* getLastString(int view) = 0;
+    virtual bool saveViewData(int view, tstring& filename) = 0;
     virtual void accLastString(int view, parseData* parse_data) = 0;
     virtual void preprocessText(int view, parseData* parse_data) = 0;
     virtual void postprocessText(int view, parseData* parse_data) = 0;
@@ -29,6 +30,7 @@ public:
     virtual void resetOscColors() = 0;
     virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
     virtual void clearDropped(int view) = 0;
+    virtual void loadProfile(const tstring& profile, const tstring& group, tstring* error) = 0;
 };
 
 class LogicProcessorMethods
@@ -47,6 +49,7 @@ public:
     virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
     virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
     virtual void windowClear(int window) = 0;
+    virtual bool setComponent(const tstring& name, bool mode) = 0;
 };
 
 class parser;
@@ -123,12 +126,16 @@ private:
     void recognizeSystemCommand(tstring* cmd, tstring* error);
     void processSystemCommand(InputCommand cmd);
     void processGameCommand(InputCommand cmd);
-    enum { SKIP_NONE = 0, SKIP_ACTIONS = 1, SKIP_SUBS = 2, SKIP_HIGHLIGHTS = 4,
-           SKIP_PLUGINS_BEFORE = 8, SKIP_PLUGINS_AFTER = 16, SKIP_PLUGINS = 24, WORK_OFFLINE = 32,
-           GAME_LOG = 64, GAME_CMD = 128, FROM_STACK = 256, FROM_TIMER = 512, NEW_LINE = 1024 };
+    bool setComponent(const tstring& name, bool mode);
+    enum { SKIP_NONE = 0, SKIP_ACTIONS = 0x1, SKIP_SUBS = 0x2, SKIP_HIGHLIGHTS = 0x4,
+           SKIP_PLUGINS_BEFORE = 0x8, SKIP_PLUGINS_AFTER = 0x10, SKIP_PLUGINS = 0x18,
+           SKIP_COMPONENT_GAGS = 0x20, SKIP_COMPONENT_SUBS = 0x40,
+           SKIP_COMPONENT_ANTISUBS = 0x80, SKIP_COMPONENT_PLUGINS = 0x100,
+           WORK_OFFLINE = 0x200, GAME_LOG = 0x400, GAME_CMD = 0x800, FROM_STACK = 0x1000,
+           FROM_TIMER = 0x2000, NEW_LINE = 0x4000 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
-    void regCommand(const char* name, syscmd_fun f);
+    void regCommand(const char* name, syscmd_fun f, bool skip_autoset = false);
     bool sendToNetwork(const tstring& cmd);
     void processNetworkError(const tstring& error);
 
@@ -137,11 +144,14 @@ private:
     void printIncoming(parseData& parse_data, int flags, int window);
     void pipelineParseData(parseData& parse_data, int flags, int window);
     void printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe);
+    enum TriggersType { PROCESS_LUATRIGGERS = 0, PROCESS_ACTIONS};
+    void processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, TriggersType tt);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
 
 public: // system commands
     DEF(drop);
+    DEF(stop);
     DEF(action);
     DEF(unaction);
     DEF(alias);
@@ -170,10 +180,11 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
-    void printex(int view, const std::vector<tstring>& params, bool enable_actions);
+    void printex(int view, const std::vector<tstring>& params, bool enable_actions_subs);
     DEF(wprint);
     DEF(print);
     DEF(message);
+    DEF(component);
     DEF(tab);
     DEF(untab);
     DEF(timer);
@@ -194,4 +205,7 @@ public: // system commands
     DEF(unvar);
     DEF(wait);
     DEF(plugin);
+    DEF(load);
+    DEF(savelog);
+    DEF(none);
 };

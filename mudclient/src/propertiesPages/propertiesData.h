@@ -246,10 +246,12 @@ public:
         return -1;
     }
 
-    void add(int index, const tstring& key)
+    int add(int index, const tstring& key)
     {
-        if (index == -1)
+        if (index == -1) {
+            index = m_values.size();
             m_values.push_back(key);
+        }
         else
         {
             int size = m_values.size();
@@ -258,6 +260,7 @@ public:
             else
                 { assert(false); }
         }
+        return index;
     }
 
     void del(int index)
@@ -397,8 +400,8 @@ struct PluginsDataValues : public std::vector<PluginData>
 
 struct PropertiesDlgPageState
 {
-    PropertiesDlgPageState() : item(-1), topitem(-1), filtermode(false), cansave(false) {}
-    int item;
+    PropertiesDlgPageState() : topitem(-1), filtermode(false), cansave(false) {}
+    tstring item;
     int topitem;
     bool filtermode;
     bool cansave;
@@ -474,6 +477,8 @@ public:
         dlg = p.dlg;
         // skip displays
         messages = p.messages;
+        // copy mode
+        mode = p.mode;
         // skip cmd_history
         codepage = p.codepage;
         logformat = p.logformat;
@@ -510,6 +515,7 @@ public:
         disable_alt = p.disable_alt;
         move_totray = p.move_totray;
         //skip title
+        rebar = p.rebar;
     }
 
 public:
@@ -543,6 +549,19 @@ public:
     int variables;
     int tabwords;
     } messages;
+
+    struct working_mode { 
+    working_mode() { initDefault();  }
+    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = antisubs = gags = plugins = val; }
+    int actions;
+    int aliases;
+    int subs;
+    int hotkeys;
+    int highlights;
+    int antisubs;
+    int gags;
+    int plugins;
+    } mode;
 
     std::vector<tstring> cmd_history;
 
@@ -582,6 +601,7 @@ public:
     int      move_totray;
 
     tstring title;        // name of main window (dont need to save)
+    tstring rebar;
 
     void initDefaultColorsAndFont()
     {
@@ -631,10 +651,12 @@ public:
         initDefaultColorsAndFont();
         initDisplay();
         messages.initDefault();
+        mode.initDefault();
         timers_on = 0;
         recognize_prompt = 0;
         recognize_prompt_template.clear();
         dlg.clear();
+        rebar.clear();
     }
 
     void initLogFont(HWND hwnd, LOGFONT *f)

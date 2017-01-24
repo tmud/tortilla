@@ -7,6 +7,7 @@
 #include "mudView.h"
 #include "mudCommandBar.h"
 #include "findDlg.h"
+#include "modeDlg.h"
 #include "logicProcessor.h"
 
 #include "plugins/pluginsApi.h"
@@ -71,6 +72,12 @@ public:
     BOOL PreTranslateMessage(MSG* pMsg)
     {
         UINT msg = pMsg->message;
+        if (msg == WM_MOUSEWHEEL)
+        {
+            BOOL b = FALSE;
+            OnWheel(pMsg->message, pMsg->wParam, pMsg->lParam, b);
+            return TRUE;
+        }
         if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN)
         {
             tstring key;
@@ -349,6 +356,7 @@ public:
     }
 
     void setCommand(const tstring& cmd) { m_bar.setCommand(cmd); }
+    void getCommand(tstring* cmd) { m_bar.getCommandLine(cmd); }
     void showView(int view, bool show) { showWindow(view, show); }
     bool isViewVisible(int view) { return isWindowVisible(view); }
 
@@ -385,6 +393,7 @@ private:
         COMMAND_ID_HANDLER(ID_LOADPROFILE, OnLoadProfile)
         COMMAND_ID_HANDLER(ID_NEWWORLD, OnNewWorld)
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
+        COMMAND_ID_HANDLER(ID_MODE, OnMode)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
         COMMAND_ID_HANDLER(ID_VIEW_FIND, OnViewFind)
         MESSAGE_HANDLER(WM_DOCK_PANE_CLOSE, OnCloseWindow)
@@ -539,6 +548,26 @@ private:
 
     LRESULT OnWheel(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
     {
+        if (checkKeysState(false, true, false))
+        {
+            if (m_history.IsWindowVisible()) {
+                ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
+                bool last = (m_history.getViewString() == m_history.getLastString());
+                if (last)
+                    closeHistory();
+                return 0;
+            }
+            int delta = GET_WHEEL_DELTA_WPARAM(wparam);
+            if (delta > 0) {
+                bool canscroll = (m_view.getStringsCount() > m_view.getStringsOnDisplay());
+                if (canscroll) {
+                    int vs = m_view.getViewString();
+                    showHistory(vs-1, 1);
+                }
+            }
+            return 0;
+        }
+
         POINT pt; RECT rc;
         if (GetCursorPos(&pt))
         {
@@ -572,6 +601,10 @@ private:
         m_view.GetWindowRect(&rc);
         if (PtInRect(&rc, pt))
             ::SendMessage(m_view, WM_MOUSEWHEEL, wparam, lparam);
+
+        m_bar.GetWindowRect(&rc);
+        if (PtInRect(&rc, pt))
+            ::SendMessage(m_bar, WM_MOUSEWHEEL, wparam, lparam);
 
         return 0;
     }
@@ -655,7 +688,8 @@ private:
                 data.truncate(converted);
             }
 
-            m_plugins.processStreamData(&wide);
+            if (m_propData->mode.plugins)
+                m_plugins.processStreamData(&wide);
             const WCHAR* processeddata = (const WCHAR*)wide.getData();
             m_processor.processNetworkData(processeddata, wcslen(processeddata));
         }
@@ -762,7 +796,8 @@ private:
         {
             if (process_history) {
             InputPlainCommands history;
-            m_plugins.processHistoryCmds(cmds, &history);
+            if (m_propData->mode.plugins)
+                m_plugins.processHistoryCmds(cmds, &history);
             for (int i=0,e=history.size(); i<e; ++i)
                 m_bar.addToHistory(history[i]);
             }
@@ -781,7 +816,9 @@ private:
         InputTemplateCommands tcmds;
         tcmds.init(cmds, p);
         tcmds.extract(&cmds);
-        m_plugins.processBarCmds(&cmds);
+
+        if (m_propData->mode.plugins)
+            m_plugins.processBarCmds(&cmds);
 
         m_processor.processUserCommand(cmds);
     }
@@ -830,6 +867,16 @@ private:
     LRESULT OnNewWorld(WORD, WORD, HWND, BOOL&)
     {
         onNewWorld();
+        return 0;
+    }
+
+    LRESULT OnMode(WORD, WORD, HWND, BOOL&)
+    {
+        ModeDlg dlg(m_propData);
+        if (dlg.DoModal() == IDOK)
+        {
+            m_plugins.processPluginsMethod("compsupdated", 0);
+        }
         return 0;
     }
 
@@ -1069,6 +1116,42 @@ private:
         m_network.connect(m_networkData);
     }
 
+    bool saveViewData(int view, tstring& filename)
+    {
+        if (view >= 0 && view <= OUTPUT_WINDOWS)
+        {
+            PropertiesData* pdata = tortilla::getProperties();
+            MudView *v = (view == 0) ? &m_view : m_views[view-1];
+            LogsFormatter *f = NULL;
+            int pos = filename.rfind(L'.');
+            if (pos != -1) {
+              tstring ext(filename.substr(pos + 1));
+              if (ext == L"txt") f = new LogsFormatterTxt(pdata);
+              if (ext == L"htm" || ext == L"html") f = new LogsFormatterHtml(pdata);
+            }
+            if (!f) {
+                if (pdata->logformat == L"txt")
+                    f = new LogsFormatterTxt(pdata);
+                else
+                    f = new LogsFormatterHtml(pdata);
+                f->normFilename(filename);
+            }
+            bool result = false;
+            f->checkExist(filename);
+            if (f->open(filename, LogsFormatter::PM_NEW) && f->prepare())
+            {
+                for (int i=0,e=v->getStringsCount();i<e;++i) {
+                    f->writeString(v->getString(i));
+                }
+                f->close();
+                result = true;
+            }
+            delete f;
+            return result;
+        }
+        return false;
+    }
+
     MudViewString* getLastString(int view)
     {
         MudViewString *s = NULL;
@@ -1120,7 +1203,8 @@ private:
             v->clearDropped();
         }
     }
-
+    void loadProfile(const tstring& name, const tstring& group, tstring* error);
+    
     void addText(int view, parseData* parse_data)
     {
         if (view == 0)

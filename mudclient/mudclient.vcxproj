@@ -161,8 +161,10 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\highlightHelper.h" />
     <ClInclude Include="src\hotkeyTable.h" />
     <ClInclude Include="src\logicPipeline.h" />
+    <ClInclude Include="src\logsFormatter.h" />
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
+    <ClInclude Include="src\modeDlg.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />
     <ClInclude Include="src\mudCommandBar.h" />
     <ClInclude Include="src\mudGameView.h" />
@@ -201,7 +203,9 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\propertiesPages\propertiesPageTabwords.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageTimers.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageTwoParams.h" />
+    <ClInclude Include="src\propertiesPages\propertiesPageVars.h" />
     <ClInclude Include="src\propertiesPages\propertiesSaveHelper.h" />
+    <ClInclude Include="src\propertiesPages\propertiesUpDown.h" />
     <ClInclude Include="src\propertiesPages\propertyList.h" />
     <ClInclude Include="src\stdafx.h" />
     <ClInclude Include="src\network\network.h" />
@@ -232,10 +236,12 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\common\md5.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
     <ClCompile Include="src\compareObject.cpp" />
+    <ClCompile Include="src\compareObject2.cpp" />
     <ClCompile Include="src\helpManager.cpp" />
     <ClCompile Include="src\highlightHelper.cpp" />
     <ClCompile Include="src\inputProcessorTests.cpp" />
     <ClCompile Include="src\LogicProcessor3.cpp" />
+    <ClCompile Include="src\logsFormatter.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
     <ClCompile Include="src\msdp\msdpNetwork.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
@@ -261,6 +267,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\propertiesPages\propertiesElements.cpp" />
     <ClCompile Include="src\propertiesPages\propertiesManager.cpp" />
     <ClCompile Include="src\mudclient.cpp" />
+    <ClCompile Include="src\propertiesPages\propertiesUpDown.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

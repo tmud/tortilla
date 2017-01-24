@@ -52,11 +52,15 @@ bool LogicProcessor::processHotkey(const tstring& hotkey)
 {
     if (hotkey.empty())
         return false;
-    InputCommands newcmds;
-    if (m_helper.processHotkeys(hotkey, &newcmds))
+    PropertiesData *pdata = tortilla::getProperties();
+    if (pdata->mode.hotkeys) 
     {
-        runCommands(newcmds);
-        return true;
+        InputCommands newcmds;
+        if (m_helper.processHotkeys(hotkey, &newcmds))
+        {
+            runCommands(newcmds);
+            return true;
+        }
     }
     return false;
 }
@@ -114,8 +118,12 @@ void LogicProcessor::processCommands(const InputPlainCommands& cmds)
 
 void LogicProcessor::runCommands(InputCommands& cmds)
 {
-    if (!processAliases(cmds))
-        return;
+    PropertiesData *pdata = tortilla::getProperties();
+    if (pdata->mode.aliases)
+    {
+        if (!processAliases(cmds))
+            return;
+    }
     int i=0,e=cmds.size();
     for (; i<e; ++i)
     {

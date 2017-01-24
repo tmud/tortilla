@@ -15,6 +15,8 @@
 #include <atlctrlx.h>
 #include <atlmisc.h>
 
+#include "ToolTipDialog.h"
+
 #include <map>
 #include <vector>
 #include <string>

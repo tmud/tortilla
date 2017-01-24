@@ -22,7 +22,9 @@ function speedwalk.description()
   'Работает с мадами с 6 направлениями для передвижений - север,юг,запад,восток,вверх,вниз.',
   p..'start - начать запись в память клиента перемещения от текущей комнаты.',
   p..'stop - остановить запись, забыть маршрут.',
-  p..'save name - остановить запись, сохранить маршрут в базу под именем name.',
+  p..'save name [комментарий]- остановить запись, сохранить маршрут в базу под именем name,',
+  'можно указать комментарий-описание для маршрута.',
+  p..'comment name [комментарий]- задать или удалить комментарий у маршрута.',
   p..'return - вернуться по последнему или записываемому маршруту.',
   p..'return name - не должно быть записи. Вернутся обратно по маршуту из базы с именем name.',
   p..'go name - не должно быть записи. Идти по маршруту из базы по имени name.',
@@ -35,10 +37,11 @@ function speedwalk.description()
   return table.concat(s, '\r\n')
 end
 function speedwalk.version()
-  return '1.02'
+  return '1.03'
 end
 
 local recorddb = {}
+local recorddb_comment = {}
 local recorddb_changed = false
 local record = ""
 local recording = false
@@ -75,16 +78,44 @@ function speedwalk.init()
   end
   local routes = loadTable('routes.lua')
   if routes then
-    for k,v in pairs(routes) do
-      if type(v)~='string' or type(k) ~= 'string' then routes[k] = nil end
+    if routes.p1name then
+      local i = 1
+      while routes['p'..i..'name'] do
+        local k = routes['p'..i..'name']
+        local v = routes['p'..i]
+        local c = routes['p'..i..'comment']
+        if type(v)=='string' and type(k) == 'string' then
+          recorddb[k] = v
+          if type(c) == 'string' then
+            recorddb_comment[k] = c
+          end
+        end
+        i = i + 1
+      end
+    else
+      for k,v in pairs(routes) do
+        if type(v)=='string' and type(k) == 'string' then
+          recorddb[k] = v
+        end
+      end
     end
-    recorddb = routes
   end
 end
 
 function speedwalk.release()
   if recorddb_changed then
-    saveTable(recorddb, 'routes.lua')
+    local tosave = {}
+    local i = 1
+    for k,v in pairs(recorddb) do
+      tosave['p'..i..'name'] = k
+      tosave['p'..i] = v
+      local c = recorddb_comment[k]
+      if c then
+        tosave['p'..i..'comment'] = c
+      end
+      i = i + 1
+    end
+    saveTable(tosave, 'routes.lua')
   end
   recorddb_changed = false
 end
@@ -237,7 +268,7 @@ local function stop(p)
   end
 end
 
-local function save(p)
+local function save(p, comment)
   if not p then
     if recording then
       print('Укажите имя маршрута для записи.')
@@ -255,6 +286,7 @@ local function save(p)
     return
   end
   recorddb[p] = record
+  if comment then recorddb_comment[p] = comment end
   recorddb_changed = true
   stop_recording()
   print('Маршрут '..p..' сохранен в базу. Запись остановлена.')
@@ -342,11 +374,13 @@ local function list(p)
   end
   local found = false
   for k,rp in pairs(recorddb) do
+    local c = ''
+    if recorddb_comment[k] then c=' ('..recorddb_comment[k]..')' end
     if not p then
-      output(k..': '..rp)
+      output(k..': '..rp..c)
     else
-      if k == p then
-        output(k..': '..rp)
+      if string.find(k, p) then
+        output(k..': '..rp..c)
         found = true
         break
       end
@@ -395,6 +429,22 @@ local function add(p, path)
   print('Маршрут '..p..' сохранен в базу.')
 end
 
+local function comment(p, comment)
+  if not recorddb[p] then
+    print('Маршрута '..p..' нет в базе.')
+    return
+  end
+  if not comment then
+    recorddb_comment[p] = nil
+    print('У маршрута '..p..' удален комментарий.')
+    recorddb_changed = true
+    return
+  end
+  recorddb_comment[p] = comment
+  print('У маршрута '..p..' новый комментарий.')
+  recorddb_changed = true
+end
+
 local cmds = {
   ['start'] = start,
   ['stop'] = stop,
@@ -405,7 +455,8 @@ local cmds = {
   ['list'] = list,
   ['delete'] = delete,
   ['show'] = show,
-  ['add'] = add
+  ['add'] = add, 
+  ['comment'] = comment
 }
 
 function speedwalk.syscmd(t)
@@ -426,7 +477,7 @@ function speedwalk.syscmd(t)
     print(p..'swalk start|stop|save|return|go|play|list|delete|show|add ('..p..'help speedwalk)')
     return
   end
-  if (#t > 3 and c ~= 'add') or #t > 4 then
+  if (#t > 3 and c ~= 'add' and c ~= 'save' and c ~= 'comment') or #t > 4 then
     print('В команде слишком много параметров.')
   else
     f(t[3], t[4])
@@ -477,6 +528,8 @@ local function in_replay(vd)
         if p:find(vd:getText()) then
           local traveled = replaying:len() - replay:len()
           if traveled == 0 then
+            replay = nil
+            replaying = nil
             return
           end
           vd:insertString(true, false)

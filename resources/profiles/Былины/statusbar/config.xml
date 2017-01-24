@@ -17,6 +17,12 @@
     <r1 value="^Вы можете выдержать [0-9]+\(([0-9]+)\).*, и пройти [0-9]+\(([0-9]+)\)"/>
     <r2 value="^Ваш опыт - ([0-9]+)"/>
   </regexp>
+  <levregexp>
+    <key value="^Уровень          Опыт            Макс на урв."/>
+    <level value="^\[[0-9 ]+\] +([0-9,]+)"/>
+    <separators value=","/>
+    <skipprompt value="^Листать :.*"/>
+  </levregexp>
   <levels>
     <array index="1" value="0"/>
     <array index="2" value="2000"/>

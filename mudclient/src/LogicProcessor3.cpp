@@ -407,27 +407,79 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
 {
+    PropertiesData *pdata = tortilla::getProperties();
+    const PropertiesData::working_mode &m = pdata->mode;
+    if (!m.actions)
+        flags |= SKIP_ACTIONS;
+    if (!m.antisubs)
+        flags |= SKIP_COMPONENT_ANTISUBS;
+    if (!m.gags)
+        flags |= SKIP_COMPONENT_GAGS;
+    if (!m.subs)
+        flags |= SKIP_COMPONENT_SUBS;
+    if (!m.highlights)
+        flags |= SKIP_HIGHLIGHTS;
+    if (!m.plugins)
+        flags |= SKIP_COMPONENT_PLUGINS;
+
     // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
     m_plugins_log_tocache = true;
 
     // final step for data
     // preprocess data via plugins
-    if (!(flags & SKIP_PLUGINS_BEFORE))
+    if (!(flags & (SKIP_PLUGINS_BEFORE|SKIP_COMPONENT_PLUGINS) ))
         m_pHost->preprocessText(window, &parse_data);
 
-    // process lua triggers and actions
+    // process lua triggers
+    processActionsTriggers(parse_data, flags, pe, PROCESS_LUATRIGGERS);
+
+    if (!(flags & SKIP_SUBS))
+    {
+        if (!(flags & SKIP_COMPONENT_ANTISUBS))
+            m_helper.processAntiSubs(&parse_data);
+        if (!(flags & SKIP_COMPONENT_GAGS))
+            m_helper.processGags(&parse_data);
+        if (!(flags & SKIP_COMPONENT_SUBS))
+            m_helper.processSubs(&parse_data);
+    }
+
+    // process actions
+    processActionsTriggers(parse_data, flags, pe, PROCESS_ACTIONS);
+
+    if (!(flags & SKIP_HIGHLIGHTS))
+        m_helper.processHighlights(&parse_data);
+
+    // postprocess data via plugins
+    if (!(flags & (SKIP_PLUGINS_AFTER|SKIP_COMPONENT_PLUGINS) ))
+        m_pHost->postprocessText(window, &parse_data);
+
+    m_plugins_log_tocache = false;
+
+    int log = m_wlogs[window];
+    if (log != -1)
+        m_logs.writeLog(log, parse_data);     // write log
+    m_pHost->addText(window, &parse_data);    // send processed text to view
+}
+
+void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, TriggersType tt)
+{
+    if (flags & SKIP_ACTIONS) return;
+    if (tt == PROCESS_LUATRIGGERS) {
+        if (flags & SKIP_COMPONENT_PLUGINS) return;
+    }
+
+    // process lua triggers or actions
     PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
-    bool skip_actions = (flags & SKIP_ACTIONS);
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
         bool triggered = false;
-        if (!skip_actions)
+        if (tt == PROCESS_LUATRIGGERS) {
             triggered = luatriggers->processTriggers(parse_data, j, pe);
-        bool actions = false;
-        if (!skip_actions) {
-            actions = m_helper.processActions(&parse_data, j, pe);
         }
-        if (triggered || actions)
+        if (tt == PROCESS_ACTIONS) {
+            triggered = m_helper.processActions(&parse_data, j, pe);
+        }
+        if (triggered)
         {
             MudViewString *s = parse_data.strings[j];
             s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
@@ -440,26 +492,5 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
             parse_data.strings.resize(from);
             break;
         }
-    }
-
-    if (!(flags & SKIP_SUBS))
-    {
-        m_helper.processAntiSubs(&parse_data);
-        m_helper.processGags(&parse_data);
-        m_helper.processSubs(&parse_data);
-    }
-
-    if (!(flags & SKIP_HIGHLIGHTS))
-        m_helper.processHighlights(&parse_data);
-
-    // postprocess data via plugins
-    if (!(flags & SKIP_PLUGINS_AFTER))
-        m_pHost->postprocessText(window, &parse_data);
-
-    m_plugins_log_tocache = false;
-
-    int log = m_wlogs[window];
-    if (log != -1)
-        m_logs.writeLog(log, parse_data);     // write log
-    m_pHost->addText(window, &parse_data);    // send processed text to view
+    } 
 }

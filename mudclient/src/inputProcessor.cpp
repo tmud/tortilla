@@ -73,15 +73,54 @@ void InputTranslateParameters::doit(const InputParameters *params, tstring *cmd)
 
     tstring result;
     int pos = 0;
-    ParamsHelper values(*cmd, ParamsHelper::DEFAULT);
+    ParamsHelper values(*cmd, false);
     int values_count = values.getSize();
     for (int i = 0; i < values_count; ++i)
     {
-        result.append(cmd->substr(pos, values.getFirst(i) - pos));
+        bool last_number = false;
+
+        result.append(cmd->substr(pos, values.getFirst(i) - pos));        
         int id = values.getId(i);
-        if (id < params_count)
-            result.append(params_list[id]);
+        if (id < params_count && id >= 0)
+        {
+            tstring param(params_list[id]);
+            values.cutParameter(i, &param);
+            result.append(param);
+        }
+        if (id == -1)
+        {
+            int cmdlen = cmd->length();
+            int last = values.getLast(i);
+            if (last != cmdlen)
+            {
+                tchar s = cmd->at(last);
+                if (s >= '0' && s <= '9')
+                    last_number = true;
+            }
+            if (last_number)
+            {
+                tstring p(cmd->substr(last-1, 2));
+                result.append(p);
+            }
+            else
+            {
+                if (i == values_count-1)  // last parameter
+                {
+                    int from = values.getFirst(i);
+                    tstring p(cmd->substr(from));
+                    result.append(p);
+                }
+                else
+                {
+                    int from = values.getFirst(i);
+                    int len = values.getLast(i) - from;
+                    tstring p(cmd->substr(from, len));
+                    result.append(p);
+                }
+            }
+        }
         pos = values.getLast(i);
+        if (last_number) pos++;
     }
     result.append(cmd->substr(pos));
     cmd->swap(result);
@@ -144,7 +183,10 @@ void InputTemplateCommands::makeTemplates()
     for (int i=0,e=size(); i<e; ++i)
     {
         if (at(i).system)   // маркируем только системные
-            markbrackets(&at(i).templ);
+        { 
+            bool markered = markbrackets(&at(i).templ);
+            at(i).markered = markered;
+        }
     }
 }
 
@@ -173,8 +215,8 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
                  cmd->srccmd.append(s); 
              }
              else {
-                 cmd->srccmd.append(s.substr(0, from));
-                 cmd->srcparameters.append(s.substr(from)); 
+                 cmd->srccmd.append(s.substr(0, pos));
+                 cmd->srcparameters.append(s.substr(pos)); 
              }
         }
         else {
@@ -196,17 +238,26 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
         else if (pos == 0)
         {
             size_t from = wcsspn(t.c_str(), L" ");
-            if (cmd->system)
-                cmd->parameters.append(t.substr(from));
-            else {
             pos = t.find(L" ", from);
-            from = 0; //не обрезаем ведущие пробелы для игровых команд
+            //if (cmd->system)
+            //    cmd->parameters.append(t.substr(from));
+            //else {
+            //pos = t.find(L" ", from);
+            /*from = 0; //не обрезаем ведущие пробелы для игровых команд
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
                  cmd->command.append(t.substr(from, pos-from));
                  cmd->parameters.append(t.substr(pos));
-            }}
+            }}*/
+
+            if (pos == -1) {
+                cmd->command.append(t);
+            }
+            else {
+                cmd->command.append(t.substr(0, pos));
+                cmd->parameters.append(t.substr(pos));
+            }
         }
         else
         {
@@ -215,7 +266,11 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
         }
 
         if (cmd->system)
+        {
+            if (!subcmd.markered)
+                markbrackets(&cmd->parameters);
             fillsyscmd(cmd);
+        }
         else
             fillgamecmd(cmd);
         cmds->push_back(cmd);
@@ -241,6 +296,13 @@ void InputTemplateCommands::fillgamecmd(InputCommand cmd)
        }
        cmd->parameters_list.push_back(tstring(p, s-p));
        p = s;
+    }
+    if (!cmd->parameters_list.empty())
+    {
+        tstring &p = cmd->parameters_list[0];
+        if (p.at(0) == L' ') {
+            p = p.substr(1);
+        }
     }
 }
 
@@ -353,8 +415,9 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
     }
 }
 
-void InputTemplateCommands::markbrackets(tstring *cmd) const
+bool InputTemplateCommands::markbrackets(tstring *cmd) const
 {
+    bool marker_used = false;
     const tchar marker[2] = { MARKER , 0 };
     const tchar *b0 = cmd->c_str();
     const tchar *p = b0;
@@ -404,6 +467,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
             {
                stack.clear();
                // mark pair brackets
+               marker_used = true;
                newp.append(b, bracket_begin-b);
                newp.append(marker);
                newp.append(bracket_begin, p-bracket_begin);
@@ -425,6 +489,7 @@ void InputTemplateCommands::markbrackets(tstring *cmd) const
     if (b != e)
         newp.append(b);
     cmd->swap(newp);
+    return marker_used;
 }
 
 void InputTemplateCommands::unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const

@@ -67,11 +67,13 @@ void SettingsDlg::editButton(PadButton *button)
     if (!button)
         return;
 
-    std::wstring text, command;
+    std::wstring text, command, ttip;
     button->getText(&text);
     button->getCommand(&command);
     m_edit_text.SetWindowText(text.c_str());
     m_edit_command.SetWindowText(command.c_str());
+    button->getTooltip(&ttip);
+    m_edit_tooltip.SetWindowText(ttip.c_str());
     m_template_cmd.SetCheck(button->getTemplate() ? BST_CHECKED : BST_UNCHECKED);
 
     button->setSelected(true);
@@ -152,6 +154,16 @@ LRESULT SettingsDlg::OnCommandChanged(WORD, WORD, HWND, BOOL&)
     return 0;
 }
 
+LRESULT SettingsDlg::OnTooltipChanged(WORD, WORD, HWND, BOOL&)
+{
+    if (!m_editable_button)
+        return 0;
+    std::wstring ttip;
+    getWindowText(m_edit_tooltip, &ttip);
+    m_editable_button->setTooltip(ttip);
+    return 0;
+}
+
 LRESULT SettingsDlg::OnButtonExit(WORD, WORD, HWND, BOOL&)
 {
     exitEditMode();
@@ -226,11 +238,13 @@ void SettingsDlg::setEditableState(bool state)
     BOOL flag = state ? TRUE : FALSE;
     m_edit_text.EnableWindow(flag);
     m_edit_command.EnableWindow(flag);
+    m_edit_tooltip.EnableWindow(flag);
     m_del_button.EnableWindow(flag);
     if (!state)
     {
         m_edit_text.SetWindowText(L"");
         m_edit_command.SetWindowText(L"");
+        m_edit_tooltip.SetWindowText(L"");
     }
     if (!flag)
         m_template_cmd.SetCheck(BST_UNCHECKED);

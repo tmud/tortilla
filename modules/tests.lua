@@ -3,6 +3,8 @@
 -- запускаются при старте клиента
 
 do
+runCommand("#wait 2 { #plugin loadsave off }")
+runCommand("#wait 2 { #plugin testmisc off }")
 return
 end
 
@@ -136,3 +138,44 @@ print ('Автотесты для модулей extra.declension и extra.dicto
 
 -- автотесты для плагинов
 runCommand("#wait 2 { #plugin loadsave on }")
+runCommand("#wait 2 { #plugin testmisc on }")
+runCommand("#wait 2 { #message all on }")
+
+local s,m,h = system.getTime()
+print(h..":"..m..":"..s)
+
+local day,mon,year = system.getDate()
+print(day.."."..mon.."."..year)
+
+system.appendStringToFile("test.txt", "строка1\r\n")
+system.appendStringToFile("test.txt", "строка2\r\n")
+
+local t = system.loadTextFile("test.txt")
+if not t then
+  print("unit test (appendStringToFile+loadTextFile) faled")
+end
+if t[1] ~= 'строка1' or t[2] ~= 'строка2' then
+  print("unit test loadTextFile faled")
+end
+
+system.deleteFile("test.txt")
+
+if aliases:select('abc') then
+  aliases:delete()
+end
+aliases:add('abc', 'cde')
+aliases:replace('abc', '123')
+
+if aliases:select('abc') then
+  if aliases:get('value') ~= '123' then
+    print('aliases failed')
+  end
+  aliases:delete()
+end
+
+tabs:add('xyz')
+if tabs:select('xyz') then
+  tabs:delete()
+end
+
+--subs:add('%%', '$HOUR:$MINUTE:$SECOND %0')

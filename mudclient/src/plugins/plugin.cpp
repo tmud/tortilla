@@ -10,12 +10,26 @@ Plugin* _cp = NULL; // current plugin in lua methods
 #include "pluginSupport.h"
 #include "pluginsApi.h"
 
-bool Plugin::isPlugin(const wchar_t* fname)
+bool Plugin::isPluginEnabled(const wchar_t* fname)
 {
     const wchar_t *e = wcsrchr(fname, L'.');
     if (!e) return false;
     tstring ext(e+1);
-    return (ext == L"lua" || ext == L"dll") ? true : false;
+    bool itplugin = (ext == L"lua" || ext == L"dll") ? true : false;
+    if (!itplugin)
+        return false;
+    tstring name(fname, e-fname);
+    lua_getglobal(L, "off");
+    if (lua_istable(L, -1))
+    {
+        luaT_pushwstring(L, name.c_str());
+        lua_gettable(L, -2);
+        if (!lua_isnil(L, -1))
+            itplugin = false;
+        lua_pop(L, 1);
+    }
+    lua_pop(L, 1);
+    return itplugin;
 }
 
 bool Plugin::loadPlugin(const wchar_t* fname)
@@ -90,9 +104,10 @@ void Plugin::setOn(bool on)
             dockpanes[i]->resetRenderErrorState();
         for (int i = 0, e = panels.size(); i < e; ++i)
             panels[i]->resetRenderErrorState();
-        current_state = true;
         if (!runMethod("init", 0, 0))
             error_state = true;
+        getparam("description", &description);
+        current_state = true;
     }
     else if (current_state && !on) {
         current_state = false;

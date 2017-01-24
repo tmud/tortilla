@@ -269,7 +269,7 @@ void MudView::removeDropped(parseData* parse_data)
     for (int i=pds.size()-1; i>=0; --i)
     {
         MudViewString *string = pds[i];
-        if (string->dropped)
+        if (string->dropped && !string->show_dropped)
         {
             pds.erase(pds.begin() + i);
             m_dropped_strings.push_back(string);
@@ -709,6 +709,8 @@ void MudView::stopDraging()
     if (drag_end == -1 && drag_begin >= 0) { drag_end = 0; drag_right = 0; }
     if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t;
     t = drag_left; drag_left = drag_right; drag_right = t; }
+    if (drag_begin < 0)
+        drag_begin = 0;
 
     tstring text, tmp;
     if (drag_begin == drag_end)

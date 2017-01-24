@@ -110,7 +110,7 @@ public:
             break;
             }
         case LUA_TBOOLEAN:
-            swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? "false" : "true");
+            swprintf(dbuf, L"boolean: %s", (lua_toboolean(L, i) == 0) ? L"false" : L"true");
             result->append(dbuf);
             break;
         case LUA_TSTRING:

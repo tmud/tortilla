@@ -129,6 +129,9 @@ bool PropertiesManager::loadProfileData()
     if (m_propData.recognize_prompt_template.empty())
         m_propData.recognize_prompt = 0;
 
+    m_propData.rebar.clear();
+    loadString(sd, L"rebar", &m_propData.rebar);
+
     xml::request colors(sd, L"colors/color");
     for (int i=0,e=colors.size(); i<e; ++i)
     {
@@ -239,6 +242,7 @@ bool PropertiesManager::saveProfileData()
     saveString(sd, L"logformat", m_propData.logformat);
     saveValue(sd, L"prompt", m_propData.recognize_prompt);
     saveString(sd, L"ptemplate", m_propData.recognize_prompt_template);
+    saveString(sd, L"rebar", m_propData.rebar);
 
     xml::node c = sd.createsubnode(L"colors");
     saveRgbColor(c, L"background", m_propData.bkgnd);
@@ -566,4 +570,16 @@ bool PropertiesManager::loadProfile(const Profile& profile)
         return true;
     }
     return false;
+}
+
+bool PropertiesManager::checkProfile(const Profile& profile)
+{
+    tstring path(L"profiles\\");
+    path.append(profile.name);
+    path.append(L".xml");
+    xml::node sd;
+    ProfilePath config(profile.group, path);
+    bool result = sd.load(config);
+    sd.deletenode();
+    return result;
 }
