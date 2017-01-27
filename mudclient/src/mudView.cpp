@@ -343,7 +343,7 @@ void MudView::renderView()
 
     // render
     int line_heigth = propElements->font_height;
-    int y = pos.bottom;
+    int y = pos.bottom - 2;
     index = m_last_visible_line;
     count = m_lines_count + 1;
     while (index >= 0 && count > 0)
