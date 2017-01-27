@@ -28,6 +28,8 @@ class MudView : public CWindowImpl<MudView>
 
     std::vector<MudViewString*> m_dropped_strings;
 
+    bool m_scrollLock;
+
 public:
 	DECLARE_WND_CLASS_EX(NULL, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_BACKGROUND+1)
     MudView(PropertiesElements *elements, int id);
@@ -54,6 +56,7 @@ public:
     int  getCurrentFindString();
     void clearFind();
     void clearDropped();
+    void lockScroll(bool scrollmode);
 
 private:
 	BEGIN_MSG_MAP(MudView)

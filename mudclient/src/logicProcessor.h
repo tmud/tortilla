@@ -31,6 +31,7 @@ public:
     virtual PluginsTriggersHandler* getPluginsTriggers() = 0;
     virtual void clearDropped(int view) = 0;
     virtual void loadProfile(const tstring& profile, const tstring& group, tstring* error) = 0;
+    virtual void lockWindow(int view, bool lockmode) = 0;
 };
 
 class LogicProcessorMethods
@@ -208,4 +209,6 @@ public: // system commands
     DEF(load);
     DEF(savelog);
     DEF(none);
+    DEF(wlock);
+    DEF(wunlock);
 };
