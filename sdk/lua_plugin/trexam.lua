@@ -76,7 +76,7 @@ function trexam.before(v, vd)
   if v ~= 0 then return t end
 
   -- отбор данных в триггер, будет вызывается функция filter
-  if t and t:сheck(vd) then
+  if t and t:check(vd) then
     -- триггер сработал, т.к. пришел промпт
     -- получаем массив viewstring строк, уже отфильтрованных 
     local strings = t.strings
