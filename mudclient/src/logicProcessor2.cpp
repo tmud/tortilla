@@ -932,7 +932,7 @@ IMPL(plugin)
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
-    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
+    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый номер окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
     tmcLog(pb.buffer);
     p->invalidargs();
 }
@@ -1404,6 +1404,38 @@ IMPL(message)
     }
     p->invalidargs();
 }
+
+IMPL(wlock)
+{
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        int window = p->toInteger(0);
+        if (window < 1 || window > OUTPUT_WINDOWS)
+            return invalidwindow(p, 1, window);
+        m_pHost->lockWindow(window, true);
+        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл отключен.", window);
+        tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(wunlock)
+{
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        int window = p->toInteger(0);
+        if (window < 1 || window > OUTPUT_WINDOWS)
+            return invalidwindow(p, 1, window);
+        m_pHost->lockWindow(window, false);
+        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл включен.", window);
+        tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
 //-------------------------------------------------------------------
 IMPL(component)
 {
@@ -1591,6 +1623,9 @@ bool LogicProcessor::init()
     regCommand("savelog", savelog);
 
     regCommand("none", none, true);
+
+    regCommand("wlock", wlock);
+    regCommand("wunlock", wunlock);
 
     return true;
 }

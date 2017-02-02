@@ -1204,6 +1204,15 @@ private:
         }
     }
     void loadProfile(const tstring& name, const tstring& group, tstring* error);
+
+    void lockWindow(int view, bool lockmode)
+    {
+        if (view >= 1 && view <= OUTPUT_WINDOWS)
+        {
+            MudView* v = m_views[view-1];
+            v->lockScroll(lockmode);
+        }
+    }
     
     void addText(int view, parseData* parse_data)
     {

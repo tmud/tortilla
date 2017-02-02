@@ -13,7 +13,8 @@ m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1),
 m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1),
-m_id(id)
+m_id(id),
+m_scrollLock(false)
 {
     m_dragpt.x = m_dragpt.y = 0;
 }
@@ -119,6 +120,16 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
     int limited = checkLimit();
     if (limited_strings)
         *limited_strings = limited;
+
+    if (m_scrollLock) 
+    {
+        if (getStringsOnDisplay() < getStringsCount())
+        {
+            updateScrollbar(m_last_visible_line);
+            return;
+        }    
+    }
+
     int new_visible_line = m_strings.size() - 1;
     updateScrollbar(new_visible_line);
     Invalidate(FALSE);
@@ -281,6 +292,11 @@ void MudView::clearDropped()
 {
     std::for_each(m_dropped_strings.begin(), m_dropped_strings.end(), [](MudViewString*s){delete s;} );
     m_dropped_strings.clear();
+}
+
+void MudView::lockScroll(bool scrollmode)
+{
+    m_scrollLock = scrollmode;
 }
 
 void MudView::calcStringsSizes(mudViewStrings& pds)
