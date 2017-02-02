@@ -248,11 +248,9 @@ private:
                 int from = 0, to = 0;
                 m_edit.GetSel(from, to);
 
-                int curpos = to;
                 if (from != to)
-                    bartext.replace(from, to, L"");
-                else
-                    curpos = from + text.length();
+                    bartext.replace(from, to-from, L"");
+                int curpos = from + text.length();
                 bartext.insert(from, text);
                 setText(bartext);
                 m_edit.SetSel(curpos,curpos);
