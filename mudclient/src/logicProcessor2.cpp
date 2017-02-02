@@ -1414,7 +1414,7 @@ IMPL(wlock)
         if (window < 1 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 1, window);
         m_pHost->lockWindow(window, true);
-        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d отключен автоскролл.", window);
+        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл отключен.", window);
         tmcLog(pb.buffer);
         return;
     }
