@@ -104,12 +104,27 @@ void PopupWindow::startAnimation(int begin_posx, int begin_posy)
 
 bool PopupWindow::canMove() const
 {
-    return m_animation.state == Animation::ANIMATION_MOVE;
+    return (m_animation.state == Animation::ANIMATION_WAIT);
+}
+
+bool PopupWindow::isAnimated() const
+{
+    return (m_animation.state != Animation::ANIMATION_NONE);
+}
+
+void PopupWindow::wait()
+{
+    if (m_animation.state == Animation::ANIMATION_MOVE)
+        m_animation.state = Animation::ANIMATION_WAIT;
 }
 
 void PopupWindow::moveTo(const SharingWindow& pos)
 {
-
+    const SharingWindow &p = m_animation.pos;
+    m_move_dx = static_cast<float>(pos.x - p.x);
+    m_move_dy = static_cast<float>(pos.y - p.y);
+    m_destination = pos;
+    m_animation.state = Animation::ANIMATION_MOVE;
 }
 
 void PopupWindow::tick()
@@ -126,17 +141,7 @@ void PopupWindow::tick()
         alpha = min(alpha+da, 255.0f);
         setAlpha(alpha);
         if (alpha == 255.0f)
-        {
-            m_animation.state =  Animation::ANIMATION_MOVE;
-            return;
-        }
-    }
-    if (state == Animation::ANIMATION_MOVE)
-    {
-        wait_timer += dt;
-        int end_timer = m_animation.wait_sec * 1000;
-        if (wait_timer >= end_timer)
-            m_animation.state =  Animation::ANIMATION_FADE_DOWN;
+            m_animation.state = Animation::ANIMATION_WAIT;            
         return;
     }
     if (state == Animation::ANIMATION_FADE_DOWN)
@@ -146,18 +151,28 @@ void PopupWindow::tick()
         setAlpha(alpha);
         if (alpha == 0.0f)
             m_animation.state =  Animation::ANIMATION_NONE;
+        return;
     }
-
-    /*if (m_animation.state == Animation::ANIMATION_MOVE)
+    if (state == Animation::ANIMATION_WAIT)
+    {
+        wait_timer += dt;
+        int end_timer = m_animation.wait_sec * 1000;
+        if (wait_timer >= end_timer)
+        {
+            m_animation.state =  Animation::ANIMATION_FADE_DOWN;
+        }
+        return;
+    }
+    if (state == Animation::ANIMATION_MOVE)
     {
         const SharingWindow &curpos = m_animation.pos;
-        const POINT& target = m_move_animation.pos;
+        POINT target = { m_destination.x, m_destination.y };
 
         float x = static_cast<float>(curpos.x);
         float y = static_cast<float>(curpos.y);
 
-        float dx = m_move_dx * m_move_animation.speed * dt;
-        float dy = m_move_dy * m_move_animation.speed * dt;
+        float dx = m_move_dx * m_animation.speed * dt;
+        float dy = m_move_dy * m_animation.speed * dt;
 
         POINT p = { 0, 0 };
 
@@ -180,87 +195,24 @@ void PopupWindow::tick()
             { p.y = target.y; stop = true; }
         if (!stop && p.x == target.x && p.y == target.y)
             { stop = true; }
-        SIZE sz = getSize();
+        SIZE sz = { m_animation.pos.w, m_animation.pos.h };
         RECT pos = { p.x, p.y, p.x+sz.cx, p.y+sz.cy };
         MoveWindow(&pos);
+        SharingWindow &w = m_animation.pos;
+        w.x = pos.left; w.y = pos.top;
+        w.w = pos.right-pos.left; w.h = pos.bottom - pos.top;
+
+        //m_animation.pos = pos;
+
         if (stop)
         {
-            setState(ANIMATION_WAIT);
-            sendNotify(MOVEANIMATION_FINISHED);
+            m_animation.state =  Animation::ANIMATION_WAIT;
+
+            //setState(ANIMATION_WAIT);
+            //sendNotify(MOVEANIMATION_FINISHED);
         }
+        return;
     }
-       
-    float da = static_cast<float>(dt) * m_animation.speed;
-    if (m_animation_state == ANIMATION_TOEND)
-    {
-        alpha = min(alpha+da, 255.0f);
-        setAlpha(alpha);
-        if (alpha == 255.0f)
-        {
-            setState(ANIMATION_WAIT);
-            sendNotify(STARTANIMATION_FINISHED);
-        }
-    }
-    if (m_animation_state == ANIMATION_TOSTART)
-    {
-        alpha = max(alpha-da, 0.0f);
-        setAlpha(alpha);
-        if (alpha == 0.0f)
-            setState(ANIMATION_NONE);
-    }*/
-}
-
-/*void PopupWindow::startAnimation(const Animation& a)
-{
-    m_animation = a;
-    //setState(ANIMATION_);
-}
-
-void PopupWindow::startMoveAnimation(const MoveAnimation& a)
-{
-    const SharingWindow &p = m_animation.pos;
-    m_move_dx = static_cast<float>(a.pos.x - p.x);
-    m_move_dy = static_cast<float>(a.pos.y - p.y);
-    m_move_animation = a;
-    setState(ANIMATION_MOVE);
-}*/
-
-void PopupWindow::setState(int newstate)
-{
-   /* const Animation &a = m_animation;
-    m_animation_state = newstate;
-
-    switch(m_animation_state)
-    {
-    case ANIMATION_TOEND:
-    {
-        fillSrcDC();
-
-        BLENDFUNCTION blend;
-        blend.BlendOp = AC_SRC_OVER;
-        blend.BlendFlags = 0;
-        blend.AlphaFormat = 0;
-        blend.SourceConstantAlpha = 0;
-
-        CWindow dw(GetDesktopWindow());
-        CDC dstdc(dw.GetDC());
-        POINT dstpt = {a.pos.x, a.pos.y};
-        SIZE sz = getSize();
-        POINT srcpt = {0,0};
-        UpdateLayeredWindow(m_hWnd, (HDC)dstdc, &dstpt, &sz, m_src_dc, &srcpt, 0, &blend, ULW_ALPHA);
-        ShowWindow(SW_SHOWNA);
-    }
-    break;
-    case ANIMATION_NONE:
-
-        ShowWindow(SW_HIDE);
-        m_src_dc.destroy();
-        wait_timer = 0;
-        alpha = 0;
-        sendNotify(ANIMATION_FINISHED);
-    break;
-    }
-    m_ticker.sync();*/
 }
 
 SIZE PopupWindow::calcDCSize()

@@ -19,7 +19,7 @@ struct NotifyParams {
 
 struct Animation
 {
-    enum AnimationState { ANIMATION_NONE, ANIMATION_FADE_UP, ANIMATION_FADE_DOWN, ANIMATION_MOVE, ANIMATION_FINISHED };
+    enum AnimationState { ANIMATION_NONE, ANIMATION_FADE_UP, ANIMATION_FADE_DOWN, ANIMATION_MOVE, ANIMATION_WAIT };
     Animation() : state(ANIMATION_NONE), speed(0), wait_sec(0), bkgnd_color(0), text_color(0) {}
     SharingWindow pos;
     AnimationState state;
@@ -38,8 +38,10 @@ class PopupWindow : public CWindowImpl<PopupWindow>
     CFont *m_font;
     TempDC m_src_dc;
     Animation m_animation;
+    SharingWindow m_destination;
     int wait_timer;
-    float alpha, m_move_dx, m_move_dy;    
+    float alpha, m_move_dx, m_move_dy;
+
 public:
     DECLARE_WND_CLASS(NULL)
     PopupWindow() : m_font(NULL),
@@ -56,6 +58,8 @@ public:
     void tick();
     bool canMove() const;
     void moveTo(const SharingWindow& pos);
+    void wait();
+    bool isAnimated() const;
 
     /*bool isAnimated() const {  return (m_animation_state==ANIMATION_NONE) ? false : true; }
     int  getAnimationState() const { return m_animation_state; }
@@ -63,12 +67,10 @@ public:
     const MoveAnimation& getMoveAnimation() const { return m_move_animation; }*/
     //void startAnimation(const Animation& a);
     //void startMoveAnimation(const MoveAnimation& a);
-
-    
 private:
     void onTimer();
     void fillSrcDC();
-    void setState(int newstate);
+    //void setState(int newstate);
     SIZE calcDCSize();
     void setAlpha(float a);
     void onClickButton();

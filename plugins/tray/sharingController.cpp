@@ -60,7 +60,7 @@ bool SharingController::tryAddWindow(SharingWindow* sw, const RECT& working_area
     return true;
 }
 
-bool SharingController::tryMoveWindow(SharingWindow* sw)
+bool SharingController::tryMoveWindow(SharingWindow* sw, int dh)
 {
     SharedMemoryLocker l(&m_shared_memory);
     SharedMemoryData* m = l.memory();
@@ -80,9 +80,9 @@ bool SharingController::tryMoveWindow(SharingWindow* sw)
 
     SharingWindow *current = getWindow(index, m);
     SharingWindow *prev = getWindow(index-1, m);
-    int dh = prev->y - (current->y + current->h);
-    if (dh > 0) {
-        sw->y = prev->y - current->h;
+    int dy = prev->y - (current->y + current->h);
+    if (dy > 0) {
+        sw->y = prev->y - dh - current->h;
         return true;
     }
     return false;

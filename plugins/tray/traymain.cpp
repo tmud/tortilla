@@ -9,7 +9,6 @@ TrayMainObject::~TrayMainObject()
     for (int i=0,e=m_windows.size(); i<e;++i)
     {
         PopupWindow *pw = m_windows[i];
-        pw->DestroyWindow();
         delete pw;
     }
     m_windows.clear();
@@ -78,9 +77,8 @@ bool TrayMainObject::showMessage(const Msg& msg)
     np.wnd = m_hWnd;
     np.msg = WM_USER;
     np.wparam = (WPARAM)w;
-
     w->setText(msg, np, m_settings.timeout);
-   
+
     SharingWindow sw = w->getPosition();
     if (!m_shared.tryAddWindow(&sw, m_workingarea, 4))
     {
@@ -101,12 +99,27 @@ void TrayMainObject::onTickPopups()
     {
         PopupWindow *w = m_windows[i];
         if (!w->canMove()) continue;
-        SharingWindow sw = w->getPosition();
-        if (m_shared.tryMoveWindow(&sw))
+        SharingWindow sw = w->getPosition();        
+        if (m_shared.tryMoveWindow(&sw, 4))
             w->moveTo(sw);
+        else
+            w->wait();
     }
+
+    std::vector<PopupWindow*> next;
     for (int i=0,e=m_windows.size();i<e;++i)
-        m_windows[i]->tick();
+    {
+        PopupWindow *w = m_windows[i];
+        w->tick();
+        if (!w->isAnimated()) {
+            const SharingWindow *sw = &w->getPosition(); 
+            m_shared.deleteWindow(sw);
+            freeWindow(w);
+        } else {
+          next.push_back(w);
+        }
+    }
+    m_windows.swap(next);
 }
 
 
