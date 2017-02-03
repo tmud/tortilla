@@ -34,6 +34,17 @@ int msgBox(HWND parent, UINT msg, UINT options)
     return msgBox(parent, msg_text, options);
 }
 
+int msgBox(HWND parent, UINT msg, const tstring&descr, UINT options)
+{
+    tstring msg_text;
+    loadString(msg, &msg_text);
+    if (!descr.empty()) {
+        msg_text.append(L"\n\n");
+        msg_text.append(descr);
+    }
+    return msgBox(parent, msg_text, options);
+}
+
 void getWindowText(HWND handle, tstring *string)
 {
     int text_len = ::GetWindowTextLength(handle);

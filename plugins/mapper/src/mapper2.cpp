@@ -183,10 +183,11 @@ void Mapper::loadMaps(lua_State *L)
         tstring filepath(dir);
         filepath.append(file);
 
+        tstring error;
         xml::node zn;
         bool loaded = false;
         Zone *zone = new Zone(name);
-        if (zn.load(filepath.c_str()))
+        if (zn.load(filepath.c_str(), &error))
         {
             loaded = true;
             xml::request levels(zn, L"level");
@@ -280,6 +281,8 @@ void Mapper::loadMaps(lua_State *L)
                     }
                 }
             }}
+        } else {
+            base::log(L, error.c_str());
         }
 
         zn.deletenode();

@@ -105,11 +105,13 @@ private:
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
         CReBarCtrl rebar = m_hWndToolBar;
+        if (rebar.IsWindow()) {
         CReBarSettings rbs;
         tstring param;
         rbs.Save(rebar, &param);
         PropertiesData *pdata = m_gameview.getPropData();
         pdata->rebar = param;
+        }
 
         // unregister message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();

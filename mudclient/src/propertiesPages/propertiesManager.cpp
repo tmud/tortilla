@@ -39,20 +39,21 @@ bool PropertiesManager::init()
     return true;
 }
 
-bool PropertiesManager::loadProfile()
+bool PropertiesManager::loadProfile(tstring *error)
 {
-    if (loadSettings() && loadProfileData())
+    if (loadSettings(error) && loadProfileData(error))
     {
-        loadHistory();
+        tstring dummy;
+        loadHistory(&dummy);
         return true;
     }
     return false;
 }
 
-bool PropertiesManager::loadSettings()
+bool PropertiesManager::loadSettings(tstring *error)
 {
     xml::node sd;
-    if (!loadFromFile(sd, L"settings.xml"))
+    if (!loadFromFile(sd, L"settings.xml", error))
         return false;
 
     tstring profile;
@@ -67,11 +68,11 @@ bool PropertiesManager::loadSettings()
     return true;
 }
 
-bool PropertiesManager::loadHistory()
+bool PropertiesManager::loadHistory(tstring* error)
 {
     m_propData.cmd_history.clear();
     xml::node hd;
-    if (!loadFromFile(hd, L"history.xml"))
+    if (!loadFromFile(hd, L"history.xml", error))
         return false;
 
     xml::request r(hd, L"cmd");
@@ -88,7 +89,7 @@ bool PropertiesManager::loadHistory()
     return true;
 }
 
-bool PropertiesManager::loadProfileData()
+bool PropertiesManager::loadProfileData(tstring *error)
 {
     m_propData.initAllDefault();
     tstring profile(L"profiles\\");
@@ -96,7 +97,7 @@ bool PropertiesManager::loadProfileData()
     profile.append(L".xml");
 
     xml::node sd;
-    if (!loadFromFile(sd, profile))
+    if (!loadFromFile(sd, profile, error))
         return false;
 
     loadValue(sd, L"viewsize", MIN_VIEW_HISTORY_SIZE, MAX_VIEW_HISTORY_SIZE, &m_propData.view_history_size);
@@ -503,10 +504,11 @@ void PropertiesManager::saveRgbColor(xml::node parent, const tstring& name, COLO
     n.set(L"b", GetBValue(color));    
 }
 
-bool PropertiesManager::loadFromFile(xml::node& node, const tstring& file)
+bool PropertiesManager::loadFromFile(xml::node& node, const tstring& file, tstring* error)
 {
     ProfilePath config(m_profile.group, file);
-    return (node.load(config)) ? true : false;
+    bool result = (node.load(config, error)) ? true : false;
+    return result;
 }
 
 bool PropertiesManager::saveToFile(xml::node node, const tstring& file)
@@ -552,20 +554,24 @@ bool PropertiesManager::createEmptyProfile(const Profile& profile)
     return result;
 }
 
-bool PropertiesManager::copyProfile(const Profile& src, const Profile& dst)
+bool PropertiesManager::copyProfile(const Profile& src, const Profile& dst, tstring* error)
 {
     NewProfileHelper h;
-    if (!h.copy(src, dst))
+    if (!h.copy(src, dst)) {
+        if (error)
+            error->assign(L"Can't copy profile");
         return false;
-    return loadProfile(dst);
+    }
+    return loadProfile(dst, error);
 }
 
-bool PropertiesManager::loadProfile(const Profile& profile)
+bool PropertiesManager::loadProfile(const Profile& profile, tstring* error)
 {
     m_profile = profile;
-    if (loadProfileData())
+    if (loadProfileData(error))
     {
-        loadHistory();
+        tstring dummy;
+        loadHistory(&dummy);
         saveSettings();
         return true;
     }
@@ -579,7 +585,7 @@ bool PropertiesManager::checkProfile(const Profile& profile)
     path.append(L".xml");
     xml::node sd;
     ProfilePath config(profile.group, path);
-    bool result = sd.load(config);
+    bool result = sd.load(config, NULL);
     sd.deletenode();
     return result;
 }

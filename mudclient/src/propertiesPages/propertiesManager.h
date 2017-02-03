@@ -8,7 +8,7 @@ public:
     ~PropertiesManager();
 
     bool init();
-    bool loadProfile();
+    bool loadProfile(tstring *error);
     bool saveProfile();
     PropertiesData* getConfig() { return &m_propData; }
     const tstring& getProfileGroup() const { return m_profile.group; }
@@ -16,14 +16,14 @@ public:
     const Profile& getProfile() const { return m_profile; }
     bool isFirstStartup() const { return m_first_startup; }
     bool createEmptyProfile(const Profile& profile);
-    bool copyProfile(const Profile& src, const Profile& dst);
-    bool loadProfile(const Profile& profile);
+    bool copyProfile(const Profile& src, const Profile& dst, tstring* error);
+    bool loadProfile(const Profile& profile, tstring* error);
     bool checkProfile(const Profile& profile);
 
 private:
-    bool loadSettings();
-    bool loadHistory();
-    bool loadProfileData();
+    bool loadSettings(tstring *error);
+    bool loadHistory(tstring* error);
+    bool loadProfileData(tstring *error);
     bool saveProfileData();
     bool saveHistory();
     bool saveSettings();
@@ -41,7 +41,7 @@ private:
     void saveRgbColor(xml::node parent, const tstring& name, COLORREF color);
     bool loadRECT(xml::node n, RECT *rc);
     void saveRECT(xml::node n, const RECT &rc);
-    bool loadFromFile(xml::node& node, const tstring& file);
+    bool loadFromFile(xml::node& node, const tstring& file, tstring* error);
     bool saveToFile(xml::node node, const tstring& file);
     bool loadMapperData();
     bool saveMapperData();

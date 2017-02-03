@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.12");
+    luaT_pushwstring(L, L"1.13");
     return 1;
 }
 
@@ -76,8 +76,9 @@ int init(lua_State *L)
     s.text = GetSysColor(COLOR_INFOTEXT);
     s.background = GetSysColor(COLOR_INFOBK);
 
+    std::wstring error;
     xml::node ld;
-    if (ld.load(path.c_str()) && ld.move(L"params"))
+    if (ld.load(path.c_str(), &error) && ld.move(L"params"))
     {
         if (ld.get(L"timeout", &s.timeout))
             check_minmax(&s.timeout, 1, 5, MAX_TIMEOUT, MAX_TIMEOUT);
@@ -93,6 +94,8 @@ int init(lua_State *L)
         if (ld.get(L"bkgndcolor", &bkgnd))
             parse_color(bkgnd, &s.background);
         ld.move(L"/");
+    } else {
+      base::log(L, error.c_str());
     }
     ld.deletenode();
     return 0;

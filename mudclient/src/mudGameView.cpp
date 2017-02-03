@@ -27,13 +27,16 @@ bool MudGameView::initialize()
         return false;
     }
 
-    if (!m_manager.loadProfile())
+    tstring error;
+    if (!m_manager.loadProfile(&error))
     {
-        if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, MB_YESNO|MB_ICONSTOP) != IDYES)
+        if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, error, MB_YESNO|MB_ICONSTOP) != IDYES)
+        {
             return false;
+        }
         Profile p(m_manager.getProfile());
         p.name = default_profile_name;
-        if (!m_manager.loadProfile(p))
+        if (!m_manager.loadProfile(p, &error))
         {
             if (!m_manager.createEmptyProfile(p))
             {
@@ -79,12 +82,15 @@ void MudGameView::onNewProfile()
         }
         else
         {
-            if (!m_manager.copyProfile(data.src, data.dst)) {
-                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, MB_OK|MB_ICONSTOP); successed = false;
+            tstring error;
+            if (!m_manager.copyProfile(data.src, data.dst, &error)) {
+                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, error, MB_OK|MB_ICONSTOP); successed = false;
             }
         }
-        if (!successed)
-            m_manager.loadProfile(current);
+        if (!successed) {
+            tstring error;
+            m_manager.loadProfile(current, &error);
+        }
 
         updateProps();
         loadClientWindowPos();
@@ -122,10 +128,11 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
         loadPlugins();
         return;
     }
-    if (!m_manager.loadProfile(profile))
+    if (!m_manager.loadProfile(profile, error))
     {
-        error->assign(L"Не получилось загрузить профиль.");
-        m_manager.loadProfile(current);
+        //error->assign(L"Не получилось загрузить профиль.");
+        tstring dummy;
+        m_manager.loadProfile(current, &dummy);
     }
     updateProps();
     loadClientWindowPos();
@@ -166,11 +173,12 @@ void MudGameView::onLoadProfile()
                 return;
             }
         }
-        if (!m_manager.loadProfile(profile))
+        tstring error;
+        if (!m_manager.loadProfile(profile, &error))
         {
-            msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, MB_OK|MB_ICONSTOP);
+            msgBox(m_hWnd, IDS_ERROR_LOADPROFILE_FAILED, error, MB_OK|MB_ICONSTOP);
             if (!reload_same_profile)
-                m_manager.loadProfile(current);
+                m_manager.loadProfile(current, &error);
         }
         updateProps();
         if (!reload_same_profile)
@@ -203,8 +211,9 @@ void MudGameView::onNewWorld()
         bool successed = true;
         if (!data.src.group.empty())
         {
-            if (!m_manager.copyProfile(data.src, data.dst)) {
-                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
+            tstring error;
+            if (!m_manager.copyProfile(data.src, data.dst, &error)) {
+                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, error, MB_OK | MB_ICONSTOP); successed = false;
             }
         }
         else
@@ -213,8 +222,10 @@ void MudGameView::onNewWorld()
                 msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
             }
         }
-        if (!successed)
-            m_manager.loadProfile(current);
+        if (!successed) {
+            tstring error;
+            m_manager.loadProfile(current, &error);
+        }
 
         updateProps();
         loadClientWindowPos();

@@ -628,14 +628,14 @@ int loadTable(lua_State *L)
 {
     EXTRA_CP;
     if (!_cp)
-        return pluginNotDeclared(L, L"loadTable");        
+        return pluginNotDeclared(L, L"loadTable");
     if (!luaT_check(L, 1, LUA_TSTRING))
         return pluginInvArgs(L, L"loadTable");
 
     tstring filename(luaT_towstring(L, 1));
     lua_pop(L, 1);
 
-    PropertiesManager *pmanager = tortilla::getPropertiesManager();    
+    PropertiesManager *pmanager = tortilla::getPropertiesManager();
     ProfilePluginPath pp(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename);
     filename.assign(pp);
 
@@ -652,10 +652,11 @@ int loadTable(lua_State *L)
         return loadTableLua(L, filename);
     }
 
+    std::wstring error;
     xml::node doc;
-    if (!doc.load(pp) )
+    if (!doc.load(pp, &error) )
     {
-       swprintf(plugin_buffer(), L"Ошибка чтения: %s", filename);
+       swprintf(plugin_buffer(), L"Ошибка чтения: %s\n%s", filename, error.c_str());
        tstring tmp(plugin_buffer());
        pluginMethodError(L"loadTable", tmp.c_str());
        return 0;

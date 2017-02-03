@@ -39,8 +39,9 @@ int init(lua_State *L)
 
     m_props.initAllDefault();
 
+    tstring error;
     xml::node ld;
-    if (ld.load(path.c_str()))
+    if (ld.load(path.c_str(), &error))
     {
         ld.get(L"darkroom/label", &m_props.dark_room);
         ld.get(L"name/begin", &m_props.begin_name);
@@ -70,6 +71,8 @@ int init(lua_State *L)
             ld.get(L"up", &m_props.up_cmd);
             ld.get(L"down", &m_props.down_cmd);
         }
+    } else {
+        base::log(L, error.c_str());
     }
     ld.deletenode();
 

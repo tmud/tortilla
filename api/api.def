@@ -8,6 +8,7 @@ EXPORTS
 	strbuf_destroy
 	strbuf_new
 	xml_load
+	xml_get_load_error
 	xml_save
 	xml_open
 	xml_delete

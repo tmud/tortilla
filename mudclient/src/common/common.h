@@ -4,6 +4,7 @@ bool isVistaOrHigher();
 void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, const tstring& msg, UINT options);
 int msgBox(HWND parent, UINT msg, UINT options);
+int msgBox(HWND parent, UINT msg, const tstring&descr, UINT options);
 void getWindowText(HWND handle, tstring *string);
 bool w2int(const tstring& str, int *value);
 void int2w(int value, tstring* str);

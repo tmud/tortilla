@@ -1169,6 +1169,7 @@ typedef void* xlist;
 typedef strbuf xstringw; // use strbuf_destroy to free string memory
 
 xnode xml_load(const wchar_t* filename);
+xstringw xml_get_load_error();
 int   xml_save(xnode node, const wchar_t* filename);
 xnode xml_open(const wchar_t* name);
 void  xml_delete(xnode node);
@@ -1199,7 +1200,14 @@ namespace xml
         ~node() {}
         operator xnode() { return m_Node; }
         operator bool() const { return (m_Node) ? true : false; }
-        bool load(const wchar_t *filename) { deletenode();  m_Node = xml_load(filename); return m_Node ? true : false; }
+        bool load(const wchar_t *filename, std::wstring* error) {
+            deletenode();
+            m_Node = xml_load(filename);
+            bool result = m_Node ? true : false;
+            if (!result && error)
+                _getp(xml_get_load_error(), error);
+            return result;
+        }
         bool save(const wchar_t *filename) { int result = xml_save(m_Node, filename); return result ? true : false; }
         void deletenode() { xml_delete(m_Node); m_Node = NULL; }
         void getname(std::wstring *name) { _getp(xml_get_name(m_Node), name); }

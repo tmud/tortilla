@@ -87,12 +87,15 @@ int init(lua_State *L)
     DWORD fa = GetFileAttributes(path.c_str());
     if (fa != INVALID_FILE_ATTRIBUTES && !(fa&FILE_ATTRIBUTE_DIRECTORY))
     {
-        bool result = ld.load(path.c_str());
+    	std::wstring error;
+        bool result = ld.load(path.c_str(), &error);
         if (!result)
         {
-            std::wstring error(L"Ошибка загрузки списка с кнопками: ");
-            error.append(path);
-            base::log(L, error.c_str());
+            std::wstring text(L"Ошибка загрузки списка с кнопками: ");
+            text.append(path);
+            text.append(L"\n");
+            text.append(error);
+            base::log(L, text.c_str());
         }
     }
 
