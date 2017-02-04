@@ -19,7 +19,7 @@ function status.description()
 end
 
 function status.version()
-  return '1.04'
+  return '1.05'
 end
 
 local r
@@ -125,11 +125,22 @@ function status.init()
   if not t.position or (t.position ~= 'top' and t.position ~= 'bottom') then term('position') end
   if not t.count or type(t.count) ~= 'number' or t.count < 1 then term('count') end
   if t.ticker then
-    if type(t.ticker) ~= 'string' or t.ticker == '' then term('ticker') end
+    if type(t.ticker) ~= 'string' and type(t.ticker) ~= 'table' then term('ticker') end
+    if type(t.ticker) == 'string' and t.ticker == '' then term('ticker') end
+    if type(t.ticker) == 'table' and #t.ticker == 0 then term('ticker') end
     if not t.ticker_seconds or type(t.ticker_seconds) ~= 'number' or t.ticker_seconds < 1 then term('ticker_seconds') end
     if not t.ticker_window or type(t.ticker_window) ~= 'number' or t.ticker_window < 1 or t.ticker_window > t.count then term('ticker_window') end
     if t.ticker_color and type(t.ticker_color) ~= 'string' then term('ticker_color') end
-    if not createTrigger(t.ticker, start_new_tick) then term('ticker') end
+    local trigs = t.ticker
+    if type(trigs) == 'string' then trigs = { trigs } end
+    local fail = 0
+    for _,s in pairs(trigs) do
+      if not createTrigger(s, start_new_tick) then 
+        log('Ошибка в триггере для тикера (работать не будет): '..s)
+        fail = fail + 1
+      end
+    end
+    if fail == #trigs then term('ticker') end
     ticker_seconds = t.ticker_seconds
     ticker_window = t.ticker_window
     ticker_panel.tcolor, ticker_panel.color = translateColors(t.ticker_color, ticker_panel.tcolor, ticker_panel.color)
