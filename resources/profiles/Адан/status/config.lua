@@ -17,3 +17,6 @@ ticker_window = 1
 
 -- Цвет текста и фона в панели с тикером (#help color). Необязательно.
 ticker_color = 'white'
+
+-- Рестарт тикера, если не приходит ключевая фраза
+ticker_restart = false

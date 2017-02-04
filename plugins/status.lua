@@ -19,7 +19,7 @@ function status.description()
 end
 
 function status.version()
-  return '1.05'
+  return '1.06'
 end
 
 local r
@@ -75,7 +75,7 @@ function status.syscmd(t)
   return nil
 end
 
-local ticker_on, ticker_window, ticker_seconds
+local ticker_on, ticker_window, ticker_seconds, ticker_restart
 local ticker_panel = { text = '', tcolor = props.paletteColor(7), color = props.backgroundColor() }
 
 local function set_ticker(t)
@@ -103,6 +103,9 @@ function status.tick()
       counter = 0
     end
     set_ticker(''..counter)
+    if counter == 0 and ticker_restart then
+      start_new_tick()
+    end
   else
     counter = nil
   end
@@ -141,6 +144,7 @@ function status.init()
       end
     end
     if fail == #trigs then term('ticker') end
+    ticker_restart = t.ticker_restart
     ticker_seconds = t.ticker_seconds
     ticker_window = t.ticker_window
     ticker_panel.tcolor, ticker_panel.color = translateColors(t.ticker_color, ticker_panel.tcolor, ticker_panel.color)
