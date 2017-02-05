@@ -1,6 +1,6 @@
 #pragma once
 
-#define TORTILLA_VERSION L"1.0beta9"
+#define TORTILLA_VERSION L"1.0beta10"
 #define TORTILLA_VERSION_MAJOR 1
 #define TORTILLA_VERSION_MINOR 0
 
