@@ -124,6 +124,6 @@ private:
     std::map<tstring, Zone*> m_zones;
     typedef std::map<tstring, Zone*>::iterator zone_iterator;
     int m_nextzone_id;
-    std::map<RoomVnum, Room*> m_rooms;
-    typedef std::map<RoomVnum, Room*>::iterator room_iterator;
+    std::map<tstring, Room*> m_rooms;
+    typedef std::map<tstring, Room*>::iterator room_iterator;
 };

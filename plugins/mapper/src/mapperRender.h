@@ -4,6 +4,14 @@
 #include "mapperRoomRender.h"
 #include "menuXP.h"
 
+enum ViewCursorColor { RCC_NORMAL = 0, RCC_LOST };
+struct ViewMapPosition
+{
+    ViewMapPosition() : room(NULL), cursor(RCC_NORMAL) {}
+    Room* room;
+    ViewCursorColor cursor;
+};
+
 class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;

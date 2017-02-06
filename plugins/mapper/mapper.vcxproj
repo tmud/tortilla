@@ -100,7 +100,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libs\common\autodel.h" />
     <ClInclude Include="..\..\libs\common\crc32.h" />
     <ClInclude Include="..\..\libs\common\dataQueue.h" />
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />

@@ -1,6 +1,6 @@
 #pragma once
 #define ROOM_DIRS_COUNT 6
-enum RoomDir { RD_NORTH = 0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN, RD_UNKNOWN=-1 };
+enum RoomDir { RD_UNKNOWN=-1, RD_NORTH = 0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN };
 struct Room;
 class RoomsLevel;
 

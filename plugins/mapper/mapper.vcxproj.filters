@@ -15,6 +15,9 @@
     <Filter Include="External Common Libs">
       <UniqueIdentifier>{7b1716d7-0314-4260-a05e-4eaaa492bf96}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Disabled Files">
+      <UniqueIdentifier>{bd168d13-982f-496d-b11c-2b827ad3fb8a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="res\resource.h">
@@ -32,9 +35,6 @@
     <ClInclude Include="src\mapperSettings.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mapperRoomsCache.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\mapperRoomRender.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -47,17 +47,11 @@
     <ClInclude Include="src\mapperObjects.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mapperHashTable.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\mapper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\stdafx.h">
       <Filter>Main Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\libs\common\autodel.h">
-      <Filter>External Common Libs</Filter>
     </ClInclude>
     <ClInclude Include="..\..\libs\common\crc32.h">
       <Filter>External Common Libs</Filter>
@@ -74,9 +68,6 @@
     <ClInclude Include="src\editListBox.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\helpers.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\mudclient\src\palette256.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
@@ -85,6 +76,15 @@
     </ClInclude>
     <ClInclude Include="src\mapperObjects2.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helpers.h">
+      <Filter>Disabled Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mapperRoomsCache.h">
+      <Filter>Disabled Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mapperHashTable.h">
+      <Filter>Disabled Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -98,9 +98,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapperObjects.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mapperHashTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapper.cpp">
@@ -126,6 +123,9 @@
     </ClCompile>
     <ClCompile Include="src\mapperObjects2.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapperHashTable.cpp">
+      <Filter>Disabled Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

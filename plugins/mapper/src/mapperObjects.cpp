@@ -1,7 +1,34 @@
 #include "stdafx.h"
 #include "mapperObjects.h"
 
-int RoomsLevel::height() const
+const RoomsLevelParams& RoomsLevel::params()
+{
+    RoomsLevelParams &p = m_params;
+    if (rooms.empty()) {
+        p.width = p.height = 0; 
+    } else {
+        p.width = rooms[0]->rr.size();
+        p.height = rooms.size();    
+    }
+    if (m_invalidBox)
+    {
+        m_invalidBox = false;
+        p.left = p.right = p.top = p.bottom = -1;
+        for (int i = 0, e = rooms.size(); i < e; ++i)
+        {
+            int left = rooms[i]->left;
+            if (left == -1) continue;
+            if (p.left == -1 || left < p.left) p.left = left;
+            int right = rooms[i]->right;
+            if (right > p.right) p.right = right;
+            if (p.top == -1 && p.left != -1) p.top = i;
+            if (p.left != -1) p.bottom = i;
+        }
+    }
+    return p;
+}
+
+/*int RoomsLevel::height() const
 {
     return rooms.size();    
 }
@@ -21,19 +48,17 @@ const RoomsLevelBox& RoomsLevel::box()
         calcBoundingBox();
     }
     return m_box;
-}
+}*/
 
-bool RoomsLevel::isEmpty() const
+/*bool RoomsLevel::isEmpty() const
 {
-    int w = width();
-    int h = height();
-    for (int y = 0; y < h; ++y) {
-    for (int x = 0; x < w; ++x) {
-        if (rooms[y]->rr[x])
-            return false;
+    const RoomsLevelParams& p = params();    
+    for (int y = 0; y < p.height; ++y) {
+    for (int x = 0; x < p.width; ++x) {
+        if (rooms[y]->rr[x]) return false;
     }}
     return true;
-}
+}*/
 
 Room* RoomsLevel::getRoom(int x, int y)
 {
@@ -46,7 +71,7 @@ Room* RoomsLevel::getRoom(int x, int y)
 bool RoomsLevel::addRoom(Room* r, int x, int y)
 {
     m_changed = true;
-    zone->resizeLevels(x, y);   // resize levels first
+    m_params.zone->resizeLevels(x, y); // resize levels first
     if (x < 0) x = 0;
     if (y < 0) y = 0;
 
@@ -54,14 +79,14 @@ bool RoomsLevel::addRoom(Room* r, int x, int y)
     if (row_y->rr[x])
     {
         assert(false);
-        return false;           // room exist
+        return false;                 // room exist
     }
     r->x = x;
     r->y = y;
     r->level = this;
     row_y->rr[x] = r;
     row_y->recalc_leftright();    
-    m_invalidBoundingBox = true;
+    m_invalidBox = true;
     return true;
 }
 
@@ -83,29 +108,14 @@ Room* RoomsLevel::detachRoom(int x, int y)
         room->level = NULL;
         row_y->rr[x] = NULL;
         row_y->recalc_leftright();
-        m_invalidBoundingBox = true;
+        m_invalidBox = true;
     }
     return room;
 }
 
-void RoomsLevel::calcBoundingBox()
-{
-    RoomsLevelBox &b = m_box;
-    b.left = b.right = b.top = b.bottom = -1;
-    for (int i = 0, e = rooms.size(); i < e; ++i)
-    {
-        int left = rooms[i]->left;        
-        if (left == -1) continue;
-        if (b.left == -1 || left < b.left) b.left = left;
-        int right = rooms[i]->right;
-        if (right > b.right) b.right = right;
-        if (b.top == -1 && b.left != -1) b.top = i;
-        if (b.left != -1) b.bottom = i;
-    }
-}
-
 void RoomsLevel::resizeLevel(int x, int y)
 {
+    const RoomsLevelParams&p = params();
     int mx = 0; int my = 0; // delta for coords
     if (x < 0)
     {
@@ -117,7 +127,7 @@ void RoomsLevel::resizeLevel(int x, int y)
                v.insert(v.begin(), NULL);
         }
     }
-    else if (x >= width())
+    else if (x >= p.width)
     {
         for (int i=0,e=rooms.size(); i<e; ++i)
         {
@@ -131,17 +141,17 @@ void RoomsLevel::resizeLevel(int x, int y)
         for (int c=-y; c; --c)
         {
             row *r = new row;
-            r->rr.resize(width(), NULL);
+            r->rr.resize(p.width, NULL);
             rooms.insert(rooms.begin(), r);
         }
     }
-    else if (y >= height())
+    else if (y >= p.height)
     {
-        int c=y-height()+1;
+        int c=y-p.height+1;
         for (; c; --c)
         {
             row *r = new row;
-            r->rr.resize(width(), NULL);
+            r->rr.resize(p.width, NULL);
             rooms.push_back(r);
         }
     }
@@ -151,44 +161,46 @@ void RoomsLevel::resizeLevel(int x, int y)
     for (int i = 0, e = rooms.size(); i < e; ++i)
         rooms[i]->recalc_leftright();
     
-    for (int i=0,e=width(); i<e; ++i) {
-    for (int j=0,je=height(); j<je; ++j) {
-    Room *room = getRoom(i, j);
-    if (room) { room->x += mx; room->y += my; }
+    for (int i=0,e=p.width; i<e; ++i) {
+    for (int j=0,je=p.height; j<je; ++j) {
+      Room *room = getRoom(i, j);
+      if (room) { room->x += mx; room->y += my; }
     }}
 }
 
-bool RoomsLevel::checkCoords(int x, int y) const
+bool RoomsLevel::checkCoords(int x, int y)
 {
-    return (x >= 0 && x < width() && y >= 0 && y < height()) ? true : false;            
+    const RoomsLevelParams&p = params();
+    return (x >= 0 && x < p.width && y >= 0 && y < p.height) ? true : false;            
 }
 
 RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
 {
-    int last = m_levels.size() + start_index - 1;
-    if (level >= start_index && level <= last)
+    const ZoneParams& zp = params();
+    if (level >= zp.minlevel && level <= zp.maxlevel)
     {
-        int index = level - start_index;
+        int index = level - zp.minlevel;
         RoomsLevel *level = m_levels[index];
         if (level)
             return level;
     }
     if (!create_if_notexist)
-        return NULL;   
+        return NULL;
 
     RoomsLevel *new_level = new RoomsLevel(this, level);    
     if (m_levels.empty())
     {
-        start_index = level;
+        zp.minlevel = level;
         m_levels.push_back(new_level);
         return new_level;
     }
     RoomsLevel *rl = m_levels[0];
-    new_level->resizeLevel(rl->width()-1, rl->height()-1);
+    const RoomsLevelParams& p = rl->params();
+    new_level->resizeLevel(p.width-1, p.height-1);
 
-    if (level < start_index)
+    if (level < m_params.minlevel)
     {
-        int count = start_index - level;
+        int count =  m_params.minlevel - level;
         m_levels.insert(m_levels.begin(), count, NULL);
         start_index = level;        
     }
@@ -210,9 +222,9 @@ RoomsLevel* Zone::getDefaultLevel()
     for (int i = 0, e = m_levels.size(); i < e; ++i)
     {
         RoomsLevel *level = m_levels[i];
-        const RoomsLevelBox& box = level->box();
-        int w = box.right - box.left + 1;
-        int h = box.bottom - box.top + 1;
+        const RoomsLevelParams&p = level->params();
+        int w = p.right - p.left + 1;
+        int h = p.bottom - p.top + 1;
         int new_area = w * h;
         if (new_area > area) { area = new_area; index = i; }
     }
@@ -220,15 +232,26 @@ RoomsLevel* Zone::getDefaultLevel()
     return m_levels[index];
 }
 
-void Zone::getParams(ZoneParams* params) const
+const ZoneParams& Zone::params()
 {
-    params->name = m_name;
-    if (m_levels.empty())
-        { params->empty = true; return; }
+    if (m_levels.empty())    
+       return m_params;
+    
     int lc = m_levels.size();
-    params->minl = start_index;
-    params->maxl = start_index + lc - 1;
-    params->empty = false;    
+    m_params.maxlevel = m_params.minlevel + lc - 1;
+    if (m_levels.empty()) {
+        m_params.
+    }
+
+    int width = 0;
+    if (m_levels.size() > 0)
+        width = m_levels[0]->width();
+    return width;
+
+    int height = 0;
+    if (m_levels.size() > 0)
+        height = m_levels[0]->height();
+    return height;
 }
 
 void Zone::resizeLevels(int x, int y)
@@ -250,7 +273,7 @@ bool Zone::isChanged() const
 
 void Zone::setName(const tstring& name)
 {
-    m_name = name;
+    m_params.name = name;
 }
 
 int Zone::width() const
