@@ -60,32 +60,57 @@ bool SharingController::tryAddWindow(SharingWindow* sw, const RECT& working_area
     return true;
 }
 
-bool SharingController::tryMoveWindow(SharingWindow* sw, int dh)
+bool SharingController::tryMoveWindow(SharingWindow* sw,const RECT& working_area, int dh)
 {
     SharedMemoryLocker l(&m_shared_memory);
     SharedMemoryData* m = l.memory();
     SharingHeader* h = getHeader(m);
     int count = h->messages;
-    SharingWindow* w = getWindow(0, m);
     int index = -1;
     for (int i=0; i<count; ++i)
     {
-        SharingWindow& c = w[i];
-        if (c.x == sw->x && c.y == sw->y && c.w == sw->w && c.h == sw->h) {
+        SharingWindow* w = getWindow(i, m);
+        if (w->x == sw->x && w->y == sw->y && w->w == sw->w && w->h == sw->h) {
             index = i; break;
         }
     }
-    if (index == -1 || index == 0)
-        return false;
+    if (index == -1)
+    {
+        //todo!
+        SharingWindow* w = getWindow(0, m);
 
-    SharingWindow *current = getWindow(index, m);
-    SharingWindow *prev = getWindow(index-1, m);
-    int dy = prev->y - (current->y + current->h);
-    if (dy > 0) {
-        sw->y = prev->y - dh - current->h;
+        return false;
+    }
+
+    SharingWindow* w = getWindow(index, m);
+    if (index == 0) {
+        int bottom = w->y + w->h;
+        if (bottom == working_area.bottom-dh)
+            return false;
+        sw->y = working_area.bottom - sw->h - dh;
+        *w = *sw;
         return true;
     }
-    return false;
+
+    SharingWindow *prev = getWindow(index-1, m);
+    int newy = prev->y - w->h - dh;
+    if (newy == w->y)
+        return false;
+    sw->y = newy;
+    *w = *sw;
+    return true;    
+}
+
+bool SharingController::getLastPostion(SharingWindow* sw)
+{
+    SharedMemoryLocker l(&m_shared_memory);
+    SharedMemoryData* m = l.memory();
+    SharingHeader* h = getHeader(m);
+    int count = h->messages;
+    if (count == 0) return false;
+    SharingWindow* lastw = getWindow(count-1, m);
+    *sw = *lastw;
+    return true;
 }
 
 void SharingController::deleteWindow(const SharingWindow* sw)
@@ -95,14 +120,19 @@ void SharingController::deleteWindow(const SharingWindow* sw)
     SharingHeader* h = getHeader(m);
     int count = h->messages;
     SharingWindow* w = getWindow(0, m);
+    bool found = false;
     for (int i=0; i<count; ++i)
     {
         SharingWindow& c = w[i];
         if (c.x == sw->x && c.y == sw->y && c.w == sw->w && c.h == sw->h) {
             memcpy(&w[i], &w[i+1], sizeof(SharingWindow)*(count-i-1));
             h->messages = count - 1;
+            found = true;
             break;
         }
+    }
+    if (!found) {
+        assert(false);    
     }
 }
 

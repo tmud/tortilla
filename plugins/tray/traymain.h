@@ -64,7 +64,7 @@ private:
     PopupWindow* getFreeWindow();
     void freeWindow(PopupWindow *w);
     POINT GetTaskbarRB();
-    bool isHeightLimited() const;
+    //bool isHeightLimited() const;
     //int  getHeightLimit() const;
     
     //void tryRunMoveAnimation();

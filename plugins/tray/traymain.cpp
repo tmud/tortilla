@@ -55,8 +55,11 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
  
 void TrayMainObject::tryShowQueue()
 {
-    while (!isHeightLimited() && !m_queue.empty())
-    {
+    while (!m_queue.empty())
+    {        
+        SharingWindow sw;
+        if (m_shared.getLastPostion(&sw) && (sw.y < (m_workingarea.bottom/5)) )
+            break;
         Msg msg(*m_queue.begin());
         if (showMessage(msg))
             m_queue.pop_front();
@@ -99,8 +102,8 @@ void TrayMainObject::onTickPopups()
     {
         PopupWindow *w = m_windows[i];
         if (!w->canMove()) continue;
-        SharingWindow sw = w->getPosition();        
-        if (m_shared.tryMoveWindow(&sw, 4))
+        SharingWindow sw = w->getPosition();
+        if (m_shared.tryMoveWindow(&sw, m_workingarea, 4))
             w->moveTo(sw);
         else
             w->wait();
@@ -110,7 +113,7 @@ void TrayMainObject::onTickPopups()
     for (int i=0,e=m_windows.size();i<e;++i)
     {
         PopupWindow *w = m_windows[i];
-        w->tick();
+        w->tick(i); //todo!
         if (!w->isAnimated()) {
             const SharingWindow *sw = &w->getPosition(); 
             m_shared.deleteWindow(sw);
@@ -223,7 +226,7 @@ POINT TrayMainObject::GetTaskbarRB()
     POINT pt = { GetSystemMetrics(SM_CXSCREEN),  GetSystemMetrics(SM_CYSCREEN) };
     RECT rect;
     HWND taskBar = FindWindow(L"Shell_traywnd", NULL);
-    if(taskBar && ::GetWindowRect(taskBar, &rect)) 
+    if(taskBar && ::GetWindowRect(taskBar, &rect))
     {
         int height = rect.bottom - rect.top;
         int width = rect.right - rect.left;
@@ -235,18 +238,18 @@ POINT TrayMainObject::GetTaskbarRB()
     return pt;
 }
 
-bool TrayMainObject::isHeightLimited() const
+/*bool TrayMainObject::isHeightLimited() const
 {
-/*    if (m_windows.empty())
+    if (m_windows.empty())
         return false;
     int last = m_windows.size() - 1;
     const POINT &p = m_windows[last]->getAnimation().pos;
     return(p.y < getHeightLimit()) ? true : false;
-    */
+    
     return false;
 }
 
-/*int TrayMainObject::getHeightLimit() const
+int TrayMainObject::getHeightLimit() const
 {
     return (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
 }*/

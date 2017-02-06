@@ -11,12 +11,11 @@
 void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeout)
 {
     const std::wstring& text = msg.text;
-    if (m_original_text == text)
-        return;
     m_original_text = text;
 
     Animation &a = m_animation;
-    a.speed = 0.5f;
+    a.speed = 0.4f;
+    a.move_speed = 0.01f;
     a.wait_sec = timeout;
     a.bkgnd_color = msg.bkgndcolor;
     a.text_color = msg.textcolor;
@@ -73,6 +72,8 @@ void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeou
     }
     a.pos.w = dc_size.cx + 12;
     a.pos.h = dc_size.cy + 8;
+    a.pos.x = a.pos.y = 0;
+    wait_timer = 0;
 }
 
 void PopupWindow::startAnimation(int begin_posx, int begin_posy)
@@ -127,7 +128,7 @@ void PopupWindow::moveTo(const SharingWindow& pos)
     m_animation.state = Animation::ANIMATION_MOVE;
 }
 
-void PopupWindow::tick()
+void PopupWindow::tick(int id)
 {
     DWORD dt = m_ticker.getDiff();
     m_ticker.sync();
@@ -153,17 +154,27 @@ void PopupWindow::tick()
             m_animation.state =  Animation::ANIMATION_NONE;
         return;
     }
-    if (state == Animation::ANIMATION_WAIT)
+
+    bool move_animation = false;
+    if (state == Animation::ANIMATION_WAIT || state == Animation::ANIMATION_MOVE)
     {
+        /*char buffer[256];
+        sprintf(buffer, "%d=%d\r\n", id, wait_timer);
+        OutputDebugStringA(buffer);*/
+
         wait_timer += dt;
         int end_timer = m_animation.wait_sec * 1000;
         if (wait_timer >= end_timer)
         {
             m_animation.state =  Animation::ANIMATION_FADE_DOWN;
         }
-        return;
+        else 
+        {
+            if (state == Animation::ANIMATION_MOVE && (m_move_dx > 0 || m_move_dy > 0))
+                move_animation = true;
+        }
     }
-    if (state == Animation::ANIMATION_MOVE)
+    if (move_animation) ///state == Animation::ANIMATION_MOVE && m_animation.state == state)
     {
         const SharingWindow &curpos = m_animation.pos;
         POINT target = { m_destination.x, m_destination.y };
@@ -171,8 +182,8 @@ void PopupWindow::tick()
         float x = static_cast<float>(curpos.x);
         float y = static_cast<float>(curpos.y);
 
-        float dx = m_move_dx * m_animation.speed * dt;
-        float dy = m_move_dy * m_animation.speed * dt;
+        float dx = m_move_dx * m_animation.move_speed * dt;
+        float dy = m_move_dy * m_animation.move_speed * dt;
 
         POINT p = { 0, 0 };
 

@@ -11,9 +11,10 @@ public:
     ~SharingController();
     bool init();
     bool tryAddWindow(SharingWindow* sw, const RECT& working_area, int dh);
-    bool tryMoveWindow(SharingWindow* sw, int dh);
-
+    bool tryMoveWindow(SharingWindow* sw, const RECT& working_area, int dh);
     void deleteWindow(const SharingWindow* sw);
+    bool getLastPostion(SharingWindow* sw);
+
     //void updateWindow(const SharingWindow* sw, int newx, int newy);
     //bool getLastWindow(SharingWindow* sw); 
 private:

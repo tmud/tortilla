@@ -20,10 +20,11 @@ struct NotifyParams {
 struct Animation
 {
     enum AnimationState { ANIMATION_NONE, ANIMATION_FADE_UP, ANIMATION_FADE_DOWN, ANIMATION_MOVE, ANIMATION_WAIT };
-    Animation() : state(ANIMATION_NONE), speed(0), wait_sec(0), bkgnd_color(0), text_color(0) {}
+    Animation() : state(ANIMATION_NONE), speed(0), move_speed(0), wait_sec(0), bkgnd_color(0), text_color(0) {}
     SharingWindow pos;
     AnimationState state;
     float speed;
+    float move_speed;
     int   wait_sec;
     COLORREF bkgnd_color;
     COLORREF text_color;
@@ -55,7 +56,7 @@ public:
     bool create(CFont *font);
     void startAnimation(int begin_posx, int begin_posy);
     void setText(const Msg& msg, const NotifyParams& notify, int timeout);
-    void tick();
+    void tick(int id);
     bool canMove() const;
     void moveTo(const SharingWindow& pos);
     void wait();
