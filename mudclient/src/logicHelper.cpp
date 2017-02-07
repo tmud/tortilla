@@ -231,7 +231,15 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
 {
     m_math_regexp.find(expr);
     if (m_math_regexp.getSize() != 4)
-         return LogicHelper::MATH_ERROR;
+    {
+        tstring p(expr);
+        if (tortilla::getVars()->processVarsStrong(&p, true))
+        {
+            result->assign(p);
+            return LogicHelper::MATH_SUCCESS;
+        }
+        return LogicHelper::MATH_ERROR;
+    }
 
      tstring p1, p2, op;
      m_math_regexp.getString(1, &p1);  //1st parameter
