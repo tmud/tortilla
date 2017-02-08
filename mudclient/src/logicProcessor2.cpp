@@ -749,7 +749,13 @@ IMPL(hide)
         tstring msg(L"*****\r\n");
         processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|NEW_LINE, 0);
         WCHAR br[2] = { 10, 0 };
-        tstring cmd(p->params());
+        tstring cmd;
+        for (int i=0,e=p->size(); i<e; ++i)
+        {
+            if (i != 0)
+                cmd.append(L" ");
+            cmd.append(p->at(i));
+        }
         cmd.append(br);
         sendToNetwork(cmd);
         return;
