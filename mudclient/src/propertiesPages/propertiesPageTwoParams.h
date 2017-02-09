@@ -126,23 +126,22 @@ private:
                 propValues->del(index2);
         }
 
-        m_list_values.add(index, pattern, text, m_currentGroup);
         if (index == -1)
         {
-            int pos = m_list.GetItemCount();
-            m_list.addItem(pos, 0, pattern);
-            m_list.addItem(pos, 1, text);
-            m_list.addItem(pos, 2, m_currentGroup);
+            index = m_list.getOnlySingleSelection() + 1;
+            m_list_values.insert(index, pattern, text, m_currentGroup);
+            m_list.addItem(index, 0, pattern);
+            m_list.addItem(index, 1, text);
+            m_list.addItem(index, 2, m_currentGroup);
         }
         else
         {
+            m_list_values.add(index, pattern, text, m_currentGroup);
             m_list.setItem(index, 0, pattern);
             m_list.setItem(index, 1, text);
             m_list.setItem(index, 2, m_currentGroup);
         }
 
-        if (index == -1)
-            index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;

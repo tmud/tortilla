@@ -159,6 +159,14 @@ public:
         }
     }
 
+    void insert(int index, const tstring& key, const T& value, const tstring& group)
+    {
+        if (index == -1)
+            return add(index, key, value, group);
+        el data; data.key = key; data.value = value; data.group = group;
+        m_values.insert(m_values.begin()+index, data);
+    }
+
     void del(int index)
     {
         int size = m_values.size();
@@ -260,6 +268,14 @@ public:
             else
                 { assert(false); }
         }
+        return index;
+    }
+
+    int insert(int index, const tstring& key)
+    {
+        if (index == -1)
+            return add(index, key);
+        m_values.insert(m_values.begin() + index, key);
         return index;
     }
 

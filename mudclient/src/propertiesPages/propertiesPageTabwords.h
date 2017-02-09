@@ -87,20 +87,19 @@ private:
         getWindowText(m_pattern, &pattern);
 
         int index = m_list_values.find(pattern);
-        m_list_values.add(index, pattern);
 
         if (index == -1)
         {
-            int pos = m_list.GetItemCount();
-            m_list.addItem(pos, 0, pattern);
+            index = m_list.getOnlySingleSelection() + 1;
+            m_list_values.insert(index, pattern);
+            m_list.addItem(index, 0, pattern);
         }
         else
         {
+            m_list_values.add(index, pattern);
             m_list.setItem(index, 0, pattern);
         }
 
-        if (index == -1)
-            index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;

@@ -90,22 +90,20 @@ private:
         getWindowText(m_value, &value);
 
         int index = m_list_values.find(pattern);
-        m_list_values.add(index, pattern, value, L"");
-
         if (index == -1)
         {
-            int pos = m_list.GetItemCount();
-            m_list.addItem(pos, 0, pattern);
-            m_list.setItem(pos, 1, value);
+            index = m_list.getOnlySingleSelection() + 1;
+            m_list_values.insert(index, pattern, value, L"");
+            m_list.addItem(index, 0, pattern);
+            m_list.setItem(index, 1, value);
         }
         else
         {
+            m_list_values.add(index, pattern, value, L"");
             m_list.setItem(index, 0, pattern);
             m_list.setItem(index, 1, value);
         }
 
-        if (index == -1)
-            index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;
