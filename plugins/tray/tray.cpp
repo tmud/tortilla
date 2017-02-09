@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.13");
+    luaT_pushwstring(L, L"1.14");
     return 1;
 }
 
@@ -95,7 +95,8 @@ int init(lua_State *L)
             parse_color(bkgnd, &s.background);
         ld.move(L"/");
     } else {
-      base::log(L, error.c_str());
+      if (!error.empty())
+        base::log(L, error.c_str());
     }
     ld.deletenode();
     return 0;
