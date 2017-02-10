@@ -760,11 +760,17 @@ private:
 
         static int seconds_count = 0;
         seconds_count = seconds_count + 1;
+        if ((seconds_count % 20) == 1)
+        {
+            bool timers = tortilla::getProperties()->timers_on ? true : false;
+            m_bar.setIndicatorStatus(MudCommandBar::IND_TIMERS, timers);
+        }
+
         if (seconds_count == 40)
         {
             seconds_count = 0;
             if (m_processor.getConnectionState())
-              m_plugins.processSecondTick();
+              m_plugins.processSecondTick();            
         }
 
         m_processor.processStackTick();

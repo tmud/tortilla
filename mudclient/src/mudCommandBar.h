@@ -1,4 +1,5 @@
 #pragma once
+#include "mudCommandBarInd.h"
 
 class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
 {
@@ -38,6 +39,8 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
     HWND m_callback_hwnd;
     UINT m_callback_msg;
 
+    MudCommandBarIndicator m_timer;
+
 public:
     BOOL PreTranslateMessage(MSG* pMsg)
     {
@@ -55,6 +58,13 @@ public:
         m_callback_hwnd(NULL), m_callback_msg(0)
     {
         m_getTextBuffer.alloc(256);
+    }
+
+    enum Indicator { IND_TIMERS = 0 };
+    void setIndicatorStatus(Indicator i, bool status) 
+    {
+        if (i == IND_TIMERS)
+            m_timer.setStatus(status);    
     }
 
     void setParams(int size, HFONT font)
@@ -202,6 +212,8 @@ private:
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
         m_edit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+        m_timer.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE);
+        m_timer.setText(L"Таймеры:");
         bHandled = FALSE;
         return 0;
     }
@@ -209,7 +221,11 @@ private:
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
     {
         RECT rc; GetClientRect(&rc);
-        rc.right -= 48;
+        rc.right -= 32;
+        rc.left = rc.right - m_timer.getWidth();
+        m_timer.MoveWindow(&rc);
+        rc.right = rc.left - 4;
+        rc.left = 0;
         m_edit.MoveWindow(&rc);
         return 0;
     }
