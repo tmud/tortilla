@@ -18,6 +18,7 @@ class CMainFrame : public CFrameWindowImpl<CMainFrame>,
 public:
     ToolbarEx<CMainFrame> m_toolBar;
     MudGameView m_gameview;
+    tstring m_cmdLine;
     DECLARE_FRAME_WND_CLASS(MAINWND_CLASS_NAME, IDR_MAINFRAME)
     CMainFrame() : m_trayIconSet(0),m_maximized(false) {}
 private:
@@ -69,9 +70,53 @@ private:
         CHAIN_MSG_MAP(CCommonFrameImpl<CMainFrame>)
     END_MSG_MAP()
 
+    void processCmdline()
+    {
+        if (m_cmdLine.empty()) return;
+        Pcre16 pcre, pcre2;
+        pcre.setRegExp(L"((?:\".*\")|[^ ]+)", true);
+        pcre.findAllMatches(m_cmdLine);
+        pcre2.setRegExp(L"\"(.*)\"", true);
+
+        std::vector<tstring> profiles;
+        for (int i=1,e=pcre.getSize(); i<e; ++i)
+        {
+            tstring profile;
+            pcre.getString(i, &profile);
+            tstring_trim(&profile);
+            if (profile.empty()) continue;
+            pcre2.find(profile);
+            if (pcre2.getSize() > 0) {
+                pcre2.getString(1, &profile);
+            }
+            profiles.push_back(profile);
+        }
+
+        tchar buffer[MAX_PATH+1];
+        GetModuleFileName(_Module.GetModuleInstance(), buffer, MAX_PATH);
+        for (int i=1,e=profiles.size(); i<e; ++i)
+        {
+            tstring p(buffer);
+            p.append(L" ");
+            p.append(profiles[i]);
+            WCHAR *tmppath = new WCHAR[p.length() + 1];
+            wcscpy(tmppath, p.c_str());
+            STARTUPINFO cif;
+            ZeroMemory(&cif, sizeof(STARTUPINFO));
+            PROCESS_INFORMATION pi;
+            CreateProcess(NULL, tmppath, NULL, NULL, FALSE, 0, NULL, NULL, &cif, &pi);
+            delete[]tmppath;
+        }
+        if (profiles.empty())
+            m_cmdLine.clear();
+        else
+            m_cmdLine = profiles[0];
+    }
+
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (!m_gameview.initialize())
+        processCmdline();
+        if (!m_gameview.initialize(m_cmdLine))
         {
             DestroyWindow();
             PostQuitMessage(0);

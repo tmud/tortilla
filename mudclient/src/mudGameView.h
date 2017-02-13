@@ -146,7 +146,7 @@ public:
         return FALSE;
     }
 
-    bool initialize();
+    bool initialize(const tstring& profile);
     HWND createView(HWND parent)
     {
         m_parent = parent;

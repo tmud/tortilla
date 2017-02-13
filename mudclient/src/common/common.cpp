@@ -34,15 +34,21 @@ int msgBox(HWND parent, UINT msg, UINT options)
     return msgBox(parent, msg_text, options);
 }
 
-int msgBox(HWND parent, UINT msg, const tstring&descr, UINT options)
+int msgBox(HWND parent, const tstring& msg, const tstring&descr, UINT options)
 {
-    tstring msg_text;
-    loadString(msg, &msg_text);
+    tstring msg_text(msg);
     if (!descr.empty()) {
         msg_text.append(L"\n\n");
         msg_text.append(descr);
     }
     return msgBox(parent, msg_text, options);
+}
+
+int msgBox(HWND parent, UINT msg, const tstring&descr, UINT options)
+{
+    tstring msg_text;
+    loadString(msg, &msg_text);
+    return msgBox(parent, msg_text, descr, options);
 }
 
 void getWindowText(HWND handle, tstring *string)

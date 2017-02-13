@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "mudGameView.h"
 
-bool MudGameView::initialize()
+bool MudGameView::initialize(const tstring& profile)
 {
     if (!initPluginsSystem())
     {
@@ -28,12 +28,16 @@ bool MudGameView::initialize()
     }
 
     tstring error;
-    if (!m_manager.loadProfile(&error))
+    if (!m_manager.loadProfile(profile, &error))
     {
-        if (msgBox(m_hWnd, IDS_ERROR_LASTLOAD_FAILED, error, MB_YESNO|MB_ICONSTOP) != IDYES)
-        {
-            return false;
-        }
+        tstring msg;
+        loadString(IDS_ERROR_LASTLOAD_FAILED, &msg);
+        tstring profile(m_manager.getProfileGroup());
+        profile.append(L" - ");
+        profile.append(m_manager.getProfileName());
+        tstring_replace(&msg, L"%s", profile);
+        if (msgBox(m_hWnd, msg, error, MB_YESNO|MB_ICONSTOP) != IDYES) { return false; }
+
         Profile p(m_manager.getProfile());
         p.name = default_profile_name;
         if (!m_manager.loadProfile(p, &error))

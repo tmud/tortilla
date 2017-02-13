@@ -21,7 +21,7 @@ bool PropertiesManager::init()
         tstring group;
         groups.getName(i, &group);
         ProfilePath pp(group, L"profiles\\player.txml");
-        DeleteFile(pp);    
+        DeleteFile(pp);
     }
 
     m_first_startup = false;
@@ -39,9 +39,23 @@ bool PropertiesManager::init()
     return true;
 }
 
-bool PropertiesManager::loadProfile(tstring *error)
+bool PropertiesManager::loadProfile(const tstring& force_profile, tstring *error)
 {
-    if (loadSettings(error) && loadProfileData(error))
+    if (force_profile.empty()) 
+    {
+        if (!loadSettings(error))
+            return false;
+    }
+    else 
+    {
+        Tokenizer t(force_profile.c_str(), L":");
+        t.trimempty();
+        if (t.size() != 2)
+            return false;
+        m_profile.name.assign( t[1] );
+        m_profile.group.assign( t[0] );
+    }
+    if (loadProfileData(error))
     {
         tstring dummy;
         loadHistory(&dummy);

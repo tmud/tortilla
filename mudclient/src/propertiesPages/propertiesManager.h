@@ -8,7 +8,7 @@ public:
     ~PropertiesManager();
 
     bool init();
-    bool loadProfile(tstring *error);
+    bool loadProfile(const tstring& force_profile, tstring *error);
     bool saveProfile();
     PropertiesData* getConfig() { return &m_propData; }
     const tstring& getProfileGroup() const { return m_profile.group; }
