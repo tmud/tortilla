@@ -41,7 +41,7 @@ bool PropertiesManager::init()
 
 bool PropertiesManager::loadProfile(const tstring& force_profile, tstring *error)
 {
-    if (force_profile.empty()) 
+    if (force_profile.empty())
     {
         if (!loadSettings(error))
             return false;

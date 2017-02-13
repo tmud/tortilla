@@ -1,6 +1,7 @@
 #pragma once 
 
 bool isVistaOrHigher();
+void getClientExePath(tstring* path);
 void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, const tstring& msg, UINT options);
 int msgBox(HWND parent, UINT msg, UINT options);
@@ -140,4 +141,10 @@ public:
 private:
     void Save(DWORD v, tstring* sv);
     bool Load(DWORD *v, tstring* sv);
+};
+
+class CreateLink
+{
+public:
+    bool create(const tstring& group, const tstring& profile);
 };

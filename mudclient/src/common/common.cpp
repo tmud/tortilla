@@ -13,6 +13,13 @@ bool isVistaOrHigher()
     return true;
 }
 
+void getClientExePath(tstring* path)
+{
+    tchar buffer[MAX_PATH + 1];
+    GetModuleFileName(_Module.GetModuleInstance(), buffer, MAX_PATH);
+    path->assign(buffer);
+}
+
 void loadString(UINT id, tstring* string)
 {
     WCHAR buffer[256];
@@ -727,4 +734,59 @@ bool CReBarSettings::Load(DWORD *v, tstring* sv)
     tstring tmp(sv->substr(pos+1));
     sv->swap(tmp);
     return true;
+}
+
+bool CreateLink::create(const tstring& group, const tstring& profile)
+{
+    tstring parameter(L"\"");
+    parameter.append(group);
+    parameter.append(L":");
+    parameter.append(profile);
+    parameter.append(L"\"");
+
+    tstring path;
+    getClientExePath(&path);
+
+    tstring linkpath;
+    {
+        tchar path[MAX_PATH + 1];
+        if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, 0, path)))
+        {
+            linkpath.assign(path);
+        }
+    }
+    if (linkpath.empty())
+        return false;
+    linkpath.append(L"\\");
+    linkpath.append(group);
+    linkpath.append(L"-");
+    linkpath.append(profile);
+    linkpath.append(L".lnk");
+
+    ChangeDir workingdir;
+
+    IShellLink*   pShellLink;            /* IShellLink object pointer */
+    IPersistFile* pPersistFile;          /* IPersistFile object pointer */
+
+    bool result = false;
+    HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&pShellLink);
+    if (SUCCEEDED(hRes))
+    {
+        hRes = pShellLink->SetPath(path.c_str());
+        if (SUCCEEDED(hRes))
+            hRes = pShellLink->SetArguments(parameter.c_str());
+        if (SUCCEEDED(hRes))
+            hRes = pShellLink->SetWorkingDirectory(workingdir.getCurrentDir().c_str());
+        if (SUCCEEDED(hRes))
+            hRes = pShellLink->QueryInterface(IID_IPersistFile, (LPVOID*)&pPersistFile);
+        if (SUCCEEDED(hRes))
+        {
+           hRes = pPersistFile->Save(linkpath.c_str(), TRUE);
+           pPersistFile->Release();
+           if (SUCCEEDED(hRes))
+               result = true;
+        }
+        pShellLink->Release();
+    }
+    return result;
 }

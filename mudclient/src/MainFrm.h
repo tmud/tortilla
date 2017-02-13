@@ -92,11 +92,11 @@ private:
             profiles.push_back(profile);
         }
 
-        tchar buffer[MAX_PATH+1];
-        GetModuleFileName(_Module.GetModuleInstance(), buffer, MAX_PATH);
+        tstring path;
+        getClientExePath(&path);
         for (int i=1,e=profiles.size(); i<e; ++i)
         {
-            tstring p(buffer);
+            tstring p(path);
             p.append(L" ");
             p.append(profiles[i]);
             WCHAR *tmppath = new WCHAR[p.length() + 1];

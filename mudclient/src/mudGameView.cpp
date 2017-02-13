@@ -95,6 +95,14 @@ void MudGameView::onNewProfile()
             tstring error;
             m_manager.loadProfile(current, &error);
         }
+        else 
+        {
+            if (data.create_link)
+            {
+                CreateLink cl;
+                cl.create(data.dst.group, data.dst.name);
+            }
+        }
 
         updateProps();
         loadClientWindowPos();
@@ -150,7 +158,8 @@ void MudGameView::onLoadProfile()
     if (dlg.DoModal() == IDOK)
     {
         Profile profile;
-        dlg.getProfile(&profile);
+        bool create_link = false;
+        dlg.getProfile(&profile, &create_link);
         if (profile.name.empty())
             return;
 
@@ -189,6 +198,11 @@ void MudGameView::onLoadProfile()
           loadClientWindowPos();
         loadPlugins();
         m_bar.reset();
+        if (create_link)
+        {
+            CreateLink cl;
+            cl.create(profile.group, profile.name);
+        }
     }
 }
 
@@ -229,6 +243,12 @@ void MudGameView::onNewWorld()
         if (!successed) {
             tstring error;
             m_manager.loadProfile(current, &error);
+        } else {
+            if (data.create_link)
+            {
+                CreateLink cl;
+                cl.create(data.dst.group, data.dst.name);
+            }
         }
 
         updateProps();
