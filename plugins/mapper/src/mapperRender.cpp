@@ -100,7 +100,7 @@ void MapperRender::onPaint()
 void MapperRender::renderMap(RoomsLevel* rlevel, int x, int y)
 {
     Zone *zone = rlevel->getZone();
-    int level = rlevel->getLevel();
+    int level = rlevel->params().level;
     /*RoomsLevel *under2 = zone->getLevel(level-2, false);
     if (under2)
         renderLevel(under2, x+12, y+12, 1);*/
@@ -117,13 +117,10 @@ void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
 {
     RECT rc;
     GetClientRect(&rc);
-
-    int width = level->width();
-    int height = level->height();
-
-    for (int x=0; x<width; ++x)
+    const RoomsLevelParams &p = level->params();
+    for (int x=0; x<p.width; ++x)
     {
-        for (int y=0; y<height; ++y)
+        for (int y=0; y<p.height; ++y)
         {
             Room *r = level->getRoom(x,y);
             if (!r) 
@@ -136,17 +133,16 @@ void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
 }
 
 MapperRender::room_pos MapperRender::findRoomPos(Room* room)
-{    
-    room_pos p;
+{
+    room_pos pos;
     RoomsLevel* level = room->level;
-    int width = level->width();
-    int height = level->height();
-    for (int x=0; x<width; ++x) {
-    for (int y=0; y<height; ++y) {
+    const RoomsLevelParams &p = level->params();
+    for (int x=0; x<p.width; ++x) {
+    for (int y=0; y<p.height; ++y) {
       if (level->getRoom(x,y) == room)
-        {  p.x = x; p.y = y;  return p;  }
+        {  pos.x = x; pos.y = y;  return pos;  }
     }}
-    return p;
+    return pos;
 }
 
 Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
@@ -154,8 +150,9 @@ Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
     RoomsLevel *level = getViewRoomLevel();
     if (!level) return NULL;
 
-    int sx = level->width() * ROOM_SIZE;
-    int sy = level->height() * ROOM_SIZE;
+    const RoomsLevelParams &p = level->params();
+    int sx = p.width * ROOM_SIZE;
+    int sy = p.height * ROOM_SIZE;
     int left = getRenderX();
     int top = getRenderY();
     int right = left + sx - 1;
@@ -261,7 +258,7 @@ void MapperRender::updateScrollbars(bool center)
         hmin, hmax, GetScrollPos(SB_HORZ), m_hscroll_pos);
     OutputDebugStringA(buffer);*/
     
-    RoomsLevel *level = getViewRoomLevel();
+    /*RoomsLevel *level = getViewRoomLevel();
     if (!level) return;
 
     int width = level->width();
@@ -275,8 +272,8 @@ void MapperRender::updateScrollbars(bool center)
     m_top = b.top * ROOM_SIZE;
     m_bottom = (height-b.bottom-1) * ROOM_SIZE;
 
-    /*sprintf(buffer, "border left=%d, right=%d, top=%d, bottom=%d\r\n", m_left, m_right, m_top, m_bottom);
-    OutputDebugStringA(buffer);*/
+    //sprintf(buffer, "border left=%d, right=%d, top=%d, bottom=%d\r\n", m_left, m_right, m_top, m_bottom);
+    //OutputDebugStringA(buffer);
 
     width = width*ROOM_SIZE + MAP_EDGE;
     height = height*ROOM_SIZE + MAP_EDGE;
@@ -335,7 +332,7 @@ void MapperRender::updateScrollbars(bool center)
     SetScrollRange(SB_VERT, 0, m_vscroll_size);
     if (m_vscroll_pos < 0) m_vscroll_pos = 0;
     else if (m_vscroll_pos > m_vscroll_size) m_vscroll_pos = m_vscroll_size;
-    SetScrollPos(SB_VERT, m_vscroll_pos + m_top);
+    SetScrollPos(SB_VERT, m_vscroll_pos + m_top);*/
 }
 
 void MapperRender::mouseMove(int x, int y)
@@ -348,7 +345,7 @@ void MapperRender::mouseLeave()
 
 void MapperRender::mouseRightButtonDown()
 {
-    POINT pt; GetCursorPos(&pt);
+   /* POINT pt; GetCursorPos(&pt);
     int cursor_x = pt.x; 
     int cursor_y = pt.y;
     ScreenToClient(&pt);
@@ -364,7 +361,7 @@ void MapperRender::mouseRightButtonDown()
     m_menu.SetItemState(MENU_NEWZONE_EAST, c.isExplored(RD_EAST));
     m_menu.SetItemState(MENU_NEWZONE_UP, c.isExplored(RD_UP));
     m_menu.SetItemState(MENU_NEWZONE_DOWN, c.isExplored(RD_DOWN));
-    m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+    m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);*/
 }
 
 void MapperRender::createMenu()

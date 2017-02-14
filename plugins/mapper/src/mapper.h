@@ -1,7 +1,7 @@
 #pragma once
 
 #include "splitterEx.h"
-#include "mapperObjects.h"
+//#include "mapperObjects.h"
 #include "mapperProcessor.h"
 #include "mapperRender.h"
 #include "mapperHashTable.h"
@@ -88,8 +88,8 @@ private:
     Room* createNewRoom(const RoomData& room);
     void  deleteRoom(Room* room);
     void  changeLevelOrZone(Room *old, Room* curr);*/
-    void  checkExit(Room *room, RoomDir dir, const tstring& exit);
-    void  checkExits(Room *room);
+    void  setExits(Room *room);
+    void  checkExit(Room *room, RoomDir dir, const tstring& exit);    
     int   revertDir(int dir);
 
     /*Room* getNextRoom(Room *room, int dir);*/
@@ -109,7 +109,7 @@ private:
     int m_toolbar_height;
 
     // logic
-    DirsVector m_dirs;
+    //DirsVector m_dirs;
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
     MapperDarkRoom m_dark;

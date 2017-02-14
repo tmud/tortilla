@@ -1,8 +1,8 @@
 #pragma once
 
-#include "mapperObjects.h"
+/*#include "mapperObjects.h"
 
-/*class MapperHashTable
+class MapperHashTable
 {
 public:
     MapperHashTable();

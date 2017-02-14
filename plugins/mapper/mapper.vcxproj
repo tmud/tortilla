@@ -108,9 +108,10 @@
     <ClInclude Include="src\debugHelpers.h" />
     <ClInclude Include="src\editListBox.h" />
     <ClInclude Include="src\helpers.h" />
+    <ClInclude Include="src\levelZoneObjects.h" />
     <ClInclude Include="src\mapper.h" />
     <ClInclude Include="src\mapperHashTable.h" />
-    <ClInclude Include="src\mapperObjects.h" />
+    <ClInclude Include="src\roomObjects.h" />
     <ClInclude Include="src\mapperObjects2.h" />
     <ClInclude Include="src\mapperProcessor.h" />
     <ClInclude Include="src\mapperRender.h" />
@@ -126,10 +127,11 @@
   <ItemGroup>
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
     <ClCompile Include="src\debugHelpers.cpp" />
+    <ClCompile Include="src\levelZoneObjects.cpp" />
     <ClCompile Include="src\mapper.cpp" />
     <ClCompile Include="src\mapper2.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
-    <ClCompile Include="src\mapperObjects.cpp" />
+    <ClCompile Include="src\roomObjects.cpp" />
     <ClCompile Include="src\mapperObjects2.cpp" />
     <ClCompile Include="src\mapperProcessor.cpp" />
     <ClCompile Include="src\mapperRender.cpp" />

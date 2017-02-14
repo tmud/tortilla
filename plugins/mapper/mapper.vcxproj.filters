@@ -44,9 +44,6 @@
     <ClInclude Include="src\mapperProcessor.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mapperObjects.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\mapper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -86,6 +83,12 @@
     <ClInclude Include="src\mapperHashTable.h">
       <Filter>Disabled Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\levelZoneObjects.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\roomObjects.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -95,9 +98,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapperProcessor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mapperObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapper.cpp">
@@ -126,6 +126,12 @@
     </ClCompile>
     <ClCompile Include="src\mapperHashTable.cpp">
       <Filter>Disabled Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\levelZoneObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\roomObjects.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "mapper.h"
-#include "mapperObjects.h"
+#include "roomObjects.h"
+#include "levelZoneObjects.h"
 #include "debugHelpers.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
@@ -52,21 +53,21 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     {
         new_room = new Room();
         new_room->roomdata = room;
-        checkExits(new_room);
+        setExits(new_room);
         if (!m_pCurrentRoom)
         {
             createNewZone(new_room);
         }
         else 
         {
-            RoomCursor c(m_pCurrentRoom);
-            if (c.getRoom(m_lastDir))
+            RoomHelper rh(m_pCurrentRoom);
+            if (rh.getRoom(m_lastDir))
             {
                 // конфликт -> новая зона
                 createNewZone(new_room);
-                c.addLink(m_lastDir, new_room);
+                rh.addLink(m_lastDir, new_room);
             }
-            else if (!c.addRoom(m_lastDir, new_room))
+            else if (!rh.addRoom(m_lastDir, new_room))
             {
                 delete new_room;
                 new_room = NULL;
@@ -80,17 +81,19 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     {
         if (m_pCurrentRoom) 
         {
-            RoomCursor c(m_pCurrentRoom);
-            c.addLink(m_lastDir, new_room);
+            RoomHelper rh(m_pCurrentRoom);
+            rh.addLink(m_lastDir, new_room);
         }    
     }
     m_pCurrentRoom = new_room;
+
     /*if (m_pCurrentRoom && m_pCurrentRoom->level)
         m_zones_control.selectZone(m_pCurrentRoom->level->getZone(), true);
     else 
     {
         int x = 1;
     }*/
+
     redrawPosition(RCC_NORMAL);
 }
 
@@ -428,7 +431,7 @@ void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
     }
 }
 
-void Mapper::checkExits(Room *room)
+void Mapper::setExits(Room *room)
 {
     // parse room->roomdata.exits to room->dirs
     checkExit(room,  RD_NORTH, m_propsData->north_exit);

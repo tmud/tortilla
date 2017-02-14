@@ -1,7 +1,7 @@
 #pragma once
 
 #include "properties.h"
-#include "mapperObjects.h"
+#include "roomObjects.h"
 
 class MapperKeyElement
 {

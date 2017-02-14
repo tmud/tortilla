@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mapperObjects.h"
+#include "roomObjects.h"
 
 class MapperRoomRender
 {

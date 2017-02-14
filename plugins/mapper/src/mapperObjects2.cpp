@@ -1,42 +1,7 @@
 #include "stdafx.h"
-#include "mapperObjects.h"
+/*#include "mapperObjects.h"
 #include "mapperObjects2.h"
 
-const wchar_t* RoomDirName[] = { L"north", L"south", L"west", L"east", L"up", L"down" };
-RoomDir RoomDirHelper::revertDir(RoomDir dir)
-{
-    if (dir == RD_NORTH)
-        return RD_SOUTH;
-    if (dir == RD_SOUTH)
-        return RD_NORTH;
-    if (dir == RD_WEST)
-        return RD_EAST;
-    if (dir == RD_EAST)
-        return RD_WEST;
-    if (dir == RD_UP)
-        return RD_DOWN;
-    if (dir == RD_DOWN)
-        return RD_UP;
-    assert(false);
-    return RD_UNKNOWN;
-}
-const wchar_t* RoomDirHelper::getDirName(RoomDir dir)
-{
-    int index = static_cast<int>(dir);
-    if (index >= 0 && index <= 5)
-        return RoomDirName[index];
-    return NULL;
-}
-RoomDir RoomDirHelper::getDirByName(const wchar_t* dirname)
-{
-    tstring name(dirname);
-    for (int index=0;index<=5;++index)
-    {
-        if (!name.compare(RoomDirName[index]))
-            return static_cast<RoomDir>(index);    
-    }
-    return RD_UNKNOWN;
-}
 
 RoomCursor::RoomCursor(Room* current_room) : 
 m_current_room(current_room), x(0), y(0), level(0)
@@ -147,3 +112,4 @@ RoomDir MapperDirCommand::check(const tstring& cmd) const
     if (rel_part_size > rel_size) return RD_UNKNOWN;
     return rel.find(rel_part) == 0 ? dir : RD_UNKNOWN;
 }
+*/
