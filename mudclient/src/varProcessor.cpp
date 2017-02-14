@@ -100,8 +100,8 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"SECOND"] = SECOND;
     v[L"MILLISECOND"] = MILLISECOND;
     v[L"TIMESTAMP"] = TIMESTAMP;
-    m_vars_regexp.setRegExp(L"\\$[a-zA-Z_][0-9a-zA-Z_.]*", true);
-    m_var_regexp.setRegExp(L"^[a-zA-Z_][0-9a-zA-Z_.]*$", true);
+    m_vars_regexp.setRegExp(L"\\$[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*", true);
+    m_var_regexp.setRegExp(L"^[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*$", true);
 }
 
 bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result)
