@@ -1805,8 +1805,94 @@ int string_clone(lua_State *L)
     return pluginInvArgs(L, L"string:clone");
 }
 
+int string_rep(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
+    {
+        std::string s(lua_tostring(L, 1));
+        int n = lua_tointeger(L, 2);
+        if (n <= 0)
+            s.clear();
+        else
+        {
+            std::string rep;
+            for(; n > 0; --n) {
+                rep.append(s);
+            }
+            rep.swap(s);
+        }
+        lua_pushstring(L, s.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"string:rep");
+}
+
+int string_reverse(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring s(luaT_towstring(L, 1));
+        tstring rev; rev.reserve(s.length());
+        tstring::reverse_iterator rt=s.rbegin(), rt_end = s.rend();
+        for(; rt!=rt_end; ++rt)
+            rev.push_back(*rt);
+        luaT_pushwstring(L, rev.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"string:reverse");
+}
+
+int string_gsub(lua_State *L)
+{
+    if (luaT_check(L, 3, LUA_TSTRING, LUA_TSTRING, LUA_TSTRING))
+    {
+        tstring s(luaT_towstring(L, 1));
+        tstring what(luaT_towstring(L, 2));
+        tstring forr(luaT_towstring(L, 3));
+        tstring_replace(&s, what, forr);
+        luaT_pushwstring(L, s.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"string:gsub");
+}
+
+int string_sub(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
+    {
+        u8string s(lua_tostring(L, 1));
+        int len = utf8_strlen(s.c_str());
+        int from = lua_tointeger(L, 2);
+        if (from < 0)
+            from = len + from + 1;
+        from = from-1;
+        u8string_substr(&s, from, len-from);
+        lua_pushstring(L, s.c_str());
+        return 1;
+    }
+    if (luaT_check(L, 3, LUA_TSTRING, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        u8string s(lua_tostring(L, 1));
+        int len = utf8_strlen(s.c_str());
+        int from = lua_tointeger(L, 2);
+        if (from < 0)
+            from = len + from + 1;
+        from = from - 1;
+        int slen = lua_tointeger(L, 3);
+        if (slen <= 0 || slen > len)
+            len = 0;
+        else
+            len = slen;
+        u8string_substr(&s, from, len);
+        lua_pushstring(L, s.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"string:sub");
+}
+
 extern void regFunction(lua_State *L, const char* name, lua_CFunction f);
 extern void regIndexMt(lua_State *L);
+int string_format(lua_State *L);
 void reg_string(lua_State *L)
 {
     lua_newtable(L);
@@ -1823,7 +1909,15 @@ void reg_string(lua_State *L)
     regFunction(L, "clone", string_clone);
     regFunction(L, "find", string_find);
     regFunction(L, "contain", string_contain);
+    regFunction(L, "gsub", string_gsub);
+    regFunction(L, "sub", string_sub);
+    regFunction(L, "rep", string_rep);
+    regFunction(L, "reverse", string_reverse);
+    regFunction(L, "format", string_format);
     regIndexMt(L);
+
+    lua_pushvalue(L, -1);
+    lua_setglobal(L, "string");
 
     // set metatable for lua string type
     lua_pushstring(L, "");
