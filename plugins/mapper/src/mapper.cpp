@@ -61,7 +61,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         else 
         {
             RoomHelper rh(m_pCurrentRoom);
-            if (rh.getRoom(m_lastDir))
+            if (rh.getRoomDir(m_lastDir))
             {
                 // конфликт -> новая зона
                 createNewZone(new_room);
@@ -126,7 +126,7 @@ Zone* Mapper::getZone(const RoomData& room)
 
 void Mapper::createNewZone(Room *room)
 {
-    assert(!room->level);
+    /*assert(!room->level);
     tchar buffer[32];
     while (true)
     {
@@ -141,19 +141,11 @@ void Mapper::createNewZone(Room *room)
     if (z) {
       m_zones_control.selectZone(zone_name, true);
       m_zones[zone_name] = z;
-    }
+    }*/
 }
 
 void Mapper::processCmd(const tstring& cmd)
-{
-    if (cmd.empty())
-        return;
-    RoomDir dir = RD_UNKNOWN;
-    for (int i=0,e=m_dirs.size();i<e;++i)
-    {
-        dir = m_dirs[i].check(cmd);
-        if (dir != -1) { m_path.push_back(dir); break; }
-    }
+{    
 #ifdef _DEBUG
     tstring d;
     switch(dir) {
@@ -468,7 +460,7 @@ int Mapper::revertDir(int dir)
     return rc.getOffsetRoom();
 }*/
 
-class InitDirVector {
+/*class InitDirVector {
     Pcre r1, r2; DirsVector& m;
  public:
     InitDirVector(DirsVector& p) : m(p) { r1.init(L","); r2.init(L"\\|"); m.clear(); }
@@ -503,25 +495,25 @@ private:
         m.push_back(k);
         return true;
     }
-};
+};*/
 
 void Mapper::updateProps()
 {
     m_processor.updateProps(m_propsData);
     m_prompt.updateProps(m_propsData);
     m_dark.updateProps(m_propsData);
-    InitDirVector h(m_dirs);
+/*    InitDirVector h(m_dirs);
     h.make(RD_NORTH, m_propsData->north_cmd);
     h.make(RD_SOUTH, m_propsData->south_cmd);
     h.make(RD_WEST, m_propsData->west_cmd);
     h.make(RD_EAST, m_propsData->east_cmd);
     h.make(RD_UP, m_propsData->up_cmd);
-    h.make(RD_DOWN, m_propsData->down_cmd);
+    h.make(RD_DOWN, m_propsData->down_cmd);*/
 }
 
 void Mapper::redrawPosition(ViewCursorColor cursor)
 {
-    ViewMapPosition vp;
+/*    ViewMapPosition vp;
     vp.cursor = cursor;
     vp.room = m_pCurrentRoom;
     m_view.roomChanged(vp);
@@ -531,7 +523,7 @@ void Mapper::redrawPosition(ViewCursorColor cursor)
         ZoneParams zp;
         z->getParams(&zp);
         m_zones_control.selectZone(zp.name, true);
-    }
+    }*/
 }
 
 void Mapper::onCreate()

@@ -46,6 +46,7 @@ public:
     //bool  isExplored(RoomDir dir);
     bool  addRoom(RoomDir dir, Room* room);
     bool  addLink(RoomDir dir, Room *room);
+
 private:
     bool move(RoomDir dir);
     Zone* zone(Room *room);

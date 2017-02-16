@@ -1,20 +1,11 @@
-#pragma once
-/*
-struct Room;
-class RoomsLevel;
-
-
-
-class Zone;
-class RoomCursorNewZone
-{
-public:
-    Zone* createNewZone(const tstring& name, Room* room);
-};
+#pragma once 
+#include "properties.h"
+#include "roomObjects.h"
 
 class MapperDirCommand
 {
-    RoomDir dir; tstring main, rel;
+    RoomDir dir;
+    tstring main, rel;
     int main_size, rel_size;
 public:
     MapperDirCommand(RoomDir d, const tstring& main_part, const tstring& rel_part) : dir(d), main(main_part), rel(rel_part)
@@ -24,5 +15,13 @@ public:
     }
     RoomDir check(const tstring& cmd) const;
 };
-typedef std::vector<MapperDirCommand> DirsVector;
-*/
+
+class MapperDirsVector
+{
+public:
+    MapperDirsVector();
+    void init(PropertiesMapper* props);
+    void find(const tstring& cmd);
+private:
+   std::vector<MapperDirCommand> dirs;
+};

@@ -112,7 +112,7 @@
     <ClInclude Include="src\mapper.h" />
     <ClInclude Include="src\mapperHashTable.h" />
     <ClInclude Include="src\roomObjects.h" />
-    <ClInclude Include="src\mapperObjects2.h" />
+    <ClInclude Include="src\dirObjects.h" />
     <ClInclude Include="src\mapperProcessor.h" />
     <ClInclude Include="src\mapperRender.h" />
     <ClInclude Include="src\mapperRoomRender.h" />
@@ -132,7 +132,7 @@
     <ClCompile Include="src\mapper2.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
     <ClCompile Include="src\roomObjects.cpp" />
-    <ClCompile Include="src\mapperObjects2.cpp" />
+    <ClCompile Include="src\dirObjects.cpp" />
     <ClCompile Include="src\mapperProcessor.cpp" />
     <ClCompile Include="src\mapperRender.cpp" />
     <ClCompile Include="src\mapperRoomRender.cpp" />

@@ -71,9 +71,6 @@
     <ClInclude Include="src\debugHelpers.h">
       <Filter>Main Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mapperObjects2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\helpers.h">
       <Filter>Disabled Files</Filter>
     </ClInclude>
@@ -87,6 +84,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\roomObjects.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\dirObjects.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -121,9 +121,6 @@
     <ClCompile Include="src\debugHelpers.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mapperObjects2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\mapperHashTable.cpp">
       <Filter>Disabled Files</Filter>
     </ClCompile>
@@ -131,6 +128,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\roomObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\dirObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -16,8 +16,8 @@ public:
     RoomsLevel(Zone* parent_zone, int floor) : m_invalidBox(true), m_changed(false), m_zone(NULL)
     {
         m_zone = parent_zone;
-        m_params.level = floor,
-            rooms.push_back(new row);
+        m_params.level = floor;
+        rooms.push_back(new row);
     }
     ~RoomsLevel() { std::for_each(rooms.begin(), rooms.end(), [](row *r){ delete r; }); }
     const RoomsLevelParams& params();
@@ -73,14 +73,14 @@ struct ZoneParams
 class Zone
 {
 public:
-    Zone(const tstring& zonename) {
+    Zone(const tstring& zonename) //, Room* first_room)
+    {
         m_params.name = zonename;
         m_params.minlevel = 0;
         m_params.maxlevel = 0;
     }
     ~Zone() { std::for_each(m_levels.begin(), m_levels.end(), [](RoomsLevel* rl) {delete rl; }); }
     const ZoneParams& params();
-
     RoomsLevel* getLevel(int level, bool create_if_notexist);
     RoomsLevel* getDefaultLevel();
     //int width() const;
@@ -92,4 +92,11 @@ public:
 private:
     std::vector<RoomsLevel*> m_levels;
     ZoneParams m_params;
+};
+
+class RoomsDir
+{
+public:
+
+
 };

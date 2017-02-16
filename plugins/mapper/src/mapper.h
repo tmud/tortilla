@@ -8,6 +8,7 @@
 #include "mapperToolbar.h"
 #include "mapperZoneControl.h"
 #include "mapperRoomsCache.h"
+#include "dirObjects.h"
 
 class ToolbarViewContainer : public CWindowImpl<ToolbarViewContainer>
 {
@@ -109,7 +110,8 @@ private:
     int m_toolbar_height;
 
     // logic
-    //DirsVector m_dirs;
+    
+    MapperDirsVector m_dirs;
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
     MapperDarkRoom m_dark;

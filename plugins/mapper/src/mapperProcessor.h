@@ -1,5 +1,4 @@
 #pragma once
-
 #include "properties.h"
 #include "roomObjects.h"
 
