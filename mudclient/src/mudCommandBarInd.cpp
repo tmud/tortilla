@@ -14,11 +14,11 @@ void MudCommandBarIndicator::onCreate()
 {
     if (m_font.IsNull()) {
         LOGFONT lf;
-        lf.lfHeight = -MulDiv(9, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
+        lf.lfHeight = -MulDiv(10, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
         lf.lfWidth = 0;
         lf.lfEscapement = 0;
         lf.lfOrientation = 0;
-        lf.lfWeight = 400;
+        lf.lfWeight = FW_NORMAL;
         lf.lfItalic = 0;
         lf.lfUnderline = 0;
         lf.lfStrikeOut = 0;
@@ -27,7 +27,7 @@ void MudCommandBarIndicator::onCreate()
         lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
         lf.lfQuality = DEFAULT_QUALITY;
         lf.lfPitchAndFamily = DEFAULT_PITCH;
-        wcscpy(lf.lfFaceName, L"Fixedsys");
+        wcscpy(lf.lfFaceName, L"MS Sans Serif");
         m_font.CreateFontIndirect(&lf);
     }
     if (m_pen1.IsNull())

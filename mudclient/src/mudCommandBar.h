@@ -221,9 +221,13 @@ private:
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
     {
         RECT rc; GetClientRect(&rc);
-        rc.right -= 32;
+        rc.right -= 24;
         rc.left = rc.right - m_timer.getWidth();
-        m_timer.MoveWindow(&rc);
+        RECT t(rc);
+        t.top += 4;
+        t.bottom -= 3;
+
+        m_timer.MoveWindow(&t);
         rc.right = rc.left - 4;
         rc.left = 0;
         m_edit.MoveWindow(&rc);
