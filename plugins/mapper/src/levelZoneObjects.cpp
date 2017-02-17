@@ -183,7 +183,7 @@ bool RoomsLevel::checkCoords(int x, int y)
 
 RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
 {
-    /*ZoneParams& zp = m_params;
+    ZoneParams& zp = m_params;
     if (level >= zp.minlevel && level <= zp.maxlevel)
     {
         int index = level - zp.minlevel;
@@ -219,8 +219,7 @@ RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
 
     int index = level - start_index;
     m_levels[index] = new_level;
-    return new_level;*/
-    return 0;
+    return new_level;
 }
 
 RoomsLevel* Zone::getDefaultLevel()

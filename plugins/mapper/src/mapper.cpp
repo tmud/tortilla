@@ -97,7 +97,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     redrawPosition(RCC_NORMAL);
 }
 
-Zone* Mapper::getZone(const RoomData& room)
+/*Zone* Mapper::getZone(const RoomData& room)
 {
     if (!room.zonename.empty())
     {
@@ -122,11 +122,10 @@ Zone* Mapper::getZone(const RoomData& room)
    Zone* new_zone = new Zone(zone_name);
    m_zones[zone_name] = new_zone;
    return new_zone;
-}
+}*/
 
 void Mapper::createNewZone(Room *room)
 {
-    /*assert(!room->level);
     tchar buffer[32];
     while (true)
     {
@@ -135,17 +134,23 @@ void Mapper::createNewZone(Room *room)
         if (zt == m_zones.end())
             break;
     }
-    tstring zone_name(buffer);    
-    RoomCursorNewZone nz;
-    Zone *z = nz.createNewZone(zone_name, room);
-    if (z) {
-      m_zones_control.selectZone(zone_name, true);
-      m_zones[zone_name] = z;
-    }*/
+    tstring zone_name(buffer);
+    Zone *new_zone = new Zone(zone_name);
+    RoomsLevel *level = new_zone->getLevel(0, true);
+    level->addRoom(room, 0, 0);
+    m_zones_control.selectZone(zone_name, true);
+    m_zones[zone_name] = new_zone;
 }
 
 void Mapper::processCmd(const tstring& cmd)
 {    
+    RoomDir dir = RD_UNKNOWN;
+    for (int i = 0, e = m_dirs.size(); i < e; ++i)
+    {
+        dir = m_dirs[i].check(cmd);
+        if (dir != RD_UNKNOWN) { m_path.push_back(dir); break; }
+    }
+
 #ifdef _DEBUG
     tstring d;
     switch(dir) {
@@ -502,13 +507,13 @@ void Mapper::updateProps()
     m_processor.updateProps(m_propsData);
     m_prompt.updateProps(m_propsData);
     m_dark.updateProps(m_propsData);
-/*    InitDirVector h(m_dirs);
-    h.make(RD_NORTH, m_propsData->north_cmd);
-    h.make(RD_SOUTH, m_propsData->south_cmd);
-    h.make(RD_WEST, m_propsData->west_cmd);
-    h.make(RD_EAST, m_propsData->east_cmd);
-    h.make(RD_UP, m_propsData->up_cmd);
-    h.make(RD_DOWN, m_propsData->down_cmd);*/
+    InitDirVector h;
+    h.make(RD_NORTH, m_propsData->north_cmd, m_dirs);
+    h.make(RD_SOUTH, m_propsData->south_cmd, m_dirs);
+    h.make(RD_WEST, m_propsData->west_cmd, m_dirs);
+    h.make(RD_EAST, m_propsData->east_cmd, m_dirs);
+    h.make(RD_UP, m_propsData->up_cmd, m_dirs);
+    h.make(RD_DOWN, m_propsData->down_cmd, m_dirs);
 }
 
 void Mapper::redrawPosition(ViewCursorColor cursor)

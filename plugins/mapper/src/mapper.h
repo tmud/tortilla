@@ -77,7 +77,7 @@ private:
 private:
     void  popDir();
     Room* findRoom(const RoomData& room);
-    Zone* getZone(const RoomData& room);
+    //Zone* getZone(const RoomData& room);
     void  createNewZone(Room *room);
 
 
@@ -89,6 +89,7 @@ private:
     Room* createNewRoom(const RoomData& room);
     void  deleteRoom(Room* room);
     void  changeLevelOrZone(Room *old, Room* curr);*/
+
     void  setExits(Room *room);
     void  checkExit(Room *room, RoomDir dir, const tstring& exit);    
     int   revertDir(int dir);
@@ -99,6 +100,8 @@ private:
 private:
     // properties
     PropertiesMapper *m_propsData;
+
+    
 
     // ui, windows and toolbars
     
@@ -112,6 +115,9 @@ private:
     // logic
     
     MapperDirsVector m_dirs;
+
+
+
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
     MapperDarkRoom m_dark;

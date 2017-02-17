@@ -78,6 +78,7 @@ public:
         m_params.name = zonename;
         m_params.minlevel = 0;
         m_params.maxlevel = 0;
+
     }
     ~Zone() { std::for_each(m_levels.begin(), m_levels.end(), [](RoomsLevel* rl) {delete rl; }); }
     const ZoneParams& params();
