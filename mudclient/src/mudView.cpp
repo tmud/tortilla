@@ -103,6 +103,8 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
     if (parse_data->strings.empty())
         return;
 
+    bool is_last_string = (getLastString() == getViewString());
+
     pushText(parse_data, false);
 
     if (m_use_softscrolling) {
@@ -121,13 +123,13 @@ void MudView::addText(parseData* parse_data, parseData *copy_data, int *limited_
     if (limited_strings)
         *limited_strings = limited;
 
-    if (m_scrollLock) 
+    if ( m_scrollLock && !is_last_string)
     {
         if (getStringsOnDisplay() < getStringsCount())
         {
             updateScrollbar(m_last_visible_line);
             return;
-        }    
+        }
     }
 
     int new_visible_line = m_strings.size() - 1;
