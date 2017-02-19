@@ -770,7 +770,8 @@ private:
         {
             seconds_count = 0;
             if (m_processor.getConnectionState())
-              m_plugins.processSecondTick();            
+            m_plugins.processSecondTick();
+            m_plugins.processDebugTick();
         }
 
         m_processor.processStackTick();

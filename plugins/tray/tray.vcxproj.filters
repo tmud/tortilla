@@ -26,6 +26,18 @@
     <ClInclude Include="traySettings.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="sharingData.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sharedMemory.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sharingController.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -38,6 +50,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sharingController.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -509,6 +509,13 @@ void PluginsManager::processSecondTick()
     doPluginsMethod("tick", 0);
 }
 
+void PluginsManager::processDebugTick()
+{
+#ifdef _DEBUG
+    doPluginsMethod("debugtick", 0);
+#endif
+}
+
 void PluginsManager::processPluginsMethod(const char* method, int args)
 {
      doPluginsMethod(method, args);
