@@ -4,6 +4,11 @@
 TrayMainObject::~TrayMainObject()
 {
     stopTimer();
+    for (int i=0,e=m_windows.size();i<e;++i)
+    {
+        PopupWindow *w = m_windows[i];
+        m_shared.deleteWindow(w->getDestination());
+    }
     m_windows.insert(m_windows.end(), m_free_windows.begin(), m_free_windows.end());
     m_free_windows.clear();
     for (int i=0,e=m_windows.size(); i<e;++i)
@@ -55,14 +60,19 @@ void TrayMainObject::setAlarmWnd(HWND wnd)
  
 void TrayMainObject::tryShowQueue()
 {
+    int counter = 0;
     while (!m_queue.empty())
-    {        
+    {
         SharingWindow sw;
         if (m_shared.getLastPostion(&sw) && (sw.y < (m_workingarea.bottom/5)) )
             break;
         Msg msg(*m_queue.begin());
-        if (showMessage(msg))
-            m_queue.pop_front();
+        if (!showMessage(msg))
+            break;
+        counter = counter + 1;
+        m_queue.pop_front();
+        if (counter > 3)
+            break;
     }
 }
 
@@ -119,6 +129,14 @@ void TrayMainObject::onTickPopups()
         }
     }
     m_windows.swap(next);
+
+    static int counter = 0;
+    counter = counter + 1;
+    if (counter == 20)
+    {
+        counter = 0;
+        tryShowQueue();
+    }
 }
 
 PopupWindow* TrayMainObject::getFreeWindow()

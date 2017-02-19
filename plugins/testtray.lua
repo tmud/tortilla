@@ -16,6 +16,7 @@ end
 
 local counter
 local maxcounter = 3
+local message = 1
 
 function testtray.syscmd(t)
   if t[1] ~= 'testtray' then
@@ -42,8 +43,8 @@ function testtray.debugtick()
   if counter then
     if counter >= maxcounter then
       counter = 0
-      local r = rnd.rand(0,9)
-      local cmd = props.cmdPrefix()..'tray ['..r..']:'..rnd.string(50, 120)
+      local cmd = props.cmdPrefix()..'tray ['..message..']:'..rnd.string(50, 120)
+      message = message + 1
       runCommand(cmd)
       return
     end

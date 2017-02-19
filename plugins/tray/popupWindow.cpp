@@ -6,9 +6,9 @@
      m_font = font;
      Create(GetDesktopWindow(), CWindow::rcDefault, NULL, WS_POPUP, WS_EX_TOPMOST|WS_EX_TOOLWINDOW|WS_EX_LAYERED|WS_EX_NOACTIVATE);
      return (IsWindow()) ? true : false;
-}    
+}
 
-void PopupWindow::setText(const Msg& msg, /*const NotifyParams& notify,*/ int timeout)
+void PopupWindow::setText(const Msg& msg, int timeout)
 {
     const std::wstring& text = msg.text;
     m_original_text = text;
@@ -19,7 +19,6 @@ void PopupWindow::setText(const Msg& msg, /*const NotifyParams& notify,*/ int ti
     a.wait_sec = timeout;
     a.bkgnd_color = msg.bkgndcolor;
     a.text_color = msg.textcolor;
-    //a.notify = notify;
 
     m_text.resize(1);
     m_text[0].assign(text);
@@ -80,12 +79,12 @@ void PopupWindow::startAnimation(const SharingWindow& startpos)
 {
     m_animation.pos = startpos;
     m_destination = startpos;
-    
+
     fillSrcDC();
     const Animation &a = m_animation;
     const SharingWindow &sw = a.pos;
     MoveWindow(sw.x, sw.y, sw.w, sw.h);
-    
+
     BLENDFUNCTION blend;
     blend.BlendOp = AC_SRC_OVER;
     blend.BlendFlags = 0;
@@ -174,7 +173,7 @@ void PopupWindow::tick(int id)
                 move_animation = true;
         }
     }
-    if (move_animation) ///state == Animation::ANIMATION_MOVE && m_animation.state == state)
+    if (move_animation)
     {
         const SharingWindow &curpos = m_animation.pos;
         POINT target = { m_destination.x, m_destination.y };
@@ -217,8 +216,6 @@ void PopupWindow::tick(int id)
         if (stop)
         {
             m_animation.state =  Animation::ANIMATION_WAIT;
-            //setState(ANIMATION_WAIT);
-            //sendNotify(MOVEANIMATION_FINISHED);
         }
         return;
     }
@@ -300,15 +297,7 @@ void PopupWindow::setAlpha(float a)
 void PopupWindow::onClickButton()
 {
     m_animation.state = Animation::ANIMATION_FADE_DOWN;
-    //sendNotify(1);
 }
-
-/*void PopupWindow::sendNotify(int state)
-{
-    const NotifyParams &np = m_animation.notify;
-     if (np.wnd)
-       ::PostMessage(np.wnd, np.msg, np.wparam, (LPARAM)state);
-}*/
 
 void PopupWindow::trimleft(std::wstring* s)
 {

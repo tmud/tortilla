@@ -73,8 +73,7 @@ bool SharingController::tryMoveWindow(SharingWindow* sw, const RECT& working_are
     }
     if (index == -1)
     {
-        //todo!
-        SharingWindow* w = getWindow(0, m);
+        assert(false);
         return false;
     }
 

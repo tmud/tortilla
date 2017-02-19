@@ -9,14 +9,6 @@ struct Msg {
     COLORREF bkgndcolor;
 };
 
-/*struct NotifyParams {
-    NotifyParams() : wnd(0), msg(0), wparam(0){}
-    HWND wnd;
-    UINT msg;
-    WPARAM wparam;
-    //LPARAM - parameter
-};*/
-
 struct Animation
 {
     enum AnimationState { ANIMATION_NONE, ANIMATION_FADE_UP, ANIMATION_FADE_DOWN, ANIMATION_MOVE, ANIMATION_WAIT };
@@ -28,12 +20,11 @@ struct Animation
     int   wait_sec;
     COLORREF bkgnd_color;
     COLORREF text_color;
-    //NotifyParams notify;
 };
 
 class PopupWindow : public CWindowImpl<PopupWindow>
 {
-    Ticker m_ticker;    
+    Ticker m_ticker;
     std::wstring m_original_text;
     std::vector<std::wstring> m_text;
     CFont *m_font;
@@ -65,7 +56,6 @@ private:
     SIZE calcDCSize();
     void setAlpha(float a);
     void onClickButton();
-    //void sendNotify(int state);
     void trimleft(std::wstring* s);
     SIZE getSize() const;
 private:
