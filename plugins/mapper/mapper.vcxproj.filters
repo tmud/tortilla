@@ -89,6 +89,9 @@
     <ClInclude Include="src\dirObjects.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\mapInstance.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -115,9 +118,6 @@
     <ClCompile Include="src\MenuXP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mapper2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\debugHelpers.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
@@ -131,6 +131,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\dirObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

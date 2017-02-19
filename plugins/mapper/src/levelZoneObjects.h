@@ -1,39 +1,36 @@
 #pragma  once
-
 #include "roomObjects.h"
 
-class Zone;
-struct RoomsLevelParams {
+struct LevelZoneSize
+{
+    LevelZoneSize() : minlevel(0), maxlevel(0), left(0), right(0), top(0), bottom(0) {}
+    int minlevel, maxlevel;
     int left, right, top, bottom;
-    int level;
-    int width, height;
 };
 
+class Zone;
 class RoomsLevel
 {
     friend class Zone;
 public:
-    RoomsLevel(Zone* parent_zone, int floor) : m_invalidBox(true), m_changed(false), m_zone(NULL)
-    {
-        m_zone = parent_zone;
-        m_params.level = floor;
+    RoomsLevel(Zone* parent_zone) : m_changed(false), m_parentZone(parent_zone) {
+        assert(parent_zone);
         rooms.push_back(new row);
     }
-    ~RoomsLevel() { std::for_each(rooms.begin(), rooms.end(), [](row *r){ delete r; }); }
-    const RoomsLevelParams& params();
+    ~RoomsLevel() {
+        std::for_each(rooms.begin(), rooms.end(), [](row *r){ delete r; });
+    }
+    Zone* getZone() const { return m_parentZone; }
+    const LevelZoneSize& size() const { m_parentZone->size(); }
+
     Room* getRoom(int x, int y);
     bool  addRoom(Room* r, int x, int y);
     Room* detachRoom(int x, int y);
-    void  deleteRoom(int x, int y); 
-    Zone* getZone() const { return m_zone; }   
-
-    //int   getLevel() const { return level; }
-    //int   width() const;
-    //int   height() const;
-    //const RoomsLevelBox& box();
+    void  deleteRoom(int x, int y);
 
     bool  isChanged() const { return m_changed; }
     //bool  isEmpty() const;
+
 private:
     void resizeLevel(int x, int y);
     bool checkCoords(int x, int y);
@@ -52,52 +49,26 @@ private:
         int left, right;
     };
     std::vector<row*> rooms;
-    //Zone* zone;
-    //int level;
-    //RoomsLevelBox m_box;
-    bool m_invalidBox;
     bool m_changed;
-
-    RoomsLevelParams m_params;
-    Zone *m_zone;
-};
-
-struct ZoneParams
-{
-    ZoneParams() : minlevel(0), maxlevel(0), width(0), height(0) {}
-    tstring name;
-    int minlevel, maxlevel;
-    int width, height;
+    Zone *m_parentZone;
 };
 
 class Zone
 {
 public:
-    Zone(const tstring& zonename) //, Room* first_room)
-    {
-        m_params.name = zonename;
-        m_params.minlevel = 0;
-        m_params.maxlevel = 0;
-
-    }
+    Zone(const tstring& zonename) : m_name(zonename) {}
     ~Zone() { std::for_each(m_levels.begin(), m_levels.end(), [](RoomsLevel* rl) {delete rl; }); }
-    const ZoneParams& params();
+    const LevelZoneSize& size() const { return m_size; }
+    const tstring& getName() const { return m_name; }
+
     RoomsLevel* getLevel(int level, bool create_if_notexist);
     RoomsLevel* getDefaultLevel();
-    //int width() const;
-    //int height() const;
 
     void resizeLevels(int x, int y);
     bool isChanged() const;
     void setName(const tstring& name);
 private:
+    tstring m_name;
+    LevelZoneSize m_size;
     std::vector<RoomsLevel*> m_levels;
-    ZoneParams m_params;
-};
-
-class RoomsDir
-{
-public:
-
-
 };

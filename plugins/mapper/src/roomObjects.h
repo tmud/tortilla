@@ -16,10 +16,11 @@ struct RoomData
 
 struct RoomExit
 {
-    RoomExit() : next_room(NULL), exist(false), door(false) {}
+    RoomExit() : next_room(NULL), exist(false), door(false), multiexit(false) {}
     Room *next_room;
     bool exist;
     bool door;
+    bool multiexit;
 };
 
 struct Room

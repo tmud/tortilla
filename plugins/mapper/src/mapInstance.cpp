@@ -1,6 +1,120 @@
 #include "stdafx.h"
-#include "mapper.h"
-#include "helpers.h"
+#include "mapInstance.h"
+
+MapInstance::MapInstance() : m_nextzone_id(1)
+{
+}
+
+MapInstance::~MapInstance()
+{
+    std::for_each(m_zones.begin(),m_zones.end(),[](std::pair<const tstring, Zone*> &p){delete p.second;});
+}
+
+Room* MapInstance::findRoom(const tstring& vnum)
+{
+    assert(!vnum.empty());
+    room_iterator rt = m_rooms.find(vnum);
+    return (rt != m_rooms.end()) ? rt->second : NULL;
+}
+
+bool MapInstance::addNewZoneAndRoom(Room *room)
+{
+    if (!room || room->roomdata.vnum.empty() || findRoom(room->roomdata.vnum))
+    {
+        assert(false);
+        return false;
+    }    
+
+    tchar buffer[32];
+    while (true)
+    {
+        swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
+        zone_iterator zt = m_zones.find(buffer);
+        if (zt == m_zones.end())
+            break;
+    }
+    tstring zone_name(buffer);
+    Zone *new_zone = new Zone(zone_name);
+    RoomsLevel *level = new_zone->getLevel(0, true);
+    level->addRoom(room, 0, 0);
+    m_zones[zone_name] = new_zone;
+    m_rooms[room->roomdata.vnum] = room;
+    return true;
+}
+
+bool MapInstance::addNewRoom(Room* from, Room* newroom, RoomDir dir)
+{
+    if (!from || !newroom || dir == RD_UNKNOWN || newroom->roomdata.vnum.empty())
+    {
+        assert(false);
+        return false;
+    }
+
+    if (isMultiExit(from, dir))
+    {
+        setRoomOnMap(from, dir, newroom);
+        return true;
+    }
+
+    Room* next = getRoom(from, dir);
+    if (!next)
+    {
+        setRoom(from, dir, newroom);
+        setRoomOnMap(from, dir, newroom);
+        return true;
+    }
+
+    // конфликт, мультивыход
+    setMultiExit(from, dir);
+    setRoomOnMap(from, dir, newroom);   
+    return true;
+}
+
+void MapInstance::setRoomOnMap(Room* from, RoomDir dir, Room* next)
+{
+}
+
+bool MapInstance::addLink(Room* from, Room* to, RoomDir dir)
+{
+    return setRoom(from, dir, to);
+}
+//-------------------------------------------------------------------------------------
+bool MapInstance::isMultiExit(Room* from, RoomDir dir)
+{
+    if (!from || dir == RD_UNKNOWN) {
+        assert(false);  return false;
+    }
+    return from->dirs[dir].multiexit;
+}
+bool MapInstance::setMultiExit(Room* from, RoomDir dir)
+{
+    if (!from || dir == RD_UNKNOWN) {
+        assert(false);  return false;
+    }
+    from->dirs[dir].multiexit = true;
+    from->dirs[dir].next_room = NULL;
+    return true;
+}
+
+Room* MapInstance::getRoom(Room* from, RoomDir dir)
+{
+    if (!from || dir == RD_UNKNOWN) {
+        assert(false);  return NULL;
+    }
+    return from->dirs[dir].next_room;
+}
+bool MapInstance::setRoom(Room* from, RoomDir dir, Room* next)
+{
+    if (!from || dir == RD_UNKNOWN || !next) {
+        assert(false); return false;
+    }
+    Room* current_next = from->dirs[dir].next_room;
+    if (current_next && current_next != next) {
+        assert(false); return false;
+    }
+    from->dirs[dir].next_room = next;
+    return true;
+}
 //-------------------------------------------------------------------------------------
 /*void Mapper::newZone(Room *room, RoomDir dir)
 {   
@@ -51,11 +165,11 @@
 
     m_zones_control.addNewZone(new_zone);
     m_view.Invalidate();
-}*/
+}
 
 void Mapper::saveMaps(lua_State *L)
 {
- /*   tstring dir;
+    tstring dir;
     base::getPath(L, L"", &dir);
 
     std::vector<tstring> todelete;
@@ -152,7 +266,7 @@ void Mapper::saveMaps(lua_State *L)
         file.append(todelete[j]);
         file.append(L".map");
         DeleteFile(file.c_str());
-    }*/
+    }
 }
 
 void Mapper::loadMaps(lua_State *L)
@@ -299,5 +413,6 @@ void Mapper::loadMaps(lua_State *L)
         Zone *zone = m_zones[0];
         m_viewpos.level = zone->getDefaultLevel();
     }
-    redrawPosition();*/
-}
+    redrawPosition();
+}*/
+

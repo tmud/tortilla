@@ -1,8 +1,6 @@
 #include "stdafx.h"
 #include "levelZoneObjects.h"
 
-
-
 /*int RoomsLevel::height() const
 {
     return rooms.size();    
@@ -33,12 +31,12 @@ const RoomsLevelBox& RoomsLevel::box()
         if (rooms[y]->rr[x]) return false;
     }}
     return true;
-}*/
+}
 
 
-const RoomsLevelParams& RoomsLevel::params()
+void RoomsLevel::getBoxParams(RoomsLevelBox* params)
 {
-    RoomsLevelParams &p = m_params;
+
     if (rooms.empty()) {
         p.width = p.height = 0;
     }
@@ -179,10 +177,11 @@ bool RoomsLevel::checkCoords(int x, int y)
 {
     const RoomsLevelParams&p = params();
     return (x >= 0 && x < p.width && y >= 0 && y < p.height) ? true : false;
-}
+}*/
 
 RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
 {
+    int start_index = 0; //todo!
     ZoneParams& zp = m_params;
     if (level >= zp.minlevel && level <= zp.maxlevel)
     {
@@ -239,9 +238,22 @@ RoomsLevel* Zone::getDefaultLevel()
     return m_levels[index];
 }
 
-const ZoneParams& Zone::params()
+/*void Zone::getParams(ZoneParams* zparams)
 {
-    /*if (m_levels.empty())
+    zparams->name = m_name;
+    zparams->minlevel = m_first_level;
+    int count = m_levels.size();
+    zparams->maxlevel = m_first_level + count;
+    if (count == 0) {
+        zparams->width = 0;
+        zparams->height = 0;
+        return;
+    }
+    zparams->maxlevel = m_first_level + count - 1;
+    RoomsLevel *l = m_levels[0];
+    
+    
+    if (m_levels.empty())
         return m_params;
 
     int lc = m_levels.size();
@@ -258,9 +270,9 @@ const ZoneParams& Zone::params()
     int height = 0;
     if (m_levels.size() > 0)
         height = m_levels[0]->height();
-    return height;*/
+    return height;
     return m_params;
-}
+}*/
 
 void Zone::resizeLevels(int x, int y)
 {
@@ -281,7 +293,7 @@ bool Zone::isChanged() const
 
 void Zone::setName(const tstring& name)
 {
-    m_params.name = name;
+    m_name = name;
 }
 
 /*int Zone::width() const
