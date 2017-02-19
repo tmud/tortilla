@@ -14,9 +14,6 @@ public:
     bool tryMoveWindow(SharingWindow* sw, const RECT& working_area, int dh);
     void deleteWindow(const SharingWindow* sw);
     bool getLastPostion(SharingWindow* sw);
-
-    //void updateWindow(const SharingWindow* sw, int newx, int newy);
-    //bool getLastWindow(SharingWindow* sw); 
 private:
     SharingHeader* getHeader(SharedMemoryData *d);
     SharingWindow* getWindow(int index, SharedMemoryData *d);

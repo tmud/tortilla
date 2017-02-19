@@ -29,9 +29,6 @@ bool SharingController::init()
     SharedMemoryInitializer smi;
     if (!m_shared_memory.create(global_share_name, global_share_size, &smi))
         return false;
-   /* SharedMemoryLocker l(&m_shared_memory);
-    SharedMemoryData* m = l.memory();
-    SharingHeader* sh = getHeader(m);*/
     return true;
 }
 
@@ -51,7 +48,7 @@ bool SharingController::tryAddWindow(SharingWindow* sw, const RECT& working_area
     }
     else
     {
-        sw->y = working_area.bottom - sw->h - dh;
+        sw->y = working_area.bottom - sw->h - dh; // - 30; //todo!
     }
     sw->x = working_area.right - sw->w;
     SharingWindow* w = getWindow(count, m);   
@@ -60,7 +57,7 @@ bool SharingController::tryAddWindow(SharingWindow* sw, const RECT& working_area
     return true;
 }
 
-bool SharingController::tryMoveWindow(SharingWindow* sw,const RECT& working_area, int dh)
+bool SharingController::tryMoveWindow(SharingWindow* sw, const RECT& working_area, int dh)
 {
     SharedMemoryLocker l(&m_shared_memory);
     SharedMemoryData* m = l.memory();
@@ -78,7 +75,6 @@ bool SharingController::tryMoveWindow(SharingWindow* sw,const RECT& working_area
     {
         //todo!
         SharingWindow* w = getWindow(0, m);
-
         return false;
     }
 
@@ -132,39 +128,9 @@ void SharingController::deleteWindow(const SharingWindow* sw)
         }
     }
     if (!found) {
-        assert(false);    
+        assert(false);
     }
 }
-
-/*void SharingController::updateWindow(const SharingWindow& sw, int newx, int newy)
-{
-    SharedMemoryLocker l(&m_shared_memory);
-    SharedMemoryData* m = l.memory();
-    SharingHeader* h = getHeader(m);
-    int count = h->messages;
-    SharingWindow* w = getWindow(0, m);
-    for (int i=0; i<count; ++i)
-    {
-        SharingWindow& c = w[i];
-        if (c.x == sw.x && c.y == sw.y && c.w == sw.w && c.h == sw.h) {
-            c.x = newx; c.y = newy;
-            break;
-        }
-    }
-}*/
-
-/*bool SharingController::getLastWindow(SharingWindow* sw)
-{
-    SharedMemoryLocker l(&m_shared_memory);
-    SharedMemoryData* m = l.memory();
-    SharingHeader* h = getHeader(m);
-    int count = h->messages;
-    if (count == 0)
-        return false;
-    SharingWindow* w = getWindow(count-1, m);
-    *sw = *w;
-    return true;
-}*/
 
 int SharingController::findWindow(const SharingWindow* sw, SharedMemoryData* memory)
 {

@@ -76,19 +76,15 @@ bool TrayMainObject::showMessage(const Msg& msg)
     if (!w)
         return false;
 
-    NotifyParams np; 
-    np.wnd = m_hWnd;
-    np.msg = WM_USER;
-    np.wparam = (WPARAM)w;
-    w->setText(msg, np, m_settings.timeout);
+    w->setText(msg, m_settings.timeout);
 
-    SharingWindow sw = w->getPosition();
-    if (!m_shared.tryAddWindow(&sw, m_workingarea, 4))
+    SharingWindow pos(*w->getPosition());
+    if (!m_shared.tryAddWindow(&pos, m_workingarea, 4))
     {
         freeWindow(w);
         return false;
     }
-    w->startAnimation(sw.x, sw.y);
+    w->startAnimation(pos);
     m_windows.push_back(w);
 
     if (!m_activated)
@@ -102,9 +98,9 @@ void TrayMainObject::onTickPopups()
     {
         PopupWindow *w = m_windows[i];
         if (!w->canMove()) continue;
-        SharingWindow sw = w->getPosition();
-        if (m_shared.tryMoveWindow(&sw, m_workingarea, 4))
-            w->moveTo(sw);
+        SharingWindow pos( *w->getPosition() );
+        if (m_shared.tryMoveWindow( &pos, m_workingarea, 4))
+            w->moveTo(pos);
         else
             w->wait();
     }
@@ -115,7 +111,7 @@ void TrayMainObject::onTickPopups()
         PopupWindow *w = m_windows[i];
         w->tick(i); //todo!
         if (!w->isAnimated()) {
-            const SharingWindow *sw = &w->getPosition(); 
+            const SharingWindow *sw = w->getDestination(); 
             m_shared.deleteWindow(sw);
             freeWindow(w);
         } else {
@@ -124,70 +120,6 @@ void TrayMainObject::onTickPopups()
     }
     m_windows.swap(next);
 }
-
-
-/*void TrayMainObject::onFinishedAnimation(PopupWindow *w)
-{
-    int index = -1;
-    for (int i=0,e=m_windows.size(); i<e; ++i) {
-        if (m_windows[i] == w) { index = i; break; }
-    }
-    if (index == -1) { assert(false); }
-    else { m_windows.erase(m_windows.begin() + index); }
-    freeWindow(w);
-    if (m_windows.empty())
-        tryShowQueue();
-    else
-        tryRunMoveAnimation();
-}
-
-void TrayMainObject::onFinishedMoveAnimation(PopupWindow *w)
-{
-    int last = m_windows.size() - 1;
-    if (m_windows[last] != w)
-        return;
-    tryShowQueue();
-}
-
-void TrayMainObject::onFinishedStartAnimation(PopupWindow *w)
-{
-    tryRunMoveAnimation();
-}
-
-void TrayMainObject::tryRunMoveAnimation()
-{
-    for (int i=0,e=m_windows.size(); i<e; ++i)
-    {
-        int at = m_windows[i]->getAnimationState();
-        if (at == PopupWindow::ANIMATION_TOSTART || at == PopupWindow::ANIMATION_TOEND)
-             return;
-    }
-    //POINT p = { m_workingarea.right, m_workingarea.bottom };
-
-
-    for (int i=0,e=m_windows.size(); i<e; ++i)
-    {
-         PopupWindow* w = m_windows[i];
-         //SIZE sz = w->getSize();
-         //POINT w_pos = w->getAnimation().pos;
-         
-         const Animation &a = w->getAnimation();
-
-
-
-
-
-         p.y -= (sz.cy+4);
-         if (w_pos.x != p.x || w_pos.y != p.y)
-         {
-             MoveAnimation ma;
-             ma.pos.y = p.y;
-             ma.pos.x = w_pos.x;
-             ma.speed = 0.002f;
-             w->startMoveAnimation(ma);
-         }
-    }
-}*/
 
 PopupWindow* TrayMainObject::getFreeWindow()
 {
@@ -237,22 +169,6 @@ POINT TrayMainObject::GetTaskbarRB()
     }
     return pt;
 }
-
-/*bool TrayMainObject::isHeightLimited() const
-{
-    if (m_windows.empty())
-        return false;
-    int last = m_windows.size() - 1;
-    const POINT &p = m_windows[last]->getAnimation().pos;
-    return(p.y < getHeightLimit()) ? true : false;
-    
-    return false;
-}
-
-int TrayMainObject::getHeightLimit() const
-{
-    return (GetSystemMetrics(SM_CYSCREEN) * 2) / 10;
-}*/
 
 TraySettings& TrayMainObject::traySettings()
 {

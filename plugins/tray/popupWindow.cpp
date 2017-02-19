@@ -8,18 +8,18 @@
      return (IsWindow()) ? true : false;
 }    
 
-void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeout)
+void PopupWindow::setText(const Msg& msg, /*const NotifyParams& notify,*/ int timeout)
 {
     const std::wstring& text = msg.text;
     m_original_text = text;
 
     Animation &a = m_animation;
     a.speed = 0.4f;
-    a.move_speed = 0.01f;
+    a.move_speed = 0.004f;
     a.wait_sec = timeout;
     a.bkgnd_color = msg.bkgndcolor;
     a.text_color = msg.textcolor;
-    a.notify = notify;
+    //a.notify = notify;
 
     m_text.resize(1);
     m_text[0].assign(text);
@@ -76,11 +76,11 @@ void PopupWindow::setText(const Msg& msg, const NotifyParams& notify, int timeou
     wait_timer = 0;
 }
 
-void PopupWindow::startAnimation(int begin_posx, int begin_posy)
+void PopupWindow::startAnimation(const SharingWindow& startpos)
 {
-    m_animation.pos.x = begin_posx;
-    m_animation.pos.y = begin_posy;
-
+    m_animation.pos = startpos;
+    m_destination = startpos;
+    
     fillSrcDC();
     const Animation &a = m_animation;
     const SharingWindow &sw = a.pos;
@@ -188,7 +188,7 @@ void PopupWindow::tick(int id)
         POINT p = { 0, 0 };
 
         float ax = abs(dx); float ay = abs(dy);
-        if (ax > 6 || ay > 6  || (ax > 0 && ax < 1) || (ay > 0 && ay < 1))
+        if (ax > 18 || ay > 18  || (ax > 0 && ax < 1) || (ay > 0 && ay < 1))
         {
             p.x = target.x;
             p.y = target.y;
@@ -210,15 +210,13 @@ void PopupWindow::tick(int id)
         RECT pos = { p.x, p.y, p.x+sz.cx, p.y+sz.cy };
         MoveWindow(&pos);
         SharingWindow &w = m_animation.pos;
-        w.x = pos.left; w.y = pos.top;
-        w.w = pos.right-pos.left; w.h = pos.bottom - pos.top;
-
-        //m_animation.pos = pos;
-
+        w.x = pos.left;
+        w.y = pos.top;
+        w.w = pos.right-pos.left;
+        w.h = pos.bottom - pos.top;
         if (stop)
         {
             m_animation.state =  Animation::ANIMATION_WAIT;
-
             //setState(ANIMATION_WAIT);
             //sendNotify(MOVEANIMATION_FINISHED);
         }
@@ -305,12 +303,12 @@ void PopupWindow::onClickButton()
     //sendNotify(1);
 }
 
-void PopupWindow::sendNotify(int state)
+/*void PopupWindow::sendNotify(int state)
 {
     const NotifyParams &np = m_animation.notify;
      if (np.wnd)
        ::PostMessage(np.wnd, np.msg, np.wparam, (LPARAM)state);
-}
+}*/
 
 void PopupWindow::trimleft(std::wstring* s)
 {

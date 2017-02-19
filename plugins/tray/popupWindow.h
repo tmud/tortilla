@@ -9,13 +9,13 @@ struct Msg {
     COLORREF bkgndcolor;
 };
 
-struct NotifyParams {
+/*struct NotifyParams {
     NotifyParams() : wnd(0), msg(0), wparam(0){}
     HWND wnd;
     UINT msg;
     WPARAM wparam;
     //LPARAM - parameter
-};
+};*/
 
 struct Animation
 {
@@ -28,7 +28,7 @@ struct Animation
     int   wait_sec;
     COLORREF bkgnd_color;
     COLORREF text_color;
-    NotifyParams notify;
+    //NotifyParams notify;
 };
 
 class PopupWindow : public CWindowImpl<PopupWindow>
@@ -47,35 +47,25 @@ public:
     DECLARE_WND_CLASS(NULL)
     PopupWindow() : m_font(NULL),
         wait_timer(0), alpha(0), m_move_dx(0), m_move_dy(0) {}
-    ~PopupWindow() 
-    {
-        if (IsWindow())
-            DestroyWindow();
-    }
-    SharingWindow getPosition() { return m_animation.pos; }
+    ~PopupWindow() { if (IsWindow()) DestroyWindow();  }
+    const SharingWindow* getPosition() { return &m_animation.pos; }
+    const SharingWindow* getDestination() { return &m_destination; }
     bool create(CFont *font);
-    void startAnimation(int begin_posx, int begin_posy);
-    void setText(const Msg& msg, const NotifyParams& notify, int timeout);
+    void startAnimation(const SharingWindow& startpos);
+    void setText(const Msg& msg, int timeout);
     void tick(int id);
     bool canMove() const;
     void moveTo(const SharingWindow& pos);
     void wait();
     bool isAnimated() const;
 
-    /*bool isAnimated() const {  return (m_animation_state==ANIMATION_NONE) ? false : true; }
-    int  getAnimationState() const { return m_animation_state; }
-    const Animation& getAnimation() const { return m_animation; }
-    const MoveAnimation& getMoveAnimation() const { return m_move_animation; }*/
-    //void startAnimation(const Animation& a);
-    //void startMoveAnimation(const MoveAnimation& a);
 private:
     void onTimer();
     void fillSrcDC();
-    //void setState(int newstate);
     SIZE calcDCSize();
     void setAlpha(float a);
     void onClickButton();
-    void sendNotify(int state);
+    //void sendNotify(int state);
     void trimleft(std::wstring* s);
     SIZE getSize() const;
 private:
