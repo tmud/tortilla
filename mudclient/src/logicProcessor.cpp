@@ -146,9 +146,32 @@ void LogicProcessor::runCommands(InputCommands& cmds)
 
 void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
 {
-    // check repeat commands
-    if (cmd->system && isOnlyDigits( cmd->command))
+    InputCommandVarsProcessor vp;
+    InputCommandsVarsFilter vf;
+    if (!vf.checkFilter(cmd))
     {
+        if (vp.makeCommand(cmd))
+        {
+           // found $var in cmd name -> run aliases again
+           InputCommands alias;
+           alias.push_back(cmd);
+           if (!processAliases(alias))
+              return;
+           cmd = alias[0];
+           alias.pop_front();
+           inserts.swap(alias);
+        }
+    }
+
+    // check repeat commands
+    if (cmd->system && isOnlyDigits(cmd->command))
+    {
+        tchar prefix[2] = { tortilla::getProperties()->cmd_prefix, 0 };
+        tstring log(prefix);
+        log.append(cmd->command);
+        log.append(cmd->parameters);
+        syscmdLog(log);
+
         int repeats = 0;
         w2int(cmd->command, &repeats);
         std::vector<tstring>& p = cmd->parameters_list;
@@ -170,7 +193,7 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
         }
 
         InputPlainCommands t;
-        for (int j=0,je=cmd->parameters_list.size();j<je;++j)
+        for (int j = 0, je = cmd->parameters_list.size(); j < je; ++j)
             t.push_back(cmd->parameters_list[j]);
         InputCommands queue_cmds;
         makeCommands(t, &queue_cmds);
@@ -179,22 +202,6 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
         return;
     }
 
-    InputCommandVarsProcessor vp;
-    InputCommandsVarsFilter vf;
-    if (!vf.checkFilter(cmd))
-    {
-        if (vp.makeCommand(cmd))
-        {
-           // found $var in cmd name -> run aliases again
-           InputCommands alias;
-           alias.push_back(cmd);
-           if (!processAliases(alias))
-              return;
-           cmd = alias[0];
-           alias.pop_front();
-           inserts.swap(alias);
-        }
-    }
     if (cmd->system)
         processSystemCommand(cmd); //it is system command for client
     else
