@@ -163,6 +163,25 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
         }
     }
 
+    if (cmd->system && cmd->command.empty())
+    {
+        tchar prefix[2] = { tortilla::getProperties()->cmd_prefix, 0 };
+        tstring log(prefix);
+        log.append(cmd->command);
+        log.append(cmd->parameters);
+        syscmdLog(log);
+        tstring error(L"Ошибка: Пустая команда [");
+        error.append(cmd->srccmd);
+        error.append(cmd->srcparameters);
+        error.append(L"] -> [");
+        error.append(prefix);
+        error.append(cmd->command);
+        error.append(cmd->parameters);
+        error.append(L"]");
+        tmcLog(error);
+        return;
+    }
+
     // check repeat commands
     if (cmd->system && isOnlyDigits(cmd->command))
     {
