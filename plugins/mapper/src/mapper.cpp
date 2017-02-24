@@ -256,7 +256,7 @@ void Mapper::redrawPosition(ViewCursorColor cursor)
     if (vp.room)
     {
         Zone* z = vp.room->level->getZone();
-        ZoneParams zp;
+        //ZoneParams zp;
         //z->getParams(&zp);
         //m_zones_control.selectZone(zp.name, true);
     }

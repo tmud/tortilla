@@ -100,7 +100,12 @@ void MapperRender::onPaint()
 void MapperRender::renderMap(RoomsLevel* rlevel, int x, int y)
 {
     Zone *zone = rlevel->getZone();
-    int level = rlevel->params().level;
+    int level = 0;
+    if (!zone->findLevel(rlevel, &level))
+    {
+        assert(false);
+        return;
+    }
     /*RoomsLevel *under2 = zone->getLevel(level-2, false);
     if (under2)
         renderLevel(under2, x+12, y+12, 1);*/
@@ -117,10 +122,10 @@ void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
 {
     RECT rc;
     GetClientRect(&rc);
-    const RoomsLevelParams &p = level->params();
-    for (int x=0; x<p.width; ++x)
+    const LevelZoneSize &p = level->size();
+    for (int x=0; x<p.width(); ++x)
     {
-        for (int y=0; y<p.height; ++y)
+        for (int y=0; y<p.height(); ++y)
         {
             Room *r = level->getRoom(x,y);
             if (!r) 
@@ -136,9 +141,9 @@ MapperRender::room_pos MapperRender::findRoomPos(Room* room)
 {
     room_pos pos;
     RoomsLevel* level = room->level;
-    const RoomsLevelParams &p = level->params();
-    for (int x=0; x<p.width; ++x) {
-    for (int y=0; y<p.height; ++y) {
+    const LevelZoneSize &p = level->size();
+    for (int x=0; x<p.width(); ++x) {
+    for (int y=0; y<p.height(); ++y) {
       if (level->getRoom(x,y) == room)
         {  pos.x = x; pos.y = y;  return pos;  }
     }}
@@ -150,9 +155,9 @@ Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
     RoomsLevel *level = getViewRoomLevel();
     if (!level) return NULL;
 
-    const RoomsLevelParams &p = level->params();
-    int sx = p.width * ROOM_SIZE;
-    int sy = p.height * ROOM_SIZE;
+    const LevelZoneSize &p = level->size();
+    int sx = p.width() * ROOM_SIZE;
+    int sy = p.height() * ROOM_SIZE;
     int left = getRenderX();
     int top = getRenderY();
     int right = left + sx - 1;
