@@ -3,7 +3,13 @@
 #include "propertyList.h"
 #include "propertiesData.h"
 
-namespace propertiesUpDown {
-void up(PropertyListCtrl &list, PropertiesValues& values, bool mode);
-void down(PropertyListCtrl &list, PropertiesValues& values, bool mode);
-}
+template<class T>
+class propertiesUpDown 
+{
+    int m_group;
+public:
+    propertiesUpDown() : m_group(2) {}
+    propertiesUpDown(int group) : m_group(group) {}
+    void up(PropertyListCtrl &list, PropertiesValuesT<T>& values, bool mode);
+    void down(PropertyListCtrl &list, PropertiesValuesT<T>& values, bool mode);
+};

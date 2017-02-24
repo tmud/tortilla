@@ -15,6 +15,8 @@ class PropertyHighlights :  public CDialogImpl<PropertyHighlights>, public Prope
     CEdit m_pattern;
     CButton m_add;
     CButton m_del;
+    CButton m_up;
+    CButton m_down;
     CButton m_replace;
     CButton m_reset;
     CButton m_filter;
@@ -83,10 +85,12 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
+       COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
        COMMAND_HANDLER(IDC_EDIT_HIGHLIGHT_TEXT, EN_CHANGE, OnPatternEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
-       NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
+       //NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
 
@@ -136,7 +140,7 @@ private:
         hl.italic = m_italic.GetCheck() ? 1 : 0;
 
         tstring flags;
-        getFlags(hl, &flags);
+        hl.getFlags(&flags);
         int index = m_list_values.find(pattern, m_currentGroup);
         if (index == -1 && m_filterMode)
         {
@@ -198,6 +202,20 @@ private:
         m_pattern.SetWindowText(L"");
         m_list.SelectItem(-1);
         m_pattern.SetFocus();
+        return 0;
+    }
+
+    LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
+    {
+        propertiesUpDown<PropertiesHighlight> ud(4);
+        ud.up(m_list, m_list_values, false);
+        return 0;
+    }
+
+    LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
+    {
+        propertiesUpDown<PropertiesHighlight> ud(4);
+        ud.down(m_list, m_list_values, false);
         return 0;
     }
 
@@ -339,7 +357,7 @@ private:
         hl.underlined = m_underline.GetCheck() ? 1 : 0;
 
         tstring flags;
-        getFlags(hl, &flags);
+        hl.getFlags(&flags);
         m_list.setItem(item, 1, flags);
 
         m_update_mode = false;
@@ -384,12 +402,12 @@ private:
         return 0;
     }
 
-    LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
+    /*LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
             m_list.SelectItem(-1);
         return 0;
-    }
+    }*/
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
 	{
@@ -417,6 +435,8 @@ private:
         m_add.Attach(GetDlgItem(IDC_BUTTON_ADD));
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
+        m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
+        m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
         m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
@@ -553,7 +573,7 @@ private:
             const PropertiesHighlight& hl = hv.value;
 
             tstring flags;
-            getFlags(hl, &flags);
+            hl.getFlags(&flags);
             m_list.addItem(i, 0, hv.key);
             m_list.addItem(i, 1, flags);
             m_list.addItem(i, 4, hv.group);
@@ -570,11 +590,15 @@ private:
         {
             m_add.EnableWindow(pattern_empty ? FALSE : TRUE);
             m_del.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
             m_replace.EnableWindow(FALSE);
         }
         else if(items_selected == 1)
         {
             m_del.EnableWindow(TRUE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             bool mode = FALSE;
             if (!pattern_empty)
             {
@@ -595,6 +619,8 @@ private:
         {
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             m_replace.EnableWindow(FALSE);
         }
     }
@@ -687,14 +713,5 @@ private:
         m_cbox.GetLBText(index, buffer);
         group->assign(buffer);
         delete[]buffer;
-    }
-
-    void getFlags(const PropertiesHighlight& hl, tstring* flags)
-    {
-        if (hl.underlined) flags->append(L"Ï");
-        if (hl.border) flags->append(L"Ð");
-        if (hl.italic) flags->append(L"Ê");
-        if (flags->empty())
-            flags->append(L"-");
     }
 };

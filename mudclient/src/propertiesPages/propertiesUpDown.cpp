@@ -1,8 +1,10 @@
 #include "stdafx.h"
 #include "propertiesUpDown.h"
 
-void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values, bool mode)
+template<class T>
+void propertiesUpDown<T>::up(PropertyListCtrl &list, PropertiesValuesT<T>& values, bool mode)
 {
+    typedef PropertiesValuesT<T>::el property_value;
     std::vector<int> selected;
     list.getSelectedUpSorted(&selected);
     if (selected.empty())
@@ -29,7 +31,7 @@ void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values, bool
         list.setItem(i, 0, v.key);
         if (!mode) {
             list.setItem(i, 1, v.value);
-            list.setItem(i, 2, v.group);
+            list.setItem(i, m_group, v.group);
         }
         else {
             list.setItem(i, 1, v.group);
@@ -46,8 +48,10 @@ void propertiesUpDown::up(PropertyListCtrl &list, PropertiesValues& values, bool
     list.SetFocus();
 }
 
-void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values, bool mode)
+template<class T>
+void propertiesUpDown<T>::down(PropertyListCtrl &list,  PropertiesValuesT<T>& values, bool mode)
 {
+    typedef PropertiesValuesT<T>::el property_value;
     std::vector<int> selected;
     list.getSelectedUpSorted(&selected);
     if (selected.empty())
@@ -77,7 +81,7 @@ void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values, bo
         list.setItem(i, 0, v.key);
         if (!mode) {
             list.setItem(i, 1, v.value);
-            list.setItem(i, 2, v.group);
+            list.setItem(i, m_group, v.group);
         } else {
             list.setItem(i, 1, v.group);
         }
@@ -97,3 +101,6 @@ void propertiesUpDown::down(PropertyListCtrl &list, PropertiesValues& values, bo
     }
     list.SetFocus();
 }
+
+template class propertiesUpDown<tstring>;
+template class propertiesUpDown<PropertiesHighlight>;

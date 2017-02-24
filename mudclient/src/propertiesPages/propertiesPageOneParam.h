@@ -86,7 +86,7 @@ private:
        COMMAND_HANDLER(IDC_EDIT_PATTERN, EN_CHANGE, OnPatternEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
-       NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
+       //NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
 
@@ -178,13 +178,15 @@ private:
 
     LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
     {
-        propertiesUpDown::up(m_list, m_list_values, true);
+        propertiesUpDown<tstring> ud;
+        ud.up(m_list, m_list_values, true);
         return 0;
     }
 
     LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
     {
-        propertiesUpDown::down(m_list, m_list_values, true);
+        propertiesUpDown<tstring> ud;
+        ud.down(m_list, m_list_values, true);
         return 0;
     }
 
@@ -297,12 +299,12 @@ private:
         return 0;
     }
 
-    LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
+    /*LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
-        //if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
-        //    m_list.SelectItem(-1);
+        if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
+            m_list.SelectItem(-1);
         return 0;
-    }
+    }*/
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {

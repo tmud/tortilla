@@ -31,6 +31,12 @@ struct PropertiesHighlight
         bkgcolor = RGB(0,0,0);
     }
 
+    operator tstring() const {
+        tstring value;
+        getFlags(&value);
+        return value;
+    }
+
     void convertToString(tstring *value) const
     {
         WCHAR buffer[64];
@@ -55,6 +61,14 @@ struct PropertiesHighlight
         }
     }
 
+    void getFlags(tstring* flags) const
+    {
+        if (underlined) flags->append(L"Ï");
+        if (border) flags->append(L"Ð");
+        if (italic) flags->append(L"Ê");
+        if (flags->empty())
+            flags->append(L"-");
+    }
 private:
     struct value{ int a; int b; int c; };
     bool parseString(const tstring& str, const tstring& label, value *v)
@@ -78,7 +92,7 @@ private:
             return true;
         }
         return false;
-    }
+    }   
 };
 
 struct PropertiesTimer
