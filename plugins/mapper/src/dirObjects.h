@@ -17,7 +17,6 @@ public:
 };
 
 typedef std::vector<MapperDirCommand> MapperDirsVector;
-
 class InitDirVector {
     Pcre r1, r2;
 public:
@@ -55,9 +54,6 @@ private:
         return true;
     }
 };
-
-
-
 
 /*{
 public:

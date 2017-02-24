@@ -16,7 +16,6 @@ Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
     r->z = p.z;
     r->zid = z_id;
     *ptr = r;
-    updateBox(p);
     return AR_OK;
 }
 
@@ -39,19 +38,15 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
     {
         r = *ptr;
         *ptr = NULL;
-        r->x = r->y = r->z = 0;  r->zid = -1; 
-        updateBox(p);        
+        r->x = r->y = r->z = 0;
+        r->zid = -1;
+        collapse(p);
     }
     return r;
 }
 
-void Rooms3dCube::updateBox(const Rooms3dCubePos& p)
-{
-
-}
-
 Room* Rooms3dCube::get(const Rooms3dCubePos& p) const
-{    
+{
     Room** ptr = getp(p);
     if (!ptr) return NULL;
     return *ptr;
@@ -76,64 +71,54 @@ bool Rooms3dCube::extends(const Rooms3dCubePos& p)
 {
     if (checkCoods(p))
         return true;
-
     //1. extends rows on all levels (y)
-    if (p.y < cube_size.top)
-        extends_height(cube_size.top - p.y, true);
-    if (p.y > cube_size.bottom)
-        extends_height(p.y - cube_size.bottom, false);
+    extends_height(p);
     // 2. extends rows by new rooms (x)
-    if (p.x < cube_size.left)
-        extends_width(cube_size.left - p.x, true);
-    if (p.x > cube_size.right)
-        extends_width(p.x - cube_size.right, false);
-
-    
-
-    if (p.x < cube_size.left) {
-        int count = cube_size.left - p.x;
-        for (int i=0,e=zone.size();i<e;++i) 
-        {
-            std::vector<row*>& v = zone[i]->rooms;
-            v.insert(v.begin(), NULL, )
-
-        }
-    } 
-    else 
-    {
-    
-    
-    }
-
-
-
-
-
-    return false;
+    extends_width(p);
+    // 3. extends levels (z)
+    extends_levels(p);
+    return true;
 }
 
-void Rooms3dCube::extends_height(int count, bool insert_begin)
+void Rooms3dCube::extends_height(const Rooms3dCubePos& p)
 {
     //extends rows on all levels (y)
+    int count = 0;
+    if (p.y < cube_size.top)
+        count = cube_size.top - p.y;
+    if (p.y > cube_size.bottom)
+        count = cube_size.bottom - p.y;
+    if (count == 0) return;
+
     for (int i=0; i<cube_size.levels(); ++i) 
     {
-        level *l = zone[i];
-        std::vector<row*>& v = l->rooms;
-        if (insert_begin) {
-            for(; count>0; --count)
+       level *l = zone[i];
+       std::vector<row*>& v = l->rooms;
+       if (count > 0) {
+            for(int c = count; c>0; --c)
                 v.insert(v.begin(), new row(cube_size.width()) );
             cube_size.top = p.y;
-        } else {
-            for(; count>0; --count)
-               v.push_back ( new row(cube_size.width()) );
-            cube_size.bottom = p.y;
+       } else {
+            for(int c = -count; c>0; --c)
+               v.push_back( new row(cube_size.width()) );
        }
     }
+    if (count > 0)
+        cube_size.top = p.y;
+    else
+        cube_size.bottom = p.y;
 }
 
-void Rooms3dCube::extends_width(int count, bool insert_begin)
+void Rooms3dCube::extends_width(const Rooms3dCubePos& p)
 {
     // extends rows by new rooms (x)
+    int count = 0;
+    if (p.x < cube_size.left)
+        count = cube_size.left - p.x;
+    if (p.x > cube_size.right)
+        count = cube_size.right - p.x;
+    if (count == 0) return;
+    
     for (int i=0; i<cube_size.levels(); ++i)
     {
         level *l = zone[i];
@@ -141,19 +126,58 @@ void Rooms3dCube::extends_width(int count, bool insert_begin)
         for (int j=0, je=v.size(); j<je; ++j)
         {
             std::vector<Room*>& rr = v[j]->rr;
-            if (insert_begin) {
-
-              //todo!
-
-               cube_size.left = p.x;
-            } else {
-               cube_size.right = p.y;
-            }
+            if (count > 0)
+              rr.insert(rr.begin(), count, NULL);              
+            else
+              rr.insert(rr.end(), -count, NULL);
         }
     }
+    if (count > 0)
+        cube_size.left = p.x;
+    else
+        cube_size.right = p.x;
 }
 
+void Rooms3dCube::extends_levels(const Rooms3dCubePos& p)
+{
+    // extends levels (z)
+    int count = 0;
+    if (p.z < cube_size.minlevel)
+        count = cube_size.minlevel - p.z;
+    if (p.z > cube_size.maxlevel)
+        count = cube_size.maxlevel - p.z;
+    if (count == 0) return;
+    bool insert_begin = (count > 0) ? true : false;
+    if (count < 0) count = -count;
+    for (;count > 0; --count)
+    {
+        level *l = new level;
+        l->rooms.resize(cube_size.height(), NULL);
+        for (int i=0;i<cube_size.height(); ++i)
+            l->rooms[i] = new row(cube_size.width());
+        if (insert_begin)
+            zone.insert(zone.begin(), l);
+        else
+            zone.push_back(l);
+    }
+    if (insert_begin)
+        cube_size.minlevel = p.z;
+    else
+        cube_size.maxlevel = p.z;
+}
 
+void Rooms3dCube::collapse(const Rooms3dCubePos& p)
+{
+    if (p.x == cube_size.left) {
+
+
+
+    }
+    if (p.x == cube_size.right) {
+        
+    }
+
+}
 
 bool Rooms3dCube::checkCoods(const Rooms3dCubePos& p) const
 {

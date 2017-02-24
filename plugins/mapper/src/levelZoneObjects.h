@@ -63,4 +63,3 @@ private:
     LevelZoneSize m_size;
     std::vector<RoomsLevel*> m_levels;
 };
-

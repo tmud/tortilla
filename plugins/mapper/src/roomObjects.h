@@ -80,13 +80,13 @@ private:
     void clearExits(Room *r);
     Room*  get(const Rooms3dCubePos& p) const;
     Room** getp(const Rooms3dCubePos& p) const;
-    bool extends(const Rooms3dCubePos& p);    
+    bool extends(const Rooms3dCubePos& p);
+    void extends_height(const Rooms3dCubePos& p);
+    void extends_width(const Rooms3dCubePos& p);
+    void extends_levels(const Rooms3dCubePos& p);
     bool checkCoods(const Rooms3dCubePos& p) const;
-    void updateBox(const Rooms3dCubePos& p);
-    
-    void extends_height(int count, bool insert_begin);
-    void extends_width(int count, bool insert_begin);
-
+    void collapse(const Rooms3dCubePos& p);
+private:
     struct row {
       row(int count=1) { rr.resize(count, NULL); }
       ~row() { std::for_each(rr.begin(), rr.end(), [](Room* r) { delete r; }); }

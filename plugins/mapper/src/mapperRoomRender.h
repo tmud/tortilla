@@ -10,7 +10,6 @@ public:
     void setIcons(CImageList *icons);
     void render(int dc_x, int dc_y, Room *r, int type);
     void renderCursor(int dc_x, int dc_y, int type);
-
 private:
     void renderRoom(int x, int y, Room *r);
     bool anotherZone(Room* r, int dir);

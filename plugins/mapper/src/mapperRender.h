@@ -86,7 +86,6 @@ private:
             bHandled = FALSE;
         return 0;
     }
-
 private:
     void renderMap(RoomsLevel* rlevel, int x, int y);
     void renderLevel(RoomsLevel* level, int dx, int dy, int type);
