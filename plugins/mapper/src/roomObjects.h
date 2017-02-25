@@ -21,13 +21,20 @@ struct RoomExit
     bool multiexit;
 };
 
+struct Rooms3dCubePos 
+{
+    Rooms3dCubePos() { clear(); }
+    void clear() { x = y = z = 0; zid = -1; }
+    bool move(RoomDir dir);
+    int x, y, z, zid;
+};
+
 struct Room
 {
-    Room() : x(0), y(0), z(0), zid(-1), icon(0), use_color(0), color(0) {}
+    Room() : icon(0), use_color(0), color(0) {}
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
-    int x, y;                       // relative position in the level (x,y >= 0)
-    int z, zid;                     // relative position level(z-coord >=0) and zone id(zid-coord >= 0)
+    Rooms3dCubePos pos;             // relative position in the level (x,y >= 0), level and zone id(>=0(
     int icon;                       // icon if exist
     int use_color;                  // flag for use background color
     COLORREF color;                 // background color
@@ -52,16 +59,11 @@ struct Rooms3dCubeSize
     int levels() const { return maxlevel-minlevel+1; }
 };
 
-struct Rooms3dCubePos 
-{
-    Rooms3dCubePos(): x(0),y(0),z(0),zid(-1) {}
-    int x, y, z, zid;
-};
-
 class Rooms3dCube
 {
+    friend class Rooms3dCubeCursor;
 public:
-    Rooms3dCube(int zid) : z_id(zid) {
+    Rooms3dCube(int zid, const tstring& name) : z_id(zid), m_name(name) {
         assert(zid >= 0);
         row *r = new row;
         level *l = new level;
@@ -70,7 +72,7 @@ public:
     }
     ~Rooms3dCube() {  release();  }
     const Rooms3dCubeSize& size() const {  return cube_size; }
-
+    const tstring& name() const { return m_name; }
     enum AR_STATUS { AR_OK = 0, AR_INVALIDROOM, AR_BUSY, AR_FAIL };
     AR_STATUS addRoom(const Rooms3dCubePos& p, Room* r);
     const Room* getRoom(const Rooms3dCubePos& p) const;
@@ -100,8 +102,8 @@ private:
     std::vector<level*> zone;
     Rooms3dCubeSize cube_size;
     int z_id;
+    tstring m_name;
 };
-
 
 /*class RoomHelper
 {

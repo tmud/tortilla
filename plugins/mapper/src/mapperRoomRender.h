@@ -8,13 +8,13 @@ public:
     MapperRoomRender(int room_size, int corridor_size);
     void setDC(HDC dc);
     void setIcons(CImageList *icons);
-    void render(int dc_x, int dc_y, Room *r, int type);
+    void render(int dc_x, int dc_y, const Room *r, int type);
     void renderCursor(int dc_x, int dc_y, int type);
 private:
-    void renderRoom(int x, int y, Room *r);
-    bool anotherZone(Room* r, int dir);
+    void renderRoom(int x, int y, const Room *r);
+    bool anotherZone(const Room* r, int dir);
     void renderShadow(int x, int y);
-    void renderHole(int x, int y, Room *r);    
+    void renderHole(int x, int y, const Room *r);    
     void renderRect(int x, int y, int dx, int dy);    
     void renderLine(int x, int y, int dx, int dy);
     void fillColor(int x, int y, int dx, int dy, COLORREF color);

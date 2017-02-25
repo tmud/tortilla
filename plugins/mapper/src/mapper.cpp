@@ -29,7 +29,8 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                 //if (next)
                 {
                     m_pCurrentRoom = next;
-                    redrawPosition(RCC_LOST);
+                    MapCursor cursor = m_map.createCursor(m_pCurrentRoom, RCC_LOST);
+                    redrawPosition(cursor);
                 }
             }            
         }
@@ -48,7 +49,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     DEBUGOUT(room.exits);
 
     Room *new_room = m_map.findRoom(room.vnum);
-    if (!new_room && m_lastDir != RD_UNKNOWN)
+    if (!new_room)
     {
         new_room = new Room();
         new_room->roomdata = room;
@@ -71,41 +72,14 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         }
     }
     else
-    {        
-         m_map.addLink(m_pCurrentRoom, new_room, m_lastDir);
+    {
+         if (m_lastDir != RD_UNKNOWN && m_pCurrentRoom)
+            m_map.addLink(m_pCurrentRoom, new_room, m_lastDir);
     }
     m_pCurrentRoom = new_room;
-    /*if (m_pCurrentRoom && m_pCurrentRoom->level)
-        m_zones_control.selectZone(m_pCurrentRoom->level->getZone(), true); */    
-    redrawPosition(RCC_NORMAL);
+    MapCursor cursor = m_map.createCursor(m_pCurrentRoom, RCC_NORMAL);
+    redrawPosition(cursor);
 }
-
-/*Zone* Mapper::getZone(const RoomData& room)
-{
-    if (!room.zonename.empty())
-    {
-        const tstring& zone_name = room.zonename;
-        zone_iterator it = m_zones.find(zone_name);
-        if (it != m_zones.end())
-            return it->second;
-        Zone *new_zone = new Zone(zone_name);
-        m_zones[zone_name] = new_zone;
-        return new_zone;
-    }
-
-    tchar buffer[32];
-    while (true)
-    {
-        swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
-        zone_iterator zt = m_zones.find(buffer);
-        if (zt == m_zones.end())
-            break;
-   }
-   tstring zone_name(buffer);
-   Zone* new_zone = new Zone(zone_name);
-   m_zones[zone_name] = new_zone;
-   return new_zone;
-}*/
 
 void Mapper::processCmd(const tstring& cmd)
 {    
@@ -247,15 +221,15 @@ void Mapper::updateProps()
     h.make(RD_DOWN, m_propsData->down_cmd, m_dirs);
 }
 
-void Mapper::redrawPosition(ViewCursorColor cursor)
+void Mapper::redrawPosition(MapCursor cursor)
 {
-    ViewMapPosition vp;
-    vp.cursor = cursor;
-    vp.room = m_pCurrentRoom;
-    m_view.roomChanged(vp);
-    if (vp.room)
+    m_view.roomChanged(cursor);
+    /*if (m_pCurrentRoom && m_pCurrentRoom->level)
+     m_zones_control.selectZone(m_pCurrentRoom->level->getZone(), true); */    
+
+    //if (vp.room)
     {
-        Zone* z = vp.room->level->getZone();
+        //Zone* z = vp.room->level->getZone();
         //ZoneParams zp;
         //z->getParams(&zp);
         //m_zones_control.selectZone(zp.name, true);

@@ -35,7 +35,7 @@ private:
     void popDir();
     void setExits(Room *room);
     void checkExit(Room *room, RoomDir dir, const tstring& exit);    
-    void redrawPosition(ViewCursorColor cursor);
+    void redrawPosition(MapCursor cursor);
 private:
     // map
     MapInstance m_map;

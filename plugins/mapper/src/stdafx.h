@@ -42,3 +42,4 @@ typedef unsigned int uint;
 #include <string>
 #include <map>
 #include <algorithm>
+#include <memory>

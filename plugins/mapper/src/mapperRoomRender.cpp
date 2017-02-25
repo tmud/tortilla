@@ -35,7 +35,7 @@ void MapperRoomRender::setIcons(CImageList *icons)
     m_plist = icons;
 }
 
-void MapperRoomRender::render(int dc_x, int dc_y, Room *r, int type)
+void MapperRoomRender::render(int dc_x, int dc_y, const Room *r, int type)
 {
     if (type == 0)
         renderRoom(dc_x, dc_y, r);
@@ -76,7 +76,7 @@ void MapperRoomRender::renderShadow(int x, int y)
     tdc.BitBlt(x, y, m_size, m_size, m_hdc, x, y, SRCERASE);
 }
 
-void MapperRoomRender::renderHole(int x, int y, Room *r)
+void MapperRoomRender::renderHole(int x, int y, const Room *r)
 {
    CRect rp(x, y, x+m_size, y+m_size);
    int cs = m_csize;
@@ -184,7 +184,7 @@ void MapperRoomRender::renderHole(int x, int y, Room *r)
    m_hdc.SelectPen(old);
 }
 
-void MapperRoomRender::renderRoom(int x, int y, Room *r)
+void MapperRoomRender::renderRoom(int x, int y, const Room *r)
 {   
    CRect rp( x, y, x+m_size, y+m_size );
    CRect base(rp);
@@ -416,7 +416,7 @@ void MapperRoomRender::renderRoom(int x, int y, Room *r)
    m_hdc.SelectPen(old);
 }
 
-bool MapperRoomRender::anotherZone(Room* r, int dir)
+bool MapperRoomRender::anotherZone(const Room* r, int dir)
 {
     /*Room *r2 = r->dirs[dir].next_room;
     if (!r2) return false;

@@ -7,14 +7,20 @@ MapInstance::MapInstance() : m_nextzone_id(1)
 
 MapInstance::~MapInstance()
 {
-    std::for_each(m_zones.begin(),m_zones.end(),[](std::pair<const tstring, Zone*> &p){delete p.second;});
+    std::for_each( zones.begin(),zones.end(),[](Rooms3dCube *p){delete p;} );
+    rooms_hash_table.clear();
 }
 
-Room* MapInstance::findRoom(const tstring& vnum)
+MapCursor MapInstance::createCursor(Room *room, MapCursorColor color)
 {
-    assert(!vnum.empty());
-    room_iterator rt = m_rooms.find(vnum);
-    return (rt != m_rooms.end()) ? rt->second : NULL;
+    return std::make_shared<MapCursorImplementation>(this, room, color);
+}
+
+Room* MapInstance::findRoom(const tstring& hash)
+{
+    assert(!hash.empty());
+    room_iterator rt = rooms_hash_table.find(hash);
+    return (rt != rooms_hash_table.end()) ? rt->second : NULL;
 }
 
 bool MapInstance::addNewZoneAndRoom(Room *room)
@@ -23,22 +29,20 @@ bool MapInstance::addNewZoneAndRoom(Room *room)
     {
         assert(false);
         return false;
-    }    
-
+    }
     tchar buffer[32];
     while (true)
     {
         swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
-        zone_iterator zt = m_zones.find(buffer);
-        if (zt == m_zones.end())
+        if (!findZone(buffer))
             break;
     }
     tstring zone_name(buffer);
-    Zone *new_zone = new Zone(zone_name);
-    RoomsLevel *level = new_zone->getLevel(0, true);
-    level->addRoom(room, 0, 0);
-    m_zones[zone_name] = new_zone;
-    m_rooms[room->roomdata.vnum] = room;
+    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), zone_name);
+    Rooms3dCubePos p;
+    new_zone->addRoom(p, room);
+    zones.push_back(new_zone);
+    addRoomToHashTable(room);
     return true;
 }
 
@@ -52,33 +56,102 @@ bool MapInstance::addNewRoom(Room* from, Room* newroom, RoomDir dir)
 
     if (isMultiExit(from, dir))
     {
-        setRoomOnMap(from, dir, newroom);
-        return true;
+        bool result = setRoomOnMap(from, newroom, dir);
+        if (result)
+            addRoomToHashTable(newroom);
+        return result;
     }
 
     Room* next = getRoom(from, dir);
     if (!next)
     {
-        setRoom(from, dir, newroom);
-        setRoomOnMap(from, dir, newroom);
-        return true;
+        bool result = setRoomOnMap(from, newroom, dir);
+        if (result)
+        {
+            addLink(from, newroom, dir);
+            addRoomToHashTable(newroom);
+        }
+        return result;
     }
 
-    // конфликт, мультивыход
+    // конфликтный мультивыход
     setMultiExit(from, dir);
-    setRoomOnMap(from, dir, newroom);   
-    return true;
-}
-
-void MapInstance::setRoomOnMap(Room* from, RoomDir dir, Room* next)
-{
+    bool result = setRoomOnMap(from, newroom, dir);
+    if (result)
+        addRoomToHashTable(newroom);
+    return result;
 }
 
 bool MapInstance::addLink(Room* from, Room* to, RoomDir dir)
 {
-    return setRoom(from, dir, to);
+    if (!from || !to || dir == RD_UNKNOWN) {
+        assert(false); return false;
+    }
+    Room* current_next = from->dirs[dir].next_room;
+    if (current_next && current_next != to) {
+        assert(false); return false;
+    }
+    from->dirs[dir].next_room = to;
+    return true;
+}
+
+bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
+{
+    assert(from && next && dir != RD_UNKNOWN);
+    Rooms3dCubePos pos = from->pos;
+    if (!pos.move(dir))
+        return false;
+    Rooms3dCube * zone = zones[from->pos.zid ];
+    
+    Rooms3dCube::AR_STATUS s = zone->addRoom(pos, next);
+    if (s == Rooms3dCube::AR_OK)
+        return true;
+    if (s == Rooms3dCube::AR_INVALIDROOM || s == Rooms3dCube::AR_FAIL)
+    {
+        return false;
+    }
+     if (s != Rooms3dCube::AR_BUSY)
+         return false;
+    
+    // todo!
+    return false;
+}
+
+void MapInstance::addRoomToHashTable(Room* r)
+{
+    const tstring& vnum = r->roomdata.vnum;
+    assert(r && !vnum.empty());
+    room_iterator it = rooms_hash_table.find(vnum);
+    if (it != rooms_hash_table.end()) {
+        assert(false);
+        return;
+    }
+    rooms_hash_table[vnum] = r;
+}
+
+void MapInstance::removeRoomFromHashTable(Room *r)
+{
+    const tstring& vnum = r->roomdata.vnum;
+    assert(r && !vnum.empty());
+    room_iterator it = rooms_hash_table.find(vnum);
+    if (it == rooms_hash_table.end()) {
+        assert(false);
+        return;
+    }
+    rooms_hash_table.erase(it);
 }
 //-------------------------------------------------------------------------------------
+Rooms3dCube* MapInstance::findZone(const tstring& name)
+{
+    zone_iterator zt = zones.begin(), zt_end = zones.end();
+    for(; zt!=zt_end; ++zt) {
+        Rooms3dCube* zone = *zt;
+        if ( zone->name() == name )
+            return zone;
+    }
+    return NULL;
+}
+
 bool MapInstance::isMultiExit(Room* from, RoomDir dir)
 {
     if (!from || dir == RD_UNKNOWN) {
@@ -99,22 +172,13 @@ bool MapInstance::setMultiExit(Room* from, RoomDir dir)
 Room* MapInstance::getRoom(Room* from, RoomDir dir)
 {
     if (!from || dir == RD_UNKNOWN) {
-        assert(false);  return NULL;
+        assert(false);
+        return NULL;
     }
     return from->dirs[dir].next_room;
 }
-bool MapInstance::setRoom(Room* from, RoomDir dir, Room* next)
-{
-    if (!from || dir == RD_UNKNOWN || !next) {
-        assert(false); return false;
-    }
-    Room* current_next = from->dirs[dir].next_room;
-    if (current_next && current_next != next) {
-        assert(false); return false;
-    }
-    from->dirs[dir].next_room = next;
-    return true;
-}
+
+
 //-------------------------------------------------------------------------------------
 /*void Mapper::newZone(Room *room, RoomDir dir)
 {   

@@ -6,30 +6,29 @@
 #define ROOM_SIZE 32
 #define MAP_EDGE 16
 
-#define MENU_SETCOLOR 100
+#define MENU_SETCOLOR   100
 #define MENU_RESETCOLOR 101
 #define MENU_NEWZONE_NORTH 102
 #define MENU_NEWZONE_SOUTH 103
-#define MENU_NEWZONE_WEST 104
-#define MENU_NEWZONE_EAST 105
-#define MENU_NEWZONE_UP   106
-#define MENU_NEWZONE_DOWN 107
-
+#define MENU_NEWZONE_WEST  104
+#define MENU_NEWZONE_EAST  105
+#define MENU_NEWZONE_UP    106
+#define MENU_NEWZONE_DOWN  107
 #define MENU_SETICON_FIRST 200  // max 100 icons
 #define MENU_SETICON_LAST  299
 
 extern Mapper* m_mapper_window;
 
-const ViewMapPosition& MapperRender::getViewRoom() const
+/*const ViewMapPosition& MapperRender::getViewRoom() const
 {
     return (viewpos.room) ? viewpos : lastpos;       
-}
+}*/
 
-RoomsLevel* MapperRender::getViewRoomLevel() const
+/*RoomsLevel* MapperRender::getViewRoomLevel() const
 {
     const ViewMapPosition& vr = getViewRoom();
     return (vr.room) ? vr.room->level : NULL;
-}
+}*/
 
 MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
 {
@@ -52,10 +51,10 @@ void MapperRender::onCreate()
     updateScrollbars(false);
 }
 
-void MapperRender::roomChanged(const ViewMapPosition& pos)
+void MapperRender::roomChanged(MapCursor pos)
 {
-    if (viewpos.room)
-        { lastpos = viewpos; lastpos.cursor = RCC_NORMAL; }
+    if (pos->valid())
+        lastpos = viewpos;
     viewpos = pos;
     updateScrollbars(false);
     Invalidate();
@@ -74,17 +73,17 @@ void MapperRender::onPaint()
     CMemoryDC mdc(dc, pos);
     mdc.FillRect(&pos, m_background);
 
-    RoomsLevel* level = getViewRoomLevel();
-    if (!level) return;
+    //RoomsLevel* level = getViewRoomLevel();
+    //if (!level) return;
 
     int x = getRenderX();
     int y = getRenderY();
-     
+
     rr.setDC(mdc);
     rr.setIcons(&m_icons);
-    renderMap(level, x, y);
+    renderMap(x, y);
 
-    const ViewMapPosition& vr = getViewRoom();
+    /*const ViewMapPosition& vr = getViewRoom();
     if (vr.room)
     {
         room_pos p = findRoomPos(vr.room);
@@ -94,44 +93,51 @@ void MapperRender::onPaint()
             int dy = y + p.y * ROOM_SIZE;
             rr.renderCursor(dx, dy, vr.cursor);
         }
-    }
+    }*/
 }
 
-void MapperRender::renderMap(RoomsLevel* rlevel, int x, int y)
+void MapperRender::renderMap(int render_x, int render_y)
 {
-    Zone *zone = rlevel->getZone();
+    MapCursor pos = viewpos ? viewpos : lastpos;
+    if (!pos) return;
+    int z = pos->pos().z;
+
+    /*Zone *zone = rlevel->getZone();
     int level = 0;
     if (!zone->findLevel(rlevel, &level))
     {
         assert(false);
         return;
-    }
-    /*RoomsLevel *under2 = zone->getLevel(level-2, false);
-    if (under2)
-        renderLevel(under2, x+12, y+12, 1);*/
-    RoomsLevel *under = zone->getLevel(level-1, false);
-    if (under)
-        renderLevel(under, x+6, y+6, 1);
-    renderLevel(rlevel, x, y, 0);
-    RoomsLevel *over = zone->getLevel(level+1, false);
-    if (over)
-        renderLevel(over, x-6, y-6, 2);
+    }*/
+    //RoomsLevel *under2 = zone->getLevel(level-2, false);
+    //if (under2)
+    //    renderLevel(under2, x+12, y+12, 1);
+    //RoomsLevel *under = zone->getLevel(level-1, false);
+    //if (under) renderLevel(under, x+6, y+6, 1);
+    
+    renderLevel(z, render_x, render_y, 0, pos);
+
+    //RoomsLevel *over = zone->getLevel(level+1, false);
+    //if (over) renderLevel(over, x-6, y-6, 2);
 }
 
-void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
+void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapCursor pos)
 {
     RECT rc;
     GetClientRect(&rc);
-    const LevelZoneSize &p = level->size();
-    for (int x=0; x<p.width(); ++x)
+    const Rooms3dCubeSize& sz = pos->size();
+    Rooms3dCubePos p; p.z = z;
+    for (int x=0; x<sz.width(); ++x)
     {
-        for (int y=0; y<p.height(); ++y)
+        p.x = x + sz.left;
+        for (int y=0; y<sz.height(); ++y)
         {
-            Room *r = level->getRoom(x,y);
-            if (!r) 
+            p.x = y + sz.top;
+            const Room *r = pos->room(p);
+            if (!r)
                 continue;
-            int px = ROOM_SIZE * x + dx;
-            int py = ROOM_SIZE * y + dy;
+            int px = ROOM_SIZE * x + render_x;
+            int py = ROOM_SIZE * y + render_y;
             rr.render(px, py, r, type);            
         }
     }
@@ -140,19 +146,19 @@ void MapperRender::renderLevel(RoomsLevel* level, int dx, int dy, int type)
 MapperRender::room_pos MapperRender::findRoomPos(Room* room)
 {
     room_pos pos;
-    RoomsLevel* level = room->level;
+/*    RoomsLevel* level = room->level;
     const LevelZoneSize &p = level->size();
     for (int x=0; x<p.width(); ++x) {
     for (int y=0; y<p.height(); ++y) {
       if (level->getRoom(x,y) == room)
         {  pos.x = x; pos.y = y;  return pos;  }
-    }}
+    }}*/
     return pos;
 }
 
 Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
 {
-    RoomsLevel *level = getViewRoomLevel();
+    /*RoomsLevel *level = getViewRoomLevel();
     if (!level) return NULL;
 
     const LevelZoneSize &p = level->size();
@@ -168,7 +174,7 @@ Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
         int x = (cursor_x - left) / ROOM_SIZE;
         int y = (cursor_y - top) / ROOM_SIZE;
         return level->getRoom(x, y);
-    }
+    }*/
     return NULL;
 }
 

@@ -1,23 +1,24 @@
 #pragma once
 
 #include "roomObjects.h"
-#include "levelZoneObjects.h"
+#include "mapCursor.h"
+
 #include "mapperRoomRender.h"
 #include "menuXP.h"
 
-enum ViewCursorColor { RCC_NORMAL = 0, RCC_LOST };
+/*enum ViewCursorColor { RCC_NORMAL = 0, RCC_LOST };
 struct ViewMapPosition
 {
     ViewMapPosition() : room(NULL), cursor(RCC_NORMAL) {}
     Room* room;
     ViewCursorColor cursor;
-};
+};*/
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;
-    ViewMapPosition viewpos;
-    ViewMapPosition lastpos;
+    MapCursor viewpos;
+    MapCursor lastpos;
     MapperRoomRender rr;
 
     struct room_pos {
@@ -43,7 +44,7 @@ class MapperRender : public CWindowImpl<MapperRender>
 
 public:
     MapperRender();
-    void roomChanged(const ViewMapPosition& pos);
+    void roomChanged(MapCursor pos);
 
 private:
 	BEGIN_MSG_MAP(MapperRender)
@@ -79,7 +80,6 @@ private:
         m_menu.DrawItem((LPDRAWITEMSTRUCT)lparam);
         return 0;
     }
-
     LRESULT OnMenuCommand(UINT, WPARAM wparam, LPARAM, BOOL& bHandled)
     {
         if (!runMenuPoint(LOWORD(wparam)))
@@ -87,8 +87,8 @@ private:
         return 0;
     }
 private:
-    void renderMap(RoomsLevel* rlevel, int x, int y);
-    void renderLevel(RoomsLevel* level, int dx, int dy, int type);
+    void renderMap(int render_x, int render_y);
+    void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
     room_pos findRoomPos(Room* room);
     Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
@@ -115,6 +115,6 @@ private:
     }
     void createMenu();
     bool runMenuPoint(int id);
-    const ViewMapPosition& getViewRoom() const;
-    RoomsLevel* getViewRoomLevel() const;    
+    //const ViewMapPosition& getViewRoom() const;
+    //RoomsLevel* getViewRoomLevel() const;    
 };

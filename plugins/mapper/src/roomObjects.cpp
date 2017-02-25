@@ -4,17 +4,15 @@
 
 Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
 {
-    if (r->zid != -1)
+    if (r->pos.zid != -1)
         return AR_INVALIDROOM;
     if (!extends(p))
         return AR_FAIL;
     Room** ptr = getp(p);
     if (*ptr)
         return AR_BUSY;
-    r->x = p.x;
-    r->y = p.y;
-    r->z = p.z;
-    r->zid = z_id;
+    r->pos = p;
+    r->pos.zid = z_id;
     *ptr = r;
     return AR_OK;
 }
@@ -38,8 +36,7 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
     {
         r = *ptr;
         *ptr = NULL;
-        r->x = r->y = r->z = 0;
-        r->zid = -1;
+        r->pos.clear();
         collapse(p);
     }
     return r;
@@ -181,10 +178,6 @@ void Rooms3dCube::collapse(const Rooms3dCubePos& p)
 
 bool Rooms3dCube::checkCoods(const Rooms3dCubePos& p) const
 {
-    if (p.zid != z_id) {
-        assert(false);
-        return false;
-    }
     if (p.z >= cube_size.minlevel && p.z <= cube_size.maxlevel)
     {
         if (p.x >= cube_size.left && p.x <= cube_size.right && p.y >= cube_size.top && p.y <= cube_size.bottom) 
@@ -208,82 +201,8 @@ void Rooms3dCube::clearExits(Room *r)
     }
 }
 
-/*RoomHelper::RoomHelper(Room *room) : r(room), x(0), y(0), z(0)
+bool Rooms3dCubePos::move(RoomDir dir)
 {
-    assert(room && room->level && zone());
-}
-
-Zone* RoomHelper::zone()
-{
-    return level()->getZone();
-}
-
-RoomsLevel* RoomHelper::level()
-{
-    return r->level;
-}
-
-Room* RoomHelper::getRoomDir(RoomDir dir)
-{
-    if (dir == RD_UNKNOWN) {
-        assert(false);  return NULL;
-    }
-    return r->dirs[dir].next_room;
-}
-
-bool RoomHelper::isExplored(RoomDir dir)
-{
-    Room *next = getRoomDir(dir);
-    return (next && zone(r) == zone(next)) ? true : false;
-}
-
-bool RoomHelper::addLink(RoomDir dir, Room *room)
-{
-    Room *next = r->dirs[dir].next_room;
-    if (!next)
-    {
-        r->dirs[dir].next_room = room;
-        return true;
-    }
-    return (next == room);
-}
-
-bool RoomHelper::addRoom(RoomDir dir, Room* room)
-{
-    if (!move(dir))
-        return false;
-    if (!m_current_room || !m_current_room->level) {
-        assert(false);
-        return false;
-    }
-    Zone *zone = m_current_room->level->getZone();
-    RoomsLevel *rl = zone->getLevel(level, true);
-    bool result = rl->addRoom(room, x, y);
-    if (result)
-    {
-        result = addLink(dir, room);
-        if (!result)
-        {
-            rl->detachRoom(x, y);
-            assert(false);
-        }
-    }
-    return result;
-    return false;
-}
-
-bool RoomHelper::move(RoomDir dir)
-{
-    x = r->x;
-    y = r->y;
-    RoomsLevel *level = r->level;
-    int index = 0;
-    if (!level->getZone()->findLevel(level, &index))
-    {
-        assert(false);
-        return false;
-    }
-    z = index;
     switch (dir)
     {
         case RD_NORTH: y -= 1; break;
@@ -298,16 +217,6 @@ bool RoomHelper::move(RoomDir dir)
     }
     return true;
 }
-
-Zone* RoomHelper::zone(Room *room)
-{
-    assert(room);
-    if (room) {
-      assert(room->level);
-      return room->level->getZone();   
-    }
-    return NULL;
-}*/
 
 RoomDir RoomDirHelper::cast(int index)
 {

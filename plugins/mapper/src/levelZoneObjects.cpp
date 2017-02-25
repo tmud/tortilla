@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "levelZoneObjects.h"
 
+/*
 Zone* RoomsLevel::getZone() const 
 {
     return m_parentZone;
@@ -11,7 +12,7 @@ const LevelZoneSize& RoomsLevel::size() const
     return m_parentZone->size(); 
 }
 
-/*bool RoomsLevel::isEmpty() const
+bool RoomsLevel::isEmpty() const
 {
     const RoomsLevelParams& p = params();    
     for (int y = 0; y < p.height; ++y) {
@@ -19,7 +20,7 @@ const LevelZoneSize& RoomsLevel::size() const
         if (rooms[y]->rr[x]) return false;
     }}
     return true;
-}*/
+}
 
 Room* RoomsLevel::getRoom(int x, int y)
 {
@@ -90,7 +91,7 @@ void RoomsLevel::resizeLevel(int width, int height)
 
 
 
-    /*const RoomsLevelParams&p = params();
+    const RoomsLevelParams&p = params();
     int mx = 0; int my = 0; // delta for coords
     if (x < 0)
     {
@@ -141,7 +142,7 @@ void RoomsLevel::resizeLevel(int width, int height)
             Room *room = getRoom(i, j);
             if (room) { room->x += mx; room->y += my; }
         }
-    }*/
+    }
 }
 
 RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
@@ -184,7 +185,7 @@ RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
     return new_level;
 }
 
-/*RoomsLevel* Zone::getDefaultLevel()
+RoomsLevel* Zone::getDefaultLevel()
 {
     // find maximized level of the zone
     int area = 0; int index = -1;
@@ -197,7 +198,7 @@ RoomsLevel* Zone::getLevel(int level, bool create_if_notexist)
     }
     if (index == -1) index = 0;
     return m_levels[index];
-}*/
+}
 
 bool Zone::findLevel(const RoomsLevel *level, int *index) const
 {
@@ -228,3 +229,4 @@ bool Zone::isChanged() const
     }
     return false;
 }
+*/
