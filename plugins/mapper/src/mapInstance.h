@@ -10,13 +10,14 @@ public:
     MapInstance();
     ~MapInstance();
     MapCursor createCursor(Room *room, MapCursorColor color);
-
     Room* findRoom(const tstring& hash);
     bool addNewZoneAndRoom(Room* newroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
-    bool addLink(Room* from, Room* to, RoomDir dir);
+    bool addLink(Room* from, Room* to, RoomDir dir);    
+
     //void saveMaps(lua_State *L);
     //void loadMaps(lua_State *L);
+
 private:
     Rooms3dCube* findZone(const tstring& name);
     bool  isMultiExit(Room* from, RoomDir dir);
@@ -47,13 +48,14 @@ protected:
     const Rooms3dCubePos& pos() const;
     const Room* room(const Rooms3dCubePos& p) const;
     MapCursorColor color() const;
+    const Rooms3dCube* zone() const;
     bool valid() const;
 private:
     void init();
     MapInstance *map_ptr;
     Room *room_ptr;
     MapCursorColor ccolor;
-    Rooms3dCube* zone;
+    Rooms3dCube* map_zone;
     bool not_empty;
     static Rooms3dCubeSize m_empty;
     static Rooms3dCubePos m_empty_pos;

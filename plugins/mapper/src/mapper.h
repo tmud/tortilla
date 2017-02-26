@@ -15,27 +15,28 @@ public:
     void processNetworkData(const tchar* text, int text_len);
     void processCmd(const tstring& cmd);
     void updateProps();
+    void saveProps();
 private:
     BEGIN_MSG_MAP(Mapper)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
       MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
       MESSAGE_HANDLER(WM_SIZE, OnSize)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
-      //MESSAGE_HANDLER(WM_USER, OnUser)
+      MESSAGE_HANDLER(WM_USER, OnUser)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { m_hWnd = NULL; return 0; }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
-    //LRESULT OnUser(UINT, WPARAM, LPARAM, BOOL&){ onZoneChanged();  return 0; }
+    LRESULT OnUser(UINT, WPARAM, LPARAM, BOOL&){ onZoneChanged();  return 0; }
     void onCreate();
     void onSize();
-    //void onZoneChanged();
+    void onZoneChanged();
 private:
     void popDir();
     void setExits(Room *room);
     void checkExit(Room *room, RoomDir dir, const tstring& exit);    
-    void redrawPosition(MapCursor cursor);
+    void redrawPosition(MapCursor cursor);    
 private:
     // map
     MapInstance m_map;

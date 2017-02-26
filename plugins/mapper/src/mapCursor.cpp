@@ -6,20 +6,20 @@ Rooms3dCubePos  MapCursorImplementation::m_empty_pos;
 
 void MapCursorImplementation::init()
 {
-    zone = NULL;
+    map_zone = NULL;
     if (!room_ptr)
         return;
     int zid = room_ptr->pos.zid;
     int count = map_ptr->zones.size();
     if (zid >= 0 && zid < count)
-        zone = map_ptr->zones[zid];
-    if (zone)
+        map_zone = map_ptr->zones[zid];
+    if (map_zone)
         not_empty = true;
 }
 
 const Rooms3dCubeSize& MapCursorImplementation::size() const
 {
-    return (zone) ? zone->size() : m_empty;
+    return (map_zone) ? map_zone->size() : m_empty;
 }
 
 const Rooms3dCubePos& MapCursorImplementation::pos() const
@@ -34,9 +34,14 @@ MapCursorColor MapCursorImplementation::color() const
 
 const Room* MapCursorImplementation::room(const Rooms3dCubePos& p) const
 {
-    if (!zone)
+    if (!map_zone)
         return NULL;
-    return zone->getRoom(p);
+    return map_zone->getRoom(p);
+}
+
+const Rooms3dCube* MapCursorImplementation::zone() const
+{
+    return map_zone;
 }
 
 bool MapCursorImplementation::valid() const

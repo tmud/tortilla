@@ -35,9 +35,9 @@ struct Room
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
     Rooms3dCubePos pos;             // relative position in the level (x,y >= 0), level and zone id(>=0(
-    int icon;                       // icon if exist
-    int use_color;                  // flag for use background color
-    COLORREF color;                 // background color
+    mutable int icon;               // icon if exist
+    mutable int use_color;          // flag for use background color
+    mutable COLORREF color;         // background color
 };
 
 class RoomDirHelper
@@ -105,22 +105,18 @@ private:
     tstring m_name;
 };
 
-/*class RoomHelper
+class RoomHelper
 {
-    Room* r;
-    int x, y, z;
+    const Room* room;
 public:
-    RoomHelper(Room *room);
-    Zone* zone();
-    RoomsLevel* level();
-    Room* getRoomDir(RoomDir dir);
-    //bool  isExplored(RoomDir dir);
-    bool  addRoom(RoomDir dir, Room* room);
-    bool  addLink(RoomDir dir, Room *room);
-private:
-    bool move(RoomDir dir);
-    Zone* zone(Room *room);
-};*/
+    RoomHelper(const Room *r) : room(r) {}
+    bool isExplored(RoomDir dir) {
+      Room *next = room->dirs[dir].next_room;
+      if (next && room->pos.zid == next->pos.zid)
+         return true;
+      return false;
+    }
+};
 
 /*class RoomCursor
 {
@@ -136,13 +132,3 @@ private:
     int x, y, level;
 };
 */
-
-/*struct RoomsLevelBox
-{
-    RoomsLevelBox() : left(0), right(0), top(0), bottom(0) {}
-    int left;
-    int right;
-    int top;
-    int bottom;
-};*/
-

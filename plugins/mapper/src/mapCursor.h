@@ -9,6 +9,7 @@ public:
     virtual const Rooms3dCubePos& pos() const = 0;
     virtual const Room* room(const Rooms3dCubePos& p) const = 0;
     virtual MapCursorColor color() const = 0;
+    virtual const Rooms3dCube* zone() const = 0;
     virtual bool valid() const = 0;
 };
 

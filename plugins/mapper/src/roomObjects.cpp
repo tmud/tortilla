@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "roomObjects.h"
-#include "levelZoneObjects.h"
 
 Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
 {
@@ -60,7 +59,7 @@ Room** Rooms3dCube::getp(const Rooms3dCubePos& p) const
     int y = p.y - cube_size.top;
     assert(y>=0 && y<(int)l->rooms.size());
     row* r = l->rooms[y];
-    assert(x>=0 && z<(int)r->rr.size());
+    assert(x>=0 && x<(int)r->rr.size());
     return &r->rr[x];
 }
 
@@ -166,14 +165,9 @@ void Rooms3dCube::extends_levels(const Rooms3dCubePos& p)
 void Rooms3dCube::collapse(const Rooms3dCubePos& p)
 {
     if (p.x == cube_size.left) {
-
-
-
     }
-    if (p.x == cube_size.right) {
-        
+    if (p.x == cube_size.right) {       
     }
-
 }
 
 bool Rooms3dCube::checkCoods(const Rooms3dCubePos& p) const

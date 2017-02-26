@@ -42,17 +42,28 @@ int init(lua_State *L)
     luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
     luaT_run(L, "addButton", "dds", IDB_MAP, 2, L"Настройка карты");
 
-    tstring path;
-    base::getPath(L, L"config.xml", &path);
-
     m_props.initAllDefault();
+
+    tstring path;
+    base::getPath(L, L"settings.xml", &path);
+    xml::node p;
+    if (p.load(path.c_str()))
+    {
+        int usemsdp = 0;
+        p.get(L"usemsdp/value", &usemsdp);
+        m_props.use_msdp = (usemsdp == 1) ? true : false;
+        int width = 0;
+        p.get(L"zoneslist/width", &width);
+        m_props.zoneslist_width = (width > 0) ? width : -1;
+    }
+    p.deletenode();
+    
+    path.clear();
+    base::getPath(L, L"config.xml", &path);   
 
     xml::node ld;
     if (ld.load(path.c_str()))
     {
-        int usemsdp = 0;
-        ld.get(L"usemsdp/value", &usemsdp);
-        m_props.use_msdp = (usemsdp == 1) ? true : false;
         ld.get(L"darkroom/label", &m_props.dark_room);
         ld.get(L"name/begin", &m_props.begin_name);
         ld.get(L"name/end", &m_props.end_name);
@@ -107,10 +118,25 @@ int init(lua_State *L)
 
 int release(lua_State *L)
 {
+    m_mapper_window->saveProps();
+
     //todo! m_mapper_window->saveMaps(L);
 
+    xml::node p(L"settings");
+    p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
+    p.set(L"zoneslist/width", m_props.zoneslist_width);
+    
+    tstring path;
+    base::getPath(L, L"settings.xml", &path);
+    if (!p.save(path.c_str()))
+    {
+        tstring error(L"Ошибка записи настроек пользователя: ");
+        error.append(path);
+        base::log(L, error.c_str());
+    }
+    p.deletenode();
+
     xml::node s(L"mapper");
-    s.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
     s.set(L"darkroom/label", m_props.dark_room);
     s.set(L"name/begin", m_props.begin_name);
     s.set(L"name/end", m_props.end_name);
@@ -138,14 +164,13 @@ int release(lua_State *L)
     s.set(L"down", m_props.down_cmd);
     s.move(L"/");
 
-    tstring path;
+    path.clear();
     base::getPath(L, L"config.xml", &path);
     if (!s.save(path.c_str()))
     {
-        s.deletenode();
-        tstring error(L"Ошибка записи настроек карты: ");
+        tstring error(L"Ошибка записи настроек распознавания карты: ");
         error.append(path);
-        return luaT_error(L, error.c_str());
+        base::log(L, error.c_str());
     }
     s.deletenode();
     return 0;

@@ -108,7 +108,6 @@
     <ClInclude Include="src\debugHelpers.h" />
     <ClInclude Include="src\editListBox.h" />
     <ClInclude Include="src\helpers.h" />
-    <ClInclude Include="src\levelZoneObjects.h" />
     <ClInclude Include="src\mapCursor.h" />
     <ClInclude Include="src\mapInstance.h" />
     <ClInclude Include="src\mapper.h" />
@@ -129,7 +128,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
     <ClCompile Include="src\debugHelpers.cpp" />
-    <ClCompile Include="src\levelZoneObjects.cpp" />
     <ClCompile Include="src\mapCursor.cpp" />
     <ClCompile Include="src\mapInstance.cpp" />
     <ClCompile Include="src\mapper.cpp" />

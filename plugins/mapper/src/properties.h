@@ -2,7 +2,7 @@
 
 struct PropertiesMapper
 {
-    PropertiesMapper() : use_msdp(false) {}
+    PropertiesMapper() : use_msdp(false), zoneslist_width(-1) {}
     tstring begin_name;
     tstring end_name;
     tstring begin_descr;
@@ -31,6 +31,7 @@ struct PropertiesMapper
     tstring dark_room;
 
     bool use_msdp;
+    int  zoneslist_width;
     
     void initAllDefault()
     {
@@ -59,5 +60,6 @@ struct PropertiesMapper
 
         dark_room.clear();
         use_msdp = false;
+        zoneslist_width = -1;
     }
 };

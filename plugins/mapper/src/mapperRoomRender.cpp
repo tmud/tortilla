@@ -56,10 +56,10 @@ void MapperRoomRender::render(int dc_x, int dc_y, const Room *r, int type)
     }
 }
 
-void MapperRoomRender::renderCursor(int dc_x, int dc_y, int type)
+void MapperRoomRender::renderCursor(int dc_x, int dc_y, int color)
 {
     RECT p = { dc_x-3, dc_y-3, dc_x+m_size+3, dc_y+m_size+3 };
-    HPEN old = (type == 0) ? m_hdc.SelectPen(m_exit) : m_hdc.SelectPen(m_yellow);
+    HPEN old = (color == 0) ? m_hdc.SelectPen(m_exit) : m_hdc.SelectPen(m_yellow);
     renderRect(dc_x-3, dc_y-3, m_size+6, m_size+6);
     renderRect(dc_x-2, dc_y-2, m_size+4, m_size+4);    
     m_hdc.SelectPen(old);

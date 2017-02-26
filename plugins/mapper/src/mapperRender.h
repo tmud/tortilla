@@ -33,14 +33,13 @@ class MapperRender : public CWindowImpl<MapperRender>
     int m_vscroll_size;        
     bool m_hscroll_flag;
     bool m_vscroll_flag;
-    int  m_left, m_right, m_top, m_bottom;
     bool m_block_center;
 
     bool m_track_mouse;
 
     CMenuXP m_menu;
     CImageList m_icons;
-    Room *m_menu_tracked_room;
+    const Room *m_menu_tracked_room;
 
 public:
     MapperRender();
@@ -89,8 +88,9 @@ private:
 private:
     void renderMap(int render_x, int render_y);
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
+    MapCursor getCursor() const;
     room_pos findRoomPos(Room* room);
-    Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
+    const Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();
     void onSize();
@@ -114,7 +114,5 @@ private:
         TrackMouseEvent(&tme);
     }
     void createMenu();
-    bool runMenuPoint(int id);
-    //const ViewMapPosition& getViewRoom() const;
-    //RoomsLevel* getViewRoomLevel() const;    
+    bool runMenuPoint(int id);   
 };

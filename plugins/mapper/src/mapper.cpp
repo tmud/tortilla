@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "mapper.h"
 #include "roomObjects.h"
-#include "levelZoneObjects.h"
 #include "debugHelpers.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
@@ -82,7 +81,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
 }
 
 void Mapper::processCmd(const tstring& cmd)
-{    
+{
     RoomDir dir = RD_UNKNOWN;
     for (int i = 0, e = m_dirs.size(); i < e; ++i)
     {
@@ -144,69 +143,6 @@ void Mapper::setExits(Room *room)
     checkExit(room,  RD_DOWN, m_propsData->down_exit);
 }
 
-/*int Mapper::revertDir(int dir)
-{
-    if (dir == RD_NORTH)
-       return RD_SOUTH;
-    if (dir == RD_SOUTH)
-        return RD_NORTH;
-    if (dir == RD_WEST)
-        return RD_EAST;
-    if (dir == RD_EAST)
-        return RD_WEST;
-    if (dir == RD_UP)
-        return RD_DOWN;
-    if (dir == RD_DOWN)
-        return RD_UP;
-    assert (false);
-    return -1;
-}*/
-
-/*Room* Mapper::getNextRoom(Room *room, int dir)
-{
-    RoomCursor rc;
-    rc.current_room = room;
-    rc.move(dir);
-    return rc.getOffsetRoom();
-}*/
-
-/*class InitDirVector {
-    Pcre r1, r2; DirsVector& m;
- public:
-    InitDirVector(DirsVector& p) : m(p) { r1.init(L","); r2.init(L"\\|"); m.clear(); }
-    bool make(RoomDir dir, const tstring& key) {
-       bool result = true;
-       r1.findall(key.c_str());
-       int b = 0;
-       for (int i=1,ie=r1.size();i<ie;++i) {
-           int e = r1.first(i);
-           if (!set(dir, key.substr(b, e-b)))
-               result = false;
-           b=e+1;
-       }
-       if (!set(dir, key.substr(b)))
-           result = false;
-       return result;
-    }
-private:
-    bool set(RoomDir dir, const tstring& dkey) {
-        if (dkey.empty()) return true;
-        if (!r2.find(dkey.c_str())) {
-          MapperDirCommand k(dir, dkey, L"");
-          m.push_back(k);
-          return true;
-        }
-        if (r2.size()!=1)
-            return false;
-        int p = r2.first(0);
-        tstring main(dkey.substr(0, p));
-        tstring rel(dkey.substr(p+1));
-        MapperDirCommand k(dir, main, rel);
-        m.push_back(k);
-        return true;
-    }
-};*/
-
 void Mapper::updateProps()
 {
     m_processor.updateProps(m_propsData);
@@ -221,19 +157,18 @@ void Mapper::updateProps()
     h.make(RD_DOWN, m_propsData->down_cmd, m_dirs);
 }
 
+void Mapper::saveProps()
+{
+    m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
+}
+
 void Mapper::redrawPosition(MapCursor cursor)
 {
     m_view.roomChanged(cursor);
-    /*if (m_pCurrentRoom && m_pCurrentRoom->level)
-     m_zones_control.selectZone(m_pCurrentRoom->level->getZone(), true); */    
 
-    //if (vp.room)
-    {
-        //Zone* z = vp.room->level->getZone();
-        //ZoneParams zp;
-        //z->getParams(&zp);
-        //m_zones_control.selectZone(zp.name, true);
-    }
+    const Rooms3dCubePos& p = cursor->pos();    
+    const Rooms3dCube* zone = cursor->zone();
+    m_zones_control.roomChanged(zone->name(), p.zid );
 }
 
 void Mapper::onCreate()
@@ -260,7 +195,11 @@ void Mapper::onCreate()
 
     m_zones_control.setNotifications(m_hWnd, WM_USER);
     m_vSplitter.SetSplitterRect();
-    m_vSplitter.SetDefaultSplitterPos();
+
+    if (m_propsData->zoneslist_width > 0)
+        m_vSplitter.SetSplitterPos(m_propsData->zoneslist_width);
+    else
+        m_vSplitter.SetDefaultSplitterPos();
     updateProps();
 }
 
@@ -272,13 +211,10 @@ void Mapper::onSize()
     m_vSplitter.SetSplitterRect();
 }
 
-/*void Mapper::onZoneChanged()
+void Mapper::onZoneChanged()
 {
-    //m_viewpos.reset();
-    Zone *zone = m_zones_control.getCurrentZone();
-    if (zone)
-        
-        m_viewpos.level = zone->getDefaultLevel();
-    redrawPosition();
-    int c=1;
-}*/
+    int zone = m_zones_control.getCurrentZone();
+
+    int x = 1;
+    //redrawPosition();
+}

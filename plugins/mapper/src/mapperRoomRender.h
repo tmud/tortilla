@@ -9,7 +9,7 @@ public:
     void setDC(HDC dc);
     void setIcons(CImageList *icons);
     void render(int dc_x, int dc_y, const Room *r, int type);
-    void renderCursor(int dc_x, int dc_y, int type);
+    void renderCursor(int dc_x, int dc_y, int color);
 private:
     void renderRoom(int x, int y, const Room *r);
     bool anotherZone(const Room* r, int dir);
