@@ -2,17 +2,8 @@
 
 #include "roomObjects.h"
 #include "mapCursor.h"
-
 #include "mapperRoomRender.h"
 #include "menuXP.h"
-
-/*enum ViewCursorColor { RCC_NORMAL = 0, RCC_LOST };
-struct ViewMapPosition
-{
-    ViewMapPosition() : room(NULL), cursor(RCC_NORMAL) {}
-    Room* room;
-    ViewCursorColor cursor;
-};*/
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
@@ -21,21 +12,17 @@ class MapperRender : public CWindowImpl<MapperRender>
     MapCursor lastpos;
     MapperRoomRender rr;
 
-    struct room_pos {
-    room_pos() : x(-1), y(-1) {}
-    bool valid() const { return (x >= 0) ? true : false; }
-    int x,y;
-    };
-
     int m_hscroll_pos;
-    int m_hscroll_size;    
+    int m_hscroll_size;
     int m_vscroll_pos;
-    int m_vscroll_size;        
+    int m_vscroll_size;
     bool m_hscroll_flag;
     bool m_vscroll_flag;
     bool m_block_center;
 
     bool m_track_mouse;
+    bool m_drag_mode;
+    POINT m_drag_point;
 
     CMenuXP m_menu;
     CImageList m_icons;
@@ -56,9 +43,11 @@ private:
         MESSAGE_HANDLER(WM_HSCROLL, OnHScroll)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
+        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnMouseLButtonDown)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnMouseLButtonUp)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnMouseRButtonDown)
-        MESSAGE_HANDLER(WM_MEASUREITEM, OnMenuMeasureItem)  
-        MESSAGE_HANDLER(WM_DRAWITEM, OnMenuDrawItem)        
+        MESSAGE_HANDLER(WM_MEASUREITEM, OnMenuMeasureItem)
+        MESSAGE_HANDLER(WM_DRAWITEM, OnMenuDrawItem)
 	END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
@@ -66,8 +55,10 @@ private:
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) { onSize(); return 0; }
     LRESULT OnVScroll(UINT, WPARAM wparam, LPARAM, BOOL&) { onVScroll(wparam);  return 0; }
     LRESULT OnHScroll(UINT, WPARAM wparam, LPARAM, BOOL&) { onHScroll(wparam);  return 0; }
-    LRESULT OnMouseMove(UINT, WPARAM, LPARAM lparam, BOOL&) { trackMouseLeave();  mouseMove(LOWORD(lparam), HIWORD(lparam)); return 0; }
+    LRESULT OnMouseMove(UINT, WPARAM, LPARAM lparam, BOOL&) { /*trackMouseLeave();*/  mouseMove(LOWORD(lparam), HIWORD(lparam)); return 0; }
     LRESULT OnMouseLeave(UINT, WPARAM, LPARAM lparam, BOOL&) { m_track_mouse = false;  mouseLeave(); return 0; }
+    LRESULT OnMouseLButtonDown(UINT, WPARAM, LPARAM, BOOL&) { mouseLeftButtonDown(); return 0; }
+    LRESULT OnMouseLButtonUp(UINT, WPARAM, LPARAM, BOOL&) { mouseLeftButtonUp(); return 0; }
     LRESULT OnMouseRButtonDown(UINT, WPARAM, LPARAM, BOOL&) { mouseRightButtonDown(); return 0; }
     LRESULT OnMenuMeasureItem(UINT, WPARAM, LPARAM lparam, BOOL&) 
     {
@@ -89,7 +80,6 @@ private:
     void renderMap(int render_x, int render_y);
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
     MapCursor getCursor() const;
-    room_pos findRoomPos(Room* room);
     const Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();
@@ -99,9 +89,11 @@ private:
     int  getRenderX() const;
     int  getRenderY() const;
     void updateScrollbars(bool center);
+    void mouseLeftButtonDown();
+    void mouseLeftButtonUp();
     void mouseMove(int x, int y);
     void mouseLeave();
-    void mouseRightButtonDown();    
+    void mouseRightButtonDown();
     void trackMouseLeave()
     {
         if (m_track_mouse) return;
@@ -114,5 +106,5 @@ private:
         TrackMouseEvent(&tme);
     }
     void createMenu();
-    bool runMenuPoint(int id);   
+    bool runMenuPoint(int id);
 };
