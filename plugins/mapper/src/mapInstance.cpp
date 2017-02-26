@@ -16,6 +16,11 @@ MapCursor MapInstance::createCursor(Room *room, MapCursorColor color)
     return std::make_shared<MapCursorImplementation>(this, room, color);
 }
 
+MapCursor MapInstance::createZoneCursor(const Rooms3dCube *zone)
+{
+    return std::make_shared<MapZoneCursorImplementation>(this, zone);
+}
+
 Room* MapInstance::findRoom(const tstring& hash)
 {
     assert(!hash.empty());
@@ -113,8 +118,11 @@ bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
      if (s != Rooms3dCube::AR_BUSY)
          return false;
     
-    // todo!
-    return false;
+    // create new zone
+    if (!addNewZoneAndRoom(next)) {
+        return false;
+    }
+    return true;
 }
 
 void MapInstance::addRoomToHashTable(Room* r)
@@ -123,7 +131,6 @@ void MapInstance::addRoomToHashTable(Room* r)
     assert(r && !vnum.empty());
     room_iterator it = rooms_hash_table.find(vnum);
     if (it != rooms_hash_table.end()) {
-        assert(false);
         return;
     }
     rooms_hash_table[vnum] = r;

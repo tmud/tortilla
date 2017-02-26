@@ -116,6 +116,12 @@ public:
          return true;
       return false;
     }
+    bool isZoneExit(RoomDir dir) {
+      Room *next = room->dirs[dir].next_room;
+      if (next && room->pos.zid != next->pos.zid)
+          return true;
+      return false;
+    }
 };
 
 /*class RoomCursor

@@ -14,6 +14,13 @@
 #define MENU_NEWZONE_EAST  105
 #define MENU_NEWZONE_UP    106
 #define MENU_NEWZONE_DOWN  107
+#define MENU_JOINZONE_NORTH 108
+#define MENU_JOINZONE_SOUTH 109
+#define MENU_JOINZONE_WEST 110
+#define MENU_JOINZONE_EAST 111
+#define MENU_JOINZONE_UP   112
+#define MENU_JOINZONE_DOWN 113
+
 #define MENU_SETICON_FIRST 200  // max 100 icons
 #define MENU_SETICON_LAST  299
 extern Mapper* m_mapper_window;
@@ -335,6 +342,14 @@ void MapperRender::mouseRightButtonDown()
     m_menu.SetItemState(MENU_NEWZONE_EAST, c.isExplored(RD_EAST));
     m_menu.SetItemState(MENU_NEWZONE_UP, c.isExplored(RD_UP));
     m_menu.SetItemState(MENU_NEWZONE_DOWN, c.isExplored(RD_DOWN));
+
+    m_menu.SetItemState(MENU_JOINZONE_NORTH, c.isZoneExit(RD_NORTH));
+    m_menu.SetItemState(MENU_JOINZONE_SOUTH, c.isZoneExit(RD_SOUTH));
+    m_menu.SetItemState(MENU_JOINZONE_WEST, c.isZoneExit(RD_WEST));
+    m_menu.SetItemState(MENU_JOINZONE_EAST, c.isZoneExit(RD_EAST));
+    m_menu.SetItemState(MENU_JOINZONE_UP, c.isZoneExit(RD_UP));
+    m_menu.SetItemState(MENU_JOINZONE_DOWN, c.isZoneExit(RD_DOWN));
+
     m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
 }
 
@@ -372,6 +387,16 @@ void MapperRender::createMenu()
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_UP, L"вверх"));
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_DOWN, L"вниз"));
     m_menu.AppendODPopup(newzone, new CMenuXPText(0, L"Начать новую зону"));
+
+    CMenuXP *joinzone = new CMenuXP();
+    joinzone->CreatePopupMenu();
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_NORTH, L"на север"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_SOUTH, L"на юг"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_WEST, L"на запад"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_EAST, L"на восток"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_UP, L"вверх"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_DOWN, L"вниз"));
+    m_menu.AppendODPopup(joinzone, new CMenuXPText(0, L"Склеить зону"));
 }
 
 bool MapperRender::runMenuPoint(int id)

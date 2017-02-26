@@ -10,6 +10,7 @@ public:
     MapInstance();
     ~MapInstance();
     MapCursor createCursor(Room *room, MapCursorColor color);
+    MapCursor createZoneCursor(const Rooms3dCube *zone);
     Room* findRoom(const tstring& hash);
     bool addNewZoneAndRoom(Room* newroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
@@ -57,6 +58,28 @@ private:
     MapCursorColor ccolor;
     Rooms3dCube* map_zone;
     bool not_empty;
+    static Rooms3dCubeSize m_empty;
+    static Rooms3dCubePos m_empty_pos;
+};
+
+class MapZoneCursorImplementation : public MapCursorInterface
+{
+public:
+    MapZoneCursorImplementation(MapInstance* m, const Rooms3dCube *zone) : map_ptr(m), map_zone(zone)
+    {
+        assert(m && zone);
+    }
+    ~MapZoneCursorImplementation() {}
+protected:
+    const Rooms3dCubeSize& size() const;
+    const Rooms3dCubePos& pos() const;
+    const Room* room(const Rooms3dCubePos& p) const;
+    MapCursorColor color() const;
+    const Rooms3dCube* zone() const;
+    bool valid() const;
+private:
+    MapInstance *map_ptr;
+    const Rooms3dCube* map_zone;
     static Rooms3dCubeSize m_empty;
     static Rooms3dCubePos m_empty_pos;
 };

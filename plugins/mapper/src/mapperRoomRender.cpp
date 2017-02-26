@@ -418,12 +418,9 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
 
 bool MapperRoomRender::anotherZone(const Room* r, int dir)
 {
-    /*Room *r2 = r->dirs[dir].next_room;
+    const Room *r2 = r->dirs[dir].next_room;
     if (!r2) return false;
-    RoomHelper h1(r);
-    RoomHelper h2(r2);
-    return (h1.zone() == h2.zone()) ? false : true;*/
-    return false;
+    return r->pos.zid != r2->pos.zid;
 }
 
 void MapperRoomRender::renderRect(int x, int y, int dx, int dy)

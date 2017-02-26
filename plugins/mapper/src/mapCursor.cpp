@@ -48,3 +48,38 @@ bool MapCursorImplementation::valid() const
 {
     return not_empty;
 }
+//-----------------------------------------------------------
+Rooms3dCubeSize MapZoneCursorImplementation::m_empty;
+Rooms3dCubePos  MapZoneCursorImplementation::m_empty_pos;
+
+const Rooms3dCubeSize& MapZoneCursorImplementation::size() const
+{
+    return (map_zone) ? map_zone->size() : m_empty;
+}
+
+const Rooms3dCubePos& MapZoneCursorImplementation::pos() const
+{
+    return m_empty_pos;
+}
+
+MapCursorColor MapZoneCursorImplementation::color() const
+{
+    return RCC_NONE;
+}
+
+const Room* MapZoneCursorImplementation::room(const Rooms3dCubePos& p) const
+{
+    if (!map_zone)
+        return NULL;
+    return map_zone->getRoom(p);
+}
+
+const Rooms3dCube* MapZoneCursorImplementation::zone() const
+{
+    return map_zone;
+}
+
+bool MapZoneCursorImplementation::valid() const
+{
+    return map_zone ? true : false;
+}

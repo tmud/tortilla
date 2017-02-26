@@ -214,7 +214,7 @@ void Mapper::onSize()
 void Mapper::onZoneChanged()
 {
     int zone = m_zones_control.getCurrentZone();
-
-    int x = 1;
-    //redrawPosition();
+    m_map.
+    MapCursor cursor = m_map.createZoneCursor();
+    redrawPosition(cursor);    
 }
