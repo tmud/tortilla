@@ -16,9 +16,9 @@ MapCursor MapInstance::createCursor(Room *room, MapCursorColor color)
     return std::make_shared<MapCursorImplementation>(this, room, color);
 }
 
-MapCursor MapInstance::createZoneCursor(const Rooms3dCube *zone)
+MapCursor MapInstance::createZoneCursor(int zoneid)
 {
-    return std::make_shared<MapZoneCursorImplementation>(this, zone);
+    return std::make_shared<MapZoneCursorImplementation>(this, zoneid);
 }
 
 Room* MapInstance::findRoom(const tstring& hash)

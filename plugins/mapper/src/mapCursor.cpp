@@ -13,8 +13,6 @@ void MapCursorImplementation::init()
     int count = map_ptr->zones.size();
     if (zid >= 0 && zid < count)
         map_zone = map_ptr->zones[zid];
-    if (map_zone)
-        not_empty = true;
 }
 
 const Rooms3dCubeSize& MapCursorImplementation::size() const
@@ -46,11 +44,19 @@ const Rooms3dCube* MapCursorImplementation::zone() const
 
 bool MapCursorImplementation::valid() const
 {
-    return not_empty;
+     return map_zone ? true : false;
 }
 //-----------------------------------------------------------
 Rooms3dCubeSize MapZoneCursorImplementation::m_empty;
 Rooms3dCubePos  MapZoneCursorImplementation::m_empty_pos;
+
+void MapZoneCursorImplementation::init(int zoneid)
+{
+    map_zone = NULL;
+    int count = map_ptr->zones.size();
+    if (zoneid >= 0 && zoneid < count)
+        map_zone = map_ptr->zones[zoneid];
+}
 
 const Rooms3dCubeSize& MapZoneCursorImplementation::size() const
 {

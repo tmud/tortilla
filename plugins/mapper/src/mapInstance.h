@@ -6,11 +6,12 @@
 class MapInstance
 {
     friend class MapCursorImplementation;
+    friend class MapZoneCursorImplementation;
 public:
     MapInstance();
     ~MapInstance();
     MapCursor createCursor(Room *room, MapCursorColor color);
-    MapCursor createZoneCursor(const Rooms3dCube *zone);
+    MapCursor createZoneCursor(int zoneid);
     Room* findRoom(const tstring& hash);
     bool addNewZoneAndRoom(Room* newroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
@@ -38,7 +39,7 @@ private:
 class MapCursorImplementation : public MapCursorInterface
 {
 public:
-    MapCursorImplementation(MapInstance* m, Room *r, MapCursorColor c) : map_ptr(m), room_ptr(r), ccolor(c), not_empty(false)
+    MapCursorImplementation(MapInstance* m, Room *r, MapCursorColor c) : map_ptr(m), room_ptr(r), ccolor(c)
     {
         assert(m);
         init();
@@ -57,7 +58,6 @@ private:
     Room *room_ptr;
     MapCursorColor ccolor;
     Rooms3dCube* map_zone;
-    bool not_empty;
     static Rooms3dCubeSize m_empty;
     static Rooms3dCubePos m_empty_pos;
 };
@@ -65,9 +65,10 @@ private:
 class MapZoneCursorImplementation : public MapCursorInterface
 {
 public:
-    MapZoneCursorImplementation(MapInstance* m, const Rooms3dCube *zone) : map_ptr(m), map_zone(zone)
+    MapZoneCursorImplementation(MapInstance* m, int zoneid) : map_ptr(m), map_zone(NULL)
     {
-        assert(m && zone);
+        assert(m);
+        init(zoneid);
     }
     ~MapZoneCursorImplementation() {}
 protected:
@@ -78,6 +79,7 @@ protected:
     const Rooms3dCube* zone() const;
     bool valid() const;
 private:
+    void init(int zoneid);
     MapInstance *map_ptr;
     const Rooms3dCube* map_zone;
     static Rooms3dCubeSize m_empty;
