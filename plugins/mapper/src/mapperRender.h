@@ -9,7 +9,7 @@ class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;
     MapCursor viewpos;
-    MapCursor lastpos;
+    MapCursor currentpos;
     MapperRoomRender rr;
 
     int m_hscroll_pos;
@@ -30,7 +30,8 @@ class MapperRender : public CWindowImpl<MapperRender>
 
 public:
     MapperRender();
-    void roomChanged(MapCursor pos);
+    void showPosition(MapCursor pos);
+    MapCursor getCurrentPosition();
 
 private:
 	BEGIN_MSG_MAP(MapperRender)

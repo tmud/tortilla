@@ -73,6 +73,7 @@ public:
     ~Rooms3dCube() {  release();  }
     const Rooms3dCubeSize& size() const {  return cube_size; }
     const tstring& name() const { return m_name; }
+    int id() const { return z_id; }
     enum AR_STATUS { AR_OK = 0, AR_INVALIDROOM, AR_BUSY, AR_FAIL };
     AR_STATUS addRoom(const Rooms3dCubePos& p, Room* r);
     const Room* getRoom(const Rooms3dCubePos& p) const;

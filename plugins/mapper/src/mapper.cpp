@@ -164,11 +164,9 @@ void Mapper::saveProps()
 
 void Mapper::redrawPosition(MapCursor cursor)
 {
-    m_view.roomChanged(cursor);
-
-    const Rooms3dCubePos& p = cursor->pos();    
+    m_view.showPosition(cursor);
     const Rooms3dCube* zone = cursor->zone();
-    m_zones_control.roomChanged(zone->name(), p.zid );
+    m_zones_control.roomChanged(zone->name(), zone->id() );
 }
 
 void Mapper::onCreate()
@@ -214,6 +212,11 @@ void Mapper::onSize()
 void Mapper::onZoneChanged()
 {
     int zone = m_zones_control.getCurrentZone();
+    MapCursor current = m_view.getCurrentPosition();
+    if (current->valid() && current->pos().zid == zone)
+    {
+        return redrawPosition(current);
+    }
     MapCursor cursor = m_map.createZoneCursor(zone);
     redrawPosition(cursor);
 }

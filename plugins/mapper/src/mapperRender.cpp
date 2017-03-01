@@ -6,23 +6,29 @@
 #define ROOM_SIZE 32
 #define MAP_EDGE 16
 
-#define MENU_SETCOLOR   100
-#define MENU_RESETCOLOR 101
-#define MENU_NEWZONE_NORTH 102
-#define MENU_NEWZONE_SOUTH 103
-#define MENU_NEWZONE_WEST  104
-#define MENU_NEWZONE_EAST  105
-#define MENU_NEWZONE_UP    106
-#define MENU_NEWZONE_DOWN  107
+#define MENU_SETCOLOR       100
+#define MENU_RESETCOLOR     101
+#define MENU_NEWZONE_NORTH  102
+#define MENU_NEWZONE_SOUTH  103
+#define MENU_NEWZONE_WEST   104
+#define MENU_NEWZONE_EAST   105
+#define MENU_NEWZONE_UP     106
+#define MENU_NEWZONE_DOWN   107
 #define MENU_JOINZONE_NORTH 108
 #define MENU_JOINZONE_SOUTH 109
-#define MENU_JOINZONE_WEST 110
-#define MENU_JOINZONE_EAST 111
-#define MENU_JOINZONE_UP   112
-#define MENU_JOINZONE_DOWN 113
+#define MENU_JOINZONE_WEST  110
+#define MENU_JOINZONE_EAST  111
+#define MENU_JOINZONE_UP    112
+#define MENU_JOINZONE_DOWN  113
+#define MENU_MOVEROOM_NORTH 114
+#define MENU_MOVEROOM_SOUTH 115
+#define MENU_MOVEROOM_WEST  116
+#define MENU_MOVEROOM_EAST  117
+#define MENU_MOVEROOM_UP    118
+#define MENU_MOVEROOM_DOWN  119
 
-#define MENU_SETICON_FIRST 200  // max 100 icons
-#define MENU_SETICON_LAST  299
+#define MENU_SETICON_FIRST  200  // max 100 icons
+#define MENU_SETICON_LAST   299
 extern Mapper* m_mapper_window;
 
 MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
@@ -41,7 +47,7 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
 
 MapCursor MapperRender::getCursor() const
 {
-    MapCursor cursor = viewpos ? viewpos : lastpos;
+    MapCursor cursor = viewpos; // ? viewpos : currentpos;
     return (cursor && cursor->valid()) ? cursor : MapCursor();
 }
 
@@ -52,13 +58,19 @@ void MapperRender::onCreate()
     updateScrollbars(false);
 }
 
-void MapperRender::roomChanged(MapCursor pos)
+void MapperRender::showPosition(MapCursor pos)
 {
-    if (pos->valid())
-        lastpos = viewpos;
+    if (pos->valid() && pos->pos().zid >= 0) {
+        currentpos = pos;
+    }
     viewpos = pos;
     updateScrollbars(false);
     Invalidate();
+}
+
+MapCursor MapperRender::getCurrentPosition()
+{
+    return currentpos;
 }
 
 void MapperRender::onPaint()
@@ -86,9 +98,12 @@ void MapperRender::renderMap(int render_x, int render_y)
     if (sz.maxlevel >= (p.z+1))
         renderLevel(p.z+1, render_x-6, render_y-6, 2, pos);
 
-    int cursor_x = (p.x - sz.left) * ROOM_SIZE + render_x;
-    int cursor_y = (p.y - sz.top) * ROOM_SIZE + render_y;
-    rr.renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1 );
+    if (pos->color() != RCC_NONE)
+    {
+        int cursor_x = (p.x - sz.left) * ROOM_SIZE + render_x;
+        int cursor_y = (p.y - sz.top) * ROOM_SIZE + render_y;
+        rr.renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1 );
+    }
 }
 
 void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapCursor pos)
@@ -350,6 +365,13 @@ void MapperRender::mouseRightButtonDown()
     m_menu.SetItemState(MENU_JOINZONE_UP, c.isZoneExit(RD_UP));
     m_menu.SetItemState(MENU_JOINZONE_DOWN, c.isZoneExit(RD_DOWN));
 
+    m_menu.SetItemState(MENU_MOVEROOM_NORTH, c.isZoneExit(RD_NORTH));
+    m_menu.SetItemState(MENU_MOVEROOM_SOUTH, c.isZoneExit(RD_SOUTH));
+    m_menu.SetItemState(MENU_MOVEROOM_WEST, c.isZoneExit(RD_WEST));
+    m_menu.SetItemState(MENU_MOVEROOM_EAST, c.isZoneExit(RD_EAST));
+    m_menu.SetItemState(MENU_MOVEROOM_UP, c.isZoneExit(RD_UP));
+    m_menu.SetItemState(MENU_MOVEROOM_DOWN, c.isZoneExit(RD_DOWN));
+
     m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
 }
 
@@ -397,6 +419,16 @@ void MapperRender::createMenu()
     joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_UP, L"вверх"));
     joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_DOWN, L"вниз"));
     m_menu.AppendODPopup(joinzone, new CMenuXPText(0, L"Склеить зону"));
+
+    CMenuXP *moveroom = new CMenuXP();
+    moveroom->CreatePopupMenu();
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_NORTH, L"на север"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_SOUTH, L"на юг"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_WEST, L"на запад"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_EAST, L"на восток"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_UP, L"вверх"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_DOWN, L"вниз"));
+    m_menu.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));
 }
 
 bool MapperRender::runMenuPoint(int id)
