@@ -841,9 +841,9 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (file.empty())
         {
             if (log == 0)
-                swprintf(pb.buffer, pb.buffer_len, L"Ћог не был открыт.");
+                swprintf(pb.buffer, pb.buffer_len, L"Ћог открыт не был.");
             else
-                swprintf(pb.buffer, pb.buffer_len, L"Ћог в окне %d не был открыт.", log);
+                swprintf(pb.buffer, pb.buffer_len, L"Ћог в окне %d открыт не был.", log);
             tmcLog(pb.buffer);
             return; 
         }
@@ -866,7 +866,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
             swprintf(pb.buffer, pb.buffer_len, L"Ћог в окне %d открыт: '%s'.", log, logfile.c_str());
         m_wlogs[log] = id;
     }
-    tmcLog(pb.buffer);    
+    tmcLog(pb.buffer);
 }
 
 void LogicProcessor::logf(parser *p, bool newlog)
@@ -909,6 +909,62 @@ IMPL(wlog)
 IMPL(wlogn)
 {
     wlogf(p, true);
+}
+
+void LogicProcessor::clogf_main(const tstring& file, bool newlog)
+{
+    if (m_clog != -1)
+    {
+        tstring oldfile(m_logs.getLogFile(m_clog));
+        swprintf(pb.buffer, pb.buffer_len, L"Ћог закрыт: '%s'.", oldfile.c_str());
+        tmcLog(pb.buffer);
+        m_logs.closeLog(m_clog);
+        m_clog = -1;
+        if (file.empty())
+            return;
+    }
+    else
+    {
+        if (file.empty())
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Ћог открыт не был.");
+            tmcLog(pb.buffer);
+            return;
+        }
+    }
+
+    tstring logfile(file);
+    int id = m_logs.openLog(logfile, newlog);
+    if (id == -1)
+    {
+        swprintf(pb.buffer, pb.buffer_len, L"ќшибка! Ћог открыть не удалось: '%s'.", logfile.c_str());
+    }
+    else
+    {
+        swprintf(pb.buffer, pb.buffer_len, L"Ћог открыт: '%s'.", logfile.c_str());
+        m_clog = id;
+    }
+    tmcLog(pb.buffer);
+}
+
+void LogicProcessor::clogf(parser *p, bool newlog)
+{
+    if (p->size() == 1)
+    {
+        clogf_main(p->at(0), newlog);
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(clog)
+{
+    clogf(p, false);
+}
+
+IMPL(clogn)
+{
+    clogf(p, true);
 }
 
 IMPL(wname)
@@ -1621,6 +1677,9 @@ bool LogicProcessor::init()
 
     regCommand("wlog", wlog);
     regCommand("wlogn", wlogn);
+    regCommand("clog", clog);
+    regCommand("clogn", clogn);
+
     regCommand("wname", wname);
 
     regCommand("plugin", plugin);

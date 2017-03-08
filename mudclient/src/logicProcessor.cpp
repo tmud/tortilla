@@ -9,6 +9,7 @@ m_plugins_log_tocache(false), m_plugins_log_blocked(false)
 {
     for (int i=0; i<OUTPUT_WINDOWS+1; ++i)
         m_wlogs[i] = -1;
+    m_clog = -1;
 }
 
 LogicProcessor::~LogicProcessor()

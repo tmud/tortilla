@@ -67,6 +67,7 @@ class LogicProcessor : public LogicProcessorMethods
     tstring m_updatelog;
     LogsProcessor m_logs;
     int m_wlogs[OUTPUT_WINDOWS+1];
+    int m_clog;
     std::map<tstring, syscmd_fun> m_syscmds;
     std::vector<tstring> m_plugins_cmds;
     Pcre16 m_prompt_pcre;
@@ -201,6 +202,10 @@ public: // system commands
     void invalidwindow(parser *p, int view0, int view);
     DEF(wlog);
     DEF(wlogn);
+    void clogf(parser *p, bool newlog);
+    void clogf_main(const tstring& file, bool newlog);
+    DEF(clog);
+    DEF(clogn);
     DEF(wname);
     DEF(var);
     DEF(unvar);

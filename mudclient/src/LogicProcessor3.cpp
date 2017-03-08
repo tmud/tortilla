@@ -407,6 +407,9 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
 {
+    if (window == 0 && m_clog != -1)
+        m_logs.writeLog(m_clog, parse_data);     // write clear log (no trigger etc)
+
     PropertiesData *pdata = tortilla::getProperties();
     const PropertiesData::working_mode &m = pdata->mode;
     if (!m.actions)
@@ -422,7 +425,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!m.plugins)
         flags |= SKIP_COMPONENT_PLUGINS;
 
-    // save all logs from plugins in cache (to break cycle before/after -> log -> befor/after -> app crash)
+    // save all logs from plugins in to cache (to break cycle before/after -> log -> befor/after -> app crash)
     m_plugins_log_tocache = true;
 
     // final step for data
