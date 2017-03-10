@@ -9,7 +9,8 @@ count = 7
 ticker = '^Минул час.'
 
 -- Количество секунд в одном тике
-ticker_seconds = 120
+-- Минул час - каджые 120 секунд, но считаем каждые 60
+ticker_seconds = 60
 
 -- В какую панель выводить тикер
 ticker_window = 1
@@ -18,4 +19,5 @@ ticker_window = 1
 ticker_color = 'white'
 
 -- Рестарт тикера, если не приходит ключевая фраза
-ticker_restart = false
+-- т.к. каждый второй тик без ключевой фразы
+ticker_restart = true

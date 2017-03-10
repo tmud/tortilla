@@ -17,26 +17,9 @@ mv2 = {r=128,g=128},
 mn1 = {g=128,b=240},
 mn2 = {g=64,b=128},
 exp1 = {r=240,g=240,b=240},
-exp2 = {r=128,g=128,b=128}
+exp2 = {r=128,g=128,b=128},
+barsnumbers = {r=0,g=0,b=0}
 }
-
-local statusbar = {}
-function statusbar.name()
-    return 'Гистограммы здоровья, маны, энергии, опыта'
-end
-
-function statusbar.description()
-  local s = { 'Плагин отображает информацию о здоровье, мане, энергии и опыте в виде полосок',
-  'на отдельной панели клиента. Требует для работы режим га/автозавершения в маде.',
-  'Требует файл с настройками. Про настройку читайте в справке к клиенту (#help statusbar).',
-  'Плагин также поддерживает систему ремортов, он отслеживает команду уровни(если актуально).' }
-  return table.concat(s, '\r\n')
-end
-
-function statusbar.version()
-    return '1.10'
-end
-
 local objs = {}
 local regs = {}
 local bars = 0
@@ -47,6 +30,33 @@ local tegs = { 'hp','mn','mv','xp','dsu','xpv' }
 local r, values, cfg
 local round = math.floor
 local scorecmd
+
+local XPVOld
+-- XPCurrentSession глобальная, чтобы хранить суммарный опыт независимо от перезапуска плагина
+-- глобальные переменные использовать только в крайних случаях
+
+local function log(s)
+  print("rgb140,60,80", "[statusbar]: "..s)
+end
+
+local statusbar = {}
+function statusbar.name()
+    return 'Гистограммы здоровья, маны, энергии, опыта'
+end
+
+function statusbar.description()
+  local s = { 'Плагин отображает информацию о здоровье, мане, энергии и опыте в виде полосок',
+  'на отдельной панели клиента. Требует для работы режим га/автозавершения в маде.',
+  'Требует файл с настройками. Про настройку читайте в справке к клиенту (#help statusbar).',
+  'Плагин также поддерживает систему ремортов, он отслеживает команду уровни(если актуально).',
+  'На панели XP отражается заработанный опыт за время запуска клиента. Сброс счетчика',
+  'выполняется командой (#statusbar сброс).'}
+  return table.concat(s, '\r\n')
+end
+
+function statusbar.version()
+    return '1.11'
+end
 
 function statusbar.render()
   if not cfg or not connect or bars == 0 then
@@ -100,32 +110,92 @@ function statusbar.drawbar(t, pos)
   return true
 end
 
+local function RN(num)
+    local ret
+    local tmp
+
+    if not num then
+        return " "
+    elseif num >= 1000000000000 then
+        ret = num / 1000000000000
+        ret = tostring(ret):tokenize(".")
+        ret = ret[1].."."..ret[2]:substr(3).." B"
+    elseif num >= 1000000000 then
+        ret = num / 1000000000
+        ret = tostring(ret):tokenize(".")
+        ret = ret[1].."."..ret[2]:substr(3).." T"
+    elseif num >= 1000000 then
+        ret = num / 1000000
+        ret = tostring(ret):tokenize(".")
+        ret = ret[1].."."..ret[2]:substr(3).." M"
+    elseif num >= 1000 then
+        ret = round(num / 1000) .. " K" 
+    else
+        ret = num
+    end
+    return ret
+end
+
 function statusbar.drawbars()
   local delta_bars = 10
-  local w = round( ((r:width()/10*6) - delta_bars*(bars-1)) / bars )
+  local w = round( (r:width() - 8 - delta_bars*(bars-1)) / bars )
   local h = r:fontHeight()
   local pos = { x=4, y=(r:height()-h)/2, width=w, height=h }
+  local poshp, posmn, posmv, posxp
 
   local hpbar = {val=values.hp,maxval=values.maxhp,text="HP:",brush1=objs.hpbrush1,brush2=objs.hpbrush2,color=colors.hp1}
   if statusbar.drawbar(hpbar, pos) then
+    poshp = pos.x + 50
     pos.x = pos.x + pos.width + delta_bars
   end
 
   local mnbar = {val=values.mn, maxval=values.maxmn,text="MA:",brush1=objs.mnbrush1,brush2=objs.mnbrush2,color=colors.mn1}
   if statusbar.drawbar(mnbar, pos) then
+    posmn = pos.x + 50
     pos.x = pos.x + pos.width + delta_bars
   end
 
   local mvbar = {val=values.mv,maxval=values.maxmv,text="MV:",brush1=objs.mvbrush1,brush2=objs.mvbrush2,color=colors.mv1}
   if statusbar.drawbar(mvbar, pos) then
+    posmv = pos.x + 50
     pos.x = pos.x + pos.width + delta_bars
   end
 
   if values.xpv and values.xpm then
     local expbar = {val=values.xpv,maxval=values.xpm,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
     if statusbar.drawbar(expbar, pos) then
+      posxp = pos.x + 50
       pos.x = pos.x + pos.width + delta_bars
     end
+
+    if not XPCurrentSession then
+      XPCurrentSession = 0
+    end
+    if not XPVOld then
+      XPVOld = values.xpv
+    end
+
+    if values.xpv ~= XPVOld then
+      local XPCH = values.xpv - XPVOld
+      XPVOld = values.xpv
+      XPCurrentSession = XPCurrentSession + XPCH
+    end
+  end
+
+  r:textColor(colors.barsnumbers)
+  if poshp then
+    r:print(poshp, pos.y, values.hp.."/"..values.maxhp)
+  end
+  if posmn then
+    r:print(posmn, pos.y, values.mn.."/"..values.maxmn)
+  end
+  if posmv then
+    r:print(posmv, pos.y, values.mv.."/"..values.maxmv)
+  end
+  if posxp then
+    local s,v = "+", XPCurrentSession
+    if v < 0 then s = "-" v = -v end
+    r:print(posxp, pos.y, "Сеанс: "..s..RN(v))
   end
 
 -- hp > maxhp or mv > maxmv or mn > maxmn (level up, affects? - неверной значение max параметров)
@@ -424,6 +494,18 @@ function statusbar.init()
 
   scorecmd = 'счет'
   if type(cfg.cmd) == 'string' then scorecmd = cfg.cmd end
+  addCommand('statusbar')
 end
+
+-- Добавление системных команд #statusbar сброс
+function statusbar.syscmd(t)
+   if t[1] ~= 'statusbar' then
+     return t
+   end
+   if t[2] == 'сброс' then
+     XPCurrentSession = 0
+     log("Сброс счётчика EXP за сессию: Выполнен")
+   end
+  end
 
 return statusbar

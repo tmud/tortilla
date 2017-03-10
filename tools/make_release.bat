@@ -51,6 +51,7 @@ xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
 xcopy ..\plugins\historyfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\colorgamecmd.lua tortilla\plugins /Y
 xcopy ..\plugins\bell.lua tortilla\plugins /Y
+xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 xcopy ..\plugins\voice.lua tortilla\plugins /Y
 xcopy ..\plugins\pcrecalc.dll tortilla\plugins /Y
 xcopy ..\plugins\lor.lua tortilla\plugins /Y
