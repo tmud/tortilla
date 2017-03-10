@@ -45,13 +45,7 @@ void LogsFormatter::checkExist(tstring& filename)
 
 bool LogsFormatter::open(const tstring& filename, PrepareMode pmode)
 {
-    if (hfile != INVALID_HANDLE_VALUE)
-    {
-        if (pmode == PM_NEW)
-            SetFilePointer(hfile, 0, NULL, FILE_BEGIN);
-        SetEndOfFile(hfile);            // clear log and make it as new (dont save exists msgs for closed log)    
-    }
-    else
+    if (hfile == INVALID_HANDLE_VALUE)
     {
         DWORD mode = (pmode == PM_NEW) ? CREATE_ALWAYS : OPEN_ALWAYS;
         hfile = CreateFile(filename.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ, NULL, mode, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -223,11 +217,8 @@ bool LogsFormatterHtml::prepare()
 
     if (m_mode == PM_NEW || !result)
     {
-        if (!result)
-        {
-            SetFilePointer(hfile, 0, NULL, FILE_BEGIN);
-            SetEndOfFile(hfile);
-        }
+        SetFilePointer(hfile, 0, NULL, FILE_BEGIN);
+        SetEndOfFile(hfile);
 
         char *buffer = m_buffer.getData();
         std::string header("<html><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf8\">\r\n<title>Tortilla Mud Client log");

@@ -850,7 +850,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    id = m_logs.openLog(logfile, newlog);
+    id = m_logs.openLog(logfile, newlog, 0);
     if (id == -1)
     {
         if (log == 0)
@@ -934,7 +934,7 @@ void LogicProcessor::clogf_main(const tstring& file, bool newlog)
     }
 
     tstring logfile(file);
-    int id = m_logs.openLog(logfile, newlog);
+    int id = m_logs.openLog(logfile, newlog, 1);
     if (id == -1)
     {
         swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
@@ -949,11 +949,9 @@ void LogicProcessor::clogf_main(const tstring& file, bool newlog)
 
 void LogicProcessor::clogf(parser *p, bool newlog)
 {
-    if (p->size() == 1)
-    {
-        clogf_main(p->at(0), newlog);
-        return;
-    }
+    int n = p->size();
+    if (n == 0)  { clogf_main(L"", newlog); return; }
+    if (n == 1)  { clogf_main(p->at(0), newlog); return; }
     p->invalidargs();
 }
 

@@ -10,7 +10,7 @@ public:
     LogsProcessor();
     ~LogsProcessor();
     bool init();
-    int  openLog(tstring& filename, bool newlog);
+    int  openLog(tstring& filename, bool newlog, int owner);
     void closeLog(int id);
     void writeLog(int id, const parseData& pdata);
     tstring getLogFile(int id);
@@ -27,9 +27,10 @@ private:
 
     struct log
     {
-        log() : ff(NULL), close(false) {}
+        log() : ff(NULL), close(false), owner(-1) {}
         LogsFormatter* ff;
         bool close;
+        int  owner;
     };
     std::vector<log*> m_logs;
 
