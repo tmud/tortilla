@@ -238,11 +238,11 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
     {
         InputCommand cmd = cmds[i];
         if (cmd->command.empty()) 
-            { i++; continue; }
+            { loops.clear(); i++; continue; }
 
         InputCommands newcmds;
         if (!m_helper.processAliases(cmd, &newcmds))
-            { i++; continue; }
+            { loops.clear(); i++; continue; }
 
         loops.push_back( (cmd->system) ? cmd->srccmd : cmd->command);
  

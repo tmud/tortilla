@@ -51,11 +51,9 @@ xcopy ..\plugins\reconnect.lua tortilla\plugins /Y
 xcopy ..\plugins\historyfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\colorgamecmd.lua tortilla\plugins /Y
 xcopy ..\plugins\bell.lua tortilla\plugins /Y
-xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 xcopy ..\plugins\voice.lua tortilla\plugins /Y
 xcopy ..\plugins\pcrecalc.dll tortilla\plugins /Y
 xcopy ..\plugins\lor.lua tortilla\plugins /Y
-xcopy ..\plugins\inveq.lua tortilla\plugins /Y
 xcopy ..\plugins\affects.lua tortilla\plugins /Y
 xcopy ..\plugins\cmdfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\speedwalk.lua tortilla\plugins /Y
@@ -97,6 +95,8 @@ xcopy ..\plugins\write.lua plugins /Y
 xcopy ..\plugins\enterb.lua plugins /Y
 xcopy ..\plugins\enterb.bmp plugins /Y
 xcopy ..\plugins\autoalias.lua plugins /Y
+xcopy ..\plugins\bellcmd.lua plugins /Y
+xcopy ..\plugins\inveq.lua plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 

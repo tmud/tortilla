@@ -2,7 +2,7 @@
 -- Плагин для Tortilla mud client
 
 -- количество писков на одну команду
-local count = 2
+local count = 1
 
 local bell2 = {}
 function bell2.name()
