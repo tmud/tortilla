@@ -550,6 +550,12 @@ public:
     {
         lua_newtable(L);
     }
+    void addEmptyTable(const char* name)
+    {
+        lua_pushstring(L, name);
+        lua_newtable(L);
+        lua_settable(L, -3);
+    }
     void add(const char* global_func)
     {
         lua_pushstring(L, global_func);
@@ -579,7 +585,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     {
         pluginLoadError(lua_toerror(L));
         lua_pop(L, 1);
-        return false;
+        return 0;
     }
     // make empty eviroment and call script in them
     LuaEnviroment env(L);
@@ -589,6 +595,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     env.add("createPcre");
     env.add("table");
     env.add("props");
+    env.addEmptyTable("_i");
 
     lua_insert(L, -2);
     lua_pushvalue(L, -2);
@@ -597,7 +604,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     {
         pluginLoadError(lua_toerror(L));
         lua_pop(L, 1);
-        return false;
+        return 0;
     }
     lua_pushstring(L, "_i");
     lua_gettable(L, -2);
@@ -641,7 +648,10 @@ int loadTable(lua_State *L)
 
     DWORD fa = GetFileAttributes(filename.c_str());
     if (fa == INVALID_FILE_ATTRIBUTES || fa&FILE_ATTRIBUTE_DIRECTORY)
-        return 0;
+    {
+        lua_pushboolean(L, 0);
+        return 1;
+    }
 
     tstring ext;
     size_t pos = filename.rfind(L".");
@@ -766,14 +776,16 @@ class LuaRecorder
 public:
     LuaRecorder() : first_param(true), brackets_layer(0), index_mode(false) { r.reserve(4096);  root_index = 0; }
     const tstring& result() const { return r; }
-    void index(const tstring& v, bool itstring) {
+    void index(int index, const tstring& v, bool itstring) {
         beginparam();
-        beginindex();
+        firstindex();
         addtabs(); 
+        beginindex(index);
         val(v, itstring);
+        if (brackets_layer == 1) { first_param = true; endline();}
     }
     void named(const tstring& k, const tstring& v, bool itstring) {
-        endindex();
+        //endindex();
         beginparam();
         addtabs(); 
         r.append(k); r.append(L"="); 
@@ -781,9 +793,14 @@ public:
         if (brackets_layer == 1) { first_param = true; endline(); }
     }
 
+    void openindex(int index)  {
+        firstindex();
+        beginindex(index);
+    }
+
     void openbracket(const tstring& name) {
         if (brackets_layer++ == 0) return;
-        endindex();
+        //endindex();
         beginparam();
         first_param = true;
 
@@ -807,11 +824,23 @@ private:
          endvar();
       first_param = false;
     }
-    void beginindex() {
-        if (brackets_layer == 1 && root_index == 0) { r.append(L"_i = {"); endline(); root_index = 1; }
+    void firstindex() {
+       // if (brackets_layer == 1 && root_index == 0) { r.append(L"_i = {}"); endline(); root_index = 1; }
+    }
+    void beginindex(int index) {
+        if (brackets_layer == 1) { r.append(L"_i"); }
+        r.append(L"[");
+        tchar buffer[16];
+        r.append(_itow(index, buffer, 10));
+        r.append(L"]=");
     }
     void endindex() {
-       if (root_index == 1) { r.append(L"}"); endline(); root_index = 2; first_param = true; }
+       if (brackets_layer == 1) { 
+           //endline(); //first_param = true;  //root_index = 2; 
+       } else {
+          ///endvar();
+          //endline();
+       }
     }
     void val(const tstring& v, bool itstring) 
     {
@@ -978,13 +1007,16 @@ int saveTable(lua_State *L)
                 lr.closebracket();
                 continue;
             }
+
+            if (n->name.empty())
+                lr.openindex(n->index);
             lr.openbracket(n->name);
 
             // save numeric indexes
             saveDataNode::tarray &ta = n->array;
             saveDataNode::tarray::const_iterator it = ta.begin(), it_end = ta.end();
             for(; it!=it_end; ++it)
-                lr.index(it->second.first, it->second.second);
+                lr.index(it->first, it->second.first, it->second.second);
 
             // save named values
             std::vector<saveDataNode::value>::const_iterator at = n->attributes.begin(), at_end = n->attributes.end();
