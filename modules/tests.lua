@@ -46,7 +46,7 @@ strassert( string.format('аб%dвгде', 10.2), 'аб10вгде' )
 strassert( string.format('аб%.1fвгде', 10.2), 'аб10.2вгде' )
 strassert( string.format('аб%.3fвгде %s', 10.21, 'абра'), 'аб10.210вгде абра' )
 do
-runCommand("#wait 2 { #plugin loadsave on }")
+runCommand("#wait 2 { #plugin testloadsave on }")
 runCommand("#wait 2 { #plugin testmisc off }")
 return
 end
