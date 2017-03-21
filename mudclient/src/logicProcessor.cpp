@@ -341,7 +341,7 @@ void LogicProcessor::processNetworkConnectError()
 
 void LogicProcessor::processNetworkError()
 {
-    processNetworkError(L"Ошибка cети. Соединение завершено.");
+    processNetworkError(L"Ошибка сети. Соединение завершено.");
 }
 
 void LogicProcessor::processNetworkMccpError()

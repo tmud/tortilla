@@ -490,7 +490,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         if ((e[2] == IAC && e[1] == COMPRESS2) || (e[2] == WILL && e[1] == COMPRESS))
         {
           if (m_mccp_on)
-               { *error = true; return 0; }
+            { return -len; } // *error = true; return 0; }
            m_totalDecompressed -= (len-5);
            m_mccp_data.write(e+4, len-5);
            m_mccp_on = true;
