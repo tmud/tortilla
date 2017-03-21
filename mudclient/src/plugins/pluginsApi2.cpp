@@ -1260,7 +1260,7 @@ int vd_print(lua_State *L)
         pdata->synctexts();
         MudViewString *s = pdata->getselected();
         int view = lua_tointeger(L, 2);
-        if (s && view >= 0 && view < OUTPUT_WINDOWS)
+        if (s && view >= 0 && view <= OUTPUT_WINDOWS)
         {
             lp()->pluginsOutput(view, s->blocks);
             return 0;
