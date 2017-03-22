@@ -360,7 +360,7 @@ void LogicProcessor::simpleLog(const tstring& cmd)
 {
     tstring log(cmd);
     log.append(L"\r\n");
-    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, 0);
+    processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG|SKIP_PLUGINS, 0);
 }
 
 void LogicProcessor::syscmdLog(const tstring& cmd)
@@ -388,8 +388,12 @@ void LogicProcessor::pluginLog(const tstring& cmd)
             m_plugins_log_toblocked.push_back(log);
         else if (m_plugins_log_tocache)
             m_plugins_log_cache.push_back(log);
-        else
-            processIncoming(log.c_str(), log.length(), SKIP_ACTIONS|SKIP_SUBS|GAME_LOG/*|SKIP_PLUGINS*/, window);
+        else {
+            int flags = SKIP_ACTIONS|SKIP_SUBS|GAME_LOG;
+            if (window == 0)
+                flags |= SKIP_PLUGINS;
+            processIncoming(log.c_str(), log.length(), flags, window);
+        }
     }
 }
 
@@ -462,8 +466,11 @@ void LogicProcessor::pluginsOutput(int window, const MudViewStringBlocks& v)
        new_string->blocks[i] = v[i];
     new_string->system = true;
     data.strings.push_back(new_string);
-    printIncoming(data, SKIP_SUBS|SKIP_ACTIONS|GAME_LOG/*|SKIP_PLUGINS*/, window);
-    }
+    int flags = SKIP_SUBS|SKIP_ACTIONS|GAME_LOG;
+    if (window == 0)
+        flags |= SKIP_PLUGINS;
+    printIncoming(data, flags, window);
+   }
 }
 
 void LogicProcessor::updateLog(const tstring& msg)
