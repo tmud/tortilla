@@ -11,30 +11,43 @@ local commands = {
 local clist
 local function makelist()
   clist = {}
-  for k,_ in pairs(commands) do clist[k] = true end
+  for k in pairs(commands) do clist[k] = true end
 end
 
-local impl = {
-alert = function(...)
-  local m = table.concat(..., ' ')
-  system.msgbox(m)
-end,
-wactive = function(...)
-  if props.activated() then
+local impl = {}
+function impl.alert(p)
+  system.alert(p)
+end
+
+local function runcmds(t)
+  local cmd = ''
+  local s = props.cmdSeparator()
+  for k,v in ipairs(t) do
+    if k~=1 then
+      cmd = cmd..s
+    end
+    cmd = cmd..v
   end
-end,
-wnotactive = function(...)
-  if not props.activated() then
+  runCommand(cmd)
+end
+
+function impl.wactive(p)
+  if props.activated() then
+    runcmds(p)
   end
 end
-}
+
+function impl.wnotactive(p)
+  if not props.activated() then
+    runcmds(p)
+  end
+end
 
 local helpers = {}
 function helpers.name()
   return 'Сборник различных команд'
 end
 function helpers.description()
-  makelist()
   local s = { 'Плагин добавляет несколько вспомогательных команд в клиент.',
   'Ненужные команды можно отключить в файле плагина.', 'Список команд:' }
   local p = props.cmdPrefix()
@@ -56,7 +69,7 @@ function helpers.syscmd(t)
   local f = impl[t[1]]
   if not f then return t end
   local p = {}
-  for i=2,#t do p[#p+1] = t[i] end
+  for i=2,#t do p[i-1] = t[i] end
   f(p)
 end
 

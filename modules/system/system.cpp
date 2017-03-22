@@ -1,13 +1,10 @@
 #include "stdafx.h"
 #include "tasks.h"
+#include "alert.h"
 #pragma comment(lib, "lua.lib")
 
 int system_messagebox(lua_State *L)
 {
-    HWND parent = base::getParent(L);
-    if (!::IsWindow(parent))
-        parent = NULL;
-
     bool params_ok = false;
 
     std::wstring text;
@@ -46,8 +43,10 @@ int system_messagebox(lua_State *L)
     }
     UINT result = 0;
     if (params_ok)
+    {
+        HWND parent = base::getParent(L);
         result = MessageBox(parent, text.c_str(), caption.c_str(), buttons);
-
+    }
     lua_pushinteger(L, result);
     return 1;
 }
@@ -103,6 +102,37 @@ void formatByType(lua_State* L, int index, std::wstring *buf)
         buf->append(L"[?]");
         break;
     }
+}
+
+int system_alert(lua_State *L)
+{
+    std::wstring text;
+    for (int i=1,e=lua_gettop(L);i<=e;++i)
+    {
+        if (i != 1)
+            text.append(L"\r\n");
+        std::wstring val;
+        if (lua_istable(L, i))
+        {
+            lua_pushnil(L);                      // first key
+            while (lua_next(L, i) != 0)          // table, value index = -1
+            {
+                formatByType(L, -1, &val);
+                text.append(val);
+                text.append(L"\r\n");
+                lua_pop(L, 1);
+            }
+            continue;
+        }
+        formatByType(L, i, &val);
+        text.append(val);
+    }
+    AlertDlg *dlg = new AlertDlg();
+    dlg->setText(text);
+    dlg->Create(NULL);
+    dlg->CenterWindow( base::getParent(L) );
+    dlg->ShowWindow(SW_SHOW);
+    return 0;
 }
 
 int system_dbglog(lua_State *L)
@@ -400,6 +430,7 @@ static const luaL_Reg system_methods[] =
     { "dbgtable", system_dbgtable },
     { "dbglog", system_dbglog },
     { "msgbox", system_messagebox },
+    { "alert", system_alert },
     { "sleep", system_sleep },
     { "loadTextFile", system_loadTextFile },
     { "convertFromWin", system_convertFromWin },

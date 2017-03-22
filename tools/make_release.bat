@@ -58,6 +58,7 @@ xcopy ..\plugins\affects.lua tortilla\plugins /Y
 xcopy ..\plugins\cmdfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\speedwalk.lua tortilla\plugins /Y
 xcopy ..\plugins\faq.lua tortilla\plugins /Y
+xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
@@ -95,8 +96,8 @@ xcopy ..\plugins\write.lua plugins /Y
 xcopy ..\plugins\enterb.lua plugins /Y
 xcopy ..\plugins\enterb.bmp plugins /Y
 xcopy ..\plugins\autoalias.lua plugins /Y
-xcopy ..\plugins\bellcmd.lua plugins /Y
 xcopy ..\plugins\inveq.lua plugins /Y
+xcopy ..\plugins\helpers.lua plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 
