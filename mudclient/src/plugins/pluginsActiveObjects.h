@@ -699,9 +699,9 @@ public:
         std::wstringstream ss;
         ss << L"group {" << v.key << L"} ";
         if (v.value == L"0")
-            ss << L"on";
-        else if (v.value == L"1")
             ss << L"off";
+        else if (v.value == L"1")
+            ss << L"on";
         else {
             return;
         }

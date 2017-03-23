@@ -6,6 +6,8 @@ local commands = {
   alert = 'Немодальное окно с текстом из параметров.',
   wactive = 'Выполняет команды из параметра, если окно клиента активно.',
   wnotactive = 'Выполняет команды из параметра, если окно клиента неактивно.',
+  gmaskon = 'Включает набор групп триггеров по регулярке.',
+  gmaskoff = 'Выключает набор групп триггеров по регулярке.',
 }
 
 local clist
@@ -43,6 +45,40 @@ function impl.wnotactive(p)
   end
 end
 
+local function group(t, mode)
+  local glist = {}
+  for _,v in ipairs(t) do
+    local r = createPcre(v)
+    for i=1,groups:size() do
+      groups:select(i)
+      local name = groups:get('key')
+      if r:find(name) then
+        glist[#glist+1] = i
+      end
+    end
+  end
+  if #glist > 0 then
+    local gname = {}
+    local m = mode and '1' or '0'
+    local action = mode and 'включены' or 'отключены'
+    for k,v in ipairs(glist) do
+      groups:select(v)
+      gname[k] = groups:get('key')
+      groups:set('value', m)
+    end
+    print('[gmask] Группы '..action..': '..table.concat(gname, ','))
+    groups:update()
+  end
+end
+
+function impl.gmaskon(p)
+  group(p, true)
+end
+
+function impl.gmaskoff(p)
+  group(p, false)
+end
+
 local helpers = {}
 function helpers.name()
   return 'Сборник различных команд'
@@ -56,14 +92,13 @@ function helpers.description()
   end
   return table.concat(s, '\r\n')
 end
+
 function helpers.version()
   return '1.0'
 end
-
 function helpers.init()
   makelist()
 end
-
 function helpers.syscmd(t)
   if not clist[t[1]] then return t end
   local f = impl[t[1]]
