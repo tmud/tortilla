@@ -481,7 +481,7 @@ public:
     PropertiesData() : codepage(L"win"), logformat(L"html"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
-       , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
+       , show_system_commands(0), newline_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
        , soft_scroll(0), unknown_cmd(0), any_font(0), disable_alt(0), move_totray(0)
     {
@@ -528,6 +528,7 @@ public:
         view_history_size = p.view_history_size;
         cmd_history_size = p.cmd_history_size;
         show_system_commands = p.show_system_commands;
+        newline_commands = p.newline_commands;
         clear_bar = p.clear_bar;
         disable_ya = p.disable_ya;
         disable_osc = p.disable_osc;
@@ -613,6 +614,7 @@ public:
     int      view_history_size;
     int      cmd_history_size;
     int      show_system_commands;
+    int      newline_commands;
     int      clear_bar;
     int      disable_ya;
     int      disable_osc;

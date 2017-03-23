@@ -205,7 +205,14 @@ void LogicProcessor::processGameCommand(InputCommand cmd)
     tstring tmp(cmd->command);
     tmp.append(cmd->parameters);
     tmp.append(br);
-    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+
+    int flags = SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD;
+    if (tortilla::getProperties()->newline_commands && !cmd->srccmd.empty())
+    {
+        flags |= NEW_LINE;
+    }
+
+    processIncoming(tmp.c_str(), tmp.length(), flags, 0);
 
     m_pHost->preprocessCommand(cmd);
     if (cmd->dropped)
@@ -225,7 +232,7 @@ void LogicProcessor::processGameCommand(InputCommand cmd)
         tmp.append(L" ");
         tmp.append(cmd->parameters);
         tmp.append(br);
-        processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+        processIncoming(tmp.c_str(), tmp.length(), flags, 0);
         tmp.erase(tmp.begin());
     }
     sendToNetwork(tmp);

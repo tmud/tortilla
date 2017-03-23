@@ -181,26 +181,28 @@ BEGIN
     CONTROL         "Показывать системные команды",IDC_CHECK_SHOW_SYSTEM_CMDS,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,55,126,9
     CONTROL         "Очищать строку ввода команд",IDC_CHECK_CLEAR_BAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,119,9
+    CONTROL         "Игровые команды всегда с новой строки",IDC_CHECK_NEWLINECMD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,76,156,9
     CONTROL         "Не показывать для триггеров ошибку Неизвестная команда",IDC_CHECK_UNKNOWNCMD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,77,225,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,87,225,9
     CONTROL         "Использовать историю команд в автоподстановках",IDC_CHECK_HISTORYTAB,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,88,189,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,98,189,9
     CONTROL         "Не удваивать букву 'я' при отправке на сервер",IDC_CHECK_DISABLE_DOUBLE_YA,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,99,175,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,109,175,9
     CONTROL         "Запретить серверу изменять цветовую палитру",IDC_CHECK_DISABLE_OSC,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,110,182,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,120,182,9
     CONTROL         "Включить режим плавного скроллирования текста",IDC_CHECK_SOFTSCROLL,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,121,187,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,131,187,9
     CONTROL         "Показывать лог работы плагинов в окне:",IDC_CHECK_PLUGINSLOGS,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,132,156,9
-    EDITTEXT        IDC_EDIT_PLUGINSLOGS,169,131,20,12,ES_AUTOHSCROLL | ES_NUMBER
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,142,156,9
+    EDITTEXT        IDC_EDIT_PLUGINSLOGS,169,141,20,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Не переходить в меню по клавише Alt",IDC_CHECK_DISABLEALT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,143,143,9
-    CONTROL         "Сворачивать клиент в трей",IDC_CHECK_MOVETOTRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,153,143,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,153,143,9
+    CONTROL         "Сворачивать клиент в трей",IDC_CHECK_MOVETOTRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,163,143,9
     CONTROL         "Использовать IAC GA (нужна поддержка сервера)",IDC_RADIO_PROMT_GA,
-                    "Button",BS_AUTORADIOBUTTON,8,182,184,8
-    CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,192,90,10
-    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,204,167,12,ES_AUTOHSCROLL
+                    "Button",BS_AUTORADIOBUTTON,8,187,184,8
+    CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,197,90,10
+    EDITTEXT        IDC_EDIT_PROMPT_PCRE,19,209,167,12,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_CODEPAGE,283,21,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CTEXT           "Общие настройки",IDC_STATIC,135,6,70,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,134,8
@@ -210,7 +212,7 @@ BEGIN
     LTEXT           "строк",IDC_STATIC,156,23,27,8
     LTEXT           "шт",IDC_STATIC,156,37,27,8
     LTEXT           "Кодировка клиента:",IDC_STATIC,207,23,70,9
-    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,171,204,51
+    GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,4,176,204,51
     LTEXT           "Формат записи логов:",IDC_STATIC,201,50,76,9
     COMBOBOX        IDC_COMBO_LOGFORMAT,283,48,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
@@ -466,7 +468,7 @@ BEGIN
     IDD_PROPERTY_COMMON, DIALOG
     BEGIN
         TOPMARGIN, 2
-        BOTTOMMARGIN, 225
+        BOTTOMMARGIN, 229
     END
 
     IDD_PROPERTY_GROUPS, DIALOG

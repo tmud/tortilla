@@ -98,6 +98,7 @@
 #define IDC_CHECK_SHOW_SYSTEM_CMDS      1085
 #define IDC_CHECK_CLEAR_BAR             1086
 #define IDC_EDIT_NUMBER                 1087
+#define IDC_CHECK_NEWLINECMD            1087
 #define IDC_EDIT_PROMPT_PCRE            1110
 #define IDC_CHECK_DISABLE_DOUBLE_YA     1111
 #define IDC_CHECK_HISTORYTAB            1113

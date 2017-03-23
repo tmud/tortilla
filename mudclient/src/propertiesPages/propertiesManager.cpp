@@ -117,6 +117,7 @@ bool PropertiesManager::loadProfileData(tstring *error)
     loadValue(sd, L"viewsize", MIN_VIEW_HISTORY_SIZE, MAX_VIEW_HISTORY_SIZE, &m_propData.view_history_size);
     loadValue(sd, L"cmdsize", MIN_CMD_HISTORY_SIZE, MAX_CMD_HISTORY_SIZE, &m_propData.cmd_history_size);
     loadValue(sd, L"systemcmds", 0, 1, &m_propData.show_system_commands);
+    loadValue(sd, L"newlinecmds", 0, 1, &m_propData.newline_commands);
     loadValue(sd, L"clearbar", 0, 1, &m_propData.clear_bar);
     loadValue(sd, L"disableya", 0, 1, &m_propData.disable_ya);
     loadValue(sd, L"disableosc", 0, 1, &m_propData.disable_osc);
@@ -242,6 +243,7 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, L"viewsize", m_propData.view_history_size);
     saveValue(sd, L"cmdsize", m_propData.cmd_history_size);
     saveValue(sd, L"systemcmds", m_propData.show_system_commands);
+    saveValue(sd, L"newlinecmds", m_propData.newline_commands);
     saveValue(sd, L"clearbar", m_propData.clear_bar);
     saveValue(sd, L"disableya", m_propData.disable_ya);
     saveValue(sd, L"disableosc", m_propData.disable_osc);
