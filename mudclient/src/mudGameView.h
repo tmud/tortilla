@@ -548,7 +548,7 @@ private:
 
     LRESULT OnWheel(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
     {
-        if (checkKeysState(false, true, false))
+        if (checkKeysState(false, true, false) && !m_view.isDragMode())
         {
             if (m_history.IsWindowVisible()) {
                 ::SendMessage(m_history, WM_MOUSEWHEEL, wparam, lparam);
