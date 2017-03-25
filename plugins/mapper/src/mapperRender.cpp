@@ -5,30 +5,6 @@
 
 #define ROOM_SIZE 32
 #define MAP_EDGE 16
-
-#define MENU_SETCOLOR       100
-#define MENU_RESETCOLOR     101
-#define MENU_NEWZONE_NORTH  102
-#define MENU_NEWZONE_SOUTH  103
-#define MENU_NEWZONE_WEST   104
-#define MENU_NEWZONE_EAST   105
-#define MENU_NEWZONE_UP     106
-#define MENU_NEWZONE_DOWN   107
-#define MENU_JOINZONE_NORTH 108
-#define MENU_JOINZONE_SOUTH 109
-#define MENU_JOINZONE_WEST  110
-#define MENU_JOINZONE_EAST  111
-#define MENU_JOINZONE_UP    112
-#define MENU_JOINZONE_DOWN  113
-#define MENU_MOVEROOM_NORTH 114
-#define MENU_MOVEROOM_SOUTH 115
-#define MENU_MOVEROOM_WEST  116
-#define MENU_MOVEROOM_EAST  117
-#define MENU_MOVEROOM_UP    118
-#define MENU_MOVEROOM_DOWN  119
-
-#define MENU_SETICON_FIRST  200  // max 100 icons
-#define MENU_SETICON_LAST   299
 extern Mapper* m_mapper_window;
 
 MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
@@ -43,6 +19,12 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
     m_track_mouse = false;
     m_drag_mode = false;
     m_menu_tracked_room = NULL;
+    m_menu_handler = NULL;
+}
+
+void MapperRender::setMenuHandler(HWND handler_wnd)
+{
+    m_menu_handler = handler_wnd;
 }
 
 MapCursor MapperRender::getCursor() const
@@ -431,8 +413,9 @@ void MapperRender::createMenu()
     m_menu.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));
 }
 
-bool MapperRender::runMenuPoint(int id)
+bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
 {
+    WORD id = LOWORD(wparam);
     if (id == MENU_SETCOLOR)
     {
         COLORREF color = m_menu_tracked_room->color;
@@ -463,13 +446,10 @@ bool MapperRender::runMenuPoint(int id)
         Invalidate();
         return true;
     }
-
-    if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
+    if (m_menu_handler)
     {
-        RoomDir dir = (RoomDir)(id - MENU_NEWZONE_NORTH);
-        //m_mapper_window->newZone(m_menu_tracked_room, dir);
+        ::PostMessage(m_menu_handler, WM_COMMAND, wparam, lparam);
         return true;
     }
-
     return false;
 }

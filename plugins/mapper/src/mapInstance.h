@@ -16,7 +16,6 @@ public:
     bool addNewZoneAndRoom(Room* newroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
     bool addLink(Room* from, Room* to, RoomDir dir);    
-
     //void saveMaps(lua_State *L);
     //void loadMaps(lua_State *L);
 

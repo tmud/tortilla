@@ -112,6 +112,7 @@
     <ClInclude Include="src\mapInstance.h" />
     <ClInclude Include="src\mapper.h" />
     <ClInclude Include="src\mapperHashTable.h" />
+    <ClInclude Include="src\roomMergeTool.h" />
     <ClInclude Include="src\roomObjects.h" />
     <ClInclude Include="src\dirObjects.h" />
     <ClInclude Include="src\mapperProcessor.h" />
@@ -132,6 +133,7 @@
     <ClCompile Include="src\mapInstance.cpp" />
     <ClCompile Include="src\mapper.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
+    <ClCompile Include="src\roomMergeTool.cpp" />
     <ClCompile Include="src\roomObjects.cpp" />
     <ClCompile Include="src\dirObjects.cpp" />
     <ClCompile Include="src\mapperProcessor.cpp" />

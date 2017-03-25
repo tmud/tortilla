@@ -5,6 +5,30 @@
 #include "mapperRoomRender.h"
 #include "menuXP.h"
 
+#define MENU_SETCOLOR       100
+#define MENU_RESETCOLOR     101
+#define MENU_NEWZONE_NORTH  102
+#define MENU_NEWZONE_SOUTH  103
+#define MENU_NEWZONE_WEST   104
+#define MENU_NEWZONE_EAST   105
+#define MENU_NEWZONE_UP     106
+#define MENU_NEWZONE_DOWN   107
+#define MENU_JOINZONE_NORTH 108
+#define MENU_JOINZONE_SOUTH 109
+#define MENU_JOINZONE_WEST  110
+#define MENU_JOINZONE_EAST  111
+#define MENU_JOINZONE_UP    112
+#define MENU_JOINZONE_DOWN  113
+#define MENU_MOVEROOM_NORTH 114
+#define MENU_MOVEROOM_SOUTH 115
+#define MENU_MOVEROOM_WEST  116
+#define MENU_MOVEROOM_EAST  117
+#define MENU_MOVEROOM_UP    118
+#define MENU_MOVEROOM_DOWN  119
+
+#define MENU_SETICON_FIRST  200  // max 100 icons
+#define MENU_SETICON_LAST   299
+
 class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;
@@ -28,8 +52,11 @@ class MapperRender : public CWindowImpl<MapperRender>
     CImageList m_icons;
     const Room *m_menu_tracked_room;
 
+    HWND m_menu_handler;
+
 public:
     MapperRender();
+    void setMenuHandler(HWND handler_wnd);
     void showPosition(MapCursor pos);
     MapCursor getCurrentPosition();
 
@@ -71,9 +98,9 @@ private:
         m_menu.DrawItem((LPDRAWITEMSTRUCT)lparam);
         return 0;
     }
-    LRESULT OnMenuCommand(UINT, WPARAM wparam, LPARAM, BOOL& bHandled)
+    LRESULT OnMenuCommand(UINT, WPARAM wparam, LPARAM lparam, BOOL& bHandled)
     {
-        if (!runMenuPoint(LOWORD(wparam)))
+        if (!runMenuPoint(wparam, lparam))
             bHandled = FALSE;
         return 0;
     }
@@ -107,5 +134,5 @@ private:
         TrackMouseEvent(&tme);
     }
     void createMenu();
-    bool runMenuPoint(int id);
+    bool runMenuPoint(DWORD wparam, LPARAM lparam);
 };

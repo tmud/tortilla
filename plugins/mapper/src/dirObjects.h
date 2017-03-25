@@ -54,12 +54,3 @@ private:
         return true;
     }
 };
-
-/*{
-public:
-    MapperDirsVector();
-    void init(PropertiesMapper* props);
-    void find(const tstring& cmd);
-private:
-   std::vector<MapperDirCommand> dirs;
-};*/

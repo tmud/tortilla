@@ -2,6 +2,7 @@
 #include "mapper.h"
 #include "roomObjects.h"
 #include "debugHelpers.h"
+#include "roomMergeTool.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
 m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL)
@@ -187,6 +188,7 @@ void Mapper::onCreate()
 
     m_toolbar.Create(m_container, rcDefault, style);
     m_view.Create(m_container, rcDefault, NULL, style | WS_VSCROLL | WS_HSCROLL, WS_EX_STATICEDGE);
+    m_view.setMenuHandler(m_hWnd);
 
     m_container.attach(40, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
@@ -219,4 +221,14 @@ void Mapper::onZoneChanged()
     }
     MapCursor cursor = m_map.createZoneCursor(zone);
     redrawPosition(cursor);
+}
+
+void Mapper::onRenderContextMenu(int id)
+{
+    if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
+    {
+        RoomDir dir = (RoomDir)(id - MENU_NEWZONE_NORTH);
+        RoomMergeTool t;
+        //t.init(m_map.)
+    }
 }
