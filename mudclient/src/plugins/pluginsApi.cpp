@@ -545,6 +545,8 @@ class LuaEnviroment
 {
     lua_State *L;
     std::vector<std::string> env_list;
+    std::map<std::string, const void*> env_tables;
+    typedef std::map<std::string, const void*>::iterator iterator;
 public:
     LuaEnviroment(lua_State *pl) : L(pl)
     {
@@ -561,6 +563,8 @@ public:
         lua_pushstring(L, global_func);
         lua_getglobal(L, global_func);
         assert(lua_isfunction(L, -1) || lua_istable(L, -1));
+        if (lua_istable(L, -1))
+            env_tables[global_func] = lua_topointer(L, -1);
         lua_settable(L, -3);
         env_list.push_back(global_func);
     }
@@ -571,9 +575,29 @@ public:
             return;
         for (int i=0,e=env_list.size();i<e;++i)
         {
-            lua_pushstring(L, env_list[i].c_str());
-            lua_pushnil(L);
-            lua_settable(L, -3);
+            bool remove = false;
+            std::string name(env_list[i]);
+            lua_pushstring(L, name.c_str());
+            lua_gettable(L, -2);
+            if (lua_isfunction(L, -1))
+                remove = true;
+            if (lua_istable(L, -1))
+            {
+                const void* table = lua_topointer(L, -1);
+                iterator it = env_tables.find(name);
+                if (it != env_tables.end()) {
+                   const void* table2 = it->second;
+                   if (it->second == table)
+                       remove = true;
+                }
+            }
+            lua_pop(L, 1);
+            if (remove)
+            {
+                lua_pushstring(L, name.c_str());
+                lua_pushnil(L);
+                lua_settable(L, -3);
+            }
         }
     }
 };
@@ -627,7 +651,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     else {
         lua_pop(L, 1);
     }
-    //env.clear();
+    env.clear();
     return 1;
 }
 
@@ -1105,7 +1129,7 @@ int saveTable(lua_State *L)
     list.clear();
 
     if (incorrect_data)
-        pluginMethodError(L"saveTable", L"Неверные данные в исходных данных.");
+        pluginMethodError(L"saveTable", L"В таблице есть неподдерживаемые для записи типы данных.");
 
     if (!result)
     {
