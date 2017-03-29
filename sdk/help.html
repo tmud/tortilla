@@ -1396,8 +1396,10 @@ render:rect(r2)
 <div class="cmd">string getHash()</div> - хэш строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество блоков в текущей строке.
 <div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в текущей строке. Удаляет лишние или добавляет новые.
-<div class="cmd">uint get(int index, string attr)</div> - получает значение атрибута блока. Возможные варианты атрибута: 
-<div class="m">textcolor</div>,<div class="m">bkgcolor</div>,<div class="m">underline</div>,<div class="m">italic</div>,<div class="m">blink</div>,<div class="m">reverse</div>,<div class="m">exttextcolor</div>,<div class="m">extbkgcolor</div>.
+<div class="cmd">uint|nil get(int index, string attr)</div> - получает значение атрибута блока. Возможные варианты атрибута: 
+<div class="m">textcolor</div>,<div class="m">bkgcolor</div>,<div class="m">underline</div>,<div class="m">italic</div>,<div class="m">blink</div>,<div class="m">reverse</div>,<div class="m">exttextcolor</div>,<div class="m">extbkgcolor</div>, 
+nil возвращается для textcolor, bkgcolor, если в блоке используется rgb цвет 
+и наоборот, nil для exttextcolor, extbkgcolor, если используется обычный цвет.
 <div class="cmd">bool set(int index, string attr, uint value)</div> - задает значение атрибута блока. Возможные варианты атрибута см. в <div class="m">get</div>.
 <div class="cmd">string getBlockText(int index)</div> - текст блока по заданному индексу.
 <div class="cmd">bool setBlockText(int index, string text)</div> - задает новый текст блоку по индексу.
@@ -1463,8 +1465,10 @@ Lua-триггере. Если вернуть значение невозмож�
 <div class="cmd">bool copyBlock(int block, viewstring|viewdata, int dst_block)</div> - копирует заданный блок строки в другую строку. 
 Копирование возможно в строку <div class="cmd">viewstring</div> или в массив строк <div class="cmd">viewdata</div> (в ее текущую строку).
 <div class="cmd">bool deleteBlock(int index)</div> - удаляет блок.
-<div class="cmd">uint get(int index, string attr)</div> - получает значение атрибута блока. Возможные варианты атрибута: 
-<div class="m">textcolor</div>,<div class="m">bkgcolor</div>,<div class="m">underline</div>,<div class="m">italic</div>,<div class="m">blink</div>,<div class="m">reverse</div>,<div class="m">exttextcolor</div>,<div class="m">extbkgcolor</div>.
+<div class="cmd">uint|nil get(int index, string attr)</div> - получает значение атрибута блока. Возможные варианты атрибута: 
+<div class="m">textcolor</div>,<div class="m">bkgcolor</div>,<div class="m">underline</div>,<div class="m">italic</div>,<div class="m">blink</div>,<div class="m">reverse</div>,<div class="m">exttextcolor</div>,<div class="m">extbkgcolor</div>,
+nil возвращается для textcolor, bkgcolor, если в блоке используется rgb цвет 
+и наоборот, nil для exttextcolor, extbkgcolor, если используется обычный цвет.
 <div class="cmd">bool set(int index, string attr, uint value)</div> - задает значение атрибута блока. Возможные варианты атрибута см. в <div class="m">get</div>.
 <div class="cmd">void print(int view)</div> - печатает строку в заданное output-окно с цветом. <div class="cmd">Важно!</div> Данные строки не будут обрабатываться 
 заменами и триггерами.

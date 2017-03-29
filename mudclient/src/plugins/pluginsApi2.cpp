@@ -463,7 +463,7 @@ bool vsp_pushparam(lua_State *L, const MudViewStringParams &p, int type)
     {
         case TEXTCOLOR:
              if (p.use_ext_colors)
-                 ok = false;
+                 lua_pushnil(L);
              else
              {
                  tbyte color = p.text_color;
@@ -473,7 +473,7 @@ bool vsp_pushparam(lua_State *L, const MudViewStringParams &p, int type)
          break;
          case BKGCOLOR:
              if (p.use_ext_colors)
-                  ok = false;
+                  lua_pushnil(L);
              else
                   lua_pushunsigned(L, p.bkg_color);
              break;
@@ -493,13 +493,13 @@ bool vsp_pushparam(lua_State *L, const MudViewStringParams &p, int type)
              if (p.use_ext_colors)
                  lua_pushunsigned(L, p.ext_text_color);
              else
-                 ok = false;
+                 lua_pushnil(L);
              break;
           case EXTBKGCOLOR:
              if (p.use_ext_colors)
                   lua_pushunsigned(L, p.ext_bkg_color);
              else
-                  ok = false;
+                  lua_pushnil(L);
              break;
           default:
              ok = false;
