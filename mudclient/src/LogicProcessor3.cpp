@@ -25,8 +25,6 @@ void LogicProcessor::processStackTick()
             for (int i=0,e=tmp.size(); i<e; ++i){
                 tstring &t = tmp[i];
                 int flags = SKIP_ACTIONS|SKIP_SUBS|GAME_LOG;
-                if (window == 0)
-                    flags |= SKIP_PLUGINS;
                 processIncoming(t.c_str(), t.length(), flags, window);
             }
             tmp.clear();
