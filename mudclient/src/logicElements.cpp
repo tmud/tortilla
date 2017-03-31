@@ -106,7 +106,6 @@ void CompareData::appendto(CompareRange& range, std::vector<MudViewStringBlock>&
             newb.string = newb.string.substr(0, end+1);
             b.push_back(newb);
         }
-        return;
     }
 }
 
@@ -375,7 +374,20 @@ bool Sub::processing(CompareData& data)
             int id = m_phelper->getId(i);
             if (id != -1) {
                 if (id < parameters_count) 
-                    data.appendto(pr[id], newb);
+                {
+                   if (!m_phelper->getCutValue(i).empty()) {
+                     CompareRange c( pr[id] );
+                     tstring param(data.fullstr.substr(c.begin, c.end-c.begin));
+                     m_phelper->cutParameter(i, &param);
+                     size_t pos = data.fullstr.find(param);
+                     if (pos != tstring::npos) {
+                        c.begin = pos; c.end = pos + param.length();
+                        data.appendto(c, newb);
+                     }
+                   } else {
+                     data.appendto(pr[id], newb);
+                   }
+                }
             }
 
             int after_param = pr[id].end + 1;
