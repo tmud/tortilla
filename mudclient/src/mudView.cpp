@@ -12,6 +12,7 @@ m_use_softscrolling(false),
 m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1),
+m_drag_boxmode(false),
 m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1),
 m_id(id),
 m_scrollLock(false)
@@ -400,12 +401,22 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
     if (checkDragging(index, true) && s->getTextLen()==0)
     {
         // dragging empty line
-        pos.right += 16;
-        COLORREF bkg = invertColor(propElements->propData->bkgnd);
-        dc->FillSolidRect(&pos, bkg);
+        if (!m_drag_boxmode) {
+            pos.right += 16;
+            COLORREF bkg = invertColor(propElements->propData->bkgnd);
+            dc->FillSolidRect(&pos, bkg);
+        } else {
+            pos.left = m_dragpt.x;
+            pos.right = m_dragpos.x;
+            COLORREF bkg = invertColor(propElements->propData->bkgnd);
+            dc->FillSolidRect(&pos, bkg);
+        }
         return;
     }
-
+    
+    if (m_drag_boxmode) // && index != drag_begin && index != drag_end)
+        calcDragArray(s, m_drag_currentline_len);
+    
     int start_sym = 0;
     std::vector<MudViewStringBlock> &b = s->blocks;
     dc->SelectFont(propElements->standard_font);
@@ -450,84 +461,185 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
 
         bool dragging = false;
         const tstring &str = b[i].string;
-        if (checkDragging(index, false))
-        {
-            dragging = true;
-            COLORREF bkg =  propElements->propData->bkgnd;
-            bkg_color = invertColor(bkg);
-            text_color = bkg;
-        }
-        else if (checkDragging(index, true))
-        {
-            dragging = true;
-            const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;
-            int last = ld.size() - 1;
-            int left = drag_left;
-            int right = drag_right;
 
-            if (drag_begin == drag_end)
+        if (!m_drag_boxmode)
+        {
+            if (checkDragging(index, false))
             {
+                dragging = true;
+                COLORREF bkg =  propElements->propData->bkgnd;
+                bkg_color = invertColor(bkg);
+                text_color = bkg;
+            }
+            else if (checkDragging(index, true))
+            {
+                dragging = true;
+                const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len : m_drag_endline_len;
+                int last = ld.size() - 1;
+                int left = drag_left;
+                int right = drag_right;
+
+                if (drag_begin == drag_end)
+                {
+                    if (left == -1) {
+                        if (right != -1) { left = right; right = last; }
+                        else { left = 0; right = last; }
+                    } else if (right == -1) {
+                        if (isDragCursorLeft()) { right = left; left = 0; }
+                        else { right = last; }
+                    }
+                    else if (left > right) { int t = left; left = right; right = t; }
+                }
+                else if (drag_begin < drag_end) // сверху вниз
+                {
+                    if (index == drag_begin) {
+                        if (left == -1) left = 0;
+                        right = last;
+                    } else {
+                        if (right == -1) right = last;
+                        left = 0;
+                    }
+                }
+                else // drag_begin > drag_end  снизу вверх
+                {
+                    if (index == drag_begin) {
+                        if (left == -1) { right = last; }
+                        else { right = left; }
+                        left = 0;
+                    } else {
+                        if (right == -1) { left = 0; }
+                        else { left = right; }
+                        right = last;
+                    }
+                }
+
+                // проверка что блок попадает в вычисленный диапазон (частью или целиком)
+                // и вычисляем в left right - что выделено, но в символьных координатах блока
+                int end_sym = start_sym + str.size();
+                DragParamsChecker dpc(left, right, start_sym, end_sym);
+                if (dpc.check())
+                {                    
+                    if (left != 0)
+                    {
+                        RECT side = pos; side.right = ld[start_sym + left - 1];
+                        renderDragSym(dc, str.substr(0, left), side, text_color, bkg_color);
+                    }
+                    // selected
+                    {
+                        RECT side = pos; if (left != 0) side.left = ld[start_sym + left - 1];
+                        if (right != (end_sym - 1)) side.right = ld[start_sym + right];
+                        COLORREF txt0 = propElements->propData->bkgnd;
+                        COLORREF bkg0 = invertColor(txt0);
+                        renderDragSym(dc, str.substr(left, right-left+1), side, txt0, bkg0);
+                    }
+                    if (right != (end_sym - 1))
+                    {
+                        RECT side = pos; side.left = ld[start_sym + right];
+                        renderDragSym(dc, str.substr(right+1), side, text_color, bkg_color);
+                    }
+                    start_sym = end_sym;
+                    continue;
+                }
+            }
+        }
+        else // m_drag_boxmode = true
+        {
+            if (checkDragging(index, true))
+            {
+                //const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len :
+                //    ((index == drag_end) ? m_drag_endline_len : m_drag_currentline_len);
+
+                const std::vector<int> &ld = m_drag_currentline_len;
+
+                int last = ld.size() - 1;
+                int left = drag_left;
+                int right = drag_right;
+
                 if (left == -1) {
                     if (right != -1) { left = right; right = last; }
-                    else { left = 0; right = last; }
+                    else
+                    {
+                        //left = 0; right = last; 
+                    }
                 } else if (right == -1) {
                     if (isDragCursorLeft()) { right = left; left = 0; }
                     else { right = last; }
+
+                     //right = last; 
                 }
                 else if (left > right) { int t = left; left = right; right = t; }
-            }
-            else if (drag_begin < drag_end) // сверху вниз
-            {
-                if (index == drag_begin) {
-                    if (left == -1) left = 0;
-                    right = last;
-                } else {
-                    if (right == -1) right = last;
-                    left = 0;
-                }
-            }
-            else // drag_begin > drag_end  снизу вверх
-            {
-                if (index == drag_begin) {
-                    if (left == -1) { right = last; }
-                    else { right = left; }
-                    left = 0;
-                } else {
-                    if (right == -1) { left = 0; }
-                    else { left = right; }
-                    right = last;
-                }
-            }
 
-            // проверка что блок попадает в вычисленный диапазон (частью или целиком)
-            // и вычисляем в left right - что выделено, но в символьных координатах блока
-            int end_sym = start_sym + str.size();
-            DragParamsChecker dpc(left, right, start_sym, end_sym);
-            if (dpc.check())
-            {
-                if (left != 0)
+                /*if (drag_begin == drag_end)
                 {
-                    RECT side = pos; side.right = ld[start_sym + left - 1];
-                    renderDragSym(dc, str.substr(0, left), side, text_color, bkg_color);
+                    if (left == -1) {
+                        if (right != -1) { left = right; right = last; }
+                        else { left = 0; right = last; }
+                    } else if (right == -1) {
+                        if (isDragCursorLeft()) { right = left; left = 0; }
+                        else { right = last; }
+                    }
+                    else if (left > right) { int t = left; left = right; right = t; }
                 }
-                // selected
+                else if (drag_begin < drag_end) // сверху вниз
                 {
-                    RECT side = pos; if (left != 0) side.left = ld[start_sym + left - 1];
-                    if (right != (end_sym - 1)) side.right = ld[start_sym + right];
-                    COLORREF txt0 = propElements->propData->bkgnd;
-                    COLORREF bkg0 = invertColor(txt0);
-                    renderDragSym(dc, str.substr(left, right-left+1), side, txt0, bkg0);
+                    if (index == drag_begin) {
+                        if (left == -1) left = 0;
+                        right = last;
+                    } else {
+                        if (right == -1) right = last;
+                        left = 0;
+                    }
                 }
-                if (right != (end_sym - 1))
+                else // drag_begin > drag_end  снизу вверх
                 {
-                    RECT side = pos; side.left = ld[start_sym + right];
-                    renderDragSym(dc, str.substr(right+1), side, text_color, bkg_color);
+                    if (index == drag_begin) {
+                        if (left == -1) { right = last; }
+                        else { right = left; }
+                        left = 0;
+                    } else {
+                        if (right == -1) { left = 0; }
+                        else { left = right; }
+                        right = last;
+                    }
+                }*/
+
+                // проверка что блок попадает в вычисленный диапазон (частью или целиком)
+                // и вычисляем в left right - что выделено, но в символьных координатах блока
+                int end_sym = start_sym + str.size();
+
+                int dsym = ld[0];                
+                DragParamsChecker dpc(left, right, start_sym, end_sym);
+                if (dpc.check())
+                {                    
+                    if (left != 0)
+                    {
+                        RECT side = pos; side.right = ld[start_sym + left - 1];
+                        renderDragSym(dc, str.substr(0, left), side, text_color, bkg_color);
+                    }
+                    // selected
+                    {
+                        RECT side = pos; if (left != 0) side.left = ld[start_sym + left - 1];
+                        if (right != (end_sym - 1)) side.right = ld[start_sym + right];
+                        COLORREF txt0 = propElements->propData->bkgnd;
+                        COLORREF bkg0 = invertColor(txt0);
+                        renderDragSym(dc, str.substr(left, right-left+1), side, txt0, bkg0);
+                    }
+                    if (right != (end_sym - 1))
+                    {
+                        RECT side = pos; side.left = ld[start_sym + right];
+                        renderDragSym(dc, str.substr(right+1), side, text_color, bkg_color);
+                    }
+                    start_sym = end_sym;
+
+
+
+
+                    continue;
                 }
-                start_sym = end_sym;
-                continue;
             }
         }
 
+        // selection for found string
         if (!dragging && index == m_find_string_index)
         {
             int left = m_find_start_pos;

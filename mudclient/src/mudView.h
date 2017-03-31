@@ -20,6 +20,8 @@ class MudView : public CWindowImpl<MudView>
     int  drag_left, drag_right;
     std::vector<int> m_drag_beginline_len;
     std::vector<int> m_drag_endline_len;
+    std::vector<int> m_drag_currentline_len;
+    bool m_drag_boxmode;
 
     int m_find_string_index;
     int m_find_start_pos, m_find_end_pos;
@@ -84,12 +86,21 @@ private:
     LRESULT OnLButtonDown(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         if (checkKeysState(true, false, false) || (GetKeyState(VK_RBUTTON) & 0x100)!=0 )
+        {
+            m_drag_boxmode = false;
             startDraging();
+        }
+        else if (checkKeysState(true, true, false))
+        {
+            m_drag_boxmode = true;
+            startDraging();
+        }
         return 0;
     }
     LRESULT OnLButtonUp(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         stopDraging();
+        m_drag_boxmode = false;
         return 0;
     }
     LRESULT OnMouseMove(UINT, WPARAM wparam, LPARAM, BOOL&)
