@@ -137,6 +137,7 @@ private:
     bool  isDragCursorLeft() const;
     enum dragline { BEGINLINE = 0, ENDLINE };
     int   calcDragSym(int x, dragline type) const;
+    int   calcDragSym(int x, const std::vector<int> &ld) const;
     void  calcDragLine(int line, dragline type);
     void  calcDragArray(MudViewString* s, std::vector<int> &ld);   
     void renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);

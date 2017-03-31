@@ -550,10 +550,15 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                 //    ((index == drag_end) ? m_drag_endline_len : m_drag_currentline_len);
 
                 const std::vector<int> &ld = m_drag_currentline_len;
-
                 int last = ld.size() - 1;
-                int left = drag_left;
-                int right = drag_right;
+
+                int left = calcDragSym(m_dragpos.x, ld);
+                int right = calcDragSym(m_dragpt.x, ld);
+                //if (left > right) { int t = left; left = right; right = t; }
+                //if (right > last) right = last;
+
+                /*left = drag_left;
+                right = drag_right;*/
 
                 if (left == -1) {
                     if (right != -1) { left = right; right = last; }
@@ -568,6 +573,8 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                      //right = last; 
                 }
                 else if (left > right) { int t = left; left = right; right = t; }
+
+
 
                 /*if (drag_begin == drag_end)
                 {
@@ -630,10 +637,6 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         renderDragSym(dc, str.substr(right+1), side, text_color, bkg_color);
                     }
                     start_sym = end_sym;
-
-
-
-
                     continue;
                 }
             }
@@ -1004,6 +1007,11 @@ bool MudView::isDragCursorLeft() const
 int MudView::calcDragSym(int x, dragline type) const
 {
     const std::vector<int> &ld = (type == BEGINLINE) ? m_drag_beginline_len : m_drag_endline_len;
+    return calcDragSym(x, ld);
+}
+
+int MudView::calcDragSym(int x, const std::vector<int> &ld) const
+{    
     int left = 0;
     for (int i = 0, e = ld.size(); i < e; ++i)
     {
