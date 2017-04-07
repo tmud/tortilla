@@ -512,7 +512,6 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         right = last;
                     }
                 }
-
                 // проверка что блок попадает в вычисленный диапазон (частью или целиком)
                 // и вычисляем в left right - что выделено, но в символьных координатах блока
                 int end_sym = start_sym + str.size();
@@ -561,14 +560,27 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                 right = drag_right;*/
 
                 if (left == -1) {
-                    if (right != -1) { left = right; right = last; }
+                    if (right != -1) {
+                        //left = right; right = last;
+                        //if (right > last)
+                        //    right = last;
+                        if (isDragCursorLeft())
+                            left = 0;
+                        else  {
+                            left = right; right = last;
+                        }
+                    }
                     else
-                    {
-                        //left = 0; right = last; 
+                    {                   
+                      // left = 0; right = last; 
+                       // continue;
                     }
                 } else if (right == -1) {
-                    if (isDragCursorLeft()) { right = left; left = 0; }
-                    else { right = last; }
+                    if (isDragCursorLeft()) {
+                        right = left; left = 0; }
+                    else {
+                        right = last;
+                    }
 
                      //right = last; 
                 }
@@ -822,6 +834,7 @@ void MudView::deleteBeginStrings(int count_from_begin)
 void MudView::startDraging()
 {
     m_dragpt = getCursor();
+    m_dragpos = m_dragpt;
     int line = getCursorLine(m_dragpt.y);
     if (line < 0) return;
     SetCapture();
