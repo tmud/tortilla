@@ -98,6 +98,7 @@ xcopy ..\plugins\enterb.bmp plugins /Y
 xcopy ..\plugins\autoalias.lua plugins /Y
 xcopy ..\plugins\inveq.lua plugins /Y
 xcopy ..\plugins\helpers.lua plugins /Y
+xcopy ..\plugins\tick.lua plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 
