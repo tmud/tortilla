@@ -13,6 +13,7 @@ m_start_softscroll(-1),
 drag_begin(-1), drag_end(-1),
 drag_left(-1), drag_right(-1),
 m_drag_boxmode(false),
+m_drag_space_len(0),
 m_find_string_index(-1), m_find_start_pos(-1), m_find_end_pos(-1),
 m_id(id),
 m_scrollLock(false)
@@ -402,21 +403,23 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
     {
         // dragging empty line
         if (!m_drag_boxmode) {
-            pos.right += 16;
+            pos.right += m_drag_space_len;
             COLORREF bkg = invertColor(propElements->propData->bkgnd);
             dc->FillSolidRect(&pos, bkg);
         } else {
-            pos.left = m_dragpt.x;
-            pos.right = m_dragpos.x;
             COLORREF bkg = invertColor(propElements->propData->bkgnd);
+            int from = m_dragpt.x / m_drag_space_len;
+            int to = m_dragpos.x / m_drag_space_len;
+            if (from > to) { int t = from; from = to; to = t; } 
+            pos.left = from * m_drag_space_len;
+            pos.right = (to+1) * m_drag_space_len;
             dc->FillSolidRect(&pos, bkg);
         }
         return;
     }
-    
-    if (m_drag_boxmode) // && index != drag_begin && index != drag_end)
+
+    if (m_drag_boxmode)
         calcDragArray(s, m_drag_currentline_len);
-    
     int start_sym = 0;
     std::vector<MudViewStringBlock> &b = s->blocks;
     dc->SelectFont(propElements->standard_font);
@@ -517,7 +520,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                 int end_sym = start_sym + str.size();
                 DragParamsChecker dpc(left, right, start_sym, end_sym);
                 if (dpc.check())
-                {                    
+                {
                     if (left != 0)
                     {
                         RECT side = pos; side.right = ld[start_sym + left - 1];
@@ -545,25 +548,14 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         {
             if (checkDragging(index, true))
             {
-                //const std::vector<int> &ld = (index == drag_begin) ? m_drag_beginline_len :
-                //    ((index == drag_end) ? m_drag_endline_len : m_drag_currentline_len);
-
                 const std::vector<int> &ld = m_drag_currentline_len;
                 int last = ld.size() - 1;
-
                 int left = calcDragSym(m_dragpos.x, ld);
                 int right = calcDragSym(m_dragpt.x, ld);
-                //if (left > right) { int t = left; left = right; right = t; }
-                //if (right > last) right = last;
-
-                /*left = drag_left;
-                right = drag_right;*/
 
                 if (left == -1) {
-                    if (right != -1) {
-                        //left = right; right = last;
-                        //if (right > last)
-                        //    right = last;
+                    if (right != -1)
+                    {
                         if (isDragCursorLeft())
                             left = 0;
                         else  {
@@ -571,65 +563,51 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         }
                     }
                     else
-                    {                   
-                      // left = 0; right = last; 
-                       // continue;
+                    {
+                         if (isDragCursorLeft()) 
+                         {
+                            int last = ld.size() - 1;
+                            int lastpix = ld[last];
+                            if (lastpix > m_dragpos.x) {
+                                left = 0; right = last;
+                            } 
+                         }
                     }
                 } else if (right == -1) {
-                    if (isDragCursorLeft()) {
-                        right = left; left = 0; }
-                    else {
-                        right = last;
-                    }
-
-                     //right = last; 
+                    right = last;
                 }
                 else if (left > right) { int t = left; left = right; right = t; }
 
-
-
-                /*if (drag_begin == drag_end)
-                {
-                    if (left == -1) {
-                        if (right != -1) { left = right; right = last; }
-                        else { left = 0; right = last; }
-                    } else if (right == -1) {
-                        if (isDragCursorLeft()) { right = left; left = 0; }
-                        else { right = last; }
-                    }
-                    else if (left > right) { int t = left; left = right; right = t; }
-                }
-                else if (drag_begin < drag_end) // сверху вниз
-                {
-                    if (index == drag_begin) {
-                        if (left == -1) left = 0;
-                        right = last;
+                if (i == 0) {
+                    int lastpix = ld[last];
+                    if (lastpix <= m_dragpos.x || lastpix <= m_dragpt.x)
+                    {
+                        COLORREF bkg = invertColor(propElements->propData->bkgnd);
+                        int from = m_dragpt.x / m_drag_space_len;
+                        int to = m_dragpos.x / m_drag_space_len;
+                        RECT pos2 = pos;
+                        if (from > to) { int t = from; from = to; to = t; }
+                        drag_right = to;
+                        drag_left = from;
+                        if (from < last) from = last+1;
+                        pos2.left = from * m_drag_space_len;
+                        pos2.right = (to+1) * m_drag_space_len;
+                        dc->FillSolidRect(&pos2, bkg);
                     } else {
-                        if (right == -1) right = last;
-                        left = 0;
+                        drag_right = right;
+                        drag_left = left;
                     }
+                    //if (drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
                 }
-                else // drag_begin > drag_end  снизу вверх
-                {
-                    if (index == drag_begin) {
-                        if (left == -1) { right = last; }
-                        else { right = left; }
-                        left = 0;
-                    } else {
-                        if (right == -1) { left = 0; }
-                        else { left = right; }
-                        right = last;
-                    }
-                }*/
 
                 // проверка что блок попадает в вычисленный диапазон (частью или целиком)
                 // и вычисляем в left right - что выделено, но в символьных координатах блока
                 int end_sym = start_sym + str.size();
 
-                int dsym = ld[0];                
+                int dsym = ld[0];
                 DragParamsChecker dpc(left, right, start_sym, end_sym);
                 if (dpc.check())
-                {                    
+                {
                     if (left != 0)
                     {
                         RECT side = pos; side.right = ld[start_sym + left - 1];
@@ -840,6 +818,7 @@ void MudView::startDraging()
     SetCapture();
     drag_begin = line;
     drag_end = line;
+    calcDragSpace();
     calcDragLine(line, BEGINLINE);
     drag_left = calcDragSym(m_dragpt.x, BEGINLINE);
     drag_right = drag_left;
@@ -853,10 +832,31 @@ void MudView::stopDraging()
     ReleaseCapture();
 
     if (drag_end == -1 && drag_begin >= 0) { drag_end = 0; drag_right = 0; }
-    if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t;
-    t = drag_left; drag_left = drag_right; drag_right = t; }
+    if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t; }
+    if ( drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
     if (drag_begin < 0)
         drag_begin = 0;
+
+    if (m_drag_boxmode)
+    {
+        tstring text, tmp;
+        tstring eol(L"\r\n");
+        for (int i=drag_begin; i<=drag_end; ++i)
+        {
+            if (i != drag_begin)
+                text.append(eol);
+            m_strings[i]->getText(&tmp);
+            int len = tmp.length();
+            //len = min(drag_right-drag_left+1, len);
+            //text.append(tmp.substr(drag_left, len));
+            tmp.resize(drag_right+1, L' ');
+            text.append(tmp.substr(drag_left, drag_right-drag_left+1));
+        }
+        sendToClipboard(m_hWnd, text);
+        drag_begin = -1;
+        Invalidate(FALSE);
+        return;
+    }
 
     tstring text, tmp;
     if (drag_begin == drag_end)
@@ -1041,6 +1041,18 @@ void MudView::calcDragLine(int line, dragline type)
     std::vector<int> &ld = (type == BEGINLINE) ? m_drag_beginline_len : m_drag_endline_len;
     MudViewString *s = m_strings[line];
     calcDragArray(s, ld);
+}
+
+void MudView::calcDragSpace()
+{
+    CDC dc(GetDC());
+    HFONT current_font = dc.SelectFont(propElements->standard_font);
+    SIZE sz = {0,0};
+    GetTextExtentPoint32(dc, L" ", 1, &sz);
+    dc.SelectFont(current_font);
+    m_drag_space_len = sz.cx;
+    if (m_drag_space_len == 0)
+        m_drag_space_len = 1;
 }
 
 void MudView::calcDragArray(MudViewString* s, std::vector<int> &ld)
