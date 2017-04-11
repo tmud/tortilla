@@ -841,16 +841,18 @@ void MudView::stopDraging()
     {
         tstring text, tmp;
         tstring eol(L"\r\n");
+        if (drag_left < 0) drag_left = 0;
         for (int i=drag_begin; i<=drag_end; ++i)
         {
             if (i != drag_begin)
                 text.append(eol);
             m_strings[i]->getText(&tmp);
             int len = tmp.length();
-            //len = min(drag_right-drag_left+1, len);
-            //text.append(tmp.substr(drag_left, len));
-            tmp.resize(drag_right+1, L' ');
-            text.append(tmp.substr(drag_left, drag_right-drag_left+1));
+            int tocopy = min(drag_right-drag_left+1, len);
+            if (drag_left < len)
+              text.append(tmp.substr(drag_left, tocopy));
+            //tmp.resize(drag_right+1, L' ');
+            //text.append(tmp.substr(drag_left, drag_right-drag_left+1));
         }
         sendToClipboard(m_hWnd, text);
         drag_begin = -1;
