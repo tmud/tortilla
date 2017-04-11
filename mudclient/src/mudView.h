@@ -20,6 +20,9 @@ class MudView : public CWindowImpl<MudView>
     int  drag_left, drag_right;
     std::vector<int> m_drag_beginline_len;
     std::vector<int> m_drag_endline_len;
+    std::vector<int> m_drag_currentline_len;
+    int  m_drag_space_len;
+    bool m_drag_boxmode;
 
     int m_find_string_index;
     int m_find_start_pos, m_find_end_pos;
@@ -84,12 +87,21 @@ private:
     LRESULT OnLButtonDown(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         if (checkKeysState(true, false, false) || (GetKeyState(VK_RBUTTON) & 0x100)!=0 )
+        {
+            m_drag_boxmode = false;
             startDraging();
+        }
+        else if (checkKeysState(true, true, false))
+        {
+            m_drag_boxmode = true;
+            startDraging();
+        }
         return 0;
     }
     LRESULT OnLButtonUp(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         stopDraging();
+        m_drag_boxmode = false;
         return 0;
     }
     LRESULT OnMouseMove(UINT, WPARAM wparam, LPARAM, BOOL&)
@@ -126,8 +138,10 @@ private:
     bool  isDragCursorLeft() const;
     enum dragline { BEGINLINE = 0, ENDLINE };
     int   calcDragSym(int x, dragline type) const;
+    int   calcDragSym(int x, const std::vector<int> &ld) const;
     void  calcDragLine(int line, dragline type);
-    void  calcDragArray(MudViewString* s, std::vector<int> &ld);   
+    void  calcDragArray(MudViewString* s, std::vector<int> &ld);
+    void  calcDragSpace();
     void renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF text, COLORREF bkg);
     void stopSoftScroll();
 };
