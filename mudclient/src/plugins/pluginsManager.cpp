@@ -247,9 +247,21 @@ void PluginsManager::updateProps()
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
-        if (m_plugins[i]->state())
-            m_plugins[i]->updateProps();
+        Plugin *p = m_plugins[i];
+        if (p->state())
+            p->updateProps();
     }
+}
+
+bool PluginsManager::processMouseWheel(const POINT& pt, DWORD param)
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (p->state() && p->processMouseWheel(pt, param))
+            return true;
+    }
+    return false;
 }
 
 void PluginsManager::processStreamData(MemoryBuffer *data)

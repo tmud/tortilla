@@ -196,6 +196,19 @@ int window_setRender(lua_State *L)
     return pluginInvArgs(L, L"window:setRender");
 }
 
+int window_attachMouse(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_WINDOW, LUA_TTABLE))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        if (v->isChildAttached())
+            return pluginInvArgsValues(L, L"window:attachMouse");
+        v->setMouseHandler(L);
+        return 0;
+    }
+    return pluginInvArgs(L, L"window:attachMouse");
+}
+
 int window_setFixedSize(lua_State *L)
 {
     if (luaT_check(L, 3, LUAT_WINDOW, LUA_TNUMBER, LUA_TNUMBER))
@@ -234,6 +247,7 @@ void reg_mt_window(lua_State *L)
     regFunction(L, "hide", window_hide);
     regFunction(L, "isVisible", window_isVisible);
     regFunction(L, "setRender", window_setRender);
+    regFunction(L, "attachMouse", window_attachMouse);
     regFunction(L, "setFixedSize", window_setFixedSize);
     regFunction(L, "getSize", window_getSize);
     regIndexMt(L);

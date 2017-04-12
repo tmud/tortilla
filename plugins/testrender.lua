@@ -39,6 +39,31 @@ local function render()
   r:solidCircle{x=120, y=270, r=80, color={ r=255, g=255, b=0} }
 end
 
+local mouse = {}
+function mouse.left(c, x, y)
+  print("left "..c..",x="..x..",y="..y)
+end
+
+function mouse.right(c, x, y)
+  print("right "..c..",x="..x..",y="..y)
+end
+
+function mouse.middle(c, x, y)
+  print("middle "..c..",x="..x..",y="..y)
+end
+
+function mouse.move(x, y)
+  print("move x="..x..",y="..y)
+end
+
+function mouse.leave()
+  print("leave")
+end
+
+function mouse.wheel(d)
+  print("wheel "..d)
+end
+
 function testrender.init()
   w = createWindow('Тесты рендера', 300, 300, true)
   if not w then
@@ -54,6 +79,7 @@ function testrender.init()
   brush1 = r:createBrush{ color={r=100,g=120,b=30} }
   brush2 = r:createBrush{ color={r=140,g=160,b=130} }
   brush3 = r:createBrush{ color={r=140,g=160,b=130}, style="diagcross" }
+  w:attachMouse(mouse)
 end
 
 return testrender

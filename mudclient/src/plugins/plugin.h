@@ -26,6 +26,7 @@ public:
     bool isErrorState() const { return error_state; }
     void setRenderState(bool state) { render_state = state; }
     bool isRenderState() const { return render_state; }
+    bool processMouseWheel(const POINT& pt, DWORD param);
 
     enum PluginState { FILE, FILENAME, NAME, VERSION, DESCRIPTION };
     const wchar_t* get(PluginState state) {

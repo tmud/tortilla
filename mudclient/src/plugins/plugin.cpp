@@ -95,6 +95,21 @@ void Plugin::updateProps()
     }
 }
 
+bool Plugin::processMouseWheel(const POINT& pt, DWORD param)
+{
+    for (int i=0,e=dockpanes.size();i<e;++i)
+    {
+        if (dockpanes[i]->mouseWheelEvent(pt, param))
+            return true;
+    }
+    for (int i=0,e=panels.size();i<e;++i)
+    {
+        if (panels[i]->mouseWheelEvent(pt, param))
+            return true;
+    }
+    return false;
+}
+
 void pluginDeleteResources(Plugin *plugin);
 void Plugin::setOn(bool on)
 {

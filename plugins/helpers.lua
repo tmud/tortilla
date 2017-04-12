@@ -6,8 +6,9 @@ local commands = {
   alert = 'Немодальное окно с текстом из параметров.',
   wactive = 'Выполняет команды из параметра, если окно клиента активно.',
   wnotactive = 'Выполняет команды из параметра, если окно клиента неактивно.',
-  gmaskon = 'Включает набор групп триггеров по регулярке.',
-  gmaskoff = 'Выключает набор групп триггеров по регулярке.',
+  gmaskon = 'Включает группы триггеров по регулярке.',
+  gmaskoff = 'Выключает группы триггеров по регулярке.',
+  gmaskshow = 'Показывает группы триггеров подпадающих под регулярку.',
 }
 
 local clist
@@ -45,7 +46,7 @@ function impl.wnotactive(p)
   end
 end
 
-local function group(t, mode)
+local function select_groups(t)
   local glist = {}
   for _,v in ipairs(t) do
     local r = createPcre(v)
@@ -57,6 +58,11 @@ local function group(t, mode)
       end
     end
   end
+  return glist
+end
+
+local function group(t, mode)
+  local glist = select_groups(t)
   if #glist > 0 then
     local gname = {}
     local m = mode and '1' or '0'
@@ -79,6 +85,19 @@ function impl.gmaskoff(p)
   group(p, false)
 end
 
+function impl.gmaskshow(p)
+  local glist = select_groups(p)
+  if #glist == 0 then
+    print('[gmask] Нет групп, соотвествующих регулярке')
+    return
+  end
+  print('[gmask] Группы, которые соотвествуют регулярке:')
+  for k,v in ipairs(glist) do
+    groups:select(v)
+    print(groups:get('key'))
+  end
+end
+
 local helpers = {}
 function helpers.name()
   return 'Сборник различных команд'
@@ -94,7 +113,7 @@ function helpers.description()
 end
 
 function helpers.version()
-  return '1.0'
+  return '1.01'
 end
 function helpers.init()
   makelist()

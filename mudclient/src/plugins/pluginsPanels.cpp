@@ -57,6 +57,19 @@ int pn_setRender(lua_State *L)
     return pluginInvArgs(L, L"panel:setRender");
 }
 
+int pn_attachMouse(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_WINDOW, LUA_TTABLE))
+    {
+        PluginsView *v = (PluginsView *)luaT_toobject(L, 1);
+        if (v->isChildAttached())
+            return pluginInvArgsValues(L, L"panel:attachMouse");
+        v->setMouseHandler(L);
+        return 0;
+    }
+    return pluginInvArgs(L, L"panel:attachMouse");
+}
+
 int pn_hwnd(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_PANEL))
@@ -75,6 +88,7 @@ void reg_mt_panels(lua_State *L)
     luaL_newmetatable(L, "panel");
     regFunction(L, "attach", pn_attach);
     regFunction(L, "setRender", pn_setRender);
+    regFunction(L, "attachMouse", pn_attachMouse);
     regFunction(L, "hwnd", pn_hwnd);
     regIndexMt(L);
     lua_pop(L, 1);

@@ -571,6 +571,9 @@ private:
         POINT pt; RECT rc;
         if (GetCursorPos(&pt))
         {
+            if (m_plugins.processMouseWheel(pt, DWORD(wparam)))
+              return 0;
+
             for (int i=0,e=m_views.size(); i<e; ++i)
             {
                 MudView *v = m_views[i];

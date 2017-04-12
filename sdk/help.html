@@ -1204,6 +1204,7 @@ end
 <div class="cmd">void setFixedSize(int width, int height)</div> - Установка и фиксация размер окна. Изменить размер такого окна 
 с помощью мышки будет невозможно.
 <div class="cmd">int, int getSize()</div> - получение размера окна (ширина и высота).
+<div class="cmd">void attachMouse(table t)</div> - подключает к окну обработчики сообщений от мышки. См. <a href="#mouseevents" class="cmd">События от мыши</a>.
 </pre>
 <hr>
 <a name="panel"></a>
@@ -1214,7 +1215,51 @@ end
 <div class="cmd">render setRender(function f)</div> - возвращает объект, с помощью которого можно будет рисовать. Не работает, если окно используется 
 как контейнер. В качестве параметра выступает функция, которая будет вызываться клиентом в момент перерисовки окна. 
 В ней следует использовать объект render, который был получен в данной функции. см. <a href="#render" class="cmd">render</a>.
+<div class="cmd">void attachMouse(table t)</div> - подключает к окну обработчики сообщений от мышки. См. <a href="#mouseevents" class="cmd">События от мыши</a>.
 </pre>
+<hr>
+<a name="mouseevents"></a>
+<h4>События от мыши</h4>
+Дополнительные окна и панели плагинов поддерживают работу с мышкой. При необходимости можно задать обработчики событий мышки для нужного окна.
+Все обработчики должны быть объединены в одну общую таблицу, которую нужно передать в функцию <div class="cmd">window:attachMouse(t)</div> или <div class="cmd">panel:attachMouse(t)</div>.
+<pre>
+Поддерживаются следующие события:
+<div class="cmd">t.left(string e, int x, int y)</div>
+<div class="cmd">t.right(string e, int x, int y)</div>
+<div class="cmd">t.middle(string e, int x, int y)</div> - нажатия соответственно левой, правой и средней кнопки мышки. Событие приходит
+только тогда, когда клик мышкой  происходит непосредственно в окне. <div class="cmd">e</div> - тип нажатия на кнопку. Возможны следующие 
+значения: <div class="cmd">down</div>, <div class="cmd">up</div>, <div class="cmd">double</div>, что соотвествует нажатию, отпусканию или двойному клику кнопкой мыши.
+<div class="cmd">x, y</div> - координаты клика мышкой.
+
+<div class="cmd">t.move(int x, int y)</div> - координаты курсора мышки при его перемещении, когда он находится над окном плагина.
+<div class="cmd">t.leave()</div> - сообщение приходит, когда курсор покидает окно плагина.
+<div class="cmd">t.wheel(string dir)</div> - сообщение приходит, когда крутят колесо мышки над окном плагина. <div class="cmd">dir</div> - направление <div class="cmd">down</div> или <div class="cmd">up</div>.
+</pre>
+Достаточно объявить только нужные обработчики событий от мыши.<br><br>
+Пример:
+<div class="ee">
+<pre>
+local plugin = {}
+....
+
+local mouse = {}
+function mouse.left(e, x, y)
+  if e == "down" then
+    -- нажали левую кнопку
+  end
+end
+function mouse.move(x, y)
+  -- получаем координаты, когда двигается мышь
+end
+function mouse.leave()
+  -- мышь покинула окно
+end
+function plugin.init()
+  w = createWindow('Плагин А', 300, 300, true)
+  w:attachMouse(mouse)
+end
+</pre>
+</div><br>
 <hr>
 <a name="render"></a>
 <h4>render</h4>
