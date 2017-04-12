@@ -20,6 +20,7 @@ end
 local impl = {}
 function impl.alert(p)
   system.alert(p)
+  focusWindow()
 end
 
 local function runcmds(t)
@@ -88,7 +89,7 @@ end
 function impl.gmaskshow(p)
   local glist = select_groups(p)
   if #glist == 0 then
-    print('[gmask] Нет групп, соотвествующих регулярке')
+    print('[gmask] Нет групп, соотвествующих регулярке.')
     return
   end
   print('[gmask] Группы, которые соотвествуют регулярке:')

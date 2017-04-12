@@ -1355,6 +1355,21 @@ int flashWindow(lua_State *L)
     return pluginInvArgs(L, L"flashWindow");
 }
 
+int focusWindow(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 0))
+    {
+        HWND alarmWnd = _wndMain;
+        if (::IsWindow(alarmWnd))
+        {
+            ::SetFocus(_wndMain);
+        }
+        return 0;
+    }
+    return pluginInvArgs(L, L"focusWindow");
+}
+
 int regUnloadFunction(lua_State *L);
 
 int clearView(lua_State *L)
@@ -1570,6 +1585,7 @@ bool initPluginsSystem()
     lua_register(L, "showView", showView);
     lua_register(L, "hideView", hideView);
     lua_register(L, "flashWindow", flashWindow);
+    lua_register(L, "focusWindow", focusWindow);
     lua_register(L, "pluginName", pluginName);
     lua_register(L, "regUnloadFunction", regUnloadFunction);
     lua_register(L, "print", print);

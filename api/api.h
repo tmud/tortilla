@@ -210,6 +210,9 @@ namespace base {
     inline void flashWindow(lua_State *L) {
         luaT_run(L, "flashWindow", "");
     }
+    inline void focusWindow(lua_State *L) {
+        luaT_run(L, "focusWindow", "");
+    }
     inline bool saveTable(lua_State* L, const wchar_t* file) {
         if (lua_istable(L, -1))
         {

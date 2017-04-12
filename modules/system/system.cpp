@@ -104,13 +104,23 @@ void formatByType(lua_State* L, int index, std::wstring *buf)
     }
 }
 
+void wstring_replace(std::wstring *str, const std::wstring& what, const std::wstring& forr)
+{
+    size_t pos = 0;
+    while((pos = str->find(what, pos)) != std::wstring::npos)
+    {
+        str->replace(pos, what.length(), forr);
+        pos += forr.length();
+    }
+}
+
 int system_alert(lua_State *L)
 {
     std::wstring text;
     for (int i=1,e=lua_gettop(L);i<=e;++i)
     {
         if (i != 1)
-            text.append(L"\r\n");
+            text.append(L" ");
         std::wstring val;
         if (lua_istable(L, i))
         {
@@ -119,7 +129,7 @@ int system_alert(lua_State *L)
             {
                 formatByType(L, -1, &val);
                 text.append(val);
-                text.append(L"\r\n");
+                text.append(L" ");
                 lua_pop(L, 1);
             }
             continue;
@@ -127,9 +137,14 @@ int system_alert(lua_State *L)
         formatByType(L, i, &val);
         text.append(val);
     }
+    wstring_replace(&text, L"\\n", L"\r\n");
+
     AlertDlg *dlg = new AlertDlg();
     dlg->setText(text);
-    dlg->Create(NULL);
+    RECT rc;
+    rc.left = 0; rc.top = 0;
+    rc.bottom = 200; rc.right = 350;
+    dlg->Create(NULL, &rc, L"Alert", WS_POPUP|WS_CAPTION|WS_SYSMENU, WS_EX_TOPMOST);
     dlg->CenterWindow( base::getParent(L) );
     dlg->ShowWindow(SW_SHOW);
     return 0;
@@ -450,7 +465,6 @@ int luaopen_system(lua_State *L)
     luaL_newlib(L, system_methods);
     return 1;
 }
-
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
 {
