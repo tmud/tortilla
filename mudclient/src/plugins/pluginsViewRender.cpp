@@ -115,6 +115,107 @@ void PluginsViewRender::regImage(Image *img)
     images.push_back(img);
 }
 
+void PluginsViewRender::point(int x, int y)
+{
+    if (!m_inside_render)
+        return;
+    if (current_pen)
+        m_dc.SelectPen(*current_pen);
+    m_dc.MoveTo(x, y);
+}
+
+void PluginsViewRender::lineto(int x, int y)
+{
+    if (!m_inside_render)
+        return;
+    if (current_pen)
+        m_dc.SelectPen(*current_pen);
+    m_dc.LineTo(x, y);
+}
+
+void PluginsViewRender::ellipse(const RECT& r)
+{
+    if (!m_inside_render)
+        return;
+    if (!current_pen)
+         return;
+    m_dc.SelectPen(*current_pen);
+    m_dc.SelectStockBrush(NULL_BRUSH);
+    m_dc.Ellipse(&r);
+}
+
+void PluginsViewRender::solidEllipse(const RECT& r)
+{
+    if (!m_inside_render)
+       return;
+    if (!current_pen || !current_brush)
+        return;
+    m_dc.SelectPen(*current_pen);
+    m_dc.SelectBrush(*current_brush);
+    m_dc.Ellipse(&r);
+}
+
+void PluginsViewRender::solidEllipse(const RECT& r, COLORREF color)
+{
+    if (!m_inside_render)
+       return;
+    if (!current_pen)
+        return;
+    m_dc.SelectPen(*current_pen);
+    CBrush solid;
+    solid.CreateSolidBrush(color);
+    HBRUSH oldbrush = m_dc.SelectBrush(solid);
+    m_dc.Ellipse(&r);
+    m_dc.SelectBrush(oldbrush);
+}
+
+void PluginsViewRender::circle(int x, int y, int r)
+{
+    if (!m_inside_render)
+       return;
+    if (!current_pen)
+        return;
+    m_dc.SelectPen(*current_pen);
+    m_dc.SelectStockBrush(NULL_BRUSH);
+    RECT rc; calcRectForCircle(x, y, r, &rc);
+    m_dc.Ellipse(&rc);
+}
+
+void PluginsViewRender::solidCircle(int x, int y, int r)
+{
+    if (!m_inside_render)
+       return;
+    if (!current_pen || !current_brush)
+        return;
+    m_dc.SelectPen(*current_pen);
+    m_dc.SelectBrush(*current_brush);
+    RECT rc; calcRectForCircle(x, y, r, &rc);
+    m_dc.Ellipse(&rc);
+}
+
+void PluginsViewRender::solidCircle(int x, int y, int r, COLORREF color)
+{
+    if (!m_inside_render)
+       return;
+    if (!current_pen)
+        return;
+    m_dc.SelectPen(*current_pen);
+    CBrush solid;
+    solid.CreateSolidBrush(color);
+    HBRUSH oldbrush = m_dc.SelectBrush(solid);
+    RECT rc; calcRectForCircle(x, y, r, &rc);
+    m_dc.Ellipse(&rc);
+    m_dc.SelectBrush(oldbrush);
+}
+
+void PluginsViewRender::calcRectForCircle(int x, int y, int r, RECT *rc)
+{
+    rc->left = x - r;
+    rc->top = y - r;
+    rc->right = rc->left + r*2;
+    rc->bottom = rc->top + r*2;
+}
+
 void PluginsViewRender::drawRect(const RECT& r)
 {
     if (!m_inside_render)
@@ -191,6 +292,9 @@ int PluginsViewRender::print(const RECT& r, const tstring& text)
 
 void PluginsViewRender::update()
 {
+    // protect from cycles
+    if (m_inside_render)
+        return;
     m_wnd.Invalidate();
 }
 
@@ -403,6 +507,121 @@ int render_solidRect(lua_State *L)
     return pluginInvArgs(L, L"render:solidRect");
 }
 
+int render_point(lua_State *L)
+{
+    if (luaT_check(L, 3, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        int x = lua_tointeger(L, 2);
+        int y = lua_tointeger(L, 3);
+        r->point(x, y);
+        return 0;
+    }
+    return pluginInvArgs(L, L"render:point");
+}
+
+int render_lineTo(lua_State *L)
+{
+    if (luaT_check(L, 3, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        int x = lua_tointeger(L, 2);
+        int y = lua_tointeger(L, 3);
+        r->lineto(x, y);
+        return 0;
+    }
+    return pluginInvArgs(L, L"render:lineTo");
+}
+
+int render_ellipse(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        RECT rc;
+        ParametersReader pr(L);
+        if (!pr.getrect(&rc))
+             return pluginInvArgsValues(L, L"render:ellipse");       
+        r->ellipse(rc);
+        return 0;
+    }
+    return pluginInvArgs(L, L"render:ellipse");
+}
+
+int render_solidEllipse(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        RECT rc;
+        ParametersReader pr(L);
+        if (!pr.getrect(&rc))
+            return pluginInvArgsValues(L, L"render:solidEllipse");
+        COLORREF color;
+        if (pr.getcolor(&color)) {
+            r->solidEllipse(rc, color);
+        } else {
+            r->solidEllipse(rc);
+        }
+        return 0;
+    }
+    return pluginInvArgs(L, L"render:solidEllipse");
+}
+
+int render_circle(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        int x = 0; int y = 0; int radius = 0;
+        ParametersReader pr(L);
+        if (pr.getxy(&x, &y) && pr.getr(&radius))
+        {
+           r->circle(x, y, radius);
+           return 0;
+        }
+    }
+    if (luaT_check(L, 4, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        int x = lua_tointeger(L, 2);
+        int y = lua_tointeger(L, 3);
+        int radius = lua_tointeger(L, 4);
+        r->circle(x, y, radius);
+        return 0;
+    }
+    return pluginInvArgs(L, L"render:circle");
+}
+
+int render_solidCircle(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_RENDER, LUA_TTABLE))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        int x = 0; int y = 0; int radius = 0;
+        ParametersReader pr(L);
+        if (pr.getxy(&x, &y) && pr.getr(&radius))
+        {
+            COLORREF color;
+            if (pr.getcolor(&color))
+                r->solidCircle(x, y, radius, color);
+            else
+                r->solidCircle(x, y, radius);
+            return 0;
+        }
+    }
+    if (luaT_check(L, 4, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER, LUA_TNUMBER))
+    {
+        PluginsViewRender *r = (PluginsViewRender *)luaT_toobject(L, 1);
+        int x = lua_tointeger(L, 2);
+        int y = lua_tointeger(L, 3);
+        int radius = lua_tointeger(L, 4);
+        r->solidCircle(x, y, radius);
+        return 0;
+    }
+    return pluginInvArgs(L, L"render:solidCircle");
+}
+
 int render_print(lua_State *L)
 {
     if (luaT_check(L, 4, LUAT_RENDER, LUA_TNUMBER, LUA_TNUMBER, LUA_TSTRING))
@@ -541,6 +760,12 @@ void reg_mt_render(lua_State *L)
     regFunction(L, "select", render_select);
     regFunction(L, "rect", render_rect);
     regFunction(L, "solidRect", render_solidRect);
+    regFunction(L, "point", render_point);
+    regFunction(L, "lineTo", render_lineTo);
+    regFunction(L, "ellipse", render_ellipse);
+    regFunction(L, "solidEllipse", render_solidEllipse);
+    regFunction(L, "circle", render_circle);
+    regFunction(L, "solidCircle", render_solidCircle);
     regFunction(L, "print", render_print);
     regFunction(L, "drawImage", render_drawImage);
     regFunction(L, "update", render_update);

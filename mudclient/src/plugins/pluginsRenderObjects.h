@@ -25,7 +25,7 @@ public:
     T* create(lua_State *L)
     {
         if (!lua_istable(L, -1))
-            return NULL;        
+            return NULL;
         F factory(L);
         int index = find(factory.key);
         if (index != -1)
@@ -139,7 +139,7 @@ public:
             get(L"b", 0, 255, &b);
             *color = RGB(r, g, b);
             result = true;
-        }      
+        }
         lua_pop(L, 1);
         return result;
 
@@ -187,6 +187,15 @@ public:
     bool getxy(int *x, int *y)
     {
         if (get(L"x", x) && get(L"y", y))
+            return true;
+        return false;
+    }
+
+    bool getr(int *r)
+    {
+        if (get(L"r", r))
+            return true;
+        if (get(L"radius", r))
             return true;
         return false;
     }
