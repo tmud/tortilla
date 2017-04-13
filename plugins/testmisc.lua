@@ -13,7 +13,8 @@ function testmisc.description()
 end
 
 function testmisc.init()
-  print('viewdata and viewstring unit tests')
+  runCommand('#wait 0.5 {#out viewdata and viewstring unit tests}')
+  runCommand('#wait 1.5 {#out {light green} 123 {red}  456 789}')
 end
 
 local function assert(s1, s2, m)
