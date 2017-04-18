@@ -7,7 +7,7 @@ class VarProcessorImpl
 {
     std::map<tstring, int> m_specvars;
     typedef std::map<tstring, int>::const_iterator citerator;
-    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP };
+    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP, POINTVAR, UNDERLINEVAR, EMPTY, DOLLAR };
     Pcre16 m_vars_regexp;
     Pcre16 m_var_regexp;
 public:
@@ -100,7 +100,11 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"SECOND"] = SECOND;
     v[L"MILLISECOND"] = MILLISECOND;
     v[L"TIMESTAMP"] = TIMESTAMP;
-    m_vars_regexp.setRegExp(L"\\$[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*", true);
+    v[L"."] = POINTVAR;
+    v[L"_"] = UNDERLINEVAR;
+    v[L"!"] = EMPTY;
+    v[L"$"] = DOLLAR;
+    m_vars_regexp.setRegExp(L"\\$[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*|\\$.|\\$!|\\$\\$", true);
     m_var_regexp.setRegExp(L"^[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*$", true);
 }
 
@@ -197,6 +201,26 @@ bool VarProcessorImpl::getVar(const PropertiesValues &vars, const tstring& var, 
 void VarProcessorImpl::getSpecVar(int id, tstring *value) const
 {
     wchar_t buffer[24];
+    if (id == POINTVAR)
+    {
+        value->assign(L".");
+        return;
+    }
+    if (id == UNDERLINEVAR)
+    {
+        value->assign(L"_");
+        return;
+    }
+    if (id == EMPTY) 
+    {
+        value->assign(L"");
+        return;
+    }
+    if (id == DOLLAR)
+    {
+        value->assign(L"$");
+        return;
+    }
     if (id == TIMESTAMP)
     {
         SYSTEMTIME st;
