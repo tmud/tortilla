@@ -651,7 +651,7 @@ int loadTableLua(lua_State* L, const tstring& filename)
     else {
         lua_pop(L, 1);
     }
-    env.clear();
+    //env.clear();
     return 1;
 }
 
@@ -902,6 +902,17 @@ int saveTable(lua_State *L)
        pluginMethodError(L"saveTable", tmp.c_str());
        return 0;
     }
+
+    // remove enviroment
+    LuaEnviroment env(L);
+    env.add("pairs");
+    env.add("ipairs");
+    env.add("log");
+    env.add("createPcre");
+    env.add("table");
+    env.add("props");
+    lua_pop(L, 1);
+    env.clear();
 
     // recursive cycles in table
     struct saveDataNode
