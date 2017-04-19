@@ -13,6 +13,7 @@ private:
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
+		COMMAND_ID_HANDLER(IDOK, OnClick)
    END_MSG_MAP()
 
    LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -29,6 +30,12 @@ private:
    {
        return 0;
    }
+
+	LRESULT OnClick(WORD, WORD, HWND, BOOL&)
+	{
+	
+		return 0;
+	}
 };
 
 
@@ -41,11 +48,17 @@ private:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)        
+		MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
    END_MSG_MAP()
 
    void setText(const std::wstring& text)
    {
         //m_text = text;
+   }
+
+   LRESULT OnKeyDown(UINT, WPARAM, LPARAM, BOOL&)
+   {
+	   return 0;
    }
 
    LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
