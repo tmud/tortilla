@@ -752,6 +752,7 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         cmd->command.clear();
         cmd->parameters.clear();
         cmd->parameters_list.clear();
+        cmd->parameters_spacesbefore.clear();
         cmd->changed =  true;
         return;
     }
@@ -773,6 +774,7 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         return;
 
     cmd->parameters_list.clear();
+    cmd->parameters_spacesbefore.clear();
     tstring symbols(L"{}\"' ");
     tstring params;
     for (int i=1,e=parts.size();i<e;++i)

@@ -182,10 +182,12 @@ void InputTemplateCommands::makeTemplates()
 {
     for (int i=0,e=size(); i<e; ++i)
     {
-        if (at(i).system)   // маркируем только системные
-        { 
-            bool markered = markbrackets(&at(i).templ);
-            at(i).markered = markered;
+        InputSubcmd &scmd = at(i);
+        if (scmd.system)   // маркируем только системные
+        {
+            bool markered = markbrackets(&scmd.templ);
+            scmd.markered = markered;
+            parsespaces(scmd);
         }
     }
 }
@@ -270,6 +272,9 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
             if (!subcmd.markered)
                 markbrackets(&cmd->parameters);
             fillsyscmd(cmd);
+            cmd->parameters_spacesbefore.resize(subcmd.spaces_before.size());
+            std::copy(subcmd.spaces_before.begin(), subcmd.spaces_before.end(), cmd->parameters_spacesbefore.begin());
+            assert (cmd->parameters_list.size()+1 == cmd->parameters_spacesbefore.size());
         }
         else
             fillgamecmd(cmd);
@@ -304,6 +309,7 @@ void InputTemplateCommands::fillgamecmd(InputCommand cmd)
             p = p.substr(1);
         }
     }
+    cmd->parameters_spacesbefore.clear();
 }
 
 void InputTemplateCommands::parsecmd(const tstring& cmd)
@@ -490,6 +496,42 @@ bool InputTemplateCommands::markbrackets(tstring *cmd) const
         newp.append(b);
     cmd->swap(newp);
     return marker_used;
+}
+
+void InputTemplateCommands::parsespaces(InputSubcmd& cmd)
+{
+    std::vector<int> &sb = cmd.spaces_before;
+    sb.clear();
+    const tstring& t = cmd.templ;
+    if (t.empty()) return;
+    const tchar *p = t.c_str();
+    const tchar *e = p + t.length();
+    if (*p == L' ') {
+        assert(false);
+        return;
+    }
+    while (p != e)
+    {
+       while (p != e && *p != L' ') p++;
+       if (p == e) {
+           sb.push_back(0);
+           break;
+       }
+       const tchar *s = p;
+       while (s != e && *s == L' ') s++;
+       sb.push_back(s-p);
+       p = s;
+       if (*s == MARKER) {
+          s++;
+          while(s != e && *s != MARKER) s++;
+          if (s == e) {
+              sb.clear();
+              assert(false);
+              return;
+          }
+          p = s;
+       }
+    }
 }
 
 void InputTemplateCommands::unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const

@@ -182,6 +182,7 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
+    void printex(int view, const parser* p, bool enable_actions_subs);
     void printex(int view, const std::vector<tstring>& params, bool enable_actions_subs);
     DEF(wprint);
     DEF(print);

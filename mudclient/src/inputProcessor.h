@@ -62,6 +62,7 @@ struct InputCommandData
     tstring command;                        // command without spaces and prefix
     tstring parameters;                     // only parameters (without command) as single line (without trimming)
     std::vector<tstring> parameters_list;   // list of parameters separately
+    std::vector<int> parameters_spacesbefore;// number of spaces after parameter and before next parameter (sys cmds only), vector can be empty
     tstring alias;                          // first alias (used in aliases)
     bool dropped;
     bool system;
@@ -143,6 +144,7 @@ struct InputSubcmd
     tstring templ;
     bool system;
     bool markered;
+    std::vector<int> spaces_before;
 };
 class InputTemplateCommands : private std::vector<InputSubcmd>
 {
@@ -160,11 +162,12 @@ private:
     void fillgamecmd(InputCommand cmd);
     void parsecmd(const tstring& cmd);
     bool markbrackets(tstring *cmd) const;
-    void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
+    void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;    
     bool isbracket(const tchar *p) const;
     bool isopenorspace(const tchar *p) const;
     bool iscloseorspace(const tchar *p) const;
     bool isbracketorspace(const tchar *p) const;
+    void parsespaces(InputSubcmd& cmd);
 };
 
 class InputCommandsVarsFilter

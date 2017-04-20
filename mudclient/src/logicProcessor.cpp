@@ -194,7 +194,7 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
 
         int repeats = 0;
         w2int(cmd->command, &repeats);
-        std::vector<tstring>& p = cmd->parameters_list;
+        const std::vector<tstring>& p = cmd->parameters_list;
         if (repeats == 0)
         {
             m_commands_queue.clear();

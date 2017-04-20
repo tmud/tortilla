@@ -17,6 +17,8 @@ public:
     parser(InputCommand pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
     int size() const { return cmd->parameters_list.size(); }
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
+    int spacesBefore(int index) const { int count = cmd->parameters_spacesbefore.size();
+        return (index >= 0 && index < count) ? cmd->parameters_spacesbefore[index] : 0; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
     const tstring& params() const { return cmd->parameters; }
     bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isInt(p); }
@@ -88,14 +90,6 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
 {
     tstring error, main_cmd(cmd->command);
     recognizeSystemCommand(&main_cmd, &error);
-
-    //todo!
-    /*if (error.empty() && (main_cmd == L"output" || main_cmd == L"woutput"))
-    {
-        Tokenizer t(cmd->parameters.c_str(), L" ");
-        t.trimempty();
-        t.moveto(&cmd->parameters_list);
-    }*/
 
     PropertiesData *pdata = tortilla::getProperties();
     tchar prefix[2] = { pdata->cmd_prefix, 0 };
@@ -1051,7 +1045,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
-        if (!last_color_teg && tc.checkText(&p))    // it color teg
+        if (!last_color_teg && tc.checkText(&p))    // it is color teg
         {
             last_color_teg = true;
             PropertiesHighlight hl;
@@ -1088,6 +1082,30 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     printIncoming(data, flags, view);
 }
 
+void LogicProcessor::printex(int view, const parser* p, bool enable_actions_subs)
+{
+      std::vector<tstring> params;
+      int n = p->size();
+      params.resize(n);
+      for (int i=0; i<n; ++i)
+      {
+          int spaces = p->spacesBefore(i);
+          if (spaces > 1) {
+              tstring tmp(spaces-1, L' ');
+              tmp.append(p->at(i));
+              params[i].assign(tmp);
+          } else {
+              params[i].assign(p->at(i));
+          }
+      }
+      int last = p->spacesBefore(n);
+      if (last > 0) {
+          tstring tmp(last-1, L' ');
+          params.push_back(tmp);
+      }
+      printex(view, params, enable_actions_subs);
+}
+
 IMPL(wprint)
 {
     int n = p->size();
@@ -1096,11 +1114,7 @@ IMPL(wprint)
         int window = p->toInteger(0);
         if (window < 0 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 0, window);
-        std::vector<tstring> data;
-        data.resize(n-1);
-        for (int i=1; i<n; ++i)
-            data[i-1].assign(p->at(i));
-        return printex(window, data, false);
+        return printex(window, p, false);
     }
     p->invalidargs();
 }
@@ -1110,11 +1124,7 @@ IMPL(print)
     int n = p->size();
     if (n >= 0)
     {
-        std::vector<tstring> data;
-        data.resize(n);
-        for (int i=0; i<n; ++i)
-            data[i].assign(p->at(i));
-        return printex(0, data, true);
+        return printex(0, p, true);
     }
     p->invalidargs();
 }
