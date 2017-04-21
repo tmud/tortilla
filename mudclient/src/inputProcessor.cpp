@@ -269,12 +269,16 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
 
         if (cmd->system)
         {
-            if (!subcmd.markered)
-                markbrackets(&cmd->parameters);
+            bool markered =subcmd.markered;
+            if (!markered)
+              markered = markbrackets(&cmd->parameters);
             fillsyscmd(cmd);
-            cmd->parameters_spacesbefore.resize(subcmd.spaces_before.size());
-            std::copy(subcmd.spaces_before.begin(), subcmd.spaces_before.end(), cmd->parameters_spacesbefore.begin());
-            assert (cmd->parameters_list.size()+1 == cmd->parameters_spacesbefore.size());
+            cmd->parameters_spacesbefore.clear();
+            if (markered && (cmd->parameters_list.size()+1 == subcmd.spaces_before.size()) )
+            {
+                cmd->parameters_spacesbefore.resize(subcmd.spaces_before.size());
+                std::copy(subcmd.spaces_before.begin(), subcmd.spaces_before.end(), cmd->parameters_spacesbefore.begin());
+            }
         }
         else
             fillgamecmd(cmd);

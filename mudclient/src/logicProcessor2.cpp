@@ -1082,12 +1082,12 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     printIncoming(data, flags, view);
 }
 
-void LogicProcessor::printex(int view, const parser* p, bool enable_actions_subs)
+void LogicProcessor::printex(int view, const parser* p, int from, bool enable_actions_subs)
 {
       std::vector<tstring> params;
       int n = p->size();
       params.resize(n);
-      for (int i=0; i<n; ++i)
+      for (int i=from; i<n; ++i)
       {
           int spaces = p->spacesBefore(i);
           if (spaces > 1) {
@@ -1114,7 +1114,7 @@ IMPL(wprint)
         int window = p->toInteger(0);
         if (window < 0 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 0, window);
-        return printex(window, p, false);
+        return printex(window, p, 1, false);
     }
     p->invalidargs();
 }
@@ -1124,7 +1124,7 @@ IMPL(print)
     int n = p->size();
     if (n >= 0)
     {
-        return printex(0, p, true);
+        return printex(0, p, 0, true);
     }
     p->invalidargs();
 }
