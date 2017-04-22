@@ -137,16 +137,18 @@ int system_alert(lua_State *L)
         formatByType(L, i, &val);
         text.append(val);
     }
-    wstring_replace(&text, L"\\n", L"\r\n");
+	wstring_replace(&text, L"\r", L"");
+	wstring_replace(&text, L"\n", L"");
+    wstring_replace(&text, L"\\n", L"\n");
 
     AlertDlg *dlg = new AlertDlg();
-    dlg->setText(text);
     RECT rc;
     rc.left = 0; rc.top = 0;
     rc.bottom = 200; rc.right = 350;
     dlg->Create(NULL, &rc, L"Alert", WS_POPUP|WS_CAPTION|WS_SYSMENU, WS_EX_TOPMOST);
     dlg->CenterWindow( base::getParent(L) );
     dlg->ShowWindow(SW_SHOW);
+	dlg->setText(text);
     return 0;
 }
 
