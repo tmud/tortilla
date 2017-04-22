@@ -107,6 +107,7 @@
     <ResourceCompile Include="system.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="mudclient.ico" />
     <Image Include="warn.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
