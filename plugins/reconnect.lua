@@ -7,6 +7,9 @@ local max_count = 10
 -- Таймаут, при котором обрывается связь, если не поступают игровые данные от мад сервера
 local timeout = 180
 
+-- Переподключатся, если окно клиента активно в момент обрыва соединения (1 - да, 0 - нет)
+local active_mode = 1
+
 local reconnect = {}
 function reconnect.name() 
     return 'Автореконнект'
@@ -26,7 +29,7 @@ function reconnect.description()
 end
 
 function reconnect.version()
-    return '1.06'
+    return '1.07'
 end
 
 local connected = false
@@ -35,6 +38,7 @@ local port = nil
 local attempts = 0
 local timeout_seconds = 0
 local timeout_disconnect = false
+
 local function flash()
   if not props.activated() then
     flashWindow()
@@ -72,6 +76,13 @@ function reconnect.disconnect()
        flash()
        return
     end
+  end
+  if active_mode ~= 1 then
+    if props.activated() then 
+	  connected = false
+	  timeout_disconnect = false
+	  return 
+	end
   end
   local p = props.cmdPrefix()
   local cmd = p..'output Переподключение('..attempts..')...'
