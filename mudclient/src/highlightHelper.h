@@ -19,6 +19,7 @@ public:
     bool checkText(tstring* param)
     {
         tstring tmp(*param);
+        if (tmp.empty()) return false;
         tstring_tolower(&tmp);
         preprocessColors(tmp);
 
@@ -177,5 +178,17 @@ class HighlightHelper
 {
    static HighlightHelperImpl m_impl;
 public:
-   bool checkText(tstring* param);
+   bool translateColor(tstring* param);
+};
+
+class SubHighlightHelper
+{
+public:
+    SubHighlightHelper(const tstring& s);
+    int  size() const;
+    const tstring& get(int index);
+    bool trimColor(int index, tstring* trimmed);
+private:
+    std::vector<tstring> parts;
+    static Pcre16 m_regexp;
 };

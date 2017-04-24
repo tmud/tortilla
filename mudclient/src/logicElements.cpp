@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "accessors.h"
 #include "logicElements.h"
+#include "highlightHelper.h"
 
 CompareData::CompareData(MudViewString *s) : string(s), start(0)
 {
@@ -406,6 +407,38 @@ bool Sub::processing(CompareData& data)
             newb.push_back(b);
         }
     }
+
+    // translate embedded colors
+    std::vector<MudViewStringBlock> embed;
+    HighlightHelper hh;
+    PropertiesHighlight ph;
+    MudViewStringBlock nb;
+    for (int j=0,je=newb.size(); j<je; ++j)
+    {
+        nb.params = newb[j].params;
+        SubHighlightHelper sp( newb[j].string );
+        for (int i=0,e=sp.size();i<e;++i)
+        {
+            tstring p;
+            if (sp.trimColor(i, &p) && hh.translateColor(&p))
+            {
+                ph.convertFromString(p);
+                MudViewStringParams &c = nb.params;
+                c.ext_text_color = ph.textcolor;
+                c.ext_bkg_color = ph.bkgcolor;
+                c.blink_status = ph.border;
+                c.italic_status = ph.italic;
+                c.underline_status = ph.underlined;
+                c.use_ext_colors = 1;
+            }
+            else
+            {
+                nb.string = sp.get(i);
+                embed.push_back(nb);
+            }
+        }
+    }
+    newb.swap(embed);
 
     // translate vars
     InputVarsAccessor va;

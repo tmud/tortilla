@@ -1448,7 +1448,7 @@ int translateColors(lua_State *L)
     {
         tstring p(luaT_towstring(L, 1));
         HighlightHelper hh;
-        if (!hh.checkText(&p))
+        if (!hh.translateColor(&p))
             return 0;
         COLORREF text = lua_tounsigned(L, 2);
         COLORREF bgnd = lua_tounsigned(L, 3);

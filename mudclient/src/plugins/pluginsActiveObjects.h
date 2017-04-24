@@ -377,7 +377,7 @@ public:
     {
         if (param == luaT_ActiveObjects::VALUE)
         {
-            if (!hh.checkText(&value))
+            if (!hh.translateColor(&value))
                 return false;
             return true;
         }
@@ -419,7 +419,7 @@ private:
             return false;
         tstring color(value);
         tstring_replace(&color, L",", L" "); 
-        if (!hh.checkText(&color))  // Highlight helper
+        if (!hh.translateColor(&color))  // Highlight helper
             return false;
         add3group(index, key, color.c_str(), group);
         return true;

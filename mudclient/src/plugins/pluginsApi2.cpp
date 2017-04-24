@@ -711,7 +711,7 @@ int vd_setBlockColor(lua_State *L)
                     return 1;
                 }
                 HighlightHelper hh;
-                if (hh.checkText(&color))
+                if (hh.translateColor(&color))
                 {
                     PropertiesHighlight hl;
                     hl.convertFromString(color);
@@ -1577,7 +1577,7 @@ int vs_setBlockColor(lua_State *L)
                 return 1;
             }
             HighlightHelper hh;
-            if (hh.checkText(&color))
+            if (hh.translateColor(&color))
             {
                 PropertiesHighlight hl;
                 hl.convertFromString(color);

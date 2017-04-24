@@ -43,7 +43,7 @@ class HighlightTestControl : public TestControl
     HighlightHelper m_hh;
 public:
     bool checkPattern(tstring* param) { return true; }
-    bool checkText(tstring* param) { return m_hh.checkText(param); }
+    bool checkText(tstring* param) { return m_hh.translateColor(param); }
 };
 
 class MethodsHelper
