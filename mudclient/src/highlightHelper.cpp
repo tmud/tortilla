@@ -11,7 +11,7 @@ Pcre16 SubHighlightHelper::m_regexp;
 SubHighlightHelper::SubHighlightHelper(const tstring& s)
 {
     if (!m_regexp.valid())
-        m_regexp.setRegExp(L"(?:^| )['{\"].*?['}\"] ", true);
+        m_regexp.setRegExp(L"(?:^| )['{\"][^{}'\"]*?['}\"] ", true);
     m_regexp.findAllMatches(s);
     int count = m_regexp.getSize();
     if (count == 0) {
