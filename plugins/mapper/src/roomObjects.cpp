@@ -50,7 +50,7 @@ Room* Rooms3dCube::get(const Rooms3dCubePos& p) const
 
 Room** Rooms3dCube::getp(const Rooms3dCubePos& p) const
 {
-    if (!checkCoods(p))
+    if (!checkCoords(p))
         return NULL;
     int z = p.z - cube_size.minlevel;
     assert(z>=0 && z<(int)zone.size());
@@ -65,7 +65,7 @@ Room** Rooms3dCube::getp(const Rooms3dCubePos& p) const
 
 bool Rooms3dCube::extends(const Rooms3dCubePos& p)
 {
-    if (checkCoods(p))
+    if (checkCoords(p))
         return true;
     //1. extends rows on all levels (y)
     extends_height(p);
@@ -170,7 +170,7 @@ void Rooms3dCube::collapse(const Rooms3dCubePos& p)
     }
 }
 
-bool Rooms3dCube::checkCoods(const Rooms3dCubePos& p) const
+bool Rooms3dCube::checkCoords(const Rooms3dCubePos& p) const
 {
     if (p.z >= cube_size.minlevel && p.z <= cube_size.maxlevel)
     {

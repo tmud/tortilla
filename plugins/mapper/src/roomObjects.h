@@ -34,7 +34,7 @@ struct Room
     Room() : icon(0), use_color(0), color(0) {}
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
-    Rooms3dCubePos pos;             // relative position in the level (x,y >= 0), level and zone id(>=0(
+    Rooms3dCubePos pos;             // relative position in the level x,y,level,zoneid. all >= 0
     mutable int icon;               // icon if exist
     mutable int use_color;          // flag for use background color
     mutable COLORREF color;         // background color
@@ -87,7 +87,7 @@ private:
     void extends_height(const Rooms3dCubePos& p);
     void extends_width(const Rooms3dCubePos& p);
     void extends_levels(const Rooms3dCubePos& p);
-    bool checkCoods(const Rooms3dCubePos& p) const;
+    bool checkCoords(const Rooms3dCubePos& p) const;
     void collapse(const Rooms3dCubePos& p);
 private:
     struct row {

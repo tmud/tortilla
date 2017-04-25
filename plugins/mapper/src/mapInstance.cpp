@@ -106,18 +106,16 @@ bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
     Rooms3dCubePos pos = from->pos;
     if (!pos.move(dir))
         return false;
-    Rooms3dCube * zone = zones[from->pos.zid ];
-    
+    Rooms3dCube* zone = zones[ pos.zid ];
     Rooms3dCube::AR_STATUS s = zone->addRoom(pos, next);
     if (s == Rooms3dCube::AR_OK)
         return true;
-    if (s == Rooms3dCube::AR_INVALIDROOM || s == Rooms3dCube::AR_FAIL)
-    {
+    if (s == Rooms3dCube::AR_INVALIDROOM || s == Rooms3dCube::AR_FAIL) {
+		assert(false);
         return false;
     }
      if (s != Rooms3dCube::AR_BUSY)
          return false;
-    
     // create new zone
     if (!addNewZoneAndRoom(next)) {
         return false;
@@ -162,14 +160,16 @@ Rooms3dCube* MapInstance::findZone(const tstring& name)
 bool MapInstance::isMultiExit(Room* from, RoomDir dir)
 {
     if (!from || dir == RD_UNKNOWN) {
-        assert(false);  return false;
+        assert(false);
+		return false;
     }
     return from->dirs[dir].multiexit;
 }
 bool MapInstance::setMultiExit(Room* from, RoomDir dir)
 {
     if (!from || dir == RD_UNKNOWN) {
-        assert(false);  return false;
+        assert(false);
+		return false;
     }
     from->dirs[dir].multiexit = true;
     from->dirs[dir].next_room = NULL;
