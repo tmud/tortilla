@@ -146,6 +146,17 @@ void MapInstance::removeRoomFromHashTable(Room *r)
     rooms_hash_table.erase(it);
 }
 //-------------------------------------------------------------------------------------
+Rooms3dCube* MapInstance::findZone(int zid)
+{
+    zone_iterator zt = zones.begin(), zt_end = zones.end();
+    for(; zt!=zt_end; ++zt) {
+        Rooms3dCube* zone = *zt;
+        if ( zone->id() == zid )
+            return zone;
+    }
+    return NULL;
+}
+
 Rooms3dCube* MapInstance::findZone(const tstring& name)
 {
     zone_iterator zt = zones.begin(), zt_end = zones.end();

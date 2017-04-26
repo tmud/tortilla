@@ -225,10 +225,19 @@ void Mapper::onZoneChanged()
 
 void Mapper::onRenderContextMenu(int id)
 {
+    const Room* room = m_view.menuTrackedRoom();
+    if (!room) {
+        assert(false);
+        return;
+    }
+    RoomDirHelper dh;
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
-        RoomDir dir = (RoomDir)(id - MENU_NEWZONE_NORTH);
-        RoomMergeTool t;
-        //t.init(m_map.)
+        RoomMergeTool t(&m_map, room);
+        RoomDir dir = dh.cast(id - MENU_NEWZONE_NORTH);
+        bool result = t.makeNewZone(dir);
+        if (!result) {
+            //MessageBox        
+        }
     }
 }

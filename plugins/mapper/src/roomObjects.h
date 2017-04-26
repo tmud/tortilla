@@ -56,12 +56,13 @@ struct Rooms3dCubeSize
     int left, right, top, bottom;
     int width() const { return right-left+1; }
     int height() const { return bottom-top+1; }
-    int levels() const { return maxlevel-minlevel+1; }
+    int levels() const { return maxlevel-minlevel+1; }    
 };
 
 class Rooms3dCube
 {
     friend class Rooms3dCubeCursor;
+    friend class RoomMergeTool;
 public:
     Rooms3dCube(int zid, const tstring& name) : z_id(zid), m_name(name) {
         assert(zid >= 0);

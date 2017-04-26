@@ -7,6 +7,7 @@ class MapInstance
 {
     friend class MapCursorImplementation;
     friend class MapZoneCursorImplementation;
+    friend class RoomMergeTool;
 public:
     MapInstance();
     ~MapInstance();
@@ -20,6 +21,7 @@ public:
     //void loadMaps(lua_State *L);
 
 private:
+    Rooms3dCube* findZone(int zid);
     Rooms3dCube* findZone(const tstring& name);
     bool  isMultiExit(Room* from, RoomDir dir);
     bool  setMultiExit(Room* from, RoomDir dir);
