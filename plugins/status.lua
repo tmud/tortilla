@@ -1,39 +1,30 @@
 ﻿-- status
 -- Плагин для Tortilla mud client
 
--- Местоположение в окне клиента "top" или "bottom"
-local position = "bottom"
-
--- Количество панелей. Чем больше панелей, тем меньше информации вмещает каждая панель
-local count = 7
-
 local status = {}
 function status.name()
-    return 'Панель статусов'
+  return 'Панель статусов'
 end
 
+local count = 0
 function status.description()
-    local p=props.cmdPrefix()
-    local s = 'Плагин создает панель с миниокнами, куда можно выводить дополнительную информацию.\r\n'
-    s = s..'Добавляет команду '..p..'status {номер окна} {text} [{цвет}]\r\n'
-    s = s..'Цвет не обязательный параметр. Он задается в формате клиента (см. справку #help color).\r\n'
-    s = s..'Плагин повторяет функционал панели статусов мад-клиента jmc3.\r\n'
-    s = s..'Количество миниокон: '..count..'. Количество можно изменить в файле плагина plugins/status.lua'
-    return s
+  local p=props.cmdPrefix()
+  local s = { 'Плагин создает панель с миниокнами, куда можно выводить дополнительную информацию.',
+  'Добавляет команду '..p..'status {номер окна} {text} [{цвет}]',
+  'Цвет - это не обязательный параметр. Он задается в формате клиента (см. справку #help color).',
+  'Плагин повторяет функционал панели статусов мад-клиента jmc3.',
+  'Он также умеет отчитывать время между тиками. Количество миниокон: '..count..'.',
+  'Настройки задаются в файле: '..getPath('config.lua') }
+  return table.concat(s, '\r\n')
 end
 
 function status.version()
-    return '1.02'
+  return '1.06'
 end
 
 local r
 local delta = 8
 local panels = {}
-
-function status.connect()
-  panels = {}
-  r:update()
-end
 
 local function render()
   local h = r:fontHeight()
@@ -84,13 +75,90 @@ function status.syscmd(t)
   return nil
 end
 
+local ticker_on, ticker_window, ticker_seconds, ticker_restart
+local ticker_panel = { text = '', tcolor = props.paletteColor(7), color = props.backgroundColor() }
+
+local function set_ticker(t)
+  if ticker_on then
+    ticker_panel.text = t
+    panels[ticker_window] = ticker_panel
+    r:update()
+  end
+end
+
+local counter, start_time
+
+local function start_new_tick()
+  start_time = system.getTicks()
+end
+
+function status.tick()
+  if start_time then
+    local time = system.getTicks()
+    if time >= start_time then
+      counter = math.floor( (time - start_time) / 1000 )
+      counter = ticker_seconds - counter
+      if counter < 0 then counter = 0 end
+    else
+      counter = 0
+    end
+    set_ticker(''..counter)
+    if counter == 0 and ticker_restart then
+      start_new_tick()
+    end
+  else
+    counter = nil
+  end
+end
+
+function status.connect()
+  panels = {}
+  set_ticker('ticker')
+end
+
+function status.disconnect()
+  set_ticker('')
+end
+
 function status.init()
-  local p = createPanel(position, 28)
+  local function term(t) terminate("Некорректый параметр '"..t.."', "..getPath('config.lua')) end
+  ticker_on = false
+  local t = loadTable('config.lua')
+  if not t then terminate('Нет файла настроек '..getPath('config.lua')..'.') end
+  if not t.position or (t.position ~= 'top' and t.position ~= 'bottom') then term('position') end
+  if not t.count or type(t.count) ~= 'number' or t.count < 1 then term('count') end
+  if t.ticker then
+    if type(t.ticker) ~= 'string' and type(t.ticker) ~= 'table' then term('ticker') end
+    if type(t.ticker) == 'string' and t.ticker == '' then term('ticker') end
+    if type(t.ticker) == 'table' and #t.ticker == 0 then term('ticker') end
+    if not t.ticker_seconds or type(t.ticker_seconds) ~= 'number' or t.ticker_seconds < 1 then term('ticker_seconds') end
+    if not t.ticker_window or type(t.ticker_window) ~= 'number' or t.ticker_window < 1 or t.ticker_window > t.count then term('ticker_window') end
+    if t.ticker_color and type(t.ticker_color) ~= 'string' then term('ticker_color') end
+    local trigs = t.ticker
+    if type(trigs) == 'string' then trigs = { trigs } end
+    local fail = 0
+    for _,s in pairs(trigs) do
+      if not createTrigger(s, start_new_tick) then 
+        log('Ошибка в триггере для тикера (работать не будет): '..s)
+        fail = fail + 1
+      end
+    end
+    if fail == #trigs then term('ticker') end
+    ticker_restart = t.ticker_restart
+    ticker_seconds = t.ticker_seconds
+    ticker_window = t.ticker_window
+    ticker_panel.tcolor, ticker_panel.color = translateColors(t.ticker_color, ticker_panel.tcolor, ticker_panel.color)
+    ticker_on = true
+  end
+  count = t.count
+  local font = props.currentFontHeight()+2
+  local p = createPanel(t.position, font)
   r = p:setRender(render)
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(7))
   r:select(props.currentFont())
   addCommand('status')
+  set_ticker('ticker')
 end
 
 return status

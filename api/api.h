@@ -210,9 +210,20 @@ namespace base {
     inline void flashWindow(lua_State *L) {
         luaT_run(L, "flashWindow", "");
     }
-    inline void saveTable(lua_State* L, const wchar_t* file) {
+    inline void focusWindow(lua_State *L) {
+        luaT_run(L, "focusWindow", "");
+    }
+    inline bool saveTable(lua_State* L, const wchar_t* file) {
         if (lua_istable(L, -1))
-            luaT_run(L, "saveTable", "rs", file);
+        {
+           luaT_run(L, "saveTable", "rs", file);
+           if (lua_isboolean(L, -1)) {
+              int result = lua_toboolean(L, -1);
+              lua_pop(L, 1);
+              return result ? true : false;
+           }
+        }
+        return false;
     }
     inline bool loadTable(lua_State* L, const wchar_t* file) {
         luaT_run(L, "loadTable", "s", file);
@@ -281,30 +292,30 @@ class luaT_window
     void *window;
 public:
     luaT_window() : L(NULL), window(NULL) {}
-	bool create(lua_State *pL, const wchar_t* caption, int width, int height, bool visible)
-	{
-		if (!pL)
+    bool create(lua_State *pL, const wchar_t* caption, int width, int height, bool visible)
+    {
+        if (!pL)
             return false;
-		L = pL;
-		luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
-		void *wnd = luaT_toobject(L, -1);
-		if (!wnd)
-			return false;
-		window = wnd;
-		return true;
-	}
-	bool create(lua_State *pL, const wchar_t* caption, int width, int height)
-	{
-		if (!pL)
-			return false;
-		L = pL;
-		luaT_run(L, "createWindow", "sdd", caption, width, height);
-		void *wnd = luaT_toobject(L, -1);
-		if (!wnd)
-			return false;
-		window = wnd;
-		return true;
-	}
+        L = pL;
+        luaT_run(L, "createWindow", "sddb", caption, width, height, visible);
+        void *wnd = luaT_toobject(L, -1);
+        if (!wnd)
+            return false;
+        window = wnd;
+        return true;
+    }
+    bool create(lua_State *pL, const wchar_t* caption, int width, int height)
+    {
+        if (!pL)
+            return false;
+        L = pL;
+        luaT_run(L, "createWindow", "sdd", caption, width, height);
+        void *wnd = luaT_toobject(L, -1);
+        if (!wnd)
+            return false;
+        window = wnd;
+        return true;
+    }
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
@@ -419,15 +430,15 @@ public:
     luaT_ViewString() : L(NULL), view_string(NULL) {}
     void init(lua_State *pL, void *viewstring) { L = pL; view_string = viewstring; }    
     bool create(lua_State *pL)
-	{
-		if (!pL)
+    {
+        if (!pL)
             return false;
-		L = pL;
-		luaT_run(L, "createViewString", "");
-		view_string = luaT_toobject(L, -1);
+        L = pL;
+        luaT_run(L, "createViewString", "");
+        view_string = luaT_toobject(L, -1);
         if (!view_string) L = NULL;
-		return (view_string) ? true : false;
-	}
+        return (view_string) ? true : false;
+    }
     void getText(std::wstring* str)
     {
         runcmd("getText");
@@ -591,10 +602,20 @@ public:
         runcmd("isPrompt");
         return boolresult();
     }
-    bool isDropped()
+    bool isDropped(bool* showdropped = 0)
     {
         runcmd("isDropped");
-        return boolresult();
+        if (lua_gettop(L) == 1) 
+            return boolresult();
+        if (lua_gettop(L) == 2) {
+            int result = (lua_isboolean(L, 1)) ? lua_toboolean(L, 1) : 0;
+            int shdropepd = (lua_isboolean(L, 2)) ? lua_toboolean(L, 2) : 0;
+            if (showdropped)
+                *showdropped = (shdropepd == 1) ? true : false;
+            lua_pop(L, 2);
+            return result ? true : false;
+        }
+        return false;
     }
     void getPrompt(std::wstring *str)
     {
@@ -740,6 +761,12 @@ public:
         runcmd("dropString");
         return boolresult();
     }
+    bool dropString(bool showdropped)
+    {
+        luaT_pushobject(L, view_data, LUAT_VIEWDATA);
+        luaT_run(L, "dropString", "b", showdropped);
+        return boolresult();
+    }
     void print(int view)
     {
         runcmdint("print", view);
@@ -864,6 +891,18 @@ public:
         luaT_run(L, "select", "od", index);
         return boolresult();
     }
+    bool select(const wchar_t* key)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "select", "os", key);
+        return boolresult();
+    }
+    bool selectNext(const wchar_t* key)
+    {
+        if (!getao()) return false;
+        luaT_run(L, "selectNext", "os", key);
+        return boolresult();
+    }
     bool add(const wchar_t* key, const wchar_t* value, const wchar_t* group)
     {
         if (!getao()) return false;
@@ -911,6 +950,12 @@ public:
         if (!getao()) return false;
         luaT_run(L, "update", "o");
         return true;
+    }
+    bool isGroupActive()
+    {
+        if (!getao()) return false;
+        luaT_run(L, "isGroupActive", "o");
+        return boolresult();
     }
 private:
     bool getao()
@@ -972,6 +1017,12 @@ public:
             return NULL;
         return (HFONT)uintresult();
     }
+    int currentFontHeight()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "currentFontHeight", "t");
+        return intresult();
+    }
     void cmdPrefix(std::wstring* str)
     {
         lua_getglobal(L, obj);
@@ -1024,6 +1075,24 @@ public:
             { int w = lua_tointeger(L, -1); lua_pop(L, 1); return w; }
         return -1;
     }
+    bool component(const wchar_t* id) 
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "component", "ts", id);
+        return boolresult();
+    }
+    bool isShowSystemCommand()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "isShowSystemCommand", "t");
+        return boolresult();
+    }
+    bool isClearCommandLine()
+    {
+        lua_getglobal(L, obj);
+        luaT_run(L, "isClearCommandLine", "t");
+        return boolresult();
+    }
 private:
     bool boolresult()
     {
@@ -1034,6 +1103,12 @@ private:
     unsigned int uintresult()
     {
         int result = (lua_isnumber(L, -1)) ? lua_tounsigned(L, -1) : 0;
+        lua_pop(L, 1);
+        return result;
+    }
+    int intresult()
+    {
+        int result = (lua_isnumber(L, -1)) ? lua_tointeger(L, -1) : 0;
         lua_pop(L, 1);
         return result;
     }
@@ -1097,6 +1172,7 @@ typedef void* xlist;
 typedef strbuf xstringw; // use strbuf_destroy to free string memory
 
 xnode xml_load(const wchar_t* filename);
+xstringw xml_get_load_error();
 int   xml_save(xnode node, const wchar_t* filename);
 xnode xml_open(const wchar_t* name);
 void  xml_delete(xnode node);
@@ -1127,7 +1203,14 @@ namespace xml
         ~node() {}
         operator xnode() { return m_Node; }
         operator bool() const { return (m_Node) ? true : false; }
-        bool load(const wchar_t *filename) { deletenode();  m_Node = xml_load(filename); return m_Node ? true : false; }
+        bool load(const wchar_t *filename, std::wstring* error) {
+            deletenode();
+            m_Node = xml_load(filename);
+            bool result = m_Node ? true : false;
+            if (!result && error)
+                _getp(xml_get_load_error(), error);
+            return result;
+        }
         bool save(const wchar_t *filename) { int result = xml_save(m_Node, filename); return result ? true : false; }
         void deletenode() { xml_delete(m_Node); m_Node = NULL; }
         void getname(std::wstring *name) { _getp(xml_get_name(m_Node), name); }

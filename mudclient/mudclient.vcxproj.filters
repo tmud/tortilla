@@ -280,6 +280,24 @@
     <ClInclude Include="src\propertiesPages\propertiesDisplay.h">
       <Filter>Source Files\PropertiesPages</Filter>
     </ClInclude>
+    <ClInclude Include="src\logsFormatter.h">
+      <Filter>Source Files\Logs</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modeDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesPageVars.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesUpDown.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mudCommandBarInd.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsMouseHandler.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -419,6 +437,21 @@
     </ClCompile>
     <ClCompile Include="src\propertiesPages\propertiesDisplay.cpp">
       <Filter>Source Files\PropertiesPages</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compareObject2.cpp">
+      <Filter>Source Files\LogicProcessor</Filter>
+    </ClCompile>
+    <ClCompile Include="src\logsFormatter.cpp">
+      <Filter>Source Files\Logs</Filter>
+    </ClCompile>
+    <ClCompile Include="src\propertiesPages\propertiesUpDown.cpp">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mudCommandBarInd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\plugins\pluginsMouseHandler.cpp">
+      <Filter>Source Files\Plugins</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

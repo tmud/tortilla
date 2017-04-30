@@ -20,10 +20,13 @@ class PropertyListCtrl : public CWindowImpl<PropertyListCtrl, CListViewCtrl>
     PropertyListCtrlHandler *m_pHandler;
     bool m_doubleclick;
     wchar_t m_temp_buffer[256];
+    HWND hwndToSend;
+    UINT msgToSend;
 
 public:
     DECLARE_WND_SUPERCLASS(NULL, CListViewCtrl::GetWndClassName())
-    PropertyListCtrl() : m_width_percent(0.0f), m_pHandler(NULL), m_doubleclick(false) {}
+    PropertyListCtrl() : m_width_percent(0.0f), m_pHandler(NULL), m_doubleclick(false), 
+    hwndToSend(0), msgToSend(0) {}
 
     void Attach(HWND hWnd) 
     {
@@ -44,6 +47,12 @@ public:
     void setHandler(PropertyListCtrlHandler* handler)
     {
         m_pHandler = handler;
+    }
+
+    void setKeyDownMessageHandler(HWND window, UINT message)
+    {
+        hwndToSend = window;
+        msgToSend = message;
     }
 
     void addItem(int item, int subitem, const tstring& text)
@@ -85,6 +94,12 @@ public:
             selected->push_back(item);
         }
         std::sort(selected->rbegin(), selected->rend());
+    }
+
+    void getSelectedUpSorted(std::vector<int>* selected) const
+    {
+        getSelected(selected);
+        std::reverse(selected->begin(), selected->end());
     }
 
     int getOnlySingleSelection() const
@@ -129,11 +144,28 @@ public:
         }
     }
 
+    int getItemsOnScreen() const
+    {
+        return GetCountPerPage();
+    }
+
 private:
     BEGIN_MSG_MAP(PropertyListCtrl)
        NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
+       MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
        REFLECTED_NOTIFY_CODE_HANDLER(NM_CUSTOMDRAW, OnCustomDraw)
     END_MSG_MAP()
+
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM lparam, BOOL&bHandled)
+    {
+        if (hwndToSend) 
+        {
+            LRESULT res = ::SendMessage(hwndToSend, msgToSend, wparam, lparam);
+            if (res) return 0;
+        }
+        bHandled = FALSE;
+        return 0;
+    }
 
     LRESULT OnCustomDraw(int, LPNMHDR pnmh, BOOL&)
     {

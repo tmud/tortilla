@@ -29,6 +29,16 @@ CFont* tortilla::getCurrentFont()
     return _gameview->getStandardFont();
 }
 
+int tortilla::getCurrentFontHeight()
+{
+    CFont *f =  _gameview->getStandardFont();
+    LOGFONT lf;
+    f->GetLogFont(&lf);
+    CDC dc(_gameview->GetDC());
+    int height = -MulDiv(lf.lfHeight, GetDeviceCaps(dc, LOGPIXELSY), 72);
+    return height;
+}
+
 Palette256* tortilla::getPalette()
 {
     return _gameview->getPalette();

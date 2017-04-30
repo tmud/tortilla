@@ -1,9 +1,10 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <plugindata>
   <baseparams>
-    <hp value="H"/>
-    <mv value="M"/>
     <dsu value="о"/>
+    <hp value="H"/>
+    <mn value="з"/>
+    <mv value="M"/>
   </baseparams>
   <maxparams>
     <hp value="1"/>
@@ -12,11 +13,20 @@
     <mvid value="r1"/>
     <xp value="1"/>
     <xpid value="r2"/>
+    <mn value="1"/>
+    <mnid value="r3"/>
   </maxparams>
   <regexp>
     <r1 value="^Вы можете выдержать [0-9]+\(([0-9]+)\).*, и пройти [0-9]+\(([0-9]+)\)"/>
     <r2 value="^Ваш опыт - ([0-9]+)"/>
+    <r3 value="^Ваша магическая энергия [0-9]+\(([0-9]+)\) и вы восстанавливаете [0-9]+ в сек\."/>
   </regexp>
+  <levregexp>
+    <key value="^Уровень          Опыт            Макс на урв."/>
+    <level value="^\[[0-9 ]+\] +([0-9,]+)"/>
+    <separators value=","/>
+    <skipprompt value="^Листать :.*"/>
+  </levregexp>
   <levels>
     <array index="1" value="0"/>
     <array index="2" value="2000"/>
@@ -50,4 +60,10 @@
     <array index="30" value="64000000"/>
     <array index="31" value="79000000"/>
   </levels>
+  <levregexp>
+    <key value="^Уровень          Опыт            Макс на урв."/>
+    <level value="^\[[0-9 ]+\] +([0-9,]+)"/>
+    <separators value=","/>
+    <skipprompt value="^Листать :.*"/>
+  </levregexp>
 </plugindata>

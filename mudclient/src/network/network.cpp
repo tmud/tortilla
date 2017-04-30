@@ -4,7 +4,7 @@
  #include <Mstcpip.h>
 #pragma comment(lib, "ws2_32.lib")
 
-NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false)
+NetworkConnection::NetworkConnection(int receive_buffer) : m_connected(false), m_connecting(false)
 {
     m_recive_buffer.alloc(receive_buffer);
 }
@@ -25,12 +25,18 @@ void NetworkConnection::connect(const NetworkConnectData& cdata)
 
 void NetworkConnection::disconnect()
 {
-    if (!connected())
+    CSectionLock lock(m_cs_connect);
+    if (!m_connecting && !m_connected) 
         return;
-    stop();
-    wait();
+    if (m_connecting)
+        terminate();
+    else {
+        stop();
+        wait();
+    }
     m_send_data.clear();
     m_receive_data.clear();
+    m_connecting = false;
     m_connected = false;
 }
 
@@ -131,15 +137,24 @@ void NetworkConnection::threadProc()
         return;
     }
 
+    {
+       CSectionLock lock(m_cs_connect);
+       m_connecting = true;
+    }
+
     sendEvent(NE_CONNECTING);
     if (::connect(sock, (sockaddr*)&peer, sizeof(peer)) == SOCKET_ERROR)
     {
+        {
+            CSectionLock lock(m_cs_connect);
+            m_connecting = false;
+        }
         sendEvent(NE_ERROR_CONNECT);
         return;
     }
-
     {
         CSectionLock lock(m_cs_connect);
+        m_connecting = false;
         m_connected = true;
     }
     sendEvent(NE_CONNECT);
@@ -349,11 +364,16 @@ int Network::read_data()
         }
         else
         {
+            if (processed == 1 && in[0] == TAB) {
+                static unsigned char tab_spaces[4] = { 0x20, 0x20, 0x20, 0x20 };
+                m_receive_data.write(tab_spaces, 4);
+            }
+
             if (processed == 2 && in[0] == IAC && in[1] == IAC)
                 m_receive_data.write(in, 1);
             else if (processed == 2 && in[0] == IAC && in[1] == GA)
             {
-                unsigned char bytes[2] = { 0x1b, 0x5c };
+                static unsigned char bytes[2] = { 0x1b, 0x5c };
                 m_receive_data.write(bytes, 2);
             }
             else
@@ -369,12 +389,12 @@ int Network::read_data()
 int Network::processing_data(const tbyte* buffer, int len, bool *error)
 {
     const tbyte* b = buffer;
-    if (*b != IAC && *b != 0)     // find iac symbol or zero
+    if (*b != IAC && *b != 0 && *b != TAB )     // find iac symbol or zero or tab
     {
         const tbyte* e = b + len;
         while(b != e)
         {
-            if (*b == IAC || *b == 0)
+            if (*b == IAC || *b == 0 || *b == TAB)
                 break;
             b++;
         }
@@ -383,6 +403,9 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 
     if (*b == 0)                 // protect from incorrect data
         return -1;
+
+    if (*b == TAB)
+        return 1;
 
     if (len < 2)
         return 0;
@@ -470,7 +493,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
         if ((e[2] == IAC && e[1] == COMPRESS2) || (e[2] == WILL && e[1] == COMPRESS))
         {
           if (m_mccp_on)
-               { *error = true; return 0; }
+            { return -len; } // *error = true; return 0; }
            m_totalDecompressed -= (len-5);
            m_mccp_data.write(e+4, len-5);
            m_mccp_on = true;

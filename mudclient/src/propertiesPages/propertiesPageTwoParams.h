@@ -1,6 +1,7 @@
 #pragma once
 
 #include "propertiesSaveHelper.h"
+#include "propertiesUpDown.h"
 
 struct PropertyTwoConfig
 {
@@ -75,6 +76,7 @@ private:
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        MESSAGE_HANDLER(WM_USER, OnSetFocus)
+       MESSAGE_HANDLER(WM_USER+1, OnKeyDown)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
@@ -87,9 +89,28 @@ private:
        COMMAND_HANDLER(IDC_EDIT_PATTERN_TEXT, EN_CHANGE, OnPatternTextChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
-       NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
+       //NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
+
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam == VK_DELETE)
+        {
+            if (m_del.IsWindowEnabled()) {
+                BOOL b = FALSE;
+                OnDeleteElement(0, 0, 0, b);
+            }
+            return 1;
+        }
+        if (wparam == VK_INSERT)
+        {
+            BOOL b = FALSE;
+            OnResetData(0, 0, 0, b);
+            return 1;
+        }
+        return 0;
+    }
 
     LRESULT OnAddElement(WORD, WORD, HWND, BOOL&)
     {
@@ -105,23 +126,22 @@ private:
                 propValues->del(index2);
         }
 
-        m_list_values.add(index, pattern, text, m_currentGroup);
         if (index == -1)
         {
-            int pos = m_list.GetItemCount();
-            m_list.addItem(pos, 0, pattern);
-            m_list.addItem(pos, 1, text);
-            m_list.addItem(pos, 2, m_currentGroup);
+            index = m_list.getOnlySingleSelection() + 1;
+            m_list_values.insert(index, pattern, text, m_currentGroup);
+            m_list.addItem(index, 0, pattern);
+            m_list.addItem(index, 1, text);
+            m_list.addItem(index, 2, m_currentGroup);
         }
         else
         {
+            m_list_values.add(index, pattern, text, m_currentGroup);
             m_list.setItem(index, 0, pattern);
             m_list.setItem(index, 1, text);
             m_list.setItem(index, 2, m_currentGroup);
         }
 
-        if (index == -1)
-            index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;
@@ -165,26 +185,15 @@ private:
 
     LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
     {
-        int index = m_list.getOnlySingleSelection();
-        if (index > 0)
-        {
-            swapItems(index, index-1);
-            m_list.SelectItem(index-1);
-            m_list.SetFocus();
-        }
+        propertiesUpDown<tstring> ud;
+        ud.up(m_list, m_list_values, false);
         return 0;
     }
 
     LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
     {
-        int index = m_list.getOnlySingleSelection();
-        int last = m_list.GetItemCount() - 1;
-        if (index >= 0 && index != last)
-        {
-            swapItems(index, index+1);
-            m_list.SelectItem(index+1);
-            m_list.SetFocus();
-        }
+        propertiesUpDown<tstring> ud;
+        ud.down(m_list, m_list_values, false);
         return 0;
     }
 
@@ -324,12 +333,12 @@ private:
         return 0;
     }
 
-    LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
+    /*LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
             m_list.SelectItem(-1);
         return 0;
-    }
+    }*/
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
@@ -378,6 +387,7 @@ private:
         m_list.addColumn(m_config.list2, 40);
         m_list.addColumn(L"Группа", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
+        m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         if (!m_config.use_priority)
@@ -424,13 +434,7 @@ private:
             m_list.addItem(i, 1, v.value);
             m_list.addItem(i, 2, v.group);
         }
-
-        int index = -1;
-        tstring pattern;
-        getWindowText(m_pattern, &pattern);
-        if (!pattern.empty())
-            index = m_list_values.find(pattern, m_currentGroup);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(2);
     }
 
     void updateButtons()
@@ -471,23 +475,10 @@ private:
         {
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
-            m_up.EnableWindow(FALSE);
-            m_down.EnableWindow(FALSE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             m_replace.EnableWindow(FALSE);
         }
-    }
-
-    void swapItems(int index1, int index2)
-    {
-        const property_value& i1 = m_list_values.get(index1);
-        const property_value& i2 = m_list_values.get(index2);
-        m_list.setItem(index1, 0, i2.key);
-        m_list.setItem(index1, 1, i2.value);
-        m_list.setItem(index1, 2, i2.group);
-        m_list.setItem(index2, 0, i1.key);
-        m_list.setItem(index2, 1, i1.value);
-        m_list.setItem(index2, 2, i1.group);
-        m_list_values.swap(index1, index2);
     }
 
     void loadValues()

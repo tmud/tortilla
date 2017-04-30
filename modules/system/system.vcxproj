@@ -57,7 +57,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SYSTEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common;..\..\libs\wtl\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -75,7 +75,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;SYSTEM_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\common;..\..\libs\wtl\include</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -88,6 +88,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="alert.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="tasks.h" />
   </ItemGroup>
@@ -100,6 +102,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="system.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="system.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="mudclient.ico" />
+    <Image Include="warn.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

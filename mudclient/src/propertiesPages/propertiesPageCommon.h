@@ -8,6 +8,7 @@ class PropertyCommon : public CDialogImpl<PropertyCommon>
     CEdit m_history_size;
     CEdit m_cmd_size;
     CButton m_show_system_cmds;
+    CButton m_newline_cmd;
     CButton m_clear_bar;
     CButton m_disable_ya;
     CButton m_disable_osc;
@@ -34,6 +35,7 @@ private:
         COMMAND_HANDLER(IDC_EDIT_VIEW_HISTORY, EN_KILLFOCUS, OnViewHistory)
         COMMAND_HANDLER(IDC_EDIT_CMD_HISTORY, EN_KILLFOCUS, OnCmdHistory)
         COMMAND_ID_HANDLER(IDC_CHECK_SHOW_SYSTEM_CMDS, OnShowSysCmds)
+        COMMAND_ID_HANDLER(IDC_CHECK_NEWLINECMD, OnNewLineCmds)
         COMMAND_ID_HANDLER(IDC_CHECK_CLEAR_BAR, OnClearBar)
         COMMAND_ID_HANDLER(IDC_CHECK_DISABLE_DOUBLE_YA, OnDisableYa)
         COMMAND_ID_HANDLER(IDC_CHECK_DISABLE_OSC, OnDisableOsc)
@@ -60,6 +62,7 @@ private:
         m_cmd_size.Attach(GetDlgItem(IDC_EDIT_CMD_HISTORY));
         m_cmd_size.SetLimitText(3);
         m_show_system_cmds.Attach(GetDlgItem(IDC_CHECK_SHOW_SYSTEM_CMDS));
+        m_newline_cmd.Attach(GetDlgItem(IDC_CHECK_NEWLINECMD));
         m_clear_bar.Attach(GetDlgItem(IDC_CHECK_CLEAR_BAR));
         m_history_tab.Attach(GetDlgItem(IDC_CHECK_HISTORYTAB));
         m_disable_ya.Attach(GetDlgItem(IDC_CHECK_DISABLE_DOUBLE_YA));
@@ -108,6 +111,7 @@ private:
         _itow(propData->cmd_history_size, buffer, 10);
         m_cmd_size.SetWindowText(buffer);
         m_show_system_cmds.SetCheck(propData->show_system_commands ? BST_CHECKED : BST_UNCHECKED);
+        m_newline_cmd.SetCheck(propData->newline_commands ? BST_CHECKED : BST_UNCHECKED);
         m_clear_bar.SetCheck(propData->clear_bar ? BST_CHECKED : BST_UNCHECKED);
         m_history_tab.SetCheck(propData->history_tab ? BST_CHECKED : BST_UNCHECKED);
         m_disable_ya.SetCheck(propData->disable_ya ? BST_CHECKED : BST_UNCHECKED);
@@ -166,6 +170,13 @@ private:
     {
         int state = (m_show_system_cmds.GetCheck() == BST_CHECKED) ? 1 : 0;
         propData->show_system_commands = state;
+        return 0;
+    }
+
+    LRESULT OnNewLineCmds(WORD, WORD, HWND, BOOL&)
+    {
+        int state = (m_newline_cmd.GetCheck() == BST_CHECKED) ? 1 : 0;
+        propData->newline_commands = state;
         return 0;
     }
 

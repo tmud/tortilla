@@ -38,6 +38,8 @@
 #define IDD_PASSWORD                    221
 #define IDD_STARTUP_WORLD               222
 #define IDD_FIND                        223
+#define IDD_MODE                        224
+#define IDD_PROPERTY_VARS               225
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
@@ -52,6 +54,7 @@
 #define IDC_BUTTON_PROP_TABWORDS        1011
 #define IDC_BUTTON_PROP_TIMERS          1012
 #define IDC_BUTTON_ADD                  1013
+#define IDC_BUTTON_PROP_VARS            1013
 #define IDC_BUTTON_DEL                  1014
 #define IDC_STATIC_BL1                  1015
 #define IDC_STATIC_BL2                  1016
@@ -60,6 +63,8 @@
 #define IDC_BUTTON_RENAME               1021
 #define IDC_EDIT_PATTERN                1022
 #define IDC_EDIT_ALIAS_TEXT             1023
+#define IDC_EDIT_VARNAME                1023
+#define IDC_EDIT_VARVALUE               1023
 #define IDC_EDIT_PATTERN_TEXT           1024
 #define IDC_LIST                        1025
 #define IDC_EDIT_HOTKEY                 1026
@@ -93,6 +98,7 @@
 #define IDC_CHECK_SHOW_SYSTEM_CMDS      1085
 #define IDC_CHECK_CLEAR_BAR             1086
 #define IDC_EDIT_NUMBER                 1087
+#define IDC_CHECK_NEWLINECMD            1087
 #define IDC_EDIT_PROMPT_PCRE            1110
 #define IDC_CHECK_DISABLE_DOUBLE_YA     1111
 #define IDC_CHECK_HISTORYTAB            1113
@@ -127,6 +133,8 @@
 #define IDC_CHECK_ANYFONTS              1143
 #define IDC_CHECK_DISABLEALT            1144
 #define IDC_CHECK_MOVETOTRAY            1145
+#define IDC_LIST_COMPONENTS             1146
+#define IDC_CHECK_CREATELINK            1147
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -143,14 +151,15 @@
 #define ID_MUDCLIENT_HELP               32798
 #define ID_NEWWORLD                     32799
 #define ID_CHECK_UPDATES                32800
+#define ID_MODE                         32801
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        224
-#define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         1146
+#define _APS_NEXT_RESOURCE_VALUE        225
+#define _APS_NEXT_COMMAND_VALUE         32802
+#define _APS_NEXT_CONTROL_VALUE         1148
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

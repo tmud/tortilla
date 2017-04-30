@@ -12,6 +12,8 @@ class PropertyGroups :  public CDialogImpl<PropertyGroups>
     CButton m_reset;
     CButton m_onoff;
     CButton m_rename;
+    CButton m_up;
+    CButton m_down;
     tstring m_OnStatus;
     bool m_deleted;
     bool m_update_mode;
@@ -32,17 +34,39 @@ private:
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_USER, OnSetFocus)
+       MESSAGE_HANDLER(WM_USER+1, OnKeyDown)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_ON, OnGroupChecked)
        COMMAND_ID_HANDLER(IDC_BUTTON_RENAME, OnRenameElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
+       COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
        COMMAND_HANDLER(IDC_EDIT_GROUP, EN_CHANGE, OnEditChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
-       NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
+       //NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
+
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam == VK_DELETE)
+        {
+            if (m_del.IsWindowEnabled()) {
+                BOOL b = FALSE;
+                OnDeleteElement(0, 0, 0, b);
+            }
+            return 1;
+        }
+        if (wparam == VK_INSERT)
+        {
+            BOOL b = FALSE;
+            OnResetData(0, 0, 0, b);
+            return 1;
+        }
+        return 0;
+    }
 
     LRESULT OnAddElement(WORD, WORD, HWND, BOOL&)
     {
@@ -117,6 +141,41 @@ private:
         return 0;
     }
 
+    LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
+    {
+        int index = m_list.getOnlySingleSelection();
+        if (index != -1 && index != 0)
+        {
+            PropertiesValues &g = propData->groups;
+            g.swap(index, index-1);
+            m_list.setItem(index, 0, g.get(index).key);
+            setListEnableItem(index);
+            m_list.setItem(index-1, 0, g.get(index-1).key);
+            setListEnableItem(index-1);
+            m_list.SelectItem(index-1);
+            m_list.SetFocus();
+        }
+        return 0;
+    }
+
+    LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
+    {
+        int index = m_list.getOnlySingleSelection();
+        int count = m_list.GetItemCount();
+        if (index != -1 && index != count-1)
+        {
+            PropertiesValues &g = propData->groups;
+            g.swap(index, index+1);
+            m_list.setItem(index, 0, g.get(index).key);
+            setListEnableItem(index);
+            m_list.setItem(index+1, 0, g.get(index+1).key);
+            setListEnableItem(index+1);
+            m_list.SelectItem(index+1);
+            m_list.SetFocus();
+        }
+        return 0;
+    }
+
     LRESULT OnGroupChecked(WORD, WORD, HWND, BOOL&)
     {
         tstring state = (m_onoff.GetCheck() == BST_CHECKED) ? L"1" : L"0";
@@ -171,13 +230,13 @@ private:
         return 0;
     }
 
-    LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
+    /*LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         HWND focus = GetFocus();
         if (focus != m_del && focus != m_onoff && m_list.GetSelectedCount() > 1)
             m_list.SelectItem(-1);
         return 0;
-    }
+    }*/
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
@@ -210,16 +269,21 @@ private:
         m_onoff.Attach(GetDlgItem(IDC_CHECK_GROUP_ON));
         m_rename.Attach(GetDlgItem(IDC_BUTTON_RENAME));
         m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
+        m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
+        m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Группа", 50);
         m_list.addColumn(L"Статус", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+        m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_add.EnableWindow(FALSE);
         m_del.EnableWindow(FALSE);
         m_onoff.EnableWindow(FALSE);
         m_rename.EnableWindow(FALSE);
+        m_up.EnableWindow(FALSE);
+        m_down.EnableWindow(FALSE);
         m_reset.EnableWindow(TRUE);
         m_state_helper.init(dlg_state, &m_list);
         for (int i=0,e=propData->groups.size(); i<e; ++i)
@@ -240,6 +304,8 @@ private:
             m_add.EnableWindow(group_empty ? FALSE : TRUE);
             m_del.EnableWindow(FALSE);
             m_rename.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
             m_onoff.SetCheck(BST_UNCHECKED);
             m_onoff.EnableWindow(FALSE);
         }
@@ -257,6 +323,8 @@ private:
             m_del.EnableWindow(TRUE);
             m_rename.EnableWindow(mode);
             m_add.EnableWindow(mode);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             m_onoff.SetCheck(checkEnableItem(selected) ? BST_CHECKED : BST_UNCHECKED);
             m_onoff.EnableWindow(TRUE);
         }        
@@ -265,6 +333,8 @@ private:
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(FALSE);
             m_rename.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
             m_onoff.EnableWindow(TRUE);
             m_onoff.SetCheck(BST_UNCHECKED);
         }

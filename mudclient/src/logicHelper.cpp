@@ -37,7 +37,7 @@ bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipeline
         MudViewString *s = parse_data->strings[j];
         if (s->dropped) return false;
 
-        bool incomplstr = (j==je && !parse_data->last_finished);
+        bool incomplstr = (!s->prompt && j==je && !parse_data->last_finished);
         bool processed = false;
         for (int i=0, e=m_actions.size(); i<e; ++i)
         {
@@ -56,14 +56,17 @@ void LogicHelper::processSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->dropped) continue;
-        bool incomplstr = (j==je && !parse_data->last_finished);
+        if (s->dropped || s->subs_processed) continue;
+        bool incomplstr = (!s->prompt && j==je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_subs.size(); i<e; ++i)
         {
             CompareData cd(s);
             while (m_subs[i]->processing(cd))
+            {
                 cd.reinit();
+                s->subs_processed = true;
+            }
         }
     }
 }
@@ -73,8 +76,8 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->dropped) continue;
-        bool incomplstr = (j == je && !parse_data->last_finished);
+        if (s->dropped || s->subs_processed) continue;
+        bool incomplstr = (!s->prompt && j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_antisubs.size(); i<e; ++i)
         {
@@ -90,8 +93,8 @@ void LogicHelper::processGags(parseData *parse_data)
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
         MudViewString *s = parse_data->strings[j];
-        if (s->dropped) continue;
-        bool incomplstr = (j == je && !parse_data->last_finished);
+        if (s->dropped || s->subs_processed) continue;
+        bool incomplstr = (!s->prompt && j == je && !parse_data->last_finished);
         if (incomplstr) continue;
         for (int i=0,e=m_gags.size(); i<e; ++i)
         {
@@ -228,7 +231,15 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
 {
     m_math_regexp.find(expr);
     if (m_math_regexp.getSize() != 4)
-         return LogicHelper::MATH_ERROR;
+    {
+        tstring p(expr);
+        if (tortilla::getVars()->processVarsStrong(&p, true))
+        {
+            result->assign(p);
+            return LogicHelper::MATH_SUCCESS;
+        }
+        return LogicHelper::MATH_ERROR;
+    }
 
      tstring p1, p2, op;
      m_math_regexp.getString(1, &p1);  //1st parameter

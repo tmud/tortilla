@@ -60,3 +60,75 @@ PluginData& find_plugin()
     }
     return pdv->at(index);
 }
+
+Pcre16 fregexp;
+int string_format(lua_State *L)
+{
+    int n = lua_gettop(L);
+    if (n == 0 || !lua_isstring(L, 1))
+        return pluginInvArgs(L, L"string:format");
+    tstring format(luaT_towstring(L, 1));
+    if (!fregexp.valid())
+        fregexp.setRegExp(L"%(?:.[0-9])?[scdiouxXeEfgGq%]", true);
+    fregexp.findAllMatches(format);
+    if (fregexp.getSize() == 0)
+    {
+        luaT_pushwstring(L, format.c_str());
+        return 1;
+    }
+    tchar buffer[32];
+    int from = 0;
+    tstring result;
+    for (int i = 1, e = fregexp.getSize(); i < e; ++i)
+    {
+        int first = fregexp.getFirst(i);
+        int last = fregexp.getLast(i);
+        result.append(format.substr(from, first - from));
+        tstring k;
+        fregexp.getString(i, &k);
+        int lastsym = k.size()-1;
+        tchar op = k.at(lastsym);
+        if (op == L'%') { result.append(L"%"); from = last; continue; }        
+        int p = i + 1;
+        if (p > n) continue;
+        switch (op)
+        {
+            case L'i':
+            case L'd':
+            {
+                swprintf(buffer, k.c_str(), lua_tointeger(L, p));
+                result.append(buffer);
+                break;
+            }
+            case L's':
+            {
+                result.append(luaT_towstring(L, p));
+                break;
+            }
+            case L'u':
+            case L'c':
+            case L'o': 
+            case L'x': 
+            case L'X':
+            {
+                swprintf(buffer, k.c_str(), lua_tounsigned(L, p));
+                result.append(buffer);
+                break;
+            }
+            case L'f':
+            case L'e':
+            case L'E':
+            case L'g':
+            case L'G':
+            {
+                swprintf(buffer, k.c_str(), lua_tonumber(L, p));
+                result.append(buffer);
+                break;
+            }
+        }
+        from = last;
+    }
+    result.append(format.substr(from));
+    luaT_pushwstring(L, result.c_str());
+    return 1;
+}

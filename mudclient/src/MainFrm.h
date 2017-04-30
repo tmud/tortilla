@@ -18,6 +18,7 @@ class CMainFrame : public CFrameWindowImpl<CMainFrame>,
 public:
     ToolbarEx<CMainFrame> m_toolBar;
     MudGameView m_gameview;
+    tstring m_cmdLine;
     DECLARE_FRAME_WND_CLASS(MAINWND_CLASS_NAME, IDR_MAINFRAME)
     CMainFrame() : m_trayIconSet(0),m_maximized(false) {}
 private:
@@ -69,9 +70,53 @@ private:
         CHAIN_MSG_MAP(CCommonFrameImpl<CMainFrame>)
     END_MSG_MAP()
 
+    void processCmdline()
+    {
+        if (m_cmdLine.empty()) return;
+        Pcre16 pcre, pcre2;
+        pcre.setRegExp(L"((?:\".*\")|[^ ]+)", true);
+        pcre.findAllMatches(m_cmdLine);
+        pcre2.setRegExp(L"\"(.*)\"", true);
+
+        std::vector<tstring> profiles;
+        for (int i=1,e=pcre.getSize(); i<e; ++i)
+        {
+            tstring profile;
+            pcre.getString(i, &profile);
+            tstring_trim(&profile);
+            if (profile.empty()) continue;
+            pcre2.find(profile);
+            if (pcre2.getSize() > 0) {
+                pcre2.getString(1, &profile);
+            }
+            profiles.push_back(profile);
+        }
+
+        tstring path;
+        getClientExePath(&path);
+        for (int i=1,e=profiles.size(); i<e; ++i)
+        {
+            tstring p(path);
+            p.append(L" ");
+            p.append(profiles[i]);
+            WCHAR *tmppath = new WCHAR[p.length() + 1];
+            wcscpy(tmppath, p.c_str());
+            STARTUPINFO cif;
+            ZeroMemory(&cif, sizeof(STARTUPINFO));
+            PROCESS_INFORMATION pi;
+            CreateProcess(NULL, tmppath, NULL, NULL, FALSE, 0, NULL, NULL, &cif, &pi);
+            delete[]tmppath;
+        }
+        if (profiles.empty())
+            m_cmdLine.clear();
+        else
+            m_cmdLine = profiles[0];
+    }
+
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (!m_gameview.initialize())
+        processCmdline();
+        if (!m_gameview.initialize(m_cmdLine))
         {
             DestroyWindow();
             PostQuitMessage(0);
@@ -84,8 +129,15 @@ private:
         m_toolBar.createCmdBar(IDR_MAINFRAME);
         m_toolBar.createToolbar(IDR_MAINFRAME);
 
+        CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        PropertiesData *pdata = m_gameview.getPropData();
+        rbs.Load(rebar, pdata->rebar);
+
+        bool toolbar = rbs.IsVisible(rebar, ATL_IDW_BAND_FIRST+1);
+        UISetCheck(ID_VIEW_TOOLBAR,toolbar);
+
         m_hWndClient = m_gameview.createView(m_hWnd);
-        UISetCheck(ID_VIEW_TOOLBAR, 1);
 
         // register object for message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
@@ -97,6 +149,15 @@ private:
 
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
+        CReBarCtrl rebar = m_hWndToolBar;
+        if (rebar.IsWindow()) {
+        CReBarSettings rbs;
+        tstring param;
+        rbs.Save(rebar, &param);
+        PropertiesData *pdata = m_gameview.getPropData();
+        pdata->rebar = param;
+        }
+
         // unregister message filtering and idle updates
         CMessageLoop* pLoop = _Module.GetMessageLoop();
         ATLASSERT(pLoop != NULL);
@@ -195,9 +256,9 @@ private:
 
     LRESULT OnViewToolBar(WORD, WORD, HWND, BOOL&)
     {
-        static BOOL bVisible = TRUE;	// initially visible
-        bVisible = !bVisible;
         CReBarCtrl rebar = m_hWndToolBar;
+        CReBarSettings rbs;
+        BOOL bVisible = rbs.IsVisible(rebar, ATL_IDW_BAND_FIRST + 1) ? FALSE : TRUE;
         int nBandIndex = rebar.IdToIndex(ATL_IDW_BAND_FIRST + 1);	// toolbar is 2nd added band
         rebar.ShowBand(nBandIndex, bVisible);
         UISetCheck(ID_VIEW_TOOLBAR, bVisible);

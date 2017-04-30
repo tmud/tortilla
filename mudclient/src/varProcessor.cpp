@@ -7,8 +7,9 @@ class VarProcessorImpl
 {
     std::map<tstring, int> m_specvars;
     typedef std::map<tstring, int>::const_iterator citerator;
-    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP };
+    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP, POINTVAR, UNDERLINEVAR, EMPTY, DOLLAR };
     Pcre16 m_vars_regexp;
+    Pcre16 m_var_regexp;
 public:
     VarProcessorImpl();
     bool canset(const tstring& var) const
@@ -59,6 +60,33 @@ bool VarProcessor::delVar(const tstring& var)
     return vars_processor.delVar(getVars(), var);
 }
 
+bool VarProcessor::iterateVar(const tstring& pred, int& last, tstring* value)
+{
+    if (last+1 < 0)
+        return false;
+    const PropertiesValues &vars = getVars();
+    int count = vars.size();
+    if (last < count)
+    {
+       for (int i=last+1;i<count;++i) {
+           const tstring& var_name = vars.get(i).key;
+           if (var_name.find(pred) == 0) {
+               last = i;
+               if (value)
+                 value->assign(vars.get(i).value);
+               return true;
+           }
+       }
+    }
+    return false;
+}
+
+void VarProcessor::deleteAll()
+{
+    PropertiesValues &vars = getVars();
+    vars.clear();
+}
+
 VarProcessorImpl::VarProcessorImpl()
 {
     std::map<tstring, int> &v = m_specvars;
@@ -72,7 +100,12 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"SECOND"] = SECOND;
     v[L"MILLISECOND"] = MILLISECOND;
     v[L"TIMESTAMP"] = TIMESTAMP;
-    m_vars_regexp.setRegExp(L"\\$[0-9a-zA-Z_]+", true);
+    v[L"."] = POINTVAR;
+    v[L"_"] = UNDERLINEVAR;
+    v[L"!"] = EMPTY;
+    v[L"$"] = DOLLAR;
+    m_vars_regexp.setRegExp(L"\\$[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*|\\$.|\\$!|\\$\\$", true);
+    m_var_regexp.setRegExp(L"^[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*$", true);
 }
 
 bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result)
@@ -131,8 +164,8 @@ bool VarProcessorImpl::setVar(PropertiesValues &vars, const tstring& var, const 
 {
     if (var.empty())
         return false;
-    tchar b = var.at(0);
-    if ((b >= L'a' && b <= L'z') || (b >= L'A' && b <= L'Z'))
+    m_var_regexp.find(var);
+    if (m_var_regexp.getSize() != 0)
     {
         int index = vars.find(var);
         vars.add(index, var, value, L"");
@@ -168,6 +201,26 @@ bool VarProcessorImpl::getVar(const PropertiesValues &vars, const tstring& var, 
 void VarProcessorImpl::getSpecVar(int id, tstring *value) const
 {
     wchar_t buffer[24];
+    if (id == POINTVAR)
+    {
+        value->assign(L".");
+        return;
+    }
+    if (id == UNDERLINEVAR)
+    {
+        value->assign(L"_");
+        return;
+    }
+    if (id == EMPTY) 
+    {
+        value->assign(L"");
+        return;
+    }
+    if (id == DOLLAR)
+    {
+        value->assign(L"$");
+        return;
+    }
     if (id == TIMESTAMP)
     {
         SYSTEMTIME st;

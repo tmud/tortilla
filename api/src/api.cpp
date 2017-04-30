@@ -141,6 +141,11 @@ xnode xml_load(const wchar_t* filename)
     return xmlLoad(w2a);
 }
 
+xstringw xml_get_load_error()
+{
+    return convert_ansi_to_wide(xmlGetLoadError());
+}
+
 int xml_save(xnode node, const wchar_t* filename)
 {
     WideToAnsi w2a(filename);

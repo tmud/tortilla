@@ -62,6 +62,7 @@ struct InputCommandData
     tstring command;                        // command without spaces and prefix
     tstring parameters;                     // only parameters (without command) as single line (without trimming)
     std::vector<tstring> parameters_list;   // list of parameters separately
+    std::vector<int> parameters_spacesbefore;// number of spaces after parameter and before next parameter (sys cmds only), vector can be empty
     tstring alias;                          // first alias (used in aliases)
     bool dropped;
     bool system;
@@ -138,10 +139,12 @@ public:
 class CompareObject;
 struct InputSubcmd
 {
-    InputSubcmd(const tstring& cmd, bool syscmd) : srccmd(cmd), templ(cmd), system(syscmd) {}
+    InputSubcmd(const tstring& cmd, bool syscmd) : srccmd(cmd), templ(cmd), system(syscmd), markered(false) {}
     tstring srccmd;
     tstring templ;
     bool system;
+    bool markered;
+    std::vector<int> spaces_before;
 };
 class InputTemplateCommands : private std::vector<InputSubcmd>
 {
@@ -158,12 +161,13 @@ private:
     void fillsyscmd(InputCommand cmd);
     void fillgamecmd(InputCommand cmd);
     void parsecmd(const tstring& cmd);
-    void markbrackets(tstring *cmd) const;
-    void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;
+    bool markbrackets(tstring *cmd) const;
+    void unmarkbrackets(tstring* parameters, std::vector<tstring>* parameters_list) const;    
     bool isbracket(const tchar *p) const;
     bool isopenorspace(const tchar *p) const;
     bool iscloseorspace(const tchar *p) const;
     bool isbracketorspace(const tchar *p) const;
+    void parsespaces(InputSubcmd& cmd);
 };
 
 class InputCommandsVarsFilter
@@ -179,7 +183,7 @@ public:
 };
 
 #ifdef _DEBUG
-class InputCommandTemplateUnitTest
+class InputCommandTemplateUnitTests
 {
     static bool test1(const tstring& str, int n, ...);
     static bool test2(const tstring& str, int params, InputCommands *ref);
@@ -188,7 +192,4 @@ class InputCommandTemplateUnitTest
 public:
     static void run();
 };
-#define RUN_INPUTPROCESSOR_TESTS InputCommandTemplateUnitTest::run();
-#else
-#define RUN_INPUTPROCESSOR_TESTS
 #endif

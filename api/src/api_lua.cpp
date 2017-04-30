@@ -138,6 +138,11 @@ const char* luaT_typename(lua_State* L, int index)
 bool luaT_run(lua_State *L, const char* func, const char* op, ...)
 {
     int n = lua_gettop(L);
+    if (n < 0)
+    {
+        n = 0;
+        lua_settop(L, 0);
+    }
     int on_stack = 0;
     bool object_method = false;
     bool simple_method = false;
@@ -278,6 +283,15 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
         base::log(L, error.c_str());
         return false;
     }
+
+    if (required_func_pos > 1) {
+        int to_pop = required_func_pos - 1;
+        while (to_pop > 0) {
+            lua_remove(L, 1);
+            to_pop--;
+        }
+    }
+
     if (lua_pcall(L, oplen, LUA_MULTRET, 0))
     {
         if (lua_isstring(L, -1))

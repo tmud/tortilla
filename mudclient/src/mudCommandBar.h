@@ -1,4 +1,5 @@
 #pragma once
+#include "mudCommandBarInd.h"
 
 class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
 {
@@ -38,6 +39,8 @@ class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
     HWND m_callback_hwnd;
     UINT m_callback_msg;
 
+    MudCommandBarIndicator m_timer;
+
 public:
     BOOL PreTranslateMessage(MSG* pMsg)
     {
@@ -55,6 +58,13 @@ public:
         m_callback_hwnd(NULL), m_callback_msg(0)
     {
         m_getTextBuffer.alloc(256);
+    }
+
+    enum Indicator { IND_TIMERS = 0 };
+    void setIndicatorStatus(Indicator i, bool status) 
+    {
+        if (i == IND_TIMERS)
+            m_timer.setStatus(status);    
     }
 
     void setParams(int size, HFONT font)
@@ -130,11 +140,17 @@ public:
         setText(cmd, -1, false);
     }
 
+    void getCommandLine(tstring *cmd)
+    {
+         getText(cmd);
+    }
+
 private:
     BEGIN_MSG_MAP(MudCommandBar)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_USER, OnPaste)
+        MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
     END_MSG_MAP()
 
     void setText(const tstring& text, int cursor = -1, bool add_undo = true)
@@ -196,6 +212,8 @@ private:
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled)
     {
         m_edit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
+        m_timer.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE);
+        m_timer.setText(L"Таймеры:");
         bHandled = FALSE;
         return 0;
     }
@@ -203,8 +221,27 @@ private:
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&)
     {
         RECT rc; GetClientRect(&rc);
-        rc.right -= 48;
+        rc.right -= 24;
+        rc.left = rc.right - m_timer.getWidth();
+        RECT t(rc);
+        t.top += 4;
+        t.bottom -= 3;
+
+        m_timer.MoveWindow(&t);
+        rc.right = rc.left - 4;
+        rc.left = 0;
         m_edit.MoveWindow(&rc);
+        return 0;
+    }
+
+    LRESULT OnMouseWheel(UINT, WPARAM wparam, LPARAM lparam, BOOL&)
+    {
+        DWORD position = HIWORD(wparam);
+        int direction = (position & 0x8000) ? 1 : -1;
+        if (direction > 0)
+            onHistoryDown();
+        else
+            onHistoryUp();
         return 0;
     }
 
@@ -231,11 +268,9 @@ private:
                 int from = 0, to = 0;
                 m_edit.GetSel(from, to);
 
-                int curpos = to;
                 if (from != to)
-                    bartext.replace(from, to, L"");
-                else
-                    curpos = from + text.length();
+                    bartext.replace(from, to-from, L"");
+                int curpos = from + text.length();
                 bartext.insert(from, text);
                 setText(bartext);
                 m_edit.SetSel(curpos,curpos);
@@ -379,7 +414,8 @@ private:
 
     void onHistoryDown()
     {
-        assert (m_history_index != -1);        
+        if (m_history_index == -1)
+            return;
         std::vector<tstring> &h = propData->cmd_history;
         initHistory();
         const tstring& hc = m_history_const;

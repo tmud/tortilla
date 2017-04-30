@@ -22,10 +22,21 @@
     <ClInclude Include="tasks.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="alert.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="system.def">
       <Filter>Source Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="system.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="warn.ico" />
+    <Image Include="mudclient.ico" />
   </ItemGroup>
 </Project>

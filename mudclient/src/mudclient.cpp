@@ -13,7 +13,7 @@
 CAppModule _Module;
 CMainFrame _wndMain;
 
-int Run(LPTSTR /*lpstrCmdLine*/, int nCmdShow = SW_SHOWDEFAULT)
+int Run(LPTSTR lpstrCmdLine, int nCmdShow = SW_SHOWDEFAULT)
 {
     NetworkInit n;
     if (!n.init())
@@ -40,6 +40,7 @@ int Run(LPTSTR /*lpstrCmdLine*/, int nCmdShow = SW_SHOWDEFAULT)
 	CMessageLoop theLoop;
 	_Module.AddMessageLoop(&theLoop);
 
+    _wndMain.m_cmdLine = lpstrCmdLine;
 	if(_wndMain.CreateEx() == NULL)
 		return 0;
 

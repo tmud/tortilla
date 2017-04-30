@@ -7,15 +7,15 @@ if soundplayer then return end
 
 dofile 'modules.lua'
 
+if not bass then
+  return
+end
+
 local function log(...)
   local w = props.pluginsLogWindow()
   if w then
     vprint(w, '[soundplayer]', ...)
   end
-end
-
-if not bass then
-  log("Модуль SoundPlayer не загружен, требуется Bass.")
 end
 
 soundplayer = {}

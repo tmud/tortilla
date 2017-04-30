@@ -171,6 +171,7 @@ private:
         /*m_timeout.SetFocus();
         int pos = m_timeout.GetWindowTextLength();
         m_timeout.SetSel(pos, pos);*/
+
         ::SetFocus(GetDlgItem(IDOK));
         CenterWindow(GetParent());
         return 0;
@@ -225,7 +226,7 @@ private:
         }
         return 0;
     }
-    
+
     LRESULT OnShowActive(WORD, WORD, HWND, BOOL&)
     {
         settings.showactive = (m_showactive.GetCheck()==BST_CHECKED) ? true : false;

@@ -50,6 +50,7 @@ private:
        MESSAGE_HANDLER(WM_DESTROY, OnCloseDialog)
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        MESSAGE_HANDLER(WM_USER, OnSetFocus)
+       MESSAGE_HANDLER(WM_USER+1, OnKeyDown)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
@@ -61,26 +62,44 @@ private:
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
 
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam == VK_DELETE)
+        {
+            if (m_del.IsWindowEnabled()) {
+                BOOL b = FALSE;
+                OnDeleteElement(0, 0, 0, b);
+            }
+            return 1;
+        }
+        if (wparam == VK_INSERT)
+        {
+            BOOL b = FALSE;
+            OnResetData(0, 0, 0, b);
+            return 1;
+        }
+        return 0;
+    }
+
     LRESULT OnAddElement(WORD, WORD, HWND, BOOL&)
     {
         tstring pattern;
         getWindowText(m_pattern, &pattern);
 
         int index = m_list_values.find(pattern);
-        m_list_values.add(index, pattern);
 
         if (index == -1)
         {
-            int pos = m_list.GetItemCount();
-            m_list.addItem(pos, 0, pattern);
+            index = m_list.getOnlySingleSelection() + 1;
+            m_list_values.insert(index, pattern);
+            m_list.addItem(index, 0, pattern);
         }
         else
         {
+            m_list_values.add(index, pattern);
             m_list.setItem(index, 0, pattern);
         }
 
-        if (index == -1)
-            index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;
@@ -229,7 +248,8 @@ private:
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Ключевые слова", 90);        
-        m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
+        m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
+        m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_state_helper.init(dlg_state, &m_list);
@@ -254,12 +274,7 @@ private:
             m_list.addItem(i, 0, v);
         }
 
-        int index = -1;
-        tstring pattern;
-        getWindowText(m_pattern, &pattern);
-        if (!pattern.empty())
-            index = m_list_values.find(pattern);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(-1);
     }
 
     void updateButtons()

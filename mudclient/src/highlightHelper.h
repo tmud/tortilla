@@ -13,12 +13,13 @@ public:
         colors.assign(L"(\\bblack\\b|\\bred\\b|\\bgreen\\b|\\bbrown\\b|\\bblue\\b|\\bmagenta\\b|\\bcyan\\b|\\bgray\\b|\\bcoal\\b|\\blight red\\b|\\blight green\\b|\\byellow\\b|\\blight blue\\b|\\bpurple\\b|\\blight cyan\\b|\\bwhite\\b|\\blight magenta\\b|\\blight brown\\b|\\bgrey\\b|\\bcharcoal\\b|\\blight yellow\\b)");
         pcre_colors.setRegExp(colors, true);
         pcre_rgb.setRegExp(L"rgb([0-9]+,[0-9]+,[0-9]+)");
-        pcre_prefix.setRegExp(L"border|line|italic|b");
+        pcre_prefix.setRegExp(L"^border|line|italic|b$");
     }
 
     bool checkText(tstring* param)
     {
         tstring tmp(*param);
+        if (tmp.empty()) return false;
         tstring_tolower(&tmp);
         preprocessColors(tmp);
 
@@ -126,6 +127,38 @@ private:
         pcre_rgb.find(*str);
         if (pcre_rgb.getSize() == 0)
             return false;
+        tchar e = 0;
+        int first = pcre_rgb.getFirst(1);
+        if (first != 3)
+        {
+            if (first != 4)
+              return false;
+            tchar b = str->at(0);
+            if (b == L'{') { e = L'}'; }
+            else if (b == L'\'' || b == L'"') { e = b; }
+            else { return false; }
+        }
+        int len = str->length();
+        int last = pcre_rgb.getLast(1);
+        if (len == last) 
+        {
+            if (e != 0)
+                return false;
+        }
+        else
+        {
+            len = len - 1;
+            if (len == last && e != 0) 
+            {
+                tchar s = str->at(last);
+                if (s != e)
+                    return false;
+            }
+            else
+            {
+                return false;
+            }
+        }
         pcre_rgb.getString(1, str);
         return true;
      }
@@ -145,5 +178,17 @@ class HighlightHelper
 {
    static HighlightHelperImpl m_impl;
 public:
-   bool checkText(tstring* param);
+   bool translateColor(tstring* param);
+};
+
+class SubHighlightHelper
+{
+public:
+    SubHighlightHelper(const tstring& s);
+    int  size() const;
+    const tstring& get(int index);
+    bool trimColor(int index, tstring* trimmed);
+private:
+    std::vector<tstring> parts;
+    static Pcre16 m_regexp;
 };

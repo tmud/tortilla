@@ -2,7 +2,55 @@
 -- тестовый код для проверки функционала клиента и модулей, юнит тесты
 -- запускаются при старте клиента
 
-do return end
+local function strassert(s1, s2)
+  if s1 ~= s2 then
+    print("unit test (string) faled: ["..s1.."],["..s2.."]")
+  end
+end
+
+strassert( string.gsub('абвгде', 'аб', '12'), '12вгде' )
+strassert( string.gsub('абвгде', 'вг', '@'), 'аб@де' )
+strassert( string.gsub('абвгде', 'ж', '34'), 'абвгде' )
+strassert( string.gsub('абвгде', 'ж', '34'), 'абвгде' )
+strassert( string.rep('абв', 3), 'абвабвабв' )
+strassert( string.rep('абв', 0), '' )
+strassert( string.rep('абв', -1), '' )
+strassert( string.reverse('абв'), 'вба' )
+strassert( string.reverse(''), '' )
+strassert( string.sub('абвгде', 2), 'бвгде' )
+strassert( string.sub('абвгде', 0), '' )
+strassert( string.sub('абвгде', -1), 'е' )
+strassert( string.sub('абвгде', -3), 'где' )
+strassert( string.sub('', -3), '' )
+strassert( string.sub('абвгде', 2, 2), 'бв' )
+strassert( string.sub('абвгде', 4, 1), 'г' )
+strassert( string.sub('абвгде', 1, 6), 'абвгде' )
+strassert( string.sub('абвгде', 2, 4), 'бвгд' )
+strassert( string.sub('абвгде', -3, 2), 'гд' )
+strassert( string.upper('абВгдЕ'), 'АБВГДЕ' )
+strassert( string.lower('абВгдЕ'), 'абвгде' )
+strassert( string.lfup('абВгдЕ'), 'Абвгде' )
+strassert( string.substr('абВгдЕ', 3), 'абВ' )
+strassert( string.substr('абВгдЕ', 4, 2), 'гд' )
+strassert( string.strstr('абВгдЕ', 'В'), 3 )
+strassert( string.find('абВгдЕ', 'дЕ'), 5 )
+strassert( string.find('абВгдЕ', 'А'), nil )
+strassert( string.trim('  абв где  '), 'абв где' )
+strassert( string.trim('    '), '' )
+local t = string.tokenize('аб,вг,де', ',')
+strassert( t[1], 'аб')
+strassert( t[3], 'де')
+strassert( string.format('абвгде'), 'абвгде' )
+strassert( string.format('аб%%вгде'), 'аб%вгде' )
+strassert( string.format('аб%dвгде', 10.2), 'аб10вгде' )
+strassert( string.format('аб%.1fвгде', 10.2), 'аб10.2вгде' )
+strassert( string.format('аб%.3fвгде %s', 10.21, 'абра'), 'аб10.210вгде абра' )
+do
+runCommand("#wait 2 { #plugin testloadsave on }")
+runCommand("#wait 2 { #plugin testmisc off }")
+runCommand("#wait 2 { #cr;#wout 0 Selection text test }")
+return
+end
 
 dofile 'modules.lua'
 
@@ -134,3 +182,43 @@ print ('Автотесты для модулей extra.declension и extra.dicto
 
 -- автотесты для плагинов
 runCommand("#wait 2 { #plugin loadsave on }")
+runCommand("#wait 2 { #plugin testmisc on }")
+runCommand("#wait 2 { #message all on }")
+
+local s,m,h = system.getTime()
+print(h..":"..m..":"..s)
+
+local day,mon,year = system.getDate()
+print(day.."."..mon.."."..year)
+
+system.appendStringToFile("test.txt", "строка1\r\n")
+system.appendStringToFile("test.txt", "строка2\r\n")
+
+local t = system.loadTextFile("test.txt")
+if not t then
+  print("unit test (appendStringToFile+loadTextFile) faled")
+end
+if t[1] ~= 'строка1' or t[2] ~= 'строка2' then
+  print("unit test loadTextFile faled")
+end
+
+system.deleteFile("test.txt")
+
+if aliases:select('abc') then
+  aliases:delete()
+end
+aliases:add('abc', 'cde')
+aliases:replace('abc', '123')
+
+if aliases:select('abc') then
+  if aliases:get('value') ~= '123' then
+    print('aliases failed')
+  end
+  aliases:delete()
+end
+
+tabs:add('xyz')
+if tabs:select('xyz') then
+  tabs:delete()
+end
+

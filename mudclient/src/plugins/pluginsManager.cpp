@@ -48,7 +48,7 @@ void PluginsManager::initPlugins()
             {
                 if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
-                    if (Plugin::isPlugin(fd.cFileName))
+                    if (Plugin::isPluginEnabled(fd.cFileName))
                         files.push_back(fd.cFileName);
                 }
             } while (::FindNextFile(file, &fd));
@@ -247,9 +247,21 @@ void PluginsManager::updateProps()
 {
     for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
-        if (m_plugins[i]->state())
-            m_plugins[i]->updateProps();
+        Plugin *p = m_plugins[i];
+        if (p->state())
+            p->updateProps();
     }
+}
+
+bool PluginsManager::processMouseWheel(const POINT& pt, DWORD param)
+{
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (p->state() && p->processMouseWheel(pt, param))
+            return true;
+    }
+    return false;
 }
 
 void PluginsManager::processStreamData(MemoryBuffer *data)
@@ -509,6 +521,13 @@ void PluginsManager::processSecondTick()
     doPluginsMethod("tick", 0);
 }
 
+void PluginsManager::processDebugTick()
+{
+#ifdef _DEBUG
+    doPluginsMethod("debugtick", 0);
+#endif
+}
+
 void PluginsManager::processPluginsMethod(const char* method, int args)
 {
      doPluginsMethod(method, args);
@@ -648,7 +667,10 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется table|nil|boolean|string", i);
+            tstring msg(L"Неверный тип результата из метода '");
+            msg.append(TA2W(method));
+            msg.append(L"'. Требуется table|nil|boolean|string");
+            turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_newtable(L);
             for (int j = 0, je = table->size(); j < je; ++j)
@@ -730,6 +752,7 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         cmd->command.clear();
         cmd->parameters.clear();
         cmd->parameters_list.clear();
+        cmd->parameters_spacesbefore.clear();
         cmd->changed =  true;
         return;
     }
@@ -751,6 +774,7 @@ void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, Inp
         return;
 
     cmd->parameters_list.clear();
+    cmd->parameters_spacesbefore.clear();
     tstring symbols(L"{}\"' ");
     tstring params;
     for (int i=1,e=parts.size();i<e;++i)

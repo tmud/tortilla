@@ -27,7 +27,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.12");
+    luaT_pushwstring(L, L"1.20");
     return 1;
 }
 
@@ -57,10 +57,16 @@ void parse_color(const std::wstring& text, COLORREF *color)
 
 int init(lua_State *L)
 {
+    if (!g_tray.create())
+    {
+        base::log(L, L"Критическая ошибка.");
+        base::terminate(L);
+        return 0;
+    }
+
     base::addCommand(L, L"tray");
     base::addMenu(L, L"Плагины/Оповещения (tray)...", 1);
 
-    g_tray.create();
     luaT_Props p(L);
     g_tray.setFont(p.currentFont());
     g_tray.setAlarmWnd(base::getParent(L));
@@ -76,8 +82,9 @@ int init(lua_State *L)
     s.text = GetSysColor(COLOR_INFOTEXT);
     s.background = GetSysColor(COLOR_INFOBK);
 
+    std::wstring error;
     xml::node ld;
-    if (ld.load(path.c_str()) && ld.move(L"params"))
+    if (ld.load(path.c_str(), &error) && ld.move(L"params"))
     {
         if (ld.get(L"timeout", &s.timeout))
             check_minmax(&s.timeout, 1, 5, MAX_TIMEOUT, MAX_TIMEOUT);
@@ -93,6 +100,9 @@ int init(lua_State *L)
         if (ld.get(L"bkgndcolor", &bkgnd))
             parse_color(bkgnd, &s.background);
         ld.move(L"/");
+    } else {
+      if (!error.empty())
+        base::log(L, error.c_str());
     }
     ld.deletenode();
     return 0;
@@ -115,7 +125,7 @@ int release(lua_State *L)
     sv.move(L"/");
 
     std::wstring path;
-    base::getPath(L, L"config.xml", &path);   
+    base::getPath(L, L"config.xml", &path);
     if (!sv.save(path.c_str()))
     {
         sv.deletenode();
@@ -164,21 +174,24 @@ int syscmd(lua_State *L)
             lua_pop(L, 1);
             if (!text.empty())
             {
-                message m;
-                COLORREF text_color = g_tray.traySettings().text;
-                COLORREF bgnd_color = g_tray.traySettings().background;
+                Msg m;
+                COLORREF text_color = 0; COLORREF bgnd_color = 0;
                 if (base::translateColors(L, text[0].c_str(), &text_color, &bgnd_color))
                 {
-                    text.pop_front();
-                    m.usecolors = true;
                     m.textcolor = text_color;
                     m.bkgndcolor = bgnd_color;
+                    text.pop_front();
+                }
+                else
+                {
+                    m.textcolor =  g_tray.traySettings().text;
+                    m.bkgndcolor = g_tray.traySettings().background;
                 }
                 for (int i=0,e=text.size();i<e;++i) {
-                   if (i!=0) m.text.append(L" ");
+                   if (i != 0) m.text.append(L" ");
                    m.text.append(text[i]);
                 }
-                g_tray.showMessage(m, false);
+                g_tray.addMessage(m);
             }
             lua_pushnil(L);
             return 1;

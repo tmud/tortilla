@@ -13,6 +13,13 @@ bool isVistaOrHigher()
     return true;
 }
 
+void getClientExePath(tstring* path)
+{
+    tchar buffer[MAX_PATH + 1];
+    GetModuleFileName(_Module.GetModuleInstance(), buffer, MAX_PATH);
+    path->assign(buffer);
+}
+
 void loadString(UINT id, tstring* string)
 {
     WCHAR buffer[256];
@@ -32,6 +39,23 @@ int msgBox(HWND parent, UINT msg, UINT options)
     tstring msg_text;
     loadString(msg, &msg_text);
     return msgBox(parent, msg_text, options);
+}
+
+int msgBox(HWND parent, const tstring& msg, const tstring&descr, UINT options)
+{
+    tstring msg_text(msg);
+    if (!descr.empty()) {
+        msg_text.append(L"\n\n");
+        msg_text.append(descr);
+    }
+    return msgBox(parent, msg_text, options);
+}
+
+int msgBox(HWND parent, UINT msg, const tstring&descr, UINT options)
+{
+    tstring msg_text;
+    loadString(msg, &msg_text);
+    return msgBox(parent, msg_text, descr, options);
 }
 
 void getWindowText(HWND handle, tstring *string)
@@ -599,3 +623,170 @@ void OutputTelnetOption(const void *data, const char* label)
     OutputDebugStringA(tmp);
 }
 #endif
+
+void CReBarSettings::Save(CReBarCtrl& ReBar, tstring *param)
+{
+    ATLASSERT(ReBar.IsWindow());    
+    DWORD cbBandCount = ReBar.GetBandCount();
+    Save(cbBandCount, param);
+    for (UINT i = 0; i < cbBandCount; i++)
+    {
+        REBARBANDINFO rbi;
+        memset(&rbi, 0, sizeof(rbi));
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        Save(rbi.wID, param);
+        Save(rbi.cx, param);
+        DWORD break_line = (rbi.fStyle & RBBS_BREAK) ? 1 : 0;
+        Save(break_line, param);
+        DWORD visible = (rbi.fStyle & RBBS_HIDDEN) ? 0 : 1;
+        Save(visible, param);
+    }
+}
+
+bool CReBarSettings::IsVisible(CReBarCtrl& ReBar, DWORD wID)
+{
+     DWORD cbBandCount = ReBar.GetBandCount();
+     for (UINT i = 0; i < cbBandCount; i++)
+     {
+        REBARBANDINFO rbi;
+        memset(&rbi, 0, sizeof(rbi));
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        if (wID == rbi.wID) {
+            return (rbi.fStyle & RBBS_HIDDEN) ? false : true;
+        }
+     }
+     return false;
+}
+
+
+void CReBarSettings::Load(CReBarCtrl& ReBar, const tstring& param)
+{
+    ATLASSERT(ReBar.IsWindow());
+    tstring s(param);
+    DWORD cbBandCount = 0;
+    if (!Load(&cbBandCount, &s))
+        return;
+    struct BandInfo
+    {
+        DWORD ID;
+        DWORD cx;
+        bool BreakLine;
+        bool Visible;
+    };
+    BandInfo* bands = new BandInfo[cbBandCount];
+    for (DWORD i = 0; i < cbBandCount; i++)
+    {
+        BandInfo &bi = bands[i];
+        DWORD brk = 0; DWORD visible = 0;
+        if (!Load(&bi.ID, &s) || !Load(&bi.cx, &s) || !Load(&brk, &s) || !Load(&visible, &s))
+        {
+            delete []bands;
+            return;
+        }
+        bi.BreakLine = (brk == 0) ? false : true;
+        bi.Visible = (visible == 0) ? false : true;
+    }
+
+    for (DWORD i = 0; i < cbBandCount; i++)
+    {
+        ReBar.MoveBand(ReBar.IdToIndex(bands[i].ID), i);
+        REBARBANDINFO rbi;
+        rbi.cbSize = sizeof(rbi);
+        rbi.fMask = RBBIM_ID | RBBIM_SIZE | RBBIM_STYLE;
+        ReBar.GetBandInfo(i, &rbi);
+        rbi.cx = bands[i].cx;
+        if (bands[i].BreakLine)
+            rbi.fStyle |= RBBS_BREAK;
+        else
+            rbi.fStyle &= (~RBBS_BREAK);
+        if (bands[i].Visible)
+            rbi.fStyle &= (~RBBS_HIDDEN);
+        else
+            rbi.fStyle |= RBBS_HIDDEN;
+        ReBar.SetBandInfo(i, &rbi);
+    }
+    delete []bands;
+}
+
+void CReBarSettings::Save(DWORD v, tstring* sv)
+{
+    wchar_t buffer[16];
+    swprintf(buffer, L"%u;", v);
+    sv->append(buffer);
+}
+
+bool CReBarSettings::Load(DWORD *v, tstring* sv)
+{
+    size_t pos = sv->find(L';');
+    if (pos == tstring::npos)
+        return false;
+    tstring value(sv->substr(0, pos));
+    if (!isOnlyDigits(value))
+        return false;
+    int n = 0;
+    if (!w2int(value, &n))
+        return false;
+    *v = static_cast<DWORD>(n);
+    tstring tmp(sv->substr(pos+1));
+    sv->swap(tmp);
+    return true;
+}
+
+bool CreateLink::create(const tstring& group, const tstring& profile)
+{
+    tstring parameter(L"\"");
+    parameter.append(group);
+    parameter.append(L":");
+    parameter.append(profile);
+    parameter.append(L"\"");
+
+    tstring path;
+    getClientExePath(&path);
+
+    tstring linkpath;
+    {
+        tchar path[MAX_PATH + 1];
+        if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, 0, path)))
+        {
+            linkpath.assign(path);
+        }
+    }
+    if (linkpath.empty())
+        return false;
+    linkpath.append(L"\\");
+    linkpath.append(group);
+    linkpath.append(L"-");
+    linkpath.append(profile);
+    linkpath.append(L".lnk");
+
+    ChangeDir workingdir;
+
+    IShellLink*   pShellLink;            /* IShellLink object pointer */
+    IPersistFile* pPersistFile;          /* IPersistFile object pointer */
+
+    bool result = false;
+    HRESULT hRes = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&pShellLink);
+    if (SUCCEEDED(hRes))
+    {
+        hRes = pShellLink->SetPath(path.c_str());
+        if (SUCCEEDED(hRes))
+            hRes = pShellLink->SetArguments(parameter.c_str());
+        if (SUCCEEDED(hRes))
+            hRes = pShellLink->SetWorkingDirectory(workingdir.getCurrentDir().c_str());
+        if (SUCCEEDED(hRes))
+            hRes = pShellLink->QueryInterface(IID_IPersistFile, (LPVOID*)&pPersistFile);
+        if (SUCCEEDED(hRes))
+        {
+           hRes = pPersistFile->Save(linkpath.c_str(), TRUE);
+           pPersistFile->Release();
+           if (SUCCEEDED(hRes))
+               result = true;
+        }
+        pShellLink->Release();
+    }
+    return result;
+}

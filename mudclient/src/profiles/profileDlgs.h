@@ -11,15 +11,18 @@ class LoadProfileDlg : public CDialogImpl<LoadProfileDlg>
    int m_group_idx;
    tstring m_profile_group;
    tstring m_profile_name;
+   CButton m_create_link;
+   bool m_create_link_state;
 
 public:
    enum { IDD = IDD_LOAD_PROFILE };
-   LoadProfileDlg() : m_group_idx(-1) {}
+   LoadProfileDlg() : m_group_idx(-1), m_create_link_state(false) {}
 
-   void getProfile(Profile *profile)
+   void getProfile(Profile *profile, bool* create_link)
    {
        profile->group.assign(m_profile_group);
        profile->name.assign(m_profile_name);
+       *create_link = m_create_link_state;
    }
 
 private:
@@ -37,6 +40,7 @@ private:
         m_groups_list.Attach(GetDlgItem(IDC_LIST_PROFILE_GROUP));
         m_list.Attach(GetDlgItem(IDC_LIST_PROFILE));
         m_ok.Attach(GetDlgItem(IDOK));
+        m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
 
         ProfilesGroupList groups;
         groups.init();
@@ -85,7 +89,7 @@ private:
         {
             return 0;
         }
-
+        m_create_link_state = (m_create_link.GetCheck() == BST_CHECKED);
         EndDialog(IDOK);
 		return 0;
 	}
@@ -141,8 +145,10 @@ private:
 
 struct CopyProfileData
 {
+    CopyProfileData() : create_link(false) {}
     Profile dst;
     Profile src;
+    bool create_link;
 };
 
 class NewWorldDlg : public CDialogImpl<NewWorldDlg>
@@ -157,7 +163,7 @@ class NewWorldDlg : public CDialogImpl<NewWorldDlg>
     CopyProfileData m_data;
     std::vector<tstring> m_templates;
     bool m_group_name_changed;
-
+    CButton m_create_link;
 public:
     enum { IDD = IDD_NEW_WORLD };
     NewWorldDlg() : m_group_idx(-1), m_group_name_changed(false)
@@ -186,6 +192,7 @@ private:
         m_newworld_name.Attach(GetDlgItem(IDC_EDIT_NEWWORLD_NAME));
         m_newworld_profile.Attach(GetDlgItem(IDC_EDIT_NEWWORLD_PROFILE));
         m_ok.Attach(GetDlgItem(IDOK));
+        m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
 
         m_groups_list.AddString(L"Создать пустой мир и профиль");
         m_groups_list.SetCurSel(0);
@@ -244,6 +251,7 @@ private:
                 m_data.src.name.clear();
             }
         }
+        m_data.create_link = (m_create_link.GetCheck() == BST_CHECKED);        
         EndDialog(IDOK);
         return 0;
     }
@@ -360,8 +368,11 @@ class NewProfileDlg : public CDialogImpl<NewProfileDlg>
     tstring m_group;
     tstring m_profile_source;
     tstring m_profile_name;
+    CButton m_create_link;
+    bool m_create_link_state;
 
 public:
+   NewProfileDlg() : m_create_link_state(false) {}
    enum { IDD = IDD_NEW_PROFILE };
 
    void loadProfiles(const tstring& group)
@@ -376,6 +387,7 @@ public:
        profile->src.name = m_profile_source;
        profile->dst.group = m_group;
        profile->dst.name = m_profile_name;
+       profile->create_link = m_create_link_state;
    }
 
 private:
@@ -391,6 +403,7 @@ private:
         m_list.Attach(GetDlgItem(IDC_LIST_PROFILE_NEW));
         m_name.Attach(GetDlgItem(IDC_EDIT_PROFILE_NEW));
         m_ok.Attach(GetDlgItem(IDOK));
+        m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
 
         tstring text(L"Создать пустой профиль");
         m_list.AddString(text.c_str());
@@ -434,6 +447,7 @@ private:
         int src_index = m_list.GetCurSel();
         if (src_index != 0)
             m_profile_source = m_plist.profiles[src_index-1];
+        m_create_link_state = (m_create_link.GetCheck() == BST_CHECKED);
         EndDialog(IDOK);
         return 0;
     }

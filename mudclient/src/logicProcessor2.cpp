@@ -17,6 +17,8 @@ public:
     parser(InputCommand pcmd, tstring *error_out) : cmd(pcmd) { perror = error_out; }
     int size() const { return cmd->parameters_list.size(); }
     const tstring& at(int index) const { return cmd->parameters_list[index]; }
+    int spacesBefore(int index) const { int count = cmd->parameters_spacesbefore.size();
+        return (index >= 0 && index < count) ? cmd->parameters_spacesbefore[index] : 0; }
     const tchar* c_str(int index) const { return cmd->parameters_list[index].c_str(); }
     const tstring& params() const { return cmd->parameters; }
     bool isInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return isInt(p); }
@@ -176,6 +178,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
             msg.append(L" [");
             bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
             if (cmd->changed) msg.append(prefix);
+            if (!usesrc && cmd->system) msg.append(prefix);
             msg.append(usesrc ? cmd->srccmd : cmd->command);
             if (!hide_cmd)
                 msg.append(usesrc ? cmd->srcparameters : cmd->parameters);
@@ -196,7 +199,14 @@ void LogicProcessor::processGameCommand(InputCommand cmd)
     tstring tmp(cmd->command);
     tmp.append(cmd->parameters);
     tmp.append(br);
-    processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+
+    int flags = SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD;
+    if (tortilla::getProperties()->newline_commands && !cmd->srccmd.empty())
+    {
+        flags |= NEW_LINE;
+    }
+
+    processIncoming(tmp.c_str(), tmp.length(), flags, 0);
 
     m_pHost->preprocessCommand(cmd);
     if (cmd->dropped)
@@ -216,7 +226,7 @@ void LogicProcessor::processGameCommand(InputCommand cmd)
         tmp.append(L" ");
         tmp.append(cmd->parameters);
         tmp.append(br);
-        processIncoming(tmp.c_str(), tmp.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|GAME_CMD, 0);
+        processIncoming(tmp.c_str(), tmp.length(), flags, 0);
         tmp.erase(tmp.begin());
     }
     sendToNetwork(tmp);
@@ -233,7 +243,25 @@ void LogicProcessor::updateProps(int update, int options)
     m_updatelog.clear();
 }
 //------------------------------------------------------------------
+bool LogicProcessor::setComponent(const tstring& name, bool mode)
+{
+    ModeCmdHelper ch(tortilla::getProperties());
+    bool result = ch.setMode(name, mode);
+    if (result) {
+       tstring str;
+       ch.getStateString(name, &str);
+       tmcLog(str);
+       tortilla::getPluginsManager()->processPluginsMethod("compsupdated", 0);
+    }
+    return result;
+}
+//------------------------------------------------------------------
 IMPL(drop)
+{
+    if (p->size() != 0)
+        p->invalidargs();
+}
+IMPL(stop)
 {
     if (p->size() != 0)
         p->invalidargs();
@@ -264,7 +292,7 @@ IMPL(action)
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
     int update = script.process(p, &pdata->actions, &pdata->groups, 
-            L"Триггеры(actions)", L"Триггеры", L"Новый триггер", &ph);
+            L"Триггеры(actions)", L"Триггеры", L"action", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
@@ -274,7 +302,7 @@ IMPL(unaction)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
-    int update = script.process(p, &pdata->actions, L"Удаление триггера", &ph);
+    int update = script.process(p, &pdata->actions, L"Удаление триггера", L"action", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
@@ -286,7 +314,7 @@ IMPL(alias)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
     AliasTestControl control;
     int update = script.process(p, &pdata->aliases, &pdata->groups,
-        L"Макросы(aliases)", L"Макросы", L"Новый макрос", &ph, &control);
+        L"Макросы(aliases)", L"Макросы", L"alias", &ph, &control);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -296,7 +324,7 @@ IMPL(unalias)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
-    int update = script.process(p, &pdata->aliases, L"Удаление макроса", &ph);
+    int update = script.process(p, &pdata->aliases, L"Удаление макроса", L"alias", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -307,7 +335,7 @@ IMPL(sub)
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
     int update = script.process(p, &pdata->subs, &pdata->groups,
-        L"Замены(subs)", L"Замены", L"Новая замена", &ph);
+        L"Замены(subs)", L"Замены", L"sub", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
@@ -317,7 +345,7 @@ IMPL(unsub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
-    int update = script.process(p, &pdata->subs, L"Удаление замены", &ph);
+    int update = script.process(p, &pdata->subs, L"Удаление замены", L"sub", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
@@ -329,7 +357,7 @@ IMPL(hotkey)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
     HotkeyTestControl control;
     int update = script.process(p, &pdata->hotkeys, &pdata->groups,
-        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"Новая горячая клавиша", &ph,
+        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"hotkey", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
@@ -340,7 +368,7 @@ IMPL(unhotkey)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
-    int update = script.process(p, &pdata->hotkeys, L"Удаление горячей клавиши", &ph);
+    int update = script.process(p, &pdata->hotkeys, L"Удаление горячей клавиши", L"hotkey", &ph);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
 
@@ -352,7 +380,7 @@ IMPL(highlight)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
     HighlightTestControl control;
     int update = script.process(p, &pdata->highlights, &pdata->groups,
-        L"Подсветки(highlights)", L"Подсветка", L"Новая подсветка", &ph,
+        L"Подсветки(highlights)", L"Подсветка", L"highlight", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
@@ -363,7 +391,7 @@ IMPL(unhighlight)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
-    int update = script.process(p, &pdata->highlights, L"Удаление подсветки", &ph);
+    int update = script.process(p, &pdata->highlights, L"Удаление подсветки", L"highlight", &ph);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
 
@@ -373,7 +401,7 @@ IMPL(gag)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &pdata->gags, &pdata->groups, L"Фильтры (gags)", L"Фильтр", &ph);
+    int update = script.process(p, &pdata->gags, &pdata->groups, L"Фильтры (gags)", L"gag", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
@@ -383,7 +411,7 @@ IMPL(ungag)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &pdata->gags, L"Удаление фильтра", &ph);
+    int update = script.process(p, &pdata->gags, L"Удаление фильтра", L"gag", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
@@ -393,7 +421,7 @@ IMPL(antisub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"Антизамены (antisubs)", L"Антизамена", &ph);
+    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"Антизамены (antisubs)", L"antisub", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -403,7 +431,7 @@ IMPL(unantisub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &pdata->antisubs, L"Удаление антизамены", &ph);
+    int update = script.process(p, &pdata->antisubs, L"Удаление антизамены", L"antisub", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -722,7 +750,13 @@ IMPL(hide)
         tstring msg(L"*****\r\n");
         processIncoming(msg.c_str(), msg.length(), SKIP_ACTIONS|SKIP_SUBS|SKIP_HIGHLIGHTS|NEW_LINE, 0);
         WCHAR br[2] = { 10, 0 };
-        tstring cmd(p->params());
+        tstring cmd;
+        for (int i=0,e=p->size(); i<e; ++i)
+        {
+            if (i != 0)
+                cmd.append(L" ");
+            cmd.append(p->at(i));
+        }
         cmd.append(br);
         sendToNetwork(cmd);
         return;
@@ -808,18 +842,16 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (file.empty())
         {
             if (log == 0)
-                swprintf(pb.buffer, pb.buffer_len, L"Лог не был открыт.");
+                swprintf(pb.buffer, pb.buffer_len, L"Лог открыт не был.");
             else
-                swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d не был открыт.", log);
+                swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d открыт не был.", log);
             tmcLog(pb.buffer);
             return; 
         }
     }
 
     tstring logfile(file);
-    m_logs.calcFileName(logfile);
-
-    id = m_logs.openLog(logfile, newlog);
+    id = m_logs.openLog(logfile, newlog, 0);
     if (id == -1)
     {
         if (log == 0)
@@ -835,7 +867,7 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
             swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
         m_wlogs[log] = id;
     }
-    tmcLog(pb.buffer);    
+    tmcLog(pb.buffer);
 }
 
 void LogicProcessor::logf(parser *p, bool newlog)
@@ -880,6 +912,60 @@ IMPL(wlogn)
     wlogf(p, true);
 }
 
+void LogicProcessor::clogf_main(const tstring& file, bool newlog)
+{
+    if (m_clog != -1)
+    {
+        tstring oldfile(m_logs.getLogFile(m_clog));
+        swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
+        tmcLog(pb.buffer);
+        m_logs.closeLog(m_clog);
+        m_clog = -1;
+        if (file.empty())
+            return;
+    }
+    else
+    {
+        if (file.empty())
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Лог открыт не был.");
+            tmcLog(pb.buffer);
+            return;
+        }
+    }
+
+    tstring logfile(file);
+    int id = m_logs.openLog(logfile, newlog, 1);
+    if (id == -1)
+    {
+        swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
+    }
+    else
+    {
+        swprintf(pb.buffer, pb.buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
+        m_clog = id;
+    }
+    tmcLog(pb.buffer);
+}
+
+void LogicProcessor::clogf(parser *p, bool newlog)
+{
+    int n = p->size();
+    if (n == 0)  { clogf_main(L"", newlog); return; }
+    if (n == 1)  { clogf_main(p->at(0), newlog); return; }
+    p->invalidargs();
+}
+
+IMPL(clog)
+{
+    clogf(p, false);
+}
+
+IMPL(clogn)
+{
+    clogf(p, true);
+}
+
 IMPL(wname)
 {
     int n = p->size();
@@ -907,7 +993,7 @@ IMPL(plugin)
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
-    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый индекс окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
+    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый номер окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
     tmcLog(pb.buffer);
     p->invalidargs();
 }
@@ -948,7 +1034,7 @@ IMPL(whide)
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions_subs)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -959,7 +1045,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     for (int i=0,e=params.size(); i<e; ++i)
     {
         tstring p(params[i]);
-        if (!last_color_teg && tc.checkText(&p))    // it color teg
+        if (!last_color_teg && tc.checkText(&p))    // it is color teg
         {
             last_color_teg = true;
             PropertiesHighlight hl;
@@ -990,10 +1076,34 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    int flags = SKIP_SUBS|GAME_LOG|WORK_OFFLINE;
-    if (!enable_actions)
-        flags |= SKIP_ACTIONS;
+    int flags = GAME_LOG|WORK_OFFLINE;
+    if (!enable_actions_subs)
+        flags |= (SKIP_ACTIONS|SKIP_SUBS);
     printIncoming(data, flags, view);
+}
+
+void LogicProcessor::printex(int view, const parser* p, int from, bool enable_actions_subs)
+{
+      std::vector<tstring> params;
+      int n = p->size();
+      params.resize(n);
+      for (int i=from; i<n; ++i)
+      {
+          int spaces = p->spacesBefore(i);
+          if (spaces > 1) {
+              tstring tmp(spaces-1, L' ');
+              tmp.append(p->at(i));
+              params[i].assign(tmp);
+          } else {
+              params[i].assign(p->at(i));
+          }
+      }
+      int last = p->spacesBefore(n);
+      if (last > 0) {
+          tstring tmp(last-1, L' ');
+          params.push_back(tmp);
+      }
+      printex(view, params, enable_actions_subs);
 }
 
 IMPL(wprint)
@@ -1004,10 +1114,7 @@ IMPL(wprint)
         int window = p->toInteger(0);
         if (window < 0 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 0, window);
-        std::vector<tstring> data;
-        for (int i=1; i<n; ++i)
-            data.push_back(p->at(i));
-        return printex(window, data, false);
+        return printex(window, p, 1, false);
     }
     p->invalidargs();
 }
@@ -1015,12 +1122,9 @@ IMPL(wprint)
 IMPL(print)
 {
     int n = p->size();
-    if (n > 0)
+    if (n >= 0)
     {
-        std::vector<tstring> data;
-        for (int i=0; i<n; ++i)
-            data.push_back(p->at(i));
-        return printex(0, data, true);
+        return printex(0, p, 0, true);
     }
     p->invalidargs();
 }
@@ -1054,7 +1158,7 @@ IMPL(tab)
         int index = pdata->tabwords.find(tab);
         if (index == -1)
             pdata->tabwords.add(index, tab);
-        swprintf(pb.buffer, pb.buffer_len, L"Автоподстановка {%s} добавлена.", tab.c_str());        
+        swprintf(pb.buffer, pb.buffer_len, L"+tab {%s}", tab.c_str());        
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -1073,12 +1177,14 @@ IMPL(untab)
     {
         const tstring &tab = p->at(0);
         int index = pdata->tabwords.find(tab);
-        if (index == -1)
-            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановки {%s} не существует.", tab.c_str());
+        if (index == -1) {
+            helper->tmcLog(L"Варианты не найдены.");
+            return;
+        }
         else
         {
             pdata->tabwords.del(index);
-            swprintf(pb.buffer, pb.buffer_len, L"Автоподстановкa {%s} удалена.", tab.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"-tab {%s}", tab.c_str());
         }
         helper->tmcLog(pb.buffer);
         return;
@@ -1363,17 +1469,79 @@ IMPL(message)
         MessageCmdHelper mh(pdata);
         if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
         {
-            if (n == 1)
-                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s'.", p->at(0).c_str());
-            else
-                swprintf(pb.buffer, pb.buffer_len, L"Некорректный набор параметров: '%s' '%s'.", p->at(0).c_str(), p->at(1).c_str());
-            tmcLog(pb.buffer);
+            p->invalidargs();
         }
         else
         {
             tstring str;
             mh.getStateString(p->at(0), &str);
             tmcLog(str);
+        }
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(wlock)
+{
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        int window = p->toInteger(0);
+        if (window < 1 || window > OUTPUT_WINDOWS)
+            return invalidwindow(p, 1, window);
+        m_pHost->lockWindow(window, true);
+        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл отключен.", window);
+        tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(wunlock)
+{
+    int n = p->size();
+    if (n == 1 && p->isInteger(0))
+    {
+        int window = p->toInteger(0);
+        if (window < 1 || window > OUTPUT_WINDOWS)
+            return invalidwindow(p, 1, window);
+        m_pHost->lockWindow(window, false);
+        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл включен.", window);
+        tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
+//-------------------------------------------------------------------
+IMPL(component)
+{
+    int n = p->size();
+    if (n == 0)
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        ModeCmdHelper mh(pdata);
+        tstring str;
+        mh.getStrings(&str);
+        tmcLog(L"Компоненты:");
+        simpleLog(str);
+        return;
+    }
+
+    if (n == 1 || n == 2)
+    {
+        PropertiesData *pdata = tortilla::getProperties();
+        ModeCmdHelper mh(pdata);
+        if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
+        {
+            p->invalidargs();
+        }
+        else
+        {
+            tstring str;
+            mh.getStateString(p->at(0), &str);
+            tmcLog(str);
+            tortilla::getPluginsManager()->processPluginsMethod("compsupdated", 0);
         }
         return;
     }
@@ -1397,14 +1565,66 @@ IMPL(wait)
      p->invalidargs();
 }
 //-------------------------------------------------------------------
-void LogicProcessor::regCommand(const char* name, syscmd_fun f)
+IMPL(load)
 {
-    PropertiesData *pdata = tortilla::getProperties();
+    int n = p->size();
+    if (n == 1 || n == 2)
+    {
+        tstring profile(p->at(0));
+        tstring group;
+        if (n==2) group.assign(p->at(1));
+        tstring error;
+        m_pHost->loadProfile(profile, group, &error);
+        if (!error.empty())
+            tmcLog(error);
+        return;
+    }
+    p->invalidargs();
+}
+//-------------------------------------------------------------------
+IMPL(savelog)
+{
+    int n = p->size();
+    if (n == 1 || n == 2)
+    {
+        tstring window( (n==1) ? L"0" : p->at(0));
+        tstring filename( (n==1) ? p->at(0) : p->at(1));
+        int v = 0;
+        if (w2int(window, &v) && v >= 0 && v < OUTPUT_WINDOWS)
+        {
+            if (!m_pHost->saveViewData(v, filename))
+            {
+                tstring error(L"Ошибка при сохранении лог-файла: ");
+                error.append(filename);
+                tmcLog(error);
+            }
+            else
+            {
+                tstring msg(L"Лог ");
+                msg.append(filename);
+                msg.append(L" сохранен.");
+                tmcLog(msg);
+            }
+            return;
+        }
+    }
+    p->invalidargs();
+}
+//-------------------------------------------------------------------
+IMPL(none)
+{
+}
+//-------------------------------------------------------------------
+void LogicProcessor::regCommand(const char* name, syscmd_fun f, bool skip_autoset)
+{    
     AnsiToWide a2w(name);
     tstring cmd(a2w);
     m_syscmds[cmd] = f;
-    PropertiesList &p = pdata->tabwords_commands;
-    p.add(-1, cmd);
+    if (!skip_autoset) {
+        PropertiesData *pdata = tortilla::getProperties();
+        PropertiesList &p = pdata->tabwords_commands;
+        p.add(-1, cmd);
+    }
 }
 
 bool LogicProcessor::init()
@@ -1423,7 +1643,9 @@ bool LogicProcessor::init()
     regCommand("zap", disconnect);
     regCommand("disconnect", disconnect);
 
-    regCommand("drop", drop);
+    regCommand("drop", drop, true);
+    regCommand("stop", stop, true);
+
     regCommand("action", action);
     regCommand("unaction", unaction);
     regCommand("alias", alias);
@@ -1455,6 +1677,7 @@ bool LogicProcessor::init()
     regCommand("output", print);
     regCommand("message", message);
     regCommand("echo", message);
+    regCommand("component", component);
 
     regCommand("tab", tab);
     regCommand("untab", untab);
@@ -1469,8 +1692,20 @@ bool LogicProcessor::init()
 
     regCommand("wlog", wlog);
     regCommand("wlogn", wlogn);
+    regCommand("clog", clog);
+    regCommand("clogn", clogn);
+
     regCommand("wname", wname);
 
     regCommand("plugin", plugin);
+    regCommand("load", load);
+
+    regCommand("savelog", savelog);
+
+    regCommand("none", none, true);
+
+    regCommand("wlock", wlock);
+    regCommand("wunlock", wunlock);
+
     return true;
 }

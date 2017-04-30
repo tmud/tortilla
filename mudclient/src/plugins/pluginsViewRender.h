@@ -20,6 +20,17 @@ public:
     void selectFont(CFont* f);
     void regImage(Image *img);
 
+    void point(int x, int y);
+    void lineto(int x, int y);
+
+    void ellipse(const RECT& r);
+    void solidEllipse(const RECT& r);
+    void solidEllipse(const RECT& r, COLORREF color);
+
+    void circle(int x, int y, int r);
+    void solidCircle(int x, int y, int r);
+    void solidCircle(int x, int y, int r, COLORREF color);
+
     void drawRect(const RECT& r);
     void drawSolidRect(const RECT& r, COLORREF* solid_color);
     void drawImage(Image *img, int x, int y);
@@ -32,6 +43,8 @@ public:
     int  getTextWidth(const tstring& text);
 
 private:
+    void calcRectForCircle(int x, int y, int r, RECT *rc);
+
     lua_State *renderL;
     lua_ref m_render_func_ref;
     CWindow m_wnd;

@@ -1,9 +1,12 @@
 #pragma once 
 
 bool isVistaOrHigher();
+void getClientExePath(tstring* path);
 void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, const tstring& msg, UINT options);
 int msgBox(HWND parent, UINT msg, UINT options);
+int msgBox(HWND parent, UINT msg, const tstring&descr, UINT options);
+int msgBox(HWND parent, const tstring& msg, const tstring&descr, UINT options);
 void getWindowText(HWND handle, tstring *string);
 bool w2int(const tstring& str, int *value);
 void int2w(int value, tstring* str);
@@ -128,3 +131,20 @@ void OutputTelnetOption(const void *data, const char* label);
 #define OUTPUT_BYTES(data, len, maxlen, label)
 #define OUTPUT_OPTION(data, label)
 #endif
+
+class CReBarSettings
+{
+public:
+    void Save(CReBarCtrl& ReBar, tstring *param);
+    void Load(CReBarCtrl& ReBar, const tstring& param);
+    bool IsVisible(CReBarCtrl& ReBar, DWORD wID);
+private:
+    void Save(DWORD v, tstring* sv);
+    bool Load(DWORD *v, tstring* sv);
+};
+
+class CreateLink
+{
+public:
+    bool create(const tstring& group, const tstring& profile);
+};

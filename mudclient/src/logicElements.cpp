@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "accessors.h"
 #include "logicElements.h"
+#include "highlightHelper.h"
 
 CompareData::CompareData(MudViewString *s) : string(s), start(0)
 {
@@ -19,6 +20,43 @@ void CompareData::fullinit()
 {
     start = 0;
     reinit();
+}
+
+void CompareData::setBlock(int blockpos, MudViewStringBlock &b)
+{
+    std::vector<MudViewStringBlock> &vb = string->blocks;
+    int size = vb.size();
+    if (blockpos >=0 && blockpos < size)
+    {
+         vb[blockpos] = b;
+         return;
+    }
+    assert(false);
+}
+
+void CompareData::insertBlocks(int blockpos, int count)
+{
+    std::vector<MudViewStringBlock> &vb = string->blocks;
+    int size = vb.size();
+    if (blockpos >=0 && blockpos < size && count > 0)
+    {
+        MudViewStringBlock b;
+        vb.insert(vb.begin()+blockpos, count, b);
+        return;
+    }
+    assert(false);
+}
+
+void CompareData::delBlocks(int blockpos, int count)
+{
+    std::vector<MudViewStringBlock> &vb = string->blocks;
+    int size = vb.size();
+    if (blockpos >=0 && blockpos < size && count > 0 && (blockpos+count) <= size)
+    {
+        vb.erase(vb.begin()+blockpos, vb.begin()+blockpos+count);
+        return;
+    }
+    assert(false);
 }
 
 void CompareData::del(CompareRange& range)
@@ -44,6 +82,34 @@ int CompareData::fold(CompareRange& range)
     return range.begin;
 }
 
+void CompareData::appendto(CompareRange& range, std::vector<MudViewStringBlock>& b)
+{
+    int size = fullstr.length();
+    if (range.begin >=0 && range.begin < size &&
+        range.end > 0 && range.end <= size)
+    {
+        std::vector<MudViewStringBlock> &vb = string->blocks;
+        int begin = range.begin;
+        int end = range.end;
+        int begin_block = findblockpos(begin, 0);
+        int end_block = findblockpos(end, 1);
+        if (begin_block == end_block) {
+            MudViewStringBlock newb(vb[begin_block]);
+            newb.string = newb.string.substr(begin, end-begin+1);
+            b.push_back(newb);
+        } else {
+            MudViewStringBlock newb(vb[begin_block]);
+            newb.string = newb.string.substr(begin);
+            b.push_back(newb);
+            for (int i=begin_block+1,e=end_block-1;i<=e;++i)
+                b.push_back(vb[i]);
+            newb = vb[end_block];
+            newb.string = newb.string.substr(0, end+1);
+            b.push_back(newb);
+        }
+    }
+}
+
 bool CompareData::cut(CompareRange& range)
 {
     int size = fullstr.length();
@@ -54,17 +120,18 @@ bool CompareData::cut(CompareRange& range)
         range.end = cutpos(range.end, 1);
         return true;
     }
+    assert(false);
     return false;
 }
 
-bool CompareData::find(CompareRange& range)
+bool CompareData::findBlocks(CompareRange& range)
 {
     int size = fullstr.length();
     if (range.begin >=0 && range.begin < size &&
         range.end > 0 && range.end <= size)
     {
-        range.begin = findpos(range.begin, 0);
-        range.end = findpos(range.end, 1);
+        range.begin = findblock(range.begin, 0);
+        range.end = findblock(range.end, 1);
         return true;
     }
     return false;
@@ -100,7 +167,7 @@ int CompareData::cutpos(int pos, int d)
     return bi+(1-d);
 }
 
-int CompareData::findpos(int pos, int d)
+int CompareData::findblockpos(int& pos, int d)
 {
     std::vector<MudViewStringBlock> &vb = string->blocks;
     int p = 0; int bi = start; pos -= d;
@@ -110,10 +177,21 @@ int CompareData::findpos(int pos, int d)
         int len = b.string.length();
         int last = p + len - 1;
         if (pos >= p && pos <= last)
-            { bi = i; break; }
+            { bi = i; pos=pos-p; break; }
         p = p + len;
     }
     return bi;
+}
+
+int CompareData::findblock(int pos, int d)
+{
+    int p = pos;
+    return findblockpos(p, d);
+}
+
+int CompareData::findBlockBySymbol(int pos)
+{
+    return findblock(pos, 0);
 }
 
 class AliasParameters : public InputParameters
@@ -125,14 +203,19 @@ public:
     void getParameters(std::vector<tstring>* params) const
     {
         if (!m_pCmd->srcparameters.empty())
-            params->push_back(m_pCmd->srcparameters.substr(1));
+            params->push_back(m_pCmd->parameters.substr(1));
         const std::vector<tstring>&p = m_pCmd->parameters_list;
-        params->insert(params->end(), p.begin(), p.end());
+        std::vector<tstring>::const_iterator it = p.begin(), it_end = p.end();
+        for(; it!=it_end;++it) {
+            tstring p(*it);
+            tstring_trimleft(&p);
+            params->push_back(p);
+        }
     }
     void doNoValues(tstring* cmd) const 
     {
         if (m_process_not_values)
-            cmd->append(m_pCmd->srcparameters);
+            cmd->append(m_pCmd->parameters);
     }
 };
 
@@ -224,15 +307,24 @@ bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newc
     m_cmds.makeCommands(newcmds, &ap);
     for (int i=0,e=newcmds->size(); i<e; ++i)
     {
-        if (newcmds->operator[](i)->command == L"drop")
-                data.string->dropped = true;
+        const tstring& cmd = newcmds->operator[](i)->command;
+        if (cmd == L"drop")
+            data.string->dropped = true;
+        else if (cmd == L"stop") {
+            data.string->dropped = true;
+            data.string->show_dropped = true;
+        }
     }
     return true;
 }
 
-Sub::Sub() {}
+Sub::Sub() : m_phelper(NULL) {}
+Sub::~Sub() { delete m_phelper; }
+
 void Sub::init(const property_value& v)
 {
+    delete m_phelper;
+    m_phelper = new ParamsHelper(v.value, false);
     m_value = v.value;
     m_compare.init(v.key, false);
 }
@@ -246,28 +338,126 @@ bool Sub::processing(CompareData& data)
     m_compare.getRange(&range);
 
     CompareRange check(range);
-    if (!data.find(check))
+    if (!data.findBlocks(check))
         return false;
 
-    std::vector<MudViewStringBlock> &b = data.string->blocks;
+    std::vector<MudViewStringBlock> &sb = data.string->blocks;
     for (int i=check.begin; i<=check.end; ++i)
     {
-        if (b[i].subs_protected)
+        if (sb[i].subs_protected)
             return false;
     }
 
-    int pos = data.fold(range);
-    if (pos == -1) return false;
+    // generate new blocks to insert
+    std::vector<MudViewStringBlock> newb;
+    int parameters_count = m_phelper->getSize();
+    if (parameters_count == 0)
+    {
+        // no parameters %x
+        newb.resize(1);
+        newb[0].string = m_value;
+        newb[0].params = sb[check.begin].params;
+    }
+    else 
+    {
+        std::vector<CompareRange> pr;
+        m_compare.getParametersRange(&pr);
+        int parameters_count = pr.size();
 
-    ActionParameters ap(&m_compare); //same adapter for subs
-    InputTranslateParameters tp;
-    tstring value(m_value);
-    tp.doit(&ap, &value);
+        MudViewStringBlock b;
+        b.string = m_value.substr(0, m_phelper->getFirst(0));
+        if (!b.string.empty())
+        {
+            b.params = sb[check.begin].params;
+            newb.push_back(b);
+        }
+        for (int i=0,e=m_phelper->getSize()-1;i<=e;++i) {
+            int id = m_phelper->getId(i);
+            if (id != -1) {
+                if (id < parameters_count) 
+                {
+                   if (!m_phelper->getCutValue(i).empty()) {
+                     CompareRange c( pr[id] );
+                     tstring param(data.fullstr.substr(c.begin, c.end-c.begin));
+                     m_phelper->cutParameter(i, &param);
+                     size_t pos = data.fullstr.find(param);
+                     if (pos != tstring::npos) {
+                        c.begin = pos; c.end = pos + param.length();
+                        data.appendto(c, newb);
+                     }
+                   } else {
+                     data.appendto(pr[id], newb);
+                   }
+                }
+            }
 
+            int after_param = pr[id].end + 1;
+            int block_index = data.findBlockBySymbol(after_param);
+            if (i == e) {
+                int from = m_phelper->getLast(i);
+                b.string = m_value.substr(from);
+                if (!b.string.empty())
+                    b.params = sb[block_index].params;
+            } else {
+                int from = m_phelper->getLast(i);
+                int to = m_phelper->getFirst(i+1);
+                b.string = m_value.substr(from, to-from);
+                b.params = sb[block_index].params;
+            }
+            newb.push_back(b);
+        }
+    }
+
+    // translate embedded colors
+    std::vector<MudViewStringBlock> embed;
+    HighlightHelper hh;
+    PropertiesHighlight ph;
+    MudViewStringBlock nb;
+    for (int j=0,je=newb.size(); j<je; ++j)
+    {
+        nb.params = newb[j].params;
+        SubHighlightHelper sp( newb[j].string );
+        for (int i=0,e=sp.size();i<e;++i)
+        {
+            tstring p;
+            if (sp.trimColor(i, &p) && hh.translateColor(&p))
+            {
+                ph.convertFromString(p);
+                MudViewStringParams &c = nb.params;
+                c.ext_text_color = ph.textcolor;
+                c.ext_bkg_color = ph.bkgcolor;
+                c.blink_status = ph.border;
+                c.italic_status = ph.italic;
+                c.underline_status = ph.underlined;
+                c.use_ext_colors = 1;
+            }
+            else
+            {
+                nb.string = sp.get(i);
+                embed.push_back(nb);
+            }
+        }
+    }
+    newb.swap(embed);
+
+    // translate vars
     InputVarsAccessor va;
-    va.translateVars(&value);
-    data.string->blocks[pos].string = value;
-    data.start = pos+1;
+    for (int i=0,e=newb.size();i<e;++i)
+        va.translateVars(&newb[i].string);
+
+    // insert new blocks in result string
+    if (!data.cut(range))
+        return false;
+    int cut_blocks_count = range.end - range.begin + 1;
+    int blocks = newb.size();
+    int delta = cut_blocks_count - blocks;
+    if (delta > 0)
+        data.delBlocks(range.begin, delta);
+    else if (delta < 0)
+        data.insertBlocks(range.begin, -delta);
+    for (int i=0; i<blocks; ++i)
+        data.setBlock(range.begin+i, newb[i]);
+    data.start = range.begin+blocks;
     return true;
 }
 
@@ -309,7 +499,7 @@ bool Gag::processing(CompareData& data)
     m_compare.getRange(&range);
 
     CompareRange check(range);
-    if (!data.find(check))
+    if (!data.findBlocks(check))
         return false;
 
     std::vector<MudViewStringBlock> &b = data.string->blocks;

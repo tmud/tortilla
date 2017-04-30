@@ -9,6 +9,7 @@
 namespace tortilla {
 void init();
 CFont* getCurrentFont();
+int getCurrentFontHeight();
 Palette256* getPalette();
 PropertiesData* getProperties();
 PluginsDataValues* pluginsData();

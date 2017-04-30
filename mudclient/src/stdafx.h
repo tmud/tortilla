@@ -1,8 +1,8 @@
 #pragma once
 
-#define TORTILLA_VERSION L"0.99beta3(mapper)"
-#define TORTILLA_VERSION_MAJOR 0
-#define TORTILLA_VERSION_MINOR 99
+#define TORTILLA_VERSION L"1.0beta18(mapper)"
+#define TORTILLA_VERSION_MAJOR 1
+#define TORTILLA_VERSION_MINOR 0
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -58,6 +58,7 @@
 #include <deque>
 #include <functional>
 #include <memory>
+#include <sstream>
 
 typedef std::wstring tstring;
 typedef WCHAR tchar;

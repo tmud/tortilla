@@ -31,6 +31,12 @@ struct PropertiesHighlight
         bkgcolor = RGB(0,0,0);
     }
 
+    operator tstring() const {
+        tstring value;
+        getFlags(&value);
+        return value;
+    }
+
     void convertToString(tstring *value) const
     {
         WCHAR buffer[64];
@@ -55,6 +61,14 @@ struct PropertiesHighlight
         }
     }
 
+    void getFlags(tstring* flags) const
+    {
+        if (underlined) flags->append(L"Ï");
+        if (border) flags->append(L"Ð");
+        if (italic) flags->append(L"Ê");
+        if (flags->empty())
+            flags->append(L"-");
+    }
 private:
     struct value{ int a; int b; int c; };
     bool parseString(const tstring& str, const tstring& label, value *v)
@@ -78,7 +92,7 @@ private:
             return true;
         }
         return false;
-    }
+    }   
 };
 
 struct PropertiesTimer
@@ -157,6 +171,14 @@ public:
             else
                 { assert(false); }
         }
+    }
+
+    void insert(int index, const tstring& key, const T& value, const tstring& group)
+    {
+        if (index == -1)
+            return add(index, key, value, group);
+        el data; data.key = key; data.value = value; data.group = group;
+        m_values.insert(m_values.begin()+index, data);
     }
 
     void del(int index)
@@ -246,10 +268,12 @@ public:
         return -1;
     }
 
-    void add(int index, const tstring& key)
+    int add(int index, const tstring& key)
     {
-        if (index == -1)
+        if (index == -1) {
+            index = m_values.size();
             m_values.push_back(key);
+        }
         else
         {
             int size = m_values.size();
@@ -258,6 +282,15 @@ public:
             else
                 { assert(false); }
         }
+        return index;
+    }
+
+    int insert(int index, const tstring& key)
+    {
+        if (index == -1)
+            return add(index, key);
+        m_values.insert(m_values.begin() + index, key);
+        return index;
     }
 
     void del(int index)
@@ -397,8 +430,8 @@ struct PluginsDataValues : public std::vector<PluginData>
 
 struct PropertiesDlgPageState
 {
-    PropertiesDlgPageState() : item(-1), topitem(-1), filtermode(false), cansave(false) {}
-    int item;
+    PropertiesDlgPageState() : topitem(-1), filtermode(false), cansave(false) {}
+    tstring item;
     int topitem;
     bool filtermode;
     bool cansave;
@@ -448,7 +481,7 @@ public:
     PropertiesData() : codepage(L"win"), logformat(L"html"), cmd_separator(L';'), cmd_prefix(L'#'),
         view_history_size(DEFAULT_VIEW_HISTORY_SIZE)
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
-       , show_system_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
+       , show_system_commands(0), newline_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
        , soft_scroll(0), unknown_cmd(0), any_font(0), disable_alt(0), move_totray(0)
     {
@@ -474,6 +507,8 @@ public:
         dlg = p.dlg;
         // skip displays
         messages = p.messages;
+        // copy mode
+        mode = p.mode;
         // skip cmd_history
         codepage = p.codepage;
         logformat = p.logformat;
@@ -493,6 +528,7 @@ public:
         view_history_size = p.view_history_size;
         cmd_history_size = p.cmd_history_size;
         show_system_commands = p.show_system_commands;
+        newline_commands = p.newline_commands;
         clear_bar = p.clear_bar;
         disable_ya = p.disable_ya;
         disable_osc = p.disable_osc;
@@ -510,6 +546,7 @@ public:
         disable_alt = p.disable_alt;
         move_totray = p.move_totray;
         //skip title
+        rebar = p.rebar;
     }
 
 public:
@@ -544,6 +581,19 @@ public:
     int tabwords;
     } messages;
 
+    struct working_mode { 
+    working_mode() { initDefault();  }
+    void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = antisubs = gags = plugins = val; }
+    int actions;
+    int aliases;
+    int subs;
+    int hotkeys;
+    int highlights;
+    int antisubs;
+    int gags;
+    int plugins;
+    } mode;
+
     std::vector<tstring> cmd_history;
 
     tstring  codepage;
@@ -564,6 +614,7 @@ public:
     int      view_history_size;
     int      cmd_history_size;
     int      show_system_commands;
+    int      newline_commands;
     int      clear_bar;
     int      disable_ya;
     int      disable_osc;
@@ -582,6 +633,7 @@ public:
     int      move_totray;
 
     tstring title;        // name of main window (dont need to save)
+    tstring rebar;
 
     void initDefaultColorsAndFont()
     {
@@ -631,10 +683,12 @@ public:
         initDefaultColorsAndFont();
         initDisplay();
         messages.initDefault();
+        mode.initDefault();
         timers_on = 0;
         recognize_prompt = 0;
         recognize_prompt_template.clear();
         dlg.clear();
+        rebar.clear();
     }
 
     void initLogFont(HWND hwnd, LOGFONT *f)

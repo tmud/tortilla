@@ -1,13 +1,10 @@
 #include "stdafx.h"
 #include "tasks.h"
+#include "alert.h"
 #pragma comment(lib, "lua.lib")
 
 int system_messagebox(lua_State *L)
 {
-    HWND parent = base::getParent(L);
-    if (!::IsWindow(parent))
-        parent = NULL;
-
     bool params_ok = false;
 
     std::wstring text;
@@ -46,8 +43,10 @@ int system_messagebox(lua_State *L)
     }
     UINT result = 0;
     if (params_ok)
+    {
+        HWND parent = base::getParent(L);
         result = MessageBox(parent, text.c_str(), caption.c_str(), buttons);
-
+    }
     lua_pushinteger(L, result);
     return 1;
 }
@@ -103,6 +102,54 @@ void formatByType(lua_State* L, int index, std::wstring *buf)
         buf->append(L"[?]");
         break;
     }
+}
+
+void wstring_replace(std::wstring *str, const std::wstring& what, const std::wstring& forr)
+{
+    size_t pos = 0;
+    while((pos = str->find(what, pos)) != std::wstring::npos)
+    {
+        str->replace(pos, what.length(), forr);
+        pos += forr.length();
+    }
+}
+
+int system_alert(lua_State *L)
+{
+    std::wstring text;
+    for (int i=1,e=lua_gettop(L);i<=e;++i)
+    {
+        if (i != 1)
+            text.append(L" ");
+        std::wstring val;
+        if (lua_istable(L, i))
+        {
+            lua_pushnil(L);                      // first key
+            while (lua_next(L, i) != 0)          // table, value index = -1
+            {
+                formatByType(L, -1, &val);
+                text.append(val);
+                text.append(L" ");
+                lua_pop(L, 1);
+            }
+            continue;
+        }
+        formatByType(L, i, &val);
+        text.append(val);
+    }
+	wstring_replace(&text, L"\r", L"");
+	wstring_replace(&text, L"\n", L"");
+    wstring_replace(&text, L"\\n", L"\n");
+
+    AlertDlg *dlg = new AlertDlg();
+    RECT rc;
+    rc.left = 0; rc.top = 0;
+    rc.bottom = 200; rc.right = 350;
+    dlg->Create(NULL, &rc, L"Alert", WS_POPUP|WS_CAPTION|WS_SYSMENU, WS_EX_TOPMOST);
+    dlg->CenterWindow( base::getParent(L) );
+    dlg->ShowWindow(SW_SHOW);
+	dlg->setText(text);
+    return 0;
 }
 
 int system_dbglog(lua_State *L)
@@ -232,6 +279,54 @@ int system_loadTextFile(lua_State *L)
     return 0;
 }
 
+int system_saveTextFile(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TTABLE))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        HANDLE file = CreateFile(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            bool error = false;
+            AutoCloseHandle auto_close(file);
+            {
+                unsigned char bom[3] = {  0xEF, 0xBB, 0xBF };
+                DWORD written = 0;
+                if (!WriteFile(file, bom, 3, &written, NULL))
+                    error = true;
+            }
+
+            std::string text;
+            int index = 1;
+            while (!error)
+            {
+                lua_pushinteger(L, index++);
+                lua_gettable(L, -2);                
+                if (lua_isstring(L, -1))
+                    text.assign(lua_tostring(L, -1));
+                else if lua_isnil(L, -1)  {
+                    lua_pop(L, 1);
+                    break;
+                }
+                else {
+                    text.clear();
+                }
+                lua_pop(L, 1);
+                text.append("\r\n");
+                DWORD written = 0;
+                if (!WriteFile(file, text.c_str(), text.length(), &written, NULL))
+                    error = true;
+            }
+            if (!error) {
+            lua_pushboolean(L, 1);
+            return 1;
+            }
+        }
+    }
+    lua_pushboolean(L, 0);
+    return 1;
+}
+
 int system_convertFromWin(lua_State *L)
 {
     if (luaT_check(L, 1, LUA_TSTRING))
@@ -262,8 +357,88 @@ int system_beep(lua_State *L)
         g_background_beep_tasks->runTask( lua_tounsigned(L, 1), lua_tounsigned(L, 2) );
         return 0;
     }
-    lua_pushstring(L, "Incorrect parameters system.beep");
-    return lua_error(L);
+    return luaT_error(L, L"Incorrect parameters system.beep");
+}
+
+int system_getTime(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        SYSTEMTIME st;
+        ::GetLocalTime(&st);
+        lua_pushinteger(L, st.wSecond);
+        lua_pushinteger(L, st.wMinute);
+        lua_pushinteger(L, st.wHour);
+        return 3;
+    }
+    return luaT_error(L, L"Incorrect parameters system.getTime");
+}
+
+int system_getDate(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        SYSTEMTIME st;
+        ::GetLocalTime(&st);
+        lua_pushinteger(L, st.wDay);
+        lua_pushinteger(L, st.wMonth);
+        lua_pushinteger(L, st.wYear);
+        return 3;
+    }
+    return luaT_error(L, L"Incorrect parameters system.getDate");
+}
+
+int system_getTicks(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        DWORD ticks = GetTickCount();
+        lua_pushunsigned(L, ticks);
+        return 1;
+    }
+    return luaT_error(L, L"Incorrect parameters system.getTicks");
+}
+
+int system_appendStringToFile(lua_State *L)
+{
+    if (luaT_check(L, 2, LUA_TSTRING, LUA_TSTRING))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        HANDLE file = CreateFile(filename.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file == INVALID_HANDLE_VALUE)
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        AutoCloseHandle auto_close(file);
+        if (SetFilePointer(file, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        std::string text( lua_tostring(L, 2));
+        DWORD len = text.length();
+        DWORD written = 0;
+        if (!WriteFile(file, text.c_str(), len, &written, NULL))
+        {
+            lua_pushboolean(L, 0);
+            return 1;
+        }
+        lua_pushboolean(L, 1);
+        return 1;
+    }
+    return luaT_error(L, L"Incorrect parameters system.appendStringToFile");
+}
+
+int system_deleteFile(lua_State *L)
+{
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        std::wstring filename( luaT_towstring(L, 1) );
+        DeleteFile(filename.c_str());
+        return 0;
+    }
+    return luaT_error(L, L"Incorrect parameters system.deleteFile");
 }
 
 static const luaL_Reg system_methods[] =
@@ -272,11 +447,18 @@ static const luaL_Reg system_methods[] =
     { "dbgtable", system_dbgtable },
     { "dbglog", system_dbglog },
     { "msgbox", system_messagebox },
+    { "alert", system_alert },
     { "sleep", system_sleep },
     { "loadTextFile", system_loadTextFile },
     { "convertFromWin", system_convertFromWin },
     { "convertToWin", system_convertToWin },
     { "beep", system_beep },
+    { "getTime", system_getTime },
+    { "getDate", system_getDate },
+    { "getTicks", system_getTicks },
+    { "saveTextFile", system_saveTextFile },
+    { "appendStringToFile", system_appendStringToFile },
+    { "deleteFile", system_deleteFile },
     { NULL, NULL }
 };
 
@@ -285,7 +467,6 @@ int luaopen_system(lua_State *L)
     luaL_newlib(L, system_methods);
     return 1;
 }
-
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
 {

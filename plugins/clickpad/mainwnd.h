@@ -21,14 +21,16 @@ struct ButtonParams
     ButtonParams() : imagex(0), imagey(0), templ(false), update(0) {}
     std::wstring text;
     std::wstring cmd;
+    std::wstring tooltip;
     std::wstring imagefile;
     int imagex, imagey;
     bool templ;
-    enum { TEXT = 1, CMD = 2, IMAGE = 4, IMAGEXY = 8, TEMPLATE = 16 };
+    enum { TEXT = 1, CMD = 2, TOOLTIP = 4, IMAGE = 8, IMAGEXY = 16, TEMPLATE = 32 };
     DWORD update;
 };
 
-class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >, public ClickpadSettings
+class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >, public ClickpadSettings, 
+            public CToolTipDialog<ClickpadMainWnd>
 {
 public:
     DECLARE_WND_CLASS_EX(L"Clickpad", 0, COLOR_BTNFACE)
@@ -47,6 +49,7 @@ public:
 
 private:
     BEGIN_MSG_MAP(ClickpadMainWnd)
+        MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_USER, OnClickButton)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
@@ -54,10 +57,14 @@ private:
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBackground)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
         MESSAGE_HANDLER(WM_USER+1, OnSetSize)
+        CHAIN_MSG_MAP(CToolTipDialog<ClickpadMainWnd>)
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnDestroy(UINT, WPARAM, LPARAM, BOOL&) { onDestroy(); return 0; }        
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
+    LRESULT OnMouseMove(UINT, WPARAM wparam, LPARAM lparam, BOOL&) {
+        return 0;
+    }
     LRESULT OnClickButton(UINT, WPARAM wparam, LPARAM lparam, BOOL&) {
         onClickButton(LOWORD(wparam), HIWORD(wparam), (lparam==0) ? false : true);
         return 0;
@@ -76,7 +83,8 @@ private:
     void onPaint(HDC dc);
 private:
     PadButton* getButton(int x, int y);
-    void showButton(int x, int y, bool show);
+    void showButton(PadButton*b, bool show);
+    void updateTooltip(PadButton*b, bool show);
     void setWorkWindowSize();
     void setColumns(int count);
     int  getColumns() const;

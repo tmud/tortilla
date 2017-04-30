@@ -94,6 +94,8 @@ int init(lua_State *L)
             ld.get(L"up", &m_props.up_cmd);
             ld.get(L"down", &m_props.down_cmd);
         }
+    } else {
+        base::log(L, error.c_str());
     }
     ld.deletenode();
 
@@ -250,7 +252,7 @@ int gamecmd(lua_State *L)
             if (pos != 0)
                 cmd.assign(cmd.substr(pos));
             m_mapper_window->processCmd(cmd);
-        }        
+        }
     }
     return 1;
 }
@@ -285,7 +287,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
         break;
     case DLL_PROCESS_DETACH:
         delete m_mapper_window;
-        _Module.Term();        
+        _Module.Term();
         break;
     }
     return TRUE;

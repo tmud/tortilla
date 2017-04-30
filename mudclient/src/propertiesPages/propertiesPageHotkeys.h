@@ -39,7 +39,7 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
 {
     PropertiesValues *propValues;
     PropertiesValues *propGroups;
-    PropertiesValues m_list_values;
+    PropertiesValuesT<tstring> m_list_values;
     std::vector<int> m_list_positions;
     PropertyListCtrl m_list;
     CBevelLine m_bl1;
@@ -50,6 +50,8 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
     CButton m_del;
     CButton m_replace;
     CButton m_reset;
+    CButton m_up;
+    CButton m_down;
     CButton m_filter;
     CComboBox m_cbox;
     bool m_filterMode;
@@ -97,18 +99,34 @@ private:
        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
        MESSAGE_HANDLER(WM_USER+1, OnSetFocus)
        MESSAGE_HANDLER(WM_USER, OnHotkeyEditChanged)
+       MESSAGE_HANDLER(WM_USER+2, OnKeyDown)
        COMMAND_ID_HANDLER(IDC_BUTTON_ADD, OnAddElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DEL, OnDeleteElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_REPLACE, OnReplaceElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
+       COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
+       COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
        COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
        COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
        COMMAND_HANDLER(IDC_EDIT_HOTKEY_TEXT, EN_CHANGE, OnHotkeyTextChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
        NOTIFY_HANDLER(IDC_LIST, NM_SETFOCUS, OnListItemChanged)
-       NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
+       //NOTIFY_HANDLER(IDC_LIST, NM_KILLFOCUS, OnListKillFocus)
        REFLECT_NOTIFICATIONS()
     END_MSG_MAP()
+
+    LRESULT OnKeyDown(UINT, WPARAM wparam, LPARAM, BOOL&)
+    {
+        if (wparam == VK_DELETE)
+        {
+            if (m_del.IsWindowEnabled()) {
+                BOOL b = FALSE;
+                OnDeleteElement(0, 0, 0, b);
+            }
+            return 1;
+        }
+        return 0;
+    }
 
     LRESULT OnAddElement(WORD, WORD, HWND, BOOL&)
     {
@@ -124,24 +142,22 @@ private:
                 propValues->del(index2);
         }
 
-        m_list_values.add(index, hotkey, text, m_currentGroup);
-
         if (index == -1)
         {
-            int pos = m_list.GetItemCount();
-            m_list.addItem(pos, 0, hotkey);
-            m_list.addItem(pos, 1, text);
-            m_list.addItem(pos, 2, m_currentGroup);
+            index = m_list.getOnlySingleSelection() + 1;
+            m_list_values.insert(index, hotkey, text, m_currentGroup);
+            m_list.addItem(index, 0, hotkey);
+            m_list.addItem(index, 1, text);
+            m_list.addItem(index, 2, m_currentGroup);
         }
         else
         {
+            m_list_values.add(index, hotkey, text, m_currentGroup);
             m_list.setItem(index, 0, hotkey);
             m_list.setItem(index, 1, text);
             m_list.setItem(index, 2, m_currentGroup);
         }
 
-        if (index == -1)
-            index = m_list.GetItemCount()-1;
         m_list.SelectItem(index);
         m_list.SetFocus();
         return 0;
@@ -192,6 +208,20 @@ private:
         updateButtons();
         m_hotkey.SetFocus();
         m_update_mode = false;
+        return 0;
+    }
+
+    LRESULT OnUpElement(WORD, WORD, HWND, BOOL&)
+    {
+        propertiesUpDown<tstring> ud;
+        ud.up(m_list, m_list_values, false);
+        return 0;
+    }
+
+    LRESULT OnDownElement(WORD, WORD, HWND, BOOL&)
+    {
+        propertiesUpDown<tstring> ud;
+        ud.down(m_list, m_list_values, false);
         return 0;
     }
 
@@ -325,12 +355,12 @@ private:
         return 0;
     }
 
-    LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
+    /*LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
     {
         if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
             m_list.SelectItem(-1);
         return 0;
-    }
+    }*/
 
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
@@ -366,12 +396,15 @@ private:
         m_del.Attach(GetDlgItem(IDC_BUTTON_DEL));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
+        m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
+        m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
         m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Hotkey", 20);
         m_list.addColumn(L"Текст", 60);
         m_list.addColumn(L"Группа", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);        
+        m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+2);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
@@ -415,12 +448,7 @@ private:
             m_list.addItem(i, 2, v.group);
         }
 
-        int index = -1;
-        tstring hotkey;
-        getWindowText(m_hotkey, &hotkey);
-        if (!hotkey.empty())
-            index = m_list_values.find(hotkey, m_currentGroup);
-        m_state_helper.loadCursorAndTopPos(index);
+        m_state_helper.loadCursorAndTopPos(2);
     }
 
     void updateButtons()
@@ -432,11 +460,15 @@ private:
         {
             m_add.EnableWindow(pattern_empty ? FALSE : TRUE);
             m_del.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
             m_replace.EnableWindow(FALSE);
         }
         else if(items_selected == 1)
         {
             m_del.EnableWindow(TRUE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             bool mode = FALSE;
             if (!pattern_empty)
             {
@@ -457,6 +489,8 @@ private:
         {
             m_add.EnableWindow(FALSE);
             m_del.EnableWindow(TRUE);
+            m_up.EnableWindow(TRUE);
+            m_down.EnableWindow(TRUE);
             m_replace.EnableWindow(FALSE);
         }
     }

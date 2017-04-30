@@ -26,14 +26,28 @@ public:
         }
     }
 
-    void loadCursorAndTopPos(int index)
+    void loadCursorAndTopPos(int group_index)
     {
+        const tstring& pattern = dlg_state->item;
+        int index = -1;
         int count = plist->GetItemCount();
-        if (index == -1 && dlg_state->item != -1)
+        if (!pattern.empty() )
         {
-            index = dlg_state->item;
-            if (index < 0 || index >= count)
-                index = -1;
+            tstring text;
+            for (int i=-0; i<count; ++i) {
+                plist->getItemText(i, 0, &text);    
+                if (text == pattern)
+                {
+                    if (group_index == -1) {
+                        index = i; break;
+                    }
+                    else
+                    {
+                      plist->getItemText(i, group_index, &text);
+                      if (text == dlg_state->group) { index = i; break; }
+                    }
+                }
+            }
             dlg_state->item = -1;
         }
         if (dlg_state->topitem != -1) 
@@ -57,7 +71,11 @@ public:
             return false;
         dlg_state->group = current_group;
         dlg_state->filtermode = filter_mode;
-        dlg_state->item = plist->getOnlySingleSelection();
+        int item = plist->getOnlySingleSelection();
+        tstring item_str;
+        if (item != -1)
+            plist->getItemText(item, 0, &item_str);
+        dlg_state->item = item_str;
         dlg_state->topitem = plist->getTopItem();
         dlg_state->cansave = false;
         return true;
