@@ -59,7 +59,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
             if (!m_map.addNewZoneAndRoom(new_room))
             {
                 delete new_room;
-                new_room = NULL;        
+                new_room = NULL;
             }
         }
         else
@@ -67,8 +67,8 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
             if (!m_map.addNewRoom(m_pCurrentRoom, new_room, m_lastDir))
             {
                 delete new_room;
-                new_room = NULL;    
-            }        
+                new_room = NULL;
+            }
         }
     }
     else

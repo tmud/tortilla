@@ -47,7 +47,7 @@ private:
 
 class MapWaveAlgorithm {
 public:
-    void doit(MapWaveArray &wa, MapWaveArrayPos& start);
+    void wave(MapWaveArray &wa, MapWaveArrayPos& start);
 };
 
 class RoomMergeTool

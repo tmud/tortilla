@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "roomMergeTool.h"
 
-void MapWaveAlgorithm::doit(MapWaveArray &wa, MapWaveArrayPos& start)
+void MapWaveAlgorithm::wave(MapWaveArray &wa, MapWaveArrayPos& start)
 {
 
 }
@@ -38,7 +38,7 @@ bool RoomMergeTool::makeNewZone(RoomDir dir)
     MapWaveArray wa(zone->size());
     MapWaveArrayPos p(start_room->pos);
     MapWaveAlgorithm alg;
-    alg.doit(wa, p);
+    alg.wave(wa, p);
         
     return false;
 }

@@ -44,10 +44,12 @@ int init(lua_State *L)
 
     m_props.initAllDefault();
 
+	tstring error;
+
     tstring path;
     base::getPath(L, L"settings.xml", &path);
     xml::node p;
-    if (p.load(path.c_str()))
+    if (p.load(path.c_str(), &error))
     {
         int usemsdp = 0;
         p.get(L"usemsdp/value", &usemsdp);
@@ -55,14 +57,19 @@ int init(lua_State *L)
         int width = 0;
         p.get(L"zoneslist/width", &width);
         m_props.zoneslist_width = (width > 0) ? width : -1;
-    }
+	} else {
+		if (!error.empty())
+			base::log(L, error.c_str());
+	}
     p.deletenode();
     
     path.clear();
-    base::getPath(L, L"config.xml", &path);   
+    base::getPath(L, L"config.xml", &path);
+
+	error.clear();
 
     xml::node ld;
-    if (ld.load(path.c_str()))
+    if (ld.load(path.c_str(), &error))
     {
         ld.get(L"darkroom/label", &m_props.dark_room);
         ld.get(L"name/begin", &m_props.begin_name);
@@ -95,7 +102,8 @@ int init(lua_State *L)
             ld.get(L"down", &m_props.down_cmd);
         }
     } else {
-        base::log(L, error.c_str());
+		if (!error.empty())
+			base::log(L, error.c_str());
     }
     ld.deletenode();
 
