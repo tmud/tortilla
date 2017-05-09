@@ -239,6 +239,9 @@ int stream(lua_State *L)
     {
         tstring stream ( luaT_towstring(L, -1) );
         m_mapper_window->processNetworkData(stream.c_str(), stream.length());
+#ifdef _DEBUG
+		luaT_pushwstring(L, stream.c_str());
+#endif
     }
     return 1;
 }
