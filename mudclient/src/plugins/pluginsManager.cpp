@@ -620,7 +620,10 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-            turnoffPlugin(L"Неверный тип значения получен из плагина. Требуется string|nil", i);
+			tstring msg(L"Неверный тип результата из метода '");
+			msg.append(TA2W(method));
+			msg.append(L"' Требуется string|nil");
+            turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
             i = 0;
