@@ -45,9 +45,18 @@ private:
     Rooms3dCubeSize sz;
 };
 
-class MapWaveAlgorithm {
+class MapWave {
 public:
-    void wave(MapWaveArray &wa, MapWaveArrayPos& start);
+    MapWave(Rooms3dCube *z);
+private:
+    Rooms3dCube *zone;
+    std::shared_ptr<MapWaveArray> wave;
+};
+
+class MapWaveAlgorithms {
+public:
+    MapWaveAlgorithms()
+    bool wave(MapWaveArray &wa, MapWaveArrayPos& start, RoomDir dir);
 };
 
 class RoomMergeTool

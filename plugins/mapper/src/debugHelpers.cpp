@@ -9,6 +9,10 @@ void init_debug_helpers(lua_State *_l) {
 } 
 void debug_print(const tstring& text) {
     if (!L) return;
+    lua_ref ref;
+    ref.createRef(L);
     base::vprint(L, debug_view, text.c_str());
+    ref.pushValue(L);
+    ref.unref(L);
 }
 #endif

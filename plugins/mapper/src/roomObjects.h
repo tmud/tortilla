@@ -1,6 +1,8 @@
 #pragma once
 #define ROOM_DIRS_COUNT 6
 enum RoomDir { RD_UNKNOWN = -1, RD_NORTH = 0, RD_SOUTH, RD_WEST, RD_EAST, RD_UP, RD_DOWN };
+const int beginRoomDir = RD_NORTH;
+const int endRoomDir = RD_DOWN;
 struct Room;
 
 struct RoomData
