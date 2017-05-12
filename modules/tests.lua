@@ -48,6 +48,7 @@ strassert( string.format('аб%.3fвгде %s', 10.21, 'абра'), 'аб10.210�
 do
 runCommand("#wait 2 { #plugin testloadsave on }")
 runCommand("#wait 2 { #plugin testmisc off }")
+runCommand("#wait 2 { #plugin testapi on }")
 runCommand("#wait 2 { #cr;#wout 0 Selection text test }")
 return
 end
