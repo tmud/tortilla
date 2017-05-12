@@ -71,6 +71,7 @@ public:
     {
         SetMinHeight(size);
         m_edit.SetFont(font);
+        m_timer.setFont(font);
     }
 
     void setCommandEventCallback(HWND hwnd, UINT msg)
