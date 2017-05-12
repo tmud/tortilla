@@ -18,6 +18,7 @@ local w, r
 local pen1, pen2, pen3, brush1, brush2, brush3
 local function render()
   r:select(pen1)
+  r:point(50, 10)
   r:rect{10, 20, 130, 130}
   r:select(brush1)
   r:solidRect{50, 50, 220, 150}
