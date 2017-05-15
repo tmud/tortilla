@@ -12,6 +12,7 @@
   <codepage value="win"/>
   <prompt value="1"/>
   <ptemplate value="оп&gt;"/>
+  <disablealt value="1"/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
