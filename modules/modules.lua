@@ -2,10 +2,31 @@
 -- загрузчик dll-модулей
 
 if system then return end
+
+function pairsByKeys (t, f)
+  local a = {}
+  for n in pairs(t) do table.insert(a, n) end
+  table.sort(a, f)
+  local i = 0      -- iterator variable
+  local iter = function ()   -- iterator function
+    i = i + 1
+    if a[i] == nil then return nil
+    else return a[i], t[a[i]]
+    end
+  end
+  return iter
+end
+
 system = require 'system'
 
 off = {}
-local t = system.loadTextFile('../off.lst')
+local t = system.loadTextFile('../off.txt')
+if not t then
+  t = system.loadTextFile('../resources/off.txt')
+  if t then
+    system.saveTextFile('../off.txt', t)
+  end
+end
 if t then
   for _,s in ipairs(t) do 
     if not s:contain('# ') then off[s] = true end
@@ -50,18 +71,4 @@ if lvoice then
 else
   print("[lvoice] Ошибка при загрузке модуля: "..err)
 end
-end
-
-function pairsByKeys (t, f)
-  local a = {}
-  for n in pairs(t) do table.insert(a, n) end
-  table.sort(a, f)
-  local i = 0      -- iterator variable
-  local iter = function ()   -- iterator function
-    i = i + 1
-    if a[i] == nil then return nil
-    else return a[i], t[a[i]]
-    end
-  end
-  return iter
 end

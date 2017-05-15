@@ -64,6 +64,7 @@ xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
 xcopy ..\resources\tmp\*.* tortilla\resources\tmp\ /E /Y
+xcopy ..\resources\off.txt tortilla\resources /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y
 xcopy ..\%prod%\api.dll tortilla /Y
