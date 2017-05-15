@@ -45,7 +45,6 @@ xcopy ..\plugins\tray.dll tortilla\plugins /Y
 xcopy ..\plugins\prompt.dll tortilla\plugins /Y
 xcopy ..\plugins\clickpad.dll tortilla\plugins /Y
 xcopy ..\plugins\sound.dll tortilla\plugins /Y
-xcopy ..\plugins\send.lua tortilla\plugins /Y
 xcopy ..\plugins\status.lua tortilla\plugins /Y
 xcopy ..\plugins\statusbar.lua tortilla\plugins /Y
 xcopy ..\plugins\autowrap.lua tortilla\plugins /Y
@@ -101,6 +100,7 @@ xcopy ..\plugins\autoalias.lua plugins /Y
 xcopy ..\plugins\inveq.lua plugins /Y
 xcopy ..\plugins\helpers.lua plugins /Y
 xcopy ..\plugins\tick.lua plugins /Y
+xcopy ..\plugins\send.lua plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 

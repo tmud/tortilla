@@ -9,11 +9,11 @@ function colorgamecmd.name()
 end
 
 function colorgamecmd.description()
-return 'Плагин изменяет цвет игровых и системных команд, которые вводит игрок.'
+return 'Плагин подсвечивает цветом игровые и системные команды, которые вводит игрок.'
 end
 
 function colorgamecmd.version()
-    return '1.01'
+    return '1.02'
 end
 
 function colorgamecmd.after(window, v)
