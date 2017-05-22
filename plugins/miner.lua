@@ -5,14 +5,24 @@ function miner.name()
 end
 
 function miner.description()
-  return 'Реализация игры сапер'
+  local t = {
+   'Реализация игры сапер.',
+   'Левая кнопка мыши - открыть клетку.',
+   'Правая кнопка мыши - пометить клетку с предполагаемой миной.',
+   'Цифра в клетке (1-8) показывает количество мин вокруг нее.',
+   'Цель игры - пометить все мины и не подорваться.',
+   'Автор - Саликов Артем'
+   }
+  return table.concat(t, '\r\n')
 end
 
 function miner.version()
-    return '-'
+    return '1.0'
 end
-local w, r, p, br, br2, num1, num2, num3, num4, num5, num6, num7, num8  --окно, рендер, ручка
+
+local w, r, p, br, br2, msgwnd --окно, рендер, и др.
 local maincolor = {r=122, g=122, b=122}
+local msgwndcolor = {r=160, g=160, b=160}
 local flagcolor = {r=240}
 local num1color = {r=0, g=115, b=255}
 local num2color = {g=255}
@@ -30,12 +40,12 @@ local Mines = {}
 local GridCoordI = {}
 local GridCoordJ = {}
 local MinesCount = 20
-local minerWindow = false
 local state = true
 local GridState = {}
 local FlagState = {}
 local xm, ym, sectorcoordX, sectorcoordY
 local stateClick = false
+local lose = false
 
 local function genGrid()
   local xx = 0
@@ -54,7 +64,6 @@ local function genGrid()
           r:select(br2)
           r:solidRect{x=i, y=j, width=shag-1, height=shag-1}
         end
-
       else
         r:rect{x=i, y=j, width=shag-1, height=shag-1}
       end
@@ -64,6 +73,7 @@ local function genGrid()
 end
 
 local function genMine()
+  lose = false
   -- Заполняем нулями массив
   for i = 1, 10 do
     Mines[i] = {}
@@ -137,12 +147,11 @@ local function genMine()
   -- for i = 1, 10 do
   --   for j = 1, 10 do
   --     log("i= "..i.." j= "..j.." Mines["..i.."]["..j.."]= "..Mines[i][j])
-  --
   --   end
   -- end
 end
 
-local function checkState()
+local function checkWin()
   local counter = 0
   for i = 1, 10 do
     for j = 1, 10 do
@@ -156,10 +165,13 @@ local function checkState()
   end
 end
 
+local function checkLose()
+  return lose
+end
+
 local function render()
   genGrid()
-  if checkState() then print("WIN") end
-  for i = 1, 10 do
+    for i = 1, 10 do
     for j = 1, 10 do
       -- r:print(shag*i/2 - midtext2 + gap, shag*j/2 - midtext + gap, Mines[i][j])
       if Mines[i][j] ~= "M" and Mines[i][j] ~= "0" then
@@ -188,15 +200,30 @@ local function render()
           r:textColor(num8color)
           r:print(shag*i-midtext2-1, shag*j-midtext-1, Mines[i][j])
         end
-
       end
-
     end
   end
+  local text = ''
+  if checkWin() then
+    text = 'WIN'
+  end
+  if checkLose() then
+    text = 'BOOM!'
+  end
+  if text ~= '' then
+    local w = r:width()
+    local h = r:height()
+    local x = math.modf((w - 100) / 2)
+    local y = math.modf((h - 48) / 2)
+    local pos = { x, y, x+100, y+48 }
+    local dx = (100 - r:textWidth(text)) / 2
+    r:select(msgwnd)
+    r:solidRect(pos)
+    r:textColor(flagcolor)
+    pos[1] = x + dx
+    r:print(pos, text)
+  end
 end
-
-
-
 
 local function clearGrid(x, y)
     if GridState[x][y] == "1" then return end
@@ -213,14 +240,18 @@ local function clearGrid(x, y)
         if x < 10 and y > 1 then clearGrid(x+1, y-1) end
       else
         if Mines[x][y] ~= "M" and Mines[x][y] ~= "0" then GridState[x][y] = "1" end
-
       end
     end
 end
 
-
 local mouse = {}
 function mouse.left(c, x, y)
+  if c ~= 'down' then return end
+    if checkLose() or checkWin() then
+      genMine()
+      r:update()
+      return
+    end
     if x>gap and x<gap+m and y>gap and y<gap+n then
       xm = math.floor((x+gap)/shag)
       ym = math.floor((y+gap)/shag)
@@ -229,33 +260,9 @@ function mouse.left(c, x, y)
       if c == "down" then
         if FlagState[xm][ym] ~= "F" then
           if Mines[xm][ym] == "M" then
-            print("BOOM!")
-
-            -- Реализация механизма "Показать мины после подрыва"
-            -- Нет возможности остановки потока для вывода мин + запрос нажатия клавишы
-            -- wait не реализован
-
-
-            -- for i = 1, 10 do
-            --   for j = 1, 10 do
-            --     if Mines[i][j] ~= "M" then
-            --       GridState[i][j] = "0"
-            --     else
-            --       GridState[i][j] = "1"
-            --     end
-            --
-            --   end
-            -- end
-            -- r:update()
-
-
-
-            genMine()
-
+            lose = true
           elseif Mines[xm][ym] == "0" then
-
             clearGrid(xm,ym)-- функция очистки поля до цифр
-            r:update()
           else
             GridState[xm][ym] = "1"
           end
@@ -276,6 +283,10 @@ function mouse.left(c, x, y)
 end
 
 function mouse.right(c, x, y)
+  if c ~= 'down' then return end
+  if checkLose() or checkWin() then
+    return
+  end
   if x>gap and x<gap+m and y>gap and y<gap+n then
     xm = math.floor((x+gap)/shag)
     ym = math.floor((y+gap)/shag)
@@ -302,75 +313,52 @@ function mouse.right(c, x, y)
   end
 end
 
-
 -- Добавляем кнопку на панель, отслеживаем статус нажатия, меняем иконку нажатия
-
-local function update ()
-  if minerWindow then checkMenu(1)
-  else uncheckMenu(1)
+local function update (minerWindow)
+  if minerWindow then 
+    w:show()
+    checkMenu(1)
+  else
+    w:hide()
+    uncheckMenu(1)
   end
 end
 
 function miner.menucmd(id)
   if id == 1 then
-    if minerWindow then
-      minerWindow = false
-      w:hide()
-      update()
-    else
-      minerWindow = true
-      w:show()
-      update()
-    end
+    update(not w:isVisible())
   end
 end
 
 -- Генерация поля мин, цифр у мин, пустых ячеек
-
-
-
-
-
-
 function miner.init()
-  w = createWindow("Сапер",m+2*gap,n+2*gap, false)
+  w = createWindow("Сапер",m+2*gap,n+2*gap)
   w:setFixedSize(m+2*gap,n+2*gap)
   if not w then
     terminate("Error on window creating!")
   end
   r = w:setRender(render)
   r:setBackground(props.backgroundColor())
-  p = r:createPen{width=2, color=maincolor}
-  br = r:createBrush{color=maincolor}
-  br2 = r:createBrush{color=flagcolor}
-  num1 = r:createPen{color=num1color}
-  num2 = r:createPen{color=num2color}
-  num3 = r:createPen{color=num3color}
-  num4 = r:createPen{color=num4color}
-  num5 = r:createPen{color=num5color}
-  num6 = r:createPen{color=num6color}
-  num7 = r:createPen{color=num7color}
-  num8 = r:createPen{color=num8color}
+  p = r:createPen{ width=2, color=maincolor }
+  br = r:createBrush{ color=maincolor }
+  br2 = r:createBrush{ color=flagcolor }
+  msgwnd = r:createBrush{ color=msgwndcolor }
   r:select(p)
   r:select(props.currentFont())
   r:select(br)
-  w:hide()
   midtext = r:fontHeight() / 2
   midtext2 = r:textWidth("?") / 2
   addButton("plugins/miner.bmp", 16, 1, "Сапер")
   w:attachMouse(mouse)
+  if w:isVisible() then checkMenu(1) end
   genMine()
 end
 
 -- Функционал кнопки Х у окна (прячем окно игры)
-
 function miner.closewindow()
   if w then
-    minerWindow = false
-    update()
-    w:hide()
+    update(false)
   end
 end
-
 
 return miner
