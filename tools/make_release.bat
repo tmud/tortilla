@@ -102,6 +102,8 @@ xcopy ..\plugins\inveq.lua plugins /Y
 xcopy ..\plugins\helpers.lua plugins /Y
 xcopy ..\plugins\tick.lua plugins /Y
 xcopy ..\plugins\send.lua plugins /Y
+xcopy ..\plugins\miner.lua plugins /Y
+xcopy ..\plugins\miner.bmp plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 
