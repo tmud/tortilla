@@ -28,6 +28,19 @@ Room* MapInstance::findRoom(const tstring& hash)
     return (rt != rooms_hash_table.end()) ? rt->second : NULL;
 }
 
+Rooms3dCube* MapInstance::getZone(const Room *room)
+{
+    assert(room);
+    const Rooms3dCubePos &pos = room->pos;
+    Rooms3dCube* zone = findZone(pos.zid);
+    if (!zone) {
+        assert(false);
+        return NULL;
+    }
+    assert( zone->getRoom(pos) == room );
+    return zone;
+}
+
 bool MapInstance::addNewZoneAndRoom(Room *room)
 {
     if (!room || room->roomdata.vnum.empty() || findRoom(room->roomdata.vnum))

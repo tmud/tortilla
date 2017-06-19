@@ -195,23 +195,6 @@ void Rooms3dCube::clearExits(Room *r)
     }
 }
 
-bool Rooms3dCubePos::move(RoomDir dir)
-{
-    switch (dir)
-    {
-        case RD_NORTH: y -= 1; break;
-        case RD_SOUTH: y += 1; break;
-        case RD_WEST:  x -= 1; break;
-        case RD_EAST:  x += 1; break;
-        case RD_UP: z += 1; break;
-        case RD_DOWN: z -= 1; break;
-        default:
-            assert(false);
-            return false;
-    }
-    return true;
-}
-
 RoomDir RoomDirHelper::cast(int index)
 {
     if (index >= 0 && index < ROOM_DIRS_COUNT)

@@ -13,10 +13,11 @@ public:
     ~MapInstance();
     MapCursor createCursor(Room *room, MapCursorColor color);
     MapCursor createZoneCursor(int zoneid);
+    Rooms3dCube* getZone(const Room *room);
     Room* findRoom(const tstring& hash);
     bool addNewZoneAndRoom(Room* newroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
-    bool addLink(Room* from, Room* to, RoomDir dir);    
+    bool addLink(Room* from, Room* to, RoomDir dir);
     //void saveMaps(lua_State *L);
     //void loadMaps(lua_State *L);
 

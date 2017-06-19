@@ -23,11 +23,40 @@ struct RoomExit
     bool multiexit;
 };
 
+struct Rooms3dCubeSize
+{
+    Rooms3dCubeSize() : minlevel(0), maxlevel(0), left(0), right(0), top(0), bottom(0) {}
+    int minlevel, maxlevel;
+    int left, right, top, bottom;
+    int width() const { return right-left+1; }
+    int height() const { return bottom-top+1; }
+    int levels() const { return maxlevel-minlevel+1; }    
+};
+
 struct Rooms3dCubePos 
 {
     Rooms3dCubePos() { clear(); }
     void clear() { x = y = z = 0; zid = -1; }
-    bool move(RoomDir dir);
+    bool move(RoomDir dir) 
+    {
+        switch (dir)
+        {
+        case RD_NORTH: y -= 1; break;
+        case RD_SOUTH: y += 1; break;
+        case RD_WEST:  x -= 1; break;
+        case RD_EAST:  x += 1; break;
+        case RD_UP:    z += 1; break;
+        case RD_DOWN:  z -= 1; break;
+        default:
+            assert(false);
+            return false;
+        }
+        return true;
+    }
+    bool valid(const Rooms3dCubeSize& sz) const {
+        return (z >= sz.minlevel && z <= sz.maxlevel && 
+        x >= sz.left && x <= sz.right && y >= sz.top && y <= sz.bottom) ? true : false;
+    }
     int x, y, z, zid;
 };
 
@@ -49,16 +78,6 @@ public:
     RoomDir revertDir(RoomDir dir);
     const wchar_t* getDirName(RoomDir dir);
     RoomDir getDirByName(const wchar_t* dirname);
-};
-
-struct Rooms3dCubeSize
-{
-    Rooms3dCubeSize() : minlevel(0), maxlevel(0), left(0), right(0), top(0), bottom(0) {}
-    int minlevel, maxlevel;
-    int left, right, top, bottom;
-    int width() const { return right-left+1; }
-    int height() const { return bottom-top+1; }
-    int levels() const { return maxlevel-minlevel+1; }    
 };
 
 class Rooms3dCube
@@ -125,5 +144,5 @@ public:
       if (next && room->pos.zid != next->pos.zid)
           return true;
       return false;
-    }
+    }    
 };

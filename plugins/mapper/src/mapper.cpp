@@ -233,11 +233,11 @@ void Mapper::onRenderContextMenu(int id)
     RoomDirHelper dh;
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
-        RoomMergeTool t(&m_map, room);
+        RoomMergeTool t(m_map.getZone(room));
         RoomDir dir = dh.cast(id - MENU_NEWZONE_NORTH);
-        bool result = t.makeNewZone(dir);
+        bool result = t.makeNewZone(room, dir);
         if (!result) {
-            //MessageBox        
+            //MessageBox
         }
     }
 }

@@ -2,36 +2,34 @@
 #include "roomObjects.h"
 #include "mapInstance.h"
 
-class MapWaveArrayPos
-{
-public:
-    MapWaveArrayPos(Rooms3dCubePos& p) : x(p.x), y(p.y), z(p.z) {}
-    bool valid(const Rooms3dCubeSize& sz) const {
-        return (z >= sz.minlevel && z <= sz.maxlevel && 
-        x >= sz.left && x <= sz.right && y >= sz.top && y <= sz.bottom) ? true : false;
-    }
-    int x,y,z;
-};
-
-class MapWaveArray 
+/*class MapWaveArray 
 {
 public:
     MapWaveArray(const Rooms3dCubeSize& size) {
-        size_t total = size.width() * size.height() * size.levels();
-        wave.resize(total, 0);
         sz = size;
+        size_t total = size.width() * size.height() * size.levels();
+        wave.resize(total, 0);        
     }
-    void set(const MapWaveArrayPos&p, int v) {
+    bool set(const Rooms3dCubePos&p, int v) {
         size_t index = 0;
-        if (getindex(p, &index)) 
+        if (getindex(p, &index))
+        {
             wave[index] = v;
+            return true;
+        }
+        assert(false);
+        return false;
     }
-    int get(const MapWaveArrayPos&p) const {
+    int get(const Rooms3dCubePos&p) const {
         size_t index = 0;
-        return (getindex(p, &index)) ? wave[index] : -1;
+        if (getindex(p, &index)) {
+            return wave[index];
+        }
+        assert(false);
+        return -1;
     }
 private:
-    bool getindex(const MapWaveArrayPos&p, size_t *index) const {
+    bool getindex(const Rooms3dCubePos&p, size_t *index) const {
         assert(index);
         if (!p.valid(sz) )
             return false;
@@ -43,28 +41,17 @@ private:
     }
     std::vector<int> wave;
     Rooms3dCubeSize sz;
-};
+};*/
 
-class MapWave {
+class RoomMergeTool {
 public:
-    MapWave(Rooms3dCube *z);
+    RoomMergeTool(Rooms3dCube *z);
+    bool makeNewZone(const Room* room, RoomDir dir);    
 private:
+    bool runWaveAlgoritm(const Rooms3dCubePos& start, RoomDir dir);
     Rooms3dCube *zone;
-    std::shared_ptr<MapWaveArray> wave;
-};
-
-class MapWaveAlgorithms {
-public:
-    MapWaveAlgorithms()
-    bool wave(MapWaveArray &wa, MapWaveArrayPos& start, RoomDir dir);
-};
-
-class RoomMergeTool
-{
-public:
-    RoomMergeTool(MapInstance *map, const Room* tracked);
-    bool makeNewZone(RoomDir dir);
-private:
-    Rooms3dCube *zone;
-    Room *start_room;
+    std::unordered_map<const Room*, int> wave;
+    typedef std::unordered_map<const Room*, int>::const_iterator const_iterator;
+    int index(const Room* r) const;
+    bool exist(const Room* r) const;
 };

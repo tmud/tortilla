@@ -1,61 +1,89 @@
 #include "stdafx.h"
 #include "roomMergeTool.h"
 
-bool MapWaveAlgorithms::wave(MapWaveArray &wa, MapWaveArrayPos& start, RoomDir dir)
-{
-    wa.set(start, 1);
-    std::vector<MapWaveArrayPos> cursors, next;
-    cursors.push_back(start);
-    for (int i=0,e=cursors.size(); i<e; ++i) {
-        MapWaveArrayPos c = cursors[i];
-        for (int rd = beginRoomDir; rd<=endRoomDir; rd++ ) {
-            RoomDir d = static_cast<RoomDir>(rd);
-            if (i == 0 && d == dir) continue;
-
-
-        }
-    }
-}
-
-MapWave::MapWave(Rooms3dCube *z) : zone(z)
+RoomMergeTool::RoomMergeTool(Rooms3dCube *z) : zone(z)
 {
     assert(z);
 }
 
-RoomMergeTool::RoomMergeTool(MapInstance *map, const Room* tracked) : zone(NULL), start_room(NULL)
+bool RoomMergeTool::makeNewZone(const Room* room, RoomDir dir)
 {
-    assert(map && tracked);
-    const Rooms3dCubePos &pos = tracked->pos;
-    zone = map->findZone(pos.zid);
-    if (!zone) {
+    if (!room || dir == RoomDir::RD_UNKNOWN || room->pos.zid != zone->id() ) {
         assert(false);
-        return;
+        return false;
     }
-    start_room = zone->get(pos);
-    if (!start_room) {
-        zone = NULL;
-        assert(false);
-        return;
+    if (!runWaveAlgoritm(room->pos, dir))
+        return false;
+
+    using pairtype=std::pair<const Room*, int>;
+    pairtype t = *std::max_element(wave.begin(), wave.end(), [] (const pairtype & p1, const pairtype & p2) { return p1.second < p2.second;});
+    int max_weight = t.second;
+
+    std::vector<const Room*> rooms;
+    for (const_iterator it = wave.begin(), it_end=wave.end(); it!=it_end; ++it) {
+        if (it->second == max_weight)
+            rooms.push_back(it->first);
     }
-    assert( start_room->roomdata.vnum == tracked->roomdata.vnum &&  start_room->roomdata.descr == tracked->roomdata.descr);
+
+
+    return true;
 }
 
-bool RoomMergeTool::makeNewZone(RoomDir dir)
+bool RoomMergeTool::runWaveAlgoritm(const Rooms3dCubePos& start, RoomDir dir)
 {
-    if (!start_room)
+    Rooms3dCubePos s(start);
+    const Room* r = zone->getRoom(s);
+    if (!r)
         return false;
-    if (dir == RoomDir::RD_UNKNOWN)
+    wave[r] = 1;
+    if (!s.move(dir))
     {
-        assert(false);
+        wave.clear();
         return false;
     }
+    r = zone->getRoom(s);
+    if (!r)
+    {
+        wave.clear();
+        return false;
+    }
+    wave[r] = 2;
 
-    MapWaveArray wa(zone->size());
-    MapWaveArrayPos p(start_room->pos);
-    MapWaveAlgorithms alg;
-    bool result = alg.wave(wa, p, dir);
-    if (!result) {
-    
-    }        
-    return false;
+    int weight = 3;
+    std::vector<const Room*> cursors, next_cursors;
+    cursors.push_back(r);
+    while (!cursors.empty())
+    {
+        for (int i=0,e=cursors.size();i<e;++i)
+        {
+            const Room* r = cursors[i];
+            for (int rd = beginRoomDir; rd<=endRoomDir; rd++)
+            {
+                const Room* next = r->dirs[rd].next_room;
+                if (next && next->pos.zid == r->pos.zid) 
+                {
+                    if (exist(next))
+                        continue;
+                    wave[next] = weight;
+                    next_cursors.push_back(next);
+                }
+            }
+        }
+        cursors.clear();
+        cursors.swap(next_cursors);
+        weight++;
+    }
+    return true;
+}
+
+
+int RoomMergeTool::index(const Room* r) const
+{
+    const_iterator it = wave.find(r);
+    return (it == wave.end()) ? -1 : it->second;
+}
+
+bool RoomMergeTool::exist(const Room* r) const
+{
+    return (index(r) == -1) ? false : true;
 }

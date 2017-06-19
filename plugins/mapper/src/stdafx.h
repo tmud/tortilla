@@ -41,5 +41,6 @@ typedef unsigned int uint;
 #include <deque>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
 #include <memory>
