@@ -22,8 +22,16 @@ public:
         m_msg = msg;
     }
     
-    void roomChanged(const tstring& name, int id)
+    void setPosition(const Rooms3dCube* zone)
     {
+        if (!zone)
+        {
+            return;
+        }
+
+        int id = zone->id();
+        const tstring& name = zone->name();
+
         zones_iterator it = zones.find(id);
         if (it == zones.end())
         {

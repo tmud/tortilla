@@ -95,6 +95,9 @@
     <ClInclude Include="src\roomMergeTool.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\newZoneNameDlg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">

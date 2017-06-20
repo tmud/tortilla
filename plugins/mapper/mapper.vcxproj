@@ -112,6 +112,7 @@
     <ClInclude Include="src\mapInstance.h" />
     <ClInclude Include="src\mapper.h" />
     <ClInclude Include="src\mapperHashTable.h" />
+    <ClInclude Include="src\newZoneNameDlg.h" />
     <ClInclude Include="src\roomMergeTool.h" />
     <ClInclude Include="src\roomObjects.h" />
     <ClInclude Include="src\dirObjects.h" />

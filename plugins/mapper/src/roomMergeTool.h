@@ -46,12 +46,20 @@ private:
 class RoomMergeTool {
 public:
     RoomMergeTool(Rooms3dCube *z);
-    bool makeNewZone(const Room* room, RoomDir dir);    
+    bool tryMakeNewZone(const Room* room, RoomDir dir);
+    void makeNewZone(const tstring& name);
 private:
+    void clear();
     bool runWaveAlgoritm(const Rooms3dCubePos& start, RoomDir dir);
+    void deleteRoom(const Room* room);
     Rooms3dCube *zone;
-    std::unordered_map<const Room*, int> wave;
+    std::unordered_map<const Room*, int> nodes;
+    typedef std::pair<const Room*, const Room*> branch;
+    std::vector<branch> branches;
+    typedef std::vector<branch>::const_iterator branches_const_iterator;
+    typedef std::vector<branch>::iterator branches_iterator;
     typedef std::unordered_map<const Room*, int>::const_iterator const_iterator;
+    typedef std::unordered_map<const Room*, int>::iterator iterator;
     int index(const Room* r) const;
     bool exist(const Room* r) const;
 };

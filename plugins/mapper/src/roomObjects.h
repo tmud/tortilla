@@ -75,6 +75,7 @@ class RoomDirHelper
 {
 public:
     RoomDir cast(int index);
+    int     index(RoomDir dir);
     RoomDir revertDir(RoomDir dir);
     const wchar_t* getDirName(RoomDir dir);
     RoomDir getDirByName(const wchar_t* dirname);
@@ -126,6 +127,10 @@ private:
     Rooms3dCubeSize cube_size;
     int z_id;
     tstring m_name;
+#ifdef _DEBUG
+public:
+    void resetColors();
+#endif
 };
 
 class RoomHelper

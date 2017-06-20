@@ -216,24 +216,6 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
 
    if (r->dirs[RD_NORTH].exist)
    {
-       int x = rp.left + de;
-       int y = rp.top;
-       fillBkg(x+2,y+2,cs-1,-cs-2);
-       m_hdc.SelectPen(m_black);
-       renderLine(x+1,y,0,-cs-1);
-       renderLine(x+cs+1,y-1,0,-cs);
-       m_hdc.SelectPen(m_white);
-       renderLine(x,y,0,-cs-1);
-       renderLine(x+cs,y,0,-cs-1);
-       if (r->dirs[RD_NORTH].door)
-       {
-           int x = rp.left + cs;
-           int y = rp.top - 2;
-           m_hdc.SelectPen(m_white);
-           renderLine(x,y, de+3,0);
-           m_hdc.SelectPen(m_black);
-           renderLine(x+3,y+1,cs-1,0);
-       }
        if (anotherZone(r, RD_NORTH))
        {
            int x = rp.left + cs;
@@ -245,28 +227,44 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x+2,y+1,de-1,0);
        }
+       else if (atline(r, RD_NORTH))
+       {
+          int x = rp.left + de;
+          int y = rp.top;
+          fillBkg(x+2,y+2,cs-1,-cs-2);
+          m_hdc.SelectPen(m_black);
+          renderLine(x+1,y,0,-cs-1);
+          renderLine(x+cs+1,y-1,0,-cs);
+          m_hdc.SelectPen(m_white);
+          renderLine(x,y,0,-cs-1);
+          renderLine(x+cs,y,0,-cs-1);
+       }
+       else
+       {
+          int dx = 0; int dy = 0;
+          int dz = (rp.right - rp.left) / 2;
+          int x = rp.left+dz; int y = rp.top;
+          if (!calcDestOffset(dx, dy, r, RD_NORTH))
+              renderLine(x, y, 0, -3);
+          else {
+              dy = dy + rp.bottom-rp.top;
+              renderArrow(x+dx, y+dy, -5, 5, 5, 4, 1, 0);
+              renderLine(x, y, dx, dy);
+              renderLine(x+1, y, dx, dy);
+          }
+       }
+       if (r->dirs[RD_NORTH].door)
+       {
+          int x = rp.left + cs;
+          int y = rp.top - 2;
+          m_hdc.SelectPen(m_white);
+          renderLine(x,y, de+3,0);
+          m_hdc.SelectPen(m_black);
+          renderLine(x+3,y+1,cs-1,0);
+       }
    }
    if (r->dirs[RD_SOUTH].exist)
    {
-       int x = rp.left + de;
-       int y = rp.bottom;
-       fillBkg(x+1,y-1,cs-1,cs+2);
-       m_hdc.SelectPen(m_black);
-       renderLine(x+1,y,0,cs+1);
-       renderLine(x+cs+1,y,0,cs+1);
-       m_hdc.SelectPen(m_white);
-       renderLine(x,y,0,cs+1);
-       renderLine(x+cs,y,0,cs+1);
-
-       if (r->dirs[RD_SOUTH].door)
-       {
-           int x = rp.left + cs;
-           int y = rp.bottom + 2;
-           m_hdc.SelectPen(m_white);
-           renderLine(x,y, de+3,0);
-           m_hdc.SelectPen(m_black);
-           renderLine(x+3,y-1,cs-1,0);
-       }
        if (anotherZone(r, RD_SOUTH))
        {
            int x = rp.left + cs;
@@ -278,28 +276,45 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x+2,y-1,de-1,0);
        }
+       else if (atline(r, RD_SOUTH))
+       {
+           int x = rp.left + de;
+           int y = rp.bottom;
+           fillBkg(x+1,y-1,cs-1,cs+2);
+           m_hdc.SelectPen(m_black);
+           renderLine(x+1,y,0,cs+1);
+           renderLine(x+cs+1,y,0,cs+1);
+           m_hdc.SelectPen(m_white);
+           renderLine(x,y,0,cs+1);
+           renderLine(x+cs,y,0,cs+1);
+       }
+       else 
+       {          
+          int dz = (rp.right - rp.left) / 2;
+          int x = rp.left+dz; int y = rp.bottom;
+          int dx = 0; int dy = 0;
+          if (!calcDestOffset(dx, dy, r, RD_SOUTH))
+              renderLine(x, y, 0, 3);
+          else {              
+              dy = dy - (rp.bottom-rp.top);
+              renderArrow(x+dx, y+dy, -5, -5, 5, -4, 1, 0);
+              renderLine(x, y, dx, dy);
+              renderLine(x+1, y, dx, dy);
+          }
+       }
+       if (r->dirs[RD_SOUTH].door)
+       {
+           int x = rp.left + cs;
+           int y = rp.bottom + 2;
+           m_hdc.SelectPen(m_white);
+           renderLine(x,y, de+3,0);
+           m_hdc.SelectPen(m_black);
+           renderLine(x+3,y-1,cs-1,0);
+       }
    }
 
    if (r->dirs[RD_WEST].exist)
    {   
-       int x = rp.left;
-       int y = rp.top + de;
-       fillBkg(x+2,y+2,-cs-2,cs-1);
-       m_hdc.SelectPen(m_black);
-       renderLine(x,y+1,-cs-1,0);
-       renderLine(x-1,y+cs+1,-cs,0);
-       m_hdc.SelectPen(m_white);
-       renderLine(x,y,-cs-1,0);
-       renderLine(x,y+cs,-cs-1,0);
-       if (r->dirs[RD_WEST].door)
-       {
-           int x = rp.left - 2 ;
-           int y = rp.top + cs;
-           m_hdc.SelectPen(m_white);
-           renderLine(x,y,0,de+3);
-           m_hdc.SelectPen(m_black);
-           renderLine(x+1,y+3,0,cs-1);
-       }
        if (anotherZone(r, RD_WEST))
        {
            int x = base.left;
@@ -311,29 +326,45 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x+1,y+2,0,de-1);
        }
-   }
-
-   if (r->dirs[RD_EAST].exist)
-   {
-       int x = rp.right;
-       int y = rp.top + de;
-       fillBkg(x-1,y+1,cs+2,cs-1);
-       m_hdc.SelectPen(m_black);
-       renderLine(x,y+1, cs+1,0);
-       renderLine(x,y+cs+1,cs+1,0);
-       m_hdc.SelectPen(m_white);
-       renderLine(x,y,cs+1,0);
-       renderLine(x,y+cs,cs+1,0);
-
-       if (r->dirs[RD_EAST].door)
+       else if (atline(r, RD_WEST))
        {
-           int x = rp.right + 2;
+           int x = rp.left;
+           int y = rp.top + de;
+           fillBkg(x+2,y+2,-cs-2,cs-1);
+           m_hdc.SelectPen(m_black);
+           renderLine(x,y+1,-cs-1,0);
+           renderLine(x-1,y+cs+1,-cs,0);
+           m_hdc.SelectPen(m_white);
+           renderLine(x,y,-cs-1,0);
+           renderLine(x,y+cs,-cs-1,0);
+       }
+       else
+       {
+          int dz = (rp.bottom - rp.top) / 2;
+          int x = rp.left; int y = rp.top+dz;
+          int dx = 0; int dy = 0;
+          if (!calcDestOffset(dx, dy, r, RD_WEST))
+              renderLine(x, y, -3, 0);
+          else {              
+              dx = dx + rp.right-rp.left;    
+              renderArrow(x+dx, y+dy, 5, -5, 4, 5, -1, 0);
+              renderLine(x, y, dx, dy);
+              renderLine(x, y+1, dx, dy);
+          }
+       }
+       if (r->dirs[RD_WEST].door)
+       {
+           int x = rp.left - 2;
            int y = rp.top + cs;
            m_hdc.SelectPen(m_white);
            renderLine(x,y,0,de+3);
            m_hdc.SelectPen(m_black);
-           renderLine(x-1,y+3,0,cs-1);
-       }
+           renderLine(x+1,y+3,0,cs-1);
+       }      
+   }
+
+   if (r->dirs[RD_EAST].exist)
+   {
        if (anotherZone(r, RD_EAST)) 
        {
            int x = base.right-1;
@@ -344,6 +375,41 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            renderLine(x-2,y,0,de+3);
            m_hdc.SelectPen(m_exitL);
            renderLine(x-1,y+2,0,de-1);          
+       }
+       else if (atline(r, RD_EAST))
+       {
+           int x = rp.right;
+           int y = rp.top + de;
+           fillBkg(x-1,y+1,cs+2,cs-1);
+           m_hdc.SelectPen(m_black);
+           renderLine(x,y+1, cs+1,0);
+           renderLine(x,y+cs+1,cs+1,0);
+           m_hdc.SelectPen(m_white);
+           renderLine(x,y,cs+1,0);
+           renderLine(x,y+cs,cs+1,0);
+       }
+       else
+       {
+          int dz = (rp.bottom - rp.top) / 2;
+          int x = rp.right; int y = rp.top+dz;
+          int dx = 0; int dy = 0;
+          if (!calcDestOffset(dx, dy, r, RD_EAST))
+              renderLine(x, y, 3, 0);
+          else {              
+              dx = dx - (rp.right-rp.left);
+              renderArrow(x+dx, y+dy, -5, -5, -4, 5, 0, 1);
+              renderLine(x, y, dx, dy);
+              renderLine(x, y+1, dx, dy);
+          }
+       }
+       if (r->dirs[RD_EAST].door)
+       {
+           int x = rp.right + 2;
+           int y = rp.top + cs;
+           m_hdc.SelectPen(m_white);
+           renderLine(x,y,0,de+3);
+           m_hdc.SelectPen(m_black);
+           renderLine(x-1,y+3,0,cs-1);
        }
    }
 
@@ -423,6 +489,56 @@ bool MapperRoomRender::anotherZone(const Room* r, int dir)
     return r->pos.zid != r2->pos.zid;
 }
 
+bool MapperRoomRender::bidirectionalExit(const Room* r, int dir)
+{
+    const Room *r2 = r->dirs[dir].next_room;
+    if (!r2) return false;
+    int revert_dir = revertDir(dir);
+    const Room* back = r2->dirs[revert_dir].next_room;
+    return (r == back);    
+}
+
+bool MapperRoomRender::atline(const Room* r, int dir)
+{
+   if (!bidirectionalExit(r, dir))
+       return false;
+   const Room *r2 = r->dirs[dir].next_room;
+   if (dir == RD_NORTH || dir == RD_SOUTH)
+   {
+       return (r->pos.x == r2->pos.x) ? true : false;
+   }
+   if (dir == RD_WEST || dir == RD_EAST)
+   {
+       return (r->pos.y == r2->pos.y) ? true : false;
+   }
+   assert(false);
+   return false;
+}
+
+bool MapperRoomRender::calcDestOffset(int &dx, int &dy, const Room* r, int dir)
+{
+    const Room *r2 = r->dirs[dir].next_room;
+    if (!r2)
+        return false;
+    if (r->pos.zid != r2->pos.zid || r->pos.z != r2->pos.z) {
+        assert(false);
+        return false;
+    }
+    dx = (r2->pos.x - r->pos.x) * m_size;
+    dy = (r2->pos.y - r->pos.y) * m_size;
+
+
+    return true;
+}
+
+int MapperRoomRender::revertDir(int dir)
+{
+    RoomDirHelper dh;
+    RoomDir d = dh.cast(dir);
+    RoomDir rd = dh.revertDir(d);
+    return dh.index(rd);
+}
+
 void MapperRoomRender::renderRect(int x, int y, int dx, int dy)
 {
    int x2 = x + dx - 1;
@@ -438,6 +554,14 @@ void MapperRoomRender::renderLine(int x, int y, int dx, int dy)
 {
    m_hdc.MoveTo(x, y);
    m_hdc.LineTo(x+dx, y+dy);
+}
+
+void MapperRoomRender::renderArrow(int x, int y, int dx1, int dy1, int dx2, int dy2, int dx3, int dy3)
+{
+   m_hdc.MoveTo(x, y);
+   m_hdc.LineTo(x+dx1, y+dy1);
+   m_hdc.MoveTo(x+dx2, y+dy2);
+   m_hdc.LineTo(x+dx3, y+dy3);
 }
 
 void MapperRoomRender::fillColor(int x, int y, int dx, int dy, COLORREF color)

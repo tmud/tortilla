@@ -13,10 +13,15 @@ public:
 private:
     void renderRoom(int x, int y, const Room *r);
     bool anotherZone(const Room* r, int dir);
+    bool bidirectionalExit(const Room* r, int dir);
+    bool atline(const Room* r, int dir);
+    int  revertDir(int dir);    
+    bool calcDestOffset(int &dx, int &dy, const Room* r, int dir);
     void renderShadow(int x, int y);
     void renderHole(int x, int y, const Room *r);    
     void renderRect(int x, int y, int dx, int dy);    
     void renderLine(int x, int y, int dx, int dy);
+    void renderArrow(int x, int y, int dx1, int dy1, int dx2, int dy2, int dx3, int dy3);
     void fillColor(int x, int y, int dx, int dy, COLORREF color);
     void fillBkg(int x, int y, int dx, int dy);
     void fillBlack(int x, int y, int dx, int dy);

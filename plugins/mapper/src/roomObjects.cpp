@@ -195,12 +195,37 @@ void Rooms3dCube::clearExits(Room *r)
     }
 }
 
+#ifdef _DEBUG
+void Rooms3dCube::resetColors()
+{
+     for (int l=0,e=zone.size();l<e;++l) {
+        level *level = zone[l];
+        std::vector<row*> &r = level->rooms;
+        for (int i=0,ie=r.size(); i<ie; ++i) {
+            row *pr = r[i];
+            for (int j=0,je=pr->rr.size();j<je;++j) {
+                Room *room = pr->rr[j];
+                if (room) {
+                room->use_color = 0;
+                room->color = 0;
+                }
+            }
+        }    
+     }
+}
+#endif
+
 RoomDir RoomDirHelper::cast(int index)
 {
     if (index >= 0 && index < ROOM_DIRS_COUNT)
         return static_cast<RoomDir>(index);
     assert(false);
     return RD_UNKNOWN;
+}
+
+int RoomDirHelper::index(RoomDir dir)
+{
+    return static_cast<int>(dir);
 }
 
 const wchar_t* RoomDirName[] = { L"north", L"south", L"west", L"east", L"up", L"down" };

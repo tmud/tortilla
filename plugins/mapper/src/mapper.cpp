@@ -3,6 +3,7 @@
 #include "roomObjects.h"
 #include "debugHelpers.h"
 #include "roomMergeTool.h"
+#include "newZoneNameDlg.h"
 
 Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
 m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL)
@@ -166,8 +167,7 @@ void Mapper::saveProps()
 void Mapper::redrawPosition(MapCursor cursor)
 {
     m_view.showPosition(cursor);
-    const Rooms3dCube* zone = cursor->zone();
-    m_zones_control.roomChanged(zone->name(), zone->id() );
+    m_zones_control.setPosition(cursor->zone());
 }
 
 void Mapper::onCreate()
@@ -235,9 +235,18 @@ void Mapper::onRenderContextMenu(int id)
     {
         RoomMergeTool t(m_map.getZone(room));
         RoomDir dir = dh.cast(id - MENU_NEWZONE_NORTH);
-        bool result = t.makeNewZone(room, dir);
-        if (!result) {
-            //MessageBox
+        bool result = t.tryMakeNewZone(room, dir);
+        if (!result)
+        {
+            MessageBox(L"Невозможно создать новую зону из-за замкнутости коридоров на данную комнату!", L"Ошибка", MB_OK | MB_ICONERROR);
+            return;
         }
+#ifdef _DEBUG
+        m_view.Invalidate();
+#endif
+        NewZoneNameDlg dlg;        
+        if (dlg.DoModal() == IDCANCEL)
+            return;
+        t.makeNewZone(dlg.getName());
     }
 }
