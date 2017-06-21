@@ -41,9 +41,11 @@ bool RoomMergeTool::tryMakeNewZone(const Room* room, RoomDir dir)
     return true;
 }
 
-void RoomMergeTool::makeNewZone(const tstring& name)
+void RoomMergeTool::getNewZoneRooms(std::vector<const Room*>* rooms)
 {
-
+    const_iterator it = nodes.cbegin(), it_end = nodes.end();
+    for (; it != it_end; ++it)
+        rooms->push_back(it->first);
 }
 
 void RoomMergeTool::deleteRoom(const Room* room)

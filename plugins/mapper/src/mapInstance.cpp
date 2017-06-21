@@ -41,22 +41,14 @@ Rooms3dCube* MapInstance::getZone(const Room *room)
     return zone;
 }
 
-bool MapInstance::addNewZoneAndRoom(Room *room)
+bool MapInstance::addNewZoneAndRoom(const tstring& name, Room *room)
 {
     if (!room || room->roomdata.vnum.empty() || findRoom(room->roomdata.vnum))
     {
         assert(false);
         return false;
     }
-    tchar buffer[32];
-    while (true)
-    {
-        swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
-        if (!findZone(buffer))
-            break;
-    }
-    tstring zone_name(buffer);
-    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), zone_name);
+    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(name));
     Rooms3dCubePos p;
     new_zone->addRoom(p, room);
     zones.push_back(new_zone);
@@ -113,6 +105,24 @@ bool MapInstance::addLink(Room* from, Room* to, RoomDir dir)
     return true;
 }
 
+bool MapInstance::migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms)
+{
+    if (rooms.empty()) {
+        assert(false);
+        return false;
+    }
+    //migrate rooms
+    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(name));
+    for (Room *r : rooms) {
+        Rooms3dCubePos p (r->pos);
+        Rooms3dCube *z = getZone(r);
+        if (z->detachRoom(p))
+            new_zone->addRoom(p, r);
+    }
+    zones.push_back(new_zone);
+    return true;
+}
+
 bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
 {
     assert(from && next && dir != RD_UNKNOWN);
@@ -130,7 +140,7 @@ bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
      if (s != Rooms3dCube::AR_BUSY)
          return false;
     // create new zone
-    if (!addNewZoneAndRoom(next)) {
+    if (!addNewZoneAndRoom(L"", next)) {
         return false;
     }
     return true;
@@ -157,6 +167,23 @@ void MapInstance::removeRoomFromHashTable(Room *r)
         return;
     }
     rooms_hash_table.erase(it);
+}
+
+tstring MapInstance::getNewZoneName(const tstring& templ)
+{
+    tstring zone_name(templ);
+    if (zone_name.empty())
+    {
+        tchar buffer[32];
+        while (true)
+        {
+            swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
+            if (!findZone(buffer))
+                break;
+        }
+        zone_name.assign(buffer);
+    }
+    return zone_name;
 }
 //-------------------------------------------------------------------------------------
 Rooms3dCube* MapInstance::findZone(int zid)

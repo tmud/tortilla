@@ -15,12 +15,13 @@ public:
     MapCursor createZoneCursor(int zoneid);
     Rooms3dCube* getZone(const Room *room);
     Room* findRoom(const tstring& hash);
-    bool addNewZoneAndRoom(Room* newroom);
+    bool addNewZoneAndRoom(const tstring& name, Room* newroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
     bool addLink(Room* from, Room* to, RoomDir dir);
+    bool migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms);
+
     //void saveMaps(lua_State *L);
     //void loadMaps(lua_State *L);
-
 private:
     Rooms3dCube* findZone(int zid);
     Rooms3dCube* findZone(const tstring& name);
@@ -30,6 +31,7 @@ private:
     bool  setRoomOnMap(Room* from, Room* next, RoomDir dir);
     void  addRoomToHashTable(Room* r);
     void  removeRoomFromHashTable(Room *r);
+    tstring  getNewZoneName(const tstring& templ);
 private:
     int m_nextzone_id;
     std::vector<Rooms3dCube*> zones;

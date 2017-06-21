@@ -47,7 +47,7 @@ class RoomMergeTool {
 public:
     RoomMergeTool(Rooms3dCube *z);
     bool tryMakeNewZone(const Room* room, RoomDir dir);
-    void makeNewZone(const tstring& name);
+    void getNewZoneRooms(std::vector<const Room*>* rooms);
 private:
     void clear();
     bool runWaveAlgoritm(const Rooms3dCubePos& start, RoomDir dir);

@@ -57,7 +57,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         setExits(new_room);
         if (!m_pCurrentRoom)
         {
-            if (!m_map.addNewZoneAndRoom(new_room))
+            if (!m_map.addNewZoneAndRoom(L"", new_room))
             {
                 delete new_room;
                 new_room = NULL;
@@ -247,6 +247,18 @@ void Mapper::onRenderContextMenu(int id)
         NewZoneNameDlg dlg;        
         if (dlg.DoModal() == IDCANCEL)
             return;
-        t.makeNewZone(dlg.getName());
+        std::vector<const Room*> r;
+        t.getNewZoneRooms(&r);
+        std::vector<Room*> rooms;
+        for(const Room* pr : r) {
+            rooms.push_back(const_cast<Room*>(pr));
+        }
+        if (m_map.migrateRoomsNewZone(dlg.getName(), rooms))
+        {
+            int zid = rooms[0]->pos.zid;
+            Rooms3dCube *zone = m_map.getZone(rooms[0]);
+            m_zones_control.addNewZone(zone);
+        }
+        m_view.Invalidate();
     }
 }

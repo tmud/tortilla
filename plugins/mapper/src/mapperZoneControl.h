@@ -22,40 +22,45 @@ public:
         m_msg = msg;
     }
     
-    void setPosition(const Rooms3dCube* zone)
+    void addNewZone(const Rooms3dCube* zone)
     {
-        if (!zone)
-        {
-            return;
+        if (!zone) {
+           assert(false);
+           return;
         }
-
         int id = zone->id();
         const tstring& name = zone->name();
-
         zones_iterator it = zones.find(id);
         if (it == zones.end())
         {
             zones[id] = name;
             m_list.AddItem(name.c_str());
-            int pos = m_list.FindItem(name.c_str());
-            m_list.SelectItem(pos);
-            m_current_zone = id;
         }
-        else
-        {
-            int pos = m_list.FindItem(it->second.c_str());
-            if (it->second != name)
-            {                
-                if (pos == -1)  {
-                    assert(false);
-                    return;
-                }
-                it->second = name;
-                m_list.SetItemText(pos, name.c_str());
+    }
+
+    void setPosition(const Rooms3dCube* zone)
+    {
+        if (!zone) {
+           assert(false);
+           return;
+        }
+        addNewZone(zone);
+        int id = zone->id();
+        const tstring& name = zone->name();
+        zones_iterator it = zones.find(id);
+     
+        int pos = m_list.FindItem(it->second.c_str());
+        if (it->second != name)
+        {                
+            if (pos == -1)  {
+               assert(false);
+               return;
             }
-            m_list.SelectItem(pos);
-            m_current_zone = id;
+            it->second = name;
+            m_list.SetItemText(pos, name.c_str());
         }
+        m_list.SelectItem(pos);
+        m_current_zone = id;
     }
 
     int getCurrentZone() const {
