@@ -13,7 +13,6 @@ Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
     r->pos = p;
     r->pos.zid = z_id;
     *ptr = r;
-    m_changed = true;
     return AR_OK;
 }
 
@@ -38,18 +37,8 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
         *ptr = NULL;
         r->pos.clear();
         collapse(p);
-        m_changed = true;
     }
     return r;
-}
-bool Rooms3dCube::isChanged() const
-{
-    return m_changed;
-}
-
-void Rooms3dCube::resetChanged()
-{
-    m_changed = false;
 }
 
 Room* Rooms3dCube::get(const Rooms3dCubePos& p) const

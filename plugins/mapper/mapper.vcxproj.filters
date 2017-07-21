@@ -101,6 +101,9 @@
     <ClInclude Include="src\roomHasher.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\md5.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -150,6 +153,9 @@
     </ClCompile>
     <ClCompile Include="src\roomHasher.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\md5.cpp">
+      <Filter>Main Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

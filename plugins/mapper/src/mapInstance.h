@@ -33,10 +33,15 @@ private:
     tstring  getNewZoneName(const tstring& templ);
 private:
     int m_nextzone_id;
-    std::vector<Rooms3dCube*> zones;
-    typedef std::vector<Rooms3dCube*>::iterator zone_iterator;
+	struct zelem {
+		zelem(Rooms3dCube* z) : zone(z) { assert(zone);  }
+		Rooms3dCube* zone;
+		tstring hash;
+	};
+	std::vector<zelem> zones;
+	typedef std::vector<zelem>::iterator zone_iterator;
     std::map<tstring, Room*> rooms_hash_table;
-    typedef std::map<tstring, Room*>::iterator room_iterator;    
+    typedef std::map<tstring, Room*>::iterator room_iterator;
 };
 
 class MapCursorImplementation : public MapCursorInterface

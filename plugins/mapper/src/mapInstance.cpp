@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "mapInstance.h"
+#include "roomHasher.h"
 
 MapInstance::MapInstance() : m_nextzone_id(1)
 {
@@ -7,7 +8,7 @@ MapInstance::MapInstance() : m_nextzone_id(1)
 
 MapInstance::~MapInstance()
 {
-    std::for_each( zones.begin(),zones.end(),[](Rooms3dCube *p){delete p;} );
+    std::for_each( zones.begin(),zones.end(),[](zelem &p){delete p.zone;} );
     rooms_hash_table.clear();
 }
 
@@ -51,7 +52,7 @@ bool MapInstance::addNewZoneAndRoom(const tstring& name, Room *room)
     Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(name));
     Rooms3dCubePos p;
     new_zone->addRoom(p, room);
-    zones.push_back(new_zone);
+	zones.push_back(zelem(new_zone));
     addRoomToHashTable(room);
     return true;
 }
@@ -129,7 +130,7 @@ bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
     Rooms3dCubePos pos = from->pos;
     if (!pos.move(dir))
         return false;
-    Rooms3dCube* zone = zones[ pos.zid ];
+	Rooms3dCube* zone = zones[pos.zid].zone;
     Rooms3dCube::AR_STATUS s = zone->addRoom(pos, next);
     if (s == Rooms3dCube::AR_OK)
         return true;
@@ -190,7 +191,7 @@ Rooms3dCube* MapInstance::findZone(int zid)
 {
     zone_iterator zt = zones.begin(), zt_end = zones.end();
     for(; zt!=zt_end; ++zt) {
-        Rooms3dCube* zone = *zt;
+        Rooms3dCube* zone = zt->zone;
         if ( zone->id() == zid )
             return zone;
     }
@@ -201,7 +202,7 @@ Rooms3dCube* MapInstance::findZone(const tstring& name)
 {
     zone_iterator zt = zones.begin(), zt_end = zones.end();
     for(; zt!=zt_end; ++zt) {
-        Rooms3dCube* zone = *zt;
+        Rooms3dCube* zone = zt->zone;
         if ( zone->name() == name )
             return zone;
     }
@@ -292,20 +293,35 @@ Room* MapInstance::getRoom(Room* from, RoomDir dir)
 void MapInstance::saveMaps(const tstring& dir)
 {
     std::vector<tstring> todelete;
-    for (int i = 0, e = zones.size(); i < e; ++i)
-    {
-        Rooms3dCube *zone = zones[i];
-        if (!zone->isChanged())
-            continue;
-/*        ZoneParams zp;
-        zone->getParams(&zp);
+	for (int i = 0, e = zones.size(); i < e; ++i)
+	{
+		zelem z = zones[i];
+		Rooms3dCube *zone = z.zone;
+		Rooms3dCubeHash h(zone);
+		if (!z.hash.compare(h.getHash()))
+			continue;
+		const Rooms3dCubeSize &sz = zone->size();
 
-        xml::node s(L"zone");
-        //s.set("width", zone->width());
-        //s.set("height", zone->height());
-        //s.set("name", zp.name);
-        for (int j = zp.minl; j <= zp.maxl; ++j)
-        {
+		xml::node s(L"zone");
+		//s.set("width", sz.);
+		//s.set("height", zone->height());
+		s.set(L"name", zone->name().c_str());
+		Rooms3dCubePos p;
+		for (int z = sz.minlevel; z <= sz.maxlevel; ++z)  {
+			p.z = z;
+			for (int y = sz.top; y <= sz.bottom; ++y)  {
+				p.y = y;
+				for (int x = sz.left; x <= sz.right; ++x) {
+					p.x = x;
+					const Room* r = zone->getRoom(p);
+					if (!r) continue;
+					xml::node rn = s.createsubnode(L"room");
+					rn.set(L"x", x); rn.set(L"y", y); rn.set(L"z", z);
+
+
+				}
+			}
+		{
             RoomsLevel *level = zone->getLevel(j, false);
             if (level->isEmpty()) continue;
             xml::node l = s.createsubnode(L"level");
@@ -333,11 +349,9 @@ void MapInstance::saveMaps(const tstring& dir)
             {                
                 RoomExit &exit = room->dirs[dir];
                 if (!exit.exist)
-                    continue;                
-                
+                    continue;                               
                 xml::node e = r.createsubnode(L"exit");
                 e.set(L"dir", RoomDirName[dir]);
-
                 Room* next_room = exit.next_room;
                 if (next_room)
                 {
@@ -358,13 +372,13 @@ void MapInstance::saveMaps(const tstring& dir)
             }}
         }
 
-        for (int j = 0, je = todelete.size(); j < je; ++j)
+        /*for (int j = 0, je = todelete.size(); j < je; ++j)
         {
-            if (todelete[j] == zp.name)
+            if (todelete[j] == zone->name)
                 { todelete.erase(todelete.begin() + j); break; }
         }
-        if (zp.name != zp.original_name)
-            todelete.push_back(zp.original_name);
+        if (zù.name != zp.original_name)
+            todelete.push_back(zp.original_name);*/
 
         tstring path(dir);
         path.append(zp.name);
@@ -375,7 +389,7 @@ void MapInstance::saveMaps(const tstring& dir)
             error.append( zp.name);
             base::log(L, error.c_str());
         }
-        s.deletenode();*/
+        s.deletenode();
     }
 
     for (int j = 0, je = todelete.size(); j < je; ++j)
