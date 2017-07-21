@@ -671,7 +671,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         dc->FillSolidRect(&pos, bkg_color);
         dc->SetBkColor(bkg_color);
         dc->SetTextColor(text_color);
-        dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
+        dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX);
 
         if (p.underline_status || p.italic_status)
             dc->SelectFont(propElements->standard_font);
@@ -697,7 +697,7 @@ void MudView::renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF tex
     dc->FillSolidRect(&pos, bkg);
     dc->SetBkColor(bkg);
     dc->SetTextColor(text);
-    dc->DrawText(str.c_str(), -1, &pos, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+    dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX);
 }
 
 void MudView::initRenderParams()
