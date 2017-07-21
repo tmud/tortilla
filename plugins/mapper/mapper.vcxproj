@@ -113,6 +113,7 @@
     <ClInclude Include="src\mapper.h" />
     <ClInclude Include="src\mapperHashTable.h" />
     <ClInclude Include="src\newZoneNameDlg.h" />
+    <ClInclude Include="src\roomHasher.h" />
     <ClInclude Include="src\roomMergeTool.h" />
     <ClInclude Include="src\roomObjects.h" />
     <ClInclude Include="src\dirObjects.h" />
@@ -134,6 +135,7 @@
     <ClCompile Include="src\mapInstance.cpp" />
     <ClCompile Include="src\mapper.cpp" />
     <ClCompile Include="src\mapperHashTable.cpp" />
+    <ClCompile Include="src\roomHasher.cpp" />
     <ClCompile Include="src\roomMergeTool.cpp" />
     <ClCompile Include="src\roomObjects.cpp" />
     <ClCompile Include="src\dirObjects.cpp" />
