@@ -110,7 +110,7 @@ public:
     }*/
 
 private:
-    BEGIN_MSG_MAP(MapperToolbar)
+    BEGIN_MSG_MAP(MappeZoneControl)
 		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)

@@ -19,9 +19,8 @@ public:
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
     bool addLink(Room* from, Room* to, RoomDir dir);
     bool migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms);
-
-    //void saveMaps(lua_State *L);
-    //void loadMaps(lua_State *L);
+    void saveMaps(const tstring& dir);
+    void loadMaps(const tstring& dir);
 private:
     Rooms3dCube* findZone(int zid);
     Rooms3dCube* findZone(const tstring& name);

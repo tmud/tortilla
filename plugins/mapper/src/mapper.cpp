@@ -5,13 +5,13 @@
 #include "roomMergeTool.h"
 #include "newZoneNameDlg.h"
 
-Mapper::Mapper(PropertiesMapper *props) : m_propsData(props), 
-m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL)
+Mapper::Mapper(PropertiesMapper *props, const tstring& mapsFolder) : m_propsData(props), 
+m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
 {
 }
 
 Mapper::~Mapper()
-{    
+{
 }
 
 void Mapper::processNetworkData(const tchar* text, int text_len)
@@ -167,7 +167,9 @@ void Mapper::saveProps()
 void Mapper::redrawPosition(MapCursor cursor)
 {
     m_view.showPosition(cursor);
-    m_zones_control.setPosition(cursor->zone());
+    const Rooms3dCube* zone = cursor->zone();
+    if (zone)
+        m_zones_control.setPosition(zone);
 }
 
 void Mapper::onCreate()
@@ -187,10 +189,11 @@ void Mapper::onCreate()
     m_container.Create(m_vSplitter, pane_right, L"", style);
 
     m_toolbar.Create(m_container, rcDefault, style);
+    m_toolbar.setControlWindow(m_hWnd, WM_USER+1);
     m_view.Create(m_container, rcDefault, NULL, style | WS_VSCROLL | WS_HSCROLL, WS_EX_STATICEDGE);
     m_view.setMenuHandler(m_hWnd);
 
-    m_container.attach(40, m_toolbar, m_view);
+    m_container.attach(30, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
 
     m_zones_control.setNotifications(m_hWnd, WM_USER);
@@ -261,4 +264,40 @@ void Mapper::onRenderContextMenu(int id)
         }
         m_view.Invalidate();
     }
+
+    if (id >= MENU_JOINZONE_NORTH && id <= MENU_JOINZONE_DOWN)
+    {
+        RoomMergeTool t(m_map.getZone(room));
+        RoomDir dir = dh.cast(id - MENU_JOINZONE_NORTH);
+        bool result = t.tryMergeZones(room, dir);
+        if (!result)
+        {
+            MessageBox(L"Неполучается объеденить зоны в одну!", L"Ошибка", MB_OK | MB_ICONERROR);
+            return;
+        }
+    }
+
+    if (id >= MENU_MOVEROOM_NORTH && id <= MENU_MOVEROOM_DOWN)
+    {
+        //RoomMergeTool t(m_map.getZone(room));
+        RoomDir dir = dh.cast(id - MENU_MOVEROOM_DOWN);
+        /*bool result = t.tryMergeZones(room, dir);
+        if (!result)
+        {
+            MessageBox(L"Неполучается объеденить зоны в одну!", L"Ошибка", MB_OK | MB_ICONERROR);
+            return;
+        }*/
+    }
+}
+
+void Mapper::onToolbar(int id)
+{
+    if (id == IDC_BUTTON_SAVEZONES) {        
+        m_map.saveMaps(m_mapsFolder);
+    }
+
+    if (id == IDC_BUTTON_LOADZONES) {
+        m_map.loadMaps(m_mapsFolder);
+    }
+
 }

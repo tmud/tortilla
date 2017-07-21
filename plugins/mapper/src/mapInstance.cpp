@@ -287,20 +287,17 @@ Room* MapInstance::getRoom(Room* from, RoomDir dir)
 
     m_zones_control.addNewZone(new_zone);
     m_view.Invalidate();
-}
+}*/
 
-void Mapper::saveMaps(lua_State *L)
+void MapInstance::saveMaps(const tstring& dir)
 {
-    tstring dir;
-    base::getPath(L, L"", &dir);
-
     std::vector<tstring> todelete;
-    for (int i = 0, e = m_zones.size(); i < e; ++i)
+    for (int i = 0, e = zones.size(); i < e; ++i)
     {
-        Zone *zone = m_zones[i];
+        Rooms3dCube *zone = zones[i];
         if (!zone->isChanged())
-            continue;        
-        ZoneParams zp;
+            continue;
+/*        ZoneParams zp;
         zone->getParams(&zp);
 
         xml::node s(L"zone");
@@ -378,7 +375,7 @@ void Mapper::saveMaps(lua_State *L)
             error.append( zp.name);
             base::log(L, error.c_str());
         }
-        s.deletenode();
+        s.deletenode();*/
     }
 
     for (int j = 0, je = todelete.size(); j < je; ++j)
@@ -391,12 +388,9 @@ void Mapper::saveMaps(lua_State *L)
     }
 }
 
-void Mapper::loadMaps(lua_State *L)
+void MapInstance::loadMaps(const tstring& dir)
 {
-    /*tstring dir;
-    base::getPath(L, L"", &dir);
-
-    tstring mask(dir);
+   /* tstring mask(dir);
     mask.append(L"*.map");
     std::vector<tstring> zones;
     WIN32_FIND_DATA fd;
@@ -538,6 +532,5 @@ void Mapper::loadMaps(lua_State *L)
         Zone *zone = m_zones[0];
         m_viewpos.level = zone->getDefaultLevel();
     }
-    redrawPosition();
-}*/
-
+    redrawPosition();*/
+}

@@ -113,7 +113,10 @@ int init(lua_State *L)
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isVisible();
 
-    m_mapper_window = new Mapper(&m_props);
+    tstring folder;
+    base::getPath(L, L"", &folder);
+
+    m_mapper_window = new Mapper(&m_props, folder);
     RECT rc; ::GetClientRect(parent, &rc);
     if (rc.right == 0) rc.right = 400; // requeires for splitter inside map window (if parent window hidden)
     HWND res = m_mapper_window->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);  
