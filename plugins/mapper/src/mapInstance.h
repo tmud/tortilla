@@ -33,13 +33,13 @@ private:
     tstring  getNewZoneName(const tstring& templ);
 private:
     int m_nextzone_id;
-	struct zelem {
-		zelem(Rooms3dCube* z) : zone(z) { assert(zone);  }
+	struct zonedata {
+		zonedata(Rooms3dCube* z) : zone(z) { assert(zone); }
 		Rooms3dCube* zone;
 		tstring hash;
 	};
-	std::vector<zelem> zones;
-	typedef std::vector<zelem>::iterator zone_iterator;
+	std::vector<zonedata> zones;
+	typedef std::vector<zonedata>::iterator zone_iterator;
     std::map<tstring, Room*> rooms_hash_table;
     typedef std::map<tstring, Room*>::iterator room_iterator;
 };

@@ -16,6 +16,8 @@ public:
     void processCmd(const tstring& cmd);
     void updateProps();
     void saveProps();
+	void saveMaps(const tstring& dir);
+	void loadMaps(const tstring& dir);
 private:
     BEGIN_MSG_MAP(Mapper)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)

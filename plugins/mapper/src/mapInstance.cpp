@@ -8,7 +8,7 @@ MapInstance::MapInstance() : m_nextzone_id(1)
 
 MapInstance::~MapInstance()
 {
-    std::for_each( zones.begin(),zones.end(),[](zelem &p){delete p.zone;} );
+    std::for_each( zones.begin(),zones.end(),[](zonedata &p){delete p.zone;} );
     rooms_hash_table.clear();
 }
 
@@ -52,7 +52,7 @@ bool MapInstance::addNewZoneAndRoom(const tstring& name, Room *room)
     Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(name));
     Rooms3dCubePos p;
     new_zone->addRoom(p, room);
-	zones.push_back(zelem(new_zone));
+	zones.push_back(zonedata(new_zone));
     addRoomToHashTable(room);
     return true;
 }
@@ -290,123 +290,117 @@ Room* MapInstance::getRoom(Room* from, RoomDir dir)
     m_view.Invalidate();
 }*/
 
+void tstring_replace(tstring *str, const tstring& what, const tstring& forr)
+{
+	size_t pos = 0;
+	while ((pos = str->find(what, pos)) != tstring::npos)
+	{
+		str->replace(pos, what.length(), forr);
+		pos += forr.length();
+	}
+}
+
 void MapInstance::saveMaps(const tstring& dir)
 {
-    std::vector<tstring> todelete;
+	std::vector<tstring> files;
+	tstring path(dir); path.append(L"*.map");
+	WIN32_FIND_DATA fd;
+	memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+	HANDLE file = FindFirstFile(path.c_str(), &fd);
+	if (file != INVALID_HANDLE_VALUE)
+	{
+		do {
+			if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+				files.push_back(fd.cFileName);
+		} while (::FindNextFile(file, &fd));
+		::FindClose(file);
+	}
+
 	for (int i = 0, e = zones.size(); i < e; ++i)
 	{
-		zelem z = zones[i];
+		zonedata z = zones[i];
+		tstring fname(z.zone->name());
+		fname.append(L".map");
+		std::vector<tstring>::iterator it = std::find(files.begin(), files.end(), fname);
+		if (it != files.end()) {
+			files.erase(it);
+		}
 		Rooms3dCube *zone = z.zone;
 		Rooms3dCubeHash h(zone);
 		if (!z.hash.compare(h.getHash()))
 			continue;
 		const Rooms3dCubeSize &sz = zone->size();
-
-		xml::node s(L"zone");
-		//s.set("width", sz.);
-		//s.set("height", zone->height());
-		s.set(L"name", zone->name().c_str());
+		xml::node s(L"zone");		
+		//s.set(L"name", zone->name().c_str());
 		Rooms3dCubePos p;
-		for (int z = sz.minlevel; z <= sz.maxlevel; ++z)  {
+		for (int z = sz.minlevel; z <= sz.maxlevel; ++z)  
+		{
 			p.z = z;
-			for (int y = sz.top; y <= sz.bottom; ++y)  {
+			for (int y = sz.top; y <= sz.bottom; ++y) 
+			{
 				p.y = y;
-				for (int x = sz.left; x <= sz.right; ++x) {
+				for (int x = sz.left; x <= sz.right; ++x)
+				{
 					p.x = x;
 					const Room* r = zone->getRoom(p);
 					if (!r) continue;
 					xml::node rn = s.createsubnode(L"room");
 					rn.set(L"x", x); rn.set(L"y", y); rn.set(L"z", z);
-
-
+					rn.set(L"name", r->roomdata.name);
+					rn.set(L"vnum", r->roomdata.vnum);
+					rn.set(L"exits", r->roomdata.exits);
+					if (r->use_color)
+						rn.set(L"color", r->color);
+					if (r->icon > 0)
+						rn.set(L"icon", r->icon);
+					tstring d(r->roomdata.descr);
+					tstring_replace(&d, L"\r", L"");
+					tstring_replace(&d, L"\n", L"\\n");
+					xml::node descr = rn.createsubnode(L"descr");
+					descr.settext(d.c_str());
+					xml::node exits = rn.createsubnode(L"exits");
+					for (int rd = beginRoomDir; rd < endRoomDir; ++rd) 
+					{
+						const RoomExit& e = r->dirs[rd];
+						if (!e.exist) continue;
+						RoomDirHelper h;
+						xml::node en = exits.createsubnode(L"exit");
+						en.set(L"dir", h.getDirName(h.cast(rd)));
+						if (e.next_room)
+							en.set(L"vnum", e.next_room->roomdata.vnum);
+						if (e.door)
+							en.set(L"door", 1);
+						if (e.multiexit)
+							en.set(L"multi", 1);						
+					}
 				}
 			}
-		{
-            RoomsLevel *level = zone->getLevel(j, false);
-            if (level->isEmpty()) continue;
-            xml::node l = s.createsubnode(L"level");
-            l.set(L"z", j);
-            for (int x = 0, xe = level->width(); x<xe; ++x) {
-            for (int y = 0, ye = level->height(); y<ye; ++y) {
-            Room *room = level->getRoom(x, y);
-            if (!room) continue;
-            xml::node r = l.createsubnode(L"room");
-            r.set(L"name", room->roomdata.name);            
-            r.set(L"exits", room->roomdata.exits);
-            r.set(L"x", room->x);
-            r.set(L"y", room->y);
-            if (room->use_color)
-            {
-                wchar_t buffer[8]; COLORREF c = room->color;
-                swprintf(buffer, L"%.2x%.2x%.2x", GetRValue(c), GetGValue(c), GetBValue(c));
-                r.set(L"color", buffer);
-            }
-            if (room->icon > 0)
-                r.set(L"icon", room->icon);
-            r.set(L"descr", room->roomdata.descr);
-            
-            for (int dir = RD_NORTH; dir <= RD_DOWN; ++dir)
-            {                
-                RoomExit &exit = room->dirs[dir];
-                if (!exit.exist)
-                    continue;                               
-                xml::node e = r.createsubnode(L"exit");
-                e.set(L"dir", RoomDirName[dir]);
-                Room* next_room = exit.next_room;
-                if (next_room)
-                {
-                    e.set(L"x", next_room->x);
-                    e.set(L"y", next_room->y);
-                    e.set(L"z", next_room->level->getLevel());
-                    Zone* zone0 = next_room->level->getZone();
-                    if (zone != zone0)
-                    {
-                        ZoneParams zp0;
-                        zone0->getParams(&zp0);
-                        e.set(L"zone", zp0.name);
-                    }
-                }
-                if (exit.door)
-                    e.set(L"door", 1);
-            }
-            }}
-        }
-
-        /*for (int j = 0, je = todelete.size(); j < je; ++j)
-        {
-            if (todelete[j] == zone->name)
-                { todelete.erase(todelete.begin() + j); break; }
-        }
-        if (zщ.name != zp.original_name)
-            todelete.push_back(zp.original_name);*/
-
+		}
         tstring path(dir);
-        path.append(zp.name);
-        path.append(L".map");
+        path.append(fname);
         if ( !s.save( path.c_str()) )
         {
             tstring error(L"Ошибка записи файла с зоной:");
-            error.append( zp.name);
-            base::log(L, error.c_str());
+            error.append( path );
+			log(error);
         }
         s.deletenode();
     }
 
-    for (int j = 0, je = todelete.size(); j < je; ++j)
+    for (int j = 0, je = files.size(); j < je; ++j)
     {
         // delete old zone files
-        tstring file(dir);
-        file.append(todelete[j]);
-        file.append(L".map");
-        DeleteFile(file.c_str());
+		tstring path(dir);
+		path.append(files[j]);
+        DeleteFile(path.c_str());
     }
 }
 
 void MapInstance::loadMaps(const tstring& dir)
 {
-   /* tstring mask(dir);
-    mask.append(L"*.map");
-    std::vector<tstring> zones;
+	std::vector<tstring> files;
+    tstring mask(dir);
+    mask.append(L"*.map");    
     WIN32_FIND_DATA fd;
     memset(&fd, 0, sizeof(WIN32_FIND_DATA));
     HANDLE file = FindFirstFile(mask.c_str(), &fd);
@@ -414,29 +408,45 @@ void MapInstance::loadMaps(const tstring& dir)
     {
         do {
             if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                zones.push_back(fd.cFileName);
+				files.push_back(fd.cFileName);
         } while (::FindNextFile(file, &fd));
         ::FindClose(file);
     }
     
-    for (int i = 0, e = zones.size(); i < e; ++i)
+    for (int i = 0, e = files.size(); i < e; ++i)
     {
-        tstring file(zones[i]);
+        tstring file(files[i]);
         int pos = file.rfind(L".");
         tstring name(file.substr(0, pos));
         tstring filepath(dir);
         filepath.append(file);
 
+		int zid = 1;
         tstring error;
         xml::node zn;
         bool loaded = false;
-        Zone *zone = new Zone(name);
+		Rooms3dCube *zone = new Rooms3dCube(zid, name);
         if (zn.load(filepath.c_str(), &error))
         {
             loaded = true;
-            xml::request levels(zn, L"level");
-            for (int j = 0, je = levels.size(); j < je; ++j)
+            xml::request rooms(zn, L"room");
+            for (int j = 0, je = rooms.size(); j < je; ++j)
             {
+				xml::node r = rooms[i];
+				Room *newroom = new Room();
+				RoomData &rd = newroom->roomdata;
+				if (!r.get(L"vnum", &rd.vnum) {
+					log("unknown room vnum at order: "); //todo
+					continue;
+				}
+				int x = 0;  int y = 0; int z = 0;
+				if (!r.get(L"x", &x) || !r.get(L"y", &y) || !r.get(L"z", &z)) {
+					log("invalid coord for room with vnum=" + rd.vnum );
+					continue;
+				}
+
+
+
                 int z = 0;
                 if (!levels[j].get(L"z", &z))
                     { loaded = false;  break; }

@@ -36,6 +36,7 @@ typedef unsigned int uint;
 #include <atlctrlx.h>
 
 #include "resource.h"
+#include "logger.h"
 
 #include <vector>
 #include <deque>

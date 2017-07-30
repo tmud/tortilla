@@ -37,6 +37,7 @@ int get_version(lua_State *L)
 int init(lua_State *L)
 {
     DEBUGINIT(L);
+	init_log(L);
     luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
     luaT_run(L, "addMenu", "s", L"Карта/-");
     luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
@@ -125,7 +126,9 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    //todo! m_mapper_window->loadMaps(L);
+	tstring dir;
+	base::getPath(L, L"", &dir);
+    m_mapper_window->loadMaps(dir);
     return 0;
 }
 
@@ -133,7 +136,9 @@ int release(lua_State *L)
 {
     m_mapper_window->saveProps();
 
-    //todo! m_mapper_window->saveMaps(L);
+	tstring dir;
+	base::getPath(L, L"", &dir);
+    m_mapper_window->saveMaps(dir);
 
     xml::node p(L"settings");
     p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);

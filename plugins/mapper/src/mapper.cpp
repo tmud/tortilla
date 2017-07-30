@@ -164,6 +164,16 @@ void Mapper::saveProps()
     m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
 }
 
+void Mapper::saveMaps(const tstring& dir)
+{
+	m_map.saveMaps(dir);
+}
+
+void Mapper::loadMaps(const tstring& dir)
+{
+	m_map.loadMaps(dir);
+}
+
 void Mapper::redrawPosition(MapCursor cursor)
 {
     m_view.showPosition(cursor);
@@ -247,7 +257,7 @@ void Mapper::onRenderContextMenu(int id)
 #ifdef _DEBUG
         m_view.Invalidate();
 #endif
-        NewZoneNameDlg dlg;        
+        NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
             return;
         std::vector<const Room*> r;
