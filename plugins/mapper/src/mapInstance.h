@@ -21,6 +21,7 @@ public:
     bool migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms);
     void saveMaps(const tstring& dir);
     void loadMaps(const tstring& dir);
+	void getZonesIds(std::vector<int>* ids);
 private:
     Rooms3dCube* findZone(int zid);
     Rooms3dCube* findZone(const tstring& name);

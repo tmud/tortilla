@@ -527,3 +527,11 @@ void MapInstance::clear()
     zones.clear();
     rooms_hash_table.clear();
 }
+
+void MapInstance::getZonesIds(std::vector<int>* ids)
+{
+	std::vector<zonedata>::iterator it = zones.begin(), it_end = zones.end();
+	for (; it != it_end; ++it) {
+		ids->push_back(it->zone->id());
+	}
+}

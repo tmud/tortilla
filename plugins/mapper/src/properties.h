@@ -32,6 +32,7 @@ struct PropertiesMapper
 
     bool use_msdp;
     int  zoneslist_width;
+	tstring current_zone;
     
     void initAllDefault()
     {
@@ -61,5 +62,6 @@ struct PropertiesMapper
         dark_room.clear();
         use_msdp = false;
         zoneslist_width = -1;
+		current_zone.clear();
     }
 };

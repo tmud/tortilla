@@ -48,6 +48,7 @@ int init(lua_State *L)
 	tstring error;
 
     tstring path;
+	tstring current_zone;
     base::getPath(L, L"settings.xml", &path);
     xml::node p;
     if (p.load(path.c_str(), &error))
@@ -58,6 +59,7 @@ int init(lua_State *L)
         int width = 0;
         p.get(L"zoneslist/width", &width);
         m_props.zoneslist_width = (width > 0) ? width : -1;
+		p.get(L"zone/name", &current_zone);
 	} else {
 		if (!error.empty())
 			base::log(L, error.c_str());
@@ -143,6 +145,7 @@ int release(lua_State *L)
     xml::node p(L"settings");
     p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
     p.set(L"zoneslist/width", m_props.zoneslist_width);
+	p.set(L"zone/name", m_props.current_zone);
     
     tstring path;
     base::getPath(L, L"settings.xml", &path);

@@ -162,6 +162,11 @@ void Mapper::updateProps()
 void Mapper::saveProps()
 {
     m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
+	int zone = m_zones_control.getCurrentZone();
+	m_propsData->current_zone.clear();
+	if (zone >= 0) {
+		m_propsData->current_zone = m_zones_control.getZoneName(zone);
+	}
 }
 
 void Mapper::saveMaps(const tstring& dir)
@@ -172,6 +177,15 @@ void Mapper::saveMaps(const tstring& dir)
 void Mapper::loadMaps(const tstring& dir)
 {
 	m_map.loadMaps(dir);
+	std::vector<int> ids;
+	m_map.getZonesIds(&ids);
+	for (int i=0,e=ids.size(); i<e; ++i)
+	{
+		MapCursor c = m_map.createZoneCursor(ids[i]);
+		m_zones_control.addNewZone(c->zone());
+	}
+
+	//m_view.Invalidate();
 }
 
 void Mapper::redrawPosition(MapCursor cursor)
