@@ -37,7 +37,7 @@ int get_version(lua_State *L)
 int init(lua_State *L)
 {
     DEBUGINIT(L);
-	init_log(L);
+	init_clientlog(L);
     luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
     luaT_run(L, "addMenu", "s", L"Карта/-");
     luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);

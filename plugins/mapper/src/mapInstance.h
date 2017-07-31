@@ -31,6 +31,7 @@ private:
     void  addRoomToHashTable(Room* r);
     void  removeRoomFromHashTable(Room *r);
     tstring  getNewZoneName(const tstring& templ);
+    void clear();
 private:
     int m_nextzone_id;
 	struct zonedata {
@@ -42,6 +43,11 @@ private:
 	typedef std::vector<zonedata>::iterator zone_iterator;
     std::map<tstring, Room*> rooms_hash_table;
     typedef std::map<tstring, Room*>::iterator room_iterator;
+    struct exitdata {
+      Room *room;
+      RoomDir dir;
+      tstring vnum;
+    };
 };
 
 class MapCursorImplementation : public MapCursorInterface

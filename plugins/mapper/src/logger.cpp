@@ -2,11 +2,17 @@
 #include "logger.h"
 
 lua_State *logL = NULL;
-void init_log(lua_State *_l) {
+void init_clientlog(lua_State *_l) {
 	logL = _l;
 }
-void log(const tstring& text) 
+
+void clientlog(const tchar* text)
 {
-	if (!logL) return;
-	base::log(logL, text.c_str());
+    if (!logL) return;
+	base::log(logL, text);
+}
+
+void clientlog(const tstring& text) 
+{
+	clientlog(text.c_str());
 }

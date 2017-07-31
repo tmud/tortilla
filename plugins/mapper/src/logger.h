@@ -1,4 +1,6 @@
 #pragma once
 
-void init_log(lua_State *L);
-void log(const tstring& text);
+void init_clientlog(lua_State *L);
+void clientlog(const tstring& text);
+void clientlog(const tchar* text);
+
