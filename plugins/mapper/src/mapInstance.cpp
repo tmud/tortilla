@@ -129,7 +129,9 @@ bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
     Rooms3dCubePos pos = from->pos;
     if (!pos.move(dir))
         return false;
-	Rooms3dCube* zone = zones[pos.zid].zone;
+	Rooms3dCube* zone = findZone(pos.zid);
+    if (!zone)
+        return false;
     Rooms3dCube::AR_STATUS s = zone->addRoom(pos, next);
     if (s == Rooms3dCube::AR_OK)
         return true;
@@ -318,7 +320,7 @@ void MapInstance::saveMaps(const tstring& dir)
 					tstring_replace(&d, L"\r", L"\\r");
 					tstring_replace(&d, L"\n", L"\\n");
                     rn.set(L"desc", d.c_str());
-					for (int rd = beginRoomDir; rd < endRoomDir; ++rd) 
+					for (int rd = beginRoomDir; rd <= endRoomDir; ++rd) 
 					{
 						const RoomExit& e = r->dirs[rd];
 						if (!e.exist) continue;
@@ -419,6 +421,8 @@ void MapInstance::loadMaps(const tstring& dir)
                 if (err.empty() && !r.get(L"exits", &rd.exits)) {
                     err = L"не заданы выходы(exits) vnum=" + rd.vnum;
                 }
+
+
                 tstring desc;
                 if (err.empty() && !r.get(L"desc", &desc)) {
                     err = L"не задано описание(desc) vnum=" + rd.vnum;

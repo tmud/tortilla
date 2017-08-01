@@ -52,6 +52,9 @@ void MapperRender::showPosition(MapCursor pos)
 
 MapCursor MapperRender::getCurrentPosition()
 {
+    if (!currentpos)
+        return std::make_shared<MapNullCursorImplementation>();
+
     return currentpos;
 }
 

@@ -59,7 +59,8 @@ int init(lua_State *L)
         int width = 0;
         p.get(L"zoneslist/width", &width);
         m_props.zoneslist_width = (width > 0) ? width : -1;
-		p.get(L"zone/name", &current_zone);
+		if (p.get(L"zone/name", &current_zone))
+            m_props.current_zone = current_zone;
 	} else {
 		if (!error.empty())
 			base::log(L, error.c_str());

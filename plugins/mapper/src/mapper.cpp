@@ -74,6 +74,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     }
     else
     {
+         setExits(new_room);
          if (m_lastDir != RD_UNKNOWN && m_pCurrentRoom)
             m_map.addLink(m_pCurrentRoom, new_room, m_lastDir);
     }
@@ -176,16 +177,30 @@ void Mapper::saveMaps(const tstring& dir)
 
 void Mapper::loadMaps(const tstring& dir)
 {
-	m_map.loadMaps(dir);
-	std::vector<int> ids;
+    bool last_found = false;
+    tstring &last = m_propsData->current_zone;
+
+    m_map.loadMaps(dir);
+    std::vector<int> ids;
 	m_map.getZonesIds(&ids);
 	for (int i=0,e=ids.size(); i<e; ++i)
 	{
 		MapCursor c = m_map.createZoneCursor(ids[i]);
+        const Rooms3dCube* zone = c->zone();
+        if (!zone) {
+            assert(false);
+            continue;
+        }
+        if (!last.empty() && last == zone->name()) {
+            redrawPosition(c);
+            last_found = true;
+        }
 		m_zones_control.addNewZone(c->zone());
 	}
-
-	//m_view.Invalidate();
+    if (!last_found && !ids.empty()) {
+        MapCursor c = m_map.createZoneCursor(ids[0]);
+        redrawPosition(c);
+    }   
 }
 
 void Mapper::redrawPosition(MapCursor cursor)
@@ -240,8 +255,9 @@ void Mapper::onSize()
 
 void Mapper::onZoneChanged()
 {
-    int zone = m_zones_control.getCurrentZone();
     MapCursor current = m_view.getCurrentPosition();
+    if (!current) return;
+    int zone = m_zones_control.getCurrentZone();
     if (current->valid() && current->pos().zid == zone)
     {
         return redrawPosition(current);

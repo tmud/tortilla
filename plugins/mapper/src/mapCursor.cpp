@@ -9,10 +9,8 @@ void MapCursorImplementation::init()
     map_zone = NULL;
     if (!room_ptr)
         return;
-    int zid = room_ptr->pos.zid;
-    int count = map_ptr->zones.size();
-    if (zid >= 0 && zid < count)
-        map_zone = map_ptr->zones[zid].zone;
+    int zoneid = room_ptr->pos.zid;
+    map_zone = map_ptr->findZone(zoneid);
 }
 
 const Rooms3dCubeSize& MapCursorImplementation::size() const
@@ -52,10 +50,7 @@ Rooms3dCubePos  MapZoneCursorImplementation::m_empty_pos;
 
 void MapZoneCursorImplementation::init(int zoneid)
 {
-    map_zone = NULL;
-    int count = map_ptr->zones.size();
-    if (zoneid >= 0 && zoneid < count)
-        map_zone = map_ptr->zones[zoneid].zone;
+    map_zone = map_ptr->findZone(zoneid);
 }
 
 const Rooms3dCubeSize& MapZoneCursorImplementation::size() const

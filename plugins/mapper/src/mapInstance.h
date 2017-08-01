@@ -100,3 +100,18 @@ private:
     static Rooms3dCubeSize m_empty;
     static Rooms3dCubePos m_empty_pos;
 };
+
+class MapNullCursorImplementation : public MapCursorInterface 
+{
+public:
+    MapNullCursorImplementation() {}
+    const Rooms3dCubeSize& size() const { return m_null_size; }
+    const Rooms3dCubePos& pos() const { return m_null_pos; }
+    const Room* room(const Rooms3dCubePos& p) const { return NULL; }
+    MapCursorColor color() const { return RCC_NONE; }
+    const Rooms3dCube* zone() const { return NULL; }
+    bool valid() const { return false; }
+private:
+    Rooms3dCubePos m_null_pos;
+    Rooms3dCubeSize m_null_size;
+};
