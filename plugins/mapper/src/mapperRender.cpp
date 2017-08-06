@@ -38,44 +38,42 @@ void MapperRender::onCreate()
 
 void MapperRender::showPosition(MapCursor pos)
 {
-    if (pos->valid()) // && pos->pos().zid >= 0) 
-    {
+    if (pos->valid())
         currentpos = pos;
-    }
 
     bool set_center = false;
     if (pos->valid() && viewpos && viewpos->valid())
     {
         int id = viewpos->zone()->id();
         int newid = pos->zone()->id();
-        if (id != newid) {
-            
+        viewpos = pos;
+        if (id != newid)
+        {
             scrolls s;
             s.h = getHScroll();
             s.v = getVScroll();
-
-
-            /*tchar buf[128];
-            swprintf(buf, L"id=%d save hbar=%d, vbar=%d\r\n", id, zb.horz_bar, zb.vert_bar);
-            OutputDebugStringW(buf);*/
             m_scrolls[id] = s;
             siterator zt = m_scrolls.find(newid);
             if (zt == m_scrolls.end()) {
                 set_center = true;
             } else {
-
-                viewpos = pos;
                 const scrolls &s = zt->second;
-                
-
-                /*tchar buf[128];
-                swprintf(buf, L"id=%d load hbar=%d, vbar=%d\r\n", newid, zb.horz_bar, zb.vert_bar);
-                OutputDebugStringW(buf);*/
                 setHScroll(s.h);
                 setVScroll(s.v);
-                
                 return;
             }
+        } 
+        else
+        {
+             siterator zt = m_scrolls.find(id);
+              if (zt != m_scrolls.end())
+              {
+                  scrolls s;
+                  s.h = getHScroll();
+                  s.v = getVScroll();
+                  m_scrolls[id] = s;
+                  return;
+              }
         }
     }
     viewpos = pos;

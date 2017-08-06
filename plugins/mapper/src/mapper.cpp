@@ -171,13 +171,15 @@ void Mapper::saveProps()
 	}
 }
 
-void Mapper::saveMaps(const tstring& dir)
+void Mapper::saveMaps()
 {
+    const tstring&dir = m_mapsFolder;
 	m_map.saveMaps(dir);
 }
 
-void Mapper::loadMaps(const tstring& dir)
+void Mapper::loadMaps()
 {
+    const tstring&dir = m_mapsFolder;
     bool last_found = false;
     tstring &last = m_propsData->current_zone;
 
@@ -334,11 +336,11 @@ void Mapper::onRenderContextMenu(int id)
 void Mapper::onToolbar(int id)
 {
     if (id == IDC_BUTTON_SAVEZONES) {        
-        m_map.saveMaps(m_mapsFolder);
+        saveMaps();
     }
 
     if (id == IDC_BUTTON_LOADZONES) {
-        m_map.loadMaps(m_mapsFolder);
+        loadMaps();
     }
 
 }

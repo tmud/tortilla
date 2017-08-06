@@ -17,8 +17,8 @@ int get_name(lua_State *L)
 }
 
 int get_description(lua_State *L) 
-{    
-    luaT_pushwstring(L, 
+{
+    luaT_pushwstring(L,
         L"ќтображает схему комнат и выходов. ѕоказывает местоположение игрока.\r\n"
         L"ѕредназначен дл€ мадов с 6 стандартными выходами.\r\n"
         L"“ребует дл€ работы наличи€ VNUM комнаты в блоке текста с ее описанием,\r\n"
@@ -66,7 +66,7 @@ int init(lua_State *L)
 			base::log(L, error.c_str());
 	}
     p.deletenode();
-    
+
     path.clear();
     base::getPath(L, L"config.xml", &path);
 
@@ -129,25 +129,20 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-	tstring dir;
-	base::getPath(L, L"", &dir);
-    m_mapper_window->loadMaps(dir);
+    m_mapper_window->loadMaps();
     return 0;
 }
 
 int release(lua_State *L)
 {
     m_mapper_window->saveProps();
-
-	tstring dir;
-	base::getPath(L, L"", &dir);
-    m_mapper_window->saveMaps(dir);
+    m_mapper_window->saveMaps();
 
     xml::node p(L"settings");
     p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
     p.set(L"zoneslist/width", m_props.zoneslist_width);
 	p.set(L"zone/name", m_props.current_zone);
-    
+
     tstring path;
     base::getPath(L, L"settings.xml", &path);
     if (!p.save(path.c_str()))
