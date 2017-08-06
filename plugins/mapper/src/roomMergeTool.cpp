@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "roomMergeTool.h"
 
-RoomFreePlaceTool::RoomFreePlaceTool(Rooms3dCube *z) : zone(z) 
+/*RoomFreePlaceTool::RoomFreePlaceTool(Rooms3dCube *z) : zone(z) 
 {
     assert(z);
 }
@@ -25,26 +25,18 @@ bool RoomFreePlaceTool::tryFreePlace(const Room* room, RoomDir dir)
      //todo! try move the room
     
     return false;
-}
+}*/
 
-RoomMergeTool::RoomMergeTool(Rooms3dCube *z) : zone(z)
+bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room, RoomDir dir)
 {
-    assert(z);
-#ifdef _DEBUG
-    z->resetColors();
-#endif
-}
-
-bool RoomMergeTool::tryMakeNewZone(const Room* room, RoomDir dir)
-{
-    clear();
-    if (!room || dir == RoomDir::RD_UNKNOWN || room->pos.zid != zone->id() ) {
+    nodes.clear();
+    branches.clear();
+    if (!zone || !room || dir == RoomDir::RD_UNKNOWN || room->pos.zid != zone->id() ) {
         assert(false);
         return false;
     }
-    if (!runWaveAlgoritm(room->pos, dir))
+    if (!run(zone, room->pos, dir))
         return false;
-
     branches_const_iterator bt = branches.cbegin(), bt_end = branches.cend();
     for (; bt != bt_end; ++bt) {
         if (bt->second == room) 
@@ -54,6 +46,8 @@ bool RoomMergeTool::tryMakeNewZone(const Room* room, RoomDir dir)
         }
     }
     deleteRoom(room);
+    if (nodes.empty())
+        return false;
 #ifdef _DEBUG
     const_iterator it = nodes.cbegin(), it_end = nodes.end();
     for (; it != it_end; ++it) {
@@ -65,40 +59,14 @@ bool RoomMergeTool::tryMakeNewZone(const Room* room, RoomDir dir)
     return true;
 }
 
-bool RoomMergeTool::tryMergeZones(const Room* room, RoomDir dir)
-{
-    return false;
-}
-
-bool RoomMergeTool::tryJoinRoom(const Room* room, RoomDir dir)
-{
-    if (!room || dir == RoomDir::RD_UNKNOWN) {
-        assert(false);
-        return false;
-    }
-    Room *next = room->dirs[dir].next_room;
-    if (!next || next->pos.zid == room->pos.zid) {
-        assert(false);
-        return false;
-    }
-    RoomFreePlaceTool fp(zone);
-    if (!fp.tryFreePlace(room, dir))
-        return false;
-
-
-
-
-    return true;
-}
-
-void RoomMergeTool::getNewZoneRooms(std::vector<const Room*>* rooms)
+void RoomWaveAlgoritm::getNewZoneRooms(std::vector<const Room*>* rooms)
 {
     const_iterator it = nodes.cbegin(), it_end = nodes.end();
     for (; it != it_end; ++it)
         rooms->push_back(it->first);
 }
 
-void RoomMergeTool::deleteRoom(const Room* room)
+void RoomWaveAlgoritm::deleteRoom(const Room* room)
 {
     std::vector<branch> new_branches;
     branches_const_iterator bt = branches.cbegin(), bt_end = branches.cend();
@@ -113,13 +81,7 @@ void RoomMergeTool::deleteRoom(const Room* room)
             nodes.erase(it);
 }
 
-void RoomMergeTool::clear()
-{
-    nodes.clear();
-    branches.clear();
-}
-
-bool RoomMergeTool::runWaveAlgoritm(const Rooms3dCubePos& start, RoomDir dir)
+bool RoomWaveAlgoritm::run(const Rooms3dCube *zone, const Rooms3dCubePos& start, RoomDir dir)
 {
     Rooms3dCubePos s(start);
     const Room* r0 = zone->getRoom(s);
@@ -170,14 +132,13 @@ bool RoomMergeTool::runWaveAlgoritm(const Rooms3dCubePos& start, RoomDir dir)
     return true;
 }
 
-
-int RoomMergeTool::index(const Room* r) const
+int RoomWaveAlgoritm::index(const Room* r) const
 {
     const_iterator it = nodes.find(r);
     return (it == nodes.end()) ? -1 : it->second;
 }
 
-bool RoomMergeTool::exist(const Room* r) const
+bool RoomWaveAlgoritm::exist(const Room* r) const
 {
     return (index(r) == -1) ? false : true;
 }

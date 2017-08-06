@@ -21,32 +21,24 @@ MapCursor MapInstance::createZoneCursor(int zoneid)
     return std::make_shared<MapZoneCursorImplementation>(this, zoneid);
 }
 
- MapTools MapInstance::getTools(const Room *srcroom)
- {
-     std::vector<Rooms3dCube*> z(zones.size(), NULL);
-     for(int i=0,e=zones.size(); i<e; ++i )
-         z[i] = zones[i].zone;
-     return std::make_shared<MapToolsImpl>(srcroom, z);
- }
+MapTools MapInstance::getTools()
+{
+   std::vector<Rooms3dCube*> z(zones.size(), NULL);
+   for(int i=0,e=zones.size(); i<e; ++i )
+       z[i] = zones[i].zone;
+   return std::make_shared<MapToolsImpl>(z, this);
+}
+
+void MapInstance::updateMap(std::vector<Rooms3dCube*>& zones)
+{
+    //todo!
+}
  
 Room* MapInstance::findRoom(const tstring& hash)
 {
     assert(!hash.empty());
     room_iterator rt = rooms_hash_table.find(hash);
     return (rt != rooms_hash_table.end()) ? rt->second : NULL;
-}
-
-Rooms3dCube* MapInstance::getZone(const Room *room)
-{
-    assert(room);
-    const Rooms3dCubePos &pos = room->pos;
-    Rooms3dCube* zone = findZone(pos.zid);
-    if (!zone) {
-        assert(false);
-        return NULL;
-    }
-    assert( zone->getRoom(pos) == room );
-    return zone;
 }
 
 bool MapInstance::addNewZone(Room *firstroom)
@@ -111,24 +103,6 @@ bool MapInstance::addLink(Room* from, Room* to, RoomDir dir)
         assert(false); return false;
     }
     from->dirs[dir].next_room = to;
-    return true;
-}
-
-bool MapInstance::migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms)
-{
-    if (rooms.empty()) {
-        assert(false);
-        return false;
-    }
-    //migrate rooms
-    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(name));
-    for (Room *r : rooms) {
-        Rooms3dCubePos p (r->pos);
-        Rooms3dCube *z = getZone(r);
-        if (z->detachRoom(p))
-            new_zone->addRoom(p, r);
-    }
-    zones.push_back(new_zone);
     return true;
 }
 

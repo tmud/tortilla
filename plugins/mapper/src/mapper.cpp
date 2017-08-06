@@ -281,9 +281,9 @@ void Mapper::onRenderContextMenu(int id)
     RoomDirHelper dh;
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
-        RoomMergeTool t(m_map.getZone(room));
+        MapTools t = m_map.getTools();
         RoomDir dir = dh.cast(id - MENU_NEWZONE_NORTH);
-        bool result = t.tryMakeNewZone(room, dir);
+        bool result = t->tryMakeNewZone(room, dir);
         if (!result)
         {
             MessageBox(L"Невозможно создать новую зону из-за замкнутости коридоров на данную комнату!", L"Ошибка", MB_OK | MB_ICONERROR);
@@ -295,43 +295,32 @@ void Mapper::onRenderContextMenu(int id)
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
             return;
-        std::vector<const Room*> r;
-        t.getNewZoneRooms(&r);
-        std::vector<Room*> rooms;
-        for(const Room* pr : r) {
-            rooms.push_back(const_cast<Room*>(pr));
-        }
-        if (m_map.migrateRoomsNewZone(dlg.getName(), rooms))
-        {
-            int zid = rooms[0]->pos.zid;
-            Rooms3dCube *zone = m_map.getZone(rooms[0]);
-            m_zones_control.addNewZone(zone);
-        }
+        t->applyMakeNewZone(dlg.getName());
         m_view.Invalidate();
     }
 
     if (id >= MENU_JOINZONE_NORTH && id <= MENU_JOINZONE_DOWN)
     {
-        RoomMergeTool t(m_map.getZone(room));
+       /* RoomMergeTool t(m_map.getZone(room));
         RoomDir dir = dh.cast(id - MENU_JOINZONE_NORTH);
         bool result = t.tryMergeZones(room, dir);
         if (!result)
         {
             MessageBox(L"Неполучается объеденить зоны в одну!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
-        }
+        }*/
     }
 
     if (id >= MENU_MOVEROOM_NORTH && id <= MENU_MOVEROOM_DOWN)
     {
-        RoomMergeTool t(m_map.getZone(room));
+        /*RoomMergeTool t(m_map.getZone(room));
         RoomDir dir = dh.cast(id - MENU_MOVEROOM_NORTH);
         bool result = t.tryJoinRoom(room, dir);
         if (!result)
         {
             MessageBox(L"Неполучается переместить комнату в текущую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
-        }
+        }*/
 
     }
 }

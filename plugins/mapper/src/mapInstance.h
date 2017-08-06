@@ -4,24 +4,20 @@
 #include "mapCursor.h"
 #include "mapTools.h"
 
-class MapInstance
+class MapInstance : public MapToolsApply
 {
     friend class MapCursorImplementation;
     friend class MapZoneCursorImplementation;
-    friend class RoomMergeTool;
 public:
     MapInstance();
     ~MapInstance();
     MapCursor createCursor(Room *room, MapCursorColor color);
     MapCursor createZoneCursor(int zoneid);
-    MapTools getTools(const Room *srcroom);
-
-    Rooms3dCube* getZone(const Room *room);
+    MapTools getTools();
     Room* findRoom(const tstring& hash);
     bool addNewZone(Room* firstroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
     bool addLink(Room* from, Room* to, RoomDir dir);
-    bool migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms);
     void saveMaps(const tstring& dir);
     void loadMaps(const tstring& dir);
 	void getZonesIds(std::vector<int>* ids);
@@ -36,6 +32,7 @@ private:
     void  removeRoomFromHashTable(Room *r);
     tstring  getNewZoneName(const tstring& templ);
     void clear();
+    void updateMap(std::vector<Rooms3dCube*>& zones);
 private:
     int m_nextzone_id;
 	struct zonedata {

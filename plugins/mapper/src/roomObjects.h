@@ -84,7 +84,7 @@ public:
 class Rooms3dCube
 {
     friend class Rooms3dCubeCursor;
-    friend class RoomMergeTool;
+    friend class MapToolsImpl;
 public:
     Rooms3dCube(int zid, const tstring& name) : z_id(zid), m_name(name) {
         assert(zid >= 0);
