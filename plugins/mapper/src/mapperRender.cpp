@@ -9,10 +9,6 @@ extern Mapper* m_mapper_window;
 
 MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
 {
-    m_hscroll_pos = -1;
-    m_hscroll_size = 0;
-    m_vscroll_pos = -1;
-    m_vscroll_size = 0;
     m_hscroll_flag = false;
     m_vscroll_flag = false;
     m_block_center = true;
@@ -42,12 +38,48 @@ void MapperRender::onCreate()
 
 void MapperRender::showPosition(MapCursor pos)
 {
-    if (pos->valid() && pos->pos().zid >= 0) {
+    if (pos->valid()) // && pos->pos().zid >= 0) 
+    {
         currentpos = pos;
     }
+
+    bool set_center = false;
+    if (pos->valid() && viewpos && viewpos->valid())
+    {
+        int id = viewpos->zone()->id();
+        int newid = pos->zone()->id();
+        if (id != newid) {
+            
+            scrolls s;
+            s.h = getHScroll();
+            s.v = getVScroll();
+
+
+            /*tchar buf[128];
+            swprintf(buf, L"id=%d save hbar=%d, vbar=%d\r\n", id, zb.horz_bar, zb.vert_bar);
+            OutputDebugStringW(buf);*/
+            m_scrolls[id] = s;
+            siterator zt = m_scrolls.find(newid);
+            if (zt == m_scrolls.end()) {
+                set_center = true;
+            } else {
+
+                viewpos = pos;
+                const scrolls &s = zt->second;
+                
+
+                /*tchar buf[128];
+                swprintf(buf, L"id=%d load hbar=%d, vbar=%d\r\n", newid, zb.horz_bar, zb.vert_bar);
+                OutputDebugStringW(buf);*/
+                setHScroll(s.h);
+                setVScroll(s.v);
+                
+                return;
+            }
+        }
+    }
     viewpos = pos;
-    updateScrollbars(false);
-    Invalidate();
+    updateScrollbars(set_center);
 }
 
 MapCursor MapperRender::getCurrentPosition()
@@ -138,80 +170,79 @@ const Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
 
 void MapperRender::onHScroll(DWORD position)
 {
-    if (m_hscroll_pos < 0) return;
+    scroll s = getHScroll();
+    if (s.pos < 0) return;
+    int &hscroll_pos = s.pos;
     m_block_center = true;
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
     switch (action) {
     case SB_LINEUP:
-        m_hscroll_pos = m_hscroll_pos - ROOM_SIZE / 4;
+        hscroll_pos = hscroll_pos - ROOM_SIZE / 4;
         break;
     case SB_LINEDOWN:
-        m_hscroll_pos = m_hscroll_pos + ROOM_SIZE / 4;
+        hscroll_pos = hscroll_pos + ROOM_SIZE / 4;
         break;
     case SB_PAGEUP:
-        m_hscroll_pos = m_hscroll_pos - ROOM_SIZE;
+        hscroll_pos = hscroll_pos - ROOM_SIZE;
         break;
     case SB_PAGEDOWN:
-        m_hscroll_pos = m_hscroll_pos + ROOM_SIZE;
+        hscroll_pos = hscroll_pos + ROOM_SIZE;
         break;
     case SB_THUMBTRACK:
     case SB_THUMBPOSITION:
-        m_hscroll_pos = thumbpos;
+        hscroll_pos = thumbpos;
         break;
     }
-    if (m_hscroll_pos < 0) m_hscroll_pos = 0;
-    else if (m_hscroll_pos > m_hscroll_size) m_hscroll_pos = m_hscroll_size;    
-    SetScrollPos(SB_HORZ, m_hscroll_pos);
-    Invalidate();
+    setHScroll(s);
 }
 
 void MapperRender::onVScroll(DWORD position)
 {
-    if (m_vscroll_pos < 0) return;
+    scroll s = getVScroll();
+    if (s.pos < 0) return;
+    int &vscroll_pos = s.pos;
     m_block_center = true;
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
     switch (action) {
     case SB_LINEUP:
-        m_vscroll_pos = m_vscroll_pos - ROOM_SIZE / 4;
+        vscroll_pos = vscroll_pos - ROOM_SIZE / 4;
         break;
     case SB_LINEDOWN:
-        m_vscroll_pos = m_vscroll_pos + ROOM_SIZE / 4;
+        vscroll_pos = vscroll_pos + ROOM_SIZE / 4;
         break;
     case SB_PAGEUP:
-        m_vscroll_pos = m_vscroll_pos - ROOM_SIZE;
+        vscroll_pos = vscroll_pos - ROOM_SIZE;
         break;
     case SB_PAGEDOWN:
-        m_vscroll_pos = m_vscroll_pos + ROOM_SIZE;
+        vscroll_pos = vscroll_pos + ROOM_SIZE;
         break;
     case SB_THUMBTRACK:
     case SB_THUMBPOSITION:
-        m_vscroll_pos = thumbpos;
+        vscroll_pos = thumbpos;
         break;
     }
-    if (m_vscroll_pos < 0) m_vscroll_pos = 0;
-    else if (m_vscroll_pos > m_vscroll_size) m_vscroll_pos = m_vscroll_size;
-    SetScrollPos(SB_VERT, m_vscroll_pos);
-    Invalidate();
+    setVScroll(s);
 }
 
 void MapperRender::onSize()
 {
     updateScrollbars(true);
-    Invalidate();
 }
 
 int MapperRender::getRenderX() const
 {
-    int x = (m_hscroll_flag) ? -m_hscroll_pos : m_hscroll_size - m_hscroll_pos;
+    scroll s = getHScroll();
+    int x = (m_hscroll_flag) ? -s.pos : s.maxpos - s.pos;
     x = x + MAP_EDGE / 2;
     return x;
 }
 
 int MapperRender::getRenderY() const
 {
-    int y = (m_vscroll_flag) ? -m_vscroll_pos : m_vscroll_size - m_vscroll_pos;    
+    scroll s = getVScroll();
+    int y = (m_vscroll_flag) ? -s.pos : s.maxpos - s.pos;
     y = y + MAP_EDGE / 2;
     return y;
 }
@@ -241,45 +272,40 @@ void MapperRender::updateScrollbars(bool center)
     int window_width = rc.right;
     int window_height = rc.bottom;
 
+    scroll h;
     if (width < window_width)
     {
-        m_hscroll_size = window_width - width - 1;
-        if (m_hscroll_pos == -1)
-            m_hscroll_pos = m_hscroll_size / 2;
+        h.maxpos = window_width - width - 1;
+        if (h.pos == -1)
+            h.pos = h.maxpos / 2;
         else if (center && !m_block_center)
-            m_hscroll_pos = m_hscroll_size / 2;
+            h.pos = h.maxpos / 2;
         m_hscroll_flag = false;
     }
     else
     {
-        m_hscroll_size = width - window_width;
+        h.maxpos = width - window_width;
         m_hscroll_flag = true;
         m_block_center = false;
     }
-    SetScrollRange(SB_HORZ, 0, m_hscroll_size);
-    if (m_hscroll_pos < 0) m_hscroll_pos = 0;
-    else if (m_hscroll_pos > m_hscroll_size) m_hscroll_pos = m_hscroll_size;
-    SetScrollPos(SB_HORZ, m_hscroll_pos);
-       
+    scroll v;
     if (height < window_height)
     {
-        m_vscroll_size = window_height - height - 1;
-        if (m_vscroll_pos == -1)
-            m_vscroll_pos = m_vscroll_size / 2;
+        v.maxpos = window_height - height - 1;
+        if (v.pos == -1)
+            v.pos = v.maxpos / 2;
         else if (center && !m_block_center)
-            m_vscroll_pos = m_vscroll_size / 2;
+            v.pos = v.maxpos / 2;
         m_vscroll_flag = false;
     }
     else
     {
-        m_vscroll_size = height - window_height;
+        v.maxpos = height - window_height;
         m_vscroll_flag = true;
         m_block_center = false;
     }
-    SetScrollRange(SB_VERT, 0, m_vscroll_size);
-    if (m_vscroll_pos < 0) m_vscroll_pos = 0;
-    else if (m_vscroll_pos > m_vscroll_size) m_vscroll_pos = m_vscroll_size;
-    SetScrollPos(SB_VERT, m_vscroll_pos);
+    setHScroll(h);
+    setVScroll(v);
 }
 
 void MapperRender::mouseLeftButtonDown()
@@ -307,17 +333,14 @@ void MapperRender::mouseMove(int x, int y)
     int dy = pos.y - m_drag_point.y;
     m_drag_point = pos;
 
-    m_hscroll_pos = m_hscroll_pos - dx;
-    m_vscroll_pos = m_vscroll_pos - dy;
+    scroll h = getHScroll();
+    scroll v = getVScroll();
 
-    if (m_hscroll_pos < 0) m_hscroll_pos = 0;
-    else if (m_hscroll_pos > m_hscroll_size) m_hscroll_pos = m_hscroll_size;
-    if (m_vscroll_pos < 0) m_vscroll_pos = 0;
-    else if (m_vscroll_pos > m_vscroll_size) m_vscroll_pos = m_vscroll_size;
+    h.pos = h.pos - dx;
+    v.pos = v.pos - dy;
 
-    SetScrollPos(SB_HORZ, m_hscroll_pos);
-    SetScrollPos(SB_VERT, m_vscroll_pos);
-    Invalidate();
+    setHScroll(h);
+    setVScroll(v);    
 }
 
 void MapperRender::mouseLeave()
@@ -455,4 +478,42 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
         return true;
     }
     return false;
+}
+
+MapperRender::scroll MapperRender::getHScroll() const
+{
+    scroll s;
+    s.pos = GetScrollPos(SB_HORZ);
+    int min = 0;
+    GetScrollRange(SB_HORZ, &min, &s.maxpos);
+    return s;
+}
+
+MapperRender::scroll MapperRender::getVScroll() const
+{
+    scroll s;
+    s.pos = GetScrollPos(SB_VERT);
+    int min = 0;
+    GetScrollRange(SB_VERT, &min, &s.maxpos);
+    return s;
+}
+
+void MapperRender::setHScroll(const scroll& s)
+{
+    SetScrollRange(SB_HORZ, 0, s.maxpos);
+    int pos = s.pos;
+    if (pos < 0) pos = 0;
+    else if (pos > s.maxpos) pos = s.maxpos;
+    SetScrollPos(SB_HORZ, pos);
+    Invalidate();
+}
+
+void MapperRender::setVScroll(const scroll& s)
+{
+    SetScrollRange(SB_VERT, 0, s.maxpos);
+    int pos = s.pos;
+    if (pos < 0) pos = 0;
+    else if (pos > s.maxpos) pos = s.maxpos;
+    SetScrollPos(SB_VERT, pos);
+    Invalidate();
 }

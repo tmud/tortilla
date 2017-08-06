@@ -7,13 +7,16 @@ class MappeZoneControl : public CDialogImpl<MappeZoneControl>
     RECT rc_list;    
     HWND m_parent;
     UINT m_msg;
-    std::map<int, tstring> zones;
-    typedef std::map<int, tstring>::iterator zones_iterator;
-    typedef std::map<int, tstring>::const_iterator zones_const_iterator;
-    int m_current_zone;
+    struct zonedata {
+        int id;
+        tstring name;
+    };
+    std::vector<zonedata> zones;
+    typedef std::vector<zonedata>::iterator zones_iterator;
+    typedef std::vector<zonedata>::const_iterator zones_const_iterator;
 public:
     enum { IDD = IDD_MAPPER_ZONES };
-    MappeZoneControl() : m_parent(NULL), m_msg(0), m_current_zone(-1)
+    MappeZoneControl() : m_parent(NULL), m_msg(0)
     {
     }    
     void setNotifications(HWND wnd, UINT msg)
@@ -28,13 +31,14 @@ public:
            assert(false);
            return;
         }
-        int id = zone->id();
-        const tstring& name = zone->name();
-        zones_iterator it = zones.find(id);
-        if (it == zones.end())
+        int index = findZone(zone->id());
+        if (index == -1)
         {
-            zones[id] = name;
-            m_list.AddItem(name.c_str());
+            zonedata zd;
+            zd.id = zone->id();
+            zd.name = zone->name();
+            zones.push_back(zd);
+            m_list.AddItem(zd.name.c_str());
         }
     }
 
@@ -45,69 +49,27 @@ public:
            return;
         }
         addNewZone(zone);
-        int id = zone->id();
-        const tstring& name = zone->name();
-        zones_iterator it = zones.find(id);
-     
-        int pos = m_list.FindItem(it->second.c_str());
-        if (it->second != name)
-        {                
-            if (pos == -1)  {
-               assert(false);
-               return;
-            }
-            it->second = name;
-            m_list.SetItemText(pos, name.c_str());
-        }
-        m_list.SelectItem(pos);
-        m_current_zone = id;
+        int index = findZone(zone->id());
+        assert(index != -1);
+        m_list.SelectItem(index);
     }
 
     int getCurrentZone() const {
-        return m_current_zone;
+       int pos = m_list.GetCurSel();
+       return (pos >= 0) ? zones[pos].id : -1;
     }
 
-    //todo! name can be changed
-    const tstring& getZoneName(int id) const {
-        static tstring empty;
-        zones_const_iterator it = zones.find(id);
-        return (it != zones.end()) ? it->second : empty;
-    }
-
-    /*int selectZone(const tstring& zone, bool select)
+    const tstring& getZoneName(int id) const
     {
-        MemoryBuffer b;
-        int index = m_list.GetCurSel();
-        if (index == -1)
-        {
-            for (int i=0,e=m_list.GetItemCount();i<e;++i)
-            {
-                int len = m_list.GetItemTextLen(i);
-                b.alloc((len+1)*sizeof(tchar));
-                tchar* buffer = (tchar*)b.getData();
-                m_list.GetItemText(i, buffer, len);
-            }
-        }
-
-        int selection = m_list.GetCurSel();
-        int index = findZone(zone);
-        if (index == -1)
-        {
-            ZoneParams zp;
-            zone->getParams(&zp);
-            index = m_list.GetItemCount();
-            m_list.InsertItem(index, zp.name.c_str());
-            zones.push_back(zone);
-            index = m_list.GetItemCount()-1;
-        }
-        if (select) {
-                m_list.SelectItem(index);
-        } else {
-            if (selection == -1)
-                m_list.SelectItem(-1);
-        }        
-        return index;
-    }*/
+        static tstring empty;
+        int index = findZone(id);
+        return (index != -1) ? zones[index].name : empty;
+    }
+private:
+    int findZone(int id) const {
+        zones_const_iterator it = std::find_if(zones.begin(), zones.end(), [&](const zonedata& zd) { return (zd.id == id); });
+        return (it != zones.end()) ? it-zones.begin() : -1;
+    }
 
 private:
     BEGIN_MSG_MAP(MappeZoneControl)
@@ -144,20 +106,8 @@ private:
 
     LRESULT OnSelectItem(UINT, WPARAM, LPARAM, BOOL&)
     {
-        int item = m_list.GetCurSel();
-        if (item != -1)
-        {
-            tstring name;
-            getItemText(item, &name);
-            item = -1;
-            zones_iterator it = zones.begin(), it_end = zones.end();
-            for(; it!=it_end;++it) {
-                if (it->second == name) { item = it->first; break; }
-            }
-            m_current_zone = item;
-            if (::IsWindow(m_parent))
-                ::SendMessage(m_parent, m_msg, 0, 0);
-        }
+        if (::IsWindow(m_parent))
+             ::SendMessage(m_parent, m_msg, 0, 0);
         return 0;
     }
 
@@ -180,13 +130,13 @@ private:
         if (conflict)
         {
             MessageBox(L"Зона с таким именем уже существует!", L"Ошибка", MB_OK | MB_ICONERROR);
-            tstring name = getZoneName(m_current_zone);
+            tstring name = zones[item].name;
             assert(!name.empty());
             m_list.SetItemText(item, name.c_str());
         }
         else
         {
-            zones[item] = text;
+            zones[item].name = text;
         }
         return 0;
     }

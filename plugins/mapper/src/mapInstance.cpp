@@ -386,7 +386,8 @@ void MapInstance::loadMaps(const tstring& dir)
         } while (::FindNextFile(file, &fd));
         ::FindClose(file);
     }
-    
+
+    int zid = 1;
     for (int i = 0, e = files.size(); i < e; ++i)
     {
         tstring file(files[i]);
@@ -394,11 +395,10 @@ void MapInstance::loadMaps(const tstring& dir)
         tstring name(file.substr(0, pos));
         tstring filepath(dir);
         filepath.append(file);
-
-		int zid = 1;
+		
         tstring error;
         xml::node zn;        
-		Rooms3dCube *zone = new Rooms3dCube(zid, name);
+		Rooms3dCube *zone = new Rooms3dCube(zid++, name);
         if (zn.load(filepath.c_str(), &error))
         {
             xml::request rooms(zn, L"room");

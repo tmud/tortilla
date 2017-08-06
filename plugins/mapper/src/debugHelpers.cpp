@@ -17,4 +17,20 @@ void debug_print(const tstring& text) {
     tstring t(text); t.append(L"\r\n");
     OutputDebugString(t.c_str());
 }
+
+void int2w(int value, tstring* str)
+{
+    wchar_t buffer[16];
+    swprintf(buffer, L"%d", value);
+    str->assign(buffer);
+}
+
+void debug_print(const tstring& text, int val)
+{
+    tstring t, out;
+    int2w(val, &t);
+    out.assign(text);
+    out.append(t);
+    debug_print(out);
+}
 #endif

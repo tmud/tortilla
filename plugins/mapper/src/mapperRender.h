@@ -36,10 +36,16 @@ class MapperRender : public CWindowImpl<MapperRender>
     MapCursor currentpos;
     MapperRoomRender rr;
 
-    int m_hscroll_pos;
-    int m_hscroll_size;
-    int m_vscroll_pos;
-    int m_vscroll_size;
+    struct scroll {
+        scroll() : pos(-1), maxpos(0) {}
+        int pos, maxpos;
+    };
+    struct scrolls {
+        scroll h,v;        
+    };   
+    std::map<int, scrolls> m_scrolls;
+    typedef std::map<int, scrolls>::iterator siterator;
+
     bool m_hscroll_flag;
     bool m_vscroll_flag;
     bool m_block_center;
@@ -53,7 +59,6 @@ class MapperRender : public CWindowImpl<MapperRender>
     const Room *m_menu_tracked_room;
 
     HWND m_menu_handler;
-
 public:
     MapperRender();
     void setMenuHandler(HWND handler_wnd);
@@ -136,4 +141,8 @@ private:
     }
     void createMenu();
     bool runMenuPoint(DWORD wparam, LPARAM lparam);
+    scroll getHScroll() const;
+    scroll getVScroll() const;
+    void setHScroll(const scroll& s);
+    void setVScroll(const scroll& s);
 };
