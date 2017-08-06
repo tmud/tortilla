@@ -63,8 +63,9 @@ public:
     MapperRender();
     void setMenuHandler(HWND handler_wnd);
     void showPosition(MapCursor pos);
-    MapCursor getCurrentPosition();
+    MapCursor getCurrentPosition();    
     const Room* menuTrackedRoom() const { return m_menu_tracked_room; }
+    void clearForNewMaps() { m_scrolls.clear(); viewpos = nullptr; currentpos = nullptr; }
 
 private:
 	BEGIN_MSG_MAP(MapperRender)

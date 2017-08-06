@@ -129,14 +129,14 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    m_mapper_window->loadMaps();
+    //todo! m_mapper_window->loadMaps();
     return 0;
 }
 
 int release(lua_State *L)
 {
     m_mapper_window->saveProps();
-    m_mapper_window->saveMaps();
+    //todo! m_mapper_window->saveMaps();
 
     xml::node p(L"settings");
     p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);

@@ -41,43 +41,29 @@ void MapperRender::showPosition(MapCursor pos)
     if (pos->valid())
         currentpos = pos;
 
-    bool set_center = false;
     if (pos->valid() && viewpos && viewpos->valid())
     {
         int id = viewpos->zone()->id();
         int newid = pos->zone()->id();
         viewpos = pos;
-        if (id != newid)
-        {
-            scrolls s;
-            s.h = getHScroll();
-            s.v = getVScroll();
-            m_scrolls[id] = s;
-            siterator zt = m_scrolls.find(newid);
-            if (zt == m_scrolls.end()) {
-                set_center = true;
-            } else {
-                const scrolls &s = zt->second;
-                setHScroll(s.h);
-                setVScroll(s.v);
-                return;
-            }
-        } 
-        else
-        {
-             siterator zt = m_scrolls.find(id);
-              if (zt != m_scrolls.end())
-              {
-                  scrolls s;
-                  s.h = getHScroll();
-                  s.v = getVScroll();
-                  m_scrolls[id] = s;
-                  return;
-              }
+        scrolls s;
+        s.h = getHScroll();
+        s.v = getVScroll();
+        m_scrolls[id] = s;
+        if (id == newid) {
+            Invalidate();
+            return;
+        }
+        siterator zt = m_scrolls.find(newid);
+        if (zt != m_scrolls.end()) {
+            const scrolls &s = zt->second;
+            setHScroll(s.h);
+            setVScroll(s.v);
+            return;
         }
     }
     viewpos = pos;
-    updateScrollbars(set_center);
+    updateScrollbars(true);
 }
 
 MapCursor MapperRender::getCurrentPosition()
@@ -226,6 +212,7 @@ void MapperRender::onVScroll(DWORD position)
 
 void MapperRender::onSize()
 {
+    m_scrolls.clear();
     updateScrollbars(true);
 }
 

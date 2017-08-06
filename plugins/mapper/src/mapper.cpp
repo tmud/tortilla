@@ -179,10 +179,12 @@ void Mapper::saveMaps()
 
 void Mapper::loadMaps()
 {
+    m_view.clearForNewMaps();
+
     const tstring&dir = m_mapsFolder;
     bool last_found = false;
     tstring &last = m_propsData->current_zone;
-
+    
     m_map.loadMaps(dir);
     std::vector<int> ids;
 	m_map.getZonesIds(&ids);

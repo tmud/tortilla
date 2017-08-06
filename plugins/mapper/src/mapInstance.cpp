@@ -422,7 +422,6 @@ void MapInstance::loadMaps(const tstring& dir)
                     err = L"не заданы выходы(exits) vnum=" + rd.vnum;
                 }
 
-
                 tstring desc;
                 if (err.empty() && !r.get(L"desc", &desc)) {
                     err = L"не задано описание(desc) vnum=" + rd.vnum;
