@@ -107,6 +107,9 @@
     <ClInclude Include="src\logger.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\mapTools.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -161,6 +164,9 @@
       <Filter>Main Files</Filter>
     </ClCompile>
     <ClCompile Include="src\logger.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

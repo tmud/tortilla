@@ -21,6 +21,14 @@ MapCursor MapInstance::createZoneCursor(int zoneid)
     return std::make_shared<MapZoneCursorImplementation>(this, zoneid);
 }
 
+ MapTools MapInstance::getTools(const Room *srcroom)
+ {
+     std::vector<Rooms3dCube*> z(zones.size(), NULL);
+     for(int i=0,e=zones.size(); i<e; ++i )
+         z[i] = zones[i].zone;
+     return std::make_shared<MapToolsImpl>(srcroom, z);
+ }
+ 
 Room* MapInstance::findRoom(const tstring& hash)
 {
     assert(!hash.empty());
@@ -41,14 +49,15 @@ Rooms3dCube* MapInstance::getZone(const Room *room)
     return zone;
 }
 
-bool MapInstance::addNewZoneAndRoom(const tstring& name, Room *room)
+bool MapInstance::addNewZone(Room *firstroom)
 {
+    Room *room = firstroom;
     if (!room || room->roomdata.vnum.empty() || findRoom(room->roomdata.vnum))
     {
         assert(false);
         return false;
     }
-    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(name));
+    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(L""));
     Rooms3dCubePos p;
     new_zone->addRoom(p, room);
 	zones.push_back(zonedata(new_zone));
@@ -142,7 +151,7 @@ bool MapInstance::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
      if (s != Rooms3dCube::AR_BUSY)
          return false;
     // create new zone
-    if (!addNewZoneAndRoom(L"", next)) {
+    if (!addNewZone(next)) {
         return false;
     }
     return true;

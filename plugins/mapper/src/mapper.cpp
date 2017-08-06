@@ -58,7 +58,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         setExits(new_room);
         if (!m_pCurrentRoom)
         {
-            if (!m_map.addNewZoneAndRoom(L"", new_room))
+            if (!m_map.addNewZone(new_room))
             {
                 delete new_room;
                 new_room = NULL;
@@ -324,14 +324,15 @@ void Mapper::onRenderContextMenu(int id)
 
     if (id >= MENU_MOVEROOM_NORTH && id <= MENU_MOVEROOM_DOWN)
     {
-        //RoomMergeTool t(m_map.getZone(room));
-        RoomDir dir = dh.cast(id - MENU_MOVEROOM_DOWN);
-        /*bool result = t.tryMergeZones(room, dir);
+        RoomMergeTool t(m_map.getZone(room));
+        RoomDir dir = dh.cast(id - MENU_MOVEROOM_NORTH);
+        bool result = t.tryJoinRoom(room, dir);
         if (!result)
         {
-            MessageBox(L"Неполучается объеденить зоны в одну!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(L"Неполучается переместить комнату в текущую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
-        }*/
+        }
+
     }
 }
 

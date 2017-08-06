@@ -2,6 +2,7 @@
 #include "roomObjects.h"
 #include "dirObjects.h"
 #include "mapCursor.h"
+#include "mapTools.h"
 
 class MapInstance
 {
@@ -13,9 +14,11 @@ public:
     ~MapInstance();
     MapCursor createCursor(Room *room, MapCursorColor color);
     MapCursor createZoneCursor(int zoneid);
+    MapTools getTools(const Room *srcroom);
+
     Rooms3dCube* getZone(const Room *room);
     Room* findRoom(const tstring& hash);
-    bool addNewZoneAndRoom(const tstring& name, Room* newroom);
+    bool addNewZone(Room* firstroom);
     bool addNewRoom(Room* from, Room* newroom, RoomDir dir);
     bool addLink(Room* from, Room* to, RoomDir dir);
     bool migrateRoomsNewZone(const tstring& name, std::vector<Room*>& rooms);

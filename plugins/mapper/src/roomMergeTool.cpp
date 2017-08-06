@@ -1,6 +1,32 @@
 #include "stdafx.h"
 #include "roomMergeTool.h"
 
+RoomFreePlaceTool::RoomFreePlaceTool(Rooms3dCube *z) : zone(z) 
+{
+    assert(z);
+}
+bool RoomFreePlaceTool::tryFreePlace(const Room* room, RoomDir dir)
+{
+    if (!room || dir == RoomDir::RD_UNKNOWN || room->pos.zid != zone->id() ) {
+        assert(false);
+        return false;
+    }
+
+    //check free place
+    Rooms3dCubePos p = room->pos;
+    if (!p.move(dir)) {
+        assert(false);
+        return false;
+    }
+    const Room *cnext = zone->getRoom(p);
+    if (!cnext)
+        return true;
+    
+     //todo! try move the room
+    
+    return false;
+}
+
 RoomMergeTool::RoomMergeTool(Rooms3dCube *z) : zone(z)
 {
     assert(z);
@@ -27,9 +53,7 @@ bool RoomMergeTool::tryMakeNewZone(const Room* room, RoomDir dir)
             return false;
         }
     }
-
     deleteRoom(room);
-
 #ifdef _DEBUG
     const_iterator it = nodes.cbegin(), it_end = nodes.end();
     for (; it != it_end; ++it) {
@@ -44,6 +68,27 @@ bool RoomMergeTool::tryMakeNewZone(const Room* room, RoomDir dir)
 bool RoomMergeTool::tryMergeZones(const Room* room, RoomDir dir)
 {
     return false;
+}
+
+bool RoomMergeTool::tryJoinRoom(const Room* room, RoomDir dir)
+{
+    if (!room || dir == RoomDir::RD_UNKNOWN) {
+        assert(false);
+        return false;
+    }
+    Room *next = room->dirs[dir].next_room;
+    if (!next || next->pos.zid == room->pos.zid) {
+        assert(false);
+        return false;
+    }
+    RoomFreePlaceTool fp(zone);
+    if (!fp.tryFreePlace(room, dir))
+        return false;
+
+
+
+
+    return true;
 }
 
 void RoomMergeTool::getNewZoneRooms(std::vector<const Room*>* rooms)
