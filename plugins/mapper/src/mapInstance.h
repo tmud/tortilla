@@ -4,7 +4,7 @@
 #include "mapCursor.h"
 #include "mapTools.h"
 
-class MapInstance : public MapToolsApply
+class MapInstance
 {
     friend class MapCursorImplementation;
     friend class MapZoneCursorImplementation;
@@ -20,6 +20,7 @@ public:
     bool addLink(Room* from, Room* to, RoomDir dir);
     void saveMaps(const tstring& dir);
     void loadMaps(const tstring& dir);
+    void clearMaps();
 	void getZonesIds(std::vector<int>* ids);
 private:
     Rooms3dCube* findZone(int zid);
@@ -32,7 +33,6 @@ private:
     void  removeRoomFromHashTable(Room *r);
     tstring  getNewZoneName(const tstring& templ);
     void clear();
-    void updateMap(std::vector<Rooms3dCube*>& zones);
 private:
     int m_nextzone_id;
 	struct zonedata {
@@ -67,6 +67,8 @@ protected:
     MapCursorColor color() const;
     const Rooms3dCube* zone() const;
     bool valid() const;
+    MapCursorInterface* dublicate();
+    bool move(RoomDir dir);
 private:
     void init();
     MapInstance *map_ptr;
@@ -80,10 +82,10 @@ private:
 class MapZoneCursorImplementation : public MapCursorInterface
 {
 public:
-    MapZoneCursorImplementation(MapInstance* m, int zoneid) : map_ptr(m), map_zone(NULL)
+    MapZoneCursorImplementation(MapInstance* m, int zoneid, int level) : map_ptr(m), map_zone(NULL)
     {
         assert(m);
-        init(zoneid);
+        init(zoneid, level);
     }
     ~MapZoneCursorImplementation() {}
 protected:
@@ -93,12 +95,14 @@ protected:
     MapCursorColor color() const;
     const Rooms3dCube* zone() const;
     bool valid() const;
+    MapCursorInterface* dublicate();
+    bool move(RoomDir dir);
 private:
-    void init(int zoneid);
+    void init(int zoneid, int level);
     MapInstance *map_ptr;
     const Rooms3dCube* map_zone;
     static Rooms3dCubeSize m_empty;
-    static Rooms3dCubePos m_empty_pos;
+    Rooms3dCubePos m_zone_pos;
 };
 
 class MapNullCursorImplementation : public MapCursorInterface 
@@ -111,6 +115,8 @@ public:
     MapCursorColor color() const { return RCC_NONE; }
     const Rooms3dCube* zone() const { return NULL; }
     bool valid() const { return false; }
+    MapCursorInterface* dublicate() { return new MapNullCursorImplementation(); }
+    bool move(RoomDir dir) { return false; }
 private:
     Rooms3dCubePos m_null_pos;
     Rooms3dCubeSize m_null_size;

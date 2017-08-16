@@ -11,6 +11,8 @@ public:
     virtual MapCursorColor color() const = 0;
     virtual const Rooms3dCube* zone() const = 0;
     virtual bool valid() const = 0;
+    virtual MapCursorInterface* dublicate() = 0;
+    virtual bool move(RoomDir dir) = 0;
 };
 
 typedef std::shared_ptr<MapCursorInterface> MapCursor;

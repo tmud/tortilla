@@ -70,8 +70,8 @@ MapCursor MapperRender::getCurrentPosition()
 {
     if (!currentpos)
         return std::make_shared<MapNullCursorImplementation>();
-
-    return currentpos;
+    std::shared_ptr<MapCursorInterface> cursor( currentpos->dublicate() );
+    return cursor;    
 }
 
 void MapperRender::onPaint()
@@ -246,7 +246,10 @@ void MapperRender::updateScrollbars(bool center)
 #endif*/
 
     MapCursor pos = getCursor();
-    if (!pos) return;
+    if (!pos) {
+        Invalidate();
+        return;
+    }
 
     const Rooms3dCubeSize& sz = pos->size();
 

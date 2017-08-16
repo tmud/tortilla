@@ -179,7 +179,8 @@ void Mapper::saveMaps()
 
 void Mapper::loadMaps()
 {
-    m_view.clearForNewMaps();
+    m_view.clear();
+    m_zones_control.deleteAllZones();
 
     const tstring&dir = m_mapsFolder;
     bool last_found = false;
@@ -212,8 +213,7 @@ void Mapper::redrawPosition(MapCursor cursor)
 {
     m_view.showPosition(cursor);
     const Rooms3dCube* zone = cursor->zone();
-    if (zone)
-        m_zones_control.setPosition(zone);
+    m_zones_control.setPosition(zone);
 }
 
 void Mapper::onCreate()
@@ -261,7 +261,6 @@ void Mapper::onSize()
 void Mapper::onZoneChanged()
 {
     MapCursor current = m_view.getCurrentPosition();
-    if (!current) return;
     int zone = m_zones_control.getCurrentZone();
     if (current->valid() && current->pos().zid == zone)
     {
@@ -335,4 +334,27 @@ void Mapper::onToolbar(int id)
         loadMaps();
     }
 
+    if (id == IDC_BUTTON_CLEARZONES) {
+        m_view.clear();
+        m_map.clearMaps();
+        m_zones_control.deleteAllZones();
+        MapCursor cursor = m_view.getCurrentPosition();
+        redrawPosition(cursor);
+    }
+
+    if (id == IDC_BUTTON_LEVEL_DOWN) {        
+        MapCursor c = m_view.getCurrentPosition();
+        if (!c->valid())
+            return;
+        if (c->move(RD_DOWN))
+            redrawPosition(c);
+    }
+
+    if (id == IDC_BUTTON_LEVEL_UP) {        
+        MapCursor c = m_view.getCurrentPosition();
+        if (!c->valid())
+            return;
+        if (c->move(RD_UP))
+            redrawPosition(c);
+    }
 }

@@ -45,7 +45,7 @@ public:
     void setPosition(const Rooms3dCube* zone)
     {
         if (!zone) {
-           assert(false);
+           m_list.SelectItem(-1);
            return;
         }
         addNewZone(zone);
@@ -64,6 +64,11 @@ public:
         static tstring empty;
         int index = findZone(id);
         return (index != -1) ? zones[index].name : empty;
+    }
+
+    void deleteAllZones() {
+        m_list.DeleteAllItems();
+        zones.clear();
     }
 private:
     int findZone(int id) const {

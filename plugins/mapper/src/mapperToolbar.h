@@ -11,6 +11,9 @@ public:
         //MESSAGE_HANDLER(WM_SIZE, OnSize)
         COMMAND_ID_HANDLER(IDC_BUTTON_SAVEZONES, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LOADZONES, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_DOWN, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_UP, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnButton)
 	END_MSG_MAP()
     MapperToolbar() : m_controlWindow(0), m_controlMessage(0) {}
     void setControlWindow(HWND wnd, UINT msg) {

@@ -2,23 +2,18 @@
 #include "roomObjects.h"
 
 class RoomWaveAlgoritm;
-class MapToolsApply {
-public:
-    virtual void updateMap(std::vector<Rooms3dCube*>& zones) = 0;
-};
-
 class MapToolsImpl
 {
 public:
-    MapToolsImpl(std::vector<Rooms3dCube*>& szones, MapToolsApply* tool);
+    MapToolsImpl(std::vector<Rooms3dCube*>& szones);
     ~MapToolsImpl();
     bool tryMakeNewZone(const Room* room, RoomDir dir);
     void applyMakeNewZone(const tstring& zoneName);
 private:
     Room *castRoom(const Room* room) const;
     int newZoneId() const;
-    std::map<int, Rooms3dCube*> zones;
-    MapToolsApply* endTool;
+    Rooms3dCube* findZone(int zid) const;
+    std::vector<Rooms3dCube*> zones;
     bool changed;
     RoomWaveAlgoritm *newZoneTool;
 };

@@ -44,13 +44,24 @@ bool MapCursorImplementation::valid() const
 {
      return map_zone ? true : false;
 }
+
+MapCursorInterface* MapCursorImplementation::dublicate()
+{
+    return new MapCursorImplementation( map_ptr, room_ptr, ccolor); 
+}
+
+bool MapCursorImplementation::move(RoomDir dir)
+{
+     return false;
+}
 //-----------------------------------------------------------
 Rooms3dCubeSize MapZoneCursorImplementation::m_empty;
-Rooms3dCubePos  MapZoneCursorImplementation::m_empty_pos;
 
-void MapZoneCursorImplementation::init(int zoneid)
+void MapZoneCursorImplementation::init(int zoneid, int level)
 {
     map_zone = map_ptr->findZone(zoneid);
+    m_zone_pos.zid = zoneid;
+    m_zone_pos.z = level;
 }
 
 const Rooms3dCubeSize& MapZoneCursorImplementation::size() const
@@ -60,7 +71,7 @@ const Rooms3dCubeSize& MapZoneCursorImplementation::size() const
 
 const Rooms3dCubePos& MapZoneCursorImplementation::pos() const
 {
-    return m_empty_pos;
+    return m_zone_pos;
 }
 
 MapCursorColor MapZoneCursorImplementation::color() const
@@ -83,4 +94,23 @@ const Rooms3dCube* MapZoneCursorImplementation::zone() const
 bool MapZoneCursorImplementation::valid() const
 {
     return map_zone ? true : false;
+}
+
+ MapCursorInterface* MapZoneCursorImplementation::dublicate()
+ {
+    return new MapZoneCursorImplementation(map_ptr, map_zone->id(), m_zone_pos.z); 
+ }
+
+ bool MapZoneCursorImplementation::move(RoomDir dir)
+ {
+     if (dir == RD_UP || dir == RD_DOWN) {
+         Rooms3dCubePos pos(m_zone_pos);
+         pos.move(dir);
+         if (pos.valid( size() )) 
+         {
+             m_zone_pos = pos;
+             return true;         
+         }
+     }
+     return false;
 }

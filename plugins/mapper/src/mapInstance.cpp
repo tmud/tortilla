@@ -18,7 +18,7 @@ MapCursor MapInstance::createCursor(Room *room, MapCursorColor color)
 
 MapCursor MapInstance::createZoneCursor(int zoneid)
 {
-    return std::make_shared<MapZoneCursorImplementation>(this, zoneid);
+    return std::make_shared<MapZoneCursorImplementation>(this, zoneid, 0);
 }
 
 MapTools MapInstance::getTools()
@@ -26,12 +26,7 @@ MapTools MapInstance::getTools()
    std::vector<Rooms3dCube*> z(zones.size(), NULL);
    for(int i=0,e=zones.size(); i<e; ++i )
        z[i] = zones[i].zone;
-   return std::make_shared<MapToolsImpl>(z, this);
-}
-
-void MapInstance::updateMap(std::vector<Rooms3dCube*>& zones)
-{
-    //todo!
+   return std::make_shared<MapToolsImpl>(z);
 }
  
 Room* MapInstance::findRoom(const tstring& hash)
@@ -505,6 +500,11 @@ void MapInstance::loadMaps(const tstring& dir)
         zd.hash = h.getHash();
         zones.push_back(zd);
     }
+}
+
+void MapInstance::clearMaps()
+{
+    clear();
 }
 
 void MapInstance::clear()
