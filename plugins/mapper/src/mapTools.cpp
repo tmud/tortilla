@@ -57,22 +57,22 @@ bool MapToolsImpl::tryMakeNewZone(const Room* room, RoomDir dir)
     return true;
 }
 
-void MapToolsImpl::applyMakeNewZone(const tstring& zoneName)
+Rooms3dCube* MapToolsImpl::applyMakeNewZone(const tstring& zoneName)
 {
     if (!newZoneTool)
-        return;
+        return NULL;
     std::vector<const Room*> constr;
     newZoneTool->getNewZoneRooms(&constr);
     delete newZoneTool;
     newZoneTool = NULL;
     if (constr.empty())
-        return;
+        return NULL;
     std::vector<Room*> rooms;
     for(const Room* r : constr) {
        Rooms3dCube *z = findZone(r->pos.zid);
        if (!z) {
            assert(false);
-           return;
+           return NULL;
        }
        rooms.push_back(const_cast<Room*>(r));
     }
@@ -84,7 +84,7 @@ void MapToolsImpl::applyMakeNewZone(const tstring& zoneName)
         if (z->detachRoom(p))
             new_zone->addRoom(p, r);
     }
-    zones.push_back(new_zone);
+	return new_zone;
 }
 
 int MapToolsImpl::newZoneId() const 

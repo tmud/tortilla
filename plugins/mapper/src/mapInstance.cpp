@@ -23,10 +23,7 @@ MapCursor MapInstance::createZoneCursor(int zoneid)
 
 MapTools MapInstance::getTools()
 {
-   std::vector<Rooms3dCube*> z(zones.size(), NULL);
-   for(int i=0,e=zones.size(); i<e; ++i )
-       z[i] = zones[i].zone;
-   return std::make_shared<MapToolsImpl>(z);
+   return std::make_shared<MapToolsImpl>(zones);
 }
  
 Room* MapInstance::findRoom(const tstring& hash)
@@ -47,7 +44,7 @@ bool MapInstance::addNewZone(Room *firstroom)
     Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), getNewZoneName(L""));
     Rooms3dCubePos p;
     new_zone->addRoom(p, room);
-	zones.push_back(zonedata(new_zone));
+	zones.push_back(new_zone);
     addRoomToHashTable(room);
     return true;
 }
@@ -170,7 +167,7 @@ Rooms3dCube* MapInstance::findZone(int zid)
 {
     zone_iterator zt = zones.begin(), zt_end = zones.end();
     for(; zt!=zt_end; ++zt) {
-        Rooms3dCube* zone = zt->zone;
+        Rooms3dCube* zone = *zt;
         if ( zone->id() == zid )
             return zone;
     }
@@ -181,7 +178,7 @@ Rooms3dCube* MapInstance::findZone(const tstring& name)
 {
     zone_iterator zt = zones.begin(), zt_end = zones.end();
     for(; zt!=zt_end; ++zt) {
-        Rooms3dCube* zone = zt->zone;
+        Rooms3dCube* zone = *zt;
         if ( zone->name() == name )
             return zone;
     }
@@ -256,17 +253,20 @@ void MapInstance::saveMaps(const tstring& dir)
 
 	for (int i = 0, e = zones.size(); i < e; ++i)
 	{
-		zonedata z = zones[i];
-		tstring fname(z.zone->name());
+		Rooms3dCube *zone = zones[i];
+		tstring fname(zone->name());
 		fname.append(L".map");
 		std::vector<tstring>::iterator it = std::find(files.begin(), files.end(), fname);
 		if (it != files.end()) {
 			files.erase(it);
+		}		
+		hashes_iterator ht = hashes.find(zone);
+		if (ht != hashes.end()) {
+			tstring loaded_hash(ht->second);
+			Rooms3dCubeHash h(zone);
+			if (!loaded_hash.compare(h.getHash()))
+				continue;
 		}
-		Rooms3dCube *zone = z.zone;
-		Rooms3dCubeHash h(zone);
-		if (!z.hash.compare(h.getHash()))
-			continue;
 		const Rooms3dCubeSize &sz = zone->size();
 		xml::node s(L"zone");		
 		//s.set(L"name", zone->name().c_str());
@@ -495,10 +495,9 @@ void MapInstance::loadMaps(const tstring& dir)
 
     std::vector<Rooms3dCube*>::iterator zt = newzones.begin(), zt_end = newzones.end();
     for (; zt != zt_end; ++zt) {
-        Rooms3dCubeHash h(*zt);
-        zonedata zd(*zt);
-        zd.hash = h.getHash();
-        zones.push_back(zd);
+		Rooms3dCube* newzone = *zt;
+        Rooms3dCubeHash h(newzone);
+		hashes[newzone] = h.getHash();
     }
 }
 
@@ -509,15 +508,16 @@ void MapInstance::clearMaps()
 
 void MapInstance::clear()
 {
-    std::for_each( zones.begin(),zones.end(),[](zonedata &p){delete p.zone;} );
+    std::for_each( zones.begin(),zones.end(),[](Rooms3dCube* p){delete p;} );
     zones.clear();
+	hashes.clear();
     rooms_hash_table.clear();
 }
 
 void MapInstance::getZonesIds(std::vector<int>* ids)
 {
-	std::vector<zonedata>::iterator it = zones.begin(), it_end = zones.end();
+	zone_iterator it = zones.begin(), it_end = zones.end();
 	for (; it != it_end; ++it) {
-		ids->push_back(it->zone->id());
+		ids->push_back((*it)->id());
 	}
 }

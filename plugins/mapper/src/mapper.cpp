@@ -169,6 +169,9 @@ void Mapper::saveProps()
 	if (zone >= 0) {
 		m_propsData->current_zone = m_zones_control.getZoneName(zone);
 	}
+	else {
+		m_propsData->current_zone = L"";
+	}
 }
 
 void Mapper::saveMaps()
@@ -294,7 +297,10 @@ void Mapper::onRenderContextMenu(int id)
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
             return;
-        t->applyMakeNewZone(dlg.getName());
+		t->applyMakeNewZone(dlg.getName());
+		
+		//m_zones_control.addNewZone(c->zone());
+
         m_view.Invalidate();
     }
 

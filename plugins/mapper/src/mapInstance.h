@@ -35,13 +35,10 @@ private:
     void clear();
 private:
     int m_nextzone_id;
-	struct zonedata {
-		zonedata(Rooms3dCube* z) : zone(z) { assert(zone); }
-		Rooms3dCube* zone;
-		tstring hash;
-	};
-	std::vector<zonedata> zones;
-	typedef std::vector<zonedata>::iterator zone_iterator;
+	std::vector<Rooms3dCube*> zones;
+	std::map<Rooms3dCube*, tstring> hashes;
+	typedef std::vector<Rooms3dCube*>::iterator zone_iterator;
+	typedef std::map<Rooms3dCube*, tstring>::iterator hashes_iterator;
     std::map<tstring, Room*> rooms_hash_table;
     typedef std::map<tstring, Room*>::iterator room_iterator;
     struct exitdata {

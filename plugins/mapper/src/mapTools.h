@@ -8,7 +8,7 @@ public:
     MapToolsImpl(std::vector<Rooms3dCube*>& szones);
     ~MapToolsImpl();
     bool tryMakeNewZone(const Room* room, RoomDir dir);
-    void applyMakeNewZone(const tstring& zoneName);
+	Rooms3dCube* applyMakeNewZone(const tstring& zoneName);
 private:
     Room *castRoom(const Room* room) const;
     int newZoneId() const;
