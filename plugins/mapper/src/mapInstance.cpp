@@ -498,6 +498,7 @@ void MapInstance::loadMaps(const tstring& dir)
 		Rooms3dCube* newzone = *zt;
         Rooms3dCubeHash h(newzone);
 		hashes[newzone] = h.getHash();
+        zones.push_back(newzone);
     }
 }
 

@@ -228,6 +228,7 @@ int RoomDirHelper::index(RoomDir dir)
     return static_cast<int>(dir);
 }
 
+const wchar_t* unknownDirName = L"unknown";
 const wchar_t* RoomDirName[] = { L"north", L"south", L"west", L"east", L"up", L"down" };
 RoomDir RoomDirHelper::revertDir(RoomDir dir)
 {
@@ -251,7 +252,7 @@ const wchar_t* RoomDirHelper::getDirName(RoomDir dir)
     int index = static_cast<int>(dir);
     if (index >= 0 && index <= 5)
         return RoomDirName[index];
-    return NULL;
+    return unknownDirName;
 }
 RoomDir RoomDirHelper::getDirByName(const wchar_t* dirname)
 {

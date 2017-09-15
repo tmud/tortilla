@@ -18,19 +18,18 @@ void debug_print(const tstring& text) {
     OutputDebugString(t.c_str());
 }
 
-void int2w(int value, tstring* str)
+/*void int2w(int value, tstring* str)
 {
     wchar_t buffer[16];
     swprintf(buffer, L"%d", value);
     str->assign(buffer);
-}
+}*/
 
-void debug_print(const tstring& text, int val)
+void debug_print(const tstring& text, const tstring& text2)
 {
-    tstring t, out;
-    int2w(val, &t);
+    tstring out;
     out.assign(text);
-    out.append(t);
+    out.append(text2);
     debug_print(out);
 }
 #endif

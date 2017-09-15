@@ -48,7 +48,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     DEBUGOUT(room.name);
     DEBUGOUT(room.vnum);
     DEBUGOUT(room.exits);
-    DEBUGOUT2(L"lastdir: ", m_lastDir);
+    DEBUGOUT2(L"lastdir: ", RoomDirHelper().getDirName(m_lastDir));
 
     Room *new_room = m_map.findRoom(room.vnum);
     if (!new_room)
