@@ -24,31 +24,50 @@ public:
         m_parent = wnd;
         m_msg = msg;
     }
-    
-    void addNewZone(const Rooms3dCube* zone)
+
+    void updateList(const Rooms3dCubeList& zoneslist)
     {
-        if (!zone) {
-           assert(false);
-           return;
-        }
-        int index = findZone(zone->id());
-        if (index == -1)
-        {
-            zonedata zd;
-            zd.id = zone->id();
-            zd.name = zone->name();
+        Rooms3dCubeList z(zoneslist.begin(), zoneslist.end());
+        std::sort(z.begin(), z.end(), [](Rooms3dCube *z1, Rooms3dCube* z2) { return z1->name() <  z2->name(); } );
+        zones.clear();
+        for (Rooms3dCube* zone : z) {
+            zonedata zd; zd.id = zone->id(); zd.name = zone->name();
             zones.push_back(zd);
-            m_list.AddItem(zd.name.c_str());
         }
+
+        int elements = m_list.GetItemCount();
+        int zonescount = zones.size();
+
+        tchar buffer[64];
+        int count = min(elements, zonescount);
+        for (int i=0; i<count; ++i) {
+            const tstring &item = zones[i].name;
+            m_list.GetItemText(i, buffer, 64);
+            if (item.compare(buffer)) {
+                m_list.SetItemText(i, item.c_str());
+            }
+        }
+        int total = max(elements, zonescount) - count;
+        if (total > 0) {
+            if (elements < zonescount) {
+                for (int i=count; i< total; ++i) {
+                    const tstring &item = zones[i].name;
+                    m_list.AddItem(item.c_str());
+                }
+            } else {
+                for (int i=count; i< total; ++i) {
+                    m_list.DeleteItem(count);
+                }
+           }
+       }
     }
 
-    void setPosition(const Rooms3dCube* zone)
+    void setCurrentZone(const Rooms3dCube* zone)
     {
         if (!zone) {
            m_list.SelectItem(-1);
            return;
         }
-        addNewZone(zone);
         int index = findZone(zone->id());
         assert(index != -1);
         m_list.SelectItem(index);

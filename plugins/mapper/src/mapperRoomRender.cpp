@@ -199,6 +199,10 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
      fillBkg(bk.left,bk.top,bk.right-bk.left,bk.bottom-bk.top);
    else
      fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->color);
+#ifdef _DEBUG
+    if (r->debugcolor != 0)
+        fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->debugcolor);
+#endif
 
    if (r->icon > 0)
    {

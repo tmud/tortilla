@@ -13,6 +13,7 @@ Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
     r->pos = p;
     r->pos.zid = z_id;
     *ptr = r;
+    m_hashmap[r->hash()] = r;
     return AR_OK;
 }
 
@@ -37,8 +38,21 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
         *ptr = NULL;
         r->pos.clear();
         collapse(p);
+        hashmap_iterator it = m_hashmap.find(r->hash());
+        if (it != m_hashmap.end()) {
+            m_hashmap.erase(it);
+        } else {
+       
+            assert(false);
+        }
     }
     return r;
+}
+
+Room* Rooms3dCube::findRoom(const tstring& hash) const
+{    
+    hashmap_const_iterator it = m_hashmap.find(hash);
+    return (it == m_hashmap.end()) ? NULL : it->second;
 }
 
 Room* Rooms3dCube::get(const Rooms3dCubePos& p) const
@@ -194,26 +208,6 @@ void Rooms3dCube::clearExits(Room *r)
         if (next && next->dirs[rdir].next_room == r) { next->dirs[rdir].next_room = NULL; }
     }
 }
-
-#ifdef _DEBUG
-void Rooms3dCube::resetColors()
-{
-     for (int l=0,e=zone.size();l<e;++l) {
-        level *level = zone[l];
-        std::vector<row*> &r = level->rooms;
-        for (int i=0,ie=r.size(); i<ie; ++i) {
-            row *pr = r[i];
-            for (int j=0,je=pr->rr.size();j<je;++j) {
-                Room *room = pr->rr[j];
-                if (room) {
-                room->use_color = 0;
-                room->color = 0;
-                }
-            }
-        }    
-     }
-}
-#endif
 
 RoomDir RoomDirHelper::cast(int index)
 {

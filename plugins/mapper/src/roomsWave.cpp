@@ -1,31 +1,19 @@
 #include "stdafx.h"
-#include "roomMergeTool.h"
+#include "roomsWave.h"
 
-/*RoomFreePlaceTool::RoomFreePlaceTool(Rooms3dCube *z) : zone(z) 
+RoomWaveAlgoritm::RoomWaveAlgoritm()
 {
-    assert(z);
 }
-bool RoomFreePlaceTool::tryFreePlace(const Room* room, RoomDir dir)
-{
-    if (!room || dir == RoomDir::RD_UNKNOWN || room->pos.zid != zone->id() ) {
-        assert(false);
-        return false;
-    }
 
-    //check free place
-    Rooms3dCubePos p = room->pos;
-    if (!p.move(dir)) {
-        assert(false);
-        return false;
+RoomWaveAlgoritm::~RoomWaveAlgoritm()
+{
+#ifdef _DEBUG
+    const_iterator it = nodes.cbegin(), it_end = nodes.end();
+    for (; it != it_end; ++it) {
+        it->first->debugcolor = 0;
     }
-    const Room *cnext = zone->getRoom(p);
-    if (!cnext)
-        return true;
-    
-     //todo! try move the room
-    
-    return false;
-}*/
+#endif
+}
 
 bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room, RoomDir dir)
 {
@@ -52,8 +40,7 @@ bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room
     const_iterator it = nodes.cbegin(), it_end = nodes.end();
     for (; it != it_end; ++it) {
         const Room* r = it->first;
-        r->use_color = 1;
-        r->color = RGB(200,200,0);
+        r->debugcolor = RGB(200,200,0);
     }
 #endif
     return true;

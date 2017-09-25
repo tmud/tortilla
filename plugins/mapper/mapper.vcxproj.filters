@@ -15,9 +15,6 @@
     <Filter Include="External Common Libs">
       <UniqueIdentifier>{7b1716d7-0314-4260-a05e-4eaaa492bf96}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Disabled Files">
-      <UniqueIdentifier>{bd168d13-982f-496d-b11c-2b827ad3fb8a}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="res\resource.h">
@@ -71,15 +68,6 @@
     <ClInclude Include="src\debugHelpers.h">
       <Filter>Main Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\helpers.h">
-      <Filter>Disabled Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mapperRoomsCache.h">
-      <Filter>Disabled Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mapperHashTable.h">
-      <Filter>Disabled Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\roomObjects.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -90,9 +78,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapCursor.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\roomMergeTool.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\newZoneNameDlg.h">
@@ -108,6 +93,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapTools.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mapSmartTools.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\roomsWave.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -139,9 +130,6 @@
     <ClCompile Include="src\debugHelpers.cpp">
       <Filter>Main Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mapperHashTable.cpp">
-      <Filter>Disabled Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\roomObjects.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -154,9 +142,6 @@
     <ClCompile Include="src\mapCursor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\roomMergeTool.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\roomHasher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -167,6 +152,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapSmartTools.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\roomsWave.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

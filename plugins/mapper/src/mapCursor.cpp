@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "mapInstance.h"
+#include "mapCursor.h"
 
 Rooms3dCubeSize MapCursorImplementation::m_empty;
 Rooms3dCubePos  MapCursorImplementation::m_empty_pos;
@@ -57,10 +58,11 @@ bool MapCursorImplementation::move(RoomDir dir)
 //-----------------------------------------------------------
 Rooms3dCubeSize MapZoneCursorImplementation::m_empty;
 
-void MapZoneCursorImplementation::init(int zoneid, int level)
+void MapZoneCursorImplementation::init(const Rooms3dCube *zone, int level)
 {
-    map_zone = map_ptr->findZone(zoneid);
-    m_zone_pos.zid = zoneid;
+    assert(zone);
+    map_zone = zone;
+    m_zone_pos.zid = zone->id();
     m_zone_pos.z = level;
 }
 
@@ -98,7 +100,7 @@ bool MapZoneCursorImplementation::valid() const
 
  MapCursorInterface* MapZoneCursorImplementation::dublicate()
  {
-    return new MapZoneCursorImplementation(map_ptr, map_zone->id(), m_zone_pos.z); 
+    return new MapZoneCursorImplementation(map_ptr, map_zone, m_zone_pos.z); 
  }
 
  bool MapZoneCursorImplementation::move(RoomDir dir)

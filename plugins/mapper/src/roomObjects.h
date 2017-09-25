@@ -62,13 +62,17 @@ struct Rooms3dCubePos
 
 struct Room
 {
-    Room() : icon(0), use_color(0), color(0) {}
+    Room() : icon(0), use_color(0), color(0), debugcolor(0) {}
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
     Rooms3dCubePos pos;             // relative position in the level x,y,level,zoneid. all >= 0
     mutable int icon;               // icon if exist
     mutable int use_color;          // flag for use background color
     mutable COLORREF color;         // background color
+#ifdef _DEBUG
+    mutable COLORREF debugcolor;    // only for debug mode
+#endif
+    const tstring hash() const { return roomdata.vnum; }
 };
 
 class RoomDirHelper
@@ -102,6 +106,7 @@ public:
     const Room* getRoom(const Rooms3dCubePos& p) const;
     void  deleteRoom(const Rooms3dCubePos& p);
     Room* detachRoom(const Rooms3dCubePos& p);
+    Room* findRoom(const tstring& hash) const;
 private:
     void clearExits(Room *r);
     Room*  get(const Rooms3dCubePos& p) const;
@@ -127,11 +132,12 @@ private:
     Rooms3dCubeSize cube_size;
     int z_id;
     tstring m_name;
-#ifdef _DEBUG
-public:
-    void resetColors();
-#endif
+    std::map<tstring, Room*> m_hashmap;
+    typedef std::map<tstring, Room*>::iterator hashmap_iterator;
+    typedef std::map<tstring, Room*>::const_iterator hashmap_const_iterator;
 };
+
+typedef std::vector<Rooms3dCube*> Rooms3dCubeList;
 
 class RoomHelper
 {

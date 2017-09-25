@@ -2,8 +2,10 @@
 #include "mapper.h"
 #include "roomObjects.h"
 #include "debugHelpers.h"
-#include "roomMergeTool.h"
+//#include "roomMergeTool.h"
 #include "newZoneNameDlg.h"
+#include "mapTools.h"
+#include "mapSmartTools.h"
 
 Mapper::Mapper(PropertiesMapper *props, const tstring& mapsFolder) : m_propsData(props), 
 m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
@@ -30,7 +32,8 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                 //if (next)
                 {
                     m_pCurrentRoom = next;
-                    MapCursor cursor = m_map.createCursor(m_pCurrentRoom, RCC_LOST);
+                    MapTools t(&m_map);
+                    MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_LOST);
                     redrawPosition(cursor);
                 }
             }            
@@ -50,7 +53,8 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     DEBUGOUT(room.exits);
     DEBUGOUT2(L"lastdir: ", RoomDirHelper().getDirName(m_lastDir));
 
-    Room *new_room = m_map.findRoom(room.vnum);
+    MapTools t(&m_map);
+    Room *new_room = t.findRoom(room.vnum);
     if (!new_room)
     {
         new_room = new Room();
@@ -58,7 +62,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         setExits(new_room);
         if (!m_pCurrentRoom)
         {
-            if (!m_map.addNewZone(new_room))
+            if (!t.createNewZone(new_room))
             {
                 delete new_room;
                 new_room = NULL;
@@ -66,7 +70,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         }
         else
         {
-            if (!m_map.addNewRoom(m_pCurrentRoom, new_room, m_lastDir))
+            if (!t.addNewRoom(m_pCurrentRoom, new_room, m_lastDir))
             {
                 delete new_room;
                 new_room = NULL;
@@ -76,11 +80,13 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     else
     {
          setExits(new_room);
-         if (m_lastDir != RD_UNKNOWN && m_pCurrentRoom)
-            m_map.addLink(m_pCurrentRoom, new_room, m_lastDir);
+         if (m_lastDir != RD_UNKNOWN && m_pCurrentRoom) {
+            MapSmartTools st;
+            st.addLink(m_pCurrentRoom, new_room, m_lastDir);
+         }
     }
     m_pCurrentRoom = new_room;
-    MapCursor cursor = m_map.createCursor(m_pCurrentRoom, RCC_NORMAL);
+    MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_NORMAL);
     redrawPosition(cursor);
 }
 
@@ -190,24 +196,24 @@ void Mapper::loadMaps()
     tstring &last = m_propsData->current_zone;
     
     m_map.loadMaps(dir);
-    std::vector<int> ids;
-	m_map.getZonesIds(&ids);
-	for (int i=0,e=ids.size(); i<e; ++i)
+
+    Rooms3dCubeList zones;
+	m_map.getZones(&zones);
+    m_zones_control.updateList(zones);
+
+	for (Rooms3dCube* zone : zones)
 	{
-		MapCursor c = m_map.createZoneCursor(ids[i]);
-        const Rooms3dCube* zone = c->zone();
-        if (!zone) {
-            assert(false);
-            continue;
-        }
         if (!last.empty() && last == zone->name()) {
+            MapTools t(&m_map);
+            MapCursor c = t.createZoneCursor(zone);
             redrawPosition(c);
             last_found = true;
+            break;
         }
-		m_zones_control.addNewZone(c->zone());
 	}
-    if (!last_found && !ids.empty()) {
-        MapCursor c = m_map.createZoneCursor(ids[0]);
+    if (!last_found && !zones.empty()) {
+        MapTools t(&m_map);
+        MapCursor c = t.createZoneCursor(zones[0]);
         redrawPosition(c);
     }   
 }
@@ -216,7 +222,7 @@ void Mapper::redrawPosition(MapCursor cursor)
 {
     m_view.showPosition(cursor);
     const Rooms3dCube* zone = cursor->zone();
-    m_zones_control.setPosition(zone);
+    m_zones_control.setCurrentZone(zone);
 }
 
 void Mapper::onCreate()
@@ -269,7 +275,9 @@ void Mapper::onZoneChanged()
     {
         return redrawPosition(current);
     }
-    MapCursor cursor = m_map.createZoneCursor(zone);
+    MapTools t(&m_map);
+    Rooms3dCube *ptr = m_map.findZone(zone);
+    MapCursor cursor = t.createZoneCursor(ptr);
     redrawPosition(cursor);
 }
 
@@ -283,9 +291,9 @@ void Mapper::onRenderContextMenu(int id)
     RoomDirHelper dh;
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
-        MapTools t = m_map.getTools();
+        MapNewZoneTool t(&m_map);
         RoomDir dir = dh.cast(id - MENU_NEWZONE_NORTH);
-        bool result = t->tryMakeNewZone(room, dir);
+        bool result = t.tryMakeNewZone(room, dir);
         if (!result)
         {
             MessageBox(L"Невозможно создать новую зону из-за замкнутости коридоров на данную комнату!", L"Ошибка", MB_OK | MB_ICONERROR);
@@ -296,11 +304,15 @@ void Mapper::onRenderContextMenu(int id)
 #endif
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
+            return;    	
+        Rooms3dCube* newzone = t.applyMakeNewZone(dlg.getName());
+        if (!newzone) {
+            assert(false);
             return;
-		t->applyMakeNewZone(dlg.getName());
-		
-		//m_zones_control.addNewZone(c->zone());
-
+        }
+        Rooms3dCubeList zones;
+        m_map.getZones(&zones);
+        m_zones_control.updateList(zones);
         m_view.Invalidate();
     }
 

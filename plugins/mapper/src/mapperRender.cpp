@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "mapperRender.h"
-#include "helpers.h"
 #include "mapper.h"
 
 #define ROOM_SIZE 32
