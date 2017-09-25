@@ -305,8 +305,8 @@ void Mapper::onRenderContextMenu(int id)
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
             return;    	
-        Rooms3dCube* newzone = t.applyMakeNewZone(dlg.getName());
-        if (!newzone) {
+        result = t.applyMakeNewZone(dlg.getName());
+        if (!result) {
             assert(false);
             return;
         }

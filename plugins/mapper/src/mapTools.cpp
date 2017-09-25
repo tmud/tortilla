@@ -122,21 +122,23 @@ bool MapNewZoneTool::tryMakeNewZone(const Room* room, RoomDir dir)
     return true;
 }
 
-Rooms3dCube* MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
+bool MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
 {
-    if (!waveTool)
-        return NULL;
+    if (!waveTool) {
+        assert(false);
+        return false;
+    }
     std::vector<const Room*> constr;
     waveTool->getNewZoneRooms(&constr);
     deleteWaveTool();
     if (constr.empty())
-        return NULL;
+        return false;
     std::vector<Room*> rooms;
     for(const Room* r : constr) {
        Rooms3dCube *z = map->findZone(r->pos.zid);
        if (!z) {
            assert(false);
-           return NULL;
+           return false;
        }
        rooms.push_back(const_cast<Room*>(r));
     }
@@ -148,7 +150,7 @@ Rooms3dCube* MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
         if (z->detachRoom(p))
             new_zone->addRoom(p, r);
     }
-	return new_zone;
+	return true;
 }
 
 void MapNewZoneTool::deleteWaveTool()

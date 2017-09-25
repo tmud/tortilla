@@ -27,6 +27,9 @@ public:
 
     void updateList(const Rooms3dCubeList& zoneslist)
     {
+        tstring currentZoneName;
+        getItemText(m_list.GetCurSel(), &currentZoneName);
+
         Rooms3dCubeList z(zoneslist.begin(), zoneslist.end());
         std::sort(z.begin(), z.end(), [](Rooms3dCube *z1, Rooms3dCube* z2) { return z1->name() <  z2->name(); } );
         zones.clear();
@@ -38,20 +41,21 @@ public:
         int elements = m_list.GetItemCount();
         int zonescount = zones.size();
 
-        tchar buffer[64];
         int count = min(elements, zonescount);
         for (int i=0; i<count; ++i) {
             const tstring &item = zones[i].name;
-            m_list.GetItemText(i, buffer, 64);
-            if (item.compare(buffer)) {
+            tstring current;
+            getItemText(i, &current);            
+            if (item.compare(current)) {
                 m_list.SetItemText(i, item.c_str());
             }
         }
         int total = max(elements, zonescount) - count;
         if (total > 0) {
             if (elements < zonescount) {
-                for (int i=count; i< total; ++i) {
-                    const tstring &item = zones[i].name;
+                for (int i=0; i< total; ++i) {
+                    int index = i + count;
+                    const tstring &item = zones[index].name;
                     m_list.AddItem(item.c_str());
                 }
             } else {
@@ -59,6 +63,14 @@ public:
                     m_list.DeleteItem(count);
                 }
            }
+       }
+       if (currentZoneName.empty())
+           return;
+       for (int i=0,e=zones.size();i<e;++i) {
+            if (zones[i].name == currentZoneName) {
+                m_list.SelectItem(i);
+                break;
+            }
        }
     }
 
@@ -167,11 +179,22 @@ private:
 
     void getItemText(int item, tstring* text)
     {
+        if (item == -1) {
+            text->clear();
+            return;
+        }
         int len = m_list.GetItemTextLen(item);
-        int size = (len + 1) * sizeof(WCHAR);
-        MemoryBuffer buffer(size);
-        WCHAR *textbuffer = (WCHAR*)buffer.getData();
-        m_list.GetItemText(item, textbuffer, len);
-        text->assign(textbuffer);
+        if (len > 31)
+        {
+            int size = (len + 1) * sizeof(tchar);
+            MemoryBuffer buffer(size);
+            tchar *textbuffer = (tchar*)buffer.getData();
+            m_list.GetItemText(item, textbuffer, len);
+            text->assign(textbuffer);
+            return;
+        }
+        tchar buffer[32];
+        m_list.GetItemText(item, buffer, len);
+        text->assign(buffer);
     }
 };

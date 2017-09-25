@@ -41,8 +41,7 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
         hashmap_iterator it = m_hashmap.find(r->hash());
         if (it != m_hashmap.end()) {
             m_hashmap.erase(it);
-        } else {
-       
+        } else {       
             assert(false);
         }
     }
@@ -178,9 +177,14 @@ void Rooms3dCube::extends_levels(const Rooms3dCubePos& p)
 
 void Rooms3dCube::collapse(const Rooms3dCubePos& p)
 {
-    if (p.x == cube_size.left) {
-    }
-    if (p.x == cube_size.right) {       
+    for (level *l : zone) 
+    {
+        bool levelempty = true;    
+        for (row *r : l->rooms) { 
+        if (r) levelempty = false;
+
+
+        }
     }
 }
 

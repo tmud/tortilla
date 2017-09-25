@@ -46,7 +46,7 @@ public:
     MapNewZoneTool(MapInstance *m) : map(m), waveTool(NULL) { assert(m); }    
     ~MapNewZoneTool() { deleteWaveTool(); }
     bool tryMakeNewZone(const Room* room, RoomDir dir);
-	Rooms3dCube* applyMakeNewZone(const tstring& zoneName);
+	bool applyMakeNewZone(const tstring& zoneName);
 private:
     void deleteWaveTool();
     RoomWaveAlgoritm *waveTool;

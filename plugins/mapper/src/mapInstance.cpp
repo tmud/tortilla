@@ -18,7 +18,8 @@ Rooms3dCube* MapInstance::createNewZone()
 
 Rooms3dCube* MapInstance::createNewZone(const tstring& name)
 {
-    Rooms3dCube* new_zone = new Rooms3dCube(zones.size(), name);
+    int newzoneid = zones.size() + 1;
+    Rooms3dCube* new_zone = new Rooms3dCube(newzoneid, name);
     zones.push_back(new_zone);
     return new_zone;
 }
