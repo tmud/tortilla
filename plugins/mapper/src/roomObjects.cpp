@@ -313,6 +313,23 @@ void Rooms3dCube::collapse()
         }
         cube_size.bottom -= 1;
     }
+
+    // correct rooms positions
+    Rooms3dCubePos c; c.z = cube_size.minlevel; c.zid = z_id;
+    for (level *l : zone) {
+        c.y = cube_size.top;
+        for (row *r : l->rooms){
+            c.x = cube_size.left;
+            for (Room *room : r->rr) {
+                if (room) { 
+                    room->pos = c;
+                }
+                c.x++;
+            }
+            c.y++;
+        }
+        c.z++;
+    }
 }
 
 bool Rooms3dCube::checkCoords(const Rooms3dCubePos& p) const
