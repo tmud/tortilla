@@ -101,6 +101,9 @@
     <ClInclude Include="src\roomsWave.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\mapperUnitTests.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -158,6 +161,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\roomsWave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapperUnitTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

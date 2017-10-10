@@ -111,6 +111,7 @@
     <ClInclude Include="src\mapCursor.h" />
     <ClInclude Include="src\mapInstance.h" />
     <ClInclude Include="src\mapper.h" />
+    <ClInclude Include="src\mapperUnitTests.h" />
     <ClInclude Include="src\mapSmartTools.h" />
     <ClInclude Include="src\mapTools.h" />
     <ClInclude Include="src\md5.h" />
@@ -136,6 +137,7 @@
     <ClCompile Include="src\mapCursor.cpp" />
     <ClCompile Include="src\mapInstance.cpp" />
     <ClCompile Include="src\mapper.cpp" />
+    <ClCompile Include="src\mapperUnitTests.cpp" />
     <ClCompile Include="src\mapSmartTools.cpp" />
     <ClCompile Include="src\mapTools.cpp" />
     <ClCompile Include="src\md5.cpp" />

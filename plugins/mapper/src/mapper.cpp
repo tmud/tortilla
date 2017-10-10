@@ -34,7 +34,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                     m_pCurrentRoom = next;
                     MapTools t(&m_map);
                     MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_LOST);
-                    redrawPosition(cursor);
+                    redrawPosition(cursor, false);
                 }
             }            
         }
@@ -87,7 +87,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
     }
     m_pCurrentRoom = new_room;
     MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_NORMAL);
-    redrawPosition(cursor);
+    redrawPosition(cursor, false);
 }
 
 void Mapper::processCmd(const tstring& cmd)
@@ -206,7 +206,7 @@ void Mapper::loadMaps()
         if (!last.empty() && last == zone->name()) {
             MapTools t(&m_map);
             MapCursor c = t.createZoneCursor(zone);
-            redrawPosition(c);
+            redrawPosition(c, false);
             last_found = true;
             break;
         }
@@ -214,13 +214,13 @@ void Mapper::loadMaps()
     if (!last_found && !zones.empty()) {
         MapTools t(&m_map);
         MapCursor c = t.createZoneCursor(zones[0]);
-        redrawPosition(c);
+        redrawPosition(c, false);
     }   
 }
 
-void Mapper::redrawPosition(MapCursor cursor)
+void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
 {
-    m_view.showPosition(cursor);
+    m_view.showPosition(cursor, resetScrolls);
     const Rooms3dCube* zone = cursor->zone();
     m_zones_control.setCurrentZone(zone);
 }
@@ -273,12 +273,12 @@ void Mapper::onZoneChanged()
     int zone = m_zones_control.getCurrentZone();
     if (current->valid() && current->pos().zid == zone)
     {
-        return redrawPosition(current);
+        return redrawPosition(current, false);
     }
     MapTools t(&m_map);
     Rooms3dCube *ptr = m_map.findZone(zone);
     MapCursor cursor = t.createZoneCursor(ptr);
-    redrawPosition(cursor);
+    redrawPosition(cursor, false);
 }
 
 void Mapper::onRenderContextMenu(int id)
@@ -313,7 +313,12 @@ void Mapper::onRenderContextMenu(int id)
         Rooms3dCubeList zones;
         m_map.getZones(&zones);
         m_zones_control.updateList(zones);
-        m_view.Invalidate();
+                
+        MapTools tools(&m_map);
+        Room *r = tools.findRoom(room->hash());        
+        MapCursor c = tools.createCursor(r, RCC_NONE );
+        redrawPosition(c, true);
+        return;
     }
 
     if (id >= MENU_JOINZONE_NORTH && id <= MENU_JOINZONE_DOWN)
@@ -357,7 +362,7 @@ void Mapper::onToolbar(int id)
         m_map.clearMaps();
         m_zones_control.deleteAllZones();
         MapCursor cursor = m_view.getCurrentPosition();
-        redrawPosition(cursor);
+        redrawPosition(cursor, false);
     }
 
     if (id == IDC_BUTTON_LEVEL_DOWN) {        
@@ -365,7 +370,7 @@ void Mapper::onToolbar(int id)
         if (!c->valid())
             return;
         if (c->move(RD_DOWN))
-            redrawPosition(c);
+            redrawPosition(c, false);
     }
 
     if (id == IDC_BUTTON_LEVEL_UP) {        
@@ -373,6 +378,6 @@ void Mapper::onToolbar(int id)
         if (!c->valid())
             return;
         if (c->move(RD_UP))
-            redrawPosition(c);
+            redrawPosition(c, false);
     }
 }

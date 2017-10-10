@@ -35,12 +35,12 @@ void MapperRender::onCreate()
     updateScrollbars(false);
 }
 
-void MapperRender::showPosition(MapCursor pos)
+void MapperRender::showPosition(MapCursor pos, bool resetScrolls)
 {
     if (pos->valid())
         currentpos = pos;
 
-    if (pos->valid() && viewpos && viewpos->valid())
+    if (pos->valid() && viewpos && viewpos->valid() && !resetScrolls)
     {
         int id = viewpos->zone()->id();
         int newid = pos->zone()->id();
@@ -63,6 +63,14 @@ void MapperRender::showPosition(MapCursor pos)
     }
     viewpos = pos;
     updateScrollbars(true);
+    if (resetScrolls) {
+        int id = viewpos->zone()->id();
+        viewpos = pos;
+        scrolls s;
+        s.h = getHScroll();
+        s.v = getVScroll();
+        m_scrolls[id] = s;   
+    }
 }
 
 MapCursor MapperRender::getCurrentPosition()

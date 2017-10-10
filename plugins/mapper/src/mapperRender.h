@@ -62,7 +62,7 @@ class MapperRender : public CWindowImpl<MapperRender>
 public:
     MapperRender();
     void setMenuHandler(HWND handler_wnd);
-    void showPosition(MapCursor pos);
+    void showPosition(MapCursor pos, bool resetScrolls);
     MapCursor getCurrentPosition();    
     const Room* menuTrackedRoom() const { return m_menu_tracked_room; }
     void clear() { m_scrolls.clear(); viewpos = nullptr; currentpos = nullptr; }

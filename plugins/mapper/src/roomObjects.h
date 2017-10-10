@@ -107,6 +107,10 @@ public:
     void  deleteRoom(const Rooms3dCubePos& p);
     Room* detachRoom(const Rooms3dCubePos& p);
     Room* findRoom(const tstring& hash) const;
+    void  optimizeSize();
+#ifdef _DEBUG
+    bool testInvariant();
+#endif
 private:
     void clearExits(Room *r);
     Room*  get(const Rooms3dCubePos& p) const;
@@ -115,8 +119,8 @@ private:
     void extends_height(const Rooms3dCubePos& p);
     void extends_width(const Rooms3dCubePos& p);
     void extends_levels(const Rooms3dCubePos& p);
-    bool checkCoords(const Rooms3dCubePos& p) const;
-    void collapse(const Rooms3dCubePos& p);
+    bool checkCoords(const Rooms3dCubePos& p) const;    
+    void collapse();
 private:
     struct row {
       row(int count=1) { rr.resize(count, NULL); }
@@ -127,6 +131,7 @@ private:
       ~level() { std::for_each(rooms.begin(), rooms.end(), [](row* r) { delete r; }); }
       std::vector<row*> rooms;
     };
+    bool emptyLevel(level *l);
     void release() { std::for_each(zone.begin(), zone.end(), [](level* l) { delete l; }); }
     std::vector<level*> zone;
     Rooms3dCubeSize cube_size;

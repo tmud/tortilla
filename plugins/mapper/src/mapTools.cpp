@@ -142,14 +142,21 @@ bool MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
        }
        rooms.push_back(const_cast<Room*>(r));
     }
+
+    Rooms3dCube* t = nullptr;
     Rooms3dCube* new_zone =  map->createNewZone(zoneName);
     for (Room *r : rooms) 
     {
         Rooms3dCube *z = map->findZone(r->pos.zid);
         Rooms3dCubePos p (r->pos);
         if (z->detachRoom(p))
+        {
+            t = z;
+            z->optimizeSize();
             new_zone->addRoom(p, r);
+        }
     }
+    new_zone->optimizeSize();
 	return true;
 }
 

@@ -37,7 +37,7 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
         r = *ptr;
         *ptr = NULL;
         r->pos.clear();
-        collapse(p);
+        collapse();
         hashmap_iterator it = m_hashmap.find(r->hash());
         if (it != m_hashmap.end()) {
             m_hashmap.erase(it);
@@ -52,6 +52,31 @@ Room* Rooms3dCube::findRoom(const tstring& hash) const
 {    
     hashmap_const_iterator it = m_hashmap.find(hash);
     return (it == m_hashmap.end()) ? NULL : it->second;
+}
+
+void Rooms3dCube::optimizeSize()
+{
+    collapse();
+}
+
+bool Rooms3dCube::testInvariant()
+{
+    const Rooms3dCubeSize&  s = size();
+    int levels_count = zone.size();
+    if (levels_count != s.levels())
+        return false;
+    for (level *l : zone) {
+        std::vector<row*>&r = l->rooms;
+        int rows = r.size();
+        if (rows != s.height())
+            return false;        
+        for (row *rv : r) {
+            int columns = rv->rr.size();
+            if (columns != s.width())
+                return false;
+        }
+    }
+    return true;
 }
 
 Room* Rooms3dCube::get(const Rooms3dCubePos& p) const
@@ -175,16 +200,118 @@ void Rooms3dCube::extends_levels(const Rooms3dCubePos& p)
         cube_size.maxlevel = p.z;
 }
 
-void Rooms3dCube::collapse(const Rooms3dCubePos& p)
+bool Rooms3dCube::emptyLevel(level *l)
 {
-    for (level *l : zone) 
-    {
-        bool levelempty = true;    
-        for (row *r : l->rooms) { 
-        if (r) levelempty = false;
-
-
+    for (row *r : l->rooms) {
+        for (Room* room : r->rr ) {
+            if (room) return false;
         }
+    }
+    return true;
+}
+
+void Rooms3dCube::collapse()
+{
+    int levels = zone.size();
+    // collapse from top level
+    while (levels > 1) {
+         level *l = zone[0];
+         if (!emptyLevel(l))
+             break;
+         zone.erase(zone.begin());
+         delete l;
+         levels = zone.size();
+         cube_size.maxlevel -= 1;
+    }
+    // collapse from bottom level
+    while (levels > 1) {
+         int bottom = levels-1;
+         level *l = zone[bottom];
+         if (!emptyLevel(l))
+             break;
+         zone.erase(zone.begin()+bottom);
+         delete l;
+         levels = zone.size();
+         cube_size.minlevel += 1;
+    }
+    // collapse from left    
+    while(true) {
+        bool trim_left = true;
+        for (level *l : zone) {
+        if (!trim_left) break;
+        for (row *r : l->rooms) {
+            std::vector<Room*> &rr = r->rr;
+            if (rr.size() < 2 || rr[0]) { trim_left = false; break; }
+        }}
+        if (!trim_left)
+            break;
+        for (level *l : zone) {
+        for (row *r : l->rooms) {
+            r->rr.erase(r->rr.begin());
+        }}
+        cube_size.left += 1;
+    }
+    // collapse from right
+    while (true) {
+        bool trim_right = true;
+        for (level *l : zone) {
+        if (!trim_right) break;
+        for (row *r : l->rooms) {
+            std::vector<Room*> &rr = r->rr;
+            int last = rr.size()-1;
+            if (last == 0 || rr[last]) { trim_right = false; break; }
+        }}
+        if (!trim_right)
+            break;
+        for (level *l : zone) {
+        for (row *r : l->rooms) {
+            std::vector<Room*> &rr = r->rr;
+            int last = rr.size()-1;
+            rr.erase(rr.begin()+last);
+        }}
+        cube_size.right -= 1;
+    }
+
+    // collapse from top
+    while (true) {        
+        bool trim_top = true;
+        for (level *l : zone) {
+            if (l->rooms.size()==1 || !trim_top) break;
+            row *r = l->rooms[0];
+            for (Room *room : r->rr) {
+                if (room) { trim_top = false; break; }
+            }
+        }
+        if (!trim_top)
+            break;
+        for (level *l : zone) {
+             row *r = l->rooms[0];
+             l->rooms.erase(l->rooms.begin());
+             delete r;
+        }
+        cube_size.top += 1;
+    }
+
+    // collapse from bottom
+    while (true) {        
+        bool trim_bottom = true;
+        for (level *l : zone) {
+            if (l->rooms.size()==1 || !trim_bottom) break;
+            int last = l->rooms.size()-1;
+            row *r = l->rooms[last];
+            for (Room *room : r->rr) {
+                if (room) { trim_bottom = false; break; }
+            }
+        }
+        if (!trim_bottom)
+            break;
+        for (level *l : zone) {
+             int last = l->rooms.size()-1;
+             row *r = l->rooms[last];
+             l->rooms.pop_back();
+             delete r;
+        }
+        cube_size.bottom -= 1;
     }
 }
 

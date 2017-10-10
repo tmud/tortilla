@@ -4,6 +4,7 @@
 #include "mapperSettings.h"
 #include "mapper.h"
 #include "debugHelpers.h"
+#include "mapperUnitTests.h"
 
 bool map_active = false;
 PropertiesMapper m_props;
@@ -36,6 +37,11 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
+#ifdef _DEBUG
+    MapperUnitTests t;
+    t.runTests();
+#endif
+
     DEBUGINIT(L);
 	init_clientlog(L);
     luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
