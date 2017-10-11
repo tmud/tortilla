@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "mapTools.h"
 #include "mapSmartTools.h"
+#include "roomObjects.h"
 
 bool MapTools::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
 {
@@ -33,7 +34,7 @@ bool MapTools::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
      if (s != Rooms3dCube::AR_BUSY)
          return false;
 
-     return createNewZone(next);    
+     return createNewZone(next);
 }
 
 Room* MapTools::findRoom(const tstring& hash)
@@ -58,7 +59,7 @@ bool MapTools::createNewZone(Room *firstroom)
     }
     Rooms3dCube *newzone = map->createNewZone();
     Rooms3dCubePos p;
-    newzone->addRoom(p, room);     
+    newzone->addRoom(p, room);
     return true;
 }
 
@@ -111,7 +112,7 @@ bool MapNewZoneTool::tryMakeNewZone(const Room* room, RoomDir dir)
     Rooms3dCube* z = map->findZone(room->pos.zid);
     if (!z) {
         assert(false);
-        return false;    
+        return false;
     }
     deleteWaveTool();
     waveTool = new RoomWaveAlgoritm();
@@ -152,8 +153,9 @@ bool MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
         if (z->detachRoom(p))
         {
             t = z;
-            z->optimizeSize();
-            new_zone->addRoom(p, r);
+            z->optimizeSize();            
+            Rooms3dCube::AR_STATUS status = new_zone->addRoom(p, r);
+            assert(status ==Rooms3dCube::AR_OK );
         }
     }
     new_zone->optimizeSize();
@@ -167,30 +169,47 @@ void MapNewZoneTool::deleteWaveTool()
     waveTool = NULL;
 }
 
-
-
-/*RoomFreePlaceTool::RoomFreePlaceTool(Rooms3dCube *z) : zone(z) 
+bool MapMoveRoomTool::tryMoveRoom(const Room* room, RoomDir dir)
 {
-    assert(z);
-}
-bool RoomFreePlaceTool::tryFreePlace(const Room* room, RoomDir dir)
-{
-    if (!room || dir == RoomDir::RD_UNKNOWN || room->pos.zid != zone->id() ) {
+    RoomHelper c(room);
+    if (!c.isZoneExit(dir)) {
         assert(false);
         return false;
     }
 
-    //check free place
-    Rooms3dCubePos p = room->pos;
-    if (!p.move(dir)) {
+    MapTools t(map);
+    Room *r = t.findRoom(room->hash());   
+    Rooms3dCube* srczone = map->findZone(r->pos.zid);
+    if (!srczone) {
         assert(false);
         return false;
     }
-    const Room *cnext = zone->getRoom(p);
-    if (!cnext)
-        return true;
-    
-     //todo! try move the room
+    MapSmartTools st;
+    Room *dest_r = st.getRoom(r, dir);
+    if (!dest_r || dest_r->pos.zid == r->pos.zid) {
+        assert(false);
+        return false;
+    }
+    Rooms3dCube* dstzone = map->findZone(dest_r->pos.zid);
+    if (!dstzone) {
+       assert(false);
+       return false;
+    }
+    Rooms3dCubePos pos(dest_r->pos);
+    RoomDirHelper dh;
+    if (!pos.move(dh.revertDir(dir))) {
+        assert(false);
+        return false;
+    }
+    if (!dstzone->getRoom(pos)) {
+        Room *detached = srczone->detachRoom(r->pos);
+        assert(detached == r);
+        Rooms3dCube::AR_STATUS status = dstzone->addRoom(pos, r);
+        assert (status == Rooms3dCube::AR_OK);
+        return (status == Rooms3dCube::AR_OK);    
+    }
+
+
     
     return false;
-}*/
+}

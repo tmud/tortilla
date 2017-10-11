@@ -19,9 +19,9 @@ public:
     void saveMaps(const tstring& dir);
     void loadMaps(const tstring& dir);
     void clearMaps();
+    tstring  getNewZoneName(const tstring& templ);
 
 private:    
-    tstring  getNewZoneName(const tstring& templ);
     void clear();
 private:
     int m_nextzone_id;

@@ -44,7 +44,8 @@ private:
     void popDir();
     void setExits(Room *room);
     void checkExit(Room *room, RoomDir dir, const tstring& exit);    
-    void redrawPosition(MapCursor cursor, bool resetScrolls);    
+    void redrawPosition(MapCursor cursor, bool resetScrolls);
+    void redrawPosition(const Room *room);
 private:
     // map
     MapInstance m_map;

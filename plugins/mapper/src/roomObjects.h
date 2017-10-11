@@ -108,6 +108,7 @@ public:
     Room* detachRoom(const Rooms3dCubePos& p);
     Room* findRoom(const tstring& hash) const;
     void  optimizeSize();
+    bool  setByZeroLevel(int level);
 #ifdef _DEBUG
     bool testInvariant();
 #endif
@@ -121,6 +122,7 @@ private:
     void extends_levels(const Rooms3dCubePos& p);
     bool checkCoords(const Rooms3dCubePos& p) const;    
     void collapse();
+    void correctPositions();
 private:
     struct row {
       row(int count=1) { rr.resize(count, NULL); }

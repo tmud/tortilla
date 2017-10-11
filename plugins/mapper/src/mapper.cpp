@@ -194,7 +194,7 @@ void Mapper::loadMaps()
     const tstring&dir = m_mapsFolder;
     bool last_found = false;
     tstring &last = m_propsData->current_zone;
-    
+
     m_map.loadMaps(dir);
 
     Rooms3dCubeList zones;
@@ -215,7 +215,7 @@ void Mapper::loadMaps()
         MapTools t(&m_map);
         MapCursor c = t.createZoneCursor(zones[0]);
         redrawPosition(c, false);
-    }   
+    }
 }
 
 void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
@@ -223,6 +223,18 @@ void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
     m_view.showPosition(cursor, resetScrolls);
     const Rooms3dCube* zone = cursor->zone();
     m_zones_control.setCurrentZone(zone);
+}
+
+void Mapper::redrawPosition(const Room *room)
+{
+    MapCursorColor color = RCC_NONE;
+    MapCursor current = m_view.getCurrentPosition();
+    if (current->valid() && current->room(current->pos()) == room) 
+        color = RCC_NORMAL;
+    MapTools tools(&m_map);
+    Room *r = tools.findRoom(room->hash());   
+    MapCursor c = tools.createCursor( r, color );
+    redrawPosition(c, true);
 }
 
 void Mapper::onCreate()
@@ -304,8 +316,12 @@ void Mapper::onRenderContextMenu(int id)
 #endif
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
-            return;    	
-        result = t.applyMakeNewZone(dlg.getName());
+            return;
+        tstring newZoneName(dlg.getName());
+        if (newZoneName.empty()) {
+           newZoneName = m_map.getNewZoneName(L"");
+        }
+        result = t.applyMakeNewZone(newZoneName);
         if (!result) {
             assert(false);
             return;
@@ -313,43 +329,31 @@ void Mapper::onRenderContextMenu(int id)
         Rooms3dCubeList zones;
         m_map.getZones(&zones);
         m_zones_control.updateList(zones);
-                
-        MapTools tools(&m_map);
-        Room *r = tools.findRoom(room->hash());        
-        MapCursor c = tools.createCursor(r, RCC_NONE );
-        redrawPosition(c, true);
+        redrawPosition(room);
         return;
     }
 
     if (id >= MENU_JOINZONE_NORTH && id <= MENU_JOINZONE_DOWN)
     {
-       /* RoomMergeTool t(m_map.getZone(room));
-        RoomDir dir = dh.cast(id - MENU_JOINZONE_NORTH);
-        bool result = t.tryMergeZones(room, dir);
-        if (!result)
-        {
-            MessageBox(L"Неполучается объеденить зоны в одну!", L"Ошибка", MB_OK | MB_ICONERROR);
-            return;
-        }*/
     }
 
     if (id >= MENU_MOVEROOM_NORTH && id <= MENU_MOVEROOM_DOWN)
     {
-        /*RoomMergeTool t(m_map.getZone(room));
         RoomDir dir = dh.cast(id - MENU_MOVEROOM_NORTH);
-        bool result = t.tryJoinRoom(room, dir);
+        MapMoveRoomTool t(&m_map);
+        bool result = t.tryMoveRoom(room, dir);
         if (!result)
         {
-            MessageBox(L"Неполучается переместить комнату в текущую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(L"Невозможно переместить комнату в другую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
-        }*/
-
+        }
+        redrawPosition(room);
     }
 }
 
 void Mapper::onToolbar(int id)
 {
-    if (id == IDC_BUTTON_SAVEZONES) {        
+    if (id == IDC_BUTTON_SAVEZONES) {
         saveMaps();
     }
 
@@ -365,7 +369,7 @@ void Mapper::onToolbar(int id)
         redrawPosition(cursor, false);
     }
 
-    if (id == IDC_BUTTON_LEVEL_DOWN) {        
+    if (id == IDC_BUTTON_LEVEL_DOWN) {
         MapCursor c = m_view.getCurrentPosition();
         if (!c->valid())
             return;
@@ -373,11 +377,30 @@ void Mapper::onToolbar(int id)
             redrawPosition(c, false);
     }
 
-    if (id == IDC_BUTTON_LEVEL_UP) {        
+    if (id == IDC_BUTTON_LEVEL_UP) {
         MapCursor c = m_view.getCurrentPosition();
         if (!c->valid())
             return;
         if (c->move(RD_UP))
             redrawPosition(c, false);
+    }
+
+    if (id == IDC_BUTTON_LEVEL0) {
+        MapCursor c = m_view.getCurrentPosition();
+        if (!c->valid())
+            return;        
+        const Rooms3dCubePos& pos = c->pos();
+        Rooms3dCube *zone = m_map.findZone(pos.zid);
+        if (!zone) {
+            assert(false);
+            return;
+        }
+        if (zone->setByZeroLevel(pos.z)) {
+           MapTools t(&m_map);
+           Rooms3dCube *ptr = m_map.findZone(pos.zid);
+           MapCursor cursor = t.createZoneCursor(ptr);
+           redrawPosition(cursor, true);
+                
+        }
     }
 }

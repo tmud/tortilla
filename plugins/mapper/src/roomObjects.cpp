@@ -59,6 +59,36 @@ void Rooms3dCube::optimizeSize()
     collapse();
 }
 
+bool Rooms3dCube::setByZeroLevel(int level)
+{
+    if (level >= cube_size.minlevel && level <= cube_size.maxlevel) {
+        int index = level - cube_size.minlevel;
+        cube_size.minlevel = -index;
+        cube_size.maxlevel = cube_size.minlevel + zone.size() - 1;
+        correctPositions();
+        return true;
+    }
+    return false;
+    
+    /*if (zone.size() == 1)
+        return;
+    std::vector<int> weights;
+    for (level *l : zone) {
+        int weight = 0;
+         for (row *r : l->rooms){
+         for (Room *room : r->rr) {
+             if (room) {  weight++; }
+         }}
+         weights.push_back(weight);
+    }
+    std::vector<int>::iterator maxel = std::max_element(weights.begin(), weights.end());
+    int index = maxel - weights.begin();    
+    cube_size.minlevel = -index;
+    cube_size.maxlevel = cube_size.minlevel + zone.size() - 1;        
+    correctPositions();*/
+    return false;
+}
+
 bool Rooms3dCube::testInvariant()
 {
     const Rooms3dCubeSize&  s = size();
@@ -276,7 +306,7 @@ void Rooms3dCube::collapse()
     while (true) {        
         bool trim_top = true;
         for (level *l : zone) {
-            if (l->rooms.size()==1 || !trim_top) break;
+            if (l->rooms.size()==1 || !trim_top) { trim_top = false; break; }
             row *r = l->rooms[0];
             for (Room *room : r->rr) {
                 if (room) { trim_top = false; break; }
@@ -296,7 +326,7 @@ void Rooms3dCube::collapse()
     while (true) {        
         bool trim_bottom = true;
         for (level *l : zone) {
-            if (l->rooms.size()==1 || !trim_bottom) break;
+            if (l->rooms.size()==1 || !trim_bottom) { trim_bottom = false; break; }
             int last = l->rooms.size()-1;
             row *r = l->rooms[last];
             for (Room *room : r->rr) {
@@ -313,7 +343,10 @@ void Rooms3dCube::collapse()
         }
         cube_size.bottom -= 1;
     }
+    correctPositions();
+}
 
+void Rooms3dCube::correctPositions() {
     // correct rooms positions
     Rooms3dCubePos c; c.z = cube_size.minlevel; c.zid = z_id;
     for (level *l : zone) {

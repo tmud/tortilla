@@ -391,12 +391,11 @@ void MapperRender::createMenu()
         pictures->CreatePopupMenu();
         for (int i = 0, e = m_icons.GetImageCount(); i <= e; i++)
         {
-            if (i == 0)
-              { pictures->AppendODMenu(new CMenuXPButton(MENU_SETICON_FIRST, NULL)); continue; }            
-            if (i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i - 1)));
+            if (i != 0 && i % 6 == 0) pictures->Break();
+            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
         }
         m_menu.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
+        m_menu.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
         m_menu.AppendSeparator();
     }
     m_menu.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
@@ -452,6 +451,13 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
         return true;
     }
 
+    if (id == MENU_RESETICON)
+    {
+        m_menu_tracked_room->icon = 0;
+        Invalidate();
+        return true;
+    }
+
     if (id == MENU_RESETCOLOR)
     {
         m_menu_tracked_room->color = 0;
@@ -463,7 +469,7 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
     if (id >= MENU_SETICON_FIRST && id <= MENU_SETICON_LAST)
     {
         int icon = id - MENU_SETICON_FIRST;
-        m_menu_tracked_room->icon = icon;
+        m_menu_tracked_room->icon = icon+1;
         Invalidate();
         return true;
     }
