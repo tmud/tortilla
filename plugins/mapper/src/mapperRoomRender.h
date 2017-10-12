@@ -10,11 +10,12 @@ public:
     void setIcons(CImageList *icons);
     void render(int dc_x, int dc_y, const Room *r, int type);
     void renderCursor(int dc_x, int dc_y, int color);
+    void renderDummy(int dc_x, int dc_y);
 private:
     void renderRoom(int x, int y, const Room *r);
     bool anotherZone(const Room* r, int dir);
     bool bidirectionalExit(const Room* r, int dir);
-    bool atline(const Room* r, int dir);
+    bool neighbor(const Room* r, int dir);
     int  revertDir(int dir);    
     bool calcDestOffset(int &dx, int &dy, const Room* r, int dir);
     void renderShadow(int x, int y);

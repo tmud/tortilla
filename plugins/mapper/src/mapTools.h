@@ -30,10 +30,18 @@ private:
     RoomWaveAlgoritm *waveTool;
 };
 
-class MapMoveRoomTool
+class MapMoveRoomToolToAnotherZone
 {
     MapInstance *map;
 public:
-    MapMoveRoomTool(MapInstance *m) : map(m) { assert(m); }
+    MapMoveRoomToolToAnotherZone(MapInstance *m) : map(m) { assert(m); }
     bool tryMoveRoom(const Room* room, RoomDir dir);
+};
+
+class MapMoveRoomByMouse 
+{
+    MapInstance *map;
+public:
+    MapMoveRoomByMouse(MapInstance *m) : map(m) { assert(m); }
+    bool tryMoveRoom(const Room* room, int x, int y);
 };

@@ -30,6 +30,11 @@
 #define MENU_SETICON_FIRST  200  // max 100 icons
 #define MENU_SETICON_LAST   299
 
+class MapperRenderRoomMoveTool {
+public:
+    virtual void roomMoveTool(const Room* room, int x, int y) = 0;
+};
+
 class MapperRender : public CWindowImpl<MapperRender>
 {
     CBrush m_background;
@@ -52,17 +57,23 @@ class MapperRender : public CWindowImpl<MapperRender>
     bool m_block_center;
 
     bool m_track_mouse;
-    bool m_drag_mode;
+
+    enum DRAGMODE { DRAG_NONE = 0, DRAG_MAP, DRAG_ROOM };
+    DRAGMODE m_drag_mode;
     POINT m_drag_point;
 
     CMenuXP m_menu;
     CImageList m_icons;
     const Room *m_menu_tracked_room;
+    const Room *m_move_tracked_room;
 
     HWND m_menu_handler;
+
+    MapperRenderRoomMoveTool *m_roomMoveTool;
 public:
     MapperRender();
     void setMenuHandler(HWND handler_wnd);
+    void setMoveToolHandler(MapperRenderRoomMoveTool *movetool);
     void showPosition(MapCursor pos, bool resetScrolls);
     MapCursor getCurrentPosition();    
     const Room* menuTrackedRoom() const { return m_menu_tracked_room; }
@@ -91,7 +102,7 @@ private:
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) { onSize(); return 0; }
     LRESULT OnVScroll(UINT, WPARAM wparam, LPARAM, BOOL&) { onVScroll(wparam);  return 0; }
     LRESULT OnHScroll(UINT, WPARAM wparam, LPARAM, BOOL&) { onHScroll(wparam);  return 0; }
-    LRESULT OnMouseMove(UINT, WPARAM, LPARAM lparam, BOOL&) { /*trackMouseLeave();*/  mouseMove(LOWORD(lparam), HIWORD(lparam)); return 0; }
+    LRESULT OnMouseMove(UINT, WPARAM, LPARAM lparam, BOOL&) { /*trackMouseLeave();*/  mouseMove(); return 0; }
     LRESULT OnMouseLeave(UINT, WPARAM, LPARAM lparam, BOOL&) { m_track_mouse = false;  mouseLeave(); return 0; }
     LRESULT OnMouseLButtonDown(UINT, WPARAM, LPARAM, BOOL&) { mouseLeftButtonDown(); return 0; }
     LRESULT OnMouseLButtonUp(UINT, WPARAM, LPARAM, BOOL&) { mouseLeftButtonUp(); return 0; }
@@ -127,7 +138,7 @@ private:
     void updateScrollbars(bool center);
     void mouseLeftButtonDown();
     void mouseLeftButtonUp();
-    void mouseMove(int x, int y);
+    void mouseMove();
     void mouseLeave();
     void mouseRightButtonDown();
     void trackMouseLeave()

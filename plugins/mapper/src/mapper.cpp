@@ -257,6 +257,7 @@ void Mapper::onCreate()
     m_toolbar.setControlWindow(m_hWnd, WM_USER+1);
     m_view.Create(m_container, rcDefault, NULL, style | WS_VSCROLL | WS_HSCROLL, WS_EX_STATICEDGE);
     m_view.setMenuHandler(m_hWnd);
+    m_view.setMoveToolHandler(this);
 
     m_container.attach(30, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
@@ -340,7 +341,7 @@ void Mapper::onRenderContextMenu(int id)
     if (id >= MENU_MOVEROOM_NORTH && id <= MENU_MOVEROOM_DOWN)
     {
         RoomDir dir = dh.cast(id - MENU_MOVEROOM_NORTH);
-        MapMoveRoomTool t(&m_map);
+        MapMoveRoomToolToAnotherZone t(&m_map);
         bool result = t.tryMoveRoom(room, dir);
         if (!result)
         {
@@ -402,5 +403,15 @@ void Mapper::onToolbar(int id)
            redrawPosition(cursor, true);
                 
         }
+    }
+}
+
+void Mapper::roomMoveTool(const Room* room, int x, int y)
+{
+    MapMoveRoomByMouse t(&m_map);
+    bool result = t.tryMoveRoom(room, x, y);
+    if (result) {
+        MapCursor cursor = m_view.getCurrentPosition();
+        redrawPosition(cursor, true);
     }
 }

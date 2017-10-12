@@ -12,14 +12,21 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
     m_vscroll_flag = false;
     m_block_center = true;
     m_track_mouse = false;
-    m_drag_mode = false;
+    m_drag_mode = DRAG_NONE;
     m_menu_tracked_room = NULL;
+    m_move_tracked_room = NULL;
     m_menu_handler = NULL;
+    m_roomMoveTool = NULL;
 }
 
 void MapperRender::setMenuHandler(HWND handler_wnd)
 {
     m_menu_handler = handler_wnd;
+}
+
+void MapperRender::setMoveToolHandler(MapperRenderRoomMoveTool *movetool)
+{
+    m_roomMoveTool = movetool;
 }
 
 MapCursor MapperRender::getCursor() const
@@ -126,11 +133,16 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
         for (int y=0; y<sz.height(); ++y)
         {
             p.y = y + sz.top;
-            const Room *r = pos->room(p);
-            if (!r)
-                continue;
             int px = ROOM_SIZE * x + render_x;
             int py = ROOM_SIZE * y + render_y;
+            const Room *r = pos->room(p);
+            if (!r)
+            {
+#ifdef _DEBUG
+                if (type == 0) rr.renderDummy(px, py);
+#endif          
+                continue;
+            }            
             rr.render(px, py, r, type);
         }
     }
@@ -305,8 +317,24 @@ void MapperRender::updateScrollbars(bool center)
 
 void MapperRender::mouseLeftButtonDown()
 {
-    if (!m_drag_mode) {
-        m_drag_mode = true;
+    if (m_drag_mode == DRAG_NONE) 
+    {
+        if( ::GetKeyState(VK_SHIFT) < 0 )
+        {
+            if (!m_roomMoveTool)
+                return;
+            POINT pt; GetCursorPos(&pt);
+            int cursor_x = pt.x; 
+            int cursor_y = pt.y;
+            ScreenToClient(&pt);
+            const Room *room = findRoomOnScreen(pt.x, pt.y);
+            if (!room)
+                return;            
+            m_move_tracked_room = room;
+            m_drag_mode = DRAG_ROOM;
+        } else {
+            m_drag_mode = DRAG_MAP;
+        }
         GetCursorPos(&m_drag_point);
         SetCapture();
     }
@@ -315,18 +343,37 @@ void MapperRender::mouseLeftButtonDown()
 void MapperRender::mouseLeftButtonUp()
 {
     ReleaseCapture();
-    m_drag_mode = false;
+    m_drag_mode = DRAG_NONE;
 }
 
-void MapperRender::mouseMove(int x, int y)
+void MapperRender::mouseMove()
 {
-    if (!m_drag_mode) return;
+    if (m_drag_mode == DRAG_NONE) return;  
     POINT pos;
     GetCursorPos(&pos);
 
     int dx = pos.x - m_drag_point.x;
     int dy = pos.y - m_drag_point.y;
     m_drag_point = pos;
+
+    if (m_drag_mode == DRAG_ROOM)
+    {
+        ScreenToClient(&pos);       
+        int x = pos.x - getRenderX();
+        if (x < 0)  x = x / ROOM_SIZE - 1;        
+        else x = x / ROOM_SIZE;
+        int y = pos.y - getRenderY();
+        if (y < 0) y = y / ROOM_SIZE - 1;
+        else y = y / ROOM_SIZE;     
+        
+        char b[64];
+        sprintf(b, "x=%d,y=%d\r\n", x, y);
+        OutputDebugStringA(b);
+
+        assert (m_roomMoveTool && m_move_tracked_room);
+        m_roomMoveTool->roomMoveTool(m_move_tracked_room, x, y);        
+        return;
+    }
 
     scroll h = getHScroll();
     scroll v = getVScroll();

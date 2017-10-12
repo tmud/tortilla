@@ -56,6 +56,15 @@ void MapperRoomRender::render(int dc_x, int dc_y, const Room *r, int type)
     }
 }
 
+void MapperRoomRender::renderDummy(int dc_x, int dc_y)
+{
+   int x = dc_x; int y = dc_y;
+   CRect bk( x, y, x+m_size, y+m_size );
+   CRect p(1, 1, 1, 1);
+   bk.DeflateRect(&p);
+   fillBkg(bk.left,bk.top,bk.right-bk.left,bk.bottom-bk.top);
+}
+
 void MapperRoomRender::renderCursor(int dc_x, int dc_y, int color)
 {
     RECT p = { dc_x-3, dc_y-3, dc_x+m_size+3, dc_y+m_size+3 };
@@ -231,7 +240,7 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x+2,y+1,de-1,0);
        }
-       else if (atline(r, RD_NORTH))
+       else if (neighbor(r, RD_NORTH))
        {
           int x = rp.left + de;
           int y = rp.top;
@@ -280,7 +289,7 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x+2,y-1,de-1,0);
        }
-       else if (atline(r, RD_SOUTH))
+       else if (neighbor(r, RD_SOUTH))
        {
            int x = rp.left + de;
            int y = rp.bottom;
@@ -330,7 +339,7 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x+1,y+2,0,de-1);
        }
-       else if (atline(r, RD_WEST))
+       else if (neighbor(r, RD_WEST))
        {
            int x = rp.left;
            int y = rp.top + de;
@@ -380,7 +389,7 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
            m_hdc.SelectPen(m_exitL);
            renderLine(x-1,y+2,0,de-1);          
        }
-       else if (atline(r, RD_EAST))
+       else if (neighbor(r, RD_EAST))
        {
            int x = rp.right;
            int y = rp.top + de;
@@ -502,18 +511,30 @@ bool MapperRoomRender::bidirectionalExit(const Room* r, int dir)
     return (r == back);    
 }
 
-bool MapperRoomRender::atline(const Room* r, int dir)
+bool MapperRoomRender::neighbor(const Room* r, int dir)
 {
    if (!bidirectionalExit(r, dir))
        return false;
    const Room *r2 = r->dirs[dir].next_room;
    if (dir == RD_NORTH || dir == RD_SOUTH)
    {
-       return (r->pos.x == r2->pos.x) ? true : false;
+       if (r->pos.x == r2->pos.x) {
+           if (dir == RD_NORTH) {
+               return (r->pos.y == r2->pos.y+1) ? true : false;
+           }
+           return (r->pos.y == r2->pos.y-1) ? true : false;
+       }
+       return false;
    }
    if (dir == RD_WEST || dir == RD_EAST)
    {
-       return (r->pos.y == r2->pos.y) ? true : false;
+       if (r->pos.y == r2->pos.y) {
+           if (dir == RD_WEST) {
+               return (r->pos.x == r2->pos.x+1) ? true : false;
+           }
+           return (r->pos.x == r2->pos.x-1) ? true : false;
+       }
+       return false;
    }
    assert(false);
    return false;

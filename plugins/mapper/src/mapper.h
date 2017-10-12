@@ -7,7 +7,7 @@
 #include "mapperZoneControl.h"
 #include "mapInstance.h"
 
-class Mapper : public CWindowImpl<Mapper>
+class Mapper : public CWindowImpl<Mapper>, public MapperRenderRoomMoveTool
 {
 public:
     Mapper(PropertiesMapper *props, const tstring& mapsFolder);
@@ -46,6 +46,7 @@ private:
     void checkExit(Room *room, RoomDir dir, const tstring& exit);    
     void redrawPosition(MapCursor cursor, bool resetScrolls);
     void redrawPosition(const Room *room);
+    void roomMoveTool(const Room* room, int x, int y);
 private:
     // map
     MapInstance m_map;

@@ -169,7 +169,7 @@ void MapNewZoneTool::deleteWaveTool()
     waveTool = NULL;
 }
 
-bool MapMoveRoomTool::tryMoveRoom(const Room* room, RoomDir dir)
+bool MapMoveRoomToolToAnotherZone::tryMoveRoom(const Room* room, RoomDir dir)
 {
     RoomHelper c(room);
     if (!c.isZoneExit(dir)) {
@@ -208,8 +208,44 @@ bool MapMoveRoomTool::tryMoveRoom(const Room* room, RoomDir dir)
         assert (status == Rooms3dCube::AR_OK);
         return (status == Rooms3dCube::AR_OK);    
     }
-
-
-    
     return false;
+}
+
+bool MapMoveRoomByMouse::tryMoveRoom(const Room* room, int x, int y)
+{
+     const Rooms3dCubePos& from = room->pos;
+     Rooms3dCube* zone = map->findZone(from.zid);
+     if (!zone) {
+         assert(false);
+         return false;
+     }
+     /*if (!p.valid(zone->size()))  {        
+         assert(false);
+         return false;
+     }*/
+
+     Rooms3dCubePos p = from;
+     const Rooms3dCubeSize& sz = zone->size();
+     
+     int dx = x - (p.x - sz.left);
+     int dy = y - (p.y - sz.top);
+
+     p.x += dx;
+     p.y += dy;
+         
+     if (zone->getRoom(p))
+     {
+         // blocked place
+         return false;
+     }
+       
+     Room *r = zone->detachRoom(from);
+     Rooms3dCube::AR_STATUS status = zone->addRoom(p, r);
+     if (status != Rooms3dCube::AR_OK) 
+     {
+         zone->addRoom(from, r);
+         assert(false);
+         return false;
+     }
+     return true;
 }

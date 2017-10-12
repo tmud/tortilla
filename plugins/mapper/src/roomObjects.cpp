@@ -69,24 +69,6 @@ bool Rooms3dCube::setByZeroLevel(int level)
         return true;
     }
     return false;
-    
-    /*if (zone.size() == 1)
-        return;
-    std::vector<int> weights;
-    for (level *l : zone) {
-        int weight = 0;
-         for (row *r : l->rooms){
-         for (Room *room : r->rr) {
-             if (room) {  weight++; }
-         }}
-         weights.push_back(weight);
-    }
-    std::vector<int>::iterator maxel = std::max_element(weights.begin(), weights.end());
-    int index = maxel - weights.begin();    
-    cube_size.minlevel = -index;
-    cube_size.maxlevel = cube_size.minlevel + zone.size() - 1;        
-    correctPositions();*/
-    return false;
 }
 
 bool Rooms3dCube::testInvariant()
