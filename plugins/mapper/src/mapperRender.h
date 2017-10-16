@@ -32,7 +32,7 @@
 
 class MapperRenderRoomMoveTool {
 public:
-    virtual void roomMoveTool(const Room* room, int x, int y) = 0;
+    virtual void roomMoveTool(std::vector<const Room*>& rooms, int x, int y) = 0;
 };
 
 class MapperRender : public CWindowImpl<MapperRender>
@@ -62,23 +62,41 @@ class MapperRender : public CWindowImpl<MapperRender>
     DRAGMODE m_drag_mode;
     POINT m_drag_point;
 
-    CMenuXP m_menu;
+    CMenuXP m_single_room_menu;
+    CMenuXP m_multiply_rooms_menu;
+
     CImageList m_icons;
-    const Room *m_menu_tracked_room;
-    const Room *m_move_tracked_room;
-
+    std::vector<const Room*> m_selected_rooms;
     HWND m_menu_handler;
-
     MapperRenderRoomMoveTool *m_roomMoveTool;
 public:
     MapperRender();
     void setMenuHandler(HWND handler_wnd);
     void setMoveToolHandler(MapperRenderRoomMoveTool *movetool);
     void showPosition(MapCursor pos, bool resetScrolls);
-    MapCursor getCurrentPosition();    
-    const Room* menuTrackedRoom() const { return m_menu_tracked_room; }
+    MapCursor getCurrentPosition();        
+    void getSelectedRooms(std::vector<const Room*>* rooms) { 
+        rooms->resize(m_selected_rooms.size());
+        std::copy(m_selected_rooms.begin(), m_selected_rooms.end(), rooms->begin());
+    }
     void clear() { m_scrolls.clear(); viewpos = nullptr; currentpos = nullptr; }
 
+private:
+    void selectRoom(const Room* room) {
+        unselectRoom(room);
+        m_selected_rooms.push_back(room);
+        room->selected = true;
+    }
+    bool unselectRoom(const Room* room) {
+         std::vector<const Room*>::iterator it = std::find(m_selected_rooms.begin(), m_selected_rooms.end(), room);
+         if (it != m_selected_rooms.end()) { m_selected_rooms.erase(it); room->selected = false; return true; }
+         return false;
+    }
+    void unselectAllRooms() {
+        for (const Room* room : m_selected_rooms)
+            room->selected = false;
+        m_selected_rooms.clear();
+    }
 private:
 	BEGIN_MSG_MAP(MapperRender)
         MESSAGE_HANDLER(WM_COMMAND, OnMenuCommand)
@@ -91,6 +109,7 @@ private:
         MESSAGE_HANDLER(WM_MOUSEMOVE, OnMouseMove)
         MESSAGE_HANDLER(WM_MOUSELEAVE, OnMouseLeave)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnMouseLButtonDown)
+        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnMouseLButtonDown)
         MESSAGE_HANDLER(WM_LBUTTONUP, OnMouseLButtonUp)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnMouseRButtonDown)
         MESSAGE_HANDLER(WM_MEASUREITEM, OnMenuMeasureItem)
@@ -109,12 +128,12 @@ private:
     LRESULT OnMouseRButtonDown(UINT, WPARAM, LPARAM, BOOL&) { mouseRightButtonDown(); return 0; }
     LRESULT OnMenuMeasureItem(UINT, WPARAM, LPARAM lparam, BOOL&) 
     {
-        m_menu.MeasureItem((LPMEASUREITEMSTRUCT)lparam);
+        m_single_room_menu.MeasureItem((LPMEASUREITEMSTRUCT)lparam);
         return 0; 
     }
     LRESULT OnMenuDrawItem(UINT, WPARAM, LPARAM lparam, BOOL&)
     {
-        m_menu.DrawItem((LPDRAWITEMSTRUCT)lparam);
+        m_single_room_menu.DrawItem((LPDRAWITEMSTRUCT)lparam);
         return 0;
     }
     LRESULT OnMenuCommand(UINT, WPARAM wparam, LPARAM lparam, BOOL& bHandled)

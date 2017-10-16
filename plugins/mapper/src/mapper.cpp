@@ -296,17 +296,22 @@ void Mapper::onZoneChanged()
 
 void Mapper::onRenderContextMenu(int id)
 {
-    const Room* room = m_view.menuTrackedRoom();
-    if (!room) {
+    std::vector<const Room*> rooms;
+    m_view.getSelectedRooms(&rooms);
+    if (rooms.empty()) {
         assert(false);
         return;
     }
+
+    bool multiselection = (rooms.size() == 1) ? false : true;
+
     RoomDirHelper dh;
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
+        assert(!multiselection);
         MapNewZoneTool t(&m_map);
         RoomDir dir = dh.cast(id - MENU_NEWZONE_NORTH);
-        bool result = t.tryMakeNewZone(room, dir);
+        bool result = t.tryMakeNewZone(rooms[0], dir);
         if (!result)
         {
             MessageBox(L"Невозможно создать новую зону из-за замкнутости коридоров на данную комнату!", L"Ошибка", MB_OK | MB_ICONERROR);
@@ -330,25 +335,29 @@ void Mapper::onRenderContextMenu(int id)
         Rooms3dCubeList zones;
         m_map.getZones(&zones);
         m_zones_control.updateList(zones);
-        redrawPosition(room);
+        redrawPosition(rooms[0]);
         return;
     }
 
     if (id >= MENU_JOINZONE_NORTH && id <= MENU_JOINZONE_DOWN)
     {
+        assert(!multiselection);
+        return;
     }
 
     if (id >= MENU_MOVEROOM_NORTH && id <= MENU_MOVEROOM_DOWN)
     {
+        assert(!multiselection);
         RoomDir dir = dh.cast(id - MENU_MOVEROOM_NORTH);
         MapMoveRoomToolToAnotherZone t(&m_map);
-        bool result = t.tryMoveRoom(room, dir);
+        bool result = t.tryMoveRoom(rooms[0], dir);
         if (!result)
         {
             MessageBox(L"Невозможно переместить комнату в другую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
         }
-        redrawPosition(room);
+        redrawPosition(rooms[0]);
+        return;
     }
 }
 
@@ -406,10 +415,10 @@ void Mapper::onToolbar(int id)
     }
 }
 
-void Mapper::roomMoveTool(const Room* room, int x, int y)
+void Mapper::roomMoveTool(std::vector<const Room*>& rooms, int x, int y)
 {
     MapMoveRoomByMouse t(&m_map);
-    bool result = t.tryMoveRoom(room, x, y);
+    bool result = t.tryMoveRooms(rooms, x, y);
     if (result) {
         MapCursor cursor = m_view.getCurrentPosition();
         redrawPosition(cursor, true);

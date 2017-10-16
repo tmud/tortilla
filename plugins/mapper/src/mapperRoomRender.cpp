@@ -204,10 +204,15 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
 
    CRect bk(rp);
    bk.DeflateRect(2,2,0,0);
-   if (!r->use_color)
-     fillBkg(bk.left,bk.top,bk.right-bk.left,bk.bottom-bk.top);
-   else
-     fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->color);
+   
+   if (!r->selected) {
+        if (!r->use_color)
+            fillBkg(bk.left,bk.top,bk.right-bk.left,bk.bottom-bk.top);
+        else
+            fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->color);
+   } else {
+        fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, RGB(200,200,0));
+   }
 #ifdef _DEBUG
     if (r->debugcolor != 0)
         fillColor(bk.left, bk.top, bk.right - bk.left, bk.bottom - bk.top, r->debugcolor);

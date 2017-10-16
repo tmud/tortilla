@@ -211,8 +211,15 @@ bool MapMoveRoomToolToAnotherZone::tryMoveRoom(const Room* room, RoomDir dir)
     return false;
 }
 
-bool MapMoveRoomByMouse::tryMoveRoom(const Room* room, int x, int y)
+bool MapMoveRoomByMouse::tryMoveRooms(std::vector<const Room*>& rooms, int x, int y)
 {
+     if (rooms.empty())
+         return false;
+     if (rooms.size()>1) {
+         //todo
+         return false;
+     }
+     const Room* room = rooms[0];
      const Rooms3dCubePos& from = room->pos;
      Rooms3dCube* zone = map->findZone(from.zid);
      if (!zone) {

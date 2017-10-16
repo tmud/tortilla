@@ -13,8 +13,6 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
     m_block_center = true;
     m_track_mouse = false;
     m_drag_mode = DRAG_NONE;
-    m_menu_tracked_room = NULL;
-    m_move_tracked_room = NULL;
     m_menu_handler = NULL;
     m_roomMoveTool = NULL;
 }
@@ -318,8 +316,9 @@ void MapperRender::updateScrollbars(bool center)
 void MapperRender::mouseLeftButtonDown()
 {
     if (m_drag_mode == DRAG_NONE) 
-    {
-        if( ::GetKeyState(VK_SHIFT) < 0 )
+    {     
+        bool shift = (::GetKeyState(VK_SHIFT) < 0 );
+        if(shift)
         {
             if (!m_roomMoveTool)
                 return;
@@ -329,10 +328,20 @@ void MapperRender::mouseLeftButtonDown()
             ScreenToClient(&pt);
             const Room *room = findRoomOnScreen(pt.x, pt.y);
             if (!room)
-                return;            
-            m_move_tracked_room = room;
+            {
+                //unselectAllRooms();
+                //Invalidate();
+                return;
+            }
+
+
+            ///if (!unselectRoom(room)) { selectRoom(room); }
+            selectRoom(room);
+            Invalidate();
             m_drag_mode = DRAG_ROOM;
-        } else {
+        } else {           
+            unselectAllRooms();
+            Invalidate();
             m_drag_mode = DRAG_MAP;
         }
         GetCursorPos(&m_drag_point);
@@ -342,8 +351,23 @@ void MapperRender::mouseLeftButtonDown()
 
 void MapperRender::mouseLeftButtonUp()
 {
-    ReleaseCapture();
-    m_drag_mode = DRAG_NONE;
+    if (m_drag_mode != DRAG_NONE) 
+    {
+       /* bool shift = (::GetKeyState(VK_SHIFT) < 0 );
+        if (shift) {
+           POINT pt; GetCursorPos(&pt);
+           int cursor_x = pt.x; 
+           int cursor_y = pt.y;
+           ScreenToClient(&pt);
+           const Room *room = findRoomOnScreen(pt.x, pt.y);
+           if (room->selected) {
+                unselectRoom(room);
+                Invalidate();
+           }
+        }*/
+        ReleaseCapture();
+        m_drag_mode = DRAG_NONE;
+    }
 }
 
 void MapperRender::mouseMove()
@@ -366,12 +390,13 @@ void MapperRender::mouseMove()
         if (y < 0) y = y / ROOM_SIZE - 1;
         else y = y / ROOM_SIZE;     
         
-        char b[64];
+        /*char b[64];
         sprintf(b, "x=%d,y=%d\r\n", x, y);
-        OutputDebugStringA(b);
+        OutputDebugStringA(b);*/
 
-        assert (m_roomMoveTool && m_move_tracked_room);
-        m_roomMoveTool->roomMoveTool(m_move_tracked_room, x, y);        
+        assert (m_roomMoveTool);
+        if (!m_selected_rooms.empty())
+            m_roomMoveTool->roomMoveTool(m_selected_rooms, x, y);        
         return;
     }
 
@@ -399,30 +424,46 @@ void MapperRender::mouseRightButtonDown()
     const Room *room = findRoomOnScreen(pt.x, pt.y);
     if (!room)
         return;
-    m_menu_tracked_room = room;
+
+    bool shift = (::GetKeyState(VK_SHIFT) < 0 );
+    if (!shift) {
+        if (!room->selected)
+            unselectAllRooms();
+    }
+    selectRoom(room);
+    Invalidate();
+
+    bool multiselection = (m_selected_rooms.size() == 1) ? false : true;
+    if (multiselection) {       
+        CMenuXP &m = m_multiply_rooms_menu;
+        m.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+        return;
+    }
+
     RoomHelper c(room);
-    m_menu.SetItemState(MENU_NEWZONE_NORTH, c.isExplored(RD_NORTH));
-    m_menu.SetItemState(MENU_NEWZONE_SOUTH, c.isExplored(RD_SOUTH));
-    m_menu.SetItemState(MENU_NEWZONE_WEST, c.isExplored(RD_WEST));
-    m_menu.SetItemState(MENU_NEWZONE_EAST, c.isExplored(RD_EAST));
-    m_menu.SetItemState(MENU_NEWZONE_UP, c.isExplored(RD_UP));
-    m_menu.SetItemState(MENU_NEWZONE_DOWN, c.isExplored(RD_DOWN));
+    CMenuXP &m = m_single_room_menu;
+    m.SetItemState(MENU_NEWZONE_NORTH, c.isExplored(RD_NORTH));
+    m.SetItemState(MENU_NEWZONE_SOUTH, c.isExplored(RD_SOUTH));
+    m.SetItemState(MENU_NEWZONE_WEST, c.isExplored(RD_WEST));
+    m.SetItemState(MENU_NEWZONE_EAST, c.isExplored(RD_EAST));
+    m.SetItemState(MENU_NEWZONE_UP, c.isExplored(RD_UP));
+    m.SetItemState(MENU_NEWZONE_DOWN, c.isExplored(RD_DOWN));
 
-    m_menu.SetItemState(MENU_JOINZONE_NORTH, c.isZoneExit(RD_NORTH));
-    m_menu.SetItemState(MENU_JOINZONE_SOUTH, c.isZoneExit(RD_SOUTH));
-    m_menu.SetItemState(MENU_JOINZONE_WEST, c.isZoneExit(RD_WEST));
-    m_menu.SetItemState(MENU_JOINZONE_EAST, c.isZoneExit(RD_EAST));
-    m_menu.SetItemState(MENU_JOINZONE_UP, c.isZoneExit(RD_UP));
-    m_menu.SetItemState(MENU_JOINZONE_DOWN, c.isZoneExit(RD_DOWN));
+    m.SetItemState(MENU_JOINZONE_NORTH, c.isZoneExit(RD_NORTH));
+    m.SetItemState(MENU_JOINZONE_SOUTH, c.isZoneExit(RD_SOUTH));
+    m.SetItemState(MENU_JOINZONE_WEST, c.isZoneExit(RD_WEST));
+    m.SetItemState(MENU_JOINZONE_EAST, c.isZoneExit(RD_EAST));
+    m.SetItemState(MENU_JOINZONE_UP, c.isZoneExit(RD_UP));
+    m.SetItemState(MENU_JOINZONE_DOWN, c.isZoneExit(RD_DOWN));
 
-    m_menu.SetItemState(MENU_MOVEROOM_NORTH, c.isZoneExit(RD_NORTH));
-    m_menu.SetItemState(MENU_MOVEROOM_SOUTH, c.isZoneExit(RD_SOUTH));
-    m_menu.SetItemState(MENU_MOVEROOM_WEST, c.isZoneExit(RD_WEST));
-    m_menu.SetItemState(MENU_MOVEROOM_EAST, c.isZoneExit(RD_EAST));
-    m_menu.SetItemState(MENU_MOVEROOM_UP, c.isZoneExit(RD_UP));
-    m_menu.SetItemState(MENU_MOVEROOM_DOWN, c.isZoneExit(RD_DOWN));
+    m.SetItemState(MENU_MOVEROOM_NORTH, c.isZoneExit(RD_NORTH));
+    m.SetItemState(MENU_MOVEROOM_SOUTH, c.isZoneExit(RD_SOUTH));
+    m.SetItemState(MENU_MOVEROOM_WEST, c.isZoneExit(RD_WEST));
+    m.SetItemState(MENU_MOVEROOM_EAST, c.isZoneExit(RD_EAST));
+    m.SetItemState(MENU_MOVEROOM_UP, c.isZoneExit(RD_UP));
+    m.SetItemState(MENU_MOVEROOM_DOWN, c.isZoneExit(RD_DOWN));
 
-    m_menu.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+    m.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
 }
 
 void MapperRender::createMenu()
@@ -431,23 +472,24 @@ void MapperRender::createMenu()
     HANDLE hBmp = LoadImage(NULL, L"plugins\\mapper.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     if (hBmp)
         m_icons.Add((HBITMAP)hBmp, RGB(128, 0, 128));
-    m_menu.CreatePopupMenu();
+    m_single_room_menu.CreatePopupMenu();
+    CMenuXP &m = m_single_room_menu;
     if (m_icons.GetImageCount() > 0)
     {
         CMenuXP *pictures = new CMenuXP();
         pictures->CreatePopupMenu();
-        for (int i = 0, e = m_icons.GetImageCount(); i <= e; i++)
+        for (int i = 0, e = m_icons.GetImageCount(); i < e; i++)
         {
             if (i != 0 && i % 6 == 0) pictures->Break();
             pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
         }
-        m_menu.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m_menu.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
-        m_menu.AppendSeparator();
+        m.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
+        m.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m.AppendSeparator();
     }
-    m_menu.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m_menu.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
-    m_menu.AppendSeparator();
+    m.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
+    m.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m.AppendSeparator();
 
     CMenuXP *newzone = new CMenuXP();
     newzone->CreatePopupMenu();
@@ -457,7 +499,7 @@ void MapperRender::createMenu()
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_EAST, L"на восток"));
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_UP, L"вверх"));
     newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_DOWN, L"вниз"));
-    m_menu.AppendODPopup(newzone, new CMenuXPText(0, L"Начать новую зону"));
+    m.AppendODPopup(newzone, new CMenuXPText(0, L"Начать новую зону"));
 
     CMenuXP *joinzone = new CMenuXP();
     joinzone->CreatePopupMenu();
@@ -467,7 +509,7 @@ void MapperRender::createMenu()
     joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_EAST, L"на восток"));
     joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_UP, L"вверх"));
     joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_DOWN, L"вниз"));
-    m_menu.AppendODPopup(joinzone, new CMenuXPText(0, L"Склеить зону"));
+    m.AppendODPopup(joinzone, new CMenuXPText(0, L"Склеить зону"));
 
     CMenuXP *moveroom = new CMenuXP();
     moveroom->CreatePopupMenu();
@@ -477,7 +519,25 @@ void MapperRender::createMenu()
     moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_EAST, L"на восток"));
     moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_UP, L"вверх"));
     moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_DOWN, L"вниз"));
-    m_menu.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));
+    m.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));
+
+    m_multiply_rooms_menu.CreatePopupMenu();
+    CMenuXP &m2 = m_multiply_rooms_menu;
+    if (m_icons.GetImageCount() > 0)
+    {
+        CMenuXP *pictures = new CMenuXP();
+        pictures->CreatePopupMenu();
+        for (int i = 0, e = m_icons.GetImageCount(); i < e; i++) {
+            if (i != 0 && i % 6 == 0) pictures->Break();
+            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+        }
+        m2.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
+        m2.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m2.AppendSeparator();
+    }
+    m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
+    m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m2.AppendSeparator();
 }
 
 bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
@@ -485,14 +545,20 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
     WORD id = LOWORD(wparam);
     if (id == MENU_SETCOLOR)
     {
-        COLORREF color = m_menu_tracked_room->color;
-        if (!m_menu_tracked_room->use_color)
-            color = RGB(180, 180, 180);
+        COLORREF color = RGB(180, 180, 180);
+        if (m_selected_rooms.size() == 1) {
+            const Room *room = m_selected_rooms[0];
+            if (room->use_color)
+                color = room->color;
+        }
         CColorDialog dlg(color, CC_FULLOPEN, m_hWnd);
         if (dlg.DoModal() == IDOK)
         {
-            m_menu_tracked_room->color = dlg.GetColor();
-            m_menu_tracked_room->use_color = 1;
+            color = dlg.GetColor();
+            for (const Room* r: m_selected_rooms) {
+                r->color = color;
+                r->use_color = 1;
+            }
             Invalidate();
         }
         return true;
@@ -500,23 +566,29 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
 
     if (id == MENU_RESETICON)
     {
-        m_menu_tracked_room->icon = 0;
+        for (const Room* r: m_selected_rooms) {
+             r->icon = 0;
+        }
         Invalidate();
         return true;
     }
 
     if (id == MENU_RESETCOLOR)
     {
-        m_menu_tracked_room->color = 0;
-        m_menu_tracked_room->use_color = 0;
+        for (const Room* r: m_selected_rooms) {
+            r->color = 0;
+            r->use_color = 0;
+        }
         Invalidate();
         return true;
     }
 
     if (id >= MENU_SETICON_FIRST && id <= MENU_SETICON_LAST)
     {
-        int icon = id - MENU_SETICON_FIRST;
-        m_menu_tracked_room->icon = icon+1;
+        int icon = (id - MENU_SETICON_FIRST)+1;
+        for (const Room* r: m_selected_rooms) {
+             r->icon = icon;
+        }
         Invalidate();
         return true;
     }

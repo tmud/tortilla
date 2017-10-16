@@ -43,5 +43,5 @@ class MapMoveRoomByMouse
     MapInstance *map;
 public:
     MapMoveRoomByMouse(MapInstance *m) : map(m) { assert(m); }
-    bool tryMoveRoom(const Room* room, int x, int y);
+    bool tryMoveRooms(std::vector<const Room*>& rooms, int x, int y);
 };
