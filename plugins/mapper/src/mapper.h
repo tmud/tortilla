@@ -45,7 +45,7 @@ private:
     void setExits(Room *room);
     void checkExit(Room *room, RoomDir dir, const tstring& exit);    
     void redrawPosition(MapCursor cursor, bool resetScrolls);
-    void redrawPosition(const Room *room);
+    void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
 private:
     // map

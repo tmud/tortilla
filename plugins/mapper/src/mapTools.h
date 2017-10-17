@@ -30,6 +30,14 @@ private:
     RoomWaveAlgoritm *waveTool;
 };
 
+class MapMoveRoomsToNewZoneTool
+{
+    MapInstance *map;
+public:
+    MapMoveRoomsToNewZoneTool(MapInstance *m) : map(m) { assert(m); }
+	bool makeNewZone(std::vector<const Room*>& rooms, const tstring& zoneName);
+};
+
 class MapMoveRoomToolToAnotherZone
 {
     MapInstance *map;

@@ -14,18 +14,19 @@
 #define MENU_NEWZONE_EAST   106
 #define MENU_NEWZONE_UP     107
 #define MENU_NEWZONE_DOWN   108
-#define MENU_JOINZONE_NORTH 109
-#define MENU_JOINZONE_SOUTH 110
-#define MENU_JOINZONE_WEST  111
-#define MENU_JOINZONE_EAST  112
-#define MENU_JOINZONE_UP    113
-#define MENU_JOINZONE_DOWN  114
-#define MENU_MOVEROOM_NORTH 115
-#define MENU_MOVEROOM_SOUTH 116
-#define MENU_MOVEROOM_WEST  117
-#define MENU_MOVEROOM_EAST  118
-#define MENU_MOVEROOM_UP    119
-#define MENU_MOVEROOM_DOWN  120
+#define MENU_NEWZONE        109
+#define MENU_JOINZONE_NORTH 110
+#define MENU_JOINZONE_SOUTH 111
+#define MENU_JOINZONE_WEST  112
+#define MENU_JOINZONE_EAST  113
+#define MENU_JOINZONE_UP    114
+#define MENU_JOINZONE_DOWN  115
+#define MENU_MOVEROOM_NORTH 116
+#define MENU_MOVEROOM_SOUTH 117
+#define MENU_MOVEROOM_WEST  118
+#define MENU_MOVEROOM_EAST  119
+#define MENU_MOVEROOM_UP    120
+#define MENU_MOVEROOM_DOWN  121
 
 #define MENU_SETICON_FIRST  200  // max 100 icons
 #define MENU_SETICON_LAST   299
@@ -79,8 +80,8 @@ public:
         rooms->resize(m_selected_rooms.size());
         std::copy(m_selected_rooms.begin(), m_selected_rooms.end(), rooms->begin());
     }
+    void clearSelection() { unselectAllRooms(); }
     void clear() { m_scrolls.clear(); viewpos = nullptr; currentpos = nullptr; }
-
 private:
     void selectRoom(const Room* room) {
         unselectRoom(room);

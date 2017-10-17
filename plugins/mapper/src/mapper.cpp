@@ -225,10 +225,14 @@ void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
     m_zones_control.setCurrentZone(zone);
 }
 
-void Mapper::redrawPosition(const Room *room)
+void Mapper::redrawPositionByRoom(const Room *room)
 {
+    Rooms3dCubeList zones;
+    m_map.getZones(&zones);
+    m_zones_control.updateList(zones);
     MapCursorColor color = RCC_NONE;
     MapCursor current = m_view.getCurrentPosition();
+    m_view.clearSelection();
     if (current->valid() && current->room(current->pos()) == room) 
         color = RCC_NORMAL;
     MapTools tools(&m_map);
@@ -306,6 +310,25 @@ void Mapper::onRenderContextMenu(int id)
     bool multiselection = (rooms.size() == 1) ? false : true;
 
     RoomDirHelper dh;
+    if (id == MENU_NEWZONE) 
+    {
+        NewZoneNameDlg dlg;
+        if (dlg.DoModal() == IDCANCEL)
+            return;
+        tstring newZoneName(dlg.getName());
+        if (newZoneName.empty()) {
+           newZoneName = m_map.getNewZoneName(L"");
+        }    
+        MapMoveRoomsToNewZoneTool t(&m_map);
+        bool result = t.makeNewZone(rooms, newZoneName);
+        if (!result)
+        {            
+            return;
+        }
+        redrawPositionByRoom(rooms[0]);
+        return;
+    }
+
     if (id >= MENU_NEWZONE_NORTH && id <= MENU_NEWZONE_DOWN)
     {
         assert(!multiselection);
@@ -332,10 +355,7 @@ void Mapper::onRenderContextMenu(int id)
             assert(false);
             return;
         }
-        Rooms3dCubeList zones;
-        m_map.getZones(&zones);
-        m_zones_control.updateList(zones);
-        redrawPosition(rooms[0]);
+        redrawPositionByRoom(rooms[0]);
         return;
     }
 
@@ -356,7 +376,7 @@ void Mapper::onRenderContextMenu(int id)
             MessageBox(L"Невозможно переместить комнату в другую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
         }
-        redrawPosition(rooms[0]);
+        redrawPositionByRoom(rooms[0]);
         return;
     }
 }

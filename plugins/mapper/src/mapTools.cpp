@@ -203,6 +203,7 @@ bool MapMoveRoomToolToAnotherZone::tryMoveRoom(const Room* room, RoomDir dir)
     }
     if (!dstzone->getRoom(pos)) {
         Room *detached = srczone->detachRoom(r->pos);
+        srczone->optimizeSize();
         assert(detached == r);
         Rooms3dCube::AR_STATUS status = dstzone->addRoom(pos, r);
         assert (status == Rooms3dCube::AR_OK);
@@ -215,44 +216,80 @@ bool MapMoveRoomByMouse::tryMoveRooms(std::vector<const Room*>& rooms, int x, in
 {
      if (rooms.empty())
          return false;
-     if (rooms.size()>1) {
-         //todo
-         return false;
-     }
-     const Room* room = rooms[0];
-     const Rooms3dCubePos& from = room->pos;
-     Rooms3dCube* zone = map->findZone(from.zid);
+     int last = rooms.size()-1;
+     const Room* base_room = rooms[last];
+     int zid = base_room->pos.zid;
+     Rooms3dCube* zone = map->findZone(zid);
      if (!zone) {
-         assert(false);
-         return false;
+        assert(false);
+        return false;
      }
-     /*if (!p.valid(zone->size()))  {        
-         assert(false);
-         return false;
-     }*/
-
-     Rooms3dCubePos p = from;
      const Rooms3dCubeSize& sz = zone->size();
-     
-     int dx = x - (p.x - sz.left);
-     int dy = y - (p.y - sz.top);
+     const Rooms3dCubePos& base_pos = base_room->pos;
+     int dx = x - (base_pos.x - sz.left);
+     int dy = y - (base_pos.y - sz.top);
 
-     p.x += dx;
-     p.y += dy;
-         
-     if (zone->getRoom(p))
-     {
-         // blocked place
-         return false;
+     struct newpos {
+        Rooms3dCubePos from;
+        Rooms3dCubePos to;
+        Room *room;
+     };
+     std::vector<newpos> movedata;     
+     for (const Room* room : rooms) 
+     {     
+        Rooms3dCubePos p = room->pos;
+        if (p.zid != zid) {
+            assert(false);
+            return false;
+        }        
+        p.x += dx;
+        p.y += dy;
+        const Room* onplace = zone->getRoom(p);
+        if (onplace && !onplace->selected)
+        {
+             // blocked place
+            return false;
+        }
+        newpos np; np.from = room->pos; np.to = p; np.room = nullptr;
+        movedata.push_back(np);
      }
-       
-     Room *r = zone->detachRoom(from);
-     Rooms3dCube::AR_STATUS status = zone->addRoom(p, r);
-     if (status != Rooms3dCube::AR_OK) 
+
+     for (newpos& d : movedata) 
      {
-         zone->addRoom(from, r);
-         assert(false);
-         return false;
+        d.room = zone->detachRoom(d.from);
      }
+
+     for (newpos& d : movedata)
+     {
+        Rooms3dCube::AR_STATUS status = zone->addRoom(d.to, d.room);
+        if (status != Rooms3dCube::AR_OK) 
+        {
+           // assert(false);
+            return false;
+        }
+     }
+     zone->optimizeSize();
      return true;
+}
+
+bool MapMoveRoomsToNewZoneTool::makeNewZone(std::vector<const Room*>& rooms, const tstring& zoneName)
+{
+    Rooms3dCube* new_zone =  map->createNewZone(zoneName);
+    for (const Room *r : rooms) 
+    {
+        Rooms3dCube *z = map->findZone(r->pos.zid);
+        Rooms3dCubePos p (r->pos);
+        Room *room = z->detachRoom(p);        
+        Rooms3dCube::AR_STATUS status = new_zone->addRoom(p, room);
+        if (status != Rooms3dCube::AR_OK )
+        {
+            assert(false);
+            return false;
+        }
+        z->optimizeSize();
+    }
+    new_zone->optimizeSize();
+    return true;
+
+
 }

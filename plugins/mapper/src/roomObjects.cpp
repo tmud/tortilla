@@ -26,6 +26,7 @@ void Rooms3dCube::deleteRoom(const Rooms3dCubePos& p)
 {
     Room *r = detachRoom(p);
     if (r) { clearExits(r); delete r; }
+    collapse();
 }
 
 Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
@@ -37,7 +38,6 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
         r = *ptr;
         *ptr = NULL;
         r->pos.clear();
-        collapse();
         hashmap_iterator it = m_hashmap.find(r->hash());
         if (it != m_hashmap.end()) {
             m_hashmap.erase(it);

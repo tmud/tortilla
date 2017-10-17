@@ -316,33 +316,30 @@ void MapperRender::updateScrollbars(bool center)
 void MapperRender::mouseLeftButtonDown()
 {
     if (m_drag_mode == DRAG_NONE) 
-    {     
+    {    
+        if (!m_roomMoveTool)
+                return;
+        POINT pt; GetCursorPos(&pt);
+        int cursor_x = pt.x; 
+        int cursor_y = pt.y;
+        ScreenToClient(&pt);
+        const Room *room = findRoomOnScreen(pt.x, pt.y);        
         bool shift = (::GetKeyState(VK_SHIFT) < 0 );
         if(shift)
         {
-            if (!m_roomMoveTool)
-                return;
-            POINT pt; GetCursorPos(&pt);
-            int cursor_x = pt.x; 
-            int cursor_y = pt.y;
-            ScreenToClient(&pt);
-            const Room *room = findRoomOnScreen(pt.x, pt.y);
             if (!room)
-            {
-                //unselectAllRooms();
-                //Invalidate();
                 return;
-            }
-
-
-            ///if (!unselectRoom(room)) { selectRoom(room); }
-            selectRoom(room);
+            if (!unselectRoom(room)) { selectRoom(room); }
             Invalidate();
-            m_drag_mode = DRAG_ROOM;
-        } else {           
-            unselectAllRooms();
-            Invalidate();
-            m_drag_mode = DRAG_MAP;
+            return;
+        } 
+        if (room && room->selected) {
+             m_drag_mode = DRAG_ROOM;
+             selectRoom(room); //move room to last position in vector
+        } else {
+             unselectAllRooms();
+             Invalidate();
+             m_drag_mode = DRAG_MAP;
         }
         GetCursorPos(&m_drag_point);
         SetCapture();
@@ -351,23 +348,10 @@ void MapperRender::mouseLeftButtonDown()
 
 void MapperRender::mouseLeftButtonUp()
 {
-    if (m_drag_mode != DRAG_NONE) 
-    {
-       /* bool shift = (::GetKeyState(VK_SHIFT) < 0 );
-        if (shift) {
-           POINT pt; GetCursorPos(&pt);
-           int cursor_x = pt.x; 
-           int cursor_y = pt.y;
-           ScreenToClient(&pt);
-           const Room *room = findRoomOnScreen(pt.x, pt.y);
-           if (room->selected) {
-                unselectRoom(room);
-                Invalidate();
-           }
-        }*/
-        ReleaseCapture();
-        m_drag_mode = DRAG_NONE;
-    }
+    if (m_drag_mode == DRAG_NONE)
+        return;
+    ReleaseCapture();
+    m_drag_mode = DRAG_NONE;
 }
 
 void MapperRender::mouseMove()
@@ -382,13 +366,13 @@ void MapperRender::mouseMove()
 
     if (m_drag_mode == DRAG_ROOM)
     {
-        ScreenToClient(&pos);       
+        ScreenToClient(&pos);
         int x = pos.x - getRenderX();
-        if (x < 0)  x = x / ROOM_SIZE - 1;        
+        if (x < 0)  x = x / ROOM_SIZE - 1;
         else x = x / ROOM_SIZE;
         int y = pos.y - getRenderY();
         if (y < 0) y = y / ROOM_SIZE - 1;
-        else y = y / ROOM_SIZE;     
+        else y = y / ROOM_SIZE;
         
         /*char b[64];
         sprintf(b, "x=%d,y=%d\r\n", x, y);
@@ -396,7 +380,7 @@ void MapperRender::mouseMove()
 
         assert (m_roomMoveTool);
         if (!m_selected_rooms.empty())
-            m_roomMoveTool->roomMoveTool(m_selected_rooms, x, y);        
+            m_roomMoveTool->roomMoveTool(m_selected_rooms, x, y);
         return;
     }
 
@@ -538,6 +522,8 @@ void MapperRender::createMenu()
     m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"÷вет..."));
     m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"—бросить цвет"));
     m2.AppendSeparator();
+
+    m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"—оздать новую зону..."));
 }
 
 bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
