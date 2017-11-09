@@ -25,6 +25,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
         if (m_prompt.processNetworkData(text, text_len))
         {
             popDir();
+			DEBUGOUT(L"------");
             if (m_dark.processNetworkData(text, text_len) && m_pCurrentRoom)
             {
                 // move in dark to direction
@@ -36,22 +37,33 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                     MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_LOST);
                     redrawPosition(cursor, false);
                 }
-            }            
+            }
         }
+		else
+		{
+			int x = 1;
+		}
         return;
     }
     else
     {
+		if (!m_prompt.processNetworkData(text, text_len))
+		{
+			int x = 1;
+
+		}
+
+
         if (m_dark.processNetworkData(text, text_len))
             in_dark = true;
     }
-    popDir();
-
-    DEBUGOUT(L"------");
+	DEBUGOUT(L"------");
+	popDir();
     DEBUGOUT(room.name);
     DEBUGOUT(room.vnum);
     DEBUGOUT(room.exits);
-    DEBUGOUT2(L"lastdir: ", RoomDirHelper().getDirName(m_lastDir));
+	DEBUGOUT2(L"move: ", RoomDirHelper().getDirName(m_lastDir));
+    
 
     MapTools t(&m_map);
     Room *new_room = t.findRoom(room.vnum);
@@ -67,6 +79,9 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
                 delete new_room;
                 new_room = NULL;
             }
+			else {
+				updateZonesList();
+			}
         }
         else
         {
@@ -100,32 +115,36 @@ void Mapper::processCmd(const tstring& cmd)
     }
 
 #ifdef _DEBUG
-    tstring d;
-    switch(dir) {
-    case RD_NORTH: d.append(L"ё"); break;
-    case RD_SOUTH: d.append(L"ў"); break;
-    case RD_WEST:  d.append(L"ч"); break;
-    case RD_EAST:  d.append(L"т"); break;
-    case RD_UP:    d.append(L"тт"); break;
-    case RD_DOWN:  d.append(L"тэ"); break;
-    }
-    if (!d.empty())
-    {
-        tstring t(L"dir:");
-        t.append(d);
-        DEBUGOUT(t);
-    }
+    tstring t(L"push: ");
+	t.append(RoomDirHelper().getDirName(dir));
+    DEBUGOUT(t);
 #endif
 }
 
 void Mapper::popDir()
 {
-    if (m_path.empty())
-        m_lastDir = RD_UNKNOWN;
+	if (m_path.empty())
+	{
+		m_lastDir = RD_UNKNOWN;
+		DEBUGOUT(L"pop empty");
+	}
     else {
         m_lastDir = *m_path.begin();
-        m_path.pop_front();
+		m_path.pop_front();
+#ifdef _DEBUG
+		DEBUGOUT(L"pop");
+		for (RoomDir d : m_path) {
+			//DEBUGOUT(L"pop");
+		}
+#endif
     }
+}
+
+void Mapper::updateZonesList()
+{
+	Rooms3dCubeList zones;
+	m_map.getZones(&zones);
+	m_zones_control.updateList(zones);
 }
 
 void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
@@ -191,16 +210,19 @@ void Mapper::loadMaps()
     m_view.clear();
     m_zones_control.deleteAllZones();
 
+	m_path.clear();
+	m_lastDir = RD_UNKNOWN;
+	m_pCurrentRoom = nullptr;
+
     const tstring&dir = m_mapsFolder;
     bool last_found = false;
     tstring &last = m_propsData->current_zone;
 
     m_map.loadMaps(dir);
+	updateZonesList();
 
     Rooms3dCubeList zones;
 	m_map.getZones(&zones);
-    m_zones_control.updateList(zones);
-
 	for (Rooms3dCube* zone : zones)
 	{
         if (!last.empty() && last == zone->name()) {
@@ -227,9 +249,7 @@ void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
 
 void Mapper::redrawPositionByRoom(const Room *room)
 {
-    Rooms3dCubeList zones;
-    m_map.getZones(&zones);
-    m_zones_control.updateList(zones);
+    updateZonesList();
     MapCursorColor color = RCC_NONE;
     MapCursor current = m_view.getCurrentPosition();
     m_view.clearSelection();
@@ -318,11 +338,11 @@ void Mapper::onRenderContextMenu(int id)
         tstring newZoneName(dlg.getName());
         if (newZoneName.empty()) {
            newZoneName = m_map.getNewZoneName(L"");
-        }    
+        }
         MapMoveRoomsToNewZoneTool t(&m_map);
         bool result = t.makeNewZone(rooms, newZoneName);
         if (!result)
-        {            
+        {
             return;
         }
         redrawPositionByRoom(rooms[0]);
@@ -430,7 +450,6 @@ void Mapper::onToolbar(int id)
            Rooms3dCube *ptr = m_map.findZone(pos.zid);
            MapCursor cursor = t.createZoneCursor(ptr);
            redrawPosition(cursor, true);
-                
         }
     }
 }

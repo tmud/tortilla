@@ -137,10 +137,10 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
             if (!r)
             {
 #ifdef _DEBUG
-                if (type == 0) rr.renderDummy(px, py);
-#endif          
+                //if (type == 0) rr.renderDummy(px, py);
+#endif
                 continue;
-            }            
+            }
             rr.render(px, py, r, type);
         }
     }

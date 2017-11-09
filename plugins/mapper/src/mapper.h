@@ -42,8 +42,9 @@ private:
     void onToolbar(int id);
 private:
     void popDir();
+	void updateZonesList();
     void setExits(Room *room);
-    void checkExit(Room *room, RoomDir dir, const tstring& exit);    
+    void checkExit(Room *room, RoomDir dir, const tstring& exit);
     void redrawPosition(MapCursor cursor, bool resetScrolls);
     void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
@@ -54,15 +55,15 @@ private:
     // properties
     PropertiesMapper *m_propsData;
 
-    // ui, windows and toolbars    
+    // ui, windows and toolbars
     MapperToolbar m_toolbar;
     MapperRender m_view;
     ToolbarViewContainer m_container;
     CSplitterWindowExT<true, 1, 4> m_vSplitter;
-    MappeZoneControl m_zones_control;    
+    MappeZoneControl m_zones_control;
     int m_toolbar_height;
 
-    // logic    
+    // logic
     MapperDirsVector m_dirs;
     MapperProcessor m_processor;
     MapperPrompt m_prompt;
