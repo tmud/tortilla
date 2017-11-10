@@ -199,6 +199,8 @@ BEGIN
     CONTROL         "Не переходить в меню по клавише Alt",IDC_CHECK_DISABLEALT,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,154,143,9
     CONTROL         "Сворачивать клиент в трей",IDC_CHECK_MOVETOTRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,165,143,9
+    CONTROL         "Не показывать триггеры неактивных групп",IDC_CHECK_HIDE_OFFGROUPS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,166,166,165,10
     CONTROL         "Использовать IAC GA (нужна поддержка сервера)",IDC_RADIO_PROMT_GA,
                     "Button",BS_AUTORADIOBUTTON,8,189,184,8
     CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,8,199,90,10
