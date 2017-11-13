@@ -2,6 +2,7 @@
 
 #include "propertiesSaveHelper.h"
 #include "propertiesUpDown.h"
+#include "propertiesGroupFilter.h"
 
 struct PropertyTwoConfig
 {
@@ -32,10 +33,10 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     CButton m_reset;
     CButton m_up;
     CButton m_down;
-    CButton m_filter;
+    CComboBox m_filter;
     CComboBox m_cbox;
     PropertyTwoConfig m_config;
-    bool m_filterMode;
+    int m_filterMode;
     tstring m_currentGroup;
     bool m_deleted;
     bool m_update_mode;
@@ -44,7 +45,7 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
 
 public:
      enum { IDD = IDD_PROPERTY_TWOPARAMS };
-     PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
+     PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(0), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
      void setParams(PropertiesValues *values, PropertiesValues *groups, PropertiesDlgPageState *state, const PropertyTwoConfig& cfg)
      {
          propValues = values;
@@ -200,7 +201,7 @@ private:
     LRESULT OnFilter(WORD, WORD, HWND, BOOL&)
     {
         saveValues();
-        m_filterMode = m_filter.GetCheck() ? true : false;
+        m_filterMode = m_filter.GetCurSel();
         loadValues();
         update();
         updateButtons();
@@ -380,7 +381,7 @@ private:
         m_reset.SetWindowText(m_config.newbutton.c_str());
         m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
         m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
-        m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
+        m_filter.Attach(GetDlgItem(IDC_COMBO_FILTER));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(m_config.list1, 40);
@@ -397,8 +398,12 @@ private:
         }
         m_state_helper.init(dlg_state, &m_list);
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
-        if (m_filterMode)
-            m_filter.SetCheck(BST_CHECKED);
+
+        m_filter.AddString(L"Все группы");
+        m_filter.AddString(L"Текущая группа");
+        m_filter.AddString(L"Активные группы");
+        m_filter.SetCurSel(m_filterMode);
+
         loadValues();
         updateButtons();
         m_reset.EnableWindow(TRUE);
@@ -489,13 +494,23 @@ private:
             return;
         }
 
+        PropertiesGroupFilter gf(propGroups);
         m_list_values.clear();
         m_list_positions.clear();
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
-            if (v.group != m_currentGroup)
+            if (m_filterMode == 1) {
+                if (v.group != m_currentGroup)
                 continue;
+            }
+            else if (m_filterMode == 2) {
+                if (!gf.isGroupActive(v.group))
+                    continue;
+            }
+            else {
+                assert(false);
+            }
             m_list_values.add(-1, v.key, v.value, v.group);
             m_list_positions.push_back(i);
         }
@@ -505,18 +520,26 @@ private:
     {
         if (!m_state_helper.save(m_currentGroup, m_filterMode))
             return;
-
         if (!m_filterMode)
         {
             *propValues = m_list_values;
             return;
         }
 
+        PropertiesGroupFilter gf(propGroups);
         std::vector<int> todelete;
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
-            if (v.group == m_currentGroup)
+            bool filter = false;
+            if (m_filterMode == 1) {
+                filter = (v.group == m_currentGroup);
+            } else if (m_filterMode == 2) {
+                filter = gf.isGroupActive(v.group);
+            } else {
+                assert(false);
+            }
+            if (filter)
             {
                 bool exist = std::find(m_list_positions.begin(), m_list_positions.end(), i) != m_list_positions.end();
                 if (!exist)

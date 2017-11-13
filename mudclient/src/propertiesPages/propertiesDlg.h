@@ -135,7 +135,7 @@ private:
 	{
         PropertiesDlgData& d = propData->dlg;
         d.pages.resize(11);
-
+        
         // add pages
         PropertyTwoConfig c;
         c.use_priority = true;

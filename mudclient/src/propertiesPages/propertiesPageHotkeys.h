@@ -409,7 +409,11 @@ private:
         m_bl2.SubclassWindow(GetDlgItem(IDC_STATIC_BL2));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_state_helper.init(dlg_state, &m_list);
-        m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
+
+        m_filterMode = false;
+        int dummy = 0;
+
+        m_state_helper.loadGroupAndFilter(m_currentGroup, dummy);
         if (m_filterMode)
             m_filter.SetCheck(BST_CHECKED);
         loadValues();

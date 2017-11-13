@@ -46,7 +46,7 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_UNKNOWNCMD, OnUnknownCmd)
         COMMAND_ID_HANDLER(IDC_CHECK_DISABLEALT, OnDisableAlt)
         COMMAND_ID_HANDLER(IDC_CHECK_MOVETOTRAY, OnMoveToTray)
-        COMMAND_ID_HANDLER(IDC_CHECK_HIDE_OFFGROUPS, OnMoveHideOffGroups)
+        COMMAND_ID_HANDLER(IDC_CHECK_HIDE_OFFGROUPS, OnHideOffGroups)
         COMMAND_HANDLER(IDC_EDIT_PLUGINSLOGS, EN_KILLFOCUS, OnPluginsWindow)
         COMMAND_HANDLER(IDC_COMBO_CODEPAGE, CBN_SELCHANGE, OnCodePage)
         COMMAND_HANDLER(IDC_COMBO_LOGFORMAT, CBN_SELCHANGE, OnLogFormat)
@@ -240,7 +240,7 @@ private:
         return 0;
     }
 
-    LRESULT OnMoveHideOffGroups(WORD, WORD, HWND, BOOL&)
+    LRESULT OnHideOffGroups(WORD, WORD, HWND, BOOL&)
     {
         int state = (m_offgroups.GetCheck() == BST_CHECKED) ? 1 : 0;
         propData->hide_offgroups = state;

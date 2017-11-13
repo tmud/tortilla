@@ -92,6 +92,8 @@
 #define IDC_CHECK_GROUP_ON              1079
 #define IDC_COMBO_GROUP                 1080
 #define IDC_CHECK_GROUP_FILTER          1081
+#define IDC_COMBO_GROUP2                1081
+#define IDC_COMBO_FILTER                1081
 #define IDC_STATIC_LABEL2               1082
 #define IDC_STATIC_LABEL1               1083
 #define IDC_STATIC_TITLE                1084
