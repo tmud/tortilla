@@ -321,7 +321,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-bool PluginsManager::processTriggers(parseData& parse_data, int string, LogicPipelineElement* pe)
+bool PluginsManager::processTriggers(parseData& parse_data, int string, std::vector<PluginsTrigger*>& triggers)
 {
     int i = string; int last = parse_data.strings.size() - 1;
     MudViewString *s = parse_data.strings[i];
@@ -342,103 +342,13 @@ bool PluginsManager::processTriggers(parseData& parse_data, int string, LogicPip
             PluginsTrigger *t = vt[k];
             if (t->compare(cd, incomplstr))
             {
-                pe->triggers.push_back(t);
+                triggers.push_back(t);
                 // проверка всех триггеров на эту строку
                 processed = true;
             }
         }
     }
-
-    /*if (processed)
-    {
-        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-        parseData &not_processed = pe->data;
-        not_processed.last_finished = parse_data.last_finished;
-        parse_data.last_finished = true;
-        not_processed.update_prev_string = false;
-        int from = string+1;
-        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
-        parse_data.strings.resize(from);
-    }*/
-
     return processed;
-
-    /*int i = start_string; int last = parse_data.strings.size() - 1;
-
-    MudViewString *s = parse_data.strings[i];
-    CompareData cd(s);
-    bool incomplstr = (i==last && !parse_data.last_finished);
-
-    bool processed = false;
-    //bool wait = false;
-    for (int j=0, je=m_plugins.size(); j<je; ++j)
-    {
-        Plugin *p = m_plugins[j];
-        if (!p->state())
-            continue;
-        std::vector<PluginsTrigger*>& vt = p->triggers;
-        if (vt.empty())
-            continue;
-        for (int k=0,ke=vt.size();k<ke;++k)
-        {
-            PluginsTrigger *t = vt[k];
-            if (!t->isEnabled())
-                continue;
-            if (t->compare(0, cd, incomplstr))
-            {
-                processed = true;
-                break;
-            }
-
-            if (t->getLen() == 1)
-            {
-                processed = true;
-                pe->triggers.push_back(t);
-                continue;
-            }
-            int count = last+1;
-            if (t->getLen() > count)
-            {
-                processed = true;
-                wait = true;
-                pe->triggers.clear();
-                break;
-            }
-            // compare next strings
-            bool compared = true;
-            for (int q=1, qe=t->getLen(); q<qe; ++q )
-            {
-                int si = start_string + q;
-                MudViewString *s2 = parse_data.strings[si];
-                CompareData cd2(s);
-                bool incomplstr2 = (si==last && !parse_data.last_finished);
-                if (!t->compare(q, cd2, incomplstr2))
-                  { compared = false;  break; }
-            }
-            if (compared)
-            {
-                processed = true;
-                pe->triggers.push_back(t);
-            }
-        }
-        //if (wait) break;
-        if (processed) break;
-    }
-
-    if (processed)
-    {
-        if (!wait)
-            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-        parseData &not_processed = pe->data;
-        not_processed.last_finished = parse_data.last_finished;
-        parse_data.last_finished = true;
-        not_processed.update_prev_string = false;
-        int from = start_string;
-        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
-        parse_data.strings.resize(from);
-    }
-
-    return processed;*/
 }
 
 void PluginsManager::processBarCmds(InputPlainCommands* cmds)

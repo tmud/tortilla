@@ -146,8 +146,8 @@ private:
     void printIncoming(parseData& parse_data, int flags, int window);
     void pipelineParseData(parseData& parse_data, int flags, int window);
     void printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe);
-    enum TriggersType { PROCESS_LUATRIGGERS = 0, PROCESS_ACTIONS};
-    void processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, TriggersType tt);
+    void processLuaTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe);
+    void processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
 

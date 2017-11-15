@@ -6,7 +6,8 @@
 class PluginsTrigger;
 struct LogicPipelineElement 
 {
-   parseData data;
+   parseData lua_processed;
+   parseData not_processed;
    InputCommands commands;                  // from actions
    std::vector<PluginsTrigger*> triggers;   // from plugin's triggers
 };
@@ -18,7 +19,8 @@ class LogicPipeline
 public:
     LogicPipeline() {}
     ~LogicPipeline() {
-        std::for_each(m_allocated.begin(), m_allocated.end(), [](LogicPipelineElement *e){ delete e; } );
+        std::for_each(m_allocated.begin(), m_allocated.end(), 
+            [](LogicPipelineElement *e){ delete e; } );
     }
 
     LogicPipelineElement* createElement()
@@ -39,9 +41,8 @@ public:
     {
         e->triggers.clear();
         e->commands.clear();
-        e->data.last_finished = true;
-        e->data.update_prev_string = false;
-        e->data.strings.clear();
+        e->not_processed.clear();
+        e->lua_processed.clear();
         m_free.push_back(e);
     }
 };
