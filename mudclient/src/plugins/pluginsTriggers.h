@@ -1,5 +1,12 @@
 #pragma once
 
+class TriggerActionHook {
+public:
+    virtual ~TriggerActionHook() {}
+    virtual void run() = 0;
+};
+typedef std::shared_ptr<TriggerActionHook> TriggerAction;
+
 struct triggerParseDataString
 {
     std::vector<tstring> params;
@@ -10,26 +17,26 @@ struct triggerParseDataString
     }
 };
 
+class triggerKeyData {
+public:
+    virtual bool getKey(int index, tstring* key) = 0;
+    virtual int getLen() const = 0;
+};
+
 class triggerParseData
 {
+    triggerKeyData *tr;
+    parseData m_parseData;
+    int m_current_compare_pos;        
+    std::vector<triggerParseDataString*> m_strings;
+    std::vector<int> m_indexes;
 public:
-    triggerParseData() {}
-    ~triggerParseData() { destroy(); }
-    void init(const std::vector<CompareObject>& cobjs)
-    {
-        destroy();
-        int count = cobjs.size();
-        m_strings.resize(count, NULL);
-        for (int i=0;i<count;++i) { m_strings[i] = new triggerParseDataString;  }
-        m_keys.resize(count);
-        for (int i=0;i<count;++i) { m_keys[i].assign(cobjs[i].getKey()); }
-        resetindex();
-    }
-    void reset()
-    {
-        std::for_each(m_strings.begin(), m_strings.end(), [](triggerParseDataString* tpd) { tpd->clear(); });
-        resetindex();
-    }
+    triggerParseData(triggerKeyData *t);
+    ~triggerParseData();    
+    int  getComparePos() const { return m_current_compare_pos; }
+    void incComparePos() { m_current_compare_pos++; }
+    void pushString(const CompareData& cd, const CompareObject &co, bool incompl_flag);
+    void reset();
     void markDeleted(int string_index) 
     {
         if (!correctindex(string_index))
@@ -75,52 +82,65 @@ public:
     bool getKey(int string_index, tstring* key) const
     {
         if (correctindex(string_index)) {
-            key->assign(m_keys[string_index]);
-            return true;
+
+            int s = m_indexes[string_index];
+            return tr->getKey(s, key);
         }
         return false;
     }
-private:
-    void destroy() {
-        std::for_each(m_strings.begin(), m_strings.end(), [](triggerParseDataString* tpd) { delete tpd;} );
-        m_strings.clear();
-    }
-    void resetindex() {
-        int count = m_strings.size();
-        m_indexes.resize(count);
-        for (int i=0;i<count;++i) m_indexes[i] = i;
-    }
-    bool correctindex(int string_index) const {
-        int count = m_indexes.size();
-        return (string_index >= 0 && string_index < count) ? true : false;
-    }
-    std::vector<triggerParseDataString*> m_strings;
-    std::vector<int> m_indexes;
-    std::vector<tstring> m_keys;
+private:    
+    void resetindex();
+    bool correctindex(int string_index) const;
 };
 
+class triggerParseVector {
+public:
+    ~triggerParseVector() { std::for_each(tpd.begin(), tpd.end(), [](triggerParseData* t) { delete t; }); }
+    void push_back(triggerParseData* t) { tpd.push_back(t); }
+    triggerParseData* pop_back() { 
+        if (tpd.empty()) return NULL;
+        int last = tpd.size() - 1;
+        triggerParseData* t = tpd[last];
+        tpd.pop_back();
+        return t;
+    }
+    bool empty() const { return tpd.empty(); }
+    int size() const { return tpd.size(); }
+    triggerParseData* operator[](int index) {
+        int count = tpd.size();
+        return (index >=0 && index < count) ? tpd[index] : NULL;
+    }
+    void clear() { tpd.clear(); }
+    void moveFrom(triggerParseVector &v) {
+        tpd.clear();
+        tpd.swap(v.tpd);
+    }
+private:
+    std::vector<triggerParseData*> tpd;
+};
 
-class PluginsTrigger
+class PluginsTrigger : public triggerKeyData
 {
 public:
     PluginsTrigger();
     ~PluginsTrigger();
     bool init(lua_State *pl, Plugin *pp);
-    void reset();
     void enable(bool enable);
     bool isEnabled() const;
     int  getLen() const;
-    bool getKey(int index, tstring* key);
-    bool compare(const CompareData& cd, bool incompl_flag);
-    void run();
+    bool getKey(int index, tstring* key);  
+    TriggerAction compare(const CompareData& cd, bool incompl_flag);
+    void run(triggerParseVector* action);
 private:
+    enum CompareResult { CR_FAIL = 0, CR_NEXT, CR_OK };
+    CompareResult compareParseData(triggerParseData* tpd, const CompareData& cd, bool incompl_flag);
+    void freeTriggerData(triggerParseData* tpd);
+    triggerParseData* getFreeTriggerData();
     lua_State *L;
     Plugin* p;
-    std::vector<CompareObject> m_compare_objects;
-    parseData m_parseData;
-    triggerParseData m_triggerParseData;
-    lua_ref m_trigger_func_ref;
-    int m_current_compare_pos;
     bool m_enabled;
-    bool m_triggered;
+    lua_ref m_trigger_func_ref;
+    std::vector<CompareObject> m_compare_objects;
+    triggerParseVector m_triggers_in_comparing;
+    triggerParseVector m_empty_data;
 };
