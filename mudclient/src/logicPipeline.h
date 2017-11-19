@@ -9,7 +9,7 @@ struct LogicPipelineElement
    parseData lua_processed;
    parseData not_processed;
    InputCommands commands;                  // from actions
-   std::vector<PluginsTrigger*> triggers;   // from plugin's triggers
+   std::vector<TriggerAction> triggers;     // from plugin's triggers
 };
 
 class LogicPipeline

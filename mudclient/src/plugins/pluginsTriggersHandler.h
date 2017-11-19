@@ -1,8 +1,14 @@
 #pragma once
 
-class PluginsTrigger;
+class TriggerActionHook {
+public:
+    virtual ~TriggerActionHook() {}
+    virtual void run() = 0;
+};
+typedef std::shared_ptr<TriggerActionHook> TriggerAction;
+
 class PluginsTriggersHandler
 {
 public:
-    virtual bool processTriggers(parseData& parse_data, int start_string, std::vector<PluginsTrigger*>& triggers) = 0;
+    virtual bool processTriggers(parseData& parse_data, int start_string, std::vector<TriggerAction>& triggers) = 0;
 };

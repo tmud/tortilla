@@ -37,7 +37,7 @@ public:
     bool processMouseWheel(const POINT& pt, DWORD param);
 
 private:
-    bool processTriggers(parseData& parse_data, int string, std::vector<PluginsTrigger*>& triggers );
+    bool processTriggers(parseData& parse_data, int string, std::vector<TriggerAction>& triggers );
     void concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd);
     void initPlugins();
     bool doPluginsStringMethod(const char* method, tstring *str);

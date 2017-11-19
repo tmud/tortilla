@@ -321,7 +321,7 @@ void PluginsManager::processViewData(const char* method, int view, parseData* da
     }
 }
 
-bool PluginsManager::processTriggers(parseData& parse_data, int string, std::vector<PluginsTrigger*>& triggers)
+bool PluginsManager::processTriggers(parseData& parse_data, int string, std::vector<TriggerAction>& triggers)
 {
     int i = string; int last = parse_data.strings.size() - 1;
     MudViewString *s = parse_data.strings[i];
@@ -340,9 +340,12 @@ bool PluginsManager::processTriggers(parseData& parse_data, int string, std::vec
         for (int k = 0, ke = vt.size(); k < ke; ++k)
         {
             PluginsTrigger *t = vt[k];
-            if (t->compare(cd, incomplstr))
+            if (!t->isEnabled())
+                continue;
+            TriggerAction action = t->compare(cd, incomplstr);
+            if (action)
             {
-                triggers.push_back(t);
+                triggers.push_back(action);
                 // проверка всех триггеров на эту строку
                 processed = true;
             }
@@ -654,7 +657,7 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;
-    PluginsDataValues* modules = tortilla::pluginsData();    
+    PluginsDataValues* modules = tortilla::pluginsData();
     modules->at(plugin_index).state = 0;
 }
 
