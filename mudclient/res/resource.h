@@ -88,11 +88,10 @@
 #define IDC_EDIT_CMD_HISTORY            1070
 #define IDC_BUTTON_UP                   1074
 #define IDC_BUTTON_DOWN                 1075
-#define IDC_EDIT_GROUP                  1078
-#define IDC_CHECK_GROUP_ON              1079
-#define IDC_COMBO_GROUP                 1080
-#define IDC_CHECK_GROUP_FILTER          1081
-#define IDC_COMBO_GROUP2                1081
+#define IDC_EDIT_GROUP                  1076
+#define IDC_CHECK_GROUP_ON              1077
+#define IDC_COMBO_GROUP                 1078
+#define IDC_CHECK_GROUP_FILTER          1079
 #define IDC_COMBO_FILTER                1081
 #define IDC_STATIC_LABEL2               1082
 #define IDC_STATIC_LABEL1               1083
@@ -137,7 +136,6 @@
 #define IDC_CHECK_MOVETOTRAY            1145
 #define IDC_LIST_COMPONENTS             1146
 #define IDC_CHECK_CREATELINK            1147
-#define IDC_CHECK_HIDE_OFFGROUPS        1148
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778

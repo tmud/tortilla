@@ -84,8 +84,8 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
-       COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
-       COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged);
+       COMMAND_HANDLER(IDC_COMBO_FILTER, CBN_SELCHANGE, OnFilter)
+       COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
        COMMAND_HANDLER(IDC_EDIT_PATTERN, EN_CHANGE, OnPatternEditChanged)
        COMMAND_HANDLER(IDC_EDIT_PATTERN_TEXT, EN_CHANGE, OnPatternTextChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
@@ -406,7 +406,6 @@ private:
 
         loadValues();
         updateButtons();
-        m_reset.EnableWindow(TRUE);
         return 0;
     }
 
@@ -418,18 +417,22 @@ private:
 
     void update()
     {
+        PropertiesGroupFilter gf(propGroups);
         int current_index = 0;
         m_cbox.ResetContent();
         for (int i=0,e=propGroups->size(); i<e; ++i)
         {
             const property_value& g = propGroups->get(i);
-            m_cbox.AddString(g.key.c_str());
+            if (m_filterMode == 2) {
+                if (!gf.isGroupActive(g.key))
+                    continue;
+            }
+            int pos = m_cbox.AddString(g.key.c_str());
             if (g.key == m_currentGroup)
-                { current_index = i; }
+                { current_index = pos; }
         }
         m_cbox.SetCurSel(current_index);
-        const property_value& g = propGroups->get(current_index);
-        m_currentGroup = g.key;
+        getCurrentGroup(&m_currentGroup);
 
         m_list.DeleteAllItems();
         for (int i=0,e=m_list_values.size(); i<e; ++i)
@@ -444,6 +447,16 @@ private:
 
     void updateButtons()
     {
+        if (m_filterMode == 2 && m_cbox.GetCount() == 0) {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
+            return;
+        }
+        m_reset.EnableWindow(TRUE);
         bool pattern_empty = m_pattern.GetWindowTextLength() == 0;
         bool text_empty = m_text.GetWindowTextLength() == 0;
         int items_selected = m_list.GetSelectedCount();
@@ -568,19 +581,25 @@ private:
 
     int getGroupIndex(const tstring& group)
     {
-        int index = -1;
-        for (int i=0,e=propGroups->size(); i<e; ++i)
+        int count = m_cbox.GetCount();
+        MemoryBuffer mb;
+        for (int i=0; i<count; ++i)
         {
-            const property_value& g = propGroups->get(i);
-            if (g.key == group)
-                { index = i; break; }
+            int len = m_cbox.GetLBTextLen(i) + 1;
+            mb.alloc(len * sizeof(tchar));
+            tchar* buffer = reinterpret_cast<tchar*>(mb.getData());
+            m_cbox.GetLBText(i, buffer);
+            tstring name(buffer);
+            if (group == name)
+                return i;
         }
-        return index;
+        return -1;
     }
 
     void getCurrentGroup(tstring *group)
     {
         int index = m_cbox.GetCurSel();
+        if (index == -1) return;
         int len = m_cbox.GetLBTextLen(index) + 1;
         WCHAR *buffer = new WCHAR[len];
         m_cbox.GetLBText(index, buffer);

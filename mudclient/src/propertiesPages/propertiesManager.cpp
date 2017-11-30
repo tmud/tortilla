@@ -129,7 +129,6 @@ bool PropertiesManager::loadProfileData(tstring *error)
     loadValue(sd, L"anyfont", 0, 1, &m_propData.any_font);
     loadValue(sd, L"disablealt", 0, 1, &m_propData.disable_alt);
     loadValue(sd, L"tray", 0, 1, &m_propData.move_totray);
-    loadValue(sd, L"offgroups", 0, 1, &m_propData.hide_offgroups);
     tstring cp;
     loadString(sd, L"codepage", &cp);
     if (cp != L"win" && cp != L"utf8")
@@ -256,7 +255,6 @@ bool PropertiesManager::saveProfileData()
     saveValue(sd, L"anyfont", m_propData.any_font);
     saveValue(sd, L"disablealt", m_propData.disable_alt);
     saveValue(sd, L"tray", m_propData.move_totray);
-    saveValue(sd, L"offgroups", m_propData.hide_offgroups);
     saveString(sd, L"codepage", m_propData.codepage);
     saveString(sd, L"logformat", m_propData.logformat);
     saveValue(sd, L"prompt", m_propData.recognize_prompt);
