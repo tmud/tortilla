@@ -180,6 +180,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\plugins\pluginsManager.h" />
     <ClInclude Include="src\plugins\pluginsMouseHandler.h" />
     <ClInclude Include="src\plugins\pluginsRenderObjects.h" />
+    <ClInclude Include="src\plugins\pluginsTriggerData.h" />
     <ClInclude Include="src\plugins\pluginsTriggers.h" />
     <ClInclude Include="src\plugins\pluginsTriggersHandler.h" />
     <ClInclude Include="src\plugins\pluginSupport.h" />
@@ -260,6 +261,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\pluginsMouseHandler.cpp" />
     <ClCompile Include="src\plugins\pluginsPanels.cpp" />
     <ClCompile Include="src\plugins\pluginsPcre.cpp" />
+    <ClCompile Include="src\plugins\pluginsTriggerData.cpp" />
     <ClCompile Include="src\plugins\pluginsTriggers.cpp" />
     <ClCompile Include="src\plugins\pluginSupport.cpp" />
     <ClCompile Include="src\plugins\pluginsView.cpp" />

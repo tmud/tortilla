@@ -286,6 +286,13 @@ void MudView::removeDropped(parseData* parse_data)
         MudViewString *string = pds[i];
         if (string->dropped && !string->show_dropped)
         {
+/*
+			MudViewStringBlock mb;
+			mb.params.bkg_color=1;
+			mb.params.text_color=7;
+			mb.string=L"-";
+			string->blocks.insert(string->blocks.begin(), mb);
+*/
             pds.erase(pds.begin() + i);
             m_dropped_strings.push_back(string);
         }
