@@ -55,7 +55,7 @@ private:
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnMinMaxInfo)
         COMMAND_ID_HANDLER(ID_VIEW_TOOLBAR, OnViewToolBar)
-        COMMAND_ID_HANDLER(ID_MUDCLIENT_ABOUT, OnAppAbout)
+        //COMMAND_ID_HANDLER(ID_MUDCLIENT_ABOUT, OnAppAbout)
         COMMAND_ID_HANDLER(ID_MUDCLIENT_EXIT, OnAppExit)
         MESSAGE_HANDLER(WM_USER, OnSetMenuCheck);
         MESSAGE_HANDLER(WM_USER+1, OnSetMenuText);
@@ -299,8 +299,8 @@ private:
 
     LRESULT OnAppAbout(WORD, WORD, HWND, BOOL&)
     {
-        CWelcomeDlg dlg;
-        dlg.DoModal();
+        //CWelcomeDlg dlg;
+        //dlg.DoModal();
         return 0;
     }
 

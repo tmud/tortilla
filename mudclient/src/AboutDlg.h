@@ -94,7 +94,7 @@ private:
     END_MSG_MAP()
 };
 
-class CWelcomeDlg : public CDialogImpl<CWelcomeDlg>
+/*class CWelcomeDlg : public CDialogImpl<CWelcomeDlg>
 {
     RichEdit m_rich;
 public:
@@ -140,3 +140,4 @@ private:
         return 0;
     }
 };
+*/

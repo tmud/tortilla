@@ -34,7 +34,6 @@
 #define IDD_PLUGINS                     215
 #define IDD_NEW_WORLD                   218
 #define IDD_WELCOME                     219
-#define IDR_BINARY_WELCOME              220
 #define IDD_PASSWORD                    221
 #define IDD_STARTUP_WORLD               222
 #define IDD_FIND                        223
