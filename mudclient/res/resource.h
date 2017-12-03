@@ -88,10 +88,11 @@
 #define IDC_EDIT_CMD_HISTORY            1070
 #define IDC_BUTTON_UP                   1074
 #define IDC_BUTTON_DOWN                 1075
-#define IDC_EDIT_GROUP                  1078
-#define IDC_CHECK_GROUP_ON              1079
-#define IDC_COMBO_GROUP                 1080
-#define IDC_CHECK_GROUP_FILTER          1081
+#define IDC_EDIT_GROUP                  1076
+#define IDC_CHECK_GROUP_ON              1077
+#define IDC_COMBO_GROUP                 1078
+#define IDC_CHECK_GROUP_FILTER          1079
+#define IDC_COMBO_FILTER                1081
 #define IDC_STATIC_LABEL2               1082
 #define IDC_STATIC_LABEL1               1083
 #define IDC_STATIC_TITLE                1084
@@ -159,7 +160,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1148
+#define _APS_NEXT_CONTROL_VALUE         1149
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -2,6 +2,7 @@
 
 #include "propertiesSaveHelper.h"
 #include "propertiesUpDown.h"
+#include "propertiesGroupFilter.h"
 
 struct PropertyTwoConfig
 {
@@ -32,10 +33,10 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
     CButton m_reset;
     CButton m_up;
     CButton m_down;
-    CButton m_filter;
+    CComboBox m_filter;
     CComboBox m_cbox;
     PropertyTwoConfig m_config;
-    bool m_filterMode;
+    int m_filterMode;
     tstring m_currentGroup;
     bool m_deleted;
     bool m_update_mode;
@@ -44,7 +45,7 @@ class PropertyTwoParams :  public CDialogImpl<PropertyTwoParams>
 
 public:
      enum { IDD = IDD_PROPERTY_TWOPARAMS };
-     PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(false), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
+     PropertyTwoParams() : propValues(NULL), propGroups(NULL), m_filterMode(0), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
      void setParams(PropertiesValues *values, PropertiesValues *groups, PropertiesDlgPageState *state, const PropertyTwoConfig& cfg)
      {
          propValues = values;
@@ -83,8 +84,8 @@ private:
        COMMAND_ID_HANDLER(IDC_BUTTON_RESET, OnResetData)
        COMMAND_ID_HANDLER(IDC_BUTTON_UP, OnUpElement)
        COMMAND_ID_HANDLER(IDC_BUTTON_DOWN, OnDownElement)
-       COMMAND_ID_HANDLER(IDC_CHECK_GROUP_FILTER, OnFilter)
-       COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged);
+       COMMAND_HANDLER(IDC_COMBO_FILTER, CBN_SELCHANGE, OnFilter)
+       COMMAND_HANDLER(IDC_COMBO_GROUP, CBN_SELCHANGE, OnGroupChanged)
        COMMAND_HANDLER(IDC_EDIT_PATTERN, EN_CHANGE, OnPatternEditChanged)
        COMMAND_HANDLER(IDC_EDIT_PATTERN_TEXT, EN_CHANGE, OnPatternTextChanged)
        NOTIFY_HANDLER(IDC_LIST, LVN_ITEMCHANGED, OnListItemChanged)
@@ -200,7 +201,7 @@ private:
     LRESULT OnFilter(WORD, WORD, HWND, BOOL&)
     {
         saveValues();
-        m_filterMode = m_filter.GetCheck() ? true : false;
+        m_filterMode = m_filter.GetCurSel();
         loadValues();
         update();
         updateButtons();
@@ -380,7 +381,7 @@ private:
         m_reset.SetWindowText(m_config.newbutton.c_str());
         m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
         m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
-        m_filter.Attach(GetDlgItem(IDC_CHECK_GROUP_FILTER));
+        m_filter.Attach(GetDlgItem(IDC_COMBO_FILTER));
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(m_config.list1, 40);
@@ -397,11 +398,14 @@ private:
         }
         m_state_helper.init(dlg_state, &m_list);
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
-        if (m_filterMode)
-            m_filter.SetCheck(BST_CHECKED);
+
+        m_filter.AddString(L"Все группы");
+        m_filter.AddString(L"Текущая группа");
+        m_filter.AddString(L"Активные группы");
+        m_filter.SetCurSel(m_filterMode);
+
         loadValues();
         updateButtons();
-        m_reset.EnableWindow(TRUE);
         return 0;
     }
 
@@ -413,18 +417,22 @@ private:
 
     void update()
     {
+        PropertiesGroupFilter gf(propGroups);
         int current_index = 0;
         m_cbox.ResetContent();
         for (int i=0,e=propGroups->size(); i<e; ++i)
         {
             const property_value& g = propGroups->get(i);
-            m_cbox.AddString(g.key.c_str());
+            if (m_filterMode == 2) {
+                if (!gf.isGroupActive(g.key))
+                    continue;
+            }
+            int pos = m_cbox.AddString(g.key.c_str());
             if (g.key == m_currentGroup)
-                { current_index = i; }
+                { current_index = pos; }
         }
         m_cbox.SetCurSel(current_index);
-        const property_value& g = propGroups->get(current_index);
-        m_currentGroup = g.key;
+        getCurrentGroup(&m_currentGroup);
 
         m_list.DeleteAllItems();
         for (int i=0,e=m_list_values.size(); i<e; ++i)
@@ -439,6 +447,16 @@ private:
 
     void updateButtons()
     {
+        if (m_filterMode == 2 && m_cbox.GetCount() == 0) {
+            m_add.EnableWindow(FALSE);
+            m_del.EnableWindow(FALSE);
+            m_up.EnableWindow(FALSE);
+            m_down.EnableWindow(FALSE);
+            m_replace.EnableWindow(FALSE);
+            m_reset.EnableWindow(FALSE);
+            return;
+        }
+        m_reset.EnableWindow(TRUE);
         bool pattern_empty = m_pattern.GetWindowTextLength() == 0;
         bool text_empty = m_text.GetWindowTextLength() == 0;
         int items_selected = m_list.GetSelectedCount();
@@ -489,13 +507,23 @@ private:
             return;
         }
 
+        PropertiesGroupFilter gf(propGroups);
         m_list_values.clear();
         m_list_positions.clear();
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
-            if (v.group != m_currentGroup)
+            if (m_filterMode == 1) {
+                if (v.group != m_currentGroup)
                 continue;
+            }
+            else if (m_filterMode == 2) {
+                if (!gf.isGroupActive(v.group))
+                    continue;
+            }
+            else {
+                assert(false);
+            }
             m_list_values.add(-1, v.key, v.value, v.group);
             m_list_positions.push_back(i);
         }
@@ -505,18 +533,26 @@ private:
     {
         if (!m_state_helper.save(m_currentGroup, m_filterMode))
             return;
-
         if (!m_filterMode)
         {
             *propValues = m_list_values;
             return;
         }
 
+        PropertiesGroupFilter gf(propGroups);
         std::vector<int> todelete;
         for (int i=0,e=propValues->size(); i<e; ++i)
         {
             const property_value& v = propValues->get(i);
-            if (v.group == m_currentGroup)
+            bool filter = false;
+            if (m_filterMode == 1) {
+                filter = (v.group == m_currentGroup);
+            } else if (m_filterMode == 2) {
+                filter = gf.isGroupActive(v.group);
+            } else {
+                assert(false);
+            }
+            if (filter)
             {
                 bool exist = std::find(m_list_positions.begin(), m_list_positions.end(), i) != m_list_positions.end();
                 if (!exist)
@@ -545,19 +581,25 @@ private:
 
     int getGroupIndex(const tstring& group)
     {
-        int index = -1;
-        for (int i=0,e=propGroups->size(); i<e; ++i)
+        int count = m_cbox.GetCount();
+        MemoryBuffer mb;
+        for (int i=0; i<count; ++i)
         {
-            const property_value& g = propGroups->get(i);
-            if (g.key == group)
-                { index = i; break; }
+            int len = m_cbox.GetLBTextLen(i) + 1;
+            mb.alloc(len * sizeof(tchar));
+            tchar* buffer = reinterpret_cast<tchar*>(mb.getData());
+            m_cbox.GetLBText(i, buffer);
+            tstring name(buffer);
+            if (group == name)
+                return i;
         }
-        return index;
+        return -1;
     }
 
     void getCurrentGroup(tstring *group)
     {
         int index = m_cbox.GetCurSel();
+        if (index == -1) return;
         int len = m_cbox.GetLBTextLen(index) + 1;
         WCHAR *buffer = new WCHAR[len];
         m_cbox.GetLBText(index, buffer);

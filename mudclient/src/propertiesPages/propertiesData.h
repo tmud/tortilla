@@ -430,10 +430,10 @@ struct PluginsDataValues : public std::vector<PluginData>
 
 struct PropertiesDlgPageState
 {
-    PropertiesDlgPageState() : topitem(-1), filtermode(false), cansave(false) {}
+    PropertiesDlgPageState() : topitem(-1), filtermode(0), cansave(false) {}
     tstring item;
     int topitem;
-    bool filtermode;
+    int filtermode;
     bool cansave;
     tstring group;
 };
@@ -545,6 +545,7 @@ public:
         any_font = p.any_font;
         disable_alt = p.disable_alt;
         move_totray = p.move_totray;
+
         //skip title
         rebar = p.rebar;
     }

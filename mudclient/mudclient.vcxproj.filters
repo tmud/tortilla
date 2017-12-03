@@ -298,6 +298,9 @@
     <ClInclude Include="src\plugins\pluginsMouseHandler.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesGroupFilter.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
     <ClInclude Include="src\plugins\pluginsTriggerData.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
