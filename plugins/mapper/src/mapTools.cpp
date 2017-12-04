@@ -144,21 +144,23 @@ bool MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
        rooms.push_back(const_cast<Room*>(r));
     }
 
-    Rooms3dCube* t = nullptr;
+    std::set<Rooms3dCube*> zones;
     Rooms3dCube* new_zone =  map->createNewZone(zoneName);
+    zones.insert(new_zone);
     for (Room *r : rooms) 
     {
         Rooms3dCube *z = map->findZone(r->pos.zid);
+        zones.insert(z);
         Rooms3dCubePos p (r->pos);
         if (z->detachRoom(p))
         {
-            t = z;
-            z->optimizeSize();            
             Rooms3dCube::AR_STATUS status = new_zone->addRoom(p, r);
             assert(status ==Rooms3dCube::AR_OK );
         }
     }
-    new_zone->optimizeSize();
+    for (Rooms3dCube* z: zones) {
+        z->optimizeSize();
+    }
 	return true;
 }
 

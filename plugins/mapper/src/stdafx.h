@@ -7,6 +7,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <vector>
+#include <set>
 
 #include "api/api.h"
 
