@@ -222,6 +222,17 @@ bool Rooms3dCube::emptyLevel(level *l)
     return true;
 }
 
+int Rooms3dCube::countRooms(level *l)
+{
+    int count = 0;
+    for (row *r : l->rooms) {
+        for (Room* room : r->rr ) {
+            if (room) count++;
+        }
+    }
+    return count;
+}
+
 void Rooms3dCube::collapse()
 {
     int levels = zone.size();
@@ -246,7 +257,7 @@ void Rooms3dCube::collapse()
          levels = zone.size();
          cube_size.minlevel += 1;
     }
-    // collapse from left    
+    // collapse from left
     while(true) {
         bool trim_left = true;
         for (level *l : zone) {
@@ -285,7 +296,7 @@ void Rooms3dCube::collapse()
     }
 
     // collapse from top
-    while (true) {        
+    while (true) {
         bool trim_top = true;
         for (level *l : zone) {
             if (l->rooms.size()==1 || !trim_top) { trim_top = false; break; }
@@ -305,7 +316,7 @@ void Rooms3dCube::collapse()
     }
 
     // collapse from bottom
-    while (true) {        
+    while (true) {
         bool trim_bottom = true;
         for (level *l : zone) {
             if (l->rooms.size()==1 || !trim_bottom) { trim_bottom = false; break; }
@@ -329,6 +340,10 @@ void Rooms3dCube::collapse()
 }
 
 void Rooms3dCube::correctPositions() {
+
+    // normalize cube size values (select center 0,0,0 if not exist)
+    normalizePositions();
+
     // correct rooms positions
     Rooms3dCubePos c; c.z = cube_size.minlevel; c.zid = z_id;
     for (level *l : zone) {
@@ -345,6 +360,44 @@ void Rooms3dCube::correctPositions() {
         }
         c.z++;
     }
+}
+
+void Rooms3dCube::normalizePositions()
+{
+     int min = cube_size.minlevel;
+     int max = cube_size.maxlevel;
+
+     if (min > 0 || 0 > max)  {
+         // select base level
+         int index = -1; int rooms = 0;
+         for (int i=0,e=zone.size(); i<e; ++i) {
+            level *l = zone[i];
+            int count = countRooms(l);
+            if (count > rooms) {
+                index = i; rooms = count;
+            }
+            if (index == -1) {
+                assert(false);
+                return;
+            }
+         }
+         cube_size.minlevel = -index;
+         cube_size.maxlevel = cube_size.minlevel + (zone.size()-1);
+     }
+     min = cube_size.left; max = cube_size.right;
+     if (min > 0 || 0 > max)  {
+         int count = (max - min)+1;
+         int center = count / 2;
+         cube_size.left = -center;
+         cube_size.right = cube_size.left + (count - 1);
+     }
+     min = cube_size.top; max = cube_size.bottom;
+     if (min > 0 || 0 > max)  {
+         int count = (max - min)+1;
+         int center = count / 2;
+         cube_size.top = -center;
+         cube_size.bottom = cube_size.top + (count - 1);
+     }
 }
 
 bool Rooms3dCube::checkCoords(const Rooms3dCubePos& p) const

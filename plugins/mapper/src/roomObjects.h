@@ -30,7 +30,7 @@ struct Rooms3dCubeSize
     int left, right, top, bottom;
     int width() const { return right-left+1; }
     int height() const { return bottom-top+1; }
-    int levels() const { return maxlevel-minlevel+1; }    
+    int levels() const { return maxlevel-minlevel+1; }
 };
 
 struct Rooms3dCubePos 
@@ -126,9 +126,10 @@ private:
     void extends_height(const Rooms3dCubePos& p);
     void extends_width(const Rooms3dCubePos& p);
     void extends_levels(const Rooms3dCubePos& p);
-    bool checkCoords(const Rooms3dCubePos& p) const;    
+    bool checkCoords(const Rooms3dCubePos& p) const;
     void collapse();
     void correctPositions();
+    void normalizePositions();
 private:
     struct row {
       row(int count=1) { rr.resize(count, NULL); }
@@ -140,6 +141,7 @@ private:
       std::vector<row*> rooms;
     };
     bool emptyLevel(level *l);
+    int  countRooms(level *l);
     void release() { std::for_each(zone.begin(), zone.end(), [](level* l) { delete l; }); }
     std::vector<level*> zone;
     Rooms3dCubeSize cube_size;
@@ -168,5 +170,5 @@ public:
       if (next && room->pos.zid != next->pos.zid)
           return true;
       return false;
-    }    
+    }
 };
