@@ -64,9 +64,6 @@ struct Room
 {
     Room() : icon(0), use_color(0), color(0), selected(false) 
     {
-#ifdef _DEBUG
-        debugcolor = 0;
-#endif
     }
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
@@ -75,9 +72,6 @@ struct Room
     mutable int use_color;          // flag for use background color
     mutable COLORREF color;         // background color
     mutable bool selected;          // to render selection flag
-#ifdef _DEBUG
-    mutable COLORREF debugcolor;    // only for debug mode
-#endif
     const tstring hash() const { return roomdata.vnum; }
 };
 

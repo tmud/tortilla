@@ -292,6 +292,4 @@ bool MapMoveRoomsToNewZoneTool::makeNewZone(std::vector<const Room*>& rooms, con
     }
     new_zone->optimizeSize();
     return true;
-
-
 }

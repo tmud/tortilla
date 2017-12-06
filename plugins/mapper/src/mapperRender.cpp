@@ -545,6 +545,7 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
                 r->color = color;
                 r->use_color = 1;
             }
+            unselectAllRooms();
             Invalidate();
         }
         return true;
@@ -555,6 +556,7 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
         for (const Room* r: m_selected_rooms) {
              r->icon = 0;
         }
+        unselectAllRooms();
         Invalidate();
         return true;
     }
@@ -565,6 +567,7 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
             r->color = 0;
             r->use_color = 0;
         }
+        unselectAllRooms();
         Invalidate();
         return true;
     }
@@ -575,6 +578,7 @@ bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
         for (const Room* r: m_selected_rooms) {
              r->icon = icon;
         }
+        unselectAllRooms();
         Invalidate();
         return true;
     }

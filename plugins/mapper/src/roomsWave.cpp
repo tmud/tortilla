@@ -7,12 +7,6 @@ RoomWaveAlgoritm::RoomWaveAlgoritm()
 
 RoomWaveAlgoritm::~RoomWaveAlgoritm()
 {
-#ifdef _DEBUG
-    const_iterator it = nodes.cbegin(), it_end = nodes.end();
-    for (; it != it_end; ++it) {
-        it->first->debugcolor = 0;
-    }
-#endif
 }
 
 bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room, RoomDir dir)
@@ -36,13 +30,12 @@ bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room
     deleteRoom(room);
     if (nodes.empty())
         return false;
-#ifdef _DEBUG
+
     const_iterator it = nodes.cbegin(), it_end = nodes.end();
     for (; it != it_end; ++it) {
         const Room* r = it->first;
-        r->debugcolor = RGB(200,200,0);
+        r->selected = true;
     }
-#endif
     return true;
 }
 

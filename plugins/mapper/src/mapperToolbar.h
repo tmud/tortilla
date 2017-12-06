@@ -5,7 +5,14 @@ class MapperToolbar : public CDialogImpl<MapperToolbar>
     HWND m_controlWindow;
     UINT m_controlMessage;
 public:
-    enum { IDD = IDD_MAPPER_TOOLBAR };    
+#ifdef _DEBUG
+    
+    //enum { IDD = IDD_MAPPER_TOOLBAR };
+    enum { IDD = IDD_GAME_TOOLBAR };
+#else
+    enum { IDD = IDD_GAME_TOOLBAR };
+#endif
+
     BEGIN_MSG_MAP(MapperToolbar)
 		//MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         //MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -15,7 +22,7 @@ public:
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_UP, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL0, OnButton)
-	END_MSG_MAP()
+    END_MSG_MAP()
     MapperToolbar() : m_controlWindow(0), m_controlMessage(0) {}
     void setControlWindow(HWND wnd, UINT msg) {
         m_controlWindow = wnd;
