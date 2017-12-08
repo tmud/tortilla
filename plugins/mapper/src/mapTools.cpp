@@ -164,6 +164,21 @@ bool MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
 	return true;
 }
 
+void MapNewZoneTool::unselectRooms()
+{
+     if (!waveTool) {
+        assert(false);
+        return;
+    }
+    std::vector<const Room*> rooms;
+    waveTool->getNewZoneRooms(&rooms);
+    deleteWaveTool();
+    for (const Room *r : rooms) 
+    {
+        r->selected = false;
+    }
+}
+
 void MapNewZoneTool::deleteWaveTool()
 {
     if (waveTool)

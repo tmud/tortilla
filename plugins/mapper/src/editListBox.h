@@ -46,6 +46,7 @@ public:
    BEGIN_MSG_MAP(thisClass)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
       MESSAGE_HANDLER(WM_SIZE, OnSize)
+      MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRightClick)
       COMMAND_CODE_HANDLER(LBN_DBLCLK, OnDblClick)
       COMMAND_CODE_HANDLER(LBN_SELCHANGE, OnChange)
    ALT_MSG_MAP(1) // Edit control
@@ -269,6 +270,11 @@ public:
       int selection = m_wndList.GetCurSel();
       if (selection != -1)
         _BeginEdit( selection );
+      return 0;
+   }
+
+   LRESULT OnRightClick(UINT /*uMsg*/, WPARAM wParam, LPARAM /*lParam*/, BOOL& /*bHandled*/)
+   {
       return 0;
    }
 

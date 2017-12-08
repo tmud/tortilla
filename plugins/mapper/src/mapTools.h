@@ -25,6 +25,7 @@ public:
     ~MapNewZoneTool() { deleteWaveTool(); }
     bool tryMakeNewZone(const Room* room, RoomDir dir);
 	bool applyMakeNewZone(const tstring& zoneName);
+    void unselectRooms();
 private:
     void deleteWaveTool();
     RoomWaveAlgoritm *waveTool;

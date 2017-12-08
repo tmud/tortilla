@@ -334,7 +334,13 @@ void Mapper::onRenderContextMenu(int id)
     {
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
+        {
+            for (const Room* r : rooms) {
+                r->selected = false;
+            }
+            m_view.Invalidate();
             return;
+        }
         tstring newZoneName(dlg.getName());
         if (newZoneName.empty()) {
            newZoneName = m_map.getNewZoneName(L"");
@@ -357,7 +363,6 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryMakeNewZone(rooms[0], dir);
         if (!result)
         {
-
             MessageBox(L"Невозможно создать новую зону из-за замкнутости коридоров на данную комнату!", L"Ошибка", MB_OK | MB_ICONERROR);
             return;
         }
@@ -369,10 +374,8 @@ void Mapper::onRenderContextMenu(int id)
         NewZoneNameDlg dlg;
         if (dlg.DoModal() == IDCANCEL)
         {
-            for (const Room* r : rooms) {
-                r->selected = false;
-            }
-            Invalidate();
+            t.unselectRooms();
+            m_view.Invalidate();
             return;
         }
         tstring newZoneName(dlg.getName());

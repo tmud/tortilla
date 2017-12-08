@@ -6,9 +6,9 @@ class MapperToolbar : public CDialogImpl<MapperToolbar>
     UINT m_controlMessage;
 public:
 #ifdef _DEBUG
-    
-    //enum { IDD = IDD_MAPPER_TOOLBAR };
-    enum { IDD = IDD_GAME_TOOLBAR };
+   
+    enum { IDD = IDD_MAPPER_TOOLBAR };
+    //enum { IDD = IDD_GAME_TOOLBAR };
 #else
     enum { IDD = IDD_GAME_TOOLBAR };
 #endif
