@@ -286,7 +286,7 @@ void Mapper::onCreate()
     m_container.attach(30, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
 
-    m_zones_control.setNotifications(m_hWnd, WM_USER);
+    m_zones_control.setNotifications(m_hWnd, WM_USER, WM_USER+2);
     m_vSplitter.SetSplitterRect();
 
     if (m_propsData->zoneslist_width > 0)
@@ -316,6 +316,11 @@ void Mapper::onZoneChanged()
     Rooms3dCube *ptr = m_map.findZone(zone);
     MapCursor cursor = t.createZoneCursor(ptr);
     redrawPosition(cursor, false);
+}
+
+void Mapper::onZoneDeleted()
+{
+
 }
 
 void Mapper::onRenderContextMenu(int id)
@@ -394,6 +399,15 @@ void Mapper::onRenderContextMenu(int id)
     if (id >= MENU_JOINZONE_NORTH && id <= MENU_JOINZONE_DOWN)
     {
         assert(!multiselection);
+        RoomDir dir = dh.cast(id - MENU_JOINZONE_NORTH);
+        MapConcatZonesInOne t(&m_map);
+        bool result = t.tryConcatZones(rooms[0], dir);
+        if (!result)
+        {
+            MessageBox(L"Склеить две зоны в одну не получилось!", L"Ошибка", MB_OK | MB_ICONERROR);
+            return;
+        }
+        redrawPositionByRoom(rooms[0]);
         return;
     }
 

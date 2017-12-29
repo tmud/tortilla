@@ -54,3 +54,11 @@ public:
     MapMoveRoomByMouse(MapInstance *m) : map(m) { assert(m); }
     bool tryMoveRooms(std::vector<const Room*>& rooms, int x, int y);
 };
+
+class MapConcatZonesInOne
+{
+    MapInstance *map;
+public:
+    MapConcatZonesInOne(MapInstance *m) : map(m) { assert(m); }
+    bool tryConcatZones(const Room* room, RoomDir dir);
+};

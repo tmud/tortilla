@@ -136,6 +136,7 @@ bool MapNewZoneTool::applyMakeNewZone(const tstring& zoneName)
         return false;
     std::vector<Room*> rooms;
     for(const Room* r : constr) {
+       r->selected = false;
        Rooms3dCube *z = map->findZone(r->pos.zid);
        if (!z) {
            assert(false);
@@ -307,4 +308,9 @@ bool MapMoveRoomsToNewZoneTool::makeNewZone(std::vector<const Room*>& rooms, con
     }
     new_zone->optimizeSize();
     return true;
+}
+
+bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
+{
+    return false;
 }

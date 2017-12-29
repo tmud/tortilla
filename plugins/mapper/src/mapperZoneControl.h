@@ -4,9 +4,11 @@
 class MappeZoneControl : public CDialogImpl<MappeZoneControl>
 {
     CEditListBox m_list;
+    CMenu m_list_contextmenu;
     RECT rc_list;    
     HWND m_parent;
-    UINT m_msg;
+    UINT m_msg_select;
+    UINT m_msg_delete;
     struct zonedata {
         int id;
         tstring name;
@@ -16,13 +18,14 @@ class MappeZoneControl : public CDialogImpl<MappeZoneControl>
     typedef std::vector<zonedata>::const_iterator zones_const_iterator;
 public:
     enum { IDD = IDD_MAPPER_ZONES };
-    MappeZoneControl() : m_parent(NULL), m_msg(0)
+    MappeZoneControl() : m_parent(NULL), m_msg_select(0), m_msg_delete(0)
     {
     }    
-    void setNotifications(HWND wnd, UINT msg)
+    void setNotifications(HWND wnd, UINT msg_select, UINT msg_delete)
     {
         m_parent = wnd;
-        m_msg = msg;
+        m_msg_select = msg_select;
+        m_msg_delete = msg_delete;
     }
 
     void updateList(const Rooms3dCubeList& zoneslist)
@@ -112,7 +115,8 @@ private:
 		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
-        MESSAGE_HANDLER(WM_USER, OnSelectItem)
+        MESSAGE_HANDLER(WM_USER, OnSelectItem)        
+        MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
@@ -123,6 +127,7 @@ private:
         m_list.GetWindowRect(&rc_list);
         rc_list.top -= rc.top;
         m_list.SelectItem(-1);
+        m_list_contextmenu.LoadMenu(IDR_MENU_ZONESCONTEXT);
         bHandled = FALSE;
         return 0;
 	}
@@ -142,8 +147,8 @@ private:
 
     LRESULT OnSelectItem(UINT, WPARAM, LPARAM, BOOL&)
     {
-        if (::IsWindow(m_parent))
-             ::SendMessage(m_parent, m_msg, 0, 0);
+        if (::IsWindow(m_parent) && m_msg_select > 0)
+             ::SendMessage(m_parent, m_msg_select, 0, 0);
         return 0;
     }
 
@@ -173,6 +178,27 @@ private:
         else
         {
             zones[item].name = text;
+        }
+        return 0;
+    }
+
+    LRESULT OnContextMenu(UINT, WPARAM wparam, LPARAM, BOOL&bHandled)
+    {
+        if (wparam != (WPARAM)m_list.m_hWnd)
+            return 0;
+        int index = m_list.GetCurSel();
+        if (index != -1)
+        {
+            POINT pt; GetCursorPos(&pt);
+            int cursor_x = pt.x;
+            int cursor_y = pt.y;
+            ScreenToClient(&pt);
+            
+
+            m_list_contextmenu.GetSubMenu(0).TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+
+            //if (::IsWindow(m_parent) && m_msg_delete > 0)
+            //    ::SendMessage(m_parent, m_msg_delete, 0, 0);
         }
         return 0;
     }

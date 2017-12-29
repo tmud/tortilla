@@ -25,6 +25,7 @@ private:
       MESSAGE_HANDLER(WM_SIZE, OnSize)
       MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
       MESSAGE_HANDLER(WM_USER, OnUser)
+      MESSAGE_HANDLER(WM_USER+2, OnUser2)
       MESSAGE_HANDLER(WM_COMMAND, OnMenu)
       MESSAGE_HANDLER(WM_USER+1, OnToolbar)
     END_MSG_MAP()
@@ -33,11 +34,13 @@ private:
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
     LRESULT OnUser(UINT, WPARAM, LPARAM, BOOL&){ onZoneChanged();  return 0; }
+    LRESULT OnUser2(UINT, WPARAM, LPARAM, BOOL&){ onZoneDeleted();  return 0; }
     LRESULT OnToolbar(UINT, WPARAM wparam, LPARAM, BOOL&){ onToolbar(wparam);  return 0; }
     LRESULT OnMenu(UINT, WPARAM wparam, LPARAM, BOOL&){ onRenderContextMenu(LOWORD(wparam)); return 0; }
     void onCreate();
     void onSize();
     void onZoneChanged();
+    void onZoneDeleted();
     void onRenderContextMenu(int id);  
     void onToolbar(int id);
 private:

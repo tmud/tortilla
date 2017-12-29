@@ -401,7 +401,7 @@ void MapperRender::mouseLeave()
 void MapperRender::mouseRightButtonDown()
 {
     POINT pt; GetCursorPos(&pt);
-    int cursor_x = pt.x; 
+    int cursor_x = pt.x;
     int cursor_y = pt.y;
     ScreenToClient(&pt);
 
