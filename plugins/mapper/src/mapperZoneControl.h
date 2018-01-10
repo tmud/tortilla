@@ -190,15 +190,17 @@ private:
         if (index != -1)
         {
             POINT pt; GetCursorPos(&pt);
-            int cursor_x = pt.x;
-            int cursor_y = pt.y;
-            ScreenToClient(&pt);
-            
-
-            m_list_contextmenu.GetSubMenu(0).TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
-
-            //if (::IsWindow(m_parent) && m_msg_delete > 0)
-            //    ::SendMessage(m_parent, m_msg_delete, 0, 0);
+            int x = pt.x; int y = pt.y;
+            m_list.ScreenToClient(&pt);
+            int item = m_list.GetItemByPoint(pt);
+            if (item != -1)
+            {
+                if (m_list.GetCurSel() != item) {
+                    m_list.SelectItem(item);
+                    ::SendMessage(m_parent, m_msg_select, 0, 0);
+                }
+                m_list_contextmenu.GetSubMenu(0).TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, x - 2, y - 2, m_hWnd, NULL);
+            }
         }
         return 0;
     }

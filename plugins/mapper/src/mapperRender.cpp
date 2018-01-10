@@ -418,9 +418,9 @@ void MapperRender::mouseRightButtonDown()
     Invalidate();
 
     bool multiselection = (m_selected_rooms.size() == 1) ? false : true;
-    if (multiselection) {       
+    if (multiselection) {
         CMenuXP &m = m_multiply_rooms_menu;
-        m.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+        m.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
         return;
     }
 
@@ -447,7 +447,7 @@ void MapperRender::mouseRightButtonDown()
     m.SetItemState(MENU_MOVEROOM_UP, c.isZoneExit(RD_UP));
     m.SetItemState(MENU_MOVEROOM_DOWN, c.isZoneExit(RD_DOWN));
 
-    m.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN | TPM_NOANIMATION, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
+    m.TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, cursor_x - 2, cursor_y - 2, m_hWnd, NULL);
 }
 
 void MapperRender::createMenu()

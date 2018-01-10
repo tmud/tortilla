@@ -171,7 +171,16 @@ public:
    {
       ATLASSERT(::IsWindow(m_hWnd));
       return m_wndList.GetCount();
-   }   
+   }
+
+   int GetItemByPoint(const POINT& pt) const
+   {
+       BOOL outside = TRUE;
+       UINT item = m_wndList.ItemFromPoint(pt, outside);
+       if (outside)
+           return -1;
+       return static_cast<int>(item);
+   }
 
    // Implementation
    void _Init()
