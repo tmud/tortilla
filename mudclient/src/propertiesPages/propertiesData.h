@@ -169,7 +169,7 @@ public:
             if (index >= 0 && index < size)
                 m_values[index] = data;
             else
-                { assert(false); }
+                m_values.push_back(data);
         }
     }
 
