@@ -56,6 +56,7 @@ class PropertyHotkeys :  public CDialogImpl<PropertyHotkeys>
     CComboBox m_cbox;
     int m_filterMode;
     tstring m_currentGroup;
+    tstring m_loadedGroup;
     bool m_deleted;
     bool m_update_mode;
     PropertiesDlgPageState *dlg_state;
@@ -243,18 +244,18 @@ private:
         if (m_currentGroup == group) return 0;
         tstring pattern;
         getWindowText(m_hotkey, &pattern);
-        if (!m_filterMode)
+        m_currentGroup = group;
+        int index = m_list_values.find(pattern, group);
+        if (index != -1)
         {
-            m_currentGroup = group;
-            int index = m_list_values.find(pattern, group);
-            if (index != -1)
-                m_list.SelectItem(index);
+            m_list.SelectItem(index);
             updateButtons();
             return 0;
         }
-        m_currentGroup = group;
-        loadValues();
-        update();
+        if (m_filterMode && m_list.GetSelectedCount() == 0) {
+            loadValues();
+            update();
+        }
         updateButtons();
         return 0;
     }
@@ -355,13 +356,6 @@ private:
         return 0;
     }
 
-    /*LRESULT OnListKillFocus(int , LPNMHDR , BOOL&)
-    {
-        if (GetFocus() != m_del && m_list.GetSelectedCount() > 1)
-            m_list.SelectItem(-1);
-        return 0;
-    }*/
-
     LRESULT OnShowWindow(UINT, WPARAM wparam, LPARAM, BOOL&)
     {
         if (wparam)
@@ -430,16 +424,11 @@ private:
 
     void update()
     {
-        PropertiesGroupFilter gf(propGroups);
         int current_index = 0;
         m_cbox.ResetContent();
         for (int i=0,e=propGroups->size(); i<e; ++i)
         {
             const property_value& g = propGroups->get(i);
-            if (m_filterMode == 2) {
-                if (!gf.isGroupActive(g.key))
-                    continue;
-            }
             int pos = m_cbox.AddString(g.key.c_str());
             if (g.key == m_currentGroup)
                 { current_index = pos; }
@@ -529,6 +518,7 @@ private:
 
     void loadValues()
     {
+        m_loadedGroup = m_currentGroup;
         if (!m_filterMode)
         {
             m_list_values = *propValues;
@@ -559,7 +549,7 @@ private:
 
     void saveValues()
     {
-        if (!m_state_helper.save(m_currentGroup, m_filterMode))
+        if (!m_state_helper.save(m_loadedGroup, m_filterMode))
             return;
 
         if (!m_filterMode)
@@ -575,7 +565,7 @@ private:
             const property_value& v = propValues->get(i);
             bool filter = false;
             if (m_filterMode == 1) {
-                filter = (v.group == m_currentGroup);
+                filter = (v.group == m_loadedGroup);
             } else if (m_filterMode == 2) {
                 filter = gf.isGroupActive(v.group);
             } else {
@@ -598,13 +588,22 @@ private:
             }
         }
 
+        todelete.clear();
         int pos_count = m_list_positions.size();
         int elem_count = m_list_values.size();
         for (int i=0; i<elem_count; ++i)
         {
-            const property_value& v = m_list_values.get(i);
             int index = (i < pos_count) ? m_list_positions[i] : -1;
+            const property_value& v = m_list_values.get(i);
+            int pos = propValues->find(v.key, v.group);
+            if (pos != -1 && pos != index)
+                todelete.push_back(pos);
             propValues->add(index, v.key, v.value, v.group);
+        }
+        for (int i=todelete.size()-1; i>=0; --i)
+        {
+            int pos = todelete[i];
+            propValues->del(pos);
         }
     }
 
