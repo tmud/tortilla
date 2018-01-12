@@ -288,15 +288,14 @@ private:
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         m_currentGroup = group;
-        if (!m_filterMode)
+        int index = m_list_values.find(pattern, group);
+        if (index != -1)
         {
-            int index = m_list_values.find(pattern, group);
-            if (index != -1)
-                m_list.SelectItem(index);
+            m_list.SelectItem(index);
             updateButtons();
             return 0;
         }
-        if (m_list.GetSelectedCount() == 0) {
+        if (m_filterMode && m_list.GetSelectedCount() == 0) {
             loadValues();
             update();
         }
@@ -709,15 +708,24 @@ private:
             }
         }
 
+        todelete.clear();
         int pos_count = m_list_positions.size();
         int elem_count = m_list_values.size();
         for (int i=0; i<elem_count; ++i)
         {
-            const highlight_value& v = m_list_values.get(i);
             int index = (i < pos_count) ? m_list_positions[i] : -1;
+            const highlight_value& v = m_list_values.get(i);
+            int pos = propValues->find(v.key, v.group);
+            if (pos != -1 && pos != index)
+                todelete.push_back(pos);
             tstring value;
             v.value.convertToString(&value);
             propValues->add(index, v.key, value, v.group);
+        }
+        for (int i=todelete.size()-1; i>=0; --i)
+        {
+            int pos = todelete[i];
+            propValues->del(pos);
         }
     }
 

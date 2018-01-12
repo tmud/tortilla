@@ -218,15 +218,14 @@ private:
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         m_currentGroup = group;
-        if (!m_filterMode)
+        int index = m_list_values.find(pattern, group);
+        if (index != -1)
         {
-            int index = m_list_values.find(pattern, group);
-            if (index != -1)
-                m_list.SelectItem(index);
+            m_list.SelectItem(index);
             updateButtons();
             return 0;
         }
-        if (m_list.GetSelectedCount() == 0) {
+        if (m_filterMode && m_list.GetSelectedCount() == 0) {
             loadValues();
             update();
         }
@@ -561,7 +560,6 @@ private:
             }
         }
 
-        //todo!
         todelete.clear();
         int pos_count = m_list_positions.size();
         int elem_count = m_list_values.size();
