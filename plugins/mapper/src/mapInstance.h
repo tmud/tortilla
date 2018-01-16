@@ -21,14 +21,15 @@ public:
     void clearMaps();
     tstring  getNewZoneName(const tstring& templ);
 
-private:    
+    void deleteZone(const tstring& name);
+private:
     void clear();
 private:
     int m_nextzone_id;
 	std::vector<Rooms3dCube*> zones;
 	std::map<Rooms3dCube*, tstring> hashes;
 	typedef std::vector<Rooms3dCube*>::iterator zone_iterator;
-	typedef std::map<Rooms3dCube*, tstring>::iterator hashes_iterator;       
+	typedef std::map<Rooms3dCube*, tstring>::iterator hashes_iterator;
 };
 
 

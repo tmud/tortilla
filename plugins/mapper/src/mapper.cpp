@@ -320,7 +320,28 @@ void Mapper::onZoneChanged()
 
 void Mapper::onZoneDeleted()
 {
-
+    int zone = m_zones_control.getCurrentZone();
+    assert(zone != -1);
+    const tstring zone_name = m_zones_control.getZoneName(zone);
+    if (zone_name.empty()) {
+        assert(false);
+        return;
+    }
+    tstring msg(L"Вы уверены, что хотите удалить зону '");
+    msg.append(zone_name);
+    msg.append(L"' ?\r\nОтменить удаление будет невозможно.");
+    if (MessageBox(msg.c_str(), L"Карта", MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2) == IDYES) {        
+        m_map.deleteZone(zone_name);
+        updateZonesList();
+        Rooms3dCubeList zones;
+	    m_map.getZones(&zones);
+        if (!zones.empty())
+        {
+            MapTools t(&m_map);
+            MapCursor cursor = t.createZoneCursor(zones[0]);
+            redrawPosition(cursor, false);
+        }
+    }
 }
 
 void Mapper::onRenderContextMenu(int id)

@@ -40,6 +40,28 @@ tstring MapInstance::getNewZoneName(const tstring& templ)
     }
     return zone_name;
 }
+
+void MapInstance::deleteZone(const tstring& name)
+{
+    bool found = false;
+    zone_iterator zt = zones.begin(), zt_end = zones.end();
+    for(; zt!=zt_end; ++zt) {
+        Rooms3dCube* zone = *zt;
+        if ( zone->name() == name )
+        {
+            found = true;
+            hashes_iterator ht = hashes.find(zone);
+            if (ht != hashes.end()) {
+                hashes.erase(ht);
+            } else {
+                assert(false);
+            }
+            zones.erase(zt);
+            delete zone;
+            break;
+        }
+    }
+}
 //-------------------------------------------------------------------------------------
 Rooms3dCube* MapInstance::findZone(int zid)
 {
@@ -205,10 +227,10 @@ void MapInstance::loadMaps(const tstring& dir)
     clear();
     std::vector<exitdata> exitsOnLoad;
     std::vector<Rooms3dCube*> newzones;
-    
+
 	std::vector<tstring> files;
     tstring mask(dir);
-    mask.append(L"*.map");    
+    mask.append(L"*.map");
     WIN32_FIND_DATA fd;
     memset(&fd, 0, sizeof(WIN32_FIND_DATA));
     HANDLE file = FindFirstFile(mask.c_str(), &fd);
@@ -229,9 +251,9 @@ void MapInstance::loadMaps(const tstring& dir)
         tstring name(file.substr(0, pos));
         tstring filepath(dir);
         filepath.append(file);
-		
+
         tstring error;
-        xml::node zn;        
+        xml::node zn;
 		Rooms3dCube *zone = new Rooms3dCube(zid++, name);
         if (zn.load(filepath.c_str(), &error))
         {
@@ -315,7 +337,7 @@ void MapInstance::loadMaps(const tstring& dir)
                         }
                     }
                 }
-                if (err.empty()) {                
+                if (err.empty()) {
                     Rooms3dCubePos pos;
                     pos.x = x; pos.y = y; pos.z = z;
                     Rooms3dCube::AR_STATUS s = zone->addRoom(pos, newroom);
@@ -330,7 +352,7 @@ void MapInstance::loadMaps(const tstring& dir)
                     clientlog(err + L" ג פאיכו: " + filepath);
                 } else {
                 }
-            }            
+            }
         }
         zn.deletenode();
         newzones.push_back(zone);
@@ -339,12 +361,11 @@ void MapInstance::loadMaps(const tstring& dir)
     RoomDirHelper h;
     std::vector<exitdata>::iterator it = exitsOnLoad.begin(), it_end = exitsOnLoad.end();
     for (; it != it_end; ++it) {
-        
         Room *destroom = NULL;
         for (Rooms3dCube *z : newzones) {
            Room *r = z->findRoom(it->vnum);
            if (r) { destroom = r; break; }
-        }       
+        }
         if (!destroom) {
             assert(false);
             continue;

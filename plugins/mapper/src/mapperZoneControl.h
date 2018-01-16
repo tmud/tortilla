@@ -5,7 +5,7 @@ class MappeZoneControl : public CDialogImpl<MappeZoneControl>
 {
     CEditListBox m_list;
     CMenu m_list_contextmenu;
-    RECT rc_list;    
+    RECT rc_list;
     HWND m_parent;
     UINT m_msg_select;
     UINT m_msg_delete;
@@ -20,7 +20,7 @@ public:
     enum { IDD = IDD_MAPPER_ZONES };
     MappeZoneControl() : m_parent(NULL), m_msg_select(0), m_msg_delete(0)
     {
-    }    
+    }
     void setNotifications(HWND wnd, UINT msg_select, UINT msg_delete)
     {
         m_parent = wnd;
@@ -48,7 +48,7 @@ public:
         for (int i=0; i<count; ++i) {
             const tstring &item = zones[i].name;
             tstring current;
-            getItemText(i, &current);            
+            getItemText(i, &current);
             if (item.compare(current)) {
                 m_list.SetItemText(i, item.c_str());
             }
@@ -62,7 +62,7 @@ public:
                     m_list.AddItem(item.c_str());
                 }
             } else {
-                for (int i=count; i< total; ++i) {
+                for (int i=0; i< total; ++i) {
                     m_list.DeleteItem(count);
                 }
            }
@@ -115,8 +115,10 @@ private:
 		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         NOTIFY_CODE_HANDLER(EDLN_ITEMCHANGED, OnChanged)
-        MESSAGE_HANDLER(WM_USER, OnSelectItem)        
+        MESSAGE_HANDLER(WM_USER, OnSelectItem)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
+        COMMAND_ID_HANDLER(ID_RENAME_ZONE, OnRenameZone)
+        COMMAND_ID_HANDLER(ID_DELETE_ZONE, OnDeleteZone)
 	END_MSG_MAP()
 
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
@@ -149,6 +151,24 @@ private:
     {
         if (::IsWindow(m_parent) && m_msg_select > 0)
              ::SendMessage(m_parent, m_msg_select, 0, 0);
+        return 0;
+    }
+
+    LRESULT OnRenameZone(WORD, WORD, HWND, BOOL&)
+    {
+        int index = m_list.GetCurSel();
+        if (index != -1)
+            m_list._BeginEdit(index);
+        return 0;
+    }
+
+    LRESULT OnDeleteZone(WORD, WORD, HWND, BOOL&)
+    {
+        int index = m_list.GetCurSel();
+        if (index != -1) {
+            if (::IsWindow(m_parent) && m_msg_delete > 0)
+               ::SendMessage(m_parent, m_msg_delete, 0, 0);
+        }
         return 0;
     }
 
@@ -189,17 +209,15 @@ private:
         int index = m_list.GetCurSel();
         if (index != -1)
         {
-            POINT pt; GetCursorPos(&pt);
-            int x = pt.x; int y = pt.y;
-            m_list.ScreenToClient(&pt);
-            int item = m_list.GetItemByPoint(pt);
+            int item = m_list.GetMouseItem();
             if (item != -1)
             {
-                if (m_list.GetCurSel() != item) {
+                if (index != item) {
                     m_list.SelectItem(item);
                     ::SendMessage(m_parent, m_msg_select, 0, 0);
                 }
-                m_list_contextmenu.GetSubMenu(0).TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, x - 2, y - 2, m_hWnd, NULL);
+                POINT pt; GetCursorPos(&pt);
+                m_list_contextmenu.GetSubMenu(0).TrackPopupMenu(TPM_LEFTALIGN | TPM_TOPALIGN, pt.x - 2, pt.y - 2, m_hWnd, NULL);
             }
         }
         return 0;

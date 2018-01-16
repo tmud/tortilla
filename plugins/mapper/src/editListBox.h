@@ -75,7 +75,14 @@ public:
    int GetCurSel() const
    {
       ATLASSERT(::IsWindow(m_hWnd));
-      return m_wndList.GetCurSel();      
+      return m_wndList.GetCurSel();
+   }
+
+   int GetMouseItem() const {
+      ATLASSERT(::IsWindow(m_hWnd));
+      POINT pt; GetCursorPos(&pt);
+      ScreenToClient(&pt);
+      return GetItemByPoint(pt);
    }
 
    void SetMaxText(int iMax)
@@ -92,15 +99,15 @@ public:
    {
       ATLASSERT(::IsWindow(m_hWnd));
       ATLASSERT(!::IsBadStringPtr(pstrText,-1));
-      
+
       if (iIndex > GetItemCount())
          return FALSE;
 
-      if (iIndex == -1) 
+      if (iIndex == -1)
           iIndex = GetItemCount();
 
       int idx = m_wndList.InsertString(iIndex, pstrText);
-      if( idx==0 ) 
+      if( idx==0 )
           m_wndList.SetCurSel(0);
       return (idx >= 0);
    }
@@ -154,7 +161,7 @@ public:
       ATLASSERT(iIndex>=0);
       ATLASSERT(!::IsBadWritePtr(pstrText, cchMax));
       *pstrText = _T('\0');
-      if (iIndex >= GetItemCount()) return FALSE;      
+      if (iIndex >= GetItemCount()) return FALSE;
       if ( (UINT)m_wndList.GetTextLen(iIndex)>cchMax ) return FALSE;
       return m_wndList.GetText(iIndex, pstrText);
    }
@@ -234,7 +241,7 @@ public:
 
       // Allow owner to cancel action
       if( _SendNotifyMsg(EDLN_BEGINLABELEDIT, iIndex) != 0 ) return;
-      
+
       // Copy text to Edit control
       int len = m_wndList.GetTextLen(iIndex)+1;
       LPTSTR pstr = (LPTSTR)_alloca(len*sizeof(TCHAR));
@@ -256,7 +263,7 @@ public:
       GetClientRect(&rc);
       m_wndList.SetWindowPos(HWND_TOP, &rc, SWP_NOZORDER|SWP_NOACTIVATE);
    }
-  
+
    // Message handlers
    LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& /*bHandled*/)
    {
@@ -277,8 +284,10 @@ public:
    LRESULT OnDblClick(WORD, WORD, HWND, BOOL&)
    {
       int selection = m_wndList.GetCurSel();
-      if (selection != -1)
-        _BeginEdit( selection );
+      if (selection != -1) {
+          if (GetMouseItem() == selection)
+            _BeginEdit( selection );
+      }
       return 0;
    }
 
@@ -288,7 +297,7 @@ public:
    }
 
    LRESULT OnChange(WORD id, WORD, HWND, BOOL&)
-   {       
+   {
        SendMessage(GetParent(), WM_USER, 0, 0);
        return 0;
    }
@@ -317,7 +326,7 @@ public:
          int len = m_wndEdit.GetWindowTextLength()+1;
          LPTSTR pstr = (LPTSTR)_alloca(len*sizeof(TCHAR));
          ATLASSERT(pstr);
-         m_wndEdit.GetWindowText(pstr, len);        
+         m_wndEdit.GetWindowText(pstr, len);
          SetItemText(iIndex, pstr);
          // Send "Item Changed" notify message
          _SendNotifyMsg(EDLN_ITEMCHANGED, iIndex);
@@ -340,9 +349,9 @@ public:
             LPTSTR pstr = (LPTSTR)_alloca(len*sizeof(TCHAR));
             ATLASSERT(pstr);
             m_wndList.GetText(iIndex, pstr);
-            m_wndEdit.SetWindowText(pstr);           
+            m_wndEdit.SetWindowText(pstr);
          }
-         // FALL THROUGH...
+         // FALL THROUGH
       case VK_RETURN:
          {
             m_wndList.SetFocus(); // Causes Edit WM_KILLFOCUS
