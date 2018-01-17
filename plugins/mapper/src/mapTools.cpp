@@ -312,5 +312,30 @@ bool MapMoveRoomsToNewZoneTool::makeNewZone(std::vector<const Room*>& rooms, con
 
 bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
 {
+    RoomHelper c(room);
+    if (!c.isZoneExit(dir)) {
+        assert(false);
+        return false;
+    }
+
+    MapTools t(map);
+    Room *r = t.findRoom(room->hash());   
+    Rooms3dCube* srczone = map->findZone(r->pos.zid);
+    if (!srczone) {
+        assert(false);
+        return false;
+    }
+    MapSmartTools st;
+    Room *dest_r = st.getRoom(r, dir);
+    if (!dest_r || dest_r->pos.zid == r->pos.zid) {
+        assert(false);
+        return false;
+    }
+    Rooms3dCube* dstzone = map->findZone(dest_r->pos.zid);
+    if (!dstzone) {
+       assert(false);
+       return false;
+    }
+
     return false;
 }

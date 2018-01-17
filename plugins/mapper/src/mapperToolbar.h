@@ -4,24 +4,16 @@ class MapperToolbar : public CDialogImpl<MapperToolbar>
 {
     HWND m_controlWindow;
     UINT m_controlMessage;
-public:
-#ifdef _DEBUG
-   
+public:  
     enum { IDD = IDD_MAPPER_TOOLBAR };
-    //enum { IDD = IDD_GAME_TOOLBAR };
-#else
-    enum { IDD = IDD_GAME_TOOLBAR };
-#endif
-
     BEGIN_MSG_MAP(MapperToolbar)
-		//MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
-        //MESSAGE_HANDLER(WM_SIZE, OnSize)
-        COMMAND_ID_HANDLER(IDC_BUTTON_SAVEZONES, OnButton)
-        COMMAND_ID_HANDLER(IDC_BUTTON_LOADZONES, OnButton)
+		MESSAGE_HANDLER(WM_INITDIALOG, OnCreate)
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_DOWN, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_UP, OnButton)
-        COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL0, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_SAVEZONES, OnDebugButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_LOADZONES, OnDebugButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnDebugButton)
     END_MSG_MAP()
     MapperToolbar() : m_controlWindow(0), m_controlMessage(0) {}
     void setControlWindow(HWND wnd, UINT msg) {
@@ -29,20 +21,28 @@ public:
         m_controlMessage = msg;
     }
 private:
-	/*LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
+    void hide(UINT id) { GetDlgItem(id).ShowWindow(SW_HIDE); }
+	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{   
-        //bHandled = FALSE;
+#ifndef _DEBUG
+        hide(IDC_BUTTON_SAVEZONES);
+        hide(IDC_BUTTON_LOADZONES);
+        hide(IDC_BUTTON_CLEARZONES);
+#endif
         return 0;
 	}
-    LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&bHandled)
-	{
-        bHandled = FALSE;
-        return 0;
-    }*/
     LRESULT OnButton(WORD, WORD id, HWND, BOOL&)
     {
         if (::IsWindow(m_controlWindow))
             ::PostMessage(m_controlWindow, m_controlMessage, id, 0 );
+        return 0;
+    }
+    LRESULT OnDebugButton(WORD, WORD id, HWND, BOOL&)
+    {
+#ifdef _DEBUG
+        if (::IsWindow(m_controlWindow))
+            ::PostMessage(m_controlWindow, m_controlMessage, id, 0 );
+#endif
         return 0;
     }
 };

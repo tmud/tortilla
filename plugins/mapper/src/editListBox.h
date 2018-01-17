@@ -283,11 +283,11 @@ public:
 
    LRESULT OnDblClick(WORD, WORD, HWND, BOOL&)
    {
-      int selection = m_wndList.GetCurSel();
+      /*int selection = m_wndList.GetCurSel();
       if (selection != -1) {
           if (GetMouseItem() == selection)
             _BeginEdit( selection );
-      }
+      }*/
       return 0;
    }
 
