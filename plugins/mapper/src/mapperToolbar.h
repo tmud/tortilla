@@ -63,7 +63,6 @@ private:
     BEGIN_MSG_MAP(ToolbarViewContainer)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkgnd)
-        MESSAGE_HANDLER(WM_LBUTTONDOWN, OnKeyDown)
     END_MSG_MAP()
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
@@ -77,11 +76,5 @@ private:
         rc.bottom = bottom;
         if (m_second.IsWindow())
            m_second.MoveWindow(&rc);
-    }
-    
-    LRESULT OnKeyDown(UINT id, WPARAM, LPARAM, BOOL&bHandled)
-	{
-        //bHandled = FALSE;
-        return 0;
     }
 };
