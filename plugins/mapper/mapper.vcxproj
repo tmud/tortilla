@@ -105,6 +105,7 @@
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
     <ClInclude Include="..\..\mudclient\src\palette256.h" />
     <ClInclude Include="res\resource.h" />
+    <ClInclude Include="src\bitmapButton.h" />
     <ClInclude Include="src\debugHelpers.h" />
     <ClInclude Include="src\editListBox.h" />
     <ClInclude Include="src\logger.h" />
@@ -158,6 +159,7 @@
   <ItemGroup>
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
+    <Image Include="res\bmp00001.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mapper.rc" />

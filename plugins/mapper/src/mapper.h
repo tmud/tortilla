@@ -64,7 +64,6 @@ private:
     ToolbarViewContainer m_container;
     CSplitterWindowExT<true, 1, 4> m_vSplitter;
     MappeZoneControl m_zones_control;
-    int m_toolbar_height;
 
     // logic
     MapperDirsVector m_dirs;

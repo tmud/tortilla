@@ -283,7 +283,7 @@ void Mapper::onCreate()
     m_view.setMenuHandler(m_hWnd);
     m_view.setMoveToolHandler(this);
 
-    m_container.attach(30, m_toolbar, m_view);
+    m_container.attach(32, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
 
     m_zones_control.setNotifications(m_hWnd, WM_USER, WM_USER+2);

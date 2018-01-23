@@ -104,6 +104,9 @@
     <ClInclude Include="src\mapperUnitTests.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\bitmapButton.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
@@ -172,6 +175,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\bitmap2.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\bmp00001.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
