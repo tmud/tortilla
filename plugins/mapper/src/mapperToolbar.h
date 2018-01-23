@@ -29,7 +29,8 @@ private:
     void init(CBitmapButtonEx& b, int image, UINT id, const tstring& tooltip) { 
         b.SetImageList(m_icons);
         b.SetImages(image);
-        b.SetBitmapButtonExtendedStyle(BMPBTN_AUTO3D_SINGLE|BMPBTN_SHAREIMAGELISTS, BMPBTN_AUTO3D_SINGLE|BMPBTN_AUTOSIZE|BMPBTN_SHAREIMAGELISTS);
+        b.SetBitmapButtonExtendedStyle(BMPBTN_AUTO3D_DOUBLE|BMPBTN_SHAREIMAGELISTS|BMPBTN_HOVER, 
+            BMPBTN_AUTO3D_DOUBLE|BMPBTN_AUTOSIZE|BMPBTN_SHAREIMAGELISTS|BMPBTN_HOVER);
         b.SubclassWindow(GetDlgItem(id));
         b.SetToolTipText(tooltip.c_str());
     }
