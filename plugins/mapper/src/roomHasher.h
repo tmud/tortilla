@@ -1,6 +1,6 @@
 #pragma once
 
-#include "roomObjects.h"
+#include "roomsZone.h"
 
 class Rooms3dCubeHash {
 public:

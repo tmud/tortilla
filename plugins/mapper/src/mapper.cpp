@@ -492,7 +492,7 @@ void Mapper::onToolbar(int id)
             assert(false);
             return;
         }
-        if (zone->setByZeroLevel(pos.z)) {
+        if (zone->setAsLevel0(pos.z)) {
            MapTools t(&m_map);
            Rooms3dCube *ptr = m_map.findZone(pos.zid);
            MapCursor cursor = t.createZoneCursor(ptr);

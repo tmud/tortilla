@@ -1,6 +1,6 @@
 #pragma once
 
-#include "roomObjects.h"
+#include "roomsZone.h"
 #include "mapCursor.h"
 #include "mapperRoomRender.h"
 #include "menuXP.h"

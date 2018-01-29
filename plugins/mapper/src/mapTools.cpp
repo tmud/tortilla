@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "mapTools.h"
 #include "mapSmartTools.h"
-#include "roomObjects.h"
+#include "roomsZone.h"
+#include "mapMergeTools.h"
 
 bool MapTools::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
 {
@@ -27,7 +28,7 @@ bool MapTools::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
     Rooms3dCube::AR_STATUS s = zone->addRoom(pos, next);
     if (s == Rooms3dCube::AR_OK)
         return true;
-    if (s == Rooms3dCube::AR_INVALIDROOM || s == Rooms3dCube::AR_FAIL) {
+    if (s == Rooms3dCube::AR_INVALIDROOM ) {
 		assert(false);
         return false;
     }
@@ -336,6 +337,13 @@ bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
        assert(false);
        return false;
     }
+
+    // try to merge zones in to one
+    MapZoneMirror m(srczone);
+    if (!m.tryMergeZone(dstzone))
+        return false;
+
+        
 
     return false;
 }
