@@ -10,8 +10,7 @@ public:
         l->rooms.push_back(r);
         zone.push_back(l);
     }
-    const Rooms3dCubeSize getSize() const { 
-        return cube_size; }    
+    const Rooms3dCubeSize getSize() const { return cube_size; }
     void  add(const Rooms3dCubePos& p, Room *room, int zoneid);
     const Room* get(const Rooms3dCubePos& p) const;
     Room* detach(const Rooms3dCubePos& p) const;

@@ -115,6 +115,7 @@ private:
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnMouseRButtonDown)
         MESSAGE_HANDLER(WM_MEASUREITEM, OnMenuMeasureItem)
         MESSAGE_HANDLER(WM_DRAWITEM, OnMenuDrawItem)
+        //MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
 	END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&) { onCreate(); return 0; }
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
@@ -122,7 +123,7 @@ private:
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&) { onSize(); return 0; }
     LRESULT OnVScroll(UINT, WPARAM wparam, LPARAM, BOOL&) { onVScroll(wparam);  return 0; }
     LRESULT OnHScroll(UINT, WPARAM wparam, LPARAM, BOOL&) { onHScroll(wparam);  return 0; }
-    LRESULT OnMouseMove(UINT, WPARAM, LPARAM lparam, BOOL&) { /*trackMouseLeave();*/  mouseMove(); return 0; }
+    LRESULT OnMouseMove(UINT, WPARAM, LPARAM lparam, BOOL&) { mouseMove(); return 0; }
     LRESULT OnMouseLeave(UINT, WPARAM, LPARAM lparam, BOOL&) { m_track_mouse = false;  mouseLeave(); return 0; }
     LRESULT OnMouseLButtonDown(UINT, WPARAM, LPARAM, BOOL&) { mouseLeftButtonDown(); return 0; }
     LRESULT OnMouseLButtonUp(UINT, WPARAM, LPARAM, BOOL&) { mouseLeftButtonUp(); return 0; }
@@ -143,6 +144,15 @@ private:
             bHandled = FALSE;
         return 0;
     }
+    LRESULT OnKillFocus(UINT, WPARAM wparam, LPARAM lparam, BOOL& bHandled) 
+    {
+        if (!m_selected_rooms.empty()) {
+            unselectAllRooms();
+            Invalidate();
+        }
+        bHandled = FALSE;
+        return 0;
+    }    
 private:
     void renderMap(int render_x, int render_y);
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);

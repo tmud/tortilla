@@ -10,7 +10,7 @@ public:
         assert(zid >= 0);
     }
     ~Rooms3dCube() {}
-    const Rooms3dCubeSize& size() const {  return rooms.getSize(); }
+    const Rooms3dCubeSize& size() const { roomsSize = rooms.getSize();  return roomsSize; }
     const tstring& name() const { return m_name; }
     int id() const { return z_id; }
     enum AR_STATUS { AR_OK = 0, AR_INVALIDROOM, AR_BUSY };
@@ -25,6 +25,7 @@ private:
     void clearExits(Room *r);
 private:
     Rooms3dContainer rooms;
+    mutable Rooms3dCubeSize roomsSize;
     int z_id;
     tstring m_name;
     std::map<tstring, Room*> m_hashmap;

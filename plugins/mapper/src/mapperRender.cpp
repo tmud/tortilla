@@ -123,7 +123,7 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
 {
     RECT rc;
     GetClientRect(&rc);
-    Rooms3dCubeSize sz( pos->size() );
+    const Rooms3dCubeSize& sz = pos->size();
     Rooms3dCubePos p; p.z = z;
     for (int x=0; x<sz.width(); ++x)
     {
