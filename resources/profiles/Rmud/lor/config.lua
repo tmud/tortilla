@@ -1,7 +1,7 @@
 ﻿key = "^Вы получили некоторую информацию."
 
 check = function()
-  local r1 = createPcre('^Название "(.*)",')
+  local r1 = createPcre('^Название: (.*)')
   local r2 = createPcre('^Вы получили некоторую информацию.')
   return function(vs)
     local s = vs:getText()
