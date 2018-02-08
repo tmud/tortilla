@@ -265,13 +265,14 @@ class MapDictonary
     std::vector<fileinfo> m_files;
     struct index
     {
-        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0) {}
-        tstring name;
+        index() : file(-1), data_pos_in_file(0), data_len(0) {}
         int file;
-        DWORD pos_in_file;
-        DWORD name_tegs_len;
+        tstring name;
+        DWORD data_pos_in_file;
         DWORD data_len;
+        std::vector<tstring> auto_tegs;
         std::vector<tstring> manual_tegs;
+        tstring info;
     };
     typedef std::shared_ptr<index> index_ptr;
 
@@ -294,7 +295,7 @@ class MapDictonary
     std::vector<worddata> m_words_table;
     typedef std::vector<worddata>::iterator words_table_iterator;
 
-    bool m_manual_tegs_changed;
+    //bool m_manual_tegs_changed;
 
     int m_current_file;
     tstring m_base_dir;
@@ -314,24 +315,22 @@ class MapDictonary
         base::log(L, e.c_str());
     }
 public:
-    MapDictonary(const tstring& dir, lua_State *pl) : m_manual_tegs_changed(false), m_current_file(-1), m_base_dir(dir), L(pl)
+    MapDictonary(const tstring& dir, lua_State *pl) : /*m_manual_tegs_changed(false),*/ m_current_file(-1), m_base_dir(dir), L(pl)
     {
         buffer.alloc(4096);
         load_db();
-        load_manual_tegs();
     }
     ~MapDictonary() 
     {
         tstring error;
         save_db(&error);
-        save_manual_tegs();
     }
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
 
     bool update(const lua_ref& r, tstring *error)
     {
         bool result = true;
-
+        /*
         // save current words table
         std::vector<worddata> savewt;
         savewt.swap(m_words_table);
@@ -493,7 +492,7 @@ public:
             // перечитываем ручные теги
             load_manual_tegs();
             m_manual_tegs_changed = true;
-        }
+        }*/
         return result;
     }
 
@@ -541,17 +540,33 @@ public:
                     }
                 }
             }
-            m_manual_tegs_changed = true;
+            repack(ix);
             return REMOVED;
         }
 
         if (add_index(teg, ix, true, true))
         {
-            m_manual_tegs_changed = true;
+            repack(ix);
             ix->manual_tegs.push_back(teg);
             return ADDED;
         }
         return ERR;
+    }
+
+    enum InfoResult { INFO_ERR = 0, INFO_ABSENT, INFO_ADDED, INFO_REMOVED };
+    InfoResult info(const tstring& name, const tstring& data) 
+    {
+        if (name.empty())
+            return INFO_ERR;
+        index_ptr ix = find_name(name);
+        if (!ix)
+            return INFO_ABSENT;
+        tstring text(data);
+        tstring_trim(&text);
+        ix->info = text;
+        if (text.empty())
+            return INFO_REMOVED;
+        return INFO_ADDED;
     }
 
     int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -673,6 +688,16 @@ public:
     }
 
 private:
+    void repack(index_ptr idx) {
+        assert(idx);
+        int file = idx->file;
+        int files_count = m_files.size();
+        if (file >= 0 && file < files_count) {
+            m_files[file].repack = true;
+        } else {
+            assert(false);
+        }
+    }
     void find_similar(const tstring& start_symbols, int word_idx, positions_vector& words_indexes)
     {
         if (start_symbols.empty())
@@ -1032,7 +1057,7 @@ private:
         }
     }
 
-    void save_manual_tegs()
+    /*void save_manual_tegs()
     {
         if (!m_manual_tegs_changed)
             return;
@@ -1086,9 +1111,9 @@ private:
         if (!::MoveFileEx(path.c_str(), newpath.c_str(), MOVEFILE_REPLACE_EXISTING))
             return;
         m_manual_tegs_changed = false;
-    }
+    }*/
 
-    void load_manual_tegs()
+    /*void load_manual_tegs()
     {
         tstring path(m_base_dir);
         path.append(L"usertegs.db");
@@ -1114,7 +1139,7 @@ private:
         }
         fr.close();
         m_manual_tegs_changed = false;
-    }
+    }*/
 };
 
 int dict_add(lua_State *L)
@@ -1253,6 +1278,9 @@ int dict_teg(lua_State *L)
         tstring teg(luaT_towstring(L, 3));
         MapDictonary::TegResult result = d->teg(name, teg);
         switch (result) {
+        case MapDictonary::ERR:
+            lua_pushstring(L, "invalid args");
+            break;
         case MapDictonary::ABSENT:
             lua_pushstring(L, "absent");
             break;
@@ -1271,6 +1299,35 @@ int dict_teg(lua_State *L)
         return 1;
     }
     return dict_invalidargs(L, "teg");
+}
+
+int dict_info(lua_State *L)
+{
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring name(luaT_towstring(L, 2));
+        tstring info(luaT_towstring(L, 3));
+        MapDictonary::InfoResult result = d->info(name, info);
+        switch (result) {
+        case MapDictonary::INFO_ERR:
+            lua_pushstring(L, "invalid args");
+            break;
+        case MapDictonary::INFO_ABSENT:
+            lua_pushstring(L, "absent");
+            break;
+        case MapDictonary::INFO_ADDED:
+            lua_pushstring(L, "added");
+            break;
+        case MapDictonary::INFO_REMOVED:
+            lua_pushstring(L, "removed");
+            break;
+        default:
+            lua_pushnil(L);
+        }
+        return 1;
+    }
+    return dict_invalidargs(L, "info");
 }
 
 int dict_gc(lua_State *L)
@@ -1305,6 +1362,7 @@ int dict_new(lua_State *L)
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
         regFunction(L, "teg", dict_teg);
+        regFunction(L, "info", dict_info);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
         lua_pushvalue(L, -2);
