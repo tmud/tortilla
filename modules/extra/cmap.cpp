@@ -245,10 +245,11 @@ public:
 };
 
 struct MapDictonaryData
-{
+{    
     std::string data;
     std::vector<tstring> auto_tegs;
     std::vector<tstring> manual_tegs;
+    tstring info;
 };
 typedef std::shared_ptr<MapDictonaryData> data_ptr;
 typedef std::map<tstring,data_ptr> MapDictonaryMap;
@@ -295,7 +296,7 @@ class MapDictonary
     std::vector<worddata> m_words_table;
     typedef std::vector<worddata>::iterator words_table_iterator;
 
-    //bool m_manual_tegs_changed;
+    bool m_manual_tegs_changed;
 
     int m_current_file;
     tstring m_base_dir;
@@ -315,7 +316,7 @@ class MapDictonary
         base::log(L, e.c_str());
     }
 public:
-    MapDictonary(const tstring& dir, lua_State *pl) : /*m_manual_tegs_changed(false),*/ m_current_file(-1), m_base_dir(dir), L(pl)
+    MapDictonary(const tstring& dir, lua_State *pl) : m_manual_tegs_changed(false), m_current_file(-1), m_base_dir(dir), L(pl)
     {
         buffer.alloc(4096);
         load_db();
@@ -543,7 +544,6 @@ public:
             repack(ix);
             return REMOVED;
         }
-
         if (add_index(teg, ix, true, true))
         {
             repack(ix);
@@ -647,7 +647,8 @@ public:
                 continue;
             }
 
-            bool result = fr.read(ix->pos_in_file, ix->name_tegs_len, &buffer);
+            // load data
+            bool result = fr.read(ix->data_pos_in_file, ix->data_len, &buffer);
             if (!result)
             {
                 fileerror(fi.path);
@@ -655,34 +656,37 @@ public:
             }
 
             data_ptr d = std::make_shared<MapDictonaryData>();
-            {
-                int size = buffer.getSize();
-                buffer.keepalloc(size+1);
-                char *b = buffer.getData();
-                b[size] = 0;
-                Tokenizer tk(TU2W(b), L";\r\n");
-                tk.trimempty();
-                for (int i=1,e=tk.size();i<e;++i)
-                    d->auto_tegs.push_back(tk[i]);
-            }
-            result = fr.read(ix->pos_in_file+ix->name_tegs_len, ix->data_len, &buffer);
-            if (!result)
-            {
-                fileerror(fi.path);
-                continue;
-            }
-            // load data
-            {
-                int size = buffer.getSize();
-                buffer.keepalloc(size+1);
-                char *b = buffer.getData();
-                b[size] = 0;
-                d->data.assign(b);
-            }
+            int size = buffer.getSize();
+            buffer.keepalloc(size+1);
+            char *b = buffer.getData();
+            b[size] = 0;
+            d->data.assign(b);
+
+            // копируем auto tegs
+            const std::vector<tstring> &at = ix->auto_tegs;
+            d->auto_tegs.assign(at.begin(), at.end());
+
             // копируем manual tegs
             const std::vector<tstring> &t = ix->manual_tegs;
             d->manual_tegs.assign(t.begin(), t.end());
+
+            // копируем доп инфо
+            d->info = ix->info;
+
+            // пишем в результат
             values->operator[](ix->name) = d;
+
+                /*{
+                int size = buffer.getSize();
+                buffer.keepalloc(size+1);
+                char *b = buffer.getData();
+                b[size] = 0;
+                
+                Tokenizer tk(TU2W(b), L";\r\n");
+                tk.trimempty();
+                for (int i=1,e=tk.size();i<e;++i)
+                    d->auto_tegs.push_back(tk[i]);                    
+            }*/            
         }
         return true;
     }
@@ -1057,7 +1061,7 @@ private:
         }
     }
 
-    /*void save_manual_tegs()
+    void save_manual_tegs()
     {
         if (!m_manual_tegs_changed)
             return;
@@ -1111,9 +1115,9 @@ private:
         if (!::MoveFileEx(path.c_str(), newpath.c_str(), MOVEFILE_REPLACE_EXISTING))
             return;
         m_manual_tegs_changed = false;
-    }*/
+    }
 
-    /*void load_manual_tegs()
+    void load_manual_tegs()
     {
         tstring path(m_base_dir);
         path.append(L"usertegs.db");
@@ -1139,7 +1143,7 @@ private:
         }
         fr.close();
         m_manual_tegs_changed = false;
-    }*/
+    }
 };
 
 int dict_add(lua_State *L)
