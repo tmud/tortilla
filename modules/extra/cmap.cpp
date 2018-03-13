@@ -70,17 +70,15 @@ public:
    }
 };
 
-class filewriter
+class appendfile
 {
     HANDLE hfile;
 public:
-    filewriter() : hfile(INVALID_HANDLE_VALUE), start_name(0), start_data(0), written(0) {}
-    ~filewriter() { if (hfile!=INVALID_HANDLE_VALUE) CloseHandle(hfile); }
-    DWORD start_name;
-    DWORD start_data;
-    DWORD written;
-
-    bool write(const tstring &path, const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
+	appendfile() : hfile(INVALID_HANDLE_VALUE), start_pos(0), len(0) {}
+	~appendfile() { if (hfile != INVALID_HANDLE_VALUE) close(); }
+    DWORD start_pos;
+    DWORD len;
+	bool write(const tstring &path, const tstring& data) //, const tstring& data, const std::vector<tstring>& tegs)
     {
         hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hfile == INVALID_HANDLE_VALUE)
@@ -89,9 +87,19 @@ public:
         DWORD size = GetFileSize(hfile, &hsize);
         if (hsize > 0)
             return false;
-        if (SetFilePointer(hfile, size, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+        if (SetFilePointer(hfile, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
             return false;
-        DWORD written1 = 0;
+		DWORD written = 0;
+		u8string tmp(TW2U(data.c_str()));
+		DWORD towrite = tmp.length();
+		if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written != towrite)
+		{
+			SetFilePointer(hfile, size, NULL, FILE_BEGIN);
+			close();
+			return false;
+		}
+
+        /*DWORD written1 = 0;
         tstring tmp(name);
         tmp.append(L";");
         for (int i=0,e=tegs.size();i<e;++i) 
@@ -108,35 +116,22 @@ public:
         DWORD written3 = 0;
         if (!write_tofile(hfile, L"\n\n", &written3))
             return error(size);
-        start_name = size;
-        start_data = size + written1;
-        written = written1 + written2 + written3;
-        CloseHandle(hfile);
-        hfile = INVALID_HANDLE_VALUE;
+		start_pos = size;
+        len = size + written1;
+        written = written1 + written2 + written3;*/
+		close();
         return true;
     }
 
 private:
-  bool error(DWORD pos) 
+  void close()
   {
-      SetFilePointer(hfile,pos,NULL,FILE_BEGIN);
-      SetEndOfFile(hfile);
-      CloseHandle(hfile);
-      hfile = INVALID_HANDLE_VALUE;
-      return false;
-  }
-  bool write_tofile(HANDLE hfile, const tstring& t, DWORD *written)
-  {
-      *written = 0;
-      u8string tmp(TW2U(t.c_str()));
-      DWORD towrite = tmp.length();
-      if (!WriteFile(hfile, tmp.c_str(), towrite, written, NULL) || *written!=towrite)
-          return false;
-      return true;
+	  CloseHandle(hfile);
+	  hfile = INVALID_HANDLE_VALUE;
   }
 };
 
-class new_filewriter
+/*class new_filewriter
 {
     HANDLE hfile;
 protected:
@@ -242,49 +237,33 @@ public:
         DWORD written = 0;
         return write_tofile(data, &written);        
     }    
-};
-
-struct MapDictonaryData
-{    
-    std::string data;
-    std::vector<tstring> auto_tegs;
-    std::vector<tstring> manual_tegs;
-    tstring info;
-};
-typedef std::shared_ptr<MapDictonaryData> data_ptr;
-typedef std::map<tstring,data_ptr> MapDictonaryMap;
+};*/
 
 class MapDictonary
 {
+	struct index
+	{
+		tstring name, comment;
+		std::vector<tstring> auto_tegs;
+		std::vector<tstring> manual_tegs;
+	};
+	typedef std::shared_ptr<index> index_ptr;
     struct fileinfo
     {
-        fileinfo() : size(0), repack(false) {}
-        tstring path;
-        DWORD size;
-        bool repack;
+		fileinfo() : repack(false), repack_manual(false) {}
+        tstring auto_path;
+		tstring manual_path;
+		bool repack, repack_manual;
+		std::vector<index_ptr> data;
     };
     std::vector<fileinfo> m_files;
-    struct index
-    {
-        index() : file(-1), data_pos_in_file(0), data_len(0) {}
-        int file;
-        tstring name;
-        DWORD data_pos_in_file;
-        DWORD data_len;
-        std::vector<tstring> auto_tegs;
-        std::vector<tstring> manual_tegs;
-        tstring info;
-    };
-    typedef std::shared_ptr<index> index_ptr;
 
-    const int name_teg = 0;
-    const int manual_teg = 2;
-    const int auto_teg = 1;
+	enum wordtype { name_teg = 0, manual_teg, auto_teg };
     struct position
     {
         index_ptr idx;
+		wordtype type;
         int word_idx;
-        int word_type;
     };
     typedef std::vector<position> positions_vector;
     typedef std::shared_ptr<positions_vector> positions_ptr;    
@@ -296,9 +275,6 @@ class MapDictonary
     std::vector<worddata> m_words_table;
     typedef std::vector<worddata>::iterator words_table_iterator;
 
-    bool m_manual_tegs_changed;
-
-    int m_current_file;
     tstring m_base_dir;
     lua_State *L;
     MemoryBuffer buffer;
@@ -316,7 +292,7 @@ class MapDictonary
         base::log(L, e.c_str());
     }
 public:
-    MapDictonary(const tstring& dir, lua_State *pl) : m_manual_tegs_changed(false), m_current_file(-1), m_base_dir(dir), L(pl)
+    MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
         buffer.alloc(4096);
         load_db();
@@ -499,9 +475,12 @@ public:
 
     void wipe()
     {
-        m_current_file = -1;
         for (int i=0,e=m_files.size(); i<e; ++i) {
-          DeleteFile(m_files[i].path.c_str());
+			fileinfo &fi = m_files[i];
+			if (!fi.auto_path.empty())
+				DeleteFile(fi.auto_path.c_str());
+			if (!fi.manual_path.empty())
+				DeleteFile(fi.manual_path.c_str());
         }
         m_files.clear();
         m_words_table.clear();
