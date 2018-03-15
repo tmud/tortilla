@@ -70,65 +70,62 @@ public:
    }
 };
 
-class appendfile
+class filewriter
 {
     HANDLE hfile;
+	tstring filepath;
+	DWORD len;
 public:
-	appendfile() : hfile(INVALID_HANDLE_VALUE), start_pos(0), len(0) {}
-	~appendfile() { if (hfile != INVALID_HANDLE_VALUE) close(); }
-    DWORD start_pos;
-    DWORD len;
+	filewriter(const tstring &path) : hfile(INVALID_HANDLE_VALUE), filepath(path), len(0) {}
+	~filewriter() { if (hfile != INVALID_HANDLE_VALUE) close(); }
+	bool open()
+	{
+		hfile = CreateFile(filepath.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hfile == INVALID_HANDLE_VALUE)
+			return false;
+		DWORD hsize = 0;
+		DWORD size = GetFileSize(hfile, &hsize);
+		if (hsize > 0) {
+			close();
+			return false;
+		}
+		if (SetFilePointer(hfile, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+		{
+			close();
+			return false;
+		}
+		return true;
+	}
 	bool write(const tstring &path, const tstring& data) //, const tstring& data, const std::vector<tstring>& tegs)
     {
-        hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hfile == INVALID_HANDLE_VALUE)
-            return false;
-        DWORD hsize = 0;
-        DWORD size = GetFileSize(hfile, &hsize);
-        if (hsize > 0)
-            return false;
-        if (SetFilePointer(hfile, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
-            return false;
+		if (hfile == INVALID_HANDLE_VALUE)
+			return false;
 		DWORD written = 0;
 		u8string tmp(TW2U(data.c_str()));
 		DWORD towrite = tmp.length();
 		if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written != towrite)
 		{
-			SetFilePointer(hfile, size, NULL, FILE_BEGIN);
+			SetFilePointer(hfile, len, NULL, FILE_BEGIN);
 			close();
 			return false;
 		}
-
-        /*DWORD written1 = 0;
-        tstring tmp(name);
-        tmp.append(L";");
-        for (int i=0,e=tegs.size();i<e;++i) 
-        {
-            tmp.append(tegs[i]);
-            tmp.append(L";");
-        }
-        tmp.append(L"\n");
-        if (!write_tofile(hfile, tmp, &written1))
-            return error(size);
-        DWORD written2 = 0;
-        if (!write_tofile(hfile, data, &written2))
-            return error(size);
-        DWORD written3 = 0;
-        if (!write_tofile(hfile, L"\n\n", &written3))
-            return error(size);
-		start_pos = size;
-        len = size + written1;
-        written = written1 + written2 + written3;*/
-		close();
+		len += written;
         return true;
     }
-
-private:
-  void close()
-  {
-	  CloseHandle(hfile);
-	  hfile = INVALID_HANDLE_VALUE;
-  }
+    void close()
+    {
+	    CloseHandle(hfile);
+	    hfile = INVALID_HANDLE_VALUE;
+    }
+	void remove()
+	{
+		close();
+		if (!filepath.empty())
+			DeleteFile(filepath.c_str());
+	}
+	DWORD datalen() {
+		return len;
+	}
 };
 
 /*class new_filewriter
@@ -251,8 +248,8 @@ class MapDictonary
     struct fileinfo
     {
 		fileinfo() : repack(false), repack_manual(false) {}
-        tstring auto_path;
-		tstring manual_path;
+		filewriter auto_db;
+		filewriter user_db;
 		bool repack, repack_manual;
 		std::vector<index_ptr> data;
     };
@@ -477,10 +474,8 @@ public:
     {
         for (int i=0,e=m_files.size(); i<e; ++i) {
 			fileinfo &fi = m_files[i];
-			if (!fi.auto_path.empty())
-				DeleteFile(fi.auto_path.c_str());
-			if (!fi.manual_path.empty())
-				DeleteFile(fi.manual_path.c_str());
+			fi.auto_db.remove();
+			fi.user_db.remove();
         }
         m_files.clear();
         m_words_table.clear();
@@ -542,7 +537,7 @@ public:
             return INFO_ABSENT;
         tstring text(data);
         tstring_trim(&text);
-        ix->info = text;
+        ix->comment = text;
         if (text.empty())
             return INFO_REMOVED;
         return INFO_ADDED;
@@ -784,7 +779,7 @@ private:
     {
         Phrase p(name);
         if (p.len() == 0)
-            return 0;
+            return nullptr;
         int pi = 0;
         if (find_pos(p.get(0), &pi))
         {
@@ -796,7 +791,7 @@ private:
                     return pv[i].idx;
             }
         }
-        return 0;
+        return nullptr;
     }
 
     bool add_index(const tstring& name, index_ptr ix, bool teg, bool manual)
@@ -807,8 +802,8 @@ private:
        for (int i=0,len=p.len(); i<len; ++i)
        {
           position word_pos;
-          word_pos.word_type = name_teg;
-          if (teg) word_pos.word_type = (manual) ? manual_teg : auto_teg;
+          word_pos.type = name_teg;
+          if (teg) word_pos.type = (manual) ? manual_teg : auto_teg;
           word_pos.word_idx = i;
           word_pos.idx = ix;
           positions_ptr positions_vector_ptr;
@@ -834,6 +829,9 @@ private:
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
+		
+
+
         if (m_current_file != -1) {
            fileinfo &f = m_files[m_current_file];
            if (f.size > max_db_filesize) {
@@ -879,6 +877,26 @@ private:
         ix->name = name;
         return ix;
     }
+
+	int get_current_file()
+	{
+		size_t files = m_files.size();
+		if (files != 0) 
+		{
+			size_t last = files - 1;
+			fileinfo& fi = m_files[last];
+			if (fi.auto_db.datalen() < max_db_filesize)
+			{
+				return last;
+			}
+		}
+		char buf[8];
+		std::string v( itoa( static_cast<int>(files), buf, 10 ));
+		fileinfo fi;
+		m_files.push_back(fi);
+		fi.auto_db = "game" + v + ".dat";
+		fi.
+	}
 
     void load_db()
     {
