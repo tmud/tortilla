@@ -248,8 +248,8 @@ class MapDictonary
     struct fileinfo
     {
 		fileinfo() : repack(false), repack_manual(false) {}
-		filewriter auto_db;
-		filewriter user_db;
+		tstring auto_db;
+		tstring user_db;
 		bool repack, repack_manual;
 		std::vector<index_ptr> data;
     };
@@ -474,8 +474,8 @@ public:
     {
         for (int i=0,e=m_files.size(); i<e; ++i) {
 			fileinfo &fi = m_files[i];
-			fi.auto_db.remove();
-			fi.user_db.remove();
+			DeleteFile(fi.auto_db.c_str());
+			DeleteFile(fi.user_db.c_str());
         }
         m_files.clear();
         m_words_table.clear();
@@ -509,7 +509,7 @@ public:
                 {
                     positions_vector& pv = *m_words_table[pos].positions;
                     for (int i=0,e=pv.size();i<e;++i) {
-                      if (pv[i].idx == ix && pv[i].word_idx == i && pv[i].word_type == manual_teg){
+                      if (pv[i].idx == ix && pv[i].word_idx == i && pv[i].type == manual_teg){
                           pv.erase(pv.begin()+i); break; 
                       }
                     }
@@ -829,9 +829,6 @@ private:
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
-		
-
-
         if (m_current_file != -1) {
            fileinfo &f = m_files[m_current_file];
            if (f.size > max_db_filesize) {
@@ -895,7 +892,7 @@ private:
 		fileinfo fi;
 		m_files.push_back(fi);
 		fi.auto_db = "game" + v + ".dat";
-		fi.
+		fi.user_db = "user" + v + ".dat";
 	}
 
     void load_db()
