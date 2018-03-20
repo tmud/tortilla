@@ -511,7 +511,6 @@ void InputTemplateCommands::parsespaces(InputSubcmd& cmd)
     const tchar *p = t.c_str();
     const tchar *e = p + t.length();
     if (*p == L' ') {
-        assert(false);
         return;
     }
     while (p != e)
