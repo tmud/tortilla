@@ -1,3 +1,11 @@
 ﻿# имена плагинов, которые отключены и скрыты в клиенте
 voice
 bell
+testrender
+trswitch
+testtray
+testmisc
+testloadsave
+write
+timeline
+example

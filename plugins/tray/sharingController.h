@@ -1,7 +1,6 @@
 #pragma once
 
-#include "sharedMemory.h"
-#include "../common/tempThread.h"
+#include "api/shared.h"
 #include "sharingData.h"
 
 class SharingController
