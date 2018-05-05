@@ -106,7 +106,6 @@ public:
 		if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written != towrite)
 		{
 			SetFilePointer(hfile, len, NULL, FILE_BEGIN);
-			close();
 			return false;
 		}
 		len += written;
@@ -236,21 +235,24 @@ public:
     }    
 };*/
 
+struct index
+{
+	index() : file(-1) {}
+	tstring name, comment;
+	std::vector<tstring> auto_tegs;
+	std::vector<tstring> manual_tegs;
+	int file;
+};
+typedef std::shared_ptr<index> index_ptr;
+typedef std::map<tstring, index_ptr> MapDirectoryMap;
+
 class MapDictonary
 {
-	struct index
-	{
-		tstring name, comment;
-		std::vector<tstring> auto_tegs;
-		std::vector<tstring> manual_tegs;
-	};
-	typedef std::shared_ptr<index> index_ptr;
     struct fileinfo
     {
-		fileinfo() : repack(false), repack_manual(false) {}
-		tstring auto_db;
-		tstring user_db;
-		bool repack, repack_manual;
+		fileinfo() {}
+		tstring auto_db, user_db;
+		bool repack_auto, repack_user;
 		std::vector<index_ptr> data;
     };
     std::vector<fileinfo> m_files;
@@ -515,13 +517,13 @@ public:
                     }
                 }
             }
-            repack(ix);
+			repack_user(ix);
             return REMOVED;
         }
         if (add_index(teg, ix, true, true))
         {
-            repack(ix);
             ix->manual_tegs.push_back(teg);
+			repack_user(ix);
             return ADDED;
         }
         return ERR;
@@ -538,6 +540,7 @@ public:
         tstring text(data);
         tstring_trim(&text);
         ix->comment = text;
+		repack_user(ix);
         if (text.empty())
             return INFO_REMOVED;
         return INFO_ADDED;
@@ -581,7 +584,8 @@ public:
          if (name.empty()) return false;
          index_ptr ix = find_name(name);
          if (!ix) return true;
-         m_files[ix->file].repack = true;
+		 repack_user(ix);
+		 repack_auto(ix);
          del_indexes(ix, ix->name);
          for (int i=0,e=ix->manual_tegs.size();i<e;++i)
              del_indexes(ix, ix->manual_tegs[i]);
@@ -666,16 +670,27 @@ public:
     }
 
 private:
-    void repack(index_ptr idx) {
-        assert(idx);
-        int file = idx->file;
-        int files_count = m_files.size();
-        if (file >= 0 && file < files_count) {
-            m_files[file].repack = true;
-        } else {
-            assert(false);
-        }
-    }
+	fileinfo* findf(index_ptr idx)
+	{
+		int file = idx->file;
+		int files_count = m_files.size();
+		if (file >= 0 && file < files_count) {
+			return &m_files[file];
+		}
+		assert(false);
+		return nullptr;
+	}
+	void repack_user(index_ptr idx)
+	{
+		fileinfo* f = findf(idx);
+		if (f) f->repack_user = true;
+	}
+	void repack_auto(index_ptr idx)
+	{
+		fileinfo* f = findf(idx);
+		if (f) f->repack_auto = true;
+	}
+
     void find_similar(const tstring& start_symbols, int word_idx, positions_vector& words_indexes)
     {
         if (start_symbols.empty())
@@ -702,7 +717,7 @@ private:
             {
                 const positions_vector& pv = *m_words_table[i].positions;
                 std::for_each(pv.begin(), pv.end(), [&](const position& p) {
-                    if (p.word_type == name_teg || p.word_idx == 0)
+                    if (p.type == name_teg || p.word_idx == 0)
                         words_indexes.push_back(p);
                 });
                 words_indexes.insert(words_indexes.end(), pv.begin(), pv.end());
@@ -721,7 +736,7 @@ private:
                     {
                         if (words_indexes[j].idx != pv[i].idx)
                             continue;
-                        if (words_indexes[j].word_type == name_teg)
+                        if (words_indexes[j].type == name_teg)
                         {
                              if (words_indexes[j].word_idx < pv[i].word_idx)
                                 found = true;
@@ -1299,7 +1314,7 @@ int dict_teg(lua_State *L)
     return dict_invalidargs(L, "teg");
 }
 
-int dict_info(lua_State *L)
+int dict_comment(lua_State *L)
 {
     if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
     {
@@ -1325,7 +1340,7 @@ int dict_info(lua_State *L)
         }
         return 1;
     }
-    return dict_invalidargs(L, "info");
+    return dict_invalidargs(L, "comment");
 }
 
 int dict_gc(lua_State *L)
@@ -1360,7 +1375,7 @@ int dict_new(lua_State *L)
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
         regFunction(L, "teg", dict_teg);
-        regFunction(L, "info", dict_info);
+        regFunction(L, "comment", dict_comment);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
         lua_pushvalue(L, -2);
