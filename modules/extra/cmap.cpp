@@ -73,70 +73,62 @@ public:
 class filewriter
 {
     HANDLE hfile;
+	tstring filepath;
+	DWORD len;
 public:
-    filewriter() : hfile(INVALID_HANDLE_VALUE), start_name(0), start_data(0), written(0) {}
-    ~filewriter() { if (hfile!=INVALID_HANDLE_VALUE) CloseHandle(hfile); }
-    DWORD start_name;
-    DWORD start_data;
-    DWORD written;
-
-    bool write(const tstring &path, const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
+	filewriter(const tstring &path) : hfile(INVALID_HANDLE_VALUE), filepath(path), len(0) {}
+	~filewriter() { if (hfile != INVALID_HANDLE_VALUE) close(); }
+	bool open()
+	{
+		hfile = CreateFile(filepath.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hfile == INVALID_HANDLE_VALUE)
+			return false;
+		DWORD hsize = 0;
+		DWORD size = GetFileSize(hfile, &hsize);
+		if (hsize > 0) {
+			close();
+			return false;
+		}
+		if (SetFilePointer(hfile, 0, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+		{
+			close();
+			return false;
+		}
+		return true;
+	}
+	bool write(const tstring &path, const tstring& data) //, const tstring& data, const std::vector<tstring>& tegs)
     {
-        hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hfile == INVALID_HANDLE_VALUE)
-            return false;
-        DWORD hsize = 0;
-        DWORD size = GetFileSize(hfile, &hsize);
-        if (hsize > 0)
-            return false;
-        if (SetFilePointer(hfile, size, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
-            return false;
-        DWORD written1 = 0;
-        tstring tmp(name);
-        tmp.append(L";");
-        for (int i=0,e=tegs.size();i<e;++i) 
-        {
-            tmp.append(tegs[i]);
-            tmp.append(L";");
-        }
-        tmp.append(L"\n");
-        if (!write_tofile(hfile, tmp, &written1))
-            return error(size);
-        DWORD written2 = 0;
-        if (!write_tofile(hfile, data, &written2))
-            return error(size);
-        DWORD written3 = 0;
-        if (!write_tofile(hfile, L"\n\n", &written3))
-            return error(size);
-        start_name = size;
-        start_data = size + written1;
-        written = written1 + written2 + written3;
-        CloseHandle(hfile);
-        hfile = INVALID_HANDLE_VALUE;
+		if (hfile == INVALID_HANDLE_VALUE)
+			return false;
+		DWORD written = 0;
+		u8string tmp(TW2U(data.c_str()));
+		DWORD towrite = tmp.length();
+		if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written != towrite)
+		{
+			SetFilePointer(hfile, len, NULL, FILE_BEGIN);
+			close();
+			return false;
+		}
+		len += written;
         return true;
     }
-
-private:
-  bool error(DWORD pos) 
-  {
-      SetFilePointer(hfile,pos,NULL,FILE_BEGIN);
-      SetEndOfFile(hfile);
-      CloseHandle(hfile);
-      hfile = INVALID_HANDLE_VALUE;
-      return false;
-  }
-  bool write_tofile(HANDLE hfile, const tstring& t, DWORD *written)
-  {
-      *written = 0;
-      u8string tmp(TW2U(t.c_str()));
-      DWORD towrite = tmp.length();
-      if (!WriteFile(hfile, tmp.c_str(), towrite, written, NULL) || *written!=towrite)
-          return false;
-      return true;
-  }
+    void close()
+    {
+	    CloseHandle(hfile);
+	    hfile = INVALID_HANDLE_VALUE;
+    }
+	void remove()
+	{
+		close();
+		if (!filepath.empty())
+			DeleteFile(filepath.c_str());
+	}
+	DWORD datalen() {
+		return len;
+	}
 };
 
-class new_filewriter
+/*class new_filewriter
 {
     HANDLE hfile;
 protected:
@@ -242,47 +234,33 @@ public:
         DWORD written = 0;
         return write_tofile(data, &written);        
     }    
-};
-
-struct MapDictonaryData
-{
-    std::string data;
-    std::vector<tstring> auto_tegs;
-    std::vector<tstring> manual_tegs;
-};
-typedef std::shared_ptr<MapDictonaryData> data_ptr;
-typedef std::map<tstring,data_ptr> MapDictonaryMap;
+};*/
 
 class MapDictonary
 {
+	struct index
+	{
+		tstring name, comment;
+		std::vector<tstring> auto_tegs;
+		std::vector<tstring> manual_tegs;
+	};
+	typedef std::shared_ptr<index> index_ptr;
     struct fileinfo
     {
-        fileinfo() : size(0), repack(false) {}
-        tstring path;
-        DWORD size;
-        bool repack;
+		fileinfo() : repack(false), repack_manual(false) {}
+		tstring auto_db;
+		tstring user_db;
+		bool repack, repack_manual;
+		std::vector<index_ptr> data;
     };
     std::vector<fileinfo> m_files;
-    struct index
-    {
-        index() : file(-1), pos_in_file(0), name_tegs_len(0), data_len(0) {}
-        tstring name;
-        int file;
-        DWORD pos_in_file;
-        DWORD name_tegs_len;
-        DWORD data_len;
-        std::vector<tstring> manual_tegs;
-    };
-    typedef std::shared_ptr<index> index_ptr;
 
-    const int name_teg = 0;
-    const int manual_teg = 2;
-    const int auto_teg = 1;
+	enum wordtype { name_teg = 0, manual_teg, auto_teg };
     struct position
     {
         index_ptr idx;
+		wordtype type;
         int word_idx;
-        int word_type;
     };
     typedef std::vector<position> positions_vector;
     typedef std::shared_ptr<positions_vector> positions_ptr;    
@@ -294,9 +272,6 @@ class MapDictonary
     std::vector<worddata> m_words_table;
     typedef std::vector<worddata>::iterator words_table_iterator;
 
-    bool m_manual_tegs_changed;
-
-    int m_current_file;
     tstring m_base_dir;
     lua_State *L;
     MemoryBuffer buffer;
@@ -314,24 +289,22 @@ class MapDictonary
         base::log(L, e.c_str());
     }
 public:
-    MapDictonary(const tstring& dir, lua_State *pl) : m_manual_tegs_changed(false), m_current_file(-1), m_base_dir(dir), L(pl)
+    MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
         buffer.alloc(4096);
         load_db();
-        load_manual_tegs();
     }
     ~MapDictonary() 
     {
         tstring error;
         save_db(&error);
-        save_manual_tegs();
     }
     enum { MD_OK = 0, MD_EXIST, MD_ERROR };
 
     bool update(const lua_ref& r, tstring *error)
     {
         bool result = true;
-
+        /*
         // save current words table
         std::vector<worddata> savewt;
         savewt.swap(m_words_table);
@@ -493,15 +466,16 @@ public:
             // перечитываем ручные теги
             load_manual_tegs();
             m_manual_tegs_changed = true;
-        }
+        }*/
         return result;
     }
 
     void wipe()
     {
-        m_current_file = -1;
         for (int i=0,e=m_files.size(); i<e; ++i) {
-          DeleteFile(m_files[i].path.c_str());
+			fileinfo &fi = m_files[i];
+			DeleteFile(fi.auto_db.c_str());
+			DeleteFile(fi.user_db.c_str());
         }
         m_files.clear();
         m_words_table.clear();
@@ -535,23 +509,38 @@ public:
                 {
                     positions_vector& pv = *m_words_table[pos].positions;
                     for (int i=0,e=pv.size();i<e;++i) {
-                      if (pv[i].idx == ix && pv[i].word_idx == i && pv[i].word_type == manual_teg){
+                      if (pv[i].idx == ix && pv[i].word_idx == i && pv[i].type == manual_teg){
                           pv.erase(pv.begin()+i); break; 
                       }
                     }
                 }
             }
-            m_manual_tegs_changed = true;
+            repack(ix);
             return REMOVED;
         }
-
         if (add_index(teg, ix, true, true))
         {
-            m_manual_tegs_changed = true;
+            repack(ix);
             ix->manual_tegs.push_back(teg);
             return ADDED;
         }
         return ERR;
+    }
+
+    enum InfoResult { INFO_ERR = 0, INFO_ABSENT, INFO_ADDED, INFO_REMOVED };
+    InfoResult info(const tstring& name, const tstring& data) 
+    {
+        if (name.empty())
+            return INFO_ERR;
+        index_ptr ix = find_name(name);
+        if (!ix)
+            return INFO_ABSENT;
+        tstring text(data);
+        tstring_trim(&text);
+        ix->comment = text;
+        if (text.empty())
+            return INFO_REMOVED;
+        return INFO_ADDED;
     }
 
     int add(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
@@ -632,7 +621,8 @@ public:
                 continue;
             }
 
-            bool result = fr.read(ix->pos_in_file, ix->name_tegs_len, &buffer);
+            // load data
+            bool result = fr.read(ix->data_pos_in_file, ix->data_len, &buffer);
             if (!result)
             {
                 fileerror(fi.path);
@@ -640,39 +630,52 @@ public:
             }
 
             data_ptr d = std::make_shared<MapDictonaryData>();
-            {
-                int size = buffer.getSize();
-                buffer.keepalloc(size+1);
-                char *b = buffer.getData();
-                b[size] = 0;
-                Tokenizer tk(TU2W(b), L";\r\n");
-                tk.trimempty();
-                for (int i=1,e=tk.size();i<e;++i)
-                    d->auto_tegs.push_back(tk[i]);
-            }
-            result = fr.read(ix->pos_in_file+ix->name_tegs_len, ix->data_len, &buffer);
-            if (!result)
-            {
-                fileerror(fi.path);
-                continue;
-            }
-            // load data
-            {
-                int size = buffer.getSize();
-                buffer.keepalloc(size+1);
-                char *b = buffer.getData();
-                b[size] = 0;
-                d->data.assign(b);
-            }
+            int size = buffer.getSize();
+            buffer.keepalloc(size+1);
+            char *b = buffer.getData();
+            b[size] = 0;
+            d->data.assign(b);
+
+            // копируем auto tegs
+            const std::vector<tstring> &at = ix->auto_tegs;
+            d->auto_tegs.assign(at.begin(), at.end());
+
             // копируем manual tegs
             const std::vector<tstring> &t = ix->manual_tegs;
             d->manual_tegs.assign(t.begin(), t.end());
+
+            // копируем доп инфо
+            d->info = ix->info;
+
+            // пишем в результат
             values->operator[](ix->name) = d;
+
+                /*{
+                int size = buffer.getSize();
+                buffer.keepalloc(size+1);
+                char *b = buffer.getData();
+                b[size] = 0;
+                
+                Tokenizer tk(TU2W(b), L";\r\n");
+                tk.trimempty();
+                for (int i=1,e=tk.size();i<e;++i)
+                    d->auto_tegs.push_back(tk[i]);                    
+            }*/            
         }
         return true;
     }
 
 private:
+    void repack(index_ptr idx) {
+        assert(idx);
+        int file = idx->file;
+        int files_count = m_files.size();
+        if (file >= 0 && file < files_count) {
+            m_files[file].repack = true;
+        } else {
+            assert(false);
+        }
+    }
     void find_similar(const tstring& start_symbols, int word_idx, positions_vector& words_indexes)
     {
         if (start_symbols.empty())
@@ -776,7 +779,7 @@ private:
     {
         Phrase p(name);
         if (p.len() == 0)
-            return 0;
+            return nullptr;
         int pi = 0;
         if (find_pos(p.get(0), &pi))
         {
@@ -788,7 +791,7 @@ private:
                     return pv[i].idx;
             }
         }
-        return 0;
+        return nullptr;
     }
 
     bool add_index(const tstring& name, index_ptr ix, bool teg, bool manual)
@@ -799,8 +802,8 @@ private:
        for (int i=0,len=p.len(); i<len; ++i)
        {
           position word_pos;
-          word_pos.word_type = name_teg;
-          if (teg) word_pos.word_type = (manual) ? manual_teg : auto_teg;
+          word_pos.type = name_teg;
+          if (teg) word_pos.type = (manual) ? manual_teg : auto_teg;
           word_pos.word_idx = i;
           word_pos.idx = ix;
           positions_ptr positions_vector_ptr;
@@ -871,6 +874,26 @@ private:
         ix->name = name;
         return ix;
     }
+
+	int get_current_file()
+	{
+		size_t files = m_files.size();
+		if (files != 0) 
+		{
+			size_t last = files - 1;
+			fileinfo& fi = m_files[last];
+			if (fi.auto_db.datalen() < max_db_filesize)
+			{
+				return last;
+			}
+		}
+		char buf[8];
+		std::string v( itoa( static_cast<int>(files), buf, 10 ));
+		fileinfo fi;
+		m_files.push_back(fi);
+		fi.auto_db = "game" + v + ".dat";
+		fi.user_db = "user" + v + ".dat";
+	}
 
     void load_db()
     {
@@ -1253,6 +1276,9 @@ int dict_teg(lua_State *L)
         tstring teg(luaT_towstring(L, 3));
         MapDictonary::TegResult result = d->teg(name, teg);
         switch (result) {
+        case MapDictonary::ERR:
+            lua_pushstring(L, "invalid args");
+            break;
         case MapDictonary::ABSENT:
             lua_pushstring(L, "absent");
             break;
@@ -1271,6 +1297,35 @@ int dict_teg(lua_State *L)
         return 1;
     }
     return dict_invalidargs(L, "teg");
+}
+
+int dict_info(lua_State *L)
+{
+    if (luaT_check(L, 3, get_dict(L), LUA_TSTRING, LUA_TSTRING))
+    {
+        MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
+        tstring name(luaT_towstring(L, 2));
+        tstring info(luaT_towstring(L, 3));
+        MapDictonary::InfoResult result = d->info(name, info);
+        switch (result) {
+        case MapDictonary::INFO_ERR:
+            lua_pushstring(L, "invalid args");
+            break;
+        case MapDictonary::INFO_ABSENT:
+            lua_pushstring(L, "absent");
+            break;
+        case MapDictonary::INFO_ADDED:
+            lua_pushstring(L, "added");
+            break;
+        case MapDictonary::INFO_REMOVED:
+            lua_pushstring(L, "removed");
+            break;
+        default:
+            lua_pushnil(L);
+        }
+        return 1;
+    }
+    return dict_invalidargs(L, "info");
 }
 
 int dict_gc(lua_State *L)
@@ -1305,6 +1360,7 @@ int dict_new(lua_State *L)
         regFunction(L, "update", dict_update);
         regFunction(L, "wipe", dict_wipe);
         regFunction(L, "teg", dict_teg);
+        regFunction(L, "info", dict_info);
         regFunction(L, "__gc", dict_gc);
         lua_pushstring(L, "__index");
         lua_pushvalue(L, -2);
