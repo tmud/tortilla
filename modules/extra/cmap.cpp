@@ -2,7 +2,7 @@
 #include "phrase.h"
 #include <memory>
 
-const DWORD max_db_filesize = 8 * 1024 * 1024; // 8mb
+const int maxitems_per_file = 256;
 std::map<lua_State*, int> m_dict_types;
 typedef std::map<lua_State*, int>::iterator iterator;
 int get_dict(lua_State *L)
@@ -239,12 +239,13 @@ struct index
 {
 	index() : file(-1) {}
 	tstring name, comment;
+	std::string data;
 	std::vector<tstring> auto_tegs;
 	std::vector<tstring> manual_tegs;
 	int file;
 };
 typedef std::shared_ptr<index> index_ptr;
-typedef std::map<tstring, index_ptr> MapDirectoryMap;
+typedef std::map<tstring, index_ptr> MapDictonaryMap;
 
 class MapDictonary
 {
@@ -610,11 +611,11 @@ public:
         std::for_each(tmp.begin(), tmp.end(), [&result](position& p){ result.insert(p.idx); });
 
         // грузим данные
-        std::vector<filereader> open_files(m_files.size());
+       // std::vector<filereader> open_files(m_files.size());
         std::set<index_ptr>::iterator rt = result.begin(), rt_end = result.end();
         for (; rt != rt_end; ++rt)
         {
-            index_ptr ix = *rt;
+           /*index_ptr ix = *rt;
 
             int fileid = ix->file;
             fileinfo& fi = m_files[fileid];
@@ -652,7 +653,7 @@ public:
             d->info = ix->info;
 
             // пишем в результат
-            values->operator[](ix->name) = d;
+            values->operator[](ix->name) = d;*/
 
                 /*{
                 int size = buffer.getSize();
@@ -844,7 +845,7 @@ private:
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
-        if (m_current_file != -1) {
+        /*if (m_current_file != -1) {
            fileinfo &f = m_files[m_current_file];
            if (f.size > max_db_filesize) {
                m_current_file = -1;
@@ -887,10 +888,12 @@ private:
         ix->name_tegs_len = fw.start_data - fw.start_name;
         ix->data_len = fw.written - (fw.start_data - fw.start_name);
         ix->name = name;
-        return ix;
+        return ix;*/
+		index_ptr ix = std::make_shared<index>();
+		return ix;
     }
 
-	int get_current_file()
+	/*int get_current_file()
 	{
 		size_t files = m_files.size();
 		if (files != 0) 
@@ -908,6 +911,11 @@ private:
 		m_files.push_back(fi);
 		fi.auto_db = "game" + v + ".dat";
 		fi.user_db = "user" + v + ".dat";
+	}*/
+
+	void load_old_db()
+	{
+
 	}
 
     void load_db()
@@ -924,8 +932,8 @@ private:
                 {
                     if (fd.nFileSizeHigh > 0)
                         continue;
-                    DWORD max_size = max_db_filesize + 16384;
-                    if (fd.nFileSizeLow >= max_size)
+					DWORD max_size = maxitems_per_file * 4096;
+					if (fd.nFileSizeLow >= max_size);
                         continue;
                     tstring name(fd.cFileName);
                     int len = name.length()-3;
@@ -935,22 +943,25 @@ private:
                     tstring path(m_base_dir);
                     path.append(fd.cFileName);
                     fileinfo f;
-                    f.path = path;
-                    f.size = fd.nFileSizeLow;
+                    f.auto_db = path;
+					path.assign(fd.cFileName);
+					path.append(name);
+					path.append(L".user");
+					f.user_db = path;
                     m_files.push_back(f);
                 }
             } while (::FindNextFile(file, &fd));
             ::FindClose(file);
         }
         std::sort(m_files.begin(),m_files.end(),[](const fileinfo&a, const fileinfo&b) {
-            return a.path < b.path;
+			return a.auto_db < b.auto_db;
         });
         for (int i=0,e=m_files.size();i<e;++i)
         {
             // read files in to catalog
-            load_file lf(m_files[i].path);
+            load_file lf(m_files[i].auto_db);
             if (!lf.result) {
-                fileerror(m_files[i].path);
+				fileerror(m_files[i].auto_db);
                 continue;
             }
 
@@ -999,7 +1010,7 @@ private:
 
     void save_db(tstring *error)
     {
-        std::vector<tstring> processed;
+        /*std::vector<tstring> processed;
         MemoryBuffer buffer;
         for (int f=0,fe=m_files.size(); f<fe; ++f)
         {
@@ -1067,10 +1078,10 @@ private:
                 }
                 DeleteFile(oldname.c_str());
             }
-        }
+        }*/
     }
 
-    void save_manual_tegs()
+    /*void save_manual_tegs()
     {
         if (!m_manual_tegs_changed)
             return;
@@ -1152,7 +1163,7 @@ private:
         }
         fr.close();
         m_manual_tegs_changed = false;
-    }
+    }*/
 };
 
 int dict_add(lua_State *L)
@@ -1217,12 +1228,12 @@ int dict_find(lua_State *L)
                 luaT_pushwstring(L, it->first.c_str());
                 lua_newtable(L);
 
-                data_ptr p = it->second;
+                index_ptr ix = it->second;
                 lua_pushstring(L, "data");
-                lua_pushstring(L, p->data.c_str());
+                lua_pushstring(L, ix->data.c_str());
                 lua_settable(L, -3);
 
-                const std::vector<tstring>& at = p->auto_tegs;
+                const std::vector<tstring>& at = ix->auto_tegs;
                 lua_pushstring(L, "auto");
                 lua_newtable(L);
                 for (int i=0,e=at.size();i<e;++i)
@@ -1233,7 +1244,7 @@ int dict_find(lua_State *L)
                 }                
                 lua_settable(L, -3);
 
-                const std::vector<tstring>& mt = p->manual_tegs;
+                const std::vector<tstring>& mt = ix->manual_tegs;
                 lua_pushstring(L, "tegs");
                 lua_newtable(L);
                 for (int i=0,e=mt.size();i<e;++i)
