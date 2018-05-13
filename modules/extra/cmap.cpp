@@ -96,21 +96,25 @@ public:
 		}
 		return true;
 	}
-	bool write(const tstring &path, const tstring& data) //, const tstring& data, const std::vector<tstring>& tegs)
+	bool write(const tstring& data)
     {
+		u8string tmp(TW2U(data.c_str()));
+		return write(tmp);
+    }
+	bool write(const std::string& data)
+	{
 		if (hfile == INVALID_HANDLE_VALUE)
 			return false;
 		DWORD written = 0;
-		u8string tmp(TW2U(data.c_str()));
-		DWORD towrite = tmp.length();
-		if (!WriteFile(hfile, tmp.c_str(), towrite, &written, NULL) || written != towrite)
+		DWORD towrite = data.length();
+		if (!WriteFile(hfile, data.c_str(), towrite, &written, NULL) || written != towrite)
 		{
 			SetFilePointer(hfile, len, NULL, FILE_BEGIN);
 			return false;
 		}
 		len += written;
-        return true;
-    }
+		return true;
+	}
     void close()
     {
 	    CloseHandle(hfile);
@@ -916,12 +920,15 @@ private:
 	void load_old_db()
 	{
 
+
+
+
 	}
 
     void load_db()
     {
         tstring mask(m_base_dir);
-        mask.append(L"*.db");
+        mask.append(L"*.mud");
         WIN32_FIND_DATA fd;
         memset(&fd, 0, sizeof(WIN32_FIND_DATA));
         HANDLE file = FindFirstFile(mask.c_str(), &fd);
@@ -932,19 +939,19 @@ private:
                 {
                     if (fd.nFileSizeHigh > 0)
                         continue;
-					DWORD max_size = maxitems_per_file * 4096;
-					if (fd.nFileSizeLow >= max_size);
+					DWORD max_size = (maxitems_per_file+1) * 4096 ;
+					if (fd.nFileSizeLow >= max_size)
                         continue;
                     tstring name(fd.cFileName);
                     int len = name.length()-3;
                     name = name.substr(0,len);
-                    if (!isOnlyDigits(name))
-                        continue;
+                    //if (!isOnlyDigits(name))
+                    //    continue;
                     tstring path(m_base_dir);
                     path.append(fd.cFileName);
                     fileinfo f;
                     f.auto_db = path;
-					path.assign(fd.cFileName);
+					path.assign(m_base_dir);
 					path.append(name);
 					path.append(L".user");
 					f.user_db = path;
@@ -953,13 +960,14 @@ private:
             } while (::FindNextFile(file, &fd));
             ::FindClose(file);
         }
+
         std::sort(m_files.begin(),m_files.end(),[](const fileinfo&a, const fileinfo&b) {
 			return a.auto_db < b.auto_db;
         });
         for (int i=0,e=m_files.size();i<e;++i)
         {
             // read files in to catalog
-            load_file lf(m_files[i].auto_db);
+            /*load_file lf(m_files[i].auto_db);
             if (!lf.result) {
 				fileerror(m_files[i].auto_db);
                 continue;
@@ -1004,81 +1012,77 @@ private:
                     ix->pos_in_file = start_pos;
                     ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
-            }
+            }*/
         }
     }
 
     void save_db(tstring *error)
     {
-        /*std::vector<tstring> processed;
+        std::vector<tstring> processed;
         MemoryBuffer buffer;
-        for (int f=0,fe=m_files.size(); f<fe; ++f)
-        {
-            if (!error->empty()) break;
-            if (!m_files[f].repack) continue;
-            fileinfo& fi = m_files[f];
-            filereader fr;
-            if (!fr.open(fi.path))
-            {
-                error->assign(L"Ошибка при открытии файла на чтение: ");
-                error->append(fi.path);
-                break;
-            }
+		for (fileinfo& fi : m_files)
+		{
+			if (!error->empty()) break;
+			if (fi.repack_auto)
+			{
+				filewriter fw(fi.auto_db);
+				if (!fw.open()) {
+					error->assign(L"Ошибка при открытии файла на запись: ");
+					error->append(fi.auto_db);
+					break;
+				}
+				for (index_ptr ix : fi.data)
+				{
+					tstring name(ix->name); name.append(L"\r\n");
+					std::string data(ix->data); data.append("\r\n");
+					if (!fw.write(name) || !fw.write(data))
+					{
+						error->assign(L"Ошибка при записи файла: ");
+						error->append(fi.auto_db);
+						break;
+					}
+				}
+				fw.close();
+			}
+			if (fi.repack_user)
+			{
+				filewriter fw(fi.user_db);
+				if (!fw.open()) {
+					error->assign(L"Ошибка при открытии файла на запись: ");
+					error->append(fi.user_db);
+					break;
+				}
+				for (index_ptr ix : fi.data)
+				{
+					tstring data(ix->name); data.append(L"\r\n");
+					int i = ix->auto_tegs.size();
+					for (const tstring& s : ix->auto_tegs)
+					{
+						data.append(s);
+						i--;
+						if (i > 0) data.append(L";");
+						else data.append(L"\r\n");
+					}
+					i = ix->manual_tegs.size();
+					for (const tstring& s : ix->manual_tegs)
+					{
+						data.append(s);
+						i--;
+						if (i > 0) data.append(L";");
+						else data.append(L"\r\n");
+					}
+					data.append(ix->comment); data.append(L"\r\n");
 
-            tstring newfile_path(fi.path);
-            newfile_path.append(L".new");
-            database_file_copier fw;
-            if (!fw.open(newfile_path))
-            {
-                error->assign(L"Ошибка при открытии файла на запись: ");
-                error->append(newfile_path);
-                break;
-            }
-            processed.push_back(fi.path);
-            words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
-            for (; it != it_end; ++it)
-            {
-                positions_vector &pv = *it->positions;
-                for (int i = 0, e=pv.size(); i<e; ++i)
-                {
-                    index_ptr ix = pv[i].idx;
-                    if (ix->file != f || pv[i].word_idx != 0 || pv[i].word_type != name_teg ) continue;
-                    if (!fr.read(ix->pos_in_file, ix->name_tegs_len+ix->data_len, &buffer))
-                    {
-                        fw.remove();
-                        error->assign(L"Ошибка при чтении файла: ");
-                        error->append(fi.path);
-                        break;
-                    }
-                    if (!fw.write(buffer))
-                    {
-                        fw.remove();
-                        error->assign(L"Ошибка при записи файла: ");
-                        error->append(newfile_path);
-                        break;                    
-                    }
-                }
-                if (!error->empty()) break;
-            }
-        }
-        if (error->empty())
-        {
-            // переименование старых файлов
-            for (int i = 0, e = processed.size(); i < e; ++i)
-            {
-                tstring name(processed[i]);
-                tstring oldname(name);
-                oldname.append(L".old");
-                tstring newname(name);
-                newname.append(L".new");
-                if (!MoveFile(name.c_str(), oldname.c_str()) || !MoveFile(newname.c_str(), name.c_str()) ) 
-                {
-                    error->assign(L"Ошибка при переименовании файлов. Переименуйте их вручную.");
-                    break;
-                }
-                DeleteFile(oldname.c_str());
-            }
-        }*/
+					if (!fw.write(data))
+					{
+						error->assign(L"Ошибка при записи файла: ");
+						error->append(fi.user_db);
+						break;
+					}
+				}
+				fw.close();
+			}
+		}
     }
 
     /*void save_manual_tegs()
