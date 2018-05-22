@@ -2,16 +2,16 @@
 #include "roomsZone.h"
 #include "mapMergeTools.h"
 
-MapZoneMirror::MapZoneMirror(const Rooms3dCube* src) 
+MapZoneMirror::MapZoneMirror(const Rooms3dContainerEx& src) : rooms(src)
 {
 }    
 
 MapZoneMirror::~MapZoneMirror() 
 {
-    release();
 }
 
-bool MapZoneMirror::tryMergeZone(const Rooms3dCube* z)
+bool MapZoneMirror::tryMergeZone()
 {
+
     return false;
 }

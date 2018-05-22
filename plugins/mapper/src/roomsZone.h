@@ -6,7 +6,7 @@ class Rooms3dCube
     friend class Rooms3dCubeCursor;
     friend class MapToolsImpl;
 public:
-    Rooms3dCube(int zid, const tstring& name) : rooms(true), z_id(zid), m_name(name) {
+    Rooms3dCube(int zid, const tstring& name) : z_id(zid), m_name(name) {
         assert(zid >= 0);
     }
     ~Rooms3dCube() {}
@@ -24,7 +24,7 @@ public:
 private:
     void clearExits(Room *r);
 private:
-    Rooms3dContainer rooms;
+    Rooms3dContainerEx rooms;
     mutable Rooms3dCubeSize roomsSize;
     int z_id;
     tstring m_name;

@@ -107,13 +107,13 @@
     <ClInclude Include="src\bitmapButton.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mapMergeTools.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\roomsContainer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\roomsZone.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mapMergeTools.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -178,13 +178,13 @@
     <ClCompile Include="src\mapperUnitTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\mapMergeTools.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\roomsContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\roomsZone.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mapMergeTools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

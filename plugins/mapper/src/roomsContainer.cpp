@@ -1,21 +1,11 @@
 #include "stdafx.h"
 #include "roomsContainer.h"
 
-const Room* Rooms3dContainer::get(const Rooms3dCubePos& p) const
+Room* Rooms3dContainer::get(const Rooms3dCubePos& p) const
 {
     Room** ptr = getp(p);
     if (!ptr) return NULL;
     return *ptr;
-}
-
-Room* Rooms3dContainer::detach(const Rooms3dCubePos& p) const
-{
-    Room** ptr = getp(p);
-    if (!ptr) return NULL;
-    Room *r = *ptr;
-    r->pos.clear();
-    *ptr = NULL;     
-    return r;
 }
 
 Room** Rooms3dContainer::getp(const Rooms3dCubePos& p) const
@@ -33,7 +23,7 @@ Room** Rooms3dContainer::getp(const Rooms3dCubePos& p) const
     return &r->rr[x];
 }
 
-void Rooms3dContainer::add(const Rooms3dCubePos& p, Room *room, int zoneid)
+void Rooms3dContainer::set(const Rooms3dCubePos& p, Room *room)
 {
     if (!checkCoords(p))
     {
@@ -44,9 +34,7 @@ void Rooms3dContainer::add(const Rooms3dCubePos& p, Room *room, int zoneid)
         // 3. extends levels (z)
         extends_levels(p);
     }
-    Room** ptr = getp(p);
-    room->pos = p;
-    room->pos.zid = zoneid;
+    Room** ptr = getp(p);    
     *ptr = room;
 }
 
@@ -144,17 +132,6 @@ bool Rooms3dContainer::emptyLevel(level *l)
         }
     }
     return true;
-}
-
-int Rooms3dContainer::countRooms(level *l)
-{
-    int count = 0;
-    for (row *r : l->rooms) {
-        for (Room* room : r->rr ) {
-            if (room) count++;
-        }
-    }
-    return count;
 }
 
 void Rooms3dContainer::collapse()
@@ -260,72 +237,8 @@ void Rooms3dContainer::collapse()
         }
         cube_size.bottom -= 1;
     }
-    correctPositions();
 }
 
-void Rooms3dContainer::correctPositions() {
-
-    // normalize cube size values (select center 0,0,0 if not exist)
-    normalizePositions();
-
-    // correct rooms positions
-    Rooms3dCubePos c;
-    c.z = cube_size.minlevel;     
-    for (level *l : zone) {
-        c.y = cube_size.top;
-        for (row *r : l->rooms){
-            c.x = cube_size.left;
-            for (Room *room : r->rr) {
-                if (room) {
-                    int zid = room->pos.zid;
-                    room->pos = c;
-                    room->pos.zid = zid;
-                }
-                c.x++;
-            }
-            c.y++;
-        }
-        c.z++;
-    }
-}
-
-void Rooms3dContainer::normalizePositions()
-{
-     int min = cube_size.minlevel;
-     int max = cube_size.maxlevel;
-
-     if (min > 0 || 0 > max)  {
-         // select base level
-         int index = -1; int rooms = 0;
-         for (int i=0,e=zone.size(); i<e; ++i) {
-            level *l = zone[i];
-            int count = countRooms(l);
-            if (count > rooms) {
-                index = i; rooms = count;
-            }
-            if (index == -1) {
-                assert(false);
-                return;
-            }
-         }
-         cube_size.minlevel = -index;
-         cube_size.maxlevel = cube_size.minlevel + (zone.size()-1);
-     }
-     min = cube_size.left; max = cube_size.right;
-     if (min > 0 || 0 > max)  {
-         int count = (max - min)+1;
-         int center = count / 2;
-         cube_size.left = -center;
-         cube_size.right = cube_size.left + (count - 1);
-     }
-     min = cube_size.top; max = cube_size.bottom;
-     if (min > 0 || 0 > max)  {
-         int count = (max - min)+1;
-         int center = count / 2;
-         cube_size.top = -center;
-         cube_size.bottom = cube_size.top + (count - 1);
-     }
-}
 
 bool Rooms3dContainer::checkCoords(const Rooms3dCubePos& p) const
 {
@@ -335,18 +248,6 @@ bool Rooms3dContainer::checkCoords(const Rooms3dCubePos& p) const
         {
             return true;
         }
-    }
-    return false;
-}
-
-bool Rooms3dContainer::setAsLevel0(int level)
-{
-    if (level >= cube_size.minlevel && level <= cube_size.maxlevel) {
-        int index = level - cube_size.minlevel;
-        cube_size.minlevel = -index;
-        cube_size.maxlevel = cube_size.minlevel + zone.size() - 1;
-        correctPositions();
-        return true;
     }
     return false;
 }
@@ -372,3 +273,127 @@ bool Rooms3dContainer::testInvariant()
     return true;
 }
 #endif
+
+Rooms3dContainerMirror::Rooms3dContainerMirror(const Rooms3dContainer& src) : rooms(false)
+{  
+    const Rooms3dCubeSize &sz = src.getSize();
+    for (int l=sz.minlevel; l<=sz.maxlevel; ++l)
+    {
+        Rooms3dCubePos p; p.z = l;
+        for (int y = sz.top; y<=sz.bottom; ++y)
+        {
+            p.y = y;
+            for (int x = sz.left; x<=sz.right; ++x)
+            {
+                p.x = x;
+                Room *r = src.get(p);
+                rooms.set(p, r);
+            }        
+        }
+    }
+    rooms.collapse();
+    const Rooms3dCubeSize &sz2 =rooms.getSize();
+    assert(sz2.left == sz.left && sz.right == sz2.right && sz.top == sz2.top && sz.bottom == sz2.bottom 
+        && sz.maxlevel == sz2.maxlevel && sz.minlevel == sz2.minlevel);
+}
+
+bool Rooms3dContainerEx::setAsLevel0(int level)
+{
+    Rooms3dCubeSize &cube_size = rooms.cube_size;
+    if (level >= cube_size.minlevel && level <= cube_size.maxlevel) 
+    {
+        int index = level - cube_size.minlevel;
+        cube_size.minlevel = -index;
+        cube_size.maxlevel = cube_size.minlevel + rooms.zone.size() - 1;
+        correctPositions();
+        return true;
+    }
+    return false;
+}
+
+void Rooms3dContainerEx::collapse() 
+{ 
+     rooms.collapse();           
+     correctPositions();
+}
+
+void Rooms3dContainerEx::correctPositions() 
+{   
+    normalizePositions();
+
+    Rooms3dCubeSize &cube_size = rooms.cube_size;
+    std::vector<level*> zone = rooms.zone;
+
+    // correct rooms positions
+    Rooms3dCubePos c;
+    c.z = cube_size.minlevel;     
+    for (level *l : zone) {
+        c.y = cube_size.top;
+        for (row *r : l->rooms){
+            c.x = cube_size.left;
+            for (Room *room : r->rr) {
+                if (room) {
+                    int zid = room->pos.zid;
+                    room->pos = c;
+                    room->pos.zid = zid;
+                }
+                c.x++;
+            }
+            c.y++;
+        }
+        c.z++;
+    }
+}
+
+void Rooms3dContainerEx::normalizePositions()
+{
+    Rooms3dCubeSize &cube_size = rooms.cube_size;
+    std::vector<level*> zone = rooms.zone;
+
+    // normalize cube size values (select center 0,0,0 if not exist)
+     int min = cube_size.minlevel;
+     int max = cube_size.maxlevel;
+
+     if (min > 0 || 0 > max)  {
+         // select base level
+         int index = -1; int rooms_max = 0;
+         for (int i=0,e=zone.size(); i<e; ++i) {
+            level *l = zone[i];
+            int count = countRooms(l);
+            if (count > rooms_max) {
+                index = i; rooms_max = count;
+            }
+            if (index == -1) {
+                assert(false);
+                return;
+            }
+         }
+         cube_size.minlevel = -index;
+         cube_size.maxlevel = cube_size.minlevel + (zone.size()-1);
+     }
+     min = cube_size.left; max = cube_size.right;
+     if (min > 0 || 0 > max)  {
+         int count = (max - min)+1;
+         int center = count / 2;
+         cube_size.left = -center;
+         cube_size.right = cube_size.left + (count - 1);
+     }
+     min = cube_size.top; max = cube_size.bottom;
+     if (min > 0 || 0 > max)  {
+         int count = (max - min)+1;
+         int center = count / 2;
+         cube_size.top = -center;
+         cube_size.bottom = cube_size.top + (count - 1);
+     }
+}
+
+int Rooms3dContainerEx::countRooms(level *l)
+{
+    int count = 0;
+    for (row *r : l->rooms) {
+        for (Room* room : r->rr ) {
+            if (room) count++;
+        }
+    }
+    return count;
+}
