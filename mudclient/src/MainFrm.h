@@ -306,7 +306,7 @@ private:
 
     void setTaskbarName()
     {
-        if (!isVistaOrHigher())
+        /*if (!isVistaOrHigher())
             return;
         tstring name(L"Tortilla");
         HKEY key = 0;
@@ -317,6 +317,6 @@ private:
             GetModuleFileName(NULL, buffer, MAX_PATH);
             RegSetValueEx(key, buffer, 0, REG_SZ, (const BYTE*)name.c_str(), name.length()*sizeof(WCHAR));
             RegCloseKey(key);
-        }
+        }*/
     }
 };

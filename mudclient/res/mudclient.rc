@@ -624,7 +624,7 @@ BEGIN
     BEGIN
         BLOCK "080004b0"
         BEGIN
-            VALUE "FileDescription", "Client for Multi User Dangeon games"
+            VALUE "FileDescription", "Tortilla Mud Client"
             VALUE "FileVersion", "1.0.4.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.github.io"
