@@ -778,6 +778,23 @@ IMPL(ifop)
             p->invalidoperation();
         return;
     }
+    if (p->size() == 3) // if-else
+    {
+        LogicHelper::IfResult result = m_helper.compareIF(p->at(0));
+        if (result == LogicHelper::IF_SUCCESS)
+        {
+            tstring cmd(p->at(1));
+            processCommand(cmd);
+        }
+        else if (result == LogicHelper::IF_FAIL)
+        {
+            tstring cmd(p->at(2));
+            processCommand(cmd);
+        }
+        else if (result == LogicHelper::IF_ERROR)
+            p->invalidoperation();
+        return;
+    }
     p->invalidargs();
 }
 
