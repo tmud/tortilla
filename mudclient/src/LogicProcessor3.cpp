@@ -493,22 +493,40 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         processLuaTriggers(parse_data, flags, pe);
     }
 
+    PropertiesData *pdata = tortilla::getProperties();
+    const PropertiesData::debug_data &dd = pdata->debug;
+
     if (!(flags & SKIP_SUBS))
     {
         if (!(flags & SKIP_COMPONENT_ANTISUBS))
-            m_helper.processAntiSubs(&parse_data);
+        {
+            m_helper.processAntiSubs(&parse_data, triggered(dd.antisubs));
+            printTriggered(parse_data, dd.antisubs);
+        }
         if (!(flags & SKIP_COMPONENT_GAGS))
-            m_helper.processGags(&parse_data);
+        {
+            m_helper.processGags(&parse_data, triggered(dd.gags));
+            printTriggered(parse_data, dd.gags);
+        }
         if (!(flags & SKIP_COMPONENT_SUBS))
-            m_helper.processSubs(&parse_data);
+        {
+            m_helper.processSubs(&parse_data, triggered(dd.subs));
+            printTriggered(parse_data, dd.subs);
+        }
     }
 
     // process actions
     if (!(flags & SKIP_ACTIONS))
-        processActionsTriggers(parse_data, flags, pe);  
+    {
+        processActionsTriggers(parse_data, flags, pe, triggered(dd.actions));
+        printTriggered(parse_data, dd.actions);
+    }
 
     if (!(flags & SKIP_HIGHLIGHTS))
-        m_helper.processHighlights(&parse_data);
+    {
+        m_helper.processHighlights(&parse_data, triggered(dd.highlights));
+        printTriggered(parse_data, dd.highlights);
+    }
 
     // postprocess data via plugins
     if (!(flags & (SKIP_PLUGINS_AFTER|SKIP_COMPONENT_PLUGINS) ))
@@ -520,6 +538,25 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (log != -1)
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
+}
+
+LogicTriggered* LogicProcessor::triggered(int mode)
+{
+    if (mode == 1) {
+        m_triggered_debug.clear();
+        return &m_triggered_debug;
+    }
+    return NULL;
+}
+
+void LogicProcessor::printTriggered(parseData& parse_data, int mode)
+{
+    if (mode == 1)
+    {
+        //todo
+
+
+    }
 }
 
 void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe)
@@ -543,13 +580,13 @@ void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicP
     }
 }
 
-void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe)
+void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, LogicTriggered* trigg)
 {    
     // process lua triggers or actions
     PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        bool triggered = m_helper.processActions(&parse_data, j, &pe->commands);
+        bool triggered = m_helper.processActions(&parse_data, j, &pe->commands, trigg);
         if (!triggered)
             continue;
         parseData &not_processed = (pe->triggers.empty()) ? pe->not_processed : pe->lua_processed;

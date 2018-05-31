@@ -1480,11 +1480,65 @@ IMPL(message)
         simpleLog(str);
         return;
     }
-
-    if (n == 1 || n == 2)
+    if (n == 1)
+    {
+        tstring str;
+        MessageCmdHelper mh(pdata);
+        if (!mh.getStateString(p->at(0), &str))
+        {
+            p->invalidargs();
+        }
+        else
+        {
+            tmcLog(str);
+        }
+        return;
+    }
+    if (n == 2)
     {
         MessageCmdHelper mh(pdata);
-        if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
+        if (!mh.setMode(p->at(0), p->at(1)))
+        {
+            p->invalidargs();
+        }
+        else
+        {
+            tstring str;
+            mh.getStateString(p->at(0), &str);
+            tmcLog(str);
+        }
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(debug_tr)
+{
+    PropertiesData *pdata = tortilla::getProperties();
+    int n = p->size();
+    if (n == 0)
+    {
+        DebugCmdHelper mh(pdata);
+        tstring str;
+        mh.getStrings(&str);
+        tmcLog(L"Debug-уведомления:");
+        simpleLog(str);
+        return;
+    }
+
+    if (n == 1)
+    {
+        DebugCmdHelper mh(pdata);
+        tstring str;
+        mh.getStateString(p->at(0), &str);
+        tmcLog(str);
+        return;       
+    }
+        
+    if (n == 2)
+    {
+        DebugCmdHelper mh(pdata);
+        if (!mh.setMode(p->at(0), p->at(1)))
         {
             p->invalidargs();
         }
@@ -1723,6 +1777,8 @@ bool LogicProcessor::init()
 
     regCommand("wlock", wlock);
     regCommand("wunlock", wunlock);
+
+    regCommand("debug", debug_tr);
 
     return true;
 }
