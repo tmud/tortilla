@@ -501,17 +501,17 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
         if (!(flags & SKIP_COMPONENT_ANTISUBS))
         {
             m_helper.processAntiSubs(&parse_data, triggered(dd.antisubs));
-            printTriggered(parse_data, dd.antisubs);
+            printTriggered(parse_data, dd.antisubs, L"antisub: ");
         }
         if (!(flags & SKIP_COMPONENT_GAGS))
         {
             m_helper.processGags(&parse_data, triggered(dd.gags));
-            printTriggered(parse_data, dd.gags);
+            printTriggered(parse_data, dd.gags, L"gag: ");
         }
         if (!(flags & SKIP_COMPONENT_SUBS))
         {
             m_helper.processSubs(&parse_data, triggered(dd.subs));
-            printTriggered(parse_data, dd.subs);
+            printTriggered(parse_data, dd.subs, L"sub: ");
         }
     }
 
@@ -519,13 +519,13 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!(flags & SKIP_ACTIONS))
     {
         processActionsTriggers(parse_data, flags, pe, triggered(dd.actions));
-        printTriggered(parse_data, dd.actions);
+        printTriggered(parse_data, dd.actions, L"action: ");
     }
 
     if (!(flags & SKIP_HIGHLIGHTS))
     {
         m_helper.processHighlights(&parse_data, triggered(dd.highlights));
-        printTriggered(parse_data, dd.highlights);
+        printTriggered(parse_data, dd.highlights, L"highlight: ");
     }
 
     // postprocess data via plugins
@@ -549,13 +549,18 @@ LogicTriggered* LogicProcessor::triggered(int mode)
     return NULL;
 }
 
-void LogicProcessor::printTriggered(parseData& parse_data, int mode)
+void LogicProcessor::printTriggered(parseData& parse_data, int mode, const tstring& prefix)
 {
-    if (mode == 1)
-    {
-        //todo
-
-
+    if (mode == 1) {
+        for (int i=0, e=m_triggered_debug.size(); i<e; ++i) {
+            MudViewString *new_string = new MudViewString();            
+            new_string->system = true;
+            new_string->blocks.resize(3);
+            new_string->blocks[0].string = L"[debug] ";
+            new_string->blocks[1].string = prefix;
+            new_string->blocks[2].string = m_triggered_debug[i];           
+            parse_data.strings.push_back(new_string);
+        }
     }
 }
 
