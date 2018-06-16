@@ -151,7 +151,7 @@ private:
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
     LogicTriggered* triggered(int mode);
-    void printTriggered(parseData& parse_data, int mode, const tstring& prefix);
+    void printTriggered(parseData& parse_data, int mode, const tstring& prefix, bool process_highlights);
 
 public: // system commands
     DEF(drop);

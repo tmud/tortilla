@@ -278,9 +278,7 @@ public:
 
         int newstate = recognizeValue(mode_value);
         if (newstate == -1)
-        {            
             return false;
-        }
         if (stateid == LogicHelper::UPDATE_ALL)
         {
             propData->messages.initDefault(newstate);
@@ -416,10 +414,10 @@ public:
             return false;
 
         int newstate = recognizeValue(mode_value);
+		if (newstate == -2)
+			return false;
         if (newstate == -1)
-        {
             return true;
-        }
         if (newstate == 2)
         {
             int curstate = getState(stateid);
@@ -479,7 +477,7 @@ private:
             return 0;
         if (n == L"перекл" || n == L"toggle" || n == L"switch")
             return 2;
-        return -1;
+        return -2;
     }
 
     int recognizeState(const tstring& state)
@@ -552,10 +550,10 @@ public:
             return false;
 
         int newstate = recognizeValue(mode_value);
+		if (newstate == -2)
+			return false;
         if (newstate == -1)
-        {
             return true;
-        }
         if (newstate == 2)
         {
             int curstate = getState(stateid);
@@ -617,7 +615,7 @@ private:
             return 0;
         if (n == L"перекл" || n == L"toggle" || n == L"switch")
             return 2;
-        return -1;
+        return -2;
     }
 
     int recognizeState(const tstring& state)

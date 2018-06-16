@@ -162,21 +162,22 @@ private:
         return 0;
     }
 
-    void updateCurrentItem(bool update_key)
+    bool updateCurrentItem(bool update_key)
     {
         int item = m_list.getOnlySingleSelection();
-        if (item == -1) return;
+        if (item == -1) return false;
         m_update_mode = true;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         tstring& v = m_list_values.getw(item);
         if (v != pattern) 
         {
-            if (!update_key) { m_update_mode = false; return; }
+            if (!update_key) { m_update_mode = false; return false; }
             v = pattern;
             m_list.setItem(item, 0, pattern);
         }
         m_update_mode = false;
+		return true;
     }
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)

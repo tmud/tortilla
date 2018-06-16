@@ -26,6 +26,10 @@ struct parseData
         strings.swap(from.strings);
         from.clear();
     }
+	void pushBack(parseData& from) {
+		strings.insert(strings.end(), from.strings.begin(), from.strings.end());
+		from.strings.clear();
+	}
     bool empty() const {
         return strings.empty();
     }

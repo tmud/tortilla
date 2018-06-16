@@ -283,15 +283,15 @@ private:
         return 0;
     }
 
-    void updateCurrentItem()
+    bool updateCurrentItem()
     {
         int item = m_list.getOnlySingleSelection();
-        if (item == -1) return;
+        if (item == -1) return false;
         m_update_mode = true;
         tstring hotkey;
         getWindowText(m_hotkey, &hotkey);
         property_value& v = m_list_values.getw(item);
-        if (v.key != hotkey) return;
+        if (v.key != hotkey) return false;
         tstring text;
         getWindowText(m_text, &text);
         if (v.value != text)
@@ -305,6 +305,7 @@ private:
             m_list.setItem(item, 2, m_currentGroup);
         }
         m_update_mode = false;
+		return true;
     }
 
     LRESULT OnHotkeyTextChanged(WORD, WORD, HWND, BOOL&)
