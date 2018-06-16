@@ -404,7 +404,7 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
     LogicPipelineElement *e = m_pipeline.createElement();
     printParseData(parse_data, flags, window, e);
     order.push_back(e);
-        
+
     while (!order.empty())
     {
         LogicPipelineElement *e = *order.begin();
@@ -489,7 +489,7 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     {
         m_pHost->preprocessText(window, &parse_data);
 
-        // process lua plugins triggers    
+        // process lua plugins triggers
         processLuaTriggers(parse_data, flags, pe);
     }
 
@@ -558,9 +558,8 @@ void LogicProcessor::printTriggered(parseData& parse_data, int mode, const tstri
     static parseData highlights_mode;
     for (int i=0, e=m_triggered_debug.size(); i<e; ++i)
     {
-        MudViewString *new_string = new MudViewString();          
+        MudViewString *new_string = new MudViewString();
         new_string->system = true;
-        new_string->debug_mode = true;
         new_string->blocks.resize(3);
         new_string->blocks[0].string = L"[debug] ";
         new_string->blocks[1].string = prefix;
@@ -607,7 +606,6 @@ void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, Lo
         if (!triggered)
             continue;
         parseData &not_processed = (pe->triggers.empty()) ? pe->not_processed : pe->lua_processed;
-        
         MudViewString *s = parse_data.strings[j];
         s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
         not_processed.last_finished = parse_data.last_finished;
