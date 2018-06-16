@@ -584,7 +584,7 @@ public:
 
     struct debug_data {
     debug_data() { initDefault(); }
-    void initDefault() { actions = subs = highlights = antisubs = gags = 1; }
+    void initDefault() { actions = subs = highlights = antisubs = gags = 0; }
     int actions;
     int subs;
     int highlights;
