@@ -15,9 +15,12 @@ class  BassPlayer
     DWORD m_sensivity_record;
     HRECORD m_record;
     RecordParams *m_record_params;
+    float m_global_volume;
 
 public:
-    BassPlayer() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_sensivity_record(30), m_record(NULL), m_record_params(NULL) {}
+    BassPlayer() : bass_loaded(false), m_freq_record(44100), m_chans_record(2), m_sensivity_record(30), m_record(NULL), m_record_params(NULL) {
+        m_global_volume = 0.75f;
+    }
     ~BassPlayer() { deleteRecordParams(); }
 
     bool loadBass();
@@ -31,6 +34,8 @@ public:
     int  isPlaying(int id);
     bool isHandle(int id) const;
     bool getPath(int id, std::wstring* path);
+    void setVolume(int volume);
+    int  getVolume();
 
     bool canRecord();
     bool setRecord(const wchar_t* param, int value);
