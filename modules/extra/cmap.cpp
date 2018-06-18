@@ -131,114 +131,6 @@ public:
 	}
 };
 
-/*class new_filewriter
-{
-    HANDLE hfile;
-protected:
-    tstring m_path;
-    DWORD start_data;
-    DWORD written;
-public:
-    new_filewriter() : hfile(INVALID_HANDLE_VALUE), start_data(0), written(0) {}
-    ~new_filewriter() { close(); }
-    bool open(const tstring &path)
-    {
-        hfile = CreateFile(path.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hfile == INVALID_HANDLE_VALUE)
-            return false;
-        m_path = true;
-        return true;
-    }
-    void close()
-    {
-        if (hfile!=INVALID_HANDLE_VALUE)
-            CloseHandle(hfile);
-        hfile = INVALID_HANDLE_VALUE;
-        start_data = 0;
-        written = 0;
-    }
-    void remove()
-    {
-        error();
-    }
-protected:
-    bool error() 
-    {
-       close();
-       DeleteFile(m_path.c_str());
-       return false;
-    }
-    bool write_tofile(const tstring& t, DWORD *written)
-    {
-        *written = 0;
-        u8string tmp(TW2U(t.c_str()));
-        DWORD towrite = tmp.length();
-        if (!WriteFile(hfile, tmp.c_str(), towrite, written, NULL) || *written!=towrite)
-            return false;
-        return true;
-    }
-    bool write_tofile(const MemoryBuffer& t, DWORD *written)
-    {
-        *written = 0;
-        DWORD towrite = t.getSize();
-        if (!WriteFile(hfile, t.getData(), towrite, written, NULL) || *written!=towrite)
-            return false;
-        return true;
-    }
-};
-
-class database_file_writer : public new_filewriter
-{
-public:
-    struct WriteResult
-    {
-        DWORD start;
-        DWORD title_len;
-        DWORD data_len;
-    };
-    bool write(const tstring& name, const MemoryBuffer& data, const std::vector<tstring>& tegs, WriteResult* r)
-    {
-        tstring rn(L"\r\n");
-        tstring tmp(name);
-        tmp.append(L";");
-        for (int i=0,e=tegs.size();i<e;++i) 
-        {
-            tmp.append(tegs[i]);
-            tmp.append(L";");
-        }
-        tmp.append(rn);
-
-        start_data += written;
-        DWORD written1 = 0;
-        if (!write_tofile(tmp, &written1))
-            return error();
-        DWORD written2 = 0;
-        if (!write_tofile(data, &written2))
-            return error();
-        DWORD written3 = 0;
-        if (!write_tofile(rn, &written3))
-            return error();
-        written = written1 + written2 + written3;
-        if (r) 
-        {
-          r->start = start_data;
-          r->title_len = written1;
-          r->data_len = written2 + written3;
-        }
-        return true;
-    }
-};
-
-class database_file_copier : public new_filewriter
-{
-public:
-    bool write( const MemoryBuffer& data)
-    {
-        DWORD written = 0;
-        return write_tofile(data, &written);        
-    }    
-};*/
-
 struct index
 {
 	index() : file(-1) {}
@@ -614,62 +506,12 @@ public:
         std::set<index_ptr> result;
         std::for_each(tmp.begin(), tmp.end(), [&result](position& p){ result.insert(p.idx); });
 
-        // грузим данные
-       // std::vector<filereader> open_files(m_files.size());
+        // выгружаем данные
         std::set<index_ptr>::iterator rt = result.begin(), rt_end = result.end();
         for (; rt != rt_end; ++rt)
         {
-           /*index_ptr ix = *rt;
-
-            int fileid = ix->file;
-            fileinfo& fi = m_files[fileid];
-            filereader& fr = open_files[fileid];
-            if (!fr.open(fi.path) || fi.size != fr.size())
-            {
-                fileerror(fi.path);
-                continue;
-            }
-
-            // load data
-            bool result = fr.read(ix->data_pos_in_file, ix->data_len, &buffer);
-            if (!result)
-            {
-                fileerror(fi.path);
-                continue;
-            }
-
-            data_ptr d = std::make_shared<MapDictonaryData>();
-            int size = buffer.getSize();
-            buffer.keepalloc(size+1);
-            char *b = buffer.getData();
-            b[size] = 0;
-            d->data.assign(b);
-
-            // копируем auto tegs
-            const std::vector<tstring> &at = ix->auto_tegs;
-            d->auto_tegs.assign(at.begin(), at.end());
-
-            // копируем manual tegs
-            const std::vector<tstring> &t = ix->manual_tegs;
-            d->manual_tegs.assign(t.begin(), t.end());
-
-            // копируем доп инфо
-            d->info = ix->info;
-
-            // пишем в результат
-            values->operator[](ix->name) = d;*/
-
-                /*{
-                int size = buffer.getSize();
-                buffer.keepalloc(size+1);
-                char *b = buffer.getData();
-                b[size] = 0;
-                
-                Tokenizer tk(TU2W(b), L";\r\n");
-                tk.trimempty();
-                for (int i=1,e=tk.size();i<e;++i)
-                    d->auto_tegs.push_back(tk[i]);                    
-            }*/            
+            index_ptr ix = *rt;
+            values->operator[](ix->name) = ix;
         }
         return true;
     }
@@ -896,26 +738,6 @@ private:
 		index_ptr ix = std::make_shared<index>();
 		return ix;
     }
-
-	/*int get_current_file()
-	{
-		size_t files = m_files.size();
-		if (files != 0) 
-		{
-			size_t last = files - 1;
-			fileinfo& fi = m_files[last];
-			if (fi.auto_db.datalen() < max_db_filesize)
-			{
-				return last;
-			}
-		}
-		char buf[8];
-		std::string v( itoa( static_cast<int>(files), buf, 10 ));
-		fileinfo fi;
-		m_files.push_back(fi);
-		fi.auto_db = "game" + v + ".dat";
-		fi.user_db = "user" + v + ".dat";
-	}*/
 
 	void load_old_db()
 	{
