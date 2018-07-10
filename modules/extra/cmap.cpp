@@ -134,8 +134,7 @@ public:
 struct index
 {
 	index() : file(-1) {}
-	tstring name, comment;
-	std::string data;
+	tstring name, comment, data;
 	std::vector<tstring> auto_tegs;
 	std::vector<tstring> manual_tegs;
 	int file;
@@ -147,7 +146,7 @@ class MapDictonary
 {
     struct fileinfo
     {
-		fileinfo() {}
+		fileinfo() : repack_auto(false), repack_user(false) {}
 		tstring auto_db, user_db;
 		bool repack_auto, repack_user;
 		std::vector<index_ptr> data;
@@ -173,7 +172,7 @@ class MapDictonary
 
     tstring m_base_dir;
     lua_State *L;
-    MemoryBuffer buffer;
+    //MemoryBuffer buffer;
 
     void fileerror(const tstring& file) 
     {
@@ -190,7 +189,7 @@ class MapDictonary
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
-        buffer.alloc(4096);
+        //buffer.alloc(4096);
         load_db();
     }
     ~MapDictonary() 
@@ -691,60 +690,54 @@ private:
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
-        /*if (m_current_file != -1) {
-           fileinfo &f = m_files[m_current_file];
-           if (f.size > max_db_filesize) {
-               m_current_file = -1;
-           }
-        }
-        if (m_current_file == -1) {
-            for (int i=0,e=m_files.size();i<e;++i) 
-            {
-                if (m_files[i].size < max_db_filesize)
-                    { m_current_file = i; break; }
-            }
-        }
-
-        index_ptr ix = std::make_shared<index>();
-        if (m_current_file == -1)
+        bool create_new_file = true;
+        if (!m_files.empty())
         {
-            int idx = m_files.size();
-            tchar buffer[16];
-            tstring filename;
-            while(true) {
-                swprintf(buffer,L"%d.db", idx);
-                filename.assign(m_base_dir);
-                filename.append(buffer);
-                if (GetFileAttributes(filename.c_str()) == INVALID_FILE_ATTRIBUTES)
-                    break;
-                idx++;
+            size_t last = m_files.size() - 1;
+            fileinfo &f = m_files[last];
+            if (f.data.size() <= maxitems_per_file) {
+                create_new_file = false;
             }
-            m_current_file = m_files.size();
-            fileinfo f;
-            f.path = filename;
+        }
+        if (create_new_file) 
+        {
+            size_t index = m_files.size() + 1;            
+            fileinfo f;                                   
+            while(true) 
+            {
+                tchar buffer[16];
+                swprintf(buffer,L"%d", index);
+                tstring filename(buffer);
+                f.auto_db = filename + L".mud";
+                f.user_db = filename + L".user";
+                filename.assign(m_base_dir);
+                filename.append(f.auto_db);
+                tstring filename2(m_base_dir);
+                filename2.append(f.user_db);
+                if ((GetFileAttributes(filename.c_str()) == INVALID_FILE_ATTRIBUTES) &&
+                    (GetFileAttributes(filename2.c_str()) == INVALID_FILE_ATTRIBUTES))
+                {
+                    break;                                    
+                }
+                index++;
+            }
             m_files.push_back(f);
         }
-        fileinfo &f = m_files[m_current_file];
-        filewriter fw;
-        if (!fw.write(f.path, name, data, tegs))
-           return ix;
-        f.size += fw.written;
-        ix->file = m_current_file;
-        ix->pos_in_file = fw.start_name;
-        ix->name_tegs_len = fw.start_data - fw.start_name;
-        ix->data_len = fw.written - (fw.start_data - fw.start_name);
+
+        size_t last = m_files.size() - 1;
+        fileinfo &f = m_files[last];
+        index_ptr ix = std::make_shared<index>();
+        ix->file = last;
         ix->name = name;
-        return ix;*/
-		index_ptr ix = std::make_shared<index>();
+        ix->auto_tegs = tegs;
+        ix->data = data;
+        f.data.push_back(ix);
+        f.repack_auto = true;
 		return ix;
     }
 
 	void load_old_db()
 	{
-
-
-
-
 	}
 
     void load_db()
@@ -767,8 +760,6 @@ private:
                     tstring name(fd.cFileName);
                     int len = name.length()-3;
                     name = name.substr(0,len);
-                    //if (!isOnlyDigits(name))
-                    //    continue;
                     tstring path(m_base_dir);
                     path.append(fd.cFileName);
                     fileinfo f;
@@ -782,15 +773,16 @@ private:
             } while (::FindNextFile(file, &fd));
             ::FindClose(file);
         }
-
         std::sort(m_files.begin(),m_files.end(),[](const fileinfo&a, const fileinfo&b) {
 			return a.auto_db < b.auto_db;
         });
+
         for (int i=0,e=m_files.size();i<e;++i)
         {
             // read files in to catalog
-            /*load_file lf(m_files[i].auto_db);
-            if (!lf.result) {
+            load_file lf(m_files[i].auto_db);
+            if (!lf.result) 
+            {
 				fileerror(m_files[i].auto_db);
                 continue;
             }
@@ -834,7 +826,7 @@ private:
                     ix->pos_in_file = start_pos;
                     ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
-            }*/
+            }
         }
     }
 
@@ -856,7 +848,7 @@ private:
 				for (index_ptr ix : fi.data)
 				{
 					tstring name(ix->name); name.append(L"\r\n");
-					std::string data(ix->data); data.append("\r\n");
+					tstring data(ix->data); data.append(L"\r\n");
 					if (!fw.write(name) || !fw.write(data))
 					{
 						error->assign(L"Ошибка при записи файла: ");
@@ -907,63 +899,8 @@ private:
 		}
     }
 
-    /*void save_manual_tegs()
-    {
-        if (!m_manual_tegs_changed)
-            return;
-
-        class tegs_file_writer : public new_filewriter  {
-        public:
-        bool write(const tstring& name, const std::vector<tstring>& tegs)
-        {
-            tstring s(name);
-            for (int i=0,e=tegs.size();i<e;++i)
-            {
-                s.append(L";");
-                s.append(tegs[i]);
-            }
-            s.append(L"\r\n");
-            DWORD written = 0;
-            return write_tofile(s, &written);
-        }} file;
-
-        tstring path(m_base_dir);
-        path.append(L"usertegs.new");
-        if (!file.open(path.c_str()))
-        {
-            filesave_error(path);
-            return;
-        }
-
-        std::set<index_ptr> saved;
-        words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
-        for(; it!=it_end;++it)
-        {
-            positions_vector &pv = *it->positions;
-            for (int i=0,e=pv.size();i<e;++i)
-            {
-                if (pv[i].word_type == manual_teg && pv[i].word_idx == 0)
-                {
-                    index_ptr p = pv[i].idx;
-                    if (!p->manual_tegs.empty() && (saved.find(p) == saved.end()))  {
-                    saved.insert(p);
-                    if (!file.write(p->name,p->manual_tegs))
-                    {
-                        filesave_error(path);
-                        return;
-                    }}
-                }
-            }
-        }
-        file.close();
-        tstring newpath(m_base_dir);
-        newpath.append(L"usertegs.db");
-        if (!::MoveFileEx(path.c_str(), newpath.c_str(), MOVEFILE_REPLACE_EXISTING))
-            return;
-        m_manual_tegs_changed = false;
-    }
-
-    void load_manual_tegs()
+    
+    /*void load_manual_tegs()
     {
         tstring path(m_base_dir);
         path.append(L"usertegs.db");
@@ -1056,7 +993,7 @@ int dict_find(lua_State *L)
 
                 index_ptr ix = it->second;
                 lua_pushstring(L, "data");
-                lua_pushstring(L, ix->data.c_str());
+                lua_pushwstring(L, ix->data.c_str());
                 lua_settable(L, -3);
 
                 const std::vector<tstring>& at = ix->auto_tegs;
