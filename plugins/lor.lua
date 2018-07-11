@@ -29,7 +29,7 @@ function lor.description()
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.10'
+  return '1.11'
 end
 
 local function print(s)
@@ -164,7 +164,7 @@ local function save_lor_strings()
     lor_strings = {}
     return false, "Не получено имя предмета, сохранить невозможно."
   end
-  if lor_drop and not lor_drop(lor_strings.name) then
+  if lor_drop and lor_drop(lor_strings.name) then
     lor_strings = {}
     return false
   end
