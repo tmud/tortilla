@@ -76,10 +76,11 @@ class filewriter
 	tstring filepath;
 	DWORD len;
 public:
-	filewriter(const tstring &path) : hfile(INVALID_HANDLE_VALUE), filepath(path), len(0) {}
+	filewriter() : hfile(INVALID_HANDLE_VALUE), len(0) {}
 	~filewriter() { if (hfile != INVALID_HANDLE_VALUE) close(); }
-	bool open()
+    bool open(const tstring &path)
 	{
+        filepath = path;
 		hfile = CreateFile(filepath.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hfile == INVALID_HANDLE_VALUE)
 			return false;
@@ -101,20 +102,6 @@ public:
 		u8string tmp(TW2U(data.c_str()));
 		return write(tmp);
     }
-	bool write(const std::string& data)
-	{
-		if (hfile == INVALID_HANDLE_VALUE)
-			return false;
-		DWORD written = 0;
-		DWORD towrite = data.length();
-		if (!WriteFile(hfile, data.c_str(), towrite, &written, NULL) || written != towrite)
-		{
-			SetFilePointer(hfile, len, NULL, FILE_BEGIN);
-			return false;
-		}
-		len += written;
-		return true;
-	}
     void close()
     {
 	    CloseHandle(hfile);
@@ -129,6 +116,60 @@ public:
 	DWORD datalen() {
 		return len;
 	}
+private:
+    bool write(const std::string& data)
+    {
+        if (hfile == INVALID_HANDLE_VALUE)
+            return false;
+        DWORD written = 0;
+        DWORD towrite = data.length();
+        if (!WriteFile(hfile, data.c_str(), towrite, &written, NULL) || written != towrite)
+        {
+            SetFilePointer(hfile, len, NULL, FILE_BEGIN);
+            return false;
+        }
+        len += written;
+        return true;
+    }
+};
+
+class database_diff_writer 
+{
+    filewriter fw;
+public:
+    bool init(const tstring& filepath)
+    {
+        return fw.open(filepath);
+    }
+    bool write_object(const tstring& name, const tstring& data, const std::vector<tstring>& auto_tegs)
+    {
+        tstring out(L"O;"); out.append(name);
+        for (const tstring& t : auto_tegs)
+        {
+            out.append(L";");
+            out.append(t);
+        }
+        out.append(data);
+        out.append(L"\n");
+        return fw.write(out);
+    }
+    bool write_tegs(const tstring& name, const std::vector<tstring>& tegs)
+    {
+        tstring out(L"T;"); out.append(name);
+        for (const tstring& t : tegs)
+        {
+            out.append(L";");
+            out.append(t);
+        }
+        return fw.write(out);
+    }
+    bool write_info(const tstring& name, const tstring& info)
+    {
+        tstring out(L"I;"); out.append(name);
+        return fw.write(out);
+
+    }
+
 };
 
 struct index
@@ -172,7 +213,6 @@ class MapDictonary
 
     tstring m_base_dir;
     lua_State *L;
-    //MemoryBuffer buffer;
 
     void fileerror(const tstring& file) 
     {
@@ -189,7 +229,6 @@ class MapDictonary
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
-        //buffer.alloc(4096);
         load_db();
     }
     ~MapDictonary() 
@@ -790,7 +829,7 @@ private:
             index_ptr ix = std::make_shared<index>();
             ix->file = i;
 
-            DWORD start_pos = 0;
+            /*DWORD start_pos = 0;
             u8string str, name;
             bool find_name_mode = true;
             while (lf.readNextString(&str, true, &start_pos))
@@ -826,7 +865,7 @@ private:
                     ix->pos_in_file = start_pos;
                     ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
-            }
+            }*/
         }
     }
 
@@ -839,8 +878,8 @@ private:
 			if (!error->empty()) break;
 			if (fi.repack_auto)
 			{
-				filewriter fw(fi.auto_db);
-				if (!fw.open()) {
+				filewriter fw;
+                if (!fw.open(fi.auto_db)) {
 					error->assign(L"Ошибка при открытии файла на запись: ");
 					error->append(fi.auto_db);
 					break;
@@ -860,8 +899,8 @@ private:
 			}
 			if (fi.repack_user)
 			{
-				filewriter fw(fi.user_db);
-				if (!fw.open()) {
+                filewriter fw;
+                if (!fw.open(fi.user_db)) {
 					error->assign(L"Ошибка при открытии файла на запись: ");
 					error->append(fi.user_db);
 					break;
