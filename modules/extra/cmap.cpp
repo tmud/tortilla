@@ -2,7 +2,9 @@
 #include "phrase.h"
 #include <memory>
 
-const int maxitems_per_file = 256;
+const tchar* maindb_file = L"main.db";
+const tchar* patchdb_file = L"patch.db";
+
 std::map<lua_State*, int> m_dict_types;
 typedef std::map<lua_State*, int>::iterator iterator;
 int get_dict(lua_State *L)
@@ -153,47 +155,31 @@ public:
         out.append(L"\n");
         return fw.write(out);
     }
-    bool write_tegs(const tstring& name, const std::vector<tstring>& tegs)
+    bool write_teg(const tstring& name, const tstring& teg)
     {
         tstring out(L"T;"); out.append(name);
-        for (const tstring& t : tegs)
-        {
-            out.append(L";");
-            out.append(t);
-        }
+        out.append(L";"); out.append(teg);
         return fw.write(out);
     }
     bool write_info(const tstring& name, const tstring& info)
     {
         tstring out(L"I;"); out.append(name);
         return fw.write(out);
-
     }
-
 };
 
 struct index
 {
-	index() : file(-1) {}
+	index() {}
 	tstring name, comment, data;
 	std::vector<tstring> auto_tegs;
 	std::vector<tstring> manual_tegs;
-	int file;
 };
 typedef std::shared_ptr<index> index_ptr;
 typedef std::map<tstring, index_ptr> MapDictonaryMap;
 
 class MapDictonary
 {
-    struct fileinfo
-    {
-		fileinfo() : repack_auto(false), repack_user(false) {}
-		tstring auto_db, user_db;
-		bool repack_auto, repack_user;
-		std::vector<index_ptr> data;
-    };
-    std::vector<fileinfo> m_files;
-
 	enum wordtype { name_teg = 0, manual_teg, auto_teg };
     struct position
     {
@@ -212,6 +198,7 @@ class MapDictonary
     typedef std::vector<worddata>::iterator words_table_iterator;
 
     tstring m_base_dir;
+    database_diff_writer m_patch_file;
     lua_State *L;
 
     void fileerror(const tstring& file) 
@@ -229,7 +216,7 @@ class MapDictonary
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
-        load_db();
+        load_db();        
     }
     ~MapDictonary() 
     {
@@ -408,13 +395,9 @@ public:
     }
 
     void wipe()
-    {
-        for (int i=0,e=m_files.size(); i<e; ++i) {
-			fileinfo &fi = m_files[i];
-			DeleteFile(fi.auto_db.c_str());
-			DeleteFile(fi.user_db.c_str());
-        }
-        m_files.clear();
+    {        
+	    DeleteFile(maindb_file);
+		DeleteFile(patchdb_file);
         m_words_table.clear();
     }
 
@@ -423,18 +406,16 @@ public:
     {
         if (teg.empty())
             return ERR;
-        if (teg.find(L";") != tstring::npos)
-            return ERR;
-
         index_ptr ix = find_name(name);
         if (!ix)
             return ABSENT;
-
         tstring t(teg);
         tstring_tolower(&t);
         std::vector<tstring>& tegs = ix->manual_tegs;
         std::vector<tstring>::iterator it = std::find_if(tegs.begin(), tegs.end(), [&](const tstring& s) 
-            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );
+            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );        
+        if (!m_patch_file.write_teg(name, teg))
+            return ERR;
         if (it != tegs.end())
         {
             tegs.erase(it);
@@ -452,13 +433,11 @@ public:
                     }
                 }
             }
-			repack_user(ix);
             return REMOVED;
         }
         if (add_index(teg, ix, true, true))
         {
             ix->manual_tegs.push_back(teg);
-			repack_user(ix);
             return ADDED;
         }
         return ERR;
@@ -475,7 +454,8 @@ public:
         tstring text(data);
         tstring_trim(&text);
         ix->comment = text;
-		repack_user(ix);
+
+
         if (text.empty())
             return INFO_REMOVED;
         return INFO_ADDED;
@@ -488,8 +468,8 @@ public:
         if (find_name(name))
             return MD_EXIST;
         index_ptr ix = add_tofile(name, data, tegs);
-        if (ix->file == -1)
-            return MD_ERROR;
+        //if (ix->file == -1)
+          //  return MD_ERROR;
         add_index(name, ix, false, false);
         for (int i=0,e=tegs.size();i<e;++i)
             add_index(tegs[i], ix, true, false);
@@ -519,8 +499,6 @@ public:
          if (name.empty()) return false;
          index_ptr ix = find_name(name);
          if (!ix) return true;
-		 repack_user(ix);
-		 repack_auto(ix);
          del_indexes(ix, ix->name);
          for (int i=0,e=ix->manual_tegs.size();i<e;++i)
              del_indexes(ix, ix->manual_tegs[i]);
@@ -555,27 +533,6 @@ public:
     }
 
 private:
-	fileinfo* findf(index_ptr idx)
-	{
-		int file = idx->file;
-		int files_count = m_files.size();
-		if (file >= 0 && file < files_count) {
-			return &m_files[file];
-		}
-		assert(false);
-		return nullptr;
-	}
-	void repack_user(index_ptr idx)
-	{
-		fileinfo* f = findf(idx);
-		if (f) f->repack_user = true;
-	}
-	void repack_auto(index_ptr idx)
-	{
-		fileinfo* f = findf(idx);
-		if (f) f->repack_auto = true;
-	}
-
     void find_similar(const tstring& start_symbols, int word_idx, positions_vector& words_indexes)
     {
         if (start_symbols.empty())
@@ -729,7 +686,9 @@ private:
 
     index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
     {
-        bool create_new_file = true;
+
+
+        /*bool create_new_file = true;
         if (!m_files.empty())
         {
             size_t last = m_files.size() - 1;
@@ -761,99 +720,75 @@ private:
                 index++;
             }
             m_files.push_back(f);
-        }
-
-        size_t last = m_files.size() - 1;
-        fileinfo &f = m_files[last];
+        }*/
+        
         index_ptr ix = std::make_shared<index>();
+
+        /*size_t last = m_files.size() - 1;
+        fileinfo &f = m_files[last];
+        
         ix->file = last;
         ix->name = name;
         ix->auto_tegs = tegs;
         ix->data = data;
         f.data.push_back(ix);
-        f.repack_auto = true;
+        f.repack_auto = true;*/
 		return ix;
     }
 
 	void load_old_db()
 	{
+
 	}
 
     void load_db()
     {
-        tstring mask(m_base_dir);
-        mask.append(L"*.mud");
-        WIN32_FIND_DATA fd;
-        memset(&fd, 0, sizeof(WIN32_FIND_DATA));
-        HANDLE file = FindFirstFile(mask.c_str(), &fd);
-        if (file != INVALID_HANDLE_VALUE)
+       tstring error;
+       load_maindb();
+       if (load_patchdb()) 
+       {           
+           save_db(&error);
+       }
+       tstring pf(m_base_dir);
+       pf.append(patchdb_file);
+       DeleteFile(pf.c_str());
+       if (!m_patch_file.init(pf))
+       {
+           error = L"patch file error";
+       }
+    }
+
+
+    void load_maindb()
+    {
+        return;
+        tstring mainfile(m_base_dir);
+        mainfile.append(maindb_file);
+
+        load_file lf(mainfile);
+        if (!lf.result)
+            return;
+
+        u8string str, name;
+        bool find_name_mode = true;
+        index_ptr ix = std::make_shared<index>();        
+        while (lf.readNextString(&str, true))
         {
-            do {
-                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                {
-                    if (fd.nFileSizeHigh > 0)
-                        continue;
-					DWORD max_size = (maxitems_per_file+1) * 4096 ;
-					if (fd.nFileSizeLow >= max_size)
-                        continue;
-                    tstring name(fd.cFileName);
-                    int len = name.length()-3;
-                    name = name.substr(0,len);
-                    tstring path(m_base_dir);
-                    path.append(fd.cFileName);
-                    fileinfo f;
-                    f.auto_db = path;
-					path.assign(m_base_dir);
-					path.append(name);
-					path.append(L".user");
-					f.user_db = path;
-                    m_files.push_back(f);
-                }
-            } while (::FindNextFile(file, &fd));
-            ::FindClose(file);
-        }
-        std::sort(m_files.begin(),m_files.end(),[](const fileinfo&a, const fileinfo&b) {
-			return a.auto_db < b.auto_db;
-        });
-
-        for (int i=0,e=m_files.size();i<e;++i)
-        {
-            // read files in to catalog
-            load_file lf(m_files[i].auto_db);
-            if (!lf.result) 
+            if (str.empty())
             {
-				fileerror(m_files[i].auto_db);
-                continue;
-            }
-
-            index_ptr ix = std::make_shared<index>();
-            ix->file = i;
-
-            /*DWORD start_pos = 0;
-            u8string str, name;
-            bool find_name_mode = true;
-            while (lf.readNextString(&str, true, &start_pos))
-            {
-                if (str.empty())
-                {
-                    find_name_mode = true;
-                    if (!name.empty())
+                find_name_mode = true;
+                if (!name.empty())
+                {                        
+                    Tokenizer tk(TU2W(name.c_str()), L";");
+                    ix->name = tk[0];
                     {
-                        ix->data_len = lf.getPosition()-ix->pos_in_file-ix->name_tegs_len;
-                        Tokenizer tk(TU2W(name.c_str()), L";");
-                        ix->name = tk[0];
-                        {
-                           index_ptr copy = find_name(tk[0]);
-                           if (!copy) {
-                           for (int i=0,e=tk.size();i<e;++i)
-                               add_index(tk[i], ix, (i!=0), false);
-                           } else {
-                             //repack file
-                             m_files[i].repack = true;
-                           }
+                        index_ptr copy = find_name(tk[0]);
+                        if (!copy) {
+                          for (int i=0,e=tk.size();i<e;++i)
+                             add_index(tk[i], ix, (i!=0), false);
+                          }
                         }
                         ix = std::make_shared<index>();
-                        ix->file = i;
                         name.clear();
                     }
                     continue;
@@ -862,16 +797,30 @@ private:
                 {
                     name.assign(str);
                     find_name_mode = false;
-                    ix->pos_in_file = start_pos;
-                    ix->name_tegs_len = lf.getPosition() - start_pos;
                 }
-            }*/
         }
+    }
+
+    bool load_patchdb()
+    {
+        return true;
+        tstring patchfile(m_base_dir);
+        patchfile.append(patchdb_file);
+        load_file pf(patchfile);
+        if (!pf.result) 
+            return false;
+
+        u8string str;
+        while (pf.readNextString(&str, true))
+        {
+
+        }
+        return true;
     }
 
     void save_db(tstring *error)
     {
-        std::vector<tstring> processed;
+        /*std::vector<tstring> processed;
         MemoryBuffer buffer;
 		for (fileinfo& fi : m_files)
 		{
@@ -935,7 +884,7 @@ private:
 				}
 				fw.close();
 			}
-		}
+		}*/
     }
 
     
