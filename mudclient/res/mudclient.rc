@@ -597,7 +597,7 @@ BEGIN
     BEGIN
         MENUITEM "&Справка",                    ID_MUDCLIENT_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Обновления и сайт...",       ID_CHECK_UPDATES
+        MENUITEM "С&айт программы...",          ID_CHECK_UPDATES
     END
 END
 
