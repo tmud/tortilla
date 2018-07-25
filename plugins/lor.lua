@@ -20,16 +20,20 @@ function lor.description()
   'Лор-информация собирается автоматически, когда предмет изучается в игре.',
   'Для поиска используется команда лор <имя предмета>, можно использовать сокращения.',
   'Поиск идет как по имени предмета, так и по тегам. Теги присваиваются автоматически,',
-  'но можно добавлять и свои теги. Для этого нужно выполнить команды лортег <имя тега>.',
+  'но можно добавлять и свои теги. Для этого нужно выполнить команду лортег <имя тега>.',
   'Команда лортег добавляет тег на последний предмет который вы смотрели командой лор.',
+  'Чтобы удалить тег, нужно еще раз выполнить команду лортег <имя тега>.',
   'Теги, которые назначаются автоматически - настраиваются в конфигурационном файле плагина.',
+  'Можно добавлять свои комментарии к предметам. Для этого используется команда лорком <текст>.',
+  'Комментарий добавляется на последний предмет который вы смотрели командой лор.',
+  'Чтобы удалить комментарий, нужно еще раз выполнить команду лортег без параметров.',
   'Возможен импорт в базу из текстовых файлов, но тут тоже нужно настраивать конфиг плагина.',
   'Подробности в справке '..p..'help lor.'
   }
   return table.concat(s, '\r\n')
 end
 function lor.version()
-  return '1.11'
+  return '1.12'
 end
 
 local function print(s)
@@ -188,22 +192,19 @@ local function save_lor_strings()
     info[k] = s:getData()
   end
   local res,err = lor_dictonary:add(lor_strings.name, table.concat(info,'\n'), tegs)
-  local basename = lor_strings.name
-  local name = basename..'.'
+  local name = lor_strings.name
   lor_strings = {}
   if not res then
     if err == 'exist' then
-      if not lor_dictonary:delete(basename) then
-        return false, 'Предмет не удалось обновить в базе на новый: '..name
-      end
-      res,err = lor_dictonary:add(basename, table.concat(info,'\n'), tegs)
+      lor_last = name
+      return true
     end
-    if not res then
-      local errtext = err and ' Ошибка: '..err..'.' or ''
-      return false, "Предмет не добавлен в базу из-за ошибки: "..name..errtext
+    if err == 'updated' then
+      lor_last = name
+      return true, "Предмет в базе был обновлен: "..name
     end
-    lor_last = name
-    return true, "Предмет в базе был обновлен: "..name
+    local errtext = err and ' Ошибка: '..err..'.' or ''
+    return false, "Предмет не добавлен в базу из-за ошибки: "..name..'.'..errtext
   end
   lor_last = name
   return true, "Предмет добавлен в базу: "..name
@@ -373,23 +374,47 @@ local function lorteg(teg)
       end
     end
   elseif res == 'absent' then
-    print("Объекта '"..lor_last.."' нет в базе. Тег не добавлен.")
-  elseif res == 'exist' then
-    print("У объекта '"..lor_last.."' уже есть данный автотег.")
+    print("Ошибка: объекта '"..lor_last.."' нет в базе? Тег не добавлен.")
   else
     print("Ошибка: команда лортег не выполнилась.")
   end
 end
 
+local function lorcomment(com)
+  if not lor_last then
+    print("Ошибка: комментарий присваивается или снимается с последнего осмотренного предмета.")
+    return
+  end
+  local res = lor_dictonary:comment(lor_last, com)
+  if res == 'added' then
+    print("Добавлен комментарий для '"..lor_last.."'.")
+    return
+  end
+  if res == 'removed' then
+    print("Удален комментарий для '"..lor_last.."'.")
+    return
+  end
+  if res == 'absent' then
+    print("Ошибка: объекта '"..lor_last.."' нет в базе? Комментарий не добавлен.")
+  end
+  print("Ошибка: команда лорком не выполнилась.")
+end
+
 function lor.gamecmd(t)
-  if t[1] ~= "лор" and t[1] ~= "лортег" then return t end
+  local c = t[1]
+  if c ~= 'лор' and c ~= 'лортег' and c ~= 'лорком' then return t end
   if not initialized then
     print("Ошибка в настройках плагина.")
     return
   end
-  if t[1] == 'лортег' then
+  if c == 'лортег' then
     local id = table.concat(t, '', 2)
     lorteg(id:trim())
+    return
+  end
+  if c == 'лорком' then
+    local com = table.concat(t, '', 2)
+    lorcomment(com)
     return
   end
   local id = ""

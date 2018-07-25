@@ -83,7 +83,7 @@ public:
     bool open(const tstring &path)
 	{
         filepath = path;
-		hfile = CreateFile(filepath.c_str(), GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+		hfile = CreateFile(filepath.c_str(), GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hfile == INVALID_HANDLE_VALUE)
 			return false;
 		DWORD hsize = 0;
@@ -151,19 +151,42 @@ public:
             out.append(L";");
             out.append(t);
         }
-        out.append(data);
         out.append(L"\n");
+        out.append(data);
+        out.append(L"\n\n");
         return fw.write(out);
+    }
+    bool write_delete_object(const tstring& name) 
+    {
+        tstring out(L"o;"); out.append(name);
+        out.append(L"\n");
+        return fw.write(out);    
     }
     bool write_teg(const tstring& name, const tstring& teg)
     {
         tstring out(L"T;"); out.append(name);
         out.append(L";"); out.append(teg);
+        out.append(L"\n");
+        return fw.write(out);
+    }
+    bool write_delete_teg(const tstring& name, const tstring& teg)
+    {
+        tstring out(L"t;"); out.append(name);
+        out.append(L";"); out.append(teg);
+        out.append(L"\n");
         return fw.write(out);
     }
     bool write_info(const tstring& name, const tstring& info)
     {
         tstring out(L"I;"); out.append(name);
+        out.append(L";"); out.append(info);
+        out.append(L"\n");
+        return fw.write(out);
+    }
+    bool write_delete_info(const tstring& name)
+    {
+        tstring out(L"i;"); out.append(name);
+        out.append(L"\n");
         return fw.write(out);
     }
 };
@@ -223,7 +246,7 @@ public:
         tstring error;
         save_db(&error);
     }
-    enum { MD_OK = 0, MD_EXIST, MD_ERROR };
+    enum { MD_OK = 0, MD_EXIST, MD_UPDATED, MD_ERROR };
 
     bool update(const lua_ref& r, tstring *error)
     {
@@ -395,13 +418,13 @@ public:
     }
 
     void wipe()
-    {        
+    {
 	    DeleteFile(maindb_file);
 		DeleteFile(patchdb_file);
         m_words_table.clear();
     }
 
-    enum TegResult { ERR = 0, ABSENT, EXIST, ADDED, REMOVED };
+    enum TegResult { ERR = 0, ABSENT, ADDED, REMOVED };
     TegResult teg(const tstring& name, const tstring& teg)
     {
         if (teg.empty())
@@ -413,11 +436,11 @@ public:
         tstring_tolower(&t);
         std::vector<tstring>& tegs = ix->manual_tegs;
         std::vector<tstring>::iterator it = std::find_if(tegs.begin(), tegs.end(), [&](const tstring& s) 
-            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );        
-        if (!m_patch_file.write_teg(name, teg))
-            return ERR;
+            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );                
         if (it != tegs.end())
         {
+            if (!m_patch_file.write_delete_teg(name, teg))
+                return ERR;
             tegs.erase(it);
             Phrase p(teg);
             for (int i=0,e=p.len();i<e;++i)
@@ -435,6 +458,8 @@ public:
             }
             return REMOVED;
         }
+        if (!m_patch_file.write_teg(name, teg))
+            return ERR;
         if (add_index(teg, ix, true, true))
         {
             ix->manual_tegs.push_back(teg);
@@ -453,9 +478,15 @@ public:
             return INFO_ABSENT;
         tstring text(data);
         tstring_trim(&text);
+        if (text.empty()) {
+            if (!m_patch_file.write_delete_info(name))
+                return INFO_ERR;
+        }
+        else {
+            if (!m_patch_file.write_info(name, text))
+                return INFO_ERR;
+        }
         ix->comment = text;
-
-
         if (text.empty())
             return INFO_REMOVED;
         return INFO_ADDED;
@@ -465,11 +496,24 @@ public:
     {
         if (name.empty() || data.empty())
             return MD_ERROR;
-        if (find_name(name))
-            return MD_EXIST;
-        index_ptr ix = add_tofile(name, data, tegs);
-        //if (ix->file == -1)
-          //  return MD_ERROR;
+        index_ptr ix = find_name(name);
+        if (ix) 
+        {
+            if (ix->data == data && ix->auto_tegs == tegs)
+                return MD_EXIST;
+            if (!m_patch_file.write_object(name, data, tegs))
+                return MD_ERROR;
+            ix->data = data;
+            ix->auto_tegs = tegs;
+            return MD_UPDATED;
+        }
+        if (!m_patch_file.write_object(name, data, tegs))
+            return MD_ERROR;
+        ix = std::make_shared<index>();
+        ix->name = name;
+        ix->data = data;
+        ix->auto_tegs = tegs;
+        //todo ? m_indexes.push_back(ix); 
         add_index(name, ix, false, false);
         for (int i=0,e=tegs.size();i<e;++i)
             add_index(tegs[i], ix, true, false);
@@ -683,59 +727,7 @@ private:
        }
        return true;
     }
-
-    index_ptr add_tofile(const tstring& name, const tstring& data, const std::vector<tstring>& tegs)
-    {
-
-
-        /*bool create_new_file = true;
-        if (!m_files.empty())
-        {
-            size_t last = m_files.size() - 1;
-            fileinfo &f = m_files[last];
-            if (f.data.size() <= maxitems_per_file) {
-                create_new_file = false;
-            }
-        }
-        if (create_new_file) 
-        {
-            size_t index = m_files.size() + 1;            
-            fileinfo f;                                   
-            while(true) 
-            {
-                tchar buffer[16];
-                swprintf(buffer,L"%d", index);
-                tstring filename(buffer);
-                f.auto_db = filename + L".mud";
-                f.user_db = filename + L".user";
-                filename.assign(m_base_dir);
-                filename.append(f.auto_db);
-                tstring filename2(m_base_dir);
-                filename2.append(f.user_db);
-                if ((GetFileAttributes(filename.c_str()) == INVALID_FILE_ATTRIBUTES) &&
-                    (GetFileAttributes(filename2.c_str()) == INVALID_FILE_ATTRIBUTES))
-                {
-                    break;                                    
-                }
-                index++;
-            }
-            m_files.push_back(f);
-        }*/
         
-        index_ptr ix = std::make_shared<index>();
-
-        /*size_t last = m_files.size() - 1;
-        fileinfo &f = m_files[last];
-        
-        ix->file = last;
-        ix->name = name;
-        ix->auto_tegs = tegs;
-        ix->data = data;
-        f.data.push_back(ix);
-        f.repack_auto = true;*/
-		return ix;
-    }
-
 	void load_old_db()
 	{
 
@@ -745,13 +737,14 @@ private:
     {
        tstring error;
        load_maindb();
-       if (load_patchdb()) 
-       {           
-           save_db(&error);
-       }
+
        tstring pf(m_base_dir);
        pf.append(patchdb_file);
-       DeleteFile(pf.c_str());
+       if (load_patchdb(pf))
+       {
+           save_db(&error);
+       }
+       //DeleteFile(pf.c_str());
        if (!m_patch_file.init(pf))
        {
            error = L"patch file error";
@@ -801,19 +794,47 @@ private:
         }
     }
 
-    bool load_patchdb()
+    bool load_patchdb(const tstring& path)
     {
-        return true;
-        tstring patchfile(m_base_dir);
-        patchfile.append(patchdb_file);
-        load_file pf(patchfile);
+        load_file pf(path);
         if (!pf.result) 
             return false;
 
+        bool reading_object = false;
         u8string str;
         while (pf.readNextString(&str, true))
         {
+            if (str.empty()) 
+            {
+                if (reading_object)
+                {
+                    reading_object = false;
 
+                }
+                continue;
+            }
+            tstring s(TU2W(str.c_str()));
+            if (reading_object)
+            {
+                continue;
+            }          
+            if (str.size() < 2 || s[1] != L';')
+                continue;
+            tstring data(s.substr(2));
+            size_t pos = data.find(L';');
+            if (pos == tstring::npos)
+                continue;
+            tstring subdata(data.substr(pos+1));
+            data = data.substr(0, pos);
+            tchar t = s[0];
+            if (t == L'O') 
+            {
+                reading_object = true;
+            }
+            if (t == L'T')
+            { //add teg
+
+            }
         }
         return true;
     }
@@ -943,7 +964,14 @@ int dict_add(lua_State *L)
             return 1;
         }
         lua_pushboolean(L, 0);
-        lua_pushstring(L, result == MapDictonary::MD_EXIST ? "exist" : "error");
+        if (result == MapDictonary::MD_EXIST)
+        {
+            lua_pushstring(L, "exist");            
+        }
+        else
+        {
+            lua_pushstring(L, result == MapDictonary::MD_UPDATED ? "updated" : "error");
+        }
         return 2;
     }
     return dict_invalidargs(L, "add");
@@ -1058,9 +1086,6 @@ int dict_teg(lua_State *L)
             break;
         case MapDictonary::ABSENT:
             lua_pushstring(L, "absent");
-            break;
-        case MapDictonary::EXIST:
-            lua_pushstring(L, "exist");
             break;
         case MapDictonary::ADDED:
             lua_pushstring(L, "added");
