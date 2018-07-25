@@ -220,4 +220,5 @@ public: // system commands
     DEF(wlock);
     DEF(wunlock);
     DEF(debug_tr);
+    DEF(strop);
 };

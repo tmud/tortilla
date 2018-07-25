@@ -1082,7 +1082,7 @@ actions. В триггерах, вместо определенных часте
 Примеры:<br>
 <div class="e">#if '$fight = 0' 'есть;пить'</div> - Переменная $fight отвечает за состояние в бою/нет. Если персонаж не в бою, то можно подкрепиться.<br>
 <div class="e">#if {$curMoney &lt; $oldMoney} {#output red 'Меня обокрали !!!'}</div> - если вдруг стало меньше денег, то вывысти сообщение о краже.<br><br>
-См.также: <a href="#var" class="cmd">#var</a>, <a href="#math" class="cmd">#math</a>, <a href="#alias" class="cmd">#alias</a>, <a href="#action" class="cmd">#action</a>, <a href="#timer" class="cmd">#timer</a>, <a href="#hotkey" class="cmd">#hotkey</a>
+См.также: <a href="#var" class="cmd">#var</a>, <a href="#math" class="cmd">#math</a>, <a href="#strop" class="cmd">#strop</a>, <a href="#alias" class="cmd">#alias</a>, <a href="#action" class="cmd">#action</a>, <a href="#timer" class="cmd">#timer</a>, <a href="#hotkey" class="cmd">#hotkey</a>
 <hr>
 <a name="gag"></a>
 <h4>#gag</h4>
@@ -1267,7 +1267,7 @@ off<br>
 <div class="ee">#math a $b+1<br>
 #math d $c/$b
 </div>
-См.также: <a href="#var" class="cmd">#var</a>, <a href="#if" class="cmd">#if</a>.
+См.также: <a href="#var" class="cmd">#var</a>, <a href="#if" class="cmd">#if</a>, <a href="#strop" class="cmd">#strop</a>.
 <hr>
 <a name="mccp"></a>
 <h4>#mccp</h4>
@@ -1379,9 +1379,28 @@ off<br>
 <div class="t">#stop</div><br>
 См.также: <a href="#drop" class="cmd">#drop</a>
 <hr>
+<a name="strop"></a>
+<h4>#strop</h4>
+Команда производит строковые операции с переменными.<br><br>
+Синтаксис команды:<br>
+<div class="t">#strop targervar 'operand 1' op ['operand 2'] </div><br>
+- targetvar - имя переменной, куда будет записан результат.<br>
+- 'operand 1' - первый операнд операции.<br>
+- 'operand 2' - второй операнд, если необходим. В зависимости от операции может быть и третий и т.д. операнд.<br><br>
+Возможные операции:<br>
+<ul>
+<li><div class="t">replace</div> - замена подстрок</li>
+<div class="t">#strop result $sourcevar replace ' ' .</div> - замена пробелов на точку в переменной $sourcevar и запись результата в переменную result.
+<li><div class="t">trim</div> - удалить пробелы в начале и конце</li>
+<div class="t">#strop result $sourcevar trim</div> - удаление пробелов в начале и в конце переменной $sourcevar и запись результата в переменную result.
+<li><div class="t">concat</div> - контекатенация (сложение) строк</li>
+<div class="t">#strop result $sourcevar concat $sourcevar2</div> - cложение строк $sourcevar и $sourcevar2 в одну и запись результата в переменную result.
+</ul>
+См.также: <a href="#math" class="cmd">#math</a>
+<hr>
 <a name="sub"></a>
 <h4>#sub</h4>
-Данная команда добавляет автоматическую 'замену' одной строки, пришедшей от сервера на заданную.<br>
+Данная команда добавляет автоматическую 'замену' одной строки, пришедшей от сервера на заданную.<br><br>
 Синтаксис команды:<br>
 <div class="t">#sub 'строка для замены' 'нужная строка' ['группа']</div><br>
 - 'строка для замены' - строка, которую нужно заменить. (См: <a href="#startline">Ключевые строки</a>)<br>

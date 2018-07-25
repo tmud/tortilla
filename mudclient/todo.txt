@@ -15,4 +15,7 @@
 16. proxy
 17. plugins manager
 18. плагин работы с –Ћ временем
-19. строковые операции с переменными
++ 19. строковые операции с переменными
+#strop target $src replace ' ' .
+#strop target $src trim
+#strop target $src concat $src2
