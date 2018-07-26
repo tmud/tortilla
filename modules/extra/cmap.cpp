@@ -757,11 +757,6 @@ private:
         return -1;
     }
 
-	void load_old_db()
-	{
-
-	}
-
     void load_db(tstring* error)
     {
        load_maindb(error);
@@ -786,8 +781,13 @@ private:
         tstring mainfile(m_base_dir);
         mainfile.append(maindb_file);
         load_file lf(mainfile);
-        if (!lf.result)
+        if (lf.file_missed)
             return;
+        if (!lf.result)
+        {
+            error->assign(L"Не загружается основной файл базы.");
+            return;
+        }
 
         std::vector<tstring> data;
         u8string str;
@@ -838,7 +838,9 @@ private:
     bool load_patchdb(const tstring& path)
     {
         load_file pf(path);
-        if (!pf.result) 
+        if (pf.file_missed) 
+            return true;
+        if (!pf.result)
             return false;
 
         bool reading_object = false;
@@ -982,8 +984,8 @@ private:
         }
     }
 
-    /*void load_manual_tegs()
-    {
+    void load_old_db()
+	{
         tstring path(m_base_dir);
         path.append(L"usertegs.db");
         load_file fr(path);
@@ -1007,8 +1009,7 @@ private:
                 teg(name, tk[i]);
         }
         fr.close();
-        m_manual_tegs_changed = false;
-    }*/
+    }
 };
 
 int dict_add(lua_State *L)
