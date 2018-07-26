@@ -99,6 +99,14 @@ public:
 		}
 		return true;
 	}
+    bool truncate()
+    {
+        if (hfile == INVALID_HANDLE_VALUE)
+			return false;
+        if (SetFilePointer(hfile, 0, NULL, FILE_BEGIN) == INVALID_SET_FILE_POINTER)
+            return false;
+        return SetEndOfFile(hfile) ? true : false;
+    }
 	bool write(const tstring& data)
     {
 		u8string tmp(TW2U(data.c_str()));
@@ -141,7 +149,7 @@ class database_diff_writer
 public:
     bool init(const tstring& filepath)
     {
-        return fw.open(filepath);
+        return (fw.open(filepath) && fw.truncate());
     }
     bool write_object(const tstring& name, const tstring& data, const std::vector<tstring>& auto_tegs)
     {
@@ -160,7 +168,7 @@ public:
     {
         tstring out(L"o;"); out.append(name);
         out.append(L"\n");
-        return fw.write(out);    
+        return fw.write(out);
     }
     bool write_teg(const tstring& name, const tstring& teg)
     {
@@ -238,14 +246,15 @@ class MapDictonary
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
-        load_db();        
     }
     ~MapDictonary() 
     {
-        tstring error;
-        save_db(&error);
     }
     enum { MD_OK = 0, MD_EXIST, MD_UPDATED, MD_ERROR };
+    void init(tstring *error)
+    {
+        load_db(error);
+    }
 
     bool update(const lua_ref& r, tstring *error)
     {
@@ -505,20 +514,25 @@ public:
         create_object(name, data, tegs, empty);
         return MD_OK;
     }
-    
+
+    void create_index(index_ptr ix)
+    {
+        del_object(ix->name);
+        add_index(ix->name, ix, false, false);
+        for (const tstring& t : ix->auto_tegs)
+            add_index(t, ix, true, false);
+        for (const tstring& t : ix->manual_tegs)
+            add_index(t, ix, true, true);
+    }
+
     void create_object(const tstring& name, const tstring& data, const std::vector<tstring>& autotegs, const std::vector<tstring>& manualtegs)
     {
-        del_object(name);
         index_ptr ix = std::make_shared<index>();
         ix->name = name;
         ix->data = data;
         ix->auto_tegs = autotegs;
         ix->manual_tegs = manualtegs;
-        add_index(name, ix, false, false);
-        for (const tstring& t : autotegs)
-            add_index(t, ix, true, false);
-        for (const tstring& t : manualtegs)
-            add_index(t, ix, true, true);
+        create_index(ix);
     }
 
     void del_index(index_ptr ix, const tstring word)
@@ -748,65 +762,76 @@ private:
 
 	}
 
-    void load_db()
+    void load_db(tstring* error)
     {
-       tstring error;
-       //load_maindb(&error);
-
+       load_maindb(error);
+       if (!error->empty())
+            return;
        tstring pf(m_base_dir);
        pf.append(patchdb_file);
        if (load_patchdb(pf))
        {
-           save_db(&error);
-           if (!error.empty())
+           save_db(error);
+           if (!error->empty())
                return;
        }
-       //DeleteFile(pf.c_str());
        if (!m_patch_file.init(pf))
        {
-           error = L"patch file error";
+           error->assign(L"patch file не смог создаться.");
        }
     }
 
-    void load_maindb()
+    void load_maindb(tstring *error)
     {
-        return;
         tstring mainfile(m_base_dir);
         mainfile.append(maindb_file);
-
         load_file lf(mainfile);
         if (!lf.result)
             return;
 
-        u8string str, name;
-        bool find_name_mode = true;
-        index_ptr ix = std::make_shared<index>();
+        std::vector<tstring> data;
+        u8string str;
         while (lf.readNextString(&str, true))
         {
-            if (str.empty())
+            tstring s(TU2W(str.c_str()));
+            if (!s.empty())
             {
-                find_name_mode = true;
-                if (!name.empty())
-                {
-                    Tokenizer tk(TU2W(name.c_str()), L";");
-                    ix->name = tk[0];
-                    {
-                        index_ptr copy = find_by_name(tk[0]);
-                        if (!copy) {
-                          for (int i=0,e=tk.size();i<e;++i)
-                             add_index(tk[i], ix, (i!=0), false);
-                          }
-                        }
-                        ix = std::make_shared<index>();
-                        name.clear();
-                    }
+                data.push_back(s);
+                continue;
+            }
+            if (data.empty())
+                continue;
+            // processing object
+            if (data[0].find(L';') != tstring::npos)
+                continue;
+            index_ptr ix = std::make_shared<index>();
+            ix->name = data[0];
+            for (int i=1,e=data.size();i<e;++i)
+            {
+                const tstring &t = data[i];
+                if (t.length() < 2) continue;
+                tchar tp = t[0];
+                if (t[1] == L';' && (tp == L'A' || tp == L'T')) {
+                    Tokenizer tk(t.substr(2).c_str(), L";");
+                    if (tp == L'A')
+                        tk.moveto(&ix->auto_tegs);
+                    else
+                        tk.moveto(&ix->manual_tegs);
                     continue;
                 }
-                if (find_name_mode)
+                if (t[1] == L';' && tp == L'C')
                 {
-                    name.assign(str);
-                    find_name_mode = false;
+                    ix->comment = t.substr(2);
+                    continue;
                 }
+                tstring& data = ix->data;
+                if (!data.empty()) {
+                    data.append(L"\r\n");
+                }
+                data.append(t);
+            }
+            data.clear();
+            create_index(ix);
         }
     }
 
@@ -913,7 +938,7 @@ private:
         tstring mainfile(m_base_dir);
         mainfile.append(maindb_file);
         filewriter fw;
-        if (!fw.open(mainfile))
+        if (!fw.open(mainfile) || !fw.truncate())
         {
             error->assign(L"Ошибка! Не получилось записать файл базы.");
             return;
@@ -1200,7 +1225,6 @@ int dict_new(lua_State *L)
         return lua_error(L);
     }
     tstring path(luaT_towstring(L, 1));
-
     if (get_dict(L) == -1)
     {
         int type = luaT_regtype(L, "dictonary");
@@ -1225,6 +1249,12 @@ int dict_new(lua_State *L)
         lua_pop(L, 1);
     }
     MapDictonary* nd = new MapDictonary(path, L);
+    tstring error;
+    nd->init(&error);
+    if (!error.empty()) {
+        luaT_pushwstring(L, error.c_str());
+        return lua_error(L);
+    }
     luaT_pushobject(L, nd, get_dict(L));
     return 1;
 }
