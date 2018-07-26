@@ -211,14 +211,13 @@ class MapDictonary
         int word_idx;
     };
     typedef std::vector<position> positions_vector;
-    typedef std::shared_ptr<positions_vector> positions_ptr;    
+    typedef std::shared_ptr<positions_vector> positions_ptr;
     struct worddata
     {
         tstring word;
         positions_ptr positions;
     };
     std::vector<worddata> m_words_table;
-    typedef std::vector<worddata>::iterator words_table_iterator;
 
     tstring m_base_dir;
     database_diff_writer m_patch_file;
@@ -732,7 +731,8 @@ private:
        }
     }
 
-    int find_manual_teg(index_ptr ix, const tstring& teg) {
+    int find_manual_teg(index_ptr ix, const tstring& teg)
+    {
         tstring t(teg);
         tstring_tolower(&t);
         std::vector<tstring>& tegs = ix->manual_tegs;
@@ -740,7 +740,7 @@ private:
             { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );
         if (it != tegs.end())
             return (it - tegs.begin());
-        return -1;   
+        return -1;
     }
 
 	void load_old_db()
@@ -751,13 +751,15 @@ private:
     void load_db()
     {
        tstring error;
-       load_maindb();
+       //load_maindb(&error);
 
        tstring pf(m_base_dir);
        pf.append(patchdb_file);
        if (load_patchdb(pf))
        {
            save_db(&error);
+           if (!error.empty())
+               return;
        }
        //DeleteFile(pf.c_str());
        if (!m_patch_file.init(pf))
@@ -897,74 +899,64 @@ private:
 
     void save_db(tstring *error)
     {
-        /*std::vector<tstring> processed;
-        MemoryBuffer buffer;
-		for (fileinfo& fi : m_files)
-		{
-			if (!error->empty()) break;
-			if (fi.repack_auto)
-			{
-				filewriter fw;
-                if (!fw.open(fi.auto_db)) {
-					error->assign(L"Ошибка при открытии файла на запись: ");
-					error->append(fi.auto_db);
-					break;
-				}
-				for (index_ptr ix : fi.data)
-				{
-					tstring name(ix->name); name.append(L"\r\n");
-					tstring data(ix->data); data.append(L"\r\n");
-					if (!fw.write(name) || !fw.write(data))
-					{
-						error->assign(L"Ошибка при записи файла: ");
-						error->append(fi.auto_db);
-						break;
-					}
-				}
-				fw.close();
-			}
-			if (fi.repack_user)
-			{
-                filewriter fw;
-                if (!fw.open(fi.user_db)) {
-					error->assign(L"Ошибка при открытии файла на запись: ");
-					error->append(fi.user_db);
-					break;
-				}
-				for (index_ptr ix : fi.data)
-				{
-					tstring data(ix->name); data.append(L"\r\n");
-					int i = ix->auto_tegs.size();
-					for (const tstring& s : ix->auto_tegs)
-					{
-						data.append(s);
-						i--;
-						if (i > 0) data.append(L";");
-						else data.append(L"\r\n");
-					}
-					i = ix->manual_tegs.size();
-					for (const tstring& s : ix->manual_tegs)
-					{
-						data.append(s);
-						i--;
-						if (i > 0) data.append(L";");
-						else data.append(L"\r\n");
-					}
-					data.append(ix->comment); data.append(L"\r\n");
+        std::set<index_ptr> setix;
+        typedef std::vector<worddata>::iterator words_table_iterator;
+        words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
+        for (; it!=it_end; ++it)
+        {
+            positions_ptr ptr  = it->positions;
+            positions_vector& pv = *ptr;
+            for (const position& p : pv)
+                setix.insert(p.idx);
+        }
 
-					if (!fw.write(data))
-					{
-						error->assign(L"Ошибка при записи файла: ");
-						error->append(fi.user_db);
-						break;
-					}
-				}
-				fw.close();
-			}
-		}*/
+        tstring mainfile(m_base_dir);
+        mainfile.append(maindb_file);
+        filewriter fw;
+        if (!fw.open(mainfile))
+        {
+            error->assign(L"Ошибка! Не получилось записать файл базы.");
+            return;
+        }
+        for (index_ptr ix : setix)
+        {
+            tstring out(ix->name); out.append(L"\n");
+            if (!ix->auto_tegs.empty())
+            {
+                out.append(L"A");
+                for (const tstring& t : ix->auto_tegs)
+                {
+                    out.append(L";");
+                    out.append(t);
+                }
+                out.append(L"\n");
+            }
+            if (!ix->manual_tegs.empty())
+            {
+                out.append(L"T");
+                for (const tstring& t : ix->manual_tegs)
+                {
+                    out.append(L";");
+                    out.append(t);
+                }
+                out.append(L"\n");
+            }
+            if (!ix->comment.empty()) 
+            {
+                out.append(L"C;");
+                out.append(ix->comment);
+                out.append(L"\n");
+            }
+            out.append(ix->data);
+            out.append(L"\n\n");
+            if (!fw.write(out))
+            {
+                error->assign(L"Ошибка! Ошибка при записи файла базы.");
+                return;
+            }
+        }
     }
 
-    
     /*void load_manual_tegs()
     {
         tstring path(m_base_dir);
