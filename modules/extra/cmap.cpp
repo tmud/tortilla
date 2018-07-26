@@ -429,19 +429,16 @@ public:
     {
         if (teg.empty())
             return ERR;
-        index_ptr ix = find_name(name);
+        index_ptr ix = find_by_name(name);
         if (!ix)
             return ABSENT;
-        tstring t(teg);
-        tstring_tolower(&t);
-        std::vector<tstring>& tegs = ix->manual_tegs;
-        std::vector<tstring>::iterator it = std::find_if(tegs.begin(), tegs.end(), [&](const tstring& s) 
-            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );                
-        if (it != tegs.end())
+        int index = find_manual_teg(ix, teg);
+        if (index != -1)
         {
             if (!m_patch_file.write_delete_teg(name, teg))
                 return ERR;
-            tegs.erase(it);
+            std::vector<tstring>& tegs = ix->manual_tegs;
+            tegs.erase(tegs.begin()+index);
             Phrase p(teg);
             for (int i=0,e=p.len();i<e;++i)
             {
@@ -451,7 +448,7 @@ public:
                     positions_vector& pv = *m_words_table[pos].positions;
                     for (int i=0,e=pv.size();i<e;++i) {
                       if (pv[i].idx == ix && pv[i].word_idx == i && pv[i].type == manual_teg){
-                          pv.erase(pv.begin()+i); break; 
+                          pv.erase(pv.begin()+i); break;
                       }
                     }
                 }
@@ -460,12 +457,9 @@ public:
         }
         if (!m_patch_file.write_teg(name, teg))
             return ERR;
-        if (add_index(teg, ix, true, true))
-        {
-            ix->manual_tegs.push_back(teg);
-            return ADDED;
-        }
-        return ERR;
+        add_index(teg, ix, true, true);        
+        ix->manual_tegs.push_back(teg);
+        return ADDED;
     }
 
     enum InfoResult { INFO_ERR = 0, INFO_ABSENT, INFO_ADDED, INFO_REMOVED };
@@ -473,7 +467,7 @@ public:
     {
         if (name.empty())
             return INFO_ERR;
-        index_ptr ix = find_name(name);
+        index_ptr ix = find_by_name(name);
         if (!ix)
             return INFO_ABSENT;
         tstring text(data);
@@ -496,33 +490,41 @@ public:
     {
         if (name.empty() || data.empty())
             return MD_ERROR;
-        index_ptr ix = find_name(name);
+        index_ptr ix = find_by_name(name);
         if (ix) 
         {
             if (ix->data == data && ix->auto_tegs == tegs)
                 return MD_EXIST;
             if (!m_patch_file.write_object(name, data, tegs))
                 return MD_ERROR;
-            ix->data = data;
-            ix->auto_tegs = tegs;
+            create_object(name, data, tegs, ix->manual_tegs);
             return MD_UPDATED;
         }
         if (!m_patch_file.write_object(name, data, tegs))
             return MD_ERROR;
-        ix = std::make_shared<index>();
-        ix->name = name;
-        ix->data = data;
-        ix->auto_tegs = tegs;
-        //todo ? m_indexes.push_back(ix); 
-        add_index(name, ix, false, false);
-        for (int i=0,e=tegs.size();i<e;++i)
-            add_index(tegs[i], ix, true, false);
+        std::vector<tstring> empty;
+        create_object(name, data, tegs, empty);
         return MD_OK;
     }
-
-    void del_indexes(index_ptr ix, const tstring name)
+    
+    void create_object(const tstring& name, const tstring& data, const std::vector<tstring>& autotegs, const std::vector<tstring>& manualtegs)
     {
-        Phrase p(name);
+        del_object(name);
+        index_ptr ix = std::make_shared<index>();
+        ix->name = name;
+        ix->data = data;
+        ix->auto_tegs = autotegs;
+        ix->manual_tegs = manualtegs;
+        add_index(name, ix, false, false);
+        for (const tstring& t : autotegs)
+            add_index(t, ix, true, false);
+        for (const tstring& t : manualtegs)
+            add_index(t, ix, true, true);
+    }
+
+    void del_index(index_ptr ix, const tstring word)
+    {
+        Phrase p(word);
         for (int j = 0, je = p.len(); j < je; ++j)
         {
             int pos = 0;
@@ -538,14 +540,17 @@ public:
         }
     }
 
-    bool del(const tstring& name)
+    bool del_object(const tstring& object)
     {
-         if (name.empty()) return false;
-         index_ptr ix = find_name(name);
+         if (object.empty())
+             return false;
+         index_ptr ix = find_by_name(object);
          if (!ix) return true;
-         del_indexes(ix, ix->name);
-         for (int i=0,e=ix->manual_tegs.size();i<e;++i)
-             del_indexes(ix, ix->manual_tegs[i]);
+         del_index(ix, ix->name);
+         for (const tstring& t : ix->manual_tegs)
+             del_index(ix, t);
+         for (const tstring& t : ix->auto_tegs)
+             del_index(ix, t);
          return true;
     }
 
@@ -630,7 +635,7 @@ private:
                         else
                         {
                             if ((pv[i].word_idx - words_indexes[j].word_idx) == 1)
-                                found = true;                        
+                                found = true;
                         }
 
                         if (found)
@@ -676,7 +681,7 @@ private:
         return false;
     }
 
-    index_ptr find_name(const tstring& name)
+    index_ptr find_by_name(const tstring& name)
     {
         Phrase p(name);
         if (p.len() == 0)
@@ -695,11 +700,11 @@ private:
         return nullptr;
     }
 
-    bool add_index(const tstring& name, index_ptr ix, bool teg, bool manual)
+    void add_index(const tstring& word, index_ptr ix, bool teg, bool manual)
     {
-       Phrase p(name);
+       Phrase p(word);
        if (p.len()==0)
-           return false;
+           return;
        for (int i=0,len=p.len(); i<len; ++i)
        {
           position word_pos;
@@ -725,9 +730,19 @@ private:
           }
           positions_vector_ptr->push_back(word_pos);
        }
-       return true;
     }
-        
+
+    int find_manual_teg(index_ptr ix, const tstring& teg) {
+        tstring t(teg);
+        tstring_tolower(&t);
+        std::vector<tstring>& tegs = ix->manual_tegs;
+        std::vector<tstring>::iterator it = std::find_if(tegs.begin(), tegs.end(), [&](const tstring& s) 
+            { tstring t1(s); tstring_tolower(&t1); return (t1 == t); } );
+        if (it != tegs.end())
+            return (it - tegs.begin());
+        return -1;   
+    }
+
 	void load_old_db()
 	{
 
@@ -751,7 +766,6 @@ private:
        }
     }
 
-
     void load_maindb()
     {
         return;
@@ -764,18 +778,18 @@ private:
 
         u8string str, name;
         bool find_name_mode = true;
-        index_ptr ix = std::make_shared<index>();        
+        index_ptr ix = std::make_shared<index>();
         while (lf.readNextString(&str, true))
         {
             if (str.empty())
             {
                 find_name_mode = true;
                 if (!name.empty())
-                {                        
+                {
                     Tokenizer tk(TU2W(name.c_str()), L";");
                     ix->name = tk[0];
                     {
-                        index_ptr copy = find_name(tk[0]);
+                        index_ptr copy = find_by_name(tk[0]);
                         if (!copy) {
                           for (int i=0,e=tk.size();i<e;++i)
                              add_index(tk[i], ix, (i!=0), false);
@@ -786,7 +800,7 @@ private:
                     }
                     continue;
                 }
-                if (find_name_mode) 
+                if (find_name_mode)
                 {
                     name.assign(str);
                     find_name_mode = false;
@@ -801,6 +815,7 @@ private:
             return false;
 
         bool reading_object = false;
+        std::vector<tstring> object_data;
         u8string str;
         while (pf.readNextString(&str, true))
         {
@@ -808,32 +823,73 @@ private:
             {
                 if (reading_object)
                 {
+                    Tokenizer tk(object_data[0].c_str(), L";");
+                    tstring data;
+                    for (int i=1,e=object_data.size(); i<e; ++i) {
+                        if (i != 1)
+                            data.append(L"\r\n");
+                        data.append(object_data[i]);
+                    }
+                    std::vector<tstring> autotegs, manualtegs;
+                    for (int i=1,e=tk.size();i<e;++i) {
+                        autotegs.push_back(tk[i]);
+                    }
+                    create_object(tk[0], data, autotegs, manualtegs);
+                    object_data.clear();
                     reading_object = false;
-
                 }
                 continue;
             }
             tstring s(TU2W(str.c_str()));
             if (reading_object)
             {
+                object_data.push_back(s);
                 continue;
-            }          
+            }
             if (str.size() < 2 || s[1] != L';')
                 continue;
-            tstring data(s.substr(2));
-            size_t pos = data.find(L';');
-            if (pos == tstring::npos)
-                continue;
-            tstring subdata(data.substr(pos+1));
-            data = data.substr(0, pos);
             tchar t = s[0];
-            if (t == L'O') 
+            tstring data(s.substr(2));
+            if (t == L'O')
             {
+                object_data.push_back(data);
                 reading_object = true;
+                continue;
             }
-            if (t == L'T')
-            { //add teg
-
+            tstring objectname(data), subdata;
+            size_t pos = data.find(L';');
+            if (pos != tstring::npos)
+            {
+                objectname = data.substr(0, pos);
+                subdata = data.substr(pos+1);
+            }
+            index_ptr ix = find_by_name(objectname);
+            if (!ix)
+                continue;
+            if (t == L'i')  //delete comment
+            {
+                ix->comment.clear();
+                continue;
+            }
+            if (t == L'T')  //add teg
+            {
+                add_index(subdata, ix, true, true);
+                if (find_manual_teg(ix, subdata) == -1) {
+                    ix->manual_tegs.push_back(subdata);
+                }
+            }
+            if (t == L't')  //delete teg
+            {
+                del_index(ix, subdata);
+                int index = find_manual_teg(ix, subdata);
+                if (index != -1) {
+                    std::vector<tstring>& tegs = ix->manual_tegs;
+                    tegs.erase(tegs.begin()+index);
+                }
+            }
+            if (t == L'I')  //add comment
+            {
+                ix->comment = subdata;
             }
         }
         return true;
@@ -983,7 +1039,7 @@ int dict_delete(lua_State *L)
     {
         MapDictonary *d = (MapDictonary*)luaT_toobject(L, 1);
         tstring id(luaT_towstring(L, 2));
-        bool result = d->del(id);
+        bool result = d->del_object(id);
         lua_pushboolean(L, result?1:0);
         return 1;
     }
@@ -1011,7 +1067,11 @@ int dict_find(lua_State *L)
                 lua_pushstring(L, "data");
                 lua_pushwstring(L, ix->data.c_str());
                 lua_settable(L, -3);
-
+                if (!ix->comment.empty()) {
+                    lua_pushstring(L, "comment");
+                    lua_pushwstring(L, ix->comment.c_str());
+                    lua_settable(L, -3);
+                }
                 const std::vector<tstring>& at = ix->auto_tegs;
                 lua_pushstring(L, "auto");
                 lua_newtable(L);
@@ -1020,7 +1080,7 @@ int dict_find(lua_State *L)
                     lua_pushinteger(L, i+1);
                     luaT_pushwstring(L, at[i].c_str());
                     lua_settable(L, -3);
-                }                
+                }
                 lua_settable(L, -3);
 
                 const std::vector<tstring>& mt = ix->manual_tegs;

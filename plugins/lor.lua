@@ -218,6 +218,11 @@ local function print_object(name, info)
     vs:setData(t[i])
     vs:print(0)
   end
+  if info.comment then
+    vs:setBlocksCount(1)
+    vs:setBlockText(1, 'Комментарий: '..info.comment)
+    vs:print(0)
+  end
   lor_show_mode = false
   lor_last = name
 end
