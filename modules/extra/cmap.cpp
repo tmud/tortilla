@@ -2,8 +2,8 @@
 #include "phrase.h"
 #include <memory>
 
-const tchar* maindb_file = L"main.db";
-const tchar* patchdb_file = L"patch.db";
+const tchar* maindb_file = L"main.ldb";
+const tchar* patchdb_file = L"patch.ldb";
 
 std::map<lua_State*, int> m_dict_types;
 typedef std::map<lua_State*, int>::iterator iterator;
@@ -226,23 +226,9 @@ class MapDictonary
         positions_ptr positions;
     };
     std::vector<worddata> m_words_table;
-
     tstring m_base_dir;
     database_diff_writer m_patch_file;
     lua_State *L;
-
-    void fileerror(const tstring& file) 
-    {
-        tstring e(L"Ошибка чтения файла: ");
-        e.append(file);
-        base::log(L, e.c_str());
-    }
-    void filesave_error(const tstring& file)
-    {
-        tstring e(L"Ошибка записи файла: ");
-        e.append(file);
-        base::log(L, e.c_str());
-    }
 public:
     MapDictonary(const tstring& dir, lua_State *pl) : m_base_dir(dir), L(pl)
     {
@@ -759,21 +745,26 @@ private:
 
     void load_db(tstring* error)
     {
+       load_old_db(error);
+       if (!error->empty())
+            return;
        load_maindb(error);
        if (!error->empty())
             return;
        tstring pf(m_base_dir);
        pf.append(patchdb_file);
-       if (load_patchdb(pf))
+       if (load_patchdb(pf, error))
        {
            save_db(error);
-           if (!error->empty())
-               return;
        }
+       if (!error->empty())
+           return;
        if (!m_patch_file.init(pf))
        {
            error->assign(L"patch file не смог создаться.");
+           return;
        }
+       delete_old_db();
     }
 
     void load_maindb(tstring *error)
@@ -835,13 +826,16 @@ private:
         }
     }
 
-    bool load_patchdb(const tstring& path)
+    bool load_patchdb(const tstring& path, tstring *error)
     {
         load_file pf(path);
         if (pf.file_missed) 
             return true;
         if (!pf.result)
+        {
+            error->assign(L"Не загрузился патч для базы.");
             return false;
+        }
 
         bool reading_object = false;
         std::vector<tstring> object_data;
@@ -984,8 +978,74 @@ private:
         }
     }
 
-    void load_old_db()
+    void load_old_db(tstring *error)
 	{
+        std::vector<tstring> files;
+        tstring mask(m_base_dir);
+        mask.append(L"*.db");
+        WIN32_FIND_DATA fd;
+        memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+        HANDLE file = FindFirstFile(mask.c_str(), &fd);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            do {
+                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                {
+                    if (fd.nFileSizeHigh > 0)
+                        continue;
+                    tstring name(fd.cFileName);
+                    int len = name.length()-3;
+                    name = name.substr(0,len);
+                    if (!isOnlyDigits(name))
+                        continue;
+                    files.push_back(fd.cFileName);
+                }
+            } while (::FindNextFile(file, &fd));
+            ::FindClose(file);
+        }
+        std::sort(files.begin(), files.end(),[](const tstring&a, const tstring&b) {
+            return a < b;
+        });
+        std::vector<tstring> empty;
+        for (const tstring& f : files)
+        {
+            // read files in to catalog
+            tstring path(m_base_dir);
+            path.append(f);
+            load_file lf(path);
+            if (!lf.result) {
+                error->assign(L"Ошибка при загрузке файла базы: " + f);
+                return;
+            }
+
+            std::vector<tstring> data;
+            u8string str;
+            bool find_name_mode = false;
+            while (lf.readNextString(&str, true))
+            {
+                tstring s(TU2W(str.c_str()));
+                if (!s.empty()) {
+                    data.push_back(s);
+                    continue;
+                }                
+                if (data.empty())
+                    continue;
+                // process object
+                Tokenizer tk(data[0].c_str(), L";");
+                std::vector<tstring> tegs;
+                tk.moveto(&tegs);
+                tstring name(tegs[0]); tegs.erase(tegs.begin());
+                tstring content;
+                for (int i=1,e=data.size();i<e;++i) {
+                    if (i != 1)
+                        content.append(L"\r\n");
+                    content.append(data[i]);
+                }
+                create_object(name, content, tegs, empty);
+                find_name_mode = true;
+                data.clear();
+            }
+        }
         tstring path(m_base_dir);
         path.append(L"usertegs.db");
         load_file fr(path);
@@ -993,22 +1053,55 @@ private:
             return;
         if (!fr.result)
         {
-            tstring error(L"Ошибка при открытии файла: ");
-            error.append(path.c_str());
-            fileerror( error.c_str() );
+            error->assign(L"Ошибка при открытии файла: " + path);
             return;
         }
-        std::string s;
-        while (fr.readNextString(&s, true))
+        u8string us;
+        while (fr.readNextString(&us, true))
         {
-            tstring ws(TU2W(s.c_str()));
-            Tokenizer tk(ws.c_str(), L";");
+            tstring s(TU2W(us.c_str()));
+            Tokenizer tk(s.c_str(), L";");
             if (tk.size() < 2) continue;
             const tstring& name = tk[0];
+            index_ptr ix = find_by_name(name);
+            if (!ix)
+                continue;
             for (int i=1,e=tk.size();i<e;++i)
-                teg(name, tk[i]);
+            {
+                const tstring& teg = tk[i];
+                add_index(teg, ix, true, true);
+                if (find_manual_teg(ix, teg) == -1) {
+                    ix->manual_tegs.push_back(teg);
+                }
+            }
         }
-        fr.close();
+    }
+
+    void delete_old_db() 
+    {
+        std::vector<tstring> files;
+        tstring mask(m_base_dir);
+        mask.append(L"*.db");
+        WIN32_FIND_DATA fd;
+        memset(&fd, 0, sizeof(WIN32_FIND_DATA));
+        HANDLE file = FindFirstFile(mask.c_str(), &fd);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            do 
+            {
+                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                {
+                    files.push_back(fd.cFileName);
+                }
+            } while (::FindNextFile(file, &fd));
+            ::FindClose(file);
+        }
+        for (const tstring& f : files)
+        {
+            tstring path(m_base_dir);
+            path.append(f);
+            DeleteFile(path.c_str());
+        }   
     }
 };
 
