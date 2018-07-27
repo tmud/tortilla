@@ -166,9 +166,13 @@ public:
             fw.delfile();
         }
     }
+    bool truncate()
+    {
+        return fw.truncate();
+    }
     bool init(const tstring& filepath)
     {
-        bool result = (fw.open(filepath) && fw.truncate());
+        bool result = (fw.open(filepath) && truncate());
         if (result)
             writed = false;
         return result;
@@ -266,171 +270,59 @@ public:
 
     bool update(const lua_ref& r, tstring *error)
     {
-        bool result = true;
-        /*
-        // save current words table
-        std::vector<worddata> savewt;
-        savewt.swap(m_words_table);
-        std::vector<DWORD> new_files_size(m_files.size(), 0);
-
-        for (int i=0,e=m_files.size();i<e;++i)
+        if (!m_patch_file.truncate())
         {
-             fileinfo& fi = m_files[i];
-             load_file lf(fi.path);
-             if (!lf.result)
-             {
-                 error->assign(L"Ошибка при открытии файла: ");
-                 error->append(fi.path);
-                 result = false;
-                 break;
-             }
-             if (fi.size != lf.size())
-             {
-                 error->assign(L"Файл изменен другой программой: ");
-                 error->append(fi.path);
-                 error->append(L". Перезапустите плагин.");
-                 result = false;
-                 break;
-             }
-             tstring newfile_path(fi.path);
-             newfile_path.append(L".new");
-             database_file_writer fw;
-             if (!fw.open(newfile_path))
-             {
-                 error->assign(L"Ошибка при открытии файла на запись: ");
-                 error->append(newfile_path);
-                 result = false;
-                 break;
-             }
-             std::string str, name;
-             DataQueue data;
-             while (lf.readNextString(&str, false))
-             {
-                 std::string t(str);
-                 string_replace(&t, "\r", "");
-                 string_replace(&t, "\n", "");
-                 if (!t.empty())
-                 {
-                     if (name.empty())
-                         name.assign(t);
-                     else
-                         data.write(str.data(), str.length());
-                     continue;
-                 }
-                 if (name.empty())
-                 {
-                     data.clear();
-                     continue;
-                 }
-                 r.pushValue(L);
-                 u8string tmp((const char*)data.getData(), data.getSize());
-                 lua_pushstring(L, tmp.c_str());
-                 if (lua_pcall(L, 1, 1, 0))
-                 {
+            error->assign(L"Не удалось сбросить патч файл.");
+            return false;
+        }
+
+        std::set<index_ptr> setix;
+        typedef std::vector<worddata>::iterator words_table_iterator;
+        words_table_iterator it = m_words_table.begin(), it_end = m_words_table.end();
+        for (; it!=it_end; ++it)
+        {
+            positions_ptr ptr  = it->positions;
+            positions_vector& pv = *ptr;
+            for (const position& p : pv)
+                setix.insert(p.idx);
+        }
+
+        for (index_ptr ix : setix)
+        {
+            std::vector<tstring> newtegs;
+            Tokenizer tk(ix->data.c_str(), L"\n");
+            for (int i=0,e=tk.size(); i<e; ++i)
+            {
+                r.pushValue(L);
+                luaT_pushwstring(L, tk[i]);
+                if (lua_pcall(L, 1, 1, 0))
+                {
                      error->assign(lua_toerror(L));
-                     result = false;
-                     break;
-                 }
-                 // read tegs
-                 std::vector<tstring> tegs;
-                 if (lua_istable(L, -1))
-                 {
+                     return false;
+                }
+                if (lua_isstring(L, -1)) {
+                    tstring newteg(luaT_towstring(L, -1));
+                    newtegs.push_back(newteg);
+                }
+                if (lua_istable(L, -1))
+                {
                      lua_pushnil(L);                     // first key
                      while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
                      {
                          if (lua_isstring(L, -1))
                          {
                              tstring teg(luaT_towstring(L, -1));
-                             tegs.push_back(teg);
+                             newtegs.push_back(teg);
                          }
                          lua_pop(L, 1);
                      }
-                  }
-                  lua_pop(L, 1);
-
-                  // write file, make index
-                  Tokenizer tk(TU2W(name.c_str()), L";");
-                  const MemoryBuffer &mb = data.getMemoryBuffer();
-                  database_file_writer::WriteResult r;
-                  if (!fw.write(tk[0], mb, tegs, &r))
-                  {
-                      error->assign(L"Ошибка при записи файла: ");
-                      error->append(newfile_path);
-                      result = false;
-                      break;
-                  }
-
-                  index_ptr ix = std::make_shared<index>();
-                  ix->file = i;
-                  ix->name = tk[0];
-                  ix->pos_in_file = r.start;
-                  ix->name_tegs_len = r.title_len;
-                  ix->data_len = r.data_len;
-
-                  add_index(ix->name, ix, false, false);
-                  for (int i=0,e=tegs.size();i<e;++i)
-                    add_index(tegs[i], ix, true, false);
-
-                  new_files_size[ix->file] = r.start + (r.data_len+r.title_len);
-
-                  name.clear();
-                  data.clear();
-             }
-        }
-
-        if (!result)
-            savewt.swap(m_words_table);
-
-        if (result)
-        {
-            // переименование старых файлов
-            for (int i=0,e=m_files.size(); i<e; ++i)
-            {
-                tstring name(m_files[i].path);
-                tstring oldname(name);
-                oldname.append(L".old");
-                if (!MoveFile(name.c_str(), oldname.c_str()))
-                {
-                    error->assign(L"Ошибка при переименовании файлов. Переименуйте их вручную.");
-                    result = false;
-                    break;
-                }
+                 }
+                 lua_pop(L, 1);
             }
+            create_object(ix->name, ix->data, newtegs, ix->manual_tegs);
         }
-
-        if (result)
-        {
-            // переименование новых файлов
-            for (int i=0,e=m_files.size(); i<e; ++i)
-            {
-                tstring name(m_files[i].path);
-                tstring newname(name);
-                newname.append(L".new");
-                if (!MoveFile(newname.c_str(), name.c_str()))
-                {
-                    error->assign(L"Ошибка при переименовании файлов. Переименуйте их вручную.");
-                    result = false;
-                    break;
-                }
-            }
-        }
-
-        if (result)
-        {
-             // удаление старых файлов
-            for (int i=0,e=m_files.size(); i<e; ++i)
-            {
-                tstring name(m_files[i].path);
-                name.append(L".old");
-                DeleteFile(name.c_str());
-                m_files[i].size = new_files_size[i];
-            }
-
-            // перечитываем ручные теги
-            load_manual_tegs();
-            m_manual_tegs_changed = true;
-        }*/
-        return result;
+        save_db(error);
+        return error->empty();
     }
 
     void wipe()
