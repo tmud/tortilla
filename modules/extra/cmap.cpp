@@ -79,7 +79,7 @@ class filewriter
 	DWORD len;
 public:
 	filewriter() : hfile(INVALID_HANDLE_VALUE), len(0) {}
-	~filewriter() { if (hfile != INVALID_HANDLE_VALUE) close(); }
+	~filewriter() { close(); }
     bool open(const tstring &path)
 	{
         filepath = path;
@@ -114,7 +114,8 @@ public:
     }
     void close()
     {
-	    CloseHandle(hfile);
+        if (hfile != INVALID_HANDLE_VALUE)
+	        CloseHandle(hfile);
 	    hfile = INVALID_HANDLE_VALUE;
     }
 	void remove()
@@ -126,6 +127,10 @@ public:
 	DWORD datalen() {
 		return len;
 	}
+    void delfile() {
+        close();
+        DeleteFile(filepath.c_str());
+    }
 private:
     bool write(const std::string& data)
     {
@@ -146,10 +151,27 @@ private:
 class database_diff_writer 
 {
     filewriter fw;
+    bool writed;
+    bool write(const tstring& t)
+    {
+        bool result = fw.write(t);
+        if (result) writed = true;
+        return result;
+    }
 public:
+    database_diff_writer() : writed(true) {}
+    ~database_diff_writer() 
+    {
+        if (!writed) {
+            fw.delfile();
+        }
+    }
     bool init(const tstring& filepath)
     {
-        return (fw.open(filepath) && fw.truncate());
+        bool result = (fw.open(filepath) && fw.truncate());
+        if (result)
+            writed = false;
+        return result;
     }
     bool write_object(const tstring& name, const tstring& data, const std::vector<tstring>& auto_tegs)
     {
@@ -162,40 +184,40 @@ public:
         out.append(L"\n");
         out.append(data);
         out.append(L"\n\n");
-        return fw.write(out);
+        return write(out);
     }
     bool write_delete_object(const tstring& name) 
     {
         tstring out(L"o;"); out.append(name);
         out.append(L"\n");
-        return fw.write(out);
+        return write(out);
     }
     bool write_teg(const tstring& name, const tstring& teg)
     {
         tstring out(L"T;"); out.append(name);
         out.append(L";"); out.append(teg);
         out.append(L"\n");
-        return fw.write(out);
+        return write(out);
     }
     bool write_delete_teg(const tstring& name, const tstring& teg)
     {
         tstring out(L"t;"); out.append(name);
         out.append(L";"); out.append(teg);
         out.append(L"\n");
-        return fw.write(out);
+        return write(out);
     }
     bool write_info(const tstring& name, const tstring& info)
     {
         tstring out(L"I;"); out.append(name);
         out.append(L";"); out.append(info);
         out.append(L"\n");
-        return fw.write(out);
+        return write(out);
     }
     bool write_delete_info(const tstring& name)
     {
         tstring out(L"i;"); out.append(name);
         out.append(L"\n");
-        return fw.write(out);
+        return write(out);
     }
 };
 
@@ -487,8 +509,15 @@ public:
         index_ptr ix = find_by_name(name);
         if (ix) 
         {
-            if (ix->data == data && ix->auto_tegs == tegs)
-                return MD_EXIST;
+            if (ix->data == data && ix->auto_tegs.size() == tegs.size())
+            {
+                bool equal = true;
+                for (int i=0,e=tegs.size(); i<e; ++i) {
+                    if (ix->auto_tegs[i] != tegs[i]) { equal = false; break; }
+                }
+                if (equal)
+                    return MD_EXIST;
+            }
             if (!m_patch_file.write_object(name, data, tegs))
                 return MD_ERROR;
             create_object(name, data, tegs, ix->manual_tegs);
@@ -817,7 +846,7 @@ private:
                 }
                 tstring& data = ix->data;
                 if (!data.empty()) {
-                    data.append(L"\r\n");
+                    data.append(L"\n");
                 }
                 data.append(t);
             }
@@ -850,7 +879,7 @@ private:
                     tstring data;
                     for (int i=1,e=object_data.size(); i<e; ++i) {
                         if (i != 1)
-                            data.append(L"\r\n");
+                            data.append(L"\n");
                         data.append(object_data[i]);
                     }
                     std::vector<tstring> autotegs, manualtegs;
@@ -1038,7 +1067,7 @@ private:
                 tstring content;
                 for (int i=1,e=data.size();i<e;++i) {
                     if (i != 1)
-                        content.append(L"\r\n");
+                        content.append(L"\n");
                     content.append(data[i]);
                 }
                 create_object(name, content, tegs, empty);
