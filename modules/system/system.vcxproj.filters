@@ -37,6 +37,5 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="warn.ico" />
-    <Image Include="mudclient.ico" />
   </ItemGroup>
 </Project>
