@@ -38,6 +38,12 @@
     <Filter Include="Source Files\Main">
       <UniqueIdentifier>{ab0c2ef1-67c2-41c1-85bf-d4d648ad0066}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Modules">
+      <UniqueIdentifier>{b86124c2-e8cf-4e6a-bf5c-9e67ce633015}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\rnd">
+      <UniqueIdentifier>{2cac7ebb-e53a-4f3b-b861-c2f823058574}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AboutDlg.h">
@@ -304,6 +310,18 @@
     <ClInclude Include="src\plugins\pluginsTriggerData.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\modules\embedded.h">
+      <Filter>Source Files\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\rnd\inttypes.h">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\rnd\stdint.h">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\rnd\tinymt32.h">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -462,6 +480,15 @@
     <ClCompile Include="src\plugins\pluginsTriggerData.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
+    <ClCompile Include="src\modules\embedded.cpp">
+      <Filter>Source Files\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\rnd\rnd.cpp">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\rnd\tinymt32.c">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">
@@ -477,8 +504,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\welcome.rtf">
-      <Filter>Resource Files</Filter>
-    </None>
+    <Text Include="src\modules\rnd\readme.txt">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </Text>
   </ItemGroup>
 </Project>

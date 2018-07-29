@@ -33,7 +33,6 @@ if t then
   end
 end
 
-rnd = require 'rnd'
 extra = require 'extra'
 
 local function prequire(m)

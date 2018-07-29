@@ -223,3 +223,6 @@ if tabs:select('xyz') then
   tabs:delete()
 end
 
+print("Тест embedded rnd: "..rnd.string(10,20))
+
+
