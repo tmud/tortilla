@@ -2,6 +2,8 @@
 // Microsoft Visual C++ generated include file.
 // Used by mudclient.rc
 //
+#define IDD_ALERT                       101
+#define IDI_WARNINGMY                   102
 #define IDR_MAINFRAME                   128
 #define IDS_RESET_COLORS_CONFIRM        129
 #define IDS_NETWORK_FAILED              130
@@ -41,6 +43,7 @@
 #define IDD_PROPERTY_VARS               225
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
+#define IDC_STATIC_EDIT                 1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
 #define IDC_BUTTON_PROP_HIGHLIGHTS      1003
 #define IDC_BUTTON_PROP_HOTKEYS         1004

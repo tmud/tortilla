@@ -169,6 +169,8 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\modules\rnd\inttypes.h" />
     <ClInclude Include="src\modules\rnd\stdint.h" />
     <ClInclude Include="src\modules\rnd\tinymt32.h" />
+    <ClInclude Include="src\modules\system\alert.h" />
+    <ClInclude Include="src\modules\system\tasks.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />
     <ClInclude Include="src\mudCommandBar.h" />
     <ClInclude Include="src\mudCommandBarInd.h" />
@@ -260,6 +262,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\modules\system\system.cpp" />
     <ClCompile Include="src\msdp\msdpNetwork.cpp" />
     <ClCompile Include="src\mudCommandBarInd.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
@@ -306,6 +309,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
   <ItemGroup>
     <Image Include="res\mudclient.ico" />
     <Image Include="res\toolbar.bmp" />
+    <Image Include="res\warn.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mudclient.rc" />

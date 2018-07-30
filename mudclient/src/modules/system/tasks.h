@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/tempThread.h"
+#include "../common/tempThread.h"
 
 class BeepTasks : public TempThread<true>
 {

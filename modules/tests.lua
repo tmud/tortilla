@@ -188,12 +188,6 @@ runCommand("#wait 2 { #plugin testloadsave on }")
 runCommand("#wait 2 { #plugin testmisc on }")
 -- runCommand("#wait 2 { #message all on }")
 
-local s,m,h = system.getTime()
-print(h..":"..m..":"..s)
-
-local day,mon,year = system.getDate()
-print(day.."."..mon.."."..year)
-
 system.appendStringToFile("test.txt", "строка1\r\n")
 system.appendStringToFile("test.txt", "строка2\r\n")
 
@@ -226,5 +220,15 @@ if tabs:select('xyz') then
 end
 
 print("Тест embedded rnd: "..rnd.string(10,20))
+--system.alert("Unittest Alert message!")
+--system.msgbox("message title", "message text", "error")
+system.beep(5000,500)
+
+
+local s,m,h = system.getTime()
+print("Время: "..h..":"..m..":"..s)
+
+local day,mon,year = system.getDate()
+print("Дата: "..day.."."..mon.."."..year)
 
 

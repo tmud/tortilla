@@ -411,6 +411,14 @@ BEGIN
     LTEXT           "Èìÿ:",IDC_STATIC_LABEL1,7,171,26,8
 END
 
+IDD_ALERT DIALOGEX 0, 0, 268, 77
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,116,58,50,14
+    LTEXT           "Editpos",IDC_STATIC_EDIT,7,7,254,49,0,WS_EX_STATICEDGE
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -554,6 +562,14 @@ BEGIN
     BEGIN
         TOPMARGIN, 3
     END
+
+    IDD_ALERT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 261
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 72
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -672,6 +688,7 @@ IDR_MAINFRAME           BITMAP                  "Toolbar.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+IDI_WARNINGMY           ICON                    "warn.ico"
 IDR_MAINFRAME           ICON                    "mudclient.ico"
 
 /////////////////////////////////////////////////////////////////////////////

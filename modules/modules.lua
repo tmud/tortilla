@@ -1,8 +1,6 @@
 ﻿-- modules.lua
 -- загрузчик dll-модулей
 
-if system then return end
-
 function pairsByKeys (t, f)
   local a = {}
   for n in pairs(t) do table.insert(a, n) end
@@ -16,8 +14,6 @@ function pairsByKeys (t, f)
   end
   return iter
 end
-
-system = require 'system'
 
 off = {}
 local t = system.loadTextFile('../off.txt')

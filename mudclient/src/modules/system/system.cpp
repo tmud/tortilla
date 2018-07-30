@@ -349,7 +349,7 @@ int system_convertToWin(lua_State *L)
     return 0;
 }
 
-BeepTasks* g_background_beep_tasks = NULL;
+std::auto_ptr<BeepTasks> g_background_beep_tasks(new BeepTasks());
 int system_beep(lua_State *L)
 {
     if (luaT_check(L, 2, LUA_TNUMBER, LUA_TNUMBER))
@@ -465,19 +465,6 @@ static const luaL_Reg system_methods[] =
 int luaopen_system(lua_State *L)
 {
     luaL_newlib(L, system_methods);
+    lua_setglobal(L, "system");
     return 1;
-}
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID)
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-        g_background_beep_tasks = new BeepTasks();
-        break;
-    case DLL_PROCESS_DETACH:
-        delete g_background_beep_tasks;
-        break;
-    }
-    return TRUE;
 }

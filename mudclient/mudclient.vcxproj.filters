@@ -44,6 +44,9 @@
     <Filter Include="Source Files\Modules\rnd">
       <UniqueIdentifier>{2cac7ebb-e53a-4f3b-b861-c2f823058574}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Modules\system">
+      <UniqueIdentifier>{a484d84e-253c-40ff-8be7-8e124721a395}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AboutDlg.h">
@@ -322,6 +325,12 @@
     <ClInclude Include="src\modules\rnd\tinymt32.h">
       <Filter>Source Files\Modules\rnd</Filter>
     </ClInclude>
+    <ClInclude Include="src\modules\system\alert.h">
+      <Filter>Source Files\Modules\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\system\tasks.h">
+      <Filter>Source Files\Modules\system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -489,12 +498,18 @@
     <ClCompile Include="src\modules\rnd\tinymt32.c">
       <Filter>Source Files\Modules\rnd</Filter>
     </ClCompile>
+    <ClCompile Include="src\modules\system\system.cpp">
+      <Filter>Source Files\Modules\system</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\toolbar.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\warn.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
