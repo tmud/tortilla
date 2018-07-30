@@ -1,6 +1,8 @@
 ﻿-- modules.lua
 -- загрузчик dll-модулей
 
+extra = require 'extra'
+
 function pairsByKeys (t, f)
   local a = {}
   for n in pairs(t) do table.insert(a, n) end
@@ -28,8 +30,6 @@ if t then
     if not s:contain('# ') then off[s] = true end
   end
 end
-
-extra = require 'extra'
 
 local function prequire(m)
   local ok, mod = pcall(require, m)
