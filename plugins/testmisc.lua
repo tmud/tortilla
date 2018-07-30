@@ -29,6 +29,7 @@ function testmisc.before(v, vd)
   if flag then return end
   flag = true
   vd:select(1)
+  vd:setBlocksCount(1)
   vd:set(1, 'textcolor', 6)
   vd:print(0)
   vd:deleteAllBlocks()

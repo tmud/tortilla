@@ -4,8 +4,8 @@ bell
 testrender
 trswitch
 testtray
-testmisc
-testloadsave
+#testmisc
+#testloadsave
 write
 timeline
 example

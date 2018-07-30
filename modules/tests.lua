@@ -45,13 +45,15 @@ strassert( string.format('аб%%вгде'), 'аб%вгде' )
 strassert( string.format('аб%dвгде', 10.2), 'аб10вгде' )
 strassert( string.format('аб%.1fвгде', 10.2), 'аб10.2вгде' )
 strassert( string.format('аб%.3fвгде %s', 10.21, 'абра'), 'аб10.210вгде абра' )
-do
-runCommand("#wait 2 { #plugin testloadsave on }")
+
+
+--do
+--runCommand("#wait 2 { #plugin testloadsave on }")
 runCommand("#wait 2 { #plugin testmisc off }")
 runCommand("#wait 2 { #plugin testapi on }")
 runCommand("#wait 2 { #cr;#wout 0 Selection text test }")
-return
-end
+--return
+--end
 
 dofile 'modules.lua'
 
@@ -182,9 +184,9 @@ dict = nil
 print ('Автотесты для модулей extra.declension и extra.dictonary - КОНЕЦ')
 
 -- автотесты для плагинов
-runCommand("#wait 2 { #plugin loadsave on }")
+runCommand("#wait 2 { #plugin testloadsave on }")
 runCommand("#wait 2 { #plugin testmisc on }")
-runCommand("#wait 2 { #message all on }")
+-- runCommand("#wait 2 { #message all on }")
 
 local s,m,h = system.getTime()
 print(h..":"..m..":"..s)
