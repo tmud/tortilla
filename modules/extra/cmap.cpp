@@ -170,6 +170,10 @@ public:
     {
         return fw.truncate();
     }
+    void close()
+    {
+        fw.close();
+    }
     bool init(const tstring& filepath)
     {
         bool result = (fw.open(filepath) && truncate());
@@ -327,8 +331,11 @@ public:
 
     void wipe()
     {
-	    DeleteFile(maindb_file);
-		DeleteFile(patchdb_file);
+        m_patch_file.close();
+        tstring mf(m_base_dir); mf.append(maindb_file);
+        tstring pf(m_base_dir); pf.append(patchdb_file);
+	    DeleteFile(mf.c_str());
+		DeleteFile(pf.c_str());
         m_words_table.clear();
     }
 
