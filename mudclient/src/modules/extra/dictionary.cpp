@@ -2,6 +2,8 @@
 #include "phrase.h"
 #include <memory>
 
+void regFunction(lua_State *L, const char* name, lua_CFunction f);
+
 const tchar* maindb_file = L"main.ldb";
 const tchar* patchdb_file = L"patch.ldb";
 

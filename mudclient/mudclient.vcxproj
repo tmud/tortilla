@@ -166,6 +166,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\MainFrm.h" />
     <ClInclude Include="src\modeDlg.h" />
     <ClInclude Include="src\modules\embedded.h" />
+    <ClInclude Include="src\modules\extra\phrase.h" />
     <ClInclude Include="src\modules\rnd\inttypes.h" />
     <ClInclude Include="src\modules\rnd\stdint.h" />
     <ClInclude Include="src\modules\rnd\tinymt32.h" />
@@ -254,6 +255,9 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\logsFormatter.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
     <ClCompile Include="src\modules\embedded.cpp" />
+    <ClCompile Include="src\modules\extra\declension.cpp" />
+    <ClCompile Include="src\modules\extra\dictionary.cpp" />
+    <ClCompile Include="src\modules\extra\extra.cpp" />
     <ClCompile Include="src\modules\rnd\rnd.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>

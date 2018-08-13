@@ -112,7 +112,7 @@ static const luaL_Reg rnd_methods[] =
     { NULL, NULL }
 };
 
-int luaopen_rnd(lua_State *L)
+void luaopen_rnd(lua_State *L)
 {
     luaL_newlib(L, rnd_methods);
     lua_setglobal(L, "rnd");
@@ -132,6 +132,4 @@ int luaopen_rnd(lua_State *L)
     seeds[6] = MAKELONG(st.wMinute^t1, st.wHour^st.wMilliseconds);
     seeds[7] = MAKELONG(st.wSecond^st.wDayOfWeek, st.wYear^st.wSecond);
     tinymt32_init_by_array(&random_handler, seeds, 8);
-
-    return 1;
 }

@@ -47,6 +47,9 @@
     <Filter Include="Source Files\Modules\system">
       <UniqueIdentifier>{a484d84e-253c-40ff-8be7-8e124721a395}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Modules\extra">
+      <UniqueIdentifier>{da56b72f-6f59-4bf1-9e28-65b3ad5333ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\AboutDlg.h">
@@ -331,6 +334,9 @@
     <ClInclude Include="src\modules\system\tasks.h">
       <Filter>Source Files\Modules\system</Filter>
     </ClInclude>
+    <ClInclude Include="src\modules\extra\phrase.h">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -500,6 +506,15 @@
     </ClCompile>
     <ClCompile Include="src\modules\system\system.cpp">
       <Filter>Source Files\Modules\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\extra\declension.cpp">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\extra\dictionary.cpp">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\extra\extra.cpp">
+      <Filter>Source Files\Modules\extra</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

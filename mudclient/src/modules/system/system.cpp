@@ -462,9 +462,8 @@ static const luaL_Reg system_methods[] =
     { NULL, NULL }
 };
 
-int luaopen_system(lua_State *L)
+void luaopen_system(lua_State *L)
 {
     luaL_newlib(L, system_methods);
     lua_setglobal(L, "system");
-    return 1;
 }
