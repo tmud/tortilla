@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 17
+VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mainapp-client", "mudclient\mudclient.vcxproj", "{FDCB8C3B-117D-42E9-BB60-04BFCE5EA051}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -172,5 +172,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9144951C-751D-4CD9-828F-2561CE521B08}
 	EndGlobalSection
 EndGlobal
