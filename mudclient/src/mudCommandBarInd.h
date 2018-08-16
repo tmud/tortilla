@@ -5,7 +5,7 @@ class MudCommandBarIndicator : public CWindowImpl<MudCommandBarIndicator, CWindo
     tchar buffer[16];
     int buffer_len;
     bool m_status;
-    static CFont m_font;
+    CFont m_font;
     static CPen m_pen1, m_pen2;
     static CBrush m_brush1, m_brush2;
     int width,height;
@@ -27,6 +27,15 @@ public:
     int getWidth() const {
         return width;
     }
+    void setFont(HFONT font) {
+
+        CFontHandle h(font);
+        LOGFONT lf;
+        h.GetLogFont(&lf);
+        createFont(lf.lfFaceName);
+        calcWidth();
+        Invalidate();
+    }
 private:
     BEGIN_MSG_MAP(MudCommandBarIndicator)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -36,7 +45,8 @@ private:
     void onCreate();
     void onPaint();
     void calcWidth();
+    void createFont(const tstring& fontname);
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL& bHandled) {  onCreate(); return 0; }
     LRESULT OnPaint(UINT, WPARAM, LPARAM, BOOL& bHandled) { onPaint(); return 0; }
-    LRESULT OnEraseBknd(UINT, WPARAM, LPARAM, BOOL&) { return 1; }
+    LRESULT OnEraseBknd(UINT, WPARAM, LPARAM, BOOL&) { return 1; }    
 };

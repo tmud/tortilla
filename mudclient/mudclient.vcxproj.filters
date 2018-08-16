@@ -38,11 +38,20 @@
     <Filter Include="Source Files\Main">
       <UniqueIdentifier>{ab0c2ef1-67c2-41c1-85bf-d4d648ad0066}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Modules">
+      <UniqueIdentifier>{b86124c2-e8cf-4e6a-bf5c-9e67ce633015}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\rnd">
+      <UniqueIdentifier>{2cac7ebb-e53a-4f3b-b861-c2f823058574}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\system">
+      <UniqueIdentifier>{a484d84e-253c-40ff-8be7-8e124721a395}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Modules\extra">
+      <UniqueIdentifier>{da56b72f-6f59-4bf1-9e28-65b3ad5333ce}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AboutDlg.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\hotkeyTable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -298,6 +307,33 @@
     <ClInclude Include="src\plugins\pluginsMouseHandler.h">
       <Filter>Source Files\Plugins</Filter>
     </ClInclude>
+    <ClInclude Include="src\propertiesPages\propertiesGroupFilter.h">
+      <Filter>Source Files\PropertiesPages</Filter>
+    </ClInclude>
+    <ClInclude Include="src\plugins\pluginsTriggerData.h">
+      <Filter>Source Files\Plugins</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\embedded.h">
+      <Filter>Source Files\Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\rnd\inttypes.h">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\rnd\stdint.h">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\rnd\tinymt32.h">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\system\alert.h">
+      <Filter>Source Files\Modules\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\system\tasks.h">
+      <Filter>Source Files\Modules\system</Filter>
+    </ClInclude>
+    <ClInclude Include="src\modules\extra\phrase.h">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -384,9 +420,6 @@
     <ClCompile Include="src\plugins\pluginsModules.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
-    <ClCompile Include="src\AboutDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\LogicProcessor3.cpp">
       <Filter>Source Files\LogicProcessor</Filter>
     </ClCompile>
@@ -453,12 +486,39 @@
     <ClCompile Include="src\plugins\pluginsMouseHandler.cpp">
       <Filter>Source Files\Plugins</Filter>
     </ClCompile>
+    <ClCompile Include="src\plugins\pluginsTriggerData.cpp">
+      <Filter>Source Files\Plugins</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\embedded.cpp">
+      <Filter>Source Files\Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\rnd\rnd.cpp">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\rnd\tinymt32.c">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\system\system.cpp">
+      <Filter>Source Files\Modules\system</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\extra\declension.cpp">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\extra\dictionary.cpp">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\modules\extra\extra.cpp">
+      <Filter>Source Files\Modules\extra</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\mudclient.ico">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\toolbar.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\warn.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
@@ -468,8 +528,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\welcome.rtf">
-      <Filter>Resource Files</Filter>
-    </None>
+    <Text Include="src\modules\rnd\readme.txt">
+      <Filter>Source Files\Modules\rnd</Filter>
+    </Text>
   </ItemGroup>
 </Project>

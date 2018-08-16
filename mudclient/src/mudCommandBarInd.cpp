@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "mudCommandBarInd.h"
 
-CFont MudCommandBarIndicator::m_font;
+//CFont MudCommandBarIndicator::m_font;
 CPen MudCommandBarIndicator::m_pen1;
 CPen MudCommandBarIndicator::m_pen2;
 CBrush MudCommandBarIndicator::m_brush1;
@@ -12,24 +12,6 @@ const COLORREF enable = RGB(0,255,0);
 
 void MudCommandBarIndicator::onCreate()
 {
-    if (m_font.IsNull()) {
-        LOGFONT lf;
-        lf.lfHeight = -MulDiv(10, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
-        lf.lfWidth = 0;
-        lf.lfEscapement = 0;
-        lf.lfOrientation = 0;
-        lf.lfWeight = FW_NORMAL;
-        lf.lfItalic = 0;
-        lf.lfUnderline = 0;
-        lf.lfStrikeOut = 0;
-        lf.lfCharSet = DEFAULT_CHARSET;
-        lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
-        lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
-        lf.lfQuality = DEFAULT_QUALITY;
-        lf.lfPitchAndFamily = DEFAULT_PITCH;
-        wcscpy(lf.lfFaceName, L"MS Sans Serif");
-        m_font.CreateFontIndirect(&lf);
-    }
     if (m_pen1.IsNull())
         m_pen1.CreatePen(PS_SOLID, 1, disable);
     if (m_pen2.IsNull())
@@ -42,6 +24,9 @@ void MudCommandBarIndicator::onCreate()
 
 void MudCommandBarIndicator::onPaint()
 {
+    if (m_font.IsNull())
+        return;
+
     RECT pos;
     GetClientRect(&pos);
     CPaintDC dc(m_hWnd);
@@ -76,4 +61,26 @@ void MudCommandBarIndicator::calcWidth()
     dc.SelectFont(old);
     width = sz.cx + sz.cy + 8;
     height = sz.cy;
+}
+
+void MudCommandBarIndicator::createFont(const tstring& fontname) {
+
+    if (!m_font.IsNull())
+        m_font.DeleteObject();
+    LOGFONT lf;
+    lf.lfHeight = -MulDiv(10, GetDeviceCaps(GetDC(), LOGPIXELSY), 72);
+    lf.lfWidth = 0;
+    lf.lfEscapement = 0;
+    lf.lfOrientation = 0;
+    lf.lfWeight = FW_NORMAL;
+    lf.lfItalic = 0;
+    lf.lfUnderline = 0;
+    lf.lfStrikeOut = 0;
+    lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
+    lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
+    lf.lfQuality = DEFAULT_QUALITY;
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
+    wcscpy(lf.lfFaceName, fontname.c_str());
+    m_font.CreateFontIndirect(&lf);
 }

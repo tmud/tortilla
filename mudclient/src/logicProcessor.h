@@ -88,7 +88,7 @@ class LogicProcessor : public LogicProcessorMethods
     WaitCommands m_waitcmds;
     LogicPipeline m_pipeline;
     InputCommands m_commands_queue;
-
+    LogicTriggered m_triggered_debug;
 public:
     LogicProcessor(LogicProcessorHost *host);
     ~LogicProcessor();
@@ -146,10 +146,12 @@ private:
     void printIncoming(parseData& parse_data, int flags, int window);
     void pipelineParseData(parseData& parse_data, int flags, int window);
     void printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe);
-    enum TriggersType { PROCESS_LUATRIGGERS = 0, PROCESS_ACTIONS};
-    void processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, TriggersType tt);
+    void processLuaTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe);
+    void processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, LogicTriggered* triggered);
     void printStack(int flags = 0);
     bool processStack(parseData& parse_data, int flags);
+    LogicTriggered* triggered(int mode);
+    void printTriggered(parseData& parse_data, int mode, const tstring& prefix, bool process_highlights);
 
 public: // system commands
     DEF(drop);
@@ -217,4 +219,6 @@ public: // system commands
     DEF(none);
     DEF(wlock);
     DEF(wunlock);
+    DEF(debug_tr);
+    DEF(strop);
 };

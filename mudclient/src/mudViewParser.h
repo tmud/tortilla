@@ -20,6 +20,19 @@ struct parseData
         update_prev_string = false;
         last_finished = true;
     }
+    void moveFrom(parseData& from) {
+        update_prev_string = from.update_prev_string;
+        last_finished = from.last_finished;
+        strings.swap(from.strings);
+        from.clear();
+    }
+	void pushBack(parseData& from) {
+		strings.insert(strings.end(), from.strings.begin(), from.strings.end());
+		from.strings.clear();
+	}
+    bool empty() const {
+        return strings.empty();
+    }
 };
 
 #ifdef MARKERS_IN_VIEW

@@ -16,7 +16,7 @@ public:
         plist = list;
     }
 
-    void loadGroupAndFilter(tstring &current_group, bool &filter_mode)
+    void loadGroupAndFilter(tstring &current_group, int &filter_mode)
     {
         const tstring& cgroup = dlg_state->group;
         if (!cgroup.empty())
@@ -65,7 +65,7 @@ public:
         dlg_state->cansave = true;
     }
 
-    bool save(const tstring &current_group, bool filter_mode)
+    bool save(const tstring &current_group, int filter_mode)
     {
         if (!dlg_state->cansave)
             return false;

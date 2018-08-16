@@ -169,7 +169,7 @@ public:
             if (index >= 0 && index < size)
                 m_values[index] = data;
             else
-                { assert(false); }
+                m_values.push_back(data);
         }
     }
 
@@ -430,10 +430,10 @@ struct PluginsDataValues : public std::vector<PluginData>
 
 struct PropertiesDlgPageState
 {
-    PropertiesDlgPageState() : topitem(-1), filtermode(false), cansave(false) {}
+    PropertiesDlgPageState() : topitem(-1), filtermode(0), cansave(false) {}
     tstring item;
     int topitem;
-    bool filtermode;
+    int filtermode;
     bool cansave;
     tstring group;
 };
@@ -545,6 +545,7 @@ public:
         any_font = p.any_font;
         disable_alt = p.disable_alt;
         move_totray = p.move_totray;
+
         //skip title
         rebar = p.rebar;
     }
@@ -580,6 +581,16 @@ public:
     int variables;
     int tabwords;
     } messages;
+
+    struct debug_data {
+    debug_data() { initDefault(); }
+    void initDefault() { actions = subs = highlights = antisubs = gags = 0; }
+    int actions;
+    int subs;
+    int highlights;
+    int antisubs;
+    int gags;    
+    } debug;
 
     struct working_mode { 
     working_mode() { initDefault();  }

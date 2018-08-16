@@ -13,13 +13,15 @@ function status.description()
   'Добавляет команду '..p..'status {номер окна} {text} [{цвет}]',
   'Цвет - это не обязательный параметр. Он задается в формате клиента (см. справку #help color).',
   'Плагин повторяет функционал панели статусов мад-клиента jmc3.',
-  'Он также умеет отчитывать время между тиками. Количество миниокон: '..count..'.',
-  'Настройки задаются в файле: '..getPath('config.lua') }
+  'Он также умеет отчитывать время между тиками и выполнять команды за N секунд до тика.',
+  'Количество миниокон: '..count..'.',
+  'Настройки задаются в файле: '..getPath('config.lua')
+  }
   return table.concat(s, '\r\n')
 end
 
 function status.version()
-  return '1.06'
+  return '1.07'
 end
 
 local r
@@ -77,6 +79,8 @@ end
 
 local ticker_on, ticker_window, ticker_seconds, ticker_restart
 local ticker_panel = { text = '', tcolor = props.paletteColor(7), color = props.backgroundColor() }
+local ticker_triggers = {}
+local tickround_triggers = {}
 
 local function set_ticker(t)
   if ticker_on then
@@ -89,7 +93,18 @@ end
 local counter, start_time
 
 local function start_new_tick()
+  tickround_triggers = {}
+  for k,v in pairs(ticker_triggers) do
+    tickround_triggers[k] = v
+  end
   start_time = system.getTicks()
+end
+
+local function check_run_command(sec)
+  if tickround_triggers[sec] then
+    runCommand(tickround_triggers[sec])
+    tickround_triggers[sec] = nil
+  end
 end
 
 function status.tick()
@@ -102,6 +117,9 @@ function status.tick()
     else
       counter = 0
     end
+    check_run_command(counter+2)
+    check_run_command(counter+1)
+    check_run_command(counter)
     set_ticker(''..counter)
     if counter == 0 and ticker_restart then
       start_new_tick()
@@ -149,6 +167,16 @@ function status.init()
     ticker_window = t.ticker_window
     ticker_panel.tcolor, ticker_panel.color = translateColors(t.ticker_color, ticker_panel.tcolor, ticker_panel.color)
     ticker_on = true
+  end
+  if t.ticker_triggers then
+    if type(t.ticker_triggers) ~= 'table' then term('ticker_triggers') end
+    for sec,cmd in pairs(t.ticker_triggers) do
+      if type(sec) ~= 'number' or type(cmd) ~= 'string' then
+        log('Ошибка в триггере для тикера (работать не будет): '..tostring(s)..'->'..tostring(cmd))
+      else
+        ticker_triggers[sec] = cmd
+      end
+    end
   end
   count = t.count
   local font = props.currentFontHeight()+2

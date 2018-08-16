@@ -143,7 +143,7 @@ int pluginOut(const tchar* msg)
 
 void pluginLoadError(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"%s: Ошибка загрузки! %s", plugin_name(), msg);
+    swprintf(plugin_buffer(), L"%s: Ошибка загрузки %s", plugin_name(), msg);
     pluginLogOut(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -604,13 +604,28 @@ public:
 
 int loadTableLua(lua_State* L, const tstring& filename)
 {
-    const tchar* fname = filename.c_str();
-    if (luaL_loadfile(L, TW2A(fname)))
+    load_file_full lf(filename);
+    if (!lf.result) {
+        pluginLoadError(filename.c_str());
+        return 0;
+    }
+    const char* data = lf.getData();
+    int len = lf.getSize();
+    if (len >= 3) {
+        const unsigned char* d = (unsigned char*)(data);
+        if (d[0] == 0xef && d[1] == 0xbb && d[2] == 0xbf) 
+            data += 3; len -= 3;
+    }
+    if (luaL_loadbuffer(L, data, len, NULL ))
     {
-        pluginLoadError(lua_toerror(L));
+        tstring error(filename);
+        error.append(lua_toerror(L));
+        tstring_replace(&error, L"[string \"?\"]", L"");
+        pluginLoadError(error.c_str());
         lua_pop(L, 1);
         return 0;
     }
+
     // make empty eviroment and call script in them
     LuaEnviroment env(L);
     env.add("pairs");
@@ -690,7 +705,7 @@ int loadTable(lua_State *L)
     xml::node doc;
     if (!doc.load(pp, &error) )
     {
-       swprintf(plugin_buffer(), L"Ошибка чтения: %s\n%s", filename, error.c_str());
+       swprintf(plugin_buffer(), L"Ошибка чтения: %s\n%s", filename.c_str(), error.c_str());
        tstring tmp(plugin_buffer());
        pluginMethodError(L"loadTable", tmp.c_str());
        return 0;

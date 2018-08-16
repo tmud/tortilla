@@ -135,7 +135,7 @@ private:
 	{
         PropertiesDlgData& d = propData->dlg;
         d.pages.resize(11);
-
+        
         // add pages
         PropertyTwoConfig c;
         c.use_priority = true;
@@ -241,9 +241,13 @@ private:
 	LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
 	{
         if (wID == IDOK) {
-          if (checkOrUpdate(true) && msgBox(m_hWnd, L"Были изменены шаблоны некоторых элементов, но не сохранены. Сохранить их?", MB_YESNO|MB_ICONQUESTION)==IDYES)
+          if (checkOrUpdate(true))
           {
-              checkOrUpdate(false);
+              int result = msgBox(m_hWnd, L"Шаблон текущего элемента был изменен, но не сохранен. Сохранить его?", MB_YESNOCANCEL|MB_ICONQUESTION);
+              if (result == IDCANCEL)
+                  return 0;
+              if (result == IDYES)
+                checkOrUpdate(false);
           }
         }
 		EndDialog(wID);

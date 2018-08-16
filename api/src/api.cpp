@@ -137,8 +137,10 @@ strbuf strbuf_new(int bytes)
 
 xnode xml_load(const wchar_t* filename)
 {
-    WideToAnsi w2a(filename);
-    return xmlLoad(w2a);
+    load_file_full lf(filename);
+    if (!lf.result)
+        return NULL;
+    return xmlLoad(lf.getData(), lf.getSize());
 }
 
 xstringw xml_get_load_error()
@@ -148,8 +150,31 @@ xstringw xml_get_load_error()
 
 int xml_save(xnode node, const wchar_t* filename)
 {
-    WideToAnsi w2a(filename);
-    return xmlSave(node, w2a);
+    xbuffer data = xmlSave(node);
+    if (!data)
+        return 0;
+    HANDLE hFile = CreateFile(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE){
+        xmlFreeBuffer(data);
+        return 0;
+    }
+    unsigned char bom[3] = { 0xef, 0xbb, 0xbf };
+    DWORD written = 0;
+    if (!WriteFile(hFile, bom, 3, &written, NULL) || written != 3) {
+        xmlFreeBuffer(data);
+        CloseHandle(hFile);
+        return 0;
+    }
+    written = 0;
+    DWORD len = strlen(data);
+    if (!WriteFile(hFile, data, len, &written, NULL) || written != len ) {
+        xmlFreeBuffer(data);
+        CloseHandle(hFile);
+        return 0;
+    }
+    xmlFreeBuffer(data);
+    CloseHandle(hFile);
+    return 1;
 }
 
 xnode xml_open(const wchar_t* name)
@@ -219,7 +244,8 @@ public:
                 }
                 else
                 {
-                    utf8 tmp[2] = { atoi(symbol.c_str()), 0 };
+                    utf8 s = static_cast<utf8>( atoi(symbol.c_str()) );
+                    utf8 tmp[2] = { s, 0 };
                     decoded.append(tmp); b = e + 1;
                 }
             }

@@ -30,7 +30,7 @@ bool LogicHelper::processHotkeys(const tstring& key, InputCommands* newcmds)
     return false;
 }
 
-bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipelineElement *pe)
+bool LogicHelper::processActions(parseData *parse_data, int index, InputCommands *newcmds, LogicTriggered* triggered)
 {
     int j = index; int je = parse_data->strings.size()-1;
     {
@@ -42,16 +42,20 @@ bool LogicHelper::processActions(parseData *parse_data, int index, LogicPipeline
         for (int i=0, e=m_actions.size(); i<e; ++i)
         {
            CompareData cd(s);
-           if (m_actions[i]->processing(cd, incomplstr, &pe->commands))
-              processed = true;
+           if (m_actions[i]->processing(cd, incomplstr, newcmds))
+           {
+               if (triggered) {
+                   triggered->push_back(m_actions[i]->getKey());
+               }
+               processed = true;
+           }
            if (s->dropped) break;
         }
-
         return processed;
     }
 }
 
-void LogicHelper::processSubs(parseData *parse_data)
+void LogicHelper::processSubs(parseData *parse_data, LogicTriggered* triggered)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
@@ -64,6 +68,9 @@ void LogicHelper::processSubs(parseData *parse_data)
             CompareData cd(s);
             while (m_subs[i]->processing(cd))
             {
+                if (triggered) {
+                   triggered->push_back(m_subs[i]->getKey());
+                }
                 cd.reinit();
                 s->subs_processed = true;
             }
@@ -71,7 +78,7 @@ void LogicHelper::processSubs(parseData *parse_data)
     }
 }
 
-void LogicHelper::processAntiSubs(parseData *parse_data)
+void LogicHelper::processAntiSubs(parseData *parse_data, LogicTriggered* triggered)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
@@ -83,12 +90,17 @@ void LogicHelper::processAntiSubs(parseData *parse_data)
         {
             CompareData cd(s);
             while (m_antisubs[i]->processing(cd))
+            {
+                if (triggered) {
+                   triggered->push_back(m_antisubs[i]->getKey());
+                }
                 cd.reinit();
+            }
         }
     }
 }
 
-void LogicHelper::processGags(parseData *parse_data)
+void LogicHelper::processGags(parseData *parse_data, LogicTriggered* triggered)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
@@ -101,6 +113,9 @@ void LogicHelper::processGags(parseData *parse_data)
             CompareData cd(s);
             while (m_gags[i]->processing(cd))
             {
+                if (triggered) {
+                   triggered->push_back(m_gags[i]->getKey());
+                }
                 if (s->dropped) break;
                 cd.fullinit();
             }
@@ -108,7 +123,7 @@ void LogicHelper::processGags(parseData *parse_data)
     }
 }
 
-void LogicHelper::processHighlights(parseData *parse_data)
+void LogicHelper::processHighlights(parseData *parse_data, LogicTriggered* triggered)
 {
     for (int j=0,je=parse_data->strings.size()-1; j<=je; ++j)
     {
@@ -118,7 +133,12 @@ void LogicHelper::processHighlights(parseData *parse_data)
             if (s->dropped) continue;
             CompareData cd(s);
             while (m_highlights[i]->processing(cd))
+            {
+                if (triggered) {
+                   triggered->push_back(m_highlights[i]->getKey());
+                }
                 cd.reinit();  // restart highlight
+            }
         }
     }
 }

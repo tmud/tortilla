@@ -264,13 +264,10 @@ public:
     DWORD getPosition() {
         return file_size-(not_readed+in_buffer);
     }
-    bool readNextString(std::string *string, bool trim_rn, DWORD* startpos = NULL)
+    bool readNextString(std::string *string, bool trim_rn)
     {
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
-        if (startpos)
-            *startpos = getPosition();
-
         int ed = (trim_rn) ? 1 : 0;
         while (not_readed > 0 || in_buffer > 0)
         {
@@ -343,7 +340,6 @@ public:
         }
         return false;
     }
-
     void close()
     {
         if (hfile != INVALID_HANDLE_VALUE)
@@ -360,5 +356,59 @@ public:
         if (hsize != 0)
             return 0;
         return size;
+    }
+};
+
+class load_file_full
+{
+    HANDLE hfile;
+    char* data;
+    DWORD size;
+public:
+    bool result;
+    bool file_missed;
+    load_file_full(const std::wstring& filepath) : hfile(INVALID_HANDLE_VALUE), data(NULL),
+        size(0), result(false), file_missed(false)
+    {
+        hfile = CreateFile(filepath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hfile == INVALID_HANDLE_VALUE)
+        {
+            if (GetLastError() == ERROR_FILE_NOT_FOUND)
+                file_missed = true;
+            return;
+        }
+        DWORD high = 0;
+        DWORD fsize = GetFileSize(hfile, &high);
+        if (high != 0)
+            { close(); return; }
+        data = new (std::nothrow) char[fsize];
+        if (!data) 
+            { close(); return; }
+        DWORD readed = 0;
+        if (!ReadFile(hfile, data, fsize, &readed, NULL) || readed != fsize) {
+            delete []data;
+            close();
+            return;
+        }
+        size = fsize;
+        result = true;
+    }
+    ~load_file_full()
+    {
+        delete []data;
+        close();
+    }
+    const char* getData() const {
+        return data;
+    }
+    DWORD getSize() const {
+        return size;
+    }
+private:
+    void close()
+    {
+        if (hfile != INVALID_HANDLE_VALUE)
+            CloseHandle(hfile);
+        hfile = INVALID_HANDLE_VALUE;
     }
 };

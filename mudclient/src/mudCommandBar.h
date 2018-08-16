@@ -71,6 +71,7 @@ public:
     {
         SetMinHeight(size);
         m_edit.SetFont(font);
+        m_timer.setFont(font);
     }
 
     void setCommandEventCallback(HWND hwnd, UINT msg)
@@ -558,6 +559,36 @@ private:
                 return;
             }
         }
+		if (!syscmd)
+		{
+			int pos = m_tab.rfind(L' ');
+			if (pos != tstring::npos)
+			{
+				int last = m_tab.size() - 1;
+				if (pos != last)
+				{
+					tstring minitab(m_tab.substr(pos));
+					int word_pos = minitab.find_first_not_of(L' ');
+					tstring word(minitab.substr(word_pos));
+					int word_min_len = word.length();
+					for (int i = m_lasttab, e = list.size(); i<e; ++i)
+					{
+						const tstring& tab = list.get(i);
+						if (!tab.compare(0, word_min_len, word))
+						{
+							if (!tab.compare(word))
+								continue;
+							m_lasttab = i + 1;
+							tstring cmd(m_tab_const);
+							cmd.append(m_tab.substr(0, pos+1));
+							cmd.append(tab);
+							setText(cmd);
+							return;
+						}
+					}
+				}
+			}
+		}
 
         if (syscmd)
         {

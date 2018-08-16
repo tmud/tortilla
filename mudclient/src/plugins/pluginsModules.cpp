@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "pluginsApi.h"
+#include "modules/embedded.h"
 extern luaT_State L;
 
 class Module
@@ -22,6 +23,8 @@ int require_stub(lua_State *L)
 
 bool loadModules()
 {
+    loadEmbeddedModules(L);
+
     ChangeDir cd;
     if (!cd.changeDir(L"modules"))
     {

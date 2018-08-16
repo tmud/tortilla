@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+# Visual Studio 17
+VisualStudioVersion = 15.0.28010.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mainapp-client", "mudclient\mudclient.vcxproj", "{FDCB8C3B-117D-42E9-BB60-04BFCE5EA051}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -25,11 +25,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jmc3import", "plugins\jmc3i
 		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "system", "modules\system\system.vcxproj", "{13795512-C898-483C-BE39-9EBEEFAB199A}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tray", "plugins\tray\tray.vcxproj", "{8A2788D9-2E51-4A82-94A5-83E7EF307367}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
@@ -39,8 +34,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clickpad", "plugins\clickpa
 	ProjectSection(ProjectDependencies) = postProject
 		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rnd", "modules\rnd\rnd.vcxproj", "{7291DF87-397A-4330-81EB-B9370FF48090}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lbass", "modules\lbass\lbass.vcxproj", "{EEE3289F-E716-409F-B6E9-A4D046F17928}"
 EndProject
@@ -52,11 +45,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "voice", "modules\voice\voice.vcxproj", "{413D9E03-C1B6-4EA4-A9CF-EA2AC9A61CEF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pcrecalc", "plugins\pcrecalc\pcrecalc.vcxproj", "{A78A1B44-ED19-44F5-8370-55E534FA54E3}"
-	ProjectSection(ProjectDependencies) = postProject
-		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extra", "modules\extra\extra.vcxproj", "{948F73B3-F954-4908-A542-7DD7669F7123}"
 	ProjectSection(ProjectDependencies) = postProject
 		{0541F606-5276-4FDE-B49C-D10AE3354129} = {0541F606-5276-4FDE-B49C-D10AE3354129}
 	EndProjectSection
@@ -121,16 +109,6 @@ Global
 		{AE752230-FE8A-4F6B-8C09-5BC6A0F7A4C4}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{AE752230-FE8A-4F6B-8C09-5BC6A0F7A4C4}.Release|Win32.ActiveCfg = Release|Win32
 		{AE752230-FE8A-4F6B-8C09-5BC6A0F7A4C4}.Release|Win32.Build.0 = Release|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Debug|Win32.Build.0 = Debug|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Release|Any CPU.ActiveCfg = Release|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Release|Win32.ActiveCfg = Release|Win32
-		{13795512-C898-483C-BE39-9EBEEFAB199A}.Release|Win32.Build.0 = Release|Win32
 		{8A2788D9-2E51-4A82-94A5-83E7EF307367}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{8A2788D9-2E51-4A82-94A5-83E7EF307367}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{8A2788D9-2E51-4A82-94A5-83E7EF307367}.Debug|Mixed Platforms.Build.0 = Debug|Win32
@@ -151,16 +129,6 @@ Global
 		{22867224-9F2D-4795-B83F-FF9844150588}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{22867224-9F2D-4795-B83F-FF9844150588}.Release|Win32.ActiveCfg = Release|Win32
 		{22867224-9F2D-4795-B83F-FF9844150588}.Release|Win32.Build.0 = Release|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Debug|Win32.ActiveCfg = Debug|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Debug|Win32.Build.0 = Debug|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Release|Any CPU.ActiveCfg = Release|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Release|Win32.ActiveCfg = Release|Win32
-		{7291DF87-397A-4330-81EB-B9370FF48090}.Release|Win32.Build.0 = Release|Win32
 		{EEE3289F-E716-409F-B6E9-A4D046F17928}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{EEE3289F-E716-409F-B6E9-A4D046F17928}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
 		{EEE3289F-E716-409F-B6E9-A4D046F17928}.Debug|Mixed Platforms.Build.0 = Debug|Win32
@@ -201,18 +169,11 @@ Global
 		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Mixed Platforms.Build.0 = Release|Win32
 		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Win32.ActiveCfg = Release|Win32
 		{A78A1B44-ED19-44F5-8370-55E534FA54E3}.Release|Win32.Build.0 = Release|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Any CPU.ActiveCfg = Debug|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Mixed Platforms.Build.0 = Debug|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Win32.ActiveCfg = Debug|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Debug|Win32.Build.0 = Debug|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Any CPU.ActiveCfg = Release|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Mixed Platforms.ActiveCfg = Release|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Mixed Platforms.Build.0 = Release|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Win32.ActiveCfg = Release|Win32
-		{948F73B3-F954-4908-A542-7DD7669F7123}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9144951C-751D-4CD9-828F-2561CE521B08}
 	EndGlobalSection
 EndGlobal

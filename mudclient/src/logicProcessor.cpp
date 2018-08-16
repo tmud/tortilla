@@ -351,7 +351,7 @@ void LogicProcessor::processNetworkMccpError()
 
 void LogicProcessor::tmcLog(const tstring& cmd)
 {
-    tstring log(L"[tortilla] ");
+    tstring log(L"[system] ");
     log.append(cmd);
     simpleLog(log);
 }

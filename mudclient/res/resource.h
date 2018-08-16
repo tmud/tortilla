@@ -2,12 +2,14 @@
 // Microsoft Visual C++ generated include file.
 // Used by mudclient.rc
 //
+#define IDD_ALERT                       101
 #define IDR_MAINFRAME                   128
 #define IDS_RESET_COLORS_CONFIRM        129
 #define IDS_NETWORK_FAILED              130
 #define IDS_RESET_OSC_CONFIRM           130
 #define IDS_NEW_PROFILE                 131
 #define IDS_NEW_WORLD                   132
+#define IDI_WARNINGMY                   133
 #define IDS_ERROR_INIT_NETWORK          200
 #define IDS_ERROR_NEWPROFILE_FAILED     201
 #define IDD_PROPERTY_ALIASES            202
@@ -33,8 +35,6 @@
 #define IDD_PROPERTY_TIMERS             214
 #define IDD_PLUGINS                     215
 #define IDD_NEW_WORLD                   218
-#define IDD_WELCOME                     219
-#define IDR_BINARY_WELCOME              220
 #define IDD_PASSWORD                    221
 #define IDD_STARTUP_WORLD               222
 #define IDD_FIND                        223
@@ -42,6 +42,7 @@
 #define IDD_PROPERTY_VARS               225
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
+#define IDC_STATIC_EDIT                 1001
 #define IDC_BUTTON_PROP_ACTIONS         1002
 #define IDC_BUTTON_PROP_HIGHLIGHTS      1003
 #define IDC_BUTTON_PROP_HOTKEYS         1004
@@ -88,10 +89,11 @@
 #define IDC_EDIT_CMD_HISTORY            1070
 #define IDC_BUTTON_UP                   1074
 #define IDC_BUTTON_DOWN                 1075
-#define IDC_EDIT_GROUP                  1078
-#define IDC_CHECK_GROUP_ON              1079
-#define IDC_COMBO_GROUP                 1080
-#define IDC_CHECK_GROUP_FILTER          1081
+#define IDC_EDIT_GROUP                  1076
+#define IDC_CHECK_GROUP_ON              1077
+#define IDC_COMBO_GROUP                 1078
+#define IDC_CHECK_GROUP_FILTER          1079
+#define IDC_COMBO_FILTER                1081
 #define IDC_STATIC_LABEL2               1082
 #define IDC_STATIC_LABEL1               1083
 #define IDC_STATIC_TITLE                1084
@@ -116,7 +118,6 @@
 #define IDC_RADIO_PROMT_GA              1124
 #define IDC_RADIO_PROMT_PCRE            1125
 #define IDC_CHECK_DONTSHOW              1126
-#define IDC_STATIC_RICHBOXPLACE         1129
 #define IDC_EDIT_PASSWORD               1130
 #define IDC_BUTTON_COLOR_RESETOSC       1131
 #define IDC_BUTTON_REPLACE              1132
@@ -159,7 +160,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        225
 #define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1148
+#define _APS_NEXT_CONTROL_VALUE         1149
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

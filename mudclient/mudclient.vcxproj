@@ -18,12 +18,12 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v141_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v120_xp</PlatformToolset>
+    <PlatformToolset>v141_xp</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -78,6 +78,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4838</DisableSpecificWarnings>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -118,6 +119,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat />
+      <DisableSpecificWarnings>4838;4302</DisableSpecificWarnings>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -148,7 +150,6 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="..\libs\common\memoryBuffer.h" />
     <ClInclude Include="..\libs\common\pcreHelper.h" />
     <ClInclude Include="..\libs\common\elapsedTimeCounter.h" />
-    <ClInclude Include="src\AboutDlg.h" />
     <ClInclude Include="src\accessors.h" />
     <ClInclude Include="src\common\criticalSection.h" />
     <ClInclude Include="src\common\md5.h" />
@@ -165,6 +166,13 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\logsProcessor.h" />
     <ClInclude Include="src\MainFrm.h" />
     <ClInclude Include="src\modeDlg.h" />
+    <ClInclude Include="src\modules\embedded.h" />
+    <ClInclude Include="src\modules\extra\phrase.h" />
+    <ClInclude Include="src\modules\rnd\inttypes.h" />
+    <ClInclude Include="src\modules\rnd\stdint.h" />
+    <ClInclude Include="src\modules\rnd\tinymt32.h" />
+    <ClInclude Include="src\modules\system\alert.h" />
+    <ClInclude Include="src\modules\system\tasks.h" />
     <ClInclude Include="src\msdp\msdpNetwork.h" />
     <ClInclude Include="src\mudCommandBar.h" />
     <ClInclude Include="src\mudCommandBarInd.h" />
@@ -180,6 +188,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\plugins\pluginsManager.h" />
     <ClInclude Include="src\plugins\pluginsMouseHandler.h" />
     <ClInclude Include="src\plugins\pluginsRenderObjects.h" />
+    <ClInclude Include="src\plugins\pluginsTriggerData.h" />
     <ClInclude Include="src\plugins\pluginsTriggers.h" />
     <ClInclude Include="src\plugins\pluginsTriggersHandler.h" />
     <ClInclude Include="src\plugins\pluginSupport.h" />
@@ -194,6 +203,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClInclude Include="src\propertiesPages\propertiesDisplay.h" />
     <ClInclude Include="src\propertiesPages\propertiesDlg.h" />
     <ClInclude Include="src\propertiesPages\propertiesElements.h" />
+    <ClInclude Include="src\propertiesPages\propertiesGroupFilter.h" />
     <ClInclude Include="src\propertiesPages\propertiesManager.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageColors.h" />
     <ClInclude Include="src\propertiesPages\propertiesPageCommon.h" />
@@ -233,7 +243,6 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\libs\common\pcreHelper.cpp" />
-    <ClCompile Include="src\AboutDlg.cpp" />
     <ClCompile Include="src\accessors.cpp" />
     <ClCompile Include="src\common\md5.cpp" />
     <ClCompile Include="src\common\toolbarEx.cpp" />
@@ -245,6 +254,19 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\LogicProcessor3.cpp" />
     <ClCompile Include="src\logsFormatter.cpp" />
     <ClCompile Include="src\logsProcessor.cpp" />
+    <ClCompile Include="src\modules\embedded.cpp" />
+    <ClCompile Include="src\modules\extra\declension.cpp" />
+    <ClCompile Include="src\modules\extra\dictionary.cpp" />
+    <ClCompile Include="src\modules\extra\extra.cpp" />
+    <ClCompile Include="src\modules\rnd\rnd.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\modules\rnd\tinymt32.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\modules\system\system.cpp" />
     <ClCompile Include="src\msdp\msdpNetwork.cpp" />
     <ClCompile Include="src\mudCommandBarInd.cpp" />
     <ClCompile Include="src\mudGameView.cpp" />
@@ -260,6 +282,7 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     <ClCompile Include="src\plugins\pluginsMouseHandler.cpp" />
     <ClCompile Include="src\plugins\pluginsPanels.cpp" />
     <ClCompile Include="src\plugins\pluginsPcre.cpp" />
+    <ClCompile Include="src\plugins\pluginsTriggerData.cpp" />
     <ClCompile Include="src\plugins\pluginsTriggers.cpp" />
     <ClCompile Include="src\plugins\pluginSupport.cpp" />
     <ClCompile Include="src\plugins\pluginsView.cpp" />
@@ -290,12 +313,13 @@ copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
   <ItemGroup>
     <Image Include="res\mudclient.ico" />
     <Image Include="res\toolbar.bmp" />
+    <Image Include="res\warn.ico" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mudclient.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="res\welcome.rtf" />
+    <Text Include="src\modules\rnd\readme.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

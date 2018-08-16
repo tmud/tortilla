@@ -209,8 +209,8 @@ int lbass_getVolume(lua_State* L)
 {
     if (lua_gettop(L) == 0)
     {
-        float v = BASS_GetVolume();
-        lua_pushinteger(L, volume_toInt(v) );
+        int v = _bass_player.getVolume();
+        lua_pushinteger(L, v);
         return 1;
     }
     return error_invargs(L, L"getVolume");
@@ -223,7 +223,7 @@ int lbass_setVolume(lua_State *L)
        int v = lua_tointeger(L, 1);
        if (v >= 0 && v <= 100)
        {
-            BASS_SetVolume( volume_ToFloat(v) );
+            _bass_player.setVolume(v);
             return 0;
        }
     }

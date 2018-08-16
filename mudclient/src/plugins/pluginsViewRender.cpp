@@ -120,7 +120,11 @@ void PluginsViewRender::point(int x, int y)
     if (!m_inside_render)
         return;
     if (current_pen)
-        m_dc.SelectPen(*current_pen);
+    {
+        LOGPEN lp;
+        current_pen->GetLogPen(&lp);
+        m_dc.SetPixel(x, y, lp.lopnColor);
+    }
     m_dc.MoveTo(x, y);
 }
 

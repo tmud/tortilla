@@ -10,9 +10,9 @@ bool MudGameView::initialize(const tstring& profile)
     }
 
 #ifdef _DEBUG
-    /*InputCommandTemplateUnitTests::run();
+    InputCommandTemplateUnitTests::run();
     ParamsHelperUnitTests::run();
-    CompareObjectUnitTests::run();*/
+    CompareObjectUnitTests::run();
 #endif
 
     if (!m_processor.init())

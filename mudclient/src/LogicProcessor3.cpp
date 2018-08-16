@@ -382,32 +382,6 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
 
 void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int window)
 {
-    LogicPipelineElement *e = m_pipeline.createElement();
-    printParseData(parse_data, flags, window, e);
-    while (!e->triggers.empty() || !e->commands.empty())
-    {
-        if (!e->triggers.empty())
-        {
-            // выполняем функции lua триггеров
-            for (int i=0,si=e->triggers.size();i<si;++i)
-                e->triggers[i]->run();
-        }
-        if (!e->commands.empty())
-        {
-            // выполняем команды actions триггеров
-            runCommands(e->commands);
-        }
-        LogicPipelineElement *e2 = m_pipeline.createElement();
-        printParseData(e->data, flags|SKIP_PLUGINS_BEFORE, window, e2);
-        m_pipeline.freeElement(e);
-        e = e2;
-    }
-    m_pipeline.freeElement(e);
-    m_pHost->clearDropped(window);
-}
-
-void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
-{
     if (window == 0 && m_clog != -1)
         m_logs.writeLog(m_clog, parse_data);     // write clear log (no trigger etc)
 
@@ -426,32 +400,133 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (!m.plugins)
         flags |= SKIP_COMPONENT_PLUGINS;
 
+    std::deque<LogicPipelineElement*> order;
+    LogicPipelineElement *e = m_pipeline.createElement();
+    printParseData(parse_data, flags, window, e);
+    order.push_back(e);
+
+    while (!order.empty())
+    {
+        LogicPipelineElement *e = *order.begin();
+        order.pop_front();
+#ifdef _DEBUG
+        if (e->triggers.empty() && !e->lua_processed.empty()) {
+            assert(false);
+        }
+#endif
+        if (e->triggers.empty() && e->commands.empty())
+        {
+            if (!e->not_processed.empty()) {
+                LogicPipelineElement *e2 = m_pipeline.createElement();
+                printParseData(e->not_processed, flags, window, e2);
+                order.push_front(e2);
+            }
+            m_pipeline.freeElement(e);
+            continue;
+        }
+
+        if (!e->not_processed.empty()) {
+            LogicPipelineElement *e2 = m_pipeline.createElement();
+            e2->not_processed.moveFrom(e->not_processed);
+            order.push_front(e2);
+        }
+
+        if (!e->triggers.empty())
+        {
+            // lua trigger and actions triggers - at same string
+            // run lua triggers first
+            bool process_triggers = e->lua_processed.strings.empty();
+            // or if no actions
+            if (!process_triggers)
+                process_triggers =  e->commands.empty();
+            else {
+                int x = 1;
+            }
+            if (process_triggers)
+            {
+                for (int i=0,si=e->triggers.size();i<si;++i)
+                    e->triggers[i]->run();
+                e->triggers.clear();
+            }
+        }
+
+        if (!e->commands.empty())
+        {
+            // выполняем команды actions триггеров
+            runCommands(e->commands);
+            int x = 1;
+        }
+
+        // eсли еще есть и триггеры, то дообрабатываем в actions
+        if (!e->triggers.empty())
+        {
+            if (!e->lua_processed.empty()) 
+            {
+                LogicPipelineElement *e2 = m_pipeline.createElement();
+                printParseData(e->lua_processed, flags|SKIP_PLUGINS_BEFORE|SKIP_SUBS, window, e2);
+                e2->triggers.swap(e->triggers);
+                order.push_front(e2);
+            }
+            else
+            {
+                for (int i=0,si=e->triggers.size();i<si;++i)
+                    e->triggers[i]->run();
+            }
+        }
+        m_pipeline.freeElement(e);
+    }
+    m_pHost->clearDropped(window);
+}
+
+void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
+{
     // save all logs from plugins in to cache (to break cycle before/after -> log -> befor/after -> app crash)
     m_plugins_log_tocache = true;
 
     // final step for data
     // preprocess data via plugins
     if (!(flags & (SKIP_PLUGINS_BEFORE|SKIP_COMPONENT_PLUGINS) ))
+    {
         m_pHost->preprocessText(window, &parse_data);
 
-    // process lua triggers
-    processActionsTriggers(parse_data, flags, pe, PROCESS_LUATRIGGERS);
+        // process lua plugins triggers
+        processLuaTriggers(parse_data, flags, pe);
+    }
+
+    PropertiesData *pdata = tortilla::getProperties();
+    const PropertiesData::debug_data &dd = pdata->debug;
 
     if (!(flags & SKIP_SUBS))
     {
         if (!(flags & SKIP_COMPONENT_ANTISUBS))
-            m_helper.processAntiSubs(&parse_data);
+        {
+            m_helper.processAntiSubs(&parse_data, triggered(dd.antisubs));
+            printTriggered(parse_data, dd.antisubs, L"antisub: ", false);
+        }
         if (!(flags & SKIP_COMPONENT_GAGS))
-            m_helper.processGags(&parse_data);
+        {
+            m_helper.processGags(&parse_data, triggered(dd.gags));
+            printTriggered(parse_data, dd.gags, L"gag: ", false);
+        }
         if (!(flags & SKIP_COMPONENT_SUBS))
-            m_helper.processSubs(&parse_data);
+        {
+            m_helper.processSubs(&parse_data, triggered(dd.subs));
+            printTriggered(parse_data, dd.subs, L"sub: ", false);
+        }
     }
 
     // process actions
-    processActionsTriggers(parse_data, flags, pe, PROCESS_ACTIONS);
+    if (!(flags & SKIP_ACTIONS))
+    {
+        processActionsTriggers(parse_data, flags, pe, triggered(dd.actions));
+        printTriggered(parse_data, dd.actions, L"action: ", false);
+    }
 
     if (!(flags & SKIP_HIGHLIGHTS))
-        m_helper.processHighlights(&parse_data);
+    {
+        m_helper.processHighlights(&parse_data, triggered(dd.highlights));
+        printTriggered(parse_data, dd.highlights, L"highlight: ", true);
+    }
 
     // postprocess data via plugins
     if (!(flags & (SKIP_PLUGINS_AFTER|SKIP_COMPONENT_PLUGINS) ))
@@ -465,36 +540,80 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     m_pHost->addText(window, &parse_data);    // send processed text to view
 }
 
-void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, TriggersType tt)
+LogicTriggered* LogicProcessor::triggered(int mode)
 {
-    if (flags & SKIP_ACTIONS) return;
-    if (tt == PROCESS_LUATRIGGERS) {
-        if (flags & SKIP_COMPONENT_PLUGINS) return;
+    if (mode == 1) {
+        m_triggered_debug.clear();
+        return &m_triggered_debug;
     }
+    return NULL;
+}
 
+void LogicProcessor::printTriggered(parseData& parse_data, int mode, const tstring& prefix, bool process_highlights)
+{
+    if (mode != 1)
+        return;
+    if (m_triggered_debug.empty())
+        return;
+    static parseData highlights_mode;
+    for (int i=0, e=m_triggered_debug.size(); i<e; ++i)
+    {
+        MudViewString *new_string = new MudViewString();
+        new_string->system = true;
+        new_string->blocks.resize(3);
+        new_string->blocks[0].string = L"[debug] ";
+        new_string->blocks[1].string = prefix;
+        new_string->blocks[2].string = m_triggered_debug[i];
+        if (process_highlights)
+            highlights_mode.strings.push_back(new_string);
+        else
+            parse_data.strings.push_back(new_string);
+    }
+    if (process_highlights) {
+        m_helper.processHighlights(&highlights_mode, NULL);
+        parse_data.pushBack(highlights_mode);
+    }
+}
+
+void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe)
+{
+    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
+    for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
+    {
+        bool triggered = luatriggers->processTriggers(parse_data, j, pe->triggers);
+        if (!triggered)
+            continue;
+        parseData &not_processed = pe->not_processed;
+        MudViewString *s = parse_data.strings[j];
+        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер        
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = j + 1;
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+        return;
+    }
+}
+
+void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, LogicTriggered* trigg)
+{    
     // process lua triggers or actions
     PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        bool triggered = false;
-        if (tt == PROCESS_LUATRIGGERS) {
-            triggered = luatriggers->processTriggers(parse_data, j, pe);
-        }
-        if (tt == PROCESS_ACTIONS) {
-            triggered = m_helper.processActions(&parse_data, j, pe);
-        }
-        if (triggered)
-        {
-            MudViewString *s = parse_data.strings[j];
-            s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
-            parseData &not_processed = pe->data;
-            not_processed.last_finished = parse_data.last_finished;
-            parse_data.last_finished = true;
-            not_processed.update_prev_string = false;
-            int from = j + 1;
-            not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
-            parse_data.strings.resize(from);
-            break;
-        }
-    } 
+        bool triggered = m_helper.processActions(&parse_data, j, &pe->commands, trigg);
+        if (!triggered)
+            continue;
+        parseData &not_processed = (pe->triggers.empty()) ? pe->not_processed : pe->lua_processed;
+        MudViewString *s = parse_data.strings[j];
+        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        not_processed.last_finished = parse_data.last_finished;
+        parse_data.last_finished = true;
+        not_processed.update_prev_string = false;
+        int from = j + 1;
+        not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
+        parse_data.strings.resize(from);
+        return;   
+    }
 }

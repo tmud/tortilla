@@ -58,6 +58,7 @@ public:
     Action();
     void init(const property_value& v, const InputTemplateParameters& p);
     bool processing(CompareData& data, bool incompl_flag, InputCommands* newcmds);
+    const tstring& getKey() const;
 private:
     CompareObject m_compare;
     InputTemplateCommands m_cmds;
@@ -70,6 +71,7 @@ public:
     ~Sub();
     void init(const property_value& v);
     bool processing(CompareData& data);
+    const tstring& getKey() const;
 private:
     CompareObject m_compare;
     tstring m_value;
@@ -82,6 +84,7 @@ public:
     AntiSub(); 
     void init(const property_value& v);
     bool processing(CompareData& data);
+    const tstring& getKey() const;
 private:
     CompareObject m_compare;
 };
@@ -92,6 +95,7 @@ public:
     Gag();
     void init(const property_value& v);
     bool processing(CompareData& data);
+    const tstring& getKey() const;
 private:
     CompareObject m_compare;
 };
@@ -102,6 +106,7 @@ public:
     Highlight();
     void init(const property_value& v);
     bool processing(CompareData& data);
+    const tstring& getKey() const;
 private:
     CompareObject m_compare;
     PropertiesHighlight m_hl;

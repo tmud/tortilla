@@ -27,15 +27,12 @@ md sdk
 
 xcopy ..\help\*.* tortilla\help /Y
 
-xcopy ..\modules\system.dll tortilla\modules /Y
-xcopy ..\modules\rnd.dll tortilla\modules /Y
 xcopy ..\modules\bass.dll tortilla\modules /Y
 xcopy ..\modules\bass_fx.dll tortilla\modules /Y
 xcopy ..\modules\lbass.dll tortilla\modules /Y
 xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y
 xcopy ..\modules\voice.dll tortilla\modules /Y
-xcopy ..\modules\extra.dll tortilla\modules /Y
 xcopy ..\modules\trprompt.lua tortilla\modules /Y
 
 xcopy ..\plugins\jmc3import.dll tortilla\plugins /Y
@@ -43,7 +40,6 @@ xcopy ..\plugins\tray.dll tortilla\plugins /Y
 xcopy ..\plugins\prompt.dll tortilla\plugins /Y
 xcopy ..\plugins\clickpad.dll tortilla\plugins /Y
 xcopy ..\plugins\sound.dll tortilla\plugins /Y
-xcopy ..\plugins\send.lua tortilla\plugins /Y
 xcopy ..\plugins\status.lua tortilla\plugins /Y
 xcopy ..\plugins\statusbar.lua tortilla\plugins /Y
 xcopy ..\plugins\autowrap.lua tortilla\plugins /Y
@@ -63,6 +59,7 @@ xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
 xcopy ..\resources\tmp\*.* tortilla\resources\tmp\ /E /Y
+xcopy ..\resources\off.txt tortilla\resources /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y
 xcopy ..\%prod%\api.dll tortilla /Y
@@ -99,6 +96,9 @@ xcopy ..\plugins\autoalias.lua plugins /Y
 xcopy ..\plugins\inveq.lua plugins /Y
 xcopy ..\plugins\helpers.lua plugins /Y
 xcopy ..\plugins\tick.lua plugins /Y
+xcopy ..\plugins\send.lua plugins /Y
+xcopy ..\plugins\miner.lua plugins /Y
+xcopy ..\plugins\miner.bmp plugins /Y
 
 7za.exe a -tzip plugins_plus.zip plugins
 

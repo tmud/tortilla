@@ -10,6 +10,7 @@
   <plogs value="1"/>
   <plogswnd value="0"/>
   <codepage value="win"/>
+  <disablealt value="1"/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
@@ -48,7 +49,7 @@
   <asubs/>
   <gags/>
   <highlights>
-    <highlight key="[tortilla] %%" value="txt[62,158,255],bkg[0,0,0],ubi[0,0,0]" group="default"/>
+    <highlight key="[system] %%" value="txt[62,158,255],bkg[0,0,0],ubi[0,0,0]" group="default"/>
   </highlights>
   <timers/>
   <groups>

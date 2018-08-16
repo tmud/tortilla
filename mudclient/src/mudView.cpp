@@ -286,6 +286,13 @@ void MudView::removeDropped(parseData* parse_data)
         MudViewString *string = pds[i];
         if (string->dropped && !string->show_dropped)
         {
+/*
+			MudViewStringBlock mb;
+			mb.params.bkg_color=1;
+			mb.params.text_color=7;
+			mb.string=L"-";
+			string->blocks.insert(string->blocks.begin(), mb);
+*/
             pds.erase(pds.begin() + i);
             m_dropped_strings.push_back(string);
         }
@@ -671,7 +678,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
         dc->FillSolidRect(&pos, bkg_color);
         dc->SetBkColor(bkg_color);
         dc->SetTextColor(text_color);
-        dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER);
+        dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX);
 
         if (p.underline_status || p.italic_status)
             dc->SelectFont(propElements->standard_font);
@@ -697,7 +704,7 @@ void MudView::renderDragSym(CDC *dc, const tstring& str, RECT& pos, COLORREF tex
     dc->FillSolidRect(&pos, bkg);
     dc->SetBkColor(bkg);
     dc->SetTextColor(text);
-    dc->DrawText(str.c_str(), -1, &pos, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
+    dc->DrawText(str.c_str(), -1, &pos, DT_CENTER|DT_SINGLELINE|DT_VCENTER|DT_NOPREFIX);
 }
 
 void MudView::initRenderParams()
@@ -831,14 +838,16 @@ void MudView::stopDraging()
         return;
     ReleaseCapture();
 
+    bool from_end_to_begin = false;
     if (drag_end == -1 && drag_begin >= 0) { drag_end = 0; drag_right = 0; }
-    if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t; }
-    if ( drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
+    if (drag_begin > drag_end) { int t=drag_begin; drag_begin=drag_end; drag_end=t; from_end_to_begin = true; }
     if (drag_begin < 0)
         drag_begin = 0;
 
     if (m_drag_boxmode)
     {
+        if (drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
+
         tstring text, tmp;
         tstring eol(L"\r\n");
         if (drag_left < 0) drag_left = 0;
@@ -890,21 +899,14 @@ void MudView::stopDraging()
 
         // begin line
         m_strings[drag_begin]->getText(&tmp);
-        if (drag_begin < drag_end)
-        {
-            int left = drag_left;
-            if (left == -1) { text.append(tmp); }
-            else { 
-                tstring sp(left, L' ');
-                text.append(sp);
-                text.append(tmp.substr(left)); 
-            }
-        }
+        int from = (!from_end_to_begin) ? drag_left : drag_right;
+        if (from == -1)
+           text.append(tmp);
         else
         {
-            int left = drag_left;
-            if (left == -1) { text.append(tmp); }
-            else { text.append(tmp.substr(left)); }
+           tstring sp(from, L' ');
+           text.append(sp);
+           text.append(tmp.substr(from));
         }
         text.append(eol);
 
@@ -918,18 +920,11 @@ void MudView::stopDraging()
 
         // endline
         m_strings[drag_end]->getText(&tmp);
-        if (drag_begin < drag_end)
-        {
-            int right = drag_right;
-            if (right == -1) { text.append(tmp); }
-            else { text.append(tmp.substr(0, right+1)); }
-        }
+        int to = (!from_end_to_begin) ? drag_right : drag_left;
+        if (to == -1)
+            text.append(tmp);
         else
-        {
-            int right = drag_right;
-            if (right == -1) { text.append(tmp); }
-            else { text.append(tmp.substr(right+1)); }
-        }
+            text.append(tmp.substr(0, to+1));
     }
 
     sendToClipboard(m_hWnd, text);
