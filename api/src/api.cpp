@@ -244,7 +244,8 @@ public:
                 }
                 else
                 {
-                    utf8 tmp[2] = { atoi(symbol.c_str()), 0 };
+                    utf8 s = static_cast<utf8>( atoi(symbol.c_str()) );
+                    utf8 tmp[2] = { s, 0 };
                     decoded.append(tmp); b = e + 1;
                 }
             }
