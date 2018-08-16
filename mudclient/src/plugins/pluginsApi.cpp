@@ -705,7 +705,7 @@ int loadTable(lua_State *L)
     xml::node doc;
     if (!doc.load(pp, &error) )
     {
-       swprintf(plugin_buffer(), L"Ошибка чтения: %s\n%s", filename, error.c_str());
+       swprintf(plugin_buffer(), L"Ошибка чтения: %s\n%s", filename.c_str(), error.c_str());
        tstring tmp(plugin_buffer());
        pluginMethodError(L"loadTable", tmp.c_str());
        return 0;

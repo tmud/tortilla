@@ -51,7 +51,7 @@
   <asubs/>
   <gags/>
   <highlights>
-    <highlight key="[tortilla] %%" value="txt[0,128,255],bkg[0,0,0],ubi[0,0,0]" group="base"/>
+    <highlight key="[system] %%" value="txt[0,128,255],bkg[0,0,0],ubi[0,0,0]" group="base"/>
   </highlights>
   <timers/>
   <groups>

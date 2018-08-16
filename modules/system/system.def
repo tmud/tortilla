@@ -1,3 +1,0 @@
-LIBRARY system
-EXPORTS 
-	luaopen_system

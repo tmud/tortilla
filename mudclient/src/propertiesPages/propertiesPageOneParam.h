@@ -250,16 +250,16 @@ private:
         return 0;
     }
 
-    void updateCurrentItem(bool update_key)
+    bool updateCurrentItem(bool update_key)
     {
         int item = m_list.getOnlySingleSelection();
-        if (item == -1) return;
+        if (item == -1) return false;
         m_update_mode = true;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         property_value& v = m_list_values.getw(item);
         if (v.key != pattern && !update_key)
-            { m_update_mode = false; return; }
+            { m_update_mode = false; return false; }
         if (v.key != pattern)
         {
             v.key = pattern;
@@ -271,6 +271,7 @@ private:
             m_list.setItem(item, 1, m_currentGroup);
         }
         m_update_mode = false;
+		return true;
     }
 
     LRESULT OnListItemChanged(int, LPNMHDR, BOOL&)

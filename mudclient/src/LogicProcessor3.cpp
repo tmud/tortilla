@@ -404,7 +404,7 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
     LogicPipelineElement *e = m_pipeline.createElement();
     printParseData(parse_data, flags, window, e);
     order.push_back(e);
-        
+
     while (!order.empty())
     {
         LogicPipelineElement *e = *order.begin();
@@ -489,26 +489,44 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     {
         m_pHost->preprocessText(window, &parse_data);
 
-        // process lua plugins triggers    
+        // process lua plugins triggers
         processLuaTriggers(parse_data, flags, pe);
     }
+
+    PropertiesData *pdata = tortilla::getProperties();
+    const PropertiesData::debug_data &dd = pdata->debug;
 
     if (!(flags & SKIP_SUBS))
     {
         if (!(flags & SKIP_COMPONENT_ANTISUBS))
-            m_helper.processAntiSubs(&parse_data);
+        {
+            m_helper.processAntiSubs(&parse_data, triggered(dd.antisubs));
+            printTriggered(parse_data, dd.antisubs, L"antisub: ", false);
+        }
         if (!(flags & SKIP_COMPONENT_GAGS))
-            m_helper.processGags(&parse_data);
+        {
+            m_helper.processGags(&parse_data, triggered(dd.gags));
+            printTriggered(parse_data, dd.gags, L"gag: ", false);
+        }
         if (!(flags & SKIP_COMPONENT_SUBS))
-            m_helper.processSubs(&parse_data);
+        {
+            m_helper.processSubs(&parse_data, triggered(dd.subs));
+            printTriggered(parse_data, dd.subs, L"sub: ", false);
+        }
     }
 
     // process actions
     if (!(flags & SKIP_ACTIONS))
-        processActionsTriggers(parse_data, flags, pe);  
+    {
+        processActionsTriggers(parse_data, flags, pe, triggered(dd.actions));
+        printTriggered(parse_data, dd.actions, L"action: ", false);
+    }
 
     if (!(flags & SKIP_HIGHLIGHTS))
-        m_helper.processHighlights(&parse_data);
+    {
+        m_helper.processHighlights(&parse_data, triggered(dd.highlights));
+        printTriggered(parse_data, dd.highlights, L"highlight: ", true);
+    }
 
     // postprocess data via plugins
     if (!(flags & (SKIP_PLUGINS_AFTER|SKIP_COMPONENT_PLUGINS) ))
@@ -520,6 +538,41 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
     if (log != -1)
         m_logs.writeLog(log, parse_data);     // write log
     m_pHost->addText(window, &parse_data);    // send processed text to view
+}
+
+LogicTriggered* LogicProcessor::triggered(int mode)
+{
+    if (mode == 1) {
+        m_triggered_debug.clear();
+        return &m_triggered_debug;
+    }
+    return NULL;
+}
+
+void LogicProcessor::printTriggered(parseData& parse_data, int mode, const tstring& prefix, bool process_highlights)
+{
+    if (mode != 1)
+        return;
+    if (m_triggered_debug.empty())
+        return;
+    static parseData highlights_mode;
+    for (int i=0, e=m_triggered_debug.size(); i<e; ++i)
+    {
+        MudViewString *new_string = new MudViewString();
+        new_string->system = true;
+        new_string->blocks.resize(3);
+        new_string->blocks[0].string = L"[debug] ";
+        new_string->blocks[1].string = prefix;
+        new_string->blocks[2].string = m_triggered_debug[i];
+        if (process_highlights)
+            highlights_mode.strings.push_back(new_string);
+        else
+            parse_data.strings.push_back(new_string);
+    }
+    if (process_highlights) {
+        m_helper.processHighlights(&highlights_mode, NULL);
+        parse_data.pushBack(highlights_mode);
+    }
 }
 
 void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe)
@@ -543,17 +596,16 @@ void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicP
     }
 }
 
-void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe)
+void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, LogicTriggered* trigg)
 {    
     // process lua triggers or actions
     PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
-        bool triggered = m_helper.processActions(&parse_data, j, &pe->commands);
+        bool triggered = m_helper.processActions(&parse_data, j, &pe->commands, trigg);
         if (!triggered)
             continue;
         parseData &not_processed = (pe->triggers.empty()) ? pe->not_processed : pe->lua_processed;
-        
         MudViewString *s = parse_data.strings[j];
         s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
         not_processed.last_finished = parse_data.last_finished;

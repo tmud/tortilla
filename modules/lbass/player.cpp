@@ -103,7 +103,9 @@ bool BassPlayer::play(int id, int volume, BassObjectEvents *callback)
     {
         BassObject *object = m_objects[id];
         object->setcallback(callback);
-        if (!object->play(volume_ToFloat(volume)))
+        float v = volume_ToFloat(volume);
+        v = v * m_global_volume;
+        if (!object->play(v))
             return error(object->geterror().c_str());
         return true;
     }
@@ -160,6 +162,18 @@ bool BassPlayer::getPath(int id, std::wstring* path)
     }
     path->assign(object->getname());
     return true;
+}
+
+void BassPlayer::setVolume(int volume)
+{
+    float v = volume_ToFloat(volume);
+    m_global_volume = v;
+}
+
+int BassPlayer::getVolume()
+{
+    int v = volume_toInt(m_global_volume);
+    return v;
 }
 
 const wchar_t* BassPlayer::getLastError() const

@@ -264,13 +264,10 @@ public:
     DWORD getPosition() {
         return file_size-(not_readed+in_buffer);
     }
-    bool readNextString(std::string *string, bool trim_rn, DWORD* startpos = NULL)
+    bool readNextString(std::string *string, bool trim_rn)
     {
         if (hfile == INVALID_HANDLE_VALUE)
             return false;
-        if (startpos)
-            *startpos = getPosition();
-
         int ed = (trim_rn) ? 1 : 0;
         while (not_readed > 0 || in_buffer > 0)
         {
@@ -343,7 +340,6 @@ public:
         }
         return false;
     }
-
     void close()
     {
         if (hfile != INVALID_HANDLE_VALUE)
@@ -363,7 +359,8 @@ public:
     }
 };
 
-class load_file_full {
+class load_file_full
+{
     HANDLE hfile;
     char* data;
     DWORD size;
@@ -382,7 +379,7 @@ public:
         }
         DWORD high = 0;
         DWORD fsize = GetFileSize(hfile, &high);
-        if (high != 0) 
+        if (high != 0)
             { close(); return; }
         data = new (std::nothrow) char[fsize];
         if (!data) 

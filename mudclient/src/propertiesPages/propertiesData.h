@@ -582,6 +582,16 @@ public:
     int tabwords;
     } messages;
 
+    struct debug_data {
+    debug_data() { initDefault(); }
+    void initDefault() { actions = subs = highlights = antisubs = gags = 0; }
+    int actions;
+    int subs;
+    int highlights;
+    int antisubs;
+    int gags;    
+    } debug;
+
     struct working_mode { 
     working_mode() { initDefault();  }
     void initDefault(int val = 1) { actions = aliases = subs = hotkeys = highlights = antisubs = gags = plugins = val; }

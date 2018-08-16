@@ -231,8 +231,8 @@ private:
             highlight_value& v = m_list_values.getw(item);
             if (v.group != m_currentGroup)
                 return 0;
-            v.value.underlined = checked ? 1 : 0;
-            updateCurrentItem(false);
+            if (updateCurrentItem(false))
+                v.value.underlined = checked ? 1 : 0;
         }
         return 0;
     }
@@ -247,8 +247,8 @@ private:
             highlight_value& v = m_list_values.getw(item);
             if (v.group != m_currentGroup)
                 return 0;
-            v.value.border = checked ? 1 : 0;
-            updateCurrentItem(false);
+            if (updateCurrentItem(false))
+                v.value.border = checked ? 1 : 0;
         }
         return 0;
     }
@@ -263,8 +263,8 @@ private:
             highlight_value& v = m_list_values.getw(item);
             if (v.group != m_currentGroup)
                 return 0;
-            v.value.italic = checked ? 1 : 0;
-            updateCurrentItem(false);
+            if (updateCurrentItem(false))
+                v.value.italic = checked ? 1 : 0;
         }
         return 0;
     }
@@ -327,16 +327,16 @@ private:
         return 0;
      }
 
-    void updateCurrentItem(bool update_key)
+    bool updateCurrentItem(bool update_key)
     {
         int item = m_list.getOnlySingleSelection();
-        if (item == -1) return;
+        if (item == -1) return false;
         m_update_mode = true;
         tstring pattern;
         getWindowText(m_pattern, &pattern);
         highlight_value& v = m_list_values.getw(item);
         if (v.key != pattern && !update_key)
-            { m_update_mode = false; return; }
+            { m_update_mode = false; return false; }
         if (v.key != pattern)
         {
             v.key = pattern;
@@ -364,6 +364,7 @@ private:
         m_list.setItem(item, 1, flags);
 
         m_update_mode = false;
+		return true;
     }
 
     LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
@@ -513,8 +514,8 @@ private:
                 highlight_value& v = m_list_values.getw(item);
                 if (v.group != m_currentGroup)
                     return 0;
-                v.value.textcolor = color;
-                updateCurrentItem(false);
+                if (updateCurrentItem(false))
+                    v.value.textcolor = color;
             }
         }
         return 0;
@@ -535,8 +536,8 @@ private:
                 highlight_value& v = m_list_values.getw(item);
                 if (v.group != m_currentGroup)
                     return 0;
-                v.value.bkgcolor = color;
-                updateCurrentItem(false);
+                if (updateCurrentItem(false))
+                    v.value.bkgcolor = color;
             }
         }
         return 0;

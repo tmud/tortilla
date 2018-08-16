@@ -14,7 +14,6 @@
 #include "plugins/pluginsView.h"
 #include "plugins/pluginsManager.h"
 
-#include "AboutDlg.h"
 #include "helpManager.h"
 
 #define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
@@ -959,9 +958,9 @@ private:
     void hideFindView()
     {
         PropertiesWindow *find_window = m_propData->displays.find_window();
-        find_window->visible = false;
         DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
-        //m_propData->find_window = ctx->rcWindow;
+        find_window->pos = ctx->rcWindow;
+        find_window->visible = false;
         m_dock.HideWindow(m_find_dlg);
         m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)

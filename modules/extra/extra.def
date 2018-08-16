@@ -1,3 +1,0 @@
-LIBRARY extra
-EXPORTS 
-	luaopen_extra

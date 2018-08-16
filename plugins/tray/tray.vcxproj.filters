@@ -29,9 +29,6 @@
     <ClInclude Include="sharingData.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sharedMemory.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sharingController.h">
       <Filter>Source Files</Filter>
     </ClInclude>

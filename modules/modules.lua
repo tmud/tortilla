@@ -1,7 +1,5 @@
 ﻿-- modules.lua
--- загрузчик dll-модулей
-
-if system then return end
+-- загрузчик модулей
 
 function pairsByKeys (t, f)
   local a = {}
@@ -17,8 +15,61 @@ function pairsByKeys (t, f)
   return iter
 end
 
-system = require 'system'
+function make_class_object(class, object)
+  object = object or {}
+  local interface = {}
+  for k,v in pairs(class) do
+    if k ~= 'new' then
+      local f = class[k]
+      interface[k] = function(p, ...)
+        if p == interface then
+          return f(object, ...)       -- object:method call
+        else
+          return f(object, p, ...)    -- object.method call
+        end
+      end
+    end
+  end
+  setmetatable(object, { __index = class })
+  return setmetatable(interface, {} )
+end
 
+-- Класс двумерного массива
+-- Использование (индексы начинаются с 1, т.к. Lua)
+-- local a = array_class:new(10, 5)  -- создание массива 10 на 5
+-- a:set(1,3, 100) - запись в массив [1,3] = 100
+-- local x = a:get(1,3) - получение из массива [1,3]
+array_class = {}
+function array_class:new(w, h)
+  local array = { width = w, height = h }
+  function array:index(x, y)
+    if x >= 1 and x <= self.width and y >= 1 and y <= self.height then
+      return self.width*(y-1) + x
+    end
+  end
+  function array:logerr(x, y, method)
+    log('Выход за пределы массива arrayxy:'..method..' index={'..x..','..y..'}, size={'..self.width..','..self.height..'}')
+  end
+  return make_class_object(array_class, array)
+end
+
+function array_class:get(x, y)
+  local i = self:index(x, y)
+  if i then
+    return self[i]
+  end
+  self:logerr(x, y, 'get')
+end
+
+function array_class:set(x,y,v)
+  local i = self:index(x, y)
+  if i then
+    self[i] = v
+    return
+  end
+  self:logerr(x, y, 'set')
+end
+------------------------------------------------------------------
 off = {}
 local t = system.loadTextFile('../off.txt')
 if not t then
@@ -32,9 +83,6 @@ if t then
     if not s:contain('# ') then off[s] = true end
   end
 end
-
-rnd = require 'rnd'
-extra = require 'extra'
 
 local function prequire(m)
   local ok, mod = pcall(require, m)

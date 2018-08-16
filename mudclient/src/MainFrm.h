@@ -3,7 +3,6 @@
 #include "mudGameView.h"
 #include "helpManager.h"
 #include "plugins/pluginsApi.h"
-#include "aboutdlg.h"
 
 template <class T> // stub for DECLARE_FRAME_WND_CLASS macro (without stub not working)
 class ATL_NO_VTABLE CCommonFrameImpl : public CMessageMap {
@@ -306,7 +305,7 @@ private:
 
     void setTaskbarName()
     {
-        if (!isVistaOrHigher())
+        /*if (!isVistaOrHigher())
             return;
         tstring name(L"Tortilla");
         HKEY key = 0;
@@ -317,6 +316,6 @@ private:
             GetModuleFileName(NULL, buffer, MAX_PATH);
             RegSetValueEx(key, buffer, 0, REG_SZ, (const BYTE*)name.c_str(), name.length()*sizeof(WCHAR));
             RegCloseKey(key);
-        }
+        }*/
     }
 };

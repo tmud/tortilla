@@ -29,6 +29,7 @@ public:
     void invalidoperation() { error(L"Невозможно вычислить."); }
     void invalidvars() { error(L"Используются неизвестные переменные."); }
     void blockedbyprops() { error(L"Команда не выполнена (открыто окно настроек)."); }
+    bool isError() const { return perror->empty() ? false : true; }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
     InputCommand cmd;
@@ -442,11 +443,10 @@ IMPL(math)
     {
         VarProcessor *vp = tortilla::getVars();
         ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
-        MethodsHelper* helper = ph;
         if (!vp->canSetVar(p->at(0)))
         {
             swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
-            helper->tmcLog(pb.buffer);
+            ph.tmcLog(pb.buffer);
             return;
         }
 
@@ -461,7 +461,65 @@ IMPL(math)
             swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
         else
             swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
-        helper->tmcLog(pb.buffer);
+        ph.tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(strop)
+{
+    int n = p->size();
+    if (n >= 3)
+    {
+        VarProcessor *vp = tortilla::getVars();
+        ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
+        if (!vp->canSetVar(p->at(0)))
+        {
+            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+            ph.tmcLog(pb.buffer);
+            return;
+        }
+        tstring result;
+        tstring op(p->at(2));
+        if (op == L"concat") 
+        {
+            if (p->size() == 4) {
+                result.assign(p->at(1));
+                result.append(p->at(3));
+            } else {
+                p->invalidargs();
+            }
+        }
+        else if (op == L"trim") 
+        {
+            if (p->size() == 3) {
+                result.assign(p->at(1));
+                tstring_trim(&result);
+            } else {
+                p->invalidargs();
+            }
+        }
+        else if (op == L"replace")
+        {
+            if (p->size() == 5)
+            {
+                result.assign(p->at(1));
+                tstring_replace(&result, p->at(3), p->at(4));
+            } else {
+                p->invalidargs();
+            }
+        } else {
+            p->invalidoperation();
+        }
+        if (!p->isError())
+        {
+            if (vp->setVar(p->at(0), result))
+                swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
+            else
+                swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
+            ph.tmcLog(pb.buffer);
+        }
         return;
     }
     p->invalidargs();
@@ -772,6 +830,23 @@ IMPL(ifop)
         if (result == LogicHelper::IF_SUCCESS)
         {
             tstring cmd(p->at(1));
+            processCommand(cmd);
+        }
+        else if (result == LogicHelper::IF_ERROR)
+            p->invalidoperation();
+        return;
+    }
+    if (p->size() == 3) // if-else
+    {
+        LogicHelper::IfResult result = m_helper.compareIF(p->at(0));
+        if (result == LogicHelper::IF_SUCCESS)
+        {
+            tstring cmd(p->at(1));
+            processCommand(cmd);
+        }
+        else if (result == LogicHelper::IF_FAIL)
+        {
+            tstring cmd(p->at(2));
             processCommand(cmd);
         }
         else if (result == LogicHelper::IF_ERROR)
@@ -1463,11 +1538,65 @@ IMPL(message)
         simpleLog(str);
         return;
     }
-
-    if (n == 1 || n == 2)
+    if (n == 1)
+    {
+        tstring str;
+        MessageCmdHelper mh(pdata);
+        if (!mh.getStateString(p->at(0), &str))
+        {
+            p->invalidargs();
+        }
+        else
+        {
+            tmcLog(str);
+        }
+        return;
+    }
+    if (n == 2)
     {
         MessageCmdHelper mh(pdata);
-        if (!mh.setMode(p->at(0), n == 2 ? p->at(1) : L""))
+        if (!mh.setMode(p->at(0), p->at(1)))
+        {
+            p->invalidargs();
+        }
+        else
+        {
+            tstring str;
+            mh.getStateString(p->at(0), &str);
+            tmcLog(str);
+        }
+        return;
+    }
+    p->invalidargs();
+}
+
+IMPL(debug_tr)
+{
+    PropertiesData *pdata = tortilla::getProperties();
+    int n = p->size();
+    if (n == 0)
+    {
+        DebugCmdHelper mh(pdata);
+        tstring str;
+        mh.getStrings(&str);
+        tmcLog(L"Debug-уведомления:");
+        simpleLog(str);
+        return;
+    }
+
+    if (n == 1)
+    {
+        DebugCmdHelper mh(pdata);
+        tstring str;
+        mh.getStateString(p->at(0), &str);
+        tmcLog(str);
+        return;       
+    }
+        
+    if (n == 2)
+    {
+        DebugCmdHelper mh(pdata);
+        if (!mh.setMode(p->at(0), p->at(1)))
         {
             p->invalidargs();
         }
@@ -1706,6 +1835,9 @@ bool LogicProcessor::init()
 
     regCommand("wlock", wlock);
     regCommand("wunlock", wunlock);
+
+    regCommand("debug", debug_tr);
+    regCommand("strop", strop);
 
     return true;
 }

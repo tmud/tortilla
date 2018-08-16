@@ -318,6 +318,11 @@ bool Action::processing(CompareData& data, bool incompl_flag,InputCommands* newc
     return true;
 }
 
+const tstring& Action::getKey() const
+{
+    return m_compare.getKey();
+}
+
 Sub::Sub() : m_phelper(NULL) {}
 Sub::~Sub() { delete m_phelper; }
 
@@ -461,6 +466,11 @@ bool Sub::processing(CompareData& data)
     return true;
 }
 
+const tstring& Sub::getKey() const
+{
+    return m_compare.getKey();
+}
+
 AntiSub::AntiSub(){}
 void AntiSub::init(const property_value& v)
 {
@@ -482,6 +492,11 @@ bool AntiSub::processing(CompareData& data)
 
     data.start = range.end+1;
     return true;
+}
+
+const tstring& AntiSub::getKey() const
+{
+    return m_compare.getKey();
 }
 
 Gag::Gag(){}
@@ -518,6 +533,11 @@ bool Gag::processing(CompareData& data)
     return true;
 }
 
+const tstring& Gag::getKey() const
+{
+    return m_compare.getKey();
+}
+
 Highlight::Highlight(){}
 void Highlight::init(const property_value& v)
 {
@@ -543,6 +563,11 @@ bool Highlight::processing(CompareData& data)
     p.italic_status = m_hl.italic;
     data.start = pos + 1;
     return true;
+}
+
+const tstring& Highlight::getKey() const
+{
+    return m_compare.getKey();
 }
 
 Timer::Timer() : timer(0), period(0)
