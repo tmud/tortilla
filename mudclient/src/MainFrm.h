@@ -3,7 +3,6 @@
 #include "mudGameView.h"
 #include "helpManager.h"
 #include "plugins/pluginsApi.h"
-#include "aboutdlg.h"
 
 template <class T> // stub for DECLARE_FRAME_WND_CLASS macro (without stub not working)
 class ATL_NO_VTABLE CCommonFrameImpl : public CMessageMap {

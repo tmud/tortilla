@@ -2,7 +2,6 @@
 #include "profileHelpers.h"
 #include "profilesPath.h"
 #include "profileDlgs.h"
-#include "AboutDlg.h"
 
 ProfilesGroupList::ProfilesGroupList() : m_last_accessed(-1)
 {

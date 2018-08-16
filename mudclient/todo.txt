@@ -14,7 +14,7 @@
 + 15. else для if
 - 16. socks4/5 proxy
 - 17. plugins manager
-18. плагин работы с РЛ временем
++ 18. плагин работы с РЛ временем
 + 19. строковые операции с переменными
 #strop target $src replace ' ' .
 #strop target $src trim

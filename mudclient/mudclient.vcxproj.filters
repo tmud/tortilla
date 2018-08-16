@@ -52,9 +52,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\AboutDlg.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\hotkeyTable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -422,9 +419,6 @@
     </ClCompile>
     <ClCompile Include="src\plugins\pluginsModules.cpp">
       <Filter>Source Files\Plugins</Filter>
-    </ClCompile>
-    <ClCompile Include="src\AboutDlg.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\LogicProcessor3.cpp">
       <Filter>Source Files\LogicProcessor</Filter>

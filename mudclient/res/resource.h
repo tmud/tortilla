@@ -35,7 +35,6 @@
 #define IDD_PROPERTY_TIMERS             214
 #define IDD_PLUGINS                     215
 #define IDD_NEW_WORLD                   218
-#define IDD_WELCOME                     219
 #define IDD_PASSWORD                    221
 #define IDD_STARTUP_WORLD               222
 #define IDD_FIND                        223
@@ -119,7 +118,6 @@
 #define IDC_RADIO_PROMT_GA              1124
 #define IDC_RADIO_PROMT_PCRE            1125
 #define IDC_CHECK_DONTSHOW              1126
-#define IDC_STATIC_RICHBOXPLACE         1129
 #define IDC_EDIT_PASSWORD               1130
 #define IDC_BUTTON_COLOR_RESETOSC       1131
 #define IDC_BUTTON_REPLACE              1132

@@ -14,7 +14,6 @@
 #include "plugins/pluginsView.h"
 #include "plugins/pluginsManager.h"
 
-#include "AboutDlg.h"
 #include "helpManager.h"
 
 #define WS_DEFCHILD WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN
