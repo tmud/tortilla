@@ -3,13 +3,13 @@
 // Used by mudclient.rc
 //
 #define IDD_ALERT                       101
-#define IDI_WARNINGMY                   102
 #define IDR_MAINFRAME                   128
 #define IDS_RESET_COLORS_CONFIRM        129
 #define IDS_NETWORK_FAILED              130
 #define IDS_RESET_OSC_CONFIRM           130
 #define IDS_NEW_PROFILE                 131
 #define IDS_NEW_WORLD                   132
+#define IDI_WARNINGMY                   133
 #define IDS_ERROR_INIT_NETWORK          200
 #define IDS_ERROR_NEWPROFILE_FAILED     201
 #define IDD_PROPERTY_ALIASES            202
