@@ -613,7 +613,7 @@ BEGIN
     BEGIN
         MENUITEM "&Справка",                    ID_MUDCLIENT_HELP
         MENUITEM SEPARATOR
-        MENUITEM "С&айт программы...",          ID_CHECK_UPDATES
+        MENUITEM "С&айт мад-клиента...",        ID_CHECK_UPDATES
     END
 END
 
@@ -681,6 +681,7 @@ END
 
 IDR_MAINFRAME           BITMAP                  "Toolbar.bmp"
 
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon
@@ -688,8 +689,10 @@ IDR_MAINFRAME           BITMAP                  "Toolbar.bmp"
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_WARNINGMY           ICON                    "warn.ico"
 IDR_MAINFRAME           ICON                    "mudclient.ico"
+
+IDI_WARNINGMY           ICON                    "warn.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
