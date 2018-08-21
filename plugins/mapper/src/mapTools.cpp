@@ -320,7 +320,11 @@ bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
     }
 
     MapTools t(map);
-    Room *r = t.findRoom(room->hash());   
+    Room *r = t.findRoom(room->hash());
+    if (!r) {
+        assert(false);
+        return false;
+    }
     Rooms3dCube* srczone = map->findZone(r->pos.zid);
     if (!srczone) {
         assert(false);
@@ -339,10 +343,9 @@ bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
     }
 
     // try to merge zones in to one
-    MapZoneMirror m(srczone);    
-    if (!m.tryMergeZone())
+    MapZoneMirror m;
+    if (!m.tryMergeZone(srczone, dstzone))
         return false;
-            
 
     return false;
 }

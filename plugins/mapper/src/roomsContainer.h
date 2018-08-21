@@ -44,17 +44,6 @@ private:
     bool deleterooms;
 };
 
-class Rooms3dContainerMirror
-{
-public:
-    Rooms3dContainerMirror(const Rooms3dContainer& src);
-    ~Rooms3dContainerMirror();
-
-private:
-    Rooms3dContainer rooms;
-};
-
-
 class Rooms3dContainerEx 
 {
 public:

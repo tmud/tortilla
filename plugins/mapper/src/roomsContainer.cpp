@@ -274,29 +274,6 @@ bool Rooms3dContainer::testInvariant()
 }
 #endif
 
-Rooms3dContainerMirror::Rooms3dContainerMirror(const Rooms3dContainer& src) : rooms(false)
-{  
-    const Rooms3dCubeSize &sz = src.getSize();
-    for (int l=sz.minlevel; l<=sz.maxlevel; ++l)
-    {
-        Rooms3dCubePos p; p.z = l;
-        for (int y = sz.top; y<=sz.bottom; ++y)
-        {
-            p.y = y;
-            for (int x = sz.left; x<=sz.right; ++x)
-            {
-                p.x = x;
-                Room *r = src.get(p);
-                rooms.set(p, r);
-            }        
-        }
-    }
-    rooms.collapse();
-    const Rooms3dCubeSize &sz2 =rooms.getSize();
-    assert(sz2.left == sz.left && sz.right == sz2.right && sz.top == sz2.top && sz.bottom == sz2.bottom 
-        && sz.maxlevel == sz2.maxlevel && sz.minlevel == sz2.minlevel);
-}
-
 bool Rooms3dContainerEx::setAsLevel0(int level)
 {
     Rooms3dCubeSize &cube_size = rooms.cube_size;
