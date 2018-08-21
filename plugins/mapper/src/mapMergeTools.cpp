@@ -142,3 +142,75 @@ void MapZoneMergeTool::deleteCopies()
     deleteCopies(-1); // all zones
     i2c.clear();
 }
+
+
+bool RoomWaveAlgoritm2::runFromRoom(Room* room)
+{
+    nodes.clear();
+    branches.clear();
+    nodes[room] = 1;
+    std::vector<Room*> cursors;
+    cursors.push_back(room);
+    return run(2, room->pos.zid, cursors);
+}
+
+bool RoomWaveAlgoritm2::runFromBranch(Room* room, int dir)
+{
+    nodes.clear();
+    branches.clear();
+    Room* next = room->dirs[dir].next_room;
+    std::vector<Room*> cursors;
+    cursors.push_back(next);
+    nodes[room] = 1;
+    nodes[next] = 2;
+    branch b; b.first = room; b.second = next;
+    branches.push_back(b);
+    return run(3, room->pos.zid, cursors);
+}
+
+bool RoomWaveAlgoritm2::run(int weight, int zoneid, std::vector<Room*>& cursors)
+{
+    std::vector<Room*> next_cursors;    
+    while (!cursors.empty())
+    {
+        for (int i = 0, e = cursors.size(); i < e; ++i)
+        {
+            const Room* r = cursors[i];
+            for (int rd = beginRoomDir; rd <= endRoomDir; rd++)
+            {
+                Room* next = r->dirs[rd].next_room;
+                if (next && next->pos.zid == zoneid)
+                {
+                    if (exist(next))
+                        continue;
+                    nodes[next] = weight;
+                    next_cursors.push_back(next);
+                    branch b; b.first = r; b.second = next;
+                    branches.push_back(b);
+                }
+            }
+        }
+        cursors.clear();
+        cursors.swap(next_cursors);
+        weight++;
+    }
+    return true;
+}
+
+void RoomWaveAlgoritm2::getRoomsInWave(std::vector<const Room*>* rooms)
+{
+    const_iterator it = nodes.cbegin(), it_end = nodes.end();
+    for (; it != it_end; ++it)
+        rooms->push_back(it->first);
+}
+
+bool RoomWaveAlgoritm2::exist(const Room* r) const
+{
+    return (index(r) == -1) ? false : true;
+}
+
+int RoomWaveAlgoritm2::index(const Room* r) const
+{
+    const_iterator it = nodes.find(r);
+    return (it == nodes.end()) ? -1 : it->second;
+}
