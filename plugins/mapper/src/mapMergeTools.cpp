@@ -2,15 +2,7 @@
 #include "roomsZone.h"
 #include "mapMergeTools.h"
 
-MapZoneMirror::MapZoneMirror()
-{
-}
-
-MapZoneMirror::~MapZoneMirror() 
-{
-}
-
-bool MapZoneMirror::tryMergeZone(const Rooms3dCube* z1, const Rooms3dCube* z2)
+bool MapZoneMergeTool::tryMergeZone(const Rooms3dCube* z1, const Rooms3dCube* z2)
 {
     makeRoomsCopies(z1);
     makeRoomsCopies(z2);
@@ -20,8 +12,10 @@ bool MapZoneMirror::tryMergeZone(const Rooms3dCube* z1, const Rooms3dCube* z2)
     }
     // fill rooms containers from zone1
     int id1 = z1->id();
+    int id2 = z2->id();
     iterator it = i2c.begin(), it_end = i2c.end();
-    for (; it != it_end; ++it) {
+    for (; it != it_end; ++it) 
+    {
         Room *d = it->second;
         if (d->pos.zid == id1)
         {
@@ -35,13 +29,36 @@ bool MapZoneMirror::tryMergeZone(const Rooms3dCube* z1, const Rooms3dCube* z2)
         && sz.maxlevel == sz2.maxlevel && sz.minlevel == sz2.minlevel);
     if (!compare)
     {
-        assert(false);
-        int id2 = z2->id();
+        assert(false);        
         deleteCopies(id2); // other rooms deleted by rooms container
         return false;
     }
-
     // try merge zone2 over zone1 
+    // get border room in zone1 connected to zone2
+    Room* z1z2 = nullptr; int dir = -1;
+    it = i2c.begin(), it_end = i2c.end();
+    for (; it != it_end; ++it)
+    {
+        Room *r = it->second;
+        if (r->pos.zid != id1) continue;
+        for (int rd = beginRoomDir; rd <= endRoomDir; ++rd)
+        {
+            Room *next = r->dirs[rd].next_room;
+            if (!next) continue;
+            if (next->pos.zid == id2)
+            {
+                z1z2 = r;
+                dir = rd;
+                break;
+            }
+        }
+        if (z1z2) break;
+    }
+    if (!z1z2)
+    {
+        assert(false);
+        return false;
+    }
 
 
 
@@ -49,7 +66,7 @@ bool MapZoneMirror::tryMergeZone(const Rooms3dCube* z1, const Rooms3dCube* z2)
     return false;
 }
 
-void MapZoneMirror::makeRoomsCopies(const Rooms3dCube* z)
+void MapZoneMergeTool::makeRoomsCopies(const Rooms3dCube* z)
 {
     // make zone's rooms deep copies (without exits yet)
     const Rooms3dCubeSize &sz = z->size();
@@ -76,7 +93,7 @@ void MapZoneMirror::makeRoomsCopies(const Rooms3dCube* z)
     }
 }
 
-bool MapZoneMirror::linkRoomsExits(const Rooms3dCube* z1, const Rooms3dCube* z2)
+bool MapZoneMergeTool::linkRoomsExits(const Rooms3dCube* z1, const Rooms3dCube* z2)
 {
     int id1 = z1->id();
     int id2 = z2->id();
@@ -108,7 +125,7 @@ bool MapZoneMirror::linkRoomsExits(const Rooms3dCube* z1, const Rooms3dCube* z2)
     return true;
 }
 
-void MapZoneMirror::deleteCopies(int zid)
+void MapZoneMergeTool::deleteCopies(int zid)
 {
     iterator it = i2c.begin(), it_end = i2c.end();
     for (; it != it_end; ++it) {
@@ -120,7 +137,7 @@ void MapZoneMirror::deleteCopies(int zid)
     }    
 }
 
-void MapZoneMirror::deleteCopies()
+void MapZoneMergeTool::deleteCopies()
 {
     deleteCopies(-1); // all zones
     i2c.clear();

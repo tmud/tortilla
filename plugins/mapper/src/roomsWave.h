@@ -6,8 +6,6 @@ class RoomWaveAlgoritm {
 public:
     bool runWaveAlgoritm(const Rooms3dCube *zone, const Room* room, RoomDir dir);
     void getNewZoneRooms(std::vector<const Room*>* rooms);    
-    RoomWaveAlgoritm();
-    ~RoomWaveAlgoritm();
 private:
     bool run(const Rooms3dCube *zone, const Rooms3dCubePos& start, RoomDir dir);
     void deleteRoom(const Room* room);    

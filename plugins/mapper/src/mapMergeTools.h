@@ -1,11 +1,9 @@
 #pragma once
 #include "roomsContainer.h"
 
-class MapZoneMirror 
+class MapZoneMergeTool
 {
 public:
-    MapZoneMirror();
-    ~MapZoneMirror();
     bool tryMergeZone(const Rooms3dCube* z1, const Rooms3dCube* z2);
 private:    
     void makeRoomsCopies(const Rooms3dCube* z);

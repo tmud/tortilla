@@ -61,6 +61,7 @@ public:
     }
     Room* detach(const Rooms3dCubePos& p) const {
         Room *room = rooms.get(p);
+        rooms.set(p, nullptr);
         room->pos.clear();
         return room;
     }
@@ -72,5 +73,5 @@ private:
     void correctPositions();
     void normalizePositions();
     int  countRooms(level *l);
-    Rooms3dContainer rooms;
+    mutable Rooms3dContainer rooms;
 };

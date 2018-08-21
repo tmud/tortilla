@@ -1,14 +1,6 @@
 #include "stdafx.h"
 #include "roomsWave.h"
 
-RoomWaveAlgoritm::RoomWaveAlgoritm()
-{
-}
-
-RoomWaveAlgoritm::~RoomWaveAlgoritm()
-{
-}
-
 bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room, RoomDir dir)
 {
     nodes.clear();

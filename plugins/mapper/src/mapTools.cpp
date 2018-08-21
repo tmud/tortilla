@@ -343,7 +343,7 @@ bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
     }
 
     // try to merge zones in to one
-    MapZoneMirror m;
+    MapZoneMergeTool m;
     if (!m.tryMergeZone(srczone, dstzone))
         return false;
 
