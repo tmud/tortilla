@@ -66,11 +66,16 @@ bool MapTools::createNewZone(Room *firstroom)
 
 bool MapTools::addNewRoom(Room* from, Room* newroom, RoomDir dir)
 {
-    if (!from || !newroom || dir == RD_UNKNOWN || newroom->roomdata.vnum.empty())
+    if (!from || !newroom || newroom->roomdata.vnum.empty())
     {
         assert(false);
         return false;
     }
+    if (dir == RD_UNKNOWN)
+    {
+        return false;
+    }
+
     MapSmartTools st;
     if (st.isMultiExit(from, dir))
     {
