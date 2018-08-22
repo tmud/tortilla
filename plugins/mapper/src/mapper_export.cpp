@@ -31,7 +31,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"0.01 beta");
+    luaT_pushwstring(L, L"0.02 beta");
     return 1;
 }
 

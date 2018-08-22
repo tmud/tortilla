@@ -41,9 +41,9 @@ private:
         init(m_up, 0, IDC_BUTTON_LEVEL_UP, L"На уровень вверх");
         init(m_level0, 2, IDC_BUTTON_LEVEL0, L"Задать нулевой уровень");
 #ifndef _DEBUG
-        hide(IDC_BUTTON_SAVEZONES);
-        hide(IDC_BUTTON_LOADZONES);
-        hide(IDC_BUTTON_CLEARZONES);
+        //hide(IDC_BUTTON_SAVEZONES);
+        //hide(IDC_BUTTON_LOADZONES);
+        //hide(IDC_BUTTON_CLEARZONES);
 #endif
         return 0;
 	}
@@ -62,10 +62,8 @@ private:
     }
     LRESULT OnDebugButton(WORD, WORD id, HWND, BOOL&)
     {
-#ifdef _DEBUG
         if (::IsWindow(m_controlWindow))
             ::PostMessage(m_controlWindow, m_controlMessage, id, 0 );
-#endif
         return 0;
     }
 };
