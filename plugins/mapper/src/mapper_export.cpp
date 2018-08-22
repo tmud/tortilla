@@ -31,7 +31,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.0");
+    luaT_pushwstring(L, L"0.01 beta");
     return 1;
 }
 
@@ -47,7 +47,7 @@ int init(lua_State *L)
     luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
     luaT_run(L, "addMenu", "s", L"Карта/-");
     luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
-    luaT_run(L, "addButton", "dds", IDB_MAP, 2, L"Настройка карты");
+    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Настройка карты");
 
     m_props.initAllDefault();
 
