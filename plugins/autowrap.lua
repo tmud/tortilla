@@ -18,7 +18,7 @@ function autowrap.name()
   return 'Автоперенос строк'
 end
 function autowrap.version()
-  return '1.07'
+  return '1.08'
 end
 function autowrap.description()
   local p = ''
@@ -88,7 +88,7 @@ local function div(v, maxlen)
 end
 
 local block_color = '7;0;;'
-local blocking_symbols = '[]<>*#'
+local blocking_symbols = '[]<>*#-'
 local function paragraph(v)
   local i,size = 1,v:size()
   while i < size do
