@@ -280,6 +280,24 @@ void PropertiesDisplayManager::clear()
     current_display = NULL;
 }
 
+void PropertiesDisplayManager::resetDisplaysData()
+{
+    std::vector<PropertiesDisplay*>::iterator it = m_displays.begin(), it_end = m_displays.end();
+    for (; it != it_end; ++it)
+    {
+        if (*it == current_display)
+            continue;
+        delete *it;
+    }
+    m_displays.clear();
+    m_displays.push_back(current_display);
+    PluginsDataValues* vpd = current_display->pluginsData();
+    for (PluginData &pd : *vpd)
+    {
+        pd.windows.clear();
+    }
+}
+
 void PropertiesDisplayManager::initDefault()
 {
     if (!current_display)
