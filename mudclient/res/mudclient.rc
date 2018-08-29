@@ -372,15 +372,23 @@ BEGIN
     LTEXT           "Направление:",IDC_STATIC,7,43,48,10
 END
 
-IDD_MODE DIALOGEX 0, 0, 356, 165
+IDD_MODE DIALOGEX 0, 0, 311, 114
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Компоненты"
+CAPTION "Разработчикам"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_LIST_COMPONENTS,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,342,131
-    PUSHBUTTON      "Вкл/Выкл",IDC_BUTTON_ONOFF,7,144,61,14
-    DEFPUSHBUTTON   "OK",IDOK,248,144,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,299,144,50,14
+    CONTROL         "Триггеры (actions)",IDC_CHECK_C_ACTIONS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,18,77,10
+    CONTROL         "Макросы (aliases)",IDC_CHECK_C_ALIASES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,30,77,10
+    CONTROL         "Горячие клавишы (hotkeys)",IDC_CHECK_C_HOTKEYS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,42,114,10
+    CONTROL         "Подсветки (highlights)",IDC_CHECK_C_HIGHLIGHTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,54,89,10
+    CONTROL         "Плагины (plugins), их команды и триггеры, препост обработка",IDC_CHECK_C_PLUGINS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,66,230,10
+    CONTROL         "Замены (subs)",IDC_CHECK_C_SUBS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,18,77,10
+    CONTROL         "Антизамены (antisubs)",IDC_CHECK_C_ANTISUBS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,30,93,10
+    CONTROL         "Фильтры (gags)",IDC_CHECK_C_GAGS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,42,77,10
+    DEFPUSHBUTTON   "OK",IDOK,200,93,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,254,93,50,14
+    GROUPBOX        "Компоненты",IDC_STATIC,7,7,297,74
 END
 
 IDD_PROPERTY_VARS DIALOGEX 0, 0, 340, 235
@@ -536,9 +544,9 @@ BEGIN
     IDD_MODE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 349
+        RIGHTMARGIN, 304
         TOPMARGIN, 7
-        BOTTOMMARGIN, 158
+        BOTTOMMARGIN, 107
     END
 
     IDD_PROPERTY_VARS, DIALOG
@@ -571,7 +579,7 @@ BEGIN
         MENUITEM "Новый мир...",                ID_NEWWORLD
         MENUITEM SEPARATOR
         MENUITEM "Н&астройки...\tShift+F12",    ID_SETTINGS
-        MENUITEM "&Компоненты...",              ID_MODE
+        MENUITEM "&Разработчикам...",           ID_MODE
         MENUITEM SEPARATOR
         MENUITEM "&Выход",                      ID_MUDCLIENT_EXIT
     END
@@ -679,6 +687,17 @@ IDI_WARNINGMY           ICON                    "warn.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_MODE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // String Table
 //
 
@@ -731,7 +750,7 @@ END
 
 STRINGTABLE
 BEGIN
-    ID_MODE                 "\nКомпоненты"
+    ID_MODE                 "\nРазработчикам"
 END
 
 STRINGTABLE

@@ -134,8 +134,15 @@
 #define IDC_CHECK_ANYFONTS              1143
 #define IDC_CHECK_DISABLEALT            1144
 #define IDC_CHECK_MOVETOTRAY            1145
-#define IDC_LIST_COMPONENTS             1146
-#define IDC_CHECK_CREATELINK            1147
+#define IDC_CHECK_CREATELINK            1146
+#define IDC_CHECK_C_ACTIONS             1147
+#define IDC_CHECK_C_ALIASES             1148
+#define IDC_CHECK_C_HIGHLIGHTS          1149
+#define IDC_CHECK_C_SUBS                1150
+#define IDC_CHECK_C_GAGS                1151
+#define IDC_CHECK_C_PLUGINS             1152
+#define IDC_CHECK_C_HOTKEYS             1153
+#define IDC_CHECK_C_ANTISUBS            1154
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -158,9 +165,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        225
+#define _APS_NEXT_RESOURCE_VALUE        226
 #define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1149
+#define _APS_NEXT_CONTROL_VALUE         1155
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
