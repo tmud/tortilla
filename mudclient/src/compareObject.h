@@ -42,6 +42,8 @@ private:
     void maskRegexpSpecialSymbols(tstring *pcre_template, bool use_first_arrow);
     void reset();
     bool checkCuts();
+    void checkFirstSymbols(const tstring& key);
+    bool compareFirstSymbols(const tstring& str);
     const ParamsHelper& getKeyHelper() const;
 private:
     Pcre16  m_pcre;
@@ -52,6 +54,7 @@ private:
     std::vector<tstring> m_vars_pcre_parts;
     bool m_fullstr_req;
     bool m_std_regexp;
+    tchar m_first_symbol, m_second_symbol;
 };
 
 #ifdef _DEBUG
