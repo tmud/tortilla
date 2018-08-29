@@ -11,6 +11,7 @@ private:
       MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
       COMMAND_ID_HANDLER(IDOK, OnCloseCmd)
       COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
+      COMMAND_ID_HANDLER(IDC_BUTTON_RESETDISPLAYS, OnResetDisplays)
     END_MSG_MAP()
 
     void add(int id, int mode) 
@@ -57,4 +58,12 @@ private:
 		EndDialog(wID);
 		return 0;
 	}
+
+    LRESULT OnResetDisplays(WORD, WORD , HWND, BOOL&)
+    {
+        m_pdata->displays.resetDisplaysData();
+        CWindow w(GetDlgItem(IDC_BUTTON_RESETDISPLAYS));
+        w.EnableWindow(FALSE);
+        return 0;
+    }
 };
