@@ -228,12 +228,12 @@ bool MapperProcessor::searchData(const tchar* data, int datalen, RoomData* resul
         
         int d = bd.getAfterKey();
         int dl = (ed.getKey() - d);
-        if (dl > 0)
-            result->descr.assign(&data[d], dl);
+        /*if (dl > 0)
+            result->descr.assign(&data[d], dl);*/
         
         int e = be.getAfterKey();
         int el = datalen - e;
-        result->exits.assign(&data[e], el);
+        //result->exits.assign(&data[e], el);
 
         int v = bv.getAfterKey();
         int vl = (ev.getKey() - v);

@@ -8,10 +8,11 @@ struct Room;
 struct RoomData
 {
     tstring vnum;
-    //tstring zonename;   // if known ?
+    tstring zonename;
     tstring name;
-    tstring descr;
-    tstring exits;
+    //tstring descr;
+    //tstring exits;
+    std::map<tstring, tstring> exits; // dir -> vnum
 };
 
 struct RoomExit

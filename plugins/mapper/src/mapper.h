@@ -14,6 +14,7 @@ public:
     ~Mapper();
     void processNetworkData(const tchar* text, int text_len);
     void processCmd(const tstring& cmd);
+    void processMsdp(const RoomData& rd);
     void updateProps();
     void saveProps();
 	void saveMaps();

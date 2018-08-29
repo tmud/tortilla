@@ -158,7 +158,7 @@ void MapInstance::saveMaps(const tstring& dir)
 					rn.set(L"x", x); rn.set(L"y", y); rn.set(L"z", z);
 					rn.set(L"name", r->roomdata.name);
 					rn.set(L"vnum", r->roomdata.vnum);
-					rn.set(L"exits", r->roomdata.exits);
+					//rn.set(L"exits", r->roomdata.exits);
 					if (r->use_color) {
                         tchar buffer[10];
                         swprintf(buffer, L"%02x%02x%02x", GetRValue(r->color), GetGValue(r->color), GetBValue(r->color));
@@ -166,10 +166,10 @@ void MapInstance::saveMaps(const tstring& dir)
                     }
 					if (r->icon > 0)
 						rn.set(L"icon", r->icon);
-					tstring d(r->roomdata.descr);
+					/*tstring d(r->roomdata.descr);
 					tstring_replace(&d, L"\r", L"\\r");
 					tstring_replace(&d, L"\n", L"\\n");
-                    rn.set(L"desc", d.c_str());
+                    rn.set(L"desc", d.c_str());*/
 					for (int rd = beginRoomDir; rd <= endRoomDir; ++rd) 
 					{
 						const RoomExit& e = r->dirs[rd];
@@ -274,18 +274,18 @@ void MapInstance::loadMaps(const tstring& dir)
                 if (err.empty() && !r.get(L"name", &rd.name)) {
                     err = L"не задано имя(name) vnum=" + rd.vnum;
                 }
-                if (err.empty() && !r.get(L"exits", &rd.exits)) {
+                /*if (err.empty() && !r.get(L"exits", &rd.exits)) {
                     err = L"не заданы выходы(exits) vnum=" + rd.vnum;
-                }
+                }*/
 
-                tstring desc;
+                /*tstring desc;
                 if (err.empty() && !r.get(L"desc", &desc)) {
                     err = L"не задано описание(desc) vnum=" + rd.vnum;
                 } else {
                     tstring_replace(&desc, L"\\r", L"\r" );
                     tstring_replace(&desc, L"\\n", L"\n" );
                     rd.descr = desc;
-                }
+                }*/
                 if (err.empty()) {
                     int icon = 0;
                     if (r.get(L"icon", &icon) && icon > 0 )

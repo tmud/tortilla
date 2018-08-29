@@ -22,16 +22,15 @@ int get_description(lua_State *L)
     luaT_pushwstring(L,
         L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
         L"Предназначен для мадов с 6 стандартными выходами.\r\n"
-        L"Требует для работы наличия VNUM комнаты в блоке текста с ее описанием,\r\n"
-        L"или MSDP протокола, в котором есть информация о местоположении.\r\n"
-        L"О настройке см. справку (#help mapper)."
+        L"Требует для работы поддержки MSDP протокола от мад-сервера c\r\n"
+        L"данными о местоположении."
         );
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"0.02 beta");
+    luaT_pushwstring(L, L"0.03 beta");
     return 1;
 }
 
@@ -44,15 +43,14 @@ int init(lua_State *L)
 
     DEBUGINIT(L);
 	init_clientlog(L);
-    luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 2, IDB_MAP);
-    luaT_run(L, "addMenu", "s", L"Карта/-");
-    luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
-    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Настройка карты");
+    //luaT_run(L, "addMenu", "sddd", L"Карта/Окно с картой", 1, 1, IDB_MAP);
+    //luaT_run(L, "addMenu", "s", L"Карта/-");
+    //luaT_run(L, "addMenu", "sdd", L"Карта/Настройка карты...", 2, 2);
+    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Окно с картой");
 
     m_props.initAllDefault();
 
 	tstring error;
-
     tstring path;
 	tstring current_zone;
     base::getPath(L, L"settings.xml", &path);
@@ -60,8 +58,8 @@ int init(lua_State *L)
     if (p.load(path.c_str(), &error))
     {
         int usemsdp = 0;
-        p.get(L"usemsdp/value", &usemsdp);
-        m_props.use_msdp = (usemsdp == 1) ? true : false;
+        //p.get(L"usemsdp/value", &usemsdp);
+        m_props.use_msdp = 1; // (usemsdp == 1) ? true : false;
         int width = 0;
         p.get(L"zoneslist/width", &width);
         m_props.zoneslist_width = (width > 0) ? width : -1;
@@ -73,9 +71,8 @@ int init(lua_State *L)
 	}
     p.deletenode();
 
-    path.clear();
+    /*path.clear();
     base::getPath(L, L"config.xml", &path);
-
 	error.clear();
 
     xml::node ld;
@@ -116,6 +113,11 @@ int init(lua_State *L)
 			base::log(L, error.c_str());
     }
     ld.deletenode();
+    */
+
+    // turn on msdp
+
+
 
 	if (!m_parent_window.create(L, L"Карта", 400, 400))
 		return luaT_error(L, L"Не удалось создать окно для карты");
@@ -145,7 +147,7 @@ int release(lua_State *L)
     //todo! m_mapper_window->saveMaps();
 
     xml::node p(L"settings");
-    p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
+    //p.set(L"usemsdp/value", m_props.use_msdp ? 1 : 0);
     p.set(L"zoneslist/width", m_props.zoneslist_width);
 	p.set(L"lastzone/name", m_props.current_zone);
 
@@ -159,7 +161,7 @@ int release(lua_State *L)
     }
     p.deletenode();
 
-    xml::node s(L"mapper");
+    /*xml::node s(L"mapper");
     s.set(L"darkroom/label", m_props.dark_room);
     s.set(L"name/begin", m_props.begin_name);
     s.set(L"name/end", m_props.end_name);
@@ -195,7 +197,7 @@ int release(lua_State *L)
         error.append(path);
         base::log(L, error.c_str());
     }
-    s.deletenode();
+    s.deletenode();*/
     return 0;
 }
 
@@ -278,6 +280,90 @@ int gamecmd(lua_State *L)
     return 1;
 }
 
+void msdpstate(lua_State *L, bool state)
+{
+    luaT_Msdp m(L);
+    std::vector<std::wstring> reports1;
+    std::vector<std::wstring> reports2;
+    reports1.push_back(L"ROOM");
+    //reports2.push_back(L"MOVEMENT");
+    if (state)
+    {
+        m.report(reports1); //todo!
+        //m.report(reports2);
+    }
+    else
+    {
+        m.unreport(reports1);
+        //m.unreport(reports2);
+    }
+}
+
+int msdpon(lua_State *L)
+{
+    msdpstate(L, true);
+    return 0;
+}
+
+int msdpoff(lua_State *L)
+{
+    msdpstate(L, false);
+    return 0;
+}
+
+bool popString(lua_State *L, const char* name, tstring* val)
+{
+    lua_pushstring(L, name);
+    lua_gettable(L, -2);
+    val->assign(luaT_towstring(L, -1));
+    lua_pop(L, 1);
+    return (val->empty()) ? false : true;
+}
+
+int msdp(lua_State *L)
+{
+    RoomData rd;
+    bool inconsistent_data = true;
+    if (luaT_check(L, 1, LUA_TTABLE))
+    {
+        lua_pushstring(L, "ROOM");
+        lua_gettable(L, -2);
+        if (lua_istable(L, -1))
+        {
+            if (popString(L, "AREA", &rd.zonename) &&
+                popString(L, "VNUM", &rd.vnum) &&
+                popString(L, "NAME", &rd.name))
+            {
+                lua_pushstring(L, "EXITS");
+                lua_gettable(L, -2);
+                if (lua_istable(L, -1))
+                {
+                    lua_pushnil(L);
+                    while (lua_next(L, -2) != 0)        // key index = -2, value index = -1
+                    {
+                        tstring dir(luaT_towstring(L, -2));
+                        tstring vnum(luaT_towstring(L, -1));
+                        rd.exits[dir] = vnum;
+                        lua_pop(L, 1);
+                    }
+                    inconsistent_data = false;
+                }
+                lua_pop(L, 1);
+            }
+        }
+        lua_pop(L, 1);
+    }
+    if (!inconsistent_data)
+    {
+        m_mapper_window->processMsdp(rd);
+    }
+    else
+    {
+        assert(false);
+    }
+    return 0;
+}
+
 static const luaL_Reg mapper_methods[] = 
 {
     {"name", get_name},
@@ -287,8 +373,11 @@ static const luaL_Reg mapper_methods[] =
     {"release", release },
     {"menucmd", menucmd },
     {"closewindow", closewindow },
-    {"streamdata", stream },
-    {"gamecmd", gamecmd },
+    {"msdpon", msdpon },
+    {"msdpoff", msdpoff },
+    {"msdp", msdp },
+    //{"streamdata", stream },
+    //{"gamecmd", gamecmd },
     { NULL, NULL }
 };
 

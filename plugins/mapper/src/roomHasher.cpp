@@ -55,8 +55,8 @@ Rooms3dCubeHash::Rooms3dCubeHash(const Rooms3dCube* c)
 				const RoomData &rd = r->roomdata;
 				m.add(rd.name);
 				m.add(rd.vnum);
-				m.add(rd.exits);
-				m.add(rd.descr);
+				//m.add(rd.exits);
+				//m.add(rd.descr);
 				m.add(r->icon);
 				m.add(r->use_color);
 				m.add(r->color);

@@ -29,21 +29,20 @@ LISTS
 
 function testmsdp.msdpon()
   log("ON")
-  msdp.list("LISTS")
-  msdp.list("COMMANDS")
-  msdp.list("REPORTABLE_VARIABLES")
-  msdp.list("CONFIGURABLE_VARIABLES")
-
+-- msdp.list("LISTS")
+-- msdp.list("COMMANDS")
+-- msdp.list("REPORTABLE_VARIABLES")
+-- msdp.list("CONFIGURABLE_VARIABLES")
   msdp.report('ROOM')
-  --msdp.report('ROOM_VNUM')
-  --msdp.report('ROOM_NAME')
   msdp.report('MOVEMENT')
+--   msdp.report{'ROOM', 'MOVEMENT'}
 end
 
 function testmsdp.msdpoff()
   log("OFF")
   msdp.unreport("ROOM")
   msdp.unreport("MOVEMENT")
+--  msdp.unreport{'ROOM', 'MOVEMENT'}
 end
 
 local function dump_table(level,t)

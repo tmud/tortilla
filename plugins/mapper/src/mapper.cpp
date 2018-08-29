@@ -61,7 +61,7 @@ void Mapper::processNetworkData(const tchar* text, int text_len)
 	popDir();
     DEBUGOUT(room.name);
     DEBUGOUT(room.vnum);
-    DEBUGOUT(room.exits);
+    //DEBUGOUT(room.exits);
 	DEBUGOUT2(L"move: ", RoomDirHelper().getDirName(m_lastDir));
     
 
@@ -121,6 +121,11 @@ void Mapper::processCmd(const tstring& cmd)
 #endif
 }
 
+void Mapper::processMsdp(const RoomData& rd)
+{
+
+}
+
 void Mapper::popDir()
 {
 	if (m_path.empty())
@@ -149,7 +154,7 @@ void Mapper::updateZonesList()
 
 void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
 {
-    const tstring& e = room->roomdata.exits; 
+    /*const tstring& e = room->roomdata.exits; 
     if (e.find(exit) != -1) 
     {
         room->dirs[dir].exist = true;
@@ -158,7 +163,7 @@ void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
         door.append(L")");
         if (e.find(door) != -1)
             room->dirs[dir].door = true;
-    }
+    }*/
 }
 
 void Mapper::setExits(Room *room)
