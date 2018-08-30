@@ -28,6 +28,7 @@
     <ClInclude Include="..\libs\common\pcreHelper.h" />
     <ClInclude Include="api.h" />
     <ClInclude Include="base.h" />
+    <ClInclude Include="shared.h" />
     <ClInclude Include="src\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
