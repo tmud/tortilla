@@ -52,9 +52,7 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
 private:
     void onStart();
     void onClose();
-    void onNewProfile();
-    void onLoadProfile();
-    void onNewWorld();
+    void onSelectProfile();
     void loadPlugins();
     void unloadPlugins();
 
@@ -388,9 +386,7 @@ private:
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnWheel)
-        COMMAND_ID_HANDLER(ID_NEWPROFILE, OnNewProfile)
-        COMMAND_ID_HANDLER(ID_LOADPROFILE, OnLoadProfile)
-        COMMAND_ID_HANDLER(ID_NEWWORLD, OnNewWorld)
+        COMMAND_ID_HANDLER(ID_SELECTPROFILE, OnSelectProfile)
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
         COMMAND_ID_HANDLER(ID_MODE, OnMode)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
@@ -861,21 +857,9 @@ private:
         m_hSplitter.MoveWindow(&pos);
     }
 
-    LRESULT OnNewProfile(WORD, WORD, HWND, BOOL&)
+    LRESULT OnSelectProfile(WORD, WORD, HWND, BOOL&)
     {
-        onNewProfile();
-        return 0;
-    }
-
-    LRESULT OnLoadProfile(WORD, WORD, HWND, BOOL&)
-    {
-        onLoadProfile();
-        return 0;
-    }
-
-    LRESULT OnNewWorld(WORD, WORD, HWND, BOOL&)
-    {
-        onNewWorld();
+        onSelectProfile();
         return 0;
     }
 

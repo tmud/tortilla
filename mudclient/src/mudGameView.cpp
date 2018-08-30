@@ -65,13 +65,14 @@ void MudGameView::onClose()
     m_manager.saveProfile();
 }
 
-void MudGameView::onNewProfile()
+void MudGameView::onSelectProfile()
 {
-    NewProfileDlg dlg;
-    dlg.loadProfiles(m_manager.getProfileGroup());
-    if (dlg.DoModal() == IDOK)
+    SelectProfileDlg dlg;
+    //dlg.loadProfiles(m_manager.getProfileGroup());
+    if (dlg.DoModal() != IDOK)
+        return;
     {
-        CopyProfileData data;
+      /*  CopyProfileData data;
         dlg.getProfile(&data);
 
         unloadPlugins();
@@ -107,7 +108,7 @@ void MudGameView::onNewProfile()
         updateProps();
         loadClientWindowPos();
         loadPlugins();
-        m_bar.reset();
+        m_bar.reset();*/
     }
 }
 
@@ -152,7 +153,7 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
     m_bar.reset();
 }
 
-void MudGameView::onLoadProfile()
+/*void MudGameView::onLoadProfile()
 {
     LoadProfileDlg dlg;
     if (dlg.DoModal() == IDOK)
@@ -256,7 +257,7 @@ void MudGameView::onNewWorld()
         loadPlugins();
         m_bar.reset();
     }
-}
+}*/
 
 void MudGameView::loadPlugins()
 {

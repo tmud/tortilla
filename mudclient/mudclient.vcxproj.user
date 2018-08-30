@@ -13,4 +13,7 @@
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
   </PropertyGroup>
+  <PropertyGroup>
+    <RESOURCE_FILE>res\mudclient.rc</RESOURCE_FILE>
+  </PropertyGroup>
 </Project>

@@ -24,9 +24,7 @@
 #define IDS_ERROR_SCRIPTENGINE_FAILED   206
 #define IDD_PROPERTY_COLORS_FONT        207
 #define IDS_ERROR_MODULES               207
-#define IDD_LOAD_PROFILE                208
 #define IDS_ERROR_LOADPROFILE_FAILED    208
-#define IDD_NEW_PROFILE                 209
 #define IDS_ERROR_LASTLOAD_FAILED       209
 #define IDD_PROPERTY_COMMON             210
 #define IDD_PROPERTY_GROUPS             211
@@ -34,12 +32,12 @@
 #define IDD_PROPERTY_TABWORDS           213
 #define IDD_PROPERTY_TIMERS             214
 #define IDD_PLUGINS                     215
-#define IDD_NEW_WORLD                   218
 #define IDD_PASSWORD                    221
 #define IDD_STARTUP_WORLD               222
 #define IDD_FIND                        223
 #define IDD_MODE                        224
 #define IDD_PROPERTY_VARS               225
+#define IDD_PROFILES                    226
 #define IDC_BUTTON_PROP_COLORS          1000
 #define IDC_BUTTON_PROP_ALIASES         1001
 #define IDC_STATIC_EDIT                 1001
@@ -77,8 +75,6 @@
 #define IDC_BUTTON_COLOR_RESET          1048
 #define IDC_LIST_PROFILE_GROUP          1049
 #define IDC_LIST_PROFILE                1050
-#define IDC_LIST_PROFILE_NEW            1051
-#define IDC_EDIT_PROFILE_NEW            1052
 #define IDC_CHECK_HIGHLIGHTS_UNDERLINE  1060
 #define IDC_CHECK_HIGHLIGHTS_FLASH      1061
 #define IDC_STATIC_TEXTCOLOR            1063
@@ -112,7 +108,9 @@
 #define IDC_EDIT_PLUGINSLOGS            1119
 #define IDC_EDIT_NEWWORLD_NAME          1120
 #define IDC_CHECK_DISABLE_OSC           1120
+#define IDC_EDIT_NEWPROFILE_GROUP       1120
 #define IDC_EDIT_NEWWORLD_PROFILE       1121
+#define IDC_EDIT_NEWPROFILE_NAME        1121
 #define IDC_COMBO_CODEPAGE              1122
 #define IDC_COMBO_LOGFORMAT             1123
 #define IDC_RADIO_PROMT_GA              1124
@@ -144,6 +142,9 @@
 #define IDC_CHECK_C_HOTKEYS             1153
 #define IDC_CHECK_C_ANTISUBS            1154
 #define IDC_BUTTON_RESETDISPLAYS        1155
+#define IDC_CHECK_CREATE_NEW_PROFILE    1156
+#define IDC_CHECK_CREATE_EMPTY_PROFILE  1157
+#define IDC_COMBO_GROUPS                1158
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -153,22 +154,20 @@
 #define ID_WINDOW_6                     32782
 #define ID_VIEW_FIND                    32783
 #define ID_PLUGINS                      32791
-#define ID_NEWPROFILE                   32794
-#define ID_LOADPROFILE                  32795
 #define ID_MUDCLIENT_EXIT               32796
 #define ID_MUDCLIENT_ABOUT              32797
 #define ID_MUDCLIENT_HELP               32798
-#define ID_NEWWORLD                     32799
 #define ID_CHECK_UPDATES                32800
 #define ID_MODE                         32801
+#define ID_SELECTPROFILE                32802
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        226
-#define _APS_NEXT_COMMAND_VALUE         32802
-#define _APS_NEXT_CONTROL_VALUE         1156
+#define _APS_NEXT_RESOURCE_VALUE        228
+#define _APS_NEXT_COMMAND_VALUE         32803
+#define _APS_NEXT_CONTROL_VALUE         1158
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
