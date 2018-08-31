@@ -145,11 +145,11 @@ private:
     }
 };*/
 
-struct CopyProfileData
+struct ProfileData
 {
-    CopyProfileData() : create_link(false) {}
-    Profile dst;
+    ProfileData() : create_link(false) {}
     Profile src;
+    Profile dst;    
     bool create_link;
 };
 
@@ -365,27 +365,26 @@ private:
 
 class SelectProfileDlg : public CDialogImpl<SelectProfileDlg>
 {
-    CComboBox m_groups_list;
-    CListBox m_profiles_list;
     std::vector<tstring> m_templates;
-
     ProfilesList m_plist;
+    ProfileData m_state;
+
+    CComboBox m_groups_list;
+    CListBox m_profiles_list;   
     CButton m_ok;
-
     CButton m_create_link;
-
     CButton m_create_new;
     CButton m_create_empty;
     CEdit m_group_name;
     CEdit m_profile_name;
+    CStatic m_label_group_name;
+    CStatic m_label_profile_name;
     
-
-    CopyProfileData m_state;
 public:
    SelectProfileDlg() {}
    enum { IDD = IDD_PROFILES };
 
-   const CopyProfileData& getProfile() const
+   const ProfileData& getProfile() const
    {
        return m_state;
        /*profile->src.group = m_group;
@@ -420,6 +419,8 @@ private:
         m_create_empty.Attach(GetDlgItem(IDC_CHECK_CREATE_EMPTY_PROFILE));
         m_group_name.Attach(GetDlgItem(IDC_EDIT_NEWPROFILE_GROUP));
         m_profile_name.Attach(GetDlgItem(IDC_EDIT_NEWPROFILE_NAME));
+        m_label_group_name.Attach(GetDlgItem(IDC_STATIC_GROUP_NAME));
+        m_label_profile_name.Attach(GetDlgItem(IDC_STATIC_PROFILE_NAME));
 
         std::vector<tstring> m_groups; // todo!
         ProfilesGroupList groups;
@@ -457,9 +458,12 @@ private:
 
     void SetNewProfileGroupStatus(BOOL status)
     {
-        m_create_empty.EnableWindow(status);
-        m_group_name.EnableWindow(status);
-        m_profile_name.EnableWindow(status);
+        int cmdShow = (status) ? SW_SHOW : SW_HIDE;
+        m_create_empty.ShowWindow(cmdShow);
+        m_group_name.ShowWindow(cmdShow);
+        m_profile_name.ShowWindow(cmdShow);
+        m_label_group_name.ShowWindow(cmdShow);
+        m_label_profile_name.ShowWindow(cmdShow);
     }
 
     LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)

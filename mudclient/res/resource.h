@@ -145,6 +145,9 @@
 #define IDC_CHECK_CREATE_NEW_PROFILE    1156
 #define IDC_CHECK_CREATE_EMPTY_PROFILE  1157
 #define IDC_COMBO_GROUPS                1158
+#define IDC_STATIC_GROUPNAME            1159
+#define IDC_STATIC_GROUP_NAME           1159
+#define IDC_STATIC_PROFILE_NAME         1160
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -167,7 +170,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        228
 #define _APS_NEXT_COMMAND_VALUE         32803
-#define _APS_NEXT_CONTROL_VALUE         1158
+#define _APS_NEXT_CONTROL_VALUE         1161
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -384,8 +384,8 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,15,163,9
     EDITTEXT        IDC_EDIT_NEWPROFILE_GROUP,254,64,82,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_NEWPROFILE_NAME,254,79,82,12,ES_AUTOHSCROLL
-    LTEXT           "Название мира:",IDC_STATIC,141,67,54,8
-    LTEXT           "Название профиля персонажа:",IDC_STATIC,141,82,107,8
+    LTEXT           "Название мира:",IDC_STATIC_GROUP_NAME,141,67,54,8
+    LTEXT           "Название профиля персонажа:",IDC_STATIC_PROFILE_NAME,141,82,107,8
     COMBOBOX        IDC_COMBO_GROUPS,7,14,126,94,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Создать пустой профиль",IDC_CHECK_CREATE_EMPTY_PROFILE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,141,53,99,8
