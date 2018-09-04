@@ -370,7 +370,7 @@ class SelectProfileDlg : public CDialogImpl<SelectProfileDlg>
     ProfileData m_state;
 
     CComboBox m_groups_list;
-    CListBox m_profiles_list;   
+    CListBox m_profiles_list;
     CButton m_ok;
     CButton m_create_link;
     CButton m_create_new;
@@ -400,6 +400,7 @@ private:
         //COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
         //COMMAND_HANDLER(IDC_EDIT_PROFILE_NEW, EN_CHANGE, OnNameChanged)
+        NOTIFY_HANDLER(IDC_COMBO_GROUPS, LVN_ITEMCHANGED, OnGroupItemChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
@@ -445,11 +446,9 @@ private:
                     m_groups_list.AddString(t.c_str());
                 }
             }
-            //updateProfilesList();
-        
+            updateProfilesList();
         }
         SetNewProfileGroupStatus(FALSE);
-
         CenterWindow(GetParent());
         m_ok.EnableWindow(FALSE);
         SetFocus();
@@ -458,14 +457,24 @@ private:
 
     void SetNewProfileGroupStatus(BOOL status)
     {
-        int cmdShow = (status) ? SW_SHOW : SW_HIDE;
+        /*int cmdShow = (status) ? SW_SHOW : SW_HIDE;
         m_create_empty.ShowWindow(cmdShow);
         m_group_name.ShowWindow(cmdShow);
         m_profile_name.ShowWindow(cmdShow);
         m_label_group_name.ShowWindow(cmdShow);
-        m_label_profile_name.ShowWindow(cmdShow);
+        m_label_profile_name.ShowWindow(cmdShow);*/
+        m_create_empty.EnableWindow(status);
+        m_group_name.EnableWindow(status);
+        m_profile_name.EnableWindow(status);
+        m_label_group_name.EnableWindow(status);
+        m_label_profile_name.EnableWindow(status);
     }
+    LRESULT OnGroupItemChanged(int, LPNMHDR, BOOL&)
+    {
+        return 0;
 
+
+    }
     LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
     {
         /*tstring text;
@@ -519,6 +528,22 @@ private:
                 m_templates.push_back(d);
             }
         }
+    }
+
+    void updateProfilesList()
+    {
+        m_profiles_list.ResetContent();
+        int sel = m_groups_list.GetCurSel();
+        if (sel == -1)
+            return;        
+        int len = m_groups_list.GetLBTextLen(sel);
+        tchar *buffer = new tchar[len + 1];
+        m_groups_list.GetLBText(sel, buffer);
+        tstring gname(buffer);
+        delete[]buffer;
+        ProfilesList plist(gname);
+        for (int i = 0, e = plist.profiles.size(); i < e; ++i)
+            m_profiles_list.AddString(plist.profiles[i].c_str());
     }
 };
 
