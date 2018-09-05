@@ -67,10 +67,13 @@ void MudGameView::onClose()
 
 void MudGameView::onSelectProfile()
 {
-    SelectProfileDlg dlg;
-    //dlg.loadProfiles(m_manager.getProfileGroup());
+    Profile current(m_manager.getProfile());
+    SelectProfileDlg dlg(current);
     if (dlg.DoModal() != IDOK)
         return;
+
+
+
     {
       /*  CopyProfileData data;
         dlg.getProfile(&data);

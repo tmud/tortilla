@@ -73,7 +73,6 @@
 #define IDC_BUTTON_FONT                 1046
 #define IDC_BUTTON_BKGND_COLOR          1047
 #define IDC_BUTTON_COLOR_RESET          1048
-#define IDC_LIST_PROFILE_GROUP          1049
 #define IDC_LIST_PROFILE                1050
 #define IDC_CHECK_HIGHLIGHTS_UNDERLINE  1060
 #define IDC_CHECK_HIGHLIGHTS_FLASH      1061
@@ -106,10 +105,8 @@
 #define IDC_BUTTON_PLUGINDOWN           1117
 #define IDC_CHECK_PLUGINSLOGS           1118
 #define IDC_EDIT_PLUGINSLOGS            1119
-#define IDC_EDIT_NEWWORLD_NAME          1120
 #define IDC_CHECK_DISABLE_OSC           1120
 #define IDC_EDIT_NEWPROFILE_GROUP       1120
-#define IDC_EDIT_NEWWORLD_PROFILE       1121
 #define IDC_EDIT_NEWPROFILE_NAME        1121
 #define IDC_COMBO_CODEPAGE              1122
 #define IDC_COMBO_LOGFORMAT             1123
