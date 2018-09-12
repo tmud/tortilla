@@ -132,7 +132,7 @@ public:
         {
             // Ctrl+F - search mode
             PropertiesWindow* main_window = m_propData->displays.main_window();
-            if (main_window->visible && m_find_dlg.focused()) { hideFindView(); }
+            if (main_window->visible && m_find_dlg.focused()) { hideFindView(); saveFindWindowPos();  }
             else { showFindView(true); }
             return TRUE;
         }
@@ -945,25 +945,21 @@ private:
 
     void hideFindView()
     {
-        PropertiesWindow *find_window = m_propData->displays.find_window();
-        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
-        find_window->pos = ctx->rcWindow;
-        find_window->visible = false;
-        m_dock.HideWindow(m_find_dlg);
-        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)
             m_history.clearFind();
         else if (m_last_find_view > 0) {
-            MudView *v = m_views[m_last_find_view-1];
+            MudView *v = m_views[m_last_find_view - 1];
             v->clearFind();
         }
         m_last_find_view = -1;
+        m_dock.HideWindow(m_find_dlg);
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
     }
 
     LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
     {
         PropertiesWindow *find_window = m_propData->displays.find_window();
-        if (find_window->visible) { hideFindView(); }
+        if (find_window->visible) { hideFindView(); saveFindWindowPos();  }
         else { showFindView(true); }
         return 0;
     }
@@ -974,6 +970,7 @@ private:
         if (wnd == m_find_dlg)
         {
             hideFindView();
+            saveFindWindowPos();
             return 0;
         }
         for (int i = 0, e = m_plugins_views.size(); i < e; ++i)
