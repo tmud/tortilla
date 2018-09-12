@@ -144,37 +144,6 @@ BEGIN
     LTEXT           "colors window",IDC_STATIC_COLORS_WINDOW,0,19,258,216,WS_BORDER
 END
 
-IDD_LOAD_PROFILE DIALOGEX 0, 0, 303, 177
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Загрузить профиль"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LISTBOX         IDC_LIST_PROFILE_GROUP,7,18,144,129,LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    LISTBOX         IDC_LIST_PROFILE,153,18,143,130,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "Создать ярлык профиля на рабочем столе",IDC_CHECK_CREATELINK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,151,163,9
-    DEFPUSHBUTTON   "OK",IDOK,194,159,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,246,159,50,14
-    LTEXT           "Группа профилей(мир):",IDC_STATIC,7,8,81,8
-    LTEXT           "Профиль(персонаж):",IDC_STATIC,157,8,71,8
-END
-
-IDD_NEW_PROFILE DIALOGEX 0, 0, 253, 160
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Новый профиль"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LISTBOX         IDC_LIST_PROFILE_NEW,7,29,239,79,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_EDIT_PROFILE_NEW,103,114,143,12,ES_AUTOHSCROLL
-    CONTROL         "Создать ярлык профиля на рабочем столе",IDC_CHECK_CREATELINK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,131,163,9
-    DEFPUSHBUTTON   "OK",IDOK,144,143,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,196,143,50,14
-    LTEXT           "Откуда скопировать настройки ?",IDC_STATIC,7,7,115,8
-    LTEXT           "Название нового профиля:",IDC_STATIC,7,116,94,8
-    LTEXT           "Список профилей (персонажи):",IDC_STATIC,7,19,141,8
-END
-
 IDD_PROPERTY_COMMON DIALOGEX 0, 0, 340, 235
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_SYSMENU
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
@@ -314,26 +283,6 @@ BEGIN
     PUSHBUTTON      "+Приоритет (^)",IDC_BUTTON_PLUGINUP,7,192,61,14
 END
 
-IDD_NEW_WORLD DIALOGEX 0, 0, 303, 209
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Новый мир"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
-BEGIN
-    LISTBOX         IDC_LIST_PROFILE_GROUP,7,29,143,112,LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    LISTBOX         IDC_LIST_PROFILE,153,29,143,112,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    EDITTEXT        IDC_EDIT_NEWWORLD_NAME,118,146,116,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_NEWWORLD_PROFILE,118,160,116,12,ES_AUTOHSCROLL
-    CONTROL         "Создать ярлык профиля на рабочем столе",IDC_CHECK_CREATELINK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,178,163,9
-    DEFPUSHBUTTON   "OK",IDOK,194,190,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,246,190,50,14
-    LTEXT           "Группа профилей (миры):",IDC_STATIC,7,18,108,8
-    LTEXT           "Профиль(персонаж):",IDC_STATIC,154,18,71,8
-    LTEXT           "Откуда скопировать настройки ?",IDC_STATIC,7,7,118,9
-    LTEXT           "Название нового мира:",IDC_STATIC,7,149,79,8
-    LTEXT           "Название профиля:",IDC_STATIC,7,162,73,8
-END
-
 IDD_PASSWORD DIALOGEX 0, 0, 228, 46
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Пароль"
@@ -354,7 +303,7 @@ BEGIN
     EDITTEXT        IDC_EDIT_STARTUP_PROFILE,70,131,107,12,ES_AUTOHSCROLL
     CONTROL         "Открыть cправку к клиенту",IDC_CHECK_OPEN_ABOUT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,151,107,11
     DEFPUSHBUTTON   "OK",IDOK,243,148,50,14
-    LTEXT           "Выберите профиль мада, в котором вы начнете игру:",IDC_STATIC,7,7,185,8
+    LTEXT           "Выберите мад, в котором вы начнете игру:",IDC_STATIC,7,7,185,8
     LTEXT           "Имя персонажа:",IDC_STATIC,8,133,56,8
     LTEXT           "Название папки:",IDC_STATIC,7,118,61,8
 END
@@ -388,7 +337,7 @@ BEGIN
     CONTROL         "Фильтры (gags)",IDC_CHECK_C_GAGS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,134,42,77,10
     DEFPUSHBUTTON   "OK",IDOK,200,93,50,14
     PUSHBUTTON      "Отмена",IDCANCEL,254,93,50,14
-    GROUPBOX        "Компоненты",IDC_STATIC,7,7,297,74
+    GROUPBOX        "Активные компоненты",IDC_STATIC,7,7,297,74
     PUSHBUTTON      "Сбросить настройки окон плагинов",IDC_BUTTON_RESETDISPLAYS,7,90,137,17
 END
 
@@ -417,6 +366,29 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,116,58,50,14
     LTEXT           "Editpos",IDC_STATIC_EDIT,7,7,254,49,0,WS_EX_STATICEDGE
+END
+
+IDD_PROFILES DIALOGEX 0, 0, 344, 126
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Выбор профиля игры"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    COMBOBOX        IDC_COMBO_GROUPS,7,14,104,94,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST_PROFILE,7,41,104,81,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Создать ярлык профиля на рабочем столе",IDC_CHECK_CREATELINK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,15,163,9
+    CONTROL         "Создать новый профиль",IDC_CHECK_CREATE_NEW_PROFILE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,52,99,8
+    CONTROL         "Скопировать в новый профиль выбранный",IDC_CHECK_COPY_CURRENT_PROFILE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,64,163,8
+    EDITTEXT        IDC_EDIT_NEWPROFILE_GROUP,237,75,99,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_NEWPROFILE_NAME,237,90,99,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,233,108,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,286,108,50,14
+    LTEXT           "Список миров:",IDC_STATIC,8,6,58,8
+    LTEXT           "Профили персонажей:",IDC_STATIC,7,32,84,8
+    LTEXT           "Название мира:",IDC_STATIC_GROUP_NAME,125,78,54,8
+    LTEXT           "Название профиля персонажа:",IDC_STATIC_PROFILE_NAME,125,93,107,8
 END
 
 
@@ -459,22 +431,6 @@ BEGIN
         BOTTOMMARGIN, 225
     END
 
-    IDD_LOAD_PROFILE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 296
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 173
-    END
-
-    IDD_NEW_PROFILE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 246
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 158
-    END
-
     IDD_PROPERTY_COMMON, DIALOG
     BEGIN
         TOPMARGIN, 2
@@ -509,14 +465,6 @@ BEGIN
         RIGHTMARGIN, 362
         TOPMARGIN, 7
         BOTTOMMARGIN, 206
-    END
-
-    IDD_NEW_WORLD, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 296
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 207
     END
 
     IDD_PASSWORD, DIALOG
@@ -562,6 +510,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 72
     END
+
+    IDD_PROFILES, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 336
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 122
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -575,9 +531,7 @@ IDR_MAINFRAME MENU
 BEGIN
     POPUP "Файл"
     BEGIN
-        MENUITEM "&Новый профиль...",           ID_NEWPROFILE
-        MENUITEM "&Загрузить профиль...",       ID_LOADPROFILE
-        MENUITEM "Новый мир...",                ID_NEWWORLD
+        MENUITEM "&Выбрать профиль игры...",    ID_SELECTPROFILE
         MENUITEM SEPARATOR
         MENUITEM "Н&астройки...\tShift+F12",    ID_SETTINGS
         MENUITEM "&Разработчикам...",           ID_MODE
@@ -605,7 +559,7 @@ BEGIN
     BEGIN
         MENUITEM "&Справка",                    ID_MUDCLIENT_HELP
         MENUITEM SEPARATOR
-        MENUITEM "С&айт мад-клиента...",        ID_CHECK_UPDATES
+        MENUITEM "&Перейти на сайт мад-клиента...", ID_CHECK_UPDATES
     END
 END
 
@@ -616,8 +570,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,5,0
- PRODUCTVERSION 1,0,5,0
+ FILEVERSION 1,0,6,0
+ PRODUCTVERSION 1,0,6,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -633,12 +587,12 @@ BEGIN
         BLOCK "080004b0"
         BEGIN
             VALUE "FileDescription", "Tortilla Mud Client"
-            VALUE "FileVersion", "1.0.5.0"
+            VALUE "FileVersion", "1.0.6.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.github.io"
             VALUE "OriginalFilename", "tortilla.exe"
             VALUE "ProductName", "Tortilla Mud Client"
-            VALUE "ProductVersion", "1.0.5.0"
+            VALUE "ProductVersion", "1.0.6.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -655,8 +609,7 @@ END
 
 IDR_MAINFRAME TOOLBAR 16, 16
 BEGIN
-    BUTTON      ID_NEWPROFILE
-    BUTTON      ID_LOADPROFILE
+    BUTTON      ID_SELECTPROFILE
     SEPARATOR
     BUTTON      ID_SETTINGS
     BUTTON      ID_PLUGINS
@@ -692,6 +645,16 @@ IDI_WARNINGMY           ICON                    "warn.ico"
 //
 
 IDD_MODE AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROFILES AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_STARTUP_WORLD AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
@@ -736,8 +699,6 @@ END
 STRINGTABLE
 BEGIN
     ID_PLUGINS              "\nПлагины"
-    ID_NEWPROFILE           "\nНовый профиль"
-    ID_LOADPROFILE          "\nЗагрузить профиль"
     ID_MUDCLIENT_HELP       "\nСправка"
 END
 
@@ -752,6 +713,7 @@ END
 STRINGTABLE
 BEGIN
     ID_MODE                 "\nРазработчикам"
+    ID_SELECTPROFILE        "\nВыбрать профиль игры"
 END
 
 STRINGTABLE

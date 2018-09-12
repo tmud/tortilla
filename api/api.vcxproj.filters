@@ -52,6 +52,9 @@
     <ClInclude Include="..\libs\common\pcreHelper.h">
       <Filter>External Common Libs</Filter>
     </ClInclude>
+    <ClInclude Include="shared.h">
+      <Filter>Main Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="api.def">

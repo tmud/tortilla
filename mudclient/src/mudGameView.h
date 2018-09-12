@@ -52,11 +52,13 @@ class MudGameView : public CWindowImpl<MudGameView>, public LogicProcessorHost, 
 private:
     void onStart();
     void onClose();
-    void onNewProfile();
-    void onLoadProfile();
-    void onNewWorld();
+    void onSelectProfile();
     void loadPlugins();
     void unloadPlugins();
+    bool loadProfile(const Profile& profile);
+    bool newProfile(const Profile& profile);
+    void createLink(const Profile& profile);
+    bool copyProfile(const Profile& profile, const Profile& src);
 
 public:
     DECLARE_WND_CLASS(NULL)
@@ -130,7 +132,7 @@ public:
         {
             // Ctrl+F - search mode
             PropertiesWindow* main_window = m_propData->displays.main_window();
-            if (main_window->visible && m_find_dlg.focused()) { hideFindView(); }
+            if (main_window->visible && m_find_dlg.focused()) { hideFindView(); saveFindWindowPos();  }
             else { showFindView(true); }
             return TRUE;
         }
@@ -388,9 +390,7 @@ private:
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_CLOSE, OnParentClose)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnWheel)
-        COMMAND_ID_HANDLER(ID_NEWPROFILE, OnNewProfile)
-        COMMAND_ID_HANDLER(ID_LOADPROFILE, OnLoadProfile)
-        COMMAND_ID_HANDLER(ID_NEWWORLD, OnNewWorld)
+        COMMAND_ID_HANDLER(ID_SELECTPROFILE, OnSelectProfile)
         COMMAND_ID_HANDLER(ID_SETTINGS, OnSettings)
         COMMAND_ID_HANDLER(ID_MODE, OnMode)
         COMMAND_RANGE_HANDLER(ID_WINDOW_1, ID_WINDOW_6, OnShowWindow)
@@ -861,21 +861,9 @@ private:
         m_hSplitter.MoveWindow(&pos);
     }
 
-    LRESULT OnNewProfile(WORD, WORD, HWND, BOOL&)
+    LRESULT OnSelectProfile(WORD, WORD, HWND, BOOL&)
     {
-        onNewProfile();
-        return 0;
-    }
-
-    LRESULT OnLoadProfile(WORD, WORD, HWND, BOOL&)
-    {
-        onLoadProfile();
-        return 0;
-    }
-
-    LRESULT OnNewWorld(WORD, WORD, HWND, BOOL&)
-    {
-        onNewWorld();
+        onSelectProfile();
         return 0;
     }
 
@@ -957,25 +945,21 @@ private:
 
     void hideFindView()
     {
-        PropertiesWindow *find_window = m_propData->displays.find_window();
-        DOCKCONTEXT *ctx = m_dock._GetContext(m_find_dlg);
-        find_window->pos = ctx->rcWindow;
-        find_window->visible = false;
-        m_dock.HideWindow(m_find_dlg);
-        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
         if (m_last_find_view == 0)
             m_history.clearFind();
         else if (m_last_find_view > 0) {
-            MudView *v = m_views[m_last_find_view-1];
+            MudView *v = m_views[m_last_find_view - 1];
             v->clearFind();
         }
         m_last_find_view = -1;
+        m_dock.HideWindow(m_find_dlg);
+        m_parent.SendMessage(WM_USER, ID_VIEW_FIND, 0);
     }
 
     LRESULT OnViewFind(WORD, WORD, HWND, BOOL&)
     {
         PropertiesWindow *find_window = m_propData->displays.find_window();
-        if (find_window->visible) { hideFindView(); }
+        if (find_window->visible) { hideFindView(); saveFindWindowPos();  }
         else { showFindView(true); }
         return 0;
     }
@@ -986,6 +970,7 @@ private:
         if (wnd == m_find_dlg)
         {
             hideFindView();
+            saveFindWindowPos();
             return 0;
         }
         for (int i = 0, e = m_plugins_views.size(); i < e; ++i)

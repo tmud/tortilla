@@ -2,452 +2,266 @@
 #include "profileHelpers.h"
 #include "profilesPath.h"
 
-class LoadProfileDlg : public CDialogImpl<LoadProfileDlg>
+struct ProfileData
 {
-   CListBox m_groups_list;
-   CListBox m_list;
-   std::vector<tstring> m_groups_name;
-   CButton m_ok;
-   int m_group_idx;
-   tstring m_profile_group;
-   tstring m_profile_name;
-   CButton m_create_link;
-   bool m_create_link_state;
-
-public:
-   enum { IDD = IDD_LOAD_PROFILE };
-   LoadProfileDlg() : m_group_idx(-1), m_create_link_state(false) {}
-
-   void getProfile(Profile *profile, bool* create_link)
-   {
-       profile->group.assign(m_profile_group);
-       profile->name.assign(m_profile_name);
-       *create_link = m_create_link_state;
-   }
-
-private:
-    BEGIN_MSG_MAP(LoadProfileDlg)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        COMMAND_ID_HANDLER(IDOK, OnOk)
-        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
-        COMMAND_HANDLER(IDC_LIST_PROFILE_GROUP, LBN_SELCHANGE, OnGroupChanged)
-        COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_SELCHANGE, OnProfileChanged)
-        COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_DBLCLK, OnProfileDblClick)
-    END_MSG_MAP()
-
-    LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
-	{
-        m_groups_list.Attach(GetDlgItem(IDC_LIST_PROFILE_GROUP));
-        m_list.Attach(GetDlgItem(IDC_LIST_PROFILE));
-        m_ok.Attach(GetDlgItem(IDOK));
-        m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
-
-        ProfilesGroupList groups;
-        groups.init();
-        {
-            for (int i=0,e=groups.getCount(); i<e; ++i)
-            {
-                tstring gname;
-                groups.getName(i, &gname);
-                ProfilesList plist(gname);
-                if (plist.profiles.empty())
-                    continue;
-                m_groups_name.push_back(gname);
-                m_groups_list.AddString(gname.c_str());
-            }
-
-            int last = groups.getLast();
-            m_groups_list.SetCurSel(last);
-            m_group_idx = last;
-            updateProfilesList();
-        }
-        CenterWindow(GetParent());
-        m_ok.EnableWindow(FALSE);
-        m_groups_list.SetFocus();
-        return 0;
-    }
-
-    LRESULT OnOk(WORD, WORD, HWND, BOOL&)
-	{
-        int idx = m_groups_list.GetCurSel();
-        int len = m_groups_list.GetTextLen(idx) + 1;
-        MemoryBuffer g(len * sizeof(WCHAR));
-        WCHAR *buffer = (WCHAR*)g.getData();
-        m_groups_list.GetText(idx, buffer);
-        m_profile_group.assign(buffer);
-
-        idx = m_list.GetCurSel();
-        if (idx != -1)
-        {
-            len = m_list.GetTextLen(idx) + 1;
-            g.alloc(len * sizeof(WCHAR));
-            buffer = (WCHAR*)g.getData();
-            m_list.GetText(idx, buffer);
-            m_profile_name.assign(buffer);
-        }
-        else
-        {
-            return 0;
-        }
-        m_create_link_state = (m_create_link.GetCheck() == BST_CHECKED);
-        EndDialog(IDOK);
-		return 0;
-	}
-
-    LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
-	{
-		EndDialog(wID);
-		return 0;
-	}
-
-    LRESULT OnGroupChanged(WORD, WORD, HWND, BOOL&)
-    {
-        int idx = m_groups_list.GetCurSel();
-        if (idx != m_group_idx)
-        {
-            m_ok.EnableWindow(FALSE);
-            m_group_idx = idx;
-            updateProfilesList();
-        }
-        return 0;
-    }
-
-    LRESULT OnProfileChanged(WORD, WORD, HWND, BOOL&)
-    {
-        m_ok.EnableWindow(TRUE);
-        return 0;
-    }
-
-    LRESULT OnProfileDblClick(WORD, WORD, HWND, BOOL&)
-    {
-        BOOL outside = FALSE;
-        POINT pt; GetCursorPos(&pt);
-        m_list.ScreenToClient(&pt);
-        UINT item = m_list.ItemFromPoint(pt, outside);
-        if (!outside)
-            OnOk(0, 0, 0, outside);
-        return 0;
-    }
-
-    void updateProfilesList()
-    {
-        m_list.ResetContent();
-        int sel = m_groups_list.GetCurSel();
-        if (sel == -1)
-            return;
-
-        tstring gname = m_groups_name[sel];
-        ProfilesList plist(gname);
-        for (int i=0,e=plist.profiles.size(); i<e; ++i)
-            m_list.AddString(plist.profiles[i].c_str());
-    }
-};
-
-struct CopyProfileData
-{
-    CopyProfileData() : create_link(false) {}
-    Profile dst;
+    ProfileData() : create_link(false), create_new(false), copy_from_src(false) {}
+    Profile profile;
     Profile src;
     bool create_link;
+    bool create_new;
+    bool copy_from_src;
 };
 
-class NewWorldDlg : public CDialogImpl<NewWorldDlg>
+class SelectProfileDlg : public CDialogImpl<SelectProfileDlg>
 {
-    CListBox m_groups_list;
-    CListBox m_list;
-    CEdit m_newworld_name;
-    CEdit m_newworld_profile;
+    Profile m_current;
+    ProfilesList m_plist;
+    ProfileData m_state;
+
+    CComboBox m_groups_list;
+    CListBox m_profiles_list;
     CButton m_ok;
-    std::vector<tstring> m_groups_name;
-    int m_group_idx;
-    CopyProfileData m_data;
-    std::vector<tstring> m_templates;
-    bool m_group_name_changed;
     CButton m_create_link;
+    CButton m_create_new;
+    CButton m_copy_current;
+    CEdit m_group_name;
+    CEdit m_profile_name;
+    CStatic m_label_group_name;
+    CStatic m_label_profile_name;
+    bool m_create_new_manually;
+    std::vector<tstring> m_groups;
+    std::vector<tstring> m_profiles;
+    bool m_update_edits_mode;
 public:
-    enum { IDD = IDD_NEW_WORLD };
-    NewWorldDlg() : m_group_idx(-1), m_group_name_changed(false)
-    {
-        readTemplates();
-    }
-    void getData(CopyProfileData* data)
-    {
-        *data = m_data;
-    }
+   SelectProfileDlg(const Profile& current) : m_current(current), m_create_new_manually(false),
+       m_update_edits_mode(false) {}
+   enum { IDD = IDD_PROFILES };
+   const ProfileData& getProfile() const
+   {
+       return m_state;
+   }
 private:
-    BEGIN_MSG_MAP(NewWorldDlg)
+    BEGIN_MSG_MAP(SelectProfileDlg)
         MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
         COMMAND_ID_HANDLER(IDOK, OnOk)
-        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
-        COMMAND_HANDLER(IDC_LIST_PROFILE_GROUP, LBN_SELCHANGE, OnGroupChanged)
-        COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_SELCHANGE, OnProfileChanged)
-        COMMAND_HANDLER(IDC_EDIT_NEWWORLD_NAME, EN_CHANGE, OnNameChanged)
-        COMMAND_HANDLER(IDC_EDIT_NEWWORLD_PROFILE, EN_CHANGE, OnProfileChanged)
+        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)        
+        COMMAND_ID_HANDLER(IDC_CHECK_CREATE_NEW_PROFILE, OnCheckNewProfile)
+        COMMAND_HANDLER(IDC_COMBO_GROUPS, CBN_SELCHANGE, OnGroupItemChanged)
+        COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_SELCHANGE, OnProfileItemChanged)
+        COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_DBLCLK, OnProfileItemSelect)
+        COMMAND_HANDLER(IDC_EDIT_NEWPROFILE_GROUP, EN_CHANGE, OnNameChanged)
+        COMMAND_HANDLER(IDC_EDIT_NEWPROFILE_NAME, EN_CHANGE, OnNameChanged)
     END_MSG_MAP()
 
     LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
-    {
-        m_groups_list.Attach(GetDlgItem(IDC_LIST_PROFILE_GROUP));
-        m_list.Attach(GetDlgItem(IDC_LIST_PROFILE));
-        m_newworld_name.Attach(GetDlgItem(IDC_EDIT_NEWWORLD_NAME));
-        m_newworld_profile.Attach(GetDlgItem(IDC_EDIT_NEWWORLD_PROFILE));
-        m_ok.Attach(GetDlgItem(IDOK));
-        m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
-
-        m_groups_list.AddString(L"Создать пустой мир и профиль");
-        m_groups_list.SetCurSel(0);
-        m_group_idx = 0;
-
-        ProfilesGroupList groups;
-        groups.init();
-        {
-            for (int i = 0, e = groups.getCount(); i<e; ++i)
-            {
-                tstring gname;
-                groups.getName(i, &gname);
-                ProfilesList plist(gname);
-                if (plist.profiles.empty())
-                    continue;
-                m_groups_name.push_back(gname);
-                m_groups_list.AddString(gname.c_str());
-            }
-            for (int i = 0, e = m_templates.size(); i<e; ++i)
-            {
-                const tstring& t = m_templates[i];
-                if (std::find(m_groups_name.begin(), m_groups_name.end(), t) == m_groups_name.end())
-                {
-                    m_groups_name.push_back(t);
-                    m_groups_list.AddString(t.c_str());
-                }
-            }
-            updateProfilesList();
-        }
-
-        CenterWindow(GetParent());
-        m_ok.EnableWindow(FALSE);
-        m_groups_list.SetFocus();
-        return 0;
-    }
-
-    LRESULT OnOk(WORD, WORD, HWND, BOOL&)
-    {
-        getWindowText(m_newworld_name, &m_data.dst.group);
-        getWindowText(m_newworld_profile, &m_data.dst.name);
-        int group = m_groups_list.GetCurSel();
-        if (group != 0)
-        {
-            int name_index = m_list.GetCurSel();
-            m_data.src.group = m_groups_name[group - 1];
-            const tstring &g  = m_data.src.group;
-            bool with_default = (std::find(m_templates.begin(), m_templates.end(), g) != m_templates.end()) ? true : false;
-            int idx = m_list.GetCurSel();
-            int len = m_list.GetTextLen(idx) + 1;
-            MemoryBuffer gn(len * sizeof(tchar));
-            tchar *buffer = (tchar*)gn.getData();
-            m_list.GetText(idx, buffer);
-            m_data.src.name = buffer;
-            if (with_default && idx == 0)
-            {
-                m_data.src.name.clear();
-            }
-        }
-        m_data.create_link = (m_create_link.GetCheck() == BST_CHECKED);        
-        EndDialog(IDOK);
-        return 0;
-    }
-
-    LRESULT OnCloseCmd(WORD, WORD wID, HWND, BOOL&)
-    {
-        EndDialog(wID);
-        return 0;
-    }
-
-    LRESULT OnGroupChanged(WORD, WORD, HWND, BOOL&)
-    {
-        if (!m_group_name_changed)
-        {
-            tstring group;
-            int sel = m_groups_list.GetCurSel();
-            if (sel != -1 && sel != 0)
-                m_newworld_name.SetWindowTextW(m_groups_name[sel-1].c_str());
-            else
-                m_newworld_name.SetWindowTextW(L"");
-            m_group_name_changed = false;
-        }
-
-        int idx = m_groups_list.GetCurSel();
-        if (idx != m_group_idx)
-        {
-            m_ok.EnableWindow(FALSE);
-            m_group_idx = idx;
-            updateProfilesList();
-        }
-        updateOK();
-        return 0;
-    }
-
-    LRESULT OnProfileChanged(WORD, WORD, HWND, BOOL&)
-    {
-        updateOK(); 
-        return 0;
-    }
-
-    LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
-    {
-        m_group_name_changed = true;
-        updateOK();
-        return 0;
-    }
-
-    void updateProfilesList()
-    {
-        m_list.ResetContent();
-        int sel = m_groups_list.GetCurSel();
-        if (sel == -1 || sel == 0)
-            return;
-        tstring gname = m_groups_name[sel-1];
-        if (std::find(m_templates.begin(), m_templates.end(), gname) != m_templates.end())
-            m_list.AddString(L"- по умолчанию -");
-        ProfilesList plist(gname);
-        for (int i = 0, e = plist.profiles.size(); i<e; ++i)
-        {
-            const tstring &p = plist.profiles[i];
-            m_list.AddString(p.c_str());
-        }
-    }
-
-    void updateOK()
-    {
-        BOOL ok_status = FALSE;
-        tstring name, profile;
-        getWindowText(m_newworld_name, &name);
-        getWindowText(m_newworld_profile, &profile);
-        if (!name.empty() && !profile.empty() && isOnlyFilnameSymbols(name) && isOnlyFilnameSymbols(profile))
-        {
-            bool confilcted_name = false;
-            /*for (int i = 0, e = m_profiles_name.size(); i < e; ++i)
-            {
-                if (m_profiles_name[i] == profile) { confilcted_name = true; break; }
-            }*/
-            if (!confilcted_name)
-            {
-                int group = m_groups_list.GetCurSel();
-                if (group == 0) ok_status = TRUE;
-                else
-                {
-                    int profile = m_list.GetCurSel();
-                    if (profile != -1) ok_status = TRUE;
-                }
-            }
-        }
-        m_ok.EnableWindow(ok_status);
-    }
-
-    void readTemplates()
-    {
+	{
+        std::vector<tstring> templates;
         ChangeDir cd;
         if (cd.changeDir(L"resources"))
         {
             ProfilesDirsListHelper ph(L"profiles");
-            for (int i=0,e=ph.dirs.size();i<e;++i)
+            for (int i = 0, e = ph.dirs.size(); i < e; ++i)
             {
                 const tstring& d = ph.dirs[i];
                 if (d == default_profile_folder) continue;
-                m_templates.push_back(d);
+                templates.push_back(d);
             }
         }
-    }
-};
-
-class NewProfileDlg : public CDialogImpl<NewProfileDlg>
-{
-    CListBox m_list;
-    CEdit m_name;
-    ProfilesList m_plist;
-    CButton m_ok;
-    tstring m_group;
-    tstring m_profile_source;
-    tstring m_profile_name;
-    CButton m_create_link;
-    bool m_create_link_state;
-
-public:
-   NewProfileDlg() : m_create_link_state(false) {}
-   enum { IDD = IDD_NEW_PROFILE };
-
-   void loadProfiles(const tstring& group)
-   {
-        m_group = group;
-        m_plist.init(group);
-   }
-
-   void getProfile(CopyProfileData *profile)
-   {
-       profile->src.group = m_group;
-       profile->src.name = m_profile_source;
-       profile->dst.group = m_group;
-       profile->dst.name = m_profile_name;
-       profile->create_link = m_create_link_state;
-   }
-
-private:
-    BEGIN_MSG_MAP(NewProfileDlg)
-        MESSAGE_HANDLER(WM_INITDIALOG, OnInitDialog)
-        COMMAND_ID_HANDLER(IDOK, OnOk)
-        COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)
-        COMMAND_HANDLER(IDC_EDIT_PROFILE_NEW, EN_CHANGE, OnNameChanged)
-    END_MSG_MAP()
-
-    LRESULT OnInitDialog(UINT, WPARAM, LPARAM, BOOL&)
-	{
-        m_list.Attach(GetDlgItem(IDC_LIST_PROFILE_NEW));
-        m_name.Attach(GetDlgItem(IDC_EDIT_PROFILE_NEW));
+        cd.restoreDir();
+        m_groups_list.Attach(GetDlgItem(IDC_COMBO_GROUPS));
+        m_profiles_list.Attach(GetDlgItem(IDC_LIST_PROFILE));
         m_ok.Attach(GetDlgItem(IDOK));
         m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
+        m_create_new.Attach(GetDlgItem(IDC_CHECK_CREATE_NEW_PROFILE));
+        m_copy_current.Attach(GetDlgItem(IDC_CHECK_COPY_CURRENT_PROFILE));
+        m_group_name.Attach(GetDlgItem(IDC_EDIT_NEWPROFILE_GROUP));
+        m_profile_name.Attach(GetDlgItem(IDC_EDIT_NEWPROFILE_NAME));
+        m_label_group_name.Attach(GetDlgItem(IDC_STATIC_GROUP_NAME));
+        m_label_profile_name.Attach(GetDlgItem(IDC_STATIC_PROFILE_NAME));
 
-        tstring text(L"Создать пустой профиль");
-        m_list.AddString(text.c_str());
-        m_list.SetCurSel(0);
-
-        for (int i=0,e=m_plist.profiles.size(); i<e; ++i)
-            m_list.AddString(m_plist.profiles[i].c_str());
-
+        std::vector<tstring> vgroups;
+        ProfilesGroupList groups;
+        groups.init();
+        {
+            int current_group = -1;
+            for (int i = 0, e = groups.getCount(); i < e; ++i)
+            {
+                tstring gname;
+                groups.getName(i, &gname);
+                ProfilesList plist(gname);
+                if (plist.profiles.empty())
+                    continue;
+                vgroups.push_back(gname);
+                m_groups_list.AddString(gname.c_str());
+                m_groups.push_back(gname);
+                if (gname == m_current.group)
+                    current_group = m_groups_list.GetCount() - 1;
+            }
+            for (int i = 0, e = templates.size(); i < e; ++i)
+            {
+                const tstring& t = templates[i];
+                if (std::find(vgroups.begin(), vgroups.end(), t) == vgroups.end())
+                {
+                    vgroups.push_back(t);
+                    m_groups_list.AddString(t.c_str());
+                    m_groups.push_back(t);
+                    if (t == m_current.group)
+                        current_group = m_groups_list.GetCount() - 1;
+                }
+            }
+            m_groups_list.SetCurSel(current_group);
+            updateProfilesList();            
+        }
+        SetNewProfileGroupStatus(FALSE);
+        updateOk();
         CenterWindow(GetParent());
-        m_ok.EnableWindow(FALSE);
-        m_list.SetFocus();
+        SetFocus();
+        return 0;
+    }
+
+    void SetGroupEdit(const tstring& group)
+    {
+        m_update_edits_mode = true;
+        m_group_name.SetWindowText(group.c_str());
+        m_update_edits_mode = false;
+    }
+
+    void SetProfileEdit(const tstring& profile)
+    {
+        m_update_edits_mode = true;
+        m_profile_name.SetWindowText(profile.c_str());
+        m_update_edits_mode = false;
+    }
+
+    void SetNewProfileGroupStatus(BOOL status)
+    {
+        if (!status)
+        {
+            SetGroupEdit(L"");
+            SetProfileEdit(L"");
+        }
+        m_group_name.EnableWindow(status);           
+        m_profile_name.EnableWindow(status);
+        m_label_group_name.EnableWindow(status);
+        m_label_profile_name.EnableWindow(status);
+    }
+
+    LRESULT OnCheckNewProfile(WORD, WORD, HWND, BOOL&)
+    {        
+        BOOL status = m_create_new.GetCheck() ? TRUE : FALSE;
+        SetNewProfileGroupStatus(status);
+        m_create_new_manually = (status) ? true : false;        
+        updateOk();
+        return 0;
+    }
+
+    LRESULT OnGroupItemChanged(WORD, WORD, HWND, BOOL&)
+    {
+        updateProfilesList();
+        updateOk();
+        return 0;
+    }
+
+    LRESULT OnProfileItemChanged(WORD, WORD, HWND, BOOL&)
+    {
+        updateOk();
+        return 0;
+    }
+
+    LRESULT OnProfileItemSelect(WORD, WORD, HWND, BOOL&)
+    {
+        bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
+        if (!newprofile && m_profiles_list.GetCurSel() != -1)
+        {
+            BOOL dummy = FALSE;
+            OnOk(0, 0, 0, dummy);
+        }
         return 0;
     }
 
     LRESULT OnNameChanged(WORD, WORD, HWND, BOOL&)
     {
-        tstring text;
-        getWindowText(m_name, &text);
-        BOOL enable_ok = FALSE;
-        if (!text.empty())
+        if (!m_update_edits_mode)
+            updateOk();
+        return 0;
+    }
+
+    void updateOk()
+    {
+        if (m_profiles_list.GetCount() == 0)
         {
-            enable_ok = TRUE;
-            for (int i=0,e=m_plist.profiles.size(); i<e; ++i)
+            m_create_new.SetCheck(BST_CHECKED);
+            SetNewProfileGroupStatus(TRUE);
+            updateGroupEdit();
+            if (m_profile_name.GetWindowTextLength() == 0)
+                SetProfileEdit(L"player");
+            updateCopyCurrent();
+            m_ok.EnableWindow(TRUE);            
+            return;
+        }
+        if (!m_create_new_manually)
+        {
+            m_create_new.SetCheck(BST_UNCHECKED);
+            SetNewProfileGroupStatus(FALSE);
+        }
+        updateCopyCurrent();
+        BOOL state = FALSE;
+        int item = m_profiles_list.GetCurSel();
+        bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
+        if (newprofile)
+            updateGroupEdit();
+        if (item == -1)
+        {
+            if (newprofile)
             {
-                if (m_plist.profiles[i] == text)
-                    { enable_ok = FALSE; break; }
-            }
-            if (enable_ok)
-            {
-                if (!isOnlyFilnameSymbols(text))
-                    enable_ok = FALSE;
+                if (m_group_name.GetWindowTextLength() > 0 &&
+                    m_profile_name.GetWindowTextLength() > 0)
+                {
+                    state = checkProfileEdit();
+                }
             }
         }
-        m_ok.EnableWindow(enable_ok);
-        return 0;
+        else
+        {
+            state = TRUE;
+            if (newprofile)
+            {
+                state = FALSE;
+                if (m_group_name.GetWindowTextLength() > 0 &&
+                    m_profile_name.GetWindowTextLength() > 0)
+                {
+                    state = checkProfileEdit();
+                }
+            }
+        }
+        m_ok.EnableWindow(state);
     }
 
     LRESULT OnOk(WORD, WORD, HWND, BOOL&)
     {
-        getWindowText(m_name, &m_profile_name);
-        int src_index = m_list.GetCurSel();
-        if (src_index != 0)
-            m_profile_source = m_plist.profiles[src_index-1];
-        m_create_link_state = (m_create_link.GetCheck() == BST_CHECKED);
+        m_state.create_link = (m_create_link.GetCheck() == TBSTATE_CHECKED);
+        m_state.src.name.clear();
+        m_state.src.group.clear();
+        m_state.copy_from_src = false;
+        m_state.create_new = false;
+        bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
+        if (!newprofile)
+        {
+            getCurrentGroup(&m_state.profile.group);
+            getCurrentProfile(&m_state.profile.name);
+        }
+        else
+        {
+            m_state.create_new = true;
+            m_state.copy_from_src = (m_copy_current.GetCheck() == TBSTATE_CHECKED);
+            getGroupEditText(&m_state.profile.group);
+            getProfileEditText(&m_state.profile.name);
+            if (m_state.copy_from_src)
+            {
+                getCurrentGroup(&m_state.src.group);
+                getCurrentProfile(&m_state.src.name);
+            }
+        }
         EndDialog(IDOK);
         return 0;
     }
@@ -457,6 +271,112 @@ private:
 		EndDialog(wID);
 		return 0;
 	}
+
+    void updateCopyCurrent()
+    {
+        bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
+        if (!newprofile)
+        {
+            m_copy_current.SetState(BST_UNCHECKED);
+            m_copy_current.EnableWindow(FALSE);
+            return;
+        }
+        BOOL state = FALSE;
+        int sel = m_profiles_list.GetCurSel();
+        if (sel != -1)
+            state = TRUE;
+        m_copy_current.EnableWindow(state);
+    }
+    
+    void updateProfilesList()
+    {
+        m_profiles_list.ResetContent();
+        m_profiles.clear();
+        tstring gname;
+        getCurrentGroup(&gname);
+        ProfilesList plist(gname);
+        for (int i = 0, e = plist.profiles.size(); i < e; ++i)
+        {
+            m_profiles_list.AddString(plist.profiles[i].c_str());
+            m_profiles.push_back(plist.profiles[i]);
+        }
+    }
+
+    void updateGroupEdit()
+    {
+        tstring gname_edit;
+        getGroupEditText(&gname_edit);
+        tstring gname;
+        getCurrentGroup(&gname);
+        if (std::find(m_groups.begin(), m_groups.end(), gname_edit) != m_groups.end())
+        {
+            SetGroupEdit(gname);
+            return;
+        }
+        if (gname_edit.empty())
+            SetGroupEdit(gname.c_str());
+    }
+
+    void getGroupEditText(tstring* group)
+    {
+        int len = m_group_name.GetWindowTextLength() + 1;
+        tchar *buffer = new tchar[len + 1];
+        m_group_name.GetWindowText(buffer, len);
+        group->assign(buffer);
+        delete[]buffer;
+    }
+
+    BOOL checkProfileEdit()
+    {
+        tstring profile_edit;
+        getProfileEditText(&profile_edit);
+        if (profile_edit.empty())
+            return FALSE;
+        if (std::find(m_profiles.begin(), m_profiles.end(), profile_edit) != m_profiles.end())
+        {
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    void getProfileEditText(tstring* profile)
+    {
+        int len = m_profile_name.GetWindowTextLength() + 1;
+        tchar *buffer = new tchar[len + 1];
+        m_profile_name.GetWindowText(buffer, len);
+        profile->assign(buffer);
+        delete[]buffer;
+    }
+
+    void getCurrentGroup(tstring *group)
+    {
+        assert(group);
+        int sel = m_groups_list.GetCurSel();
+        if (sel == -1) {
+            group->clear();
+            return;
+        }
+        int len = m_groups_list.GetLBTextLen(sel);
+        tchar *buffer = new tchar[len + 1];
+        m_groups_list.GetLBText(sel, buffer);
+        group->assign(buffer);
+        delete[]buffer;
+    }
+
+    void getCurrentProfile(tstring* profile)
+    {
+        assert(profile);
+        int sel = m_profiles_list.GetCurSel();
+        if (sel == -1) {
+            profile->clear();
+            return;
+        }
+        int len = m_profiles_list.GetTextLen(sel);
+        tchar *buffer = new tchar[len + 1];
+        m_profiles_list.GetText(sel, buffer);
+        profile->assign(buffer);
+        delete[]buffer;
+    }
 };
 
 class CStartupWorldDlg : public CDialogImpl<CStartupWorldDlg>

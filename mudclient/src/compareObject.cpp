@@ -18,7 +18,8 @@ private:
     CutRegexp& operator= (CutRegexp const&);
 };
 
-CompareObject::CompareObject() : m_pkey_helper(NULL), m_fullstr_req(true), m_std_regexp(false) {}
+CompareObject::CompareObject() : m_pkey_helper(NULL), m_fullstr_req(true), m_std_regexp(false), 
+m_first_symbol(0), m_second_symbol(0){}
 CompareObject::~CompareObject() { delete m_pkey_helper; }
 CompareObject::CompareObject(const CompareObject& co) { cthis(co); }
 CompareObject& CompareObject::operator=(const CompareObject& co) { cthis(co); return *this; }
@@ -30,6 +31,8 @@ void CompareObject::cthis(const CompareObject& co) {
     m_fullstr_req = co.m_fullstr_req;
     m_std_regexp = co.m_std_regexp;
     m_pkey_helper = NULL;
+    m_first_symbol = co.m_first_symbol;
+    m_second_symbol = co.m_second_symbol;
 }
 bool CompareObject::init(const tstring& key, bool endline_mode)
 {
@@ -52,6 +55,7 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     }
 
     tstring regexp;
+    checkFirstSymbols(m_key_nocuts);
     createCheckPcre(m_key_nocuts, endline_mode, &regexp);
     checkVars(&regexp);
     bool result = m_pcre.setRegExp(regexp, true);
@@ -98,6 +102,8 @@ bool CompareObject::compare(const tstring& str)
         if (!result)
             return false;
     }
+    if (!compareFirstSymbols(str)) // experemental
+        return false;
     m_pcre.find(str);
     if (m_pcre.getSize() == 0)
         return false;
@@ -192,6 +198,46 @@ bool CompareObject::checkCuts()
         if  (from_param != len)
              return false;
     }
+    return true;
+}
+
+void CompareObject::checkFirstSymbols(const tstring& key)
+{
+    if (key.size() < 2)
+        return;
+    tchar s = key.at(0);
+    if (s == L'%' || s == L'$')
+        return;
+    if (s == L'^')
+    {
+        m_first_symbol = key.at(1);
+        m_second_symbol = 0;
+    }
+    else
+    {
+        m_first_symbol = s;
+        m_second_symbol = key.at(1);
+    }
+}
+
+bool CompareObject::compareFirstSymbols(const tstring& str)
+{
+    if (!m_first_symbol || str.empty())
+        return true;
+    if (m_second_symbol == 0)
+    {
+        if (str.at(0) != m_first_symbol)
+            return false;
+        return true;
+    }
+    size_t pos = str.find(m_first_symbol);
+    if (pos == tstring::npos)
+        return false;
+    pos++;
+    if (str.length() <= pos)
+        return false;
+    if (str.at(pos) != m_second_symbol)
+        return false;
     return true;
 }
 
@@ -441,4 +487,6 @@ void CompareObject::reset()
     m_std_regexp = false;
     delete m_pkey_helper;
     m_pkey_helper = NULL;
+    m_first_symbol = 0;
+    m_second_symbol = 0;
 }

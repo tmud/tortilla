@@ -39,6 +39,7 @@ private:
        add(IDC_CHECK_C_GAGS, m.gags);
        add(IDC_CHECK_C_PLUGINS, m.plugins);
        CenterWindow(GetParent());
+       SetFocus();
        return 0;
     }
 
