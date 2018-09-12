@@ -240,59 +240,6 @@ bool MudGameView::copyProfile(const Profile& profile, const Profile& src)
     return successed;
 }
 
-/*
-void MudGameView::onNewWorld()
-{
-    NewWorldDlg dlg;
-    if (dlg.DoModal() == IDOK)
-    {
-        CopyProfileData data;
-        dlg.getData(&data);
-
-        saveClientWindowPos();
-        savePluginWindowPos();
-        unloadPlugins();
-        if (!m_manager.saveProfile())
-        {
-            msgBox(m_hWnd, IDS_ERROR_CURRENTSAVEPROFILE_FAILED, MB_OK | MB_ICONSTOP);
-            loadPlugins();
-            loadClientWindowPos();
-            return;
-        }
-
-        Profile current(m_manager.getProfile());
-        bool successed = true;
-        if (!data.src.group.empty())
-        {
-            tstring error;
-            if (!m_manager.copyProfile(data.src, data.dst, &error)) {
-                msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, error, MB_OK | MB_ICONSTOP); successed = false;
-            }
-        }
-        else
-        {
-            if (!m_manager.createEmptyProfile(data.dst)) {
-                msgBox(m_hWnd, IDS_ERROR_NEWPROFILE_FAILED, MB_OK | MB_ICONSTOP); successed = false;
-            }
-        }
-        if (!successed) {
-            tstring error;
-            m_manager.loadProfile(current, &error);
-        } else {
-            if (data.create_link)
-            {
-                CreateLink cl;
-                cl.create(data.dst.group, data.dst.name);
-            }
-        }
-
-        updateProps();
-        loadClientWindowPos();
-        loadPlugins();
-        m_bar.reset();
-    }
-}*/
-
 void MudGameView::loadPlugins()
 {
     m_plugins.loadPlugins(m_manager.getProfileGroup(), m_manager.getProfileName());
