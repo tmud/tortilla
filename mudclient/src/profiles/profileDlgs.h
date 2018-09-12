@@ -48,6 +48,7 @@ private:
         COMMAND_ID_HANDLER(IDC_CHECK_CREATE_NEW_PROFILE, OnCheckNewProfile)
         COMMAND_HANDLER(IDC_COMBO_GROUPS, CBN_SELCHANGE, OnGroupItemChanged)
         COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_SELCHANGE, OnProfileItemChanged)
+        COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_DBLCLK, OnProfileItemSelect)
         COMMAND_HANDLER(IDC_EDIT_NEWPROFILE_GROUP, EN_CHANGE, OnNameChanged)
         COMMAND_HANDLER(IDC_EDIT_NEWPROFILE_NAME, EN_CHANGE, OnNameChanged)
     END_MSG_MAP()
@@ -164,6 +165,17 @@ private:
     LRESULT OnProfileItemChanged(WORD, WORD, HWND, BOOL&)
     {
         updateOk();
+        return 0;
+    }
+
+    LRESULT OnProfileItemSelect(WORD, WORD, HWND, BOOL&)
+    {
+        bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
+        if (!newprofile && m_profiles_list.GetCurSel() != -1)
+        {
+            BOOL dummy = FALSE;
+            OnOk(0, 0, 0, dummy);
+        }
         return 0;
     }
 
