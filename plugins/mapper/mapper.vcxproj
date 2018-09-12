@@ -113,6 +113,7 @@
     <ClInclude Include="src\mapInstance.h" />
     <ClInclude Include="src\mapMergeTools.h" />
     <ClInclude Include="src\mapper.h" />
+    <ClInclude Include="src\properties.h" />
     <ClInclude Include="src\roomsContainer.h" />
     <ClInclude Include="src\mapperUnitTests.h" />
     <ClInclude Include="src\mapSmartTools.h" />
@@ -123,14 +124,11 @@
     <ClInclude Include="src\roomsWave.h" />
     <ClInclude Include="src\roomObjects.h" />
     <ClInclude Include="src\dirObjects.h" />
-    <ClInclude Include="src\mapperProcessor.h" />
     <ClInclude Include="src\mapperRender.h" />
     <ClInclude Include="src\mapperRoomRender.h" />
-    <ClInclude Include="src\mapperSettings.h" />
     <ClInclude Include="src\mapperToolbar.h" />
     <ClInclude Include="src\mapperZoneControl.h" />
     <ClInclude Include="src\MenuXP.h" />
-    <ClInclude Include="src\properties.h" />
     <ClInclude Include="src\roomsZone.h" />
     <ClInclude Include="src\stdafx.h" />
   </ItemGroup>
@@ -151,7 +149,6 @@
     <ClCompile Include="src\roomsWave.cpp" />
     <ClCompile Include="src\roomObjects.cpp" />
     <ClCompile Include="src\dirObjects.cpp" />
-    <ClCompile Include="src\mapperProcessor.cpp" />
     <ClCompile Include="src\mapperRender.cpp" />
     <ClCompile Include="src\mapperRoomRender.cpp" />
     <ClCompile Include="src\mapper_export.cpp" />

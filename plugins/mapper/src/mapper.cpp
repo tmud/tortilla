@@ -8,7 +8,7 @@
 #include "mapSmartTools.h"
 
 Mapper::Mapper(PropertiesMapper *props, const tstring& mapsFolder) : m_propsData(props), 
-m_lastDir(RD_UNKNOWN), m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
+m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
 {
 }
 
@@ -16,133 +16,8 @@ Mapper::~Mapper()
 {
 }
 
-void Mapper::processNetworkData(const tchar* text, int text_len)
-{
-    bool in_dark = false;
-    RoomData room;
-    if (!m_processor.processNetworkData(text, text_len, &room))
-    {
-        if (m_prompt.processNetworkData(text, text_len))
-        {
-            popDir();
-			DEBUGOUT(L"------");
-            if (m_dark.processNetworkData(text, text_len) && m_pCurrentRoom)
-            {
-                // move in dark to direction
-                Room *next = m_pCurrentRoom->dirs[m_lastDir].next_room;
-                //if (next)
-                {
-                    m_pCurrentRoom = next;
-                    MapTools t(&m_map);
-                    MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_LOST);
-                    redrawPosition(cursor, false);
-                }
-            }
-        }
-		else
-		{
-			int x = 1;
-		}
-        return;
-    }
-    else
-    {
-		if (!m_prompt.processNetworkData(text, text_len))
-		{
-			int x = 1;
-
-		}
-
-
-        if (m_dark.processNetworkData(text, text_len))
-            in_dark = true;
-    }
-	DEBUGOUT(L"------");
-	popDir();
-    DEBUGOUT(room.name);
-    DEBUGOUT(room.vnum);
-    //DEBUGOUT(room.exits);
-	DEBUGOUT2(L"move: ", RoomDirHelper().getDirName(m_lastDir));
-    
-
-    MapTools t(&m_map);
-    Room *new_room = t.findRoom(room.vnum);
-    if (!new_room)
-    {
-        new_room = new Room();
-        new_room->roomdata = room;
-        setExits(new_room);
-        if (!m_pCurrentRoom)
-        {
-            if (!t.createNewZone(new_room))
-            {
-                delete new_room;
-                new_room = NULL;
-            }
-			else {
-				updateZonesList();
-			}
-        }
-        else
-        {
-            if (!t.addNewRoom(m_pCurrentRoom, new_room, m_lastDir))
-            {
-                delete new_room;
-                new_room = NULL;
-            }
-        }
-    }
-    else
-    {
-         setExits(new_room);
-         if (m_lastDir != RD_UNKNOWN && m_pCurrentRoom) {
-            MapSmartTools st;
-            st.addLink(m_pCurrentRoom, new_room, m_lastDir);
-         }
-    }
-    m_pCurrentRoom = new_room;
-    MapCursor cursor = t.createCursor(m_pCurrentRoom, RCC_NORMAL);
-    redrawPosition(cursor, false);
-}
-
-void Mapper::processCmd(const tstring& cmd)
-{
-    RoomDir dir = RD_UNKNOWN;
-    for (int i = 0, e = m_dirs.size(); i < e; ++i)
-    {
-        dir = m_dirs[i].check(cmd);
-        if (dir != RD_UNKNOWN) { m_path.push_back(dir); break; }
-    }
-
-#ifdef _DEBUG
-    tstring t(L"push: ");
-	t.append(RoomDirHelper().getDirName(dir));
-    DEBUGOUT(t);
-#endif
-}
-
 void Mapper::processMsdp(const RoomData& rd)
 {
-
-}
-
-void Mapper::popDir()
-{
-	if (m_path.empty())
-	{
-		m_lastDir = RD_UNKNOWN;
-		DEBUGOUT(L"pop empty");
-	}
-    else {
-        m_lastDir = *m_path.begin();
-		m_path.pop_front();
-#ifdef _DEBUG
-		DEBUGOUT(L"pop");
-		for (RoomDir d : m_path) {
-			//DEBUGOUT(L"pop");
-		}
-#endif
-    }
 }
 
 void Mapper::updateZonesList()
@@ -150,58 +25,6 @@ void Mapper::updateZonesList()
 	Rooms3dCubeList zones;
 	m_map.getZones(&zones);
 	m_zones_control.updateList(zones);
-}
-
-void Mapper::checkExit(Room *room, RoomDir dir, const tstring& exit)
-{
-    /*const tstring& e = room->roomdata.exits; 
-    if (e.find(exit) != -1) 
-    {
-        room->dirs[dir].exist = true;
-        tstring door(L"(");
-        door.append(exit);
-        door.append(L")");
-        if (e.find(door) != -1)
-            room->dirs[dir].door = true;
-    }*/
-}
-
-void Mapper::setExits(Room *room)
-{
-    // parse room->roomdata.exits to room->dirs
-    checkExit(room,  RD_NORTH, m_propsData->north_exit);
-    checkExit(room,  RD_SOUTH, m_propsData->south_exit);
-    checkExit(room,  RD_WEST, m_propsData->west_exit);
-    checkExit(room,  RD_EAST, m_propsData->east_exit);
-    checkExit(room,  RD_UP, m_propsData->up_exit);
-    checkExit(room,  RD_DOWN, m_propsData->down_exit);
-}
-
-void Mapper::updateProps()
-{
-    m_processor.updateProps(m_propsData);
-    m_prompt.updateProps(m_propsData);
-    m_dark.updateProps(m_propsData);
-    InitDirVector h;
-    h.make(RD_NORTH, m_propsData->north_cmd, m_dirs);
-    h.make(RD_SOUTH, m_propsData->south_cmd, m_dirs);
-    h.make(RD_WEST, m_propsData->west_cmd, m_dirs);
-    h.make(RD_EAST, m_propsData->east_cmd, m_dirs);
-    h.make(RD_UP, m_propsData->up_cmd, m_dirs);
-    h.make(RD_DOWN, m_propsData->down_cmd, m_dirs);
-}
-
-void Mapper::saveProps()
-{
-    m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
-	int zone = m_zones_control.getCurrentZone();
-	m_propsData->current_zone.clear();
-	if (zone >= 0) {
-		m_propsData->current_zone = m_zones_control.getZoneName(zone);
-	}
-	else {
-		m_propsData->current_zone = L"";
-	}
 }
 
 void Mapper::saveMaps()
@@ -215,8 +38,6 @@ void Mapper::loadMaps()
     m_view.clear();
     m_zones_control.deleteAllZones();
 
-	m_path.clear();
-	m_lastDir = RD_UNKNOWN;
 	m_pCurrentRoom = nullptr;
 
     const tstring&dir = m_mapsFolder;
@@ -298,7 +119,6 @@ void Mapper::onCreate()
         m_vSplitter.SetSplitterPos(m_propsData->zoneslist_width);
     else
         m_vSplitter.SetDefaultSplitterPos();
-    updateProps();
 }
 
 void Mapper::onSize()

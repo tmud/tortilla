@@ -1,22 +1,18 @@
 #pragma once
 
 #include "splitterEx.h"
-#include "mapperProcessor.h"
 #include "mapperRender.h"
 #include "mapperToolbar.h"
 #include "mapperZoneControl.h"
 #include "mapInstance.h"
+#include "properties.h"
 
 class Mapper : public CWindowImpl<Mapper>, public MapperRenderRoomMoveTool
 {
 public:
     Mapper(PropertiesMapper *props, const tstring& mapsFolder);
     ~Mapper();
-    void processNetworkData(const tchar* text, int text_len);
-    void processCmd(const tstring& cmd);
     void processMsdp(const RoomData& rd);
-    void updateProps();
-    void saveProps();
 	void saveMaps();
 	void loadMaps();
 private:
@@ -45,10 +41,7 @@ private:
     void onRenderContextMenu(int id);  
     void onToolbar(int id);
 private:
-    void popDir();
 	void updateZonesList();
-    void setExits(Room *room);
-    void checkExit(Room *room, RoomDir dir, const tstring& exit);
     void redrawPosition(MapCursor cursor, bool resetScrolls);
     void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
@@ -68,11 +61,6 @@ private:
 
     // logic
     MapperDirsVector m_dirs;
-    MapperProcessor m_processor;
-    MapperPrompt m_prompt;
-    MapperDarkRoom m_dark;
-    std::deque<RoomDir> m_path;
-    RoomDir m_lastDir;
     Room *m_pCurrentRoom;
 
     tstring m_mapsFolder;

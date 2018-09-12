@@ -20,25 +20,16 @@
     <ClInclude Include="res\resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\properties.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\mapperZoneControl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapperToolbar.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\mapperSettings.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\mapperRoomRender.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapperRender.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\mapperProcessor.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="src\mapper.h">
@@ -116,15 +107,15 @@
     <ClInclude Include="src\mapMergeTools.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\properties.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mapperRoomRender.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapperRender.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\mapperProcessor.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\mapper.cpp">
