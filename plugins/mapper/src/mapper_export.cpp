@@ -185,7 +185,6 @@ bool popString(lua_State *L, const char* name, tstring* val)
 
 int msdp(lua_State *L)
 {
-    luaT_showLuaStack(L, L"begin");
     RoomData rd;
     bool inconsistent_data = true;
     if (luaT_check(L, 1, LUA_TTABLE))
@@ -217,15 +216,13 @@ int msdp(lua_State *L)
         }
         lua_pop(L, 1);
     }
-    luaT_showLuaStack(L, L"end");
-    luaT_showTableOnTop(L, L"end");
     if (!inconsistent_data)
     {
         m_mapper_window->processMsdp(rd);
-        return 1;
+        return 0;
     }
     assert(false);
-    return 1;
+    return 0;
 }
 
 static const luaL_Reg mapper_methods[] = 
