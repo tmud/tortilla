@@ -92,6 +92,9 @@ void NetworkConnection::threadProc()
         }
     };
 
+    DWORD nodelay = 1;
+    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&nodelay, sizeof(DWORD));
+
     autoclose ac(sock);
 
     // connecting

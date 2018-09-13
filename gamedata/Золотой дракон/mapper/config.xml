@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mapper>
   <darkroom label="Здесь темно..."/>
-  <name begin="\$[36m" end="\$[0m\r\n"/>
+  <name begin="\$[30m\$[36m" end="\$[0m"/>
+  <key begin="\$[30m" end="\$[0m"/>
   <descr begin="\$[0m\r\n\s\s" end="\r\n\$["/>
   <exits begin="\s\$[1;36m" end="&gt;\$[0;0m"/>
   <prompt begin="\$[0;32m" end="&gt;\$[0;0m"/>

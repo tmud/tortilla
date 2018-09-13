@@ -165,8 +165,8 @@ void CMenuXP::DrawItem( LPDRAWITEMSTRUCT lpds )
 
 		//draw the button, not the icon
 		CRect rcButton(rcItem.TopLeft(), CSize(rcItem.Height(), rcItem.Height()));
-		if (pItem->m_bButtonOnly)
-			rcButton = rcItem;
+		/*if (pItem->m_bButtonOnly)
+			rcButton = rcItem;*/
 		if (/*pItem->IsImage() || */bChecked)
 		{
 			DrawButton(&dc, rcButton, bSelected, bDisabled, bChecked);

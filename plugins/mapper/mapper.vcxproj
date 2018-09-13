@@ -100,41 +100,60 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\libs\common\autodel.h" />
     <ClInclude Include="..\..\libs\common\crc32.h" />
     <ClInclude Include="..\..\libs\common\dataQueue.h" />
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
     <ClInclude Include="..\..\mudclient\src\palette256.h" />
     <ClInclude Include="res\resource.h" />
+    <ClInclude Include="src\bitmapButton.h" />
+    <ClInclude Include="src\debugHelpers.h" />
     <ClInclude Include="src\editListBox.h" />
-    <ClInclude Include="src\helpers.h" />
+    <ClInclude Include="src\logger.h" />
+    <ClInclude Include="src\mapCursor.h" />
+    <ClInclude Include="src\mapInstance.h" />
+    <ClInclude Include="src\mapMergeTools.h" />
     <ClInclude Include="src\mapper.h" />
-    <ClInclude Include="src\mapperHashTable.h" />
-    <ClInclude Include="src\mapperObjects.h" />
-    <ClInclude Include="src\mapperProcessor.h" />
-    <ClInclude Include="src\mapperPrompt.h" />
+    <ClInclude Include="src\properties.h" />
+    <ClInclude Include="src\roomsContainer.h" />
+    <ClInclude Include="src\mapperUnitTests.h" />
+    <ClInclude Include="src\mapSmartTools.h" />
+    <ClInclude Include="src\mapTools.h" />
+    <ClInclude Include="src\md5.h" />
+    <ClInclude Include="src\newZoneNameDlg.h" />
+    <ClInclude Include="src\roomHasher.h" />
+    <ClInclude Include="src\roomsWave.h" />
+    <ClInclude Include="src\roomObjects.h" />
+    <ClInclude Include="src\dirObjects.h" />
     <ClInclude Include="src\mapperRender.h" />
     <ClInclude Include="src\mapperRoomRender.h" />
-    <ClInclude Include="src\mapperRoomsCache.h" />
-    <ClInclude Include="src\mapperSettings.h" />
     <ClInclude Include="src\mapperToolbar.h" />
     <ClInclude Include="src\mapperZoneControl.h" />
     <ClInclude Include="src\MenuXP.h" />
-    <ClInclude Include="src\properties.h" />
+    <ClInclude Include="src\roomsZone.h" />
     <ClInclude Include="src\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\libs\common\crc32.cpp" />
+    <ClCompile Include="src\debugHelpers.cpp" />
+    <ClCompile Include="src\logger.cpp" />
+    <ClCompile Include="src\mapCursor.cpp" />
+    <ClCompile Include="src\mapInstance.cpp" />
+    <ClCompile Include="src\mapMergeTools.cpp" />
     <ClCompile Include="src\mapper.cpp" />
-    <ClCompile Include="src\mapper2.cpp" />
-    <ClCompile Include="src\mapperHashTable.cpp" />
-    <ClCompile Include="src\mapperObjects.cpp" />
-    <ClCompile Include="src\mapperProcessor.cpp" />
-    <ClCompile Include="src\mapperPrompt.cpp" />
+    <ClCompile Include="src\mapperUnitTests.cpp" />
+    <ClCompile Include="src\mapSmartTools.cpp" />
+    <ClCompile Include="src\mapTools.cpp" />
+    <ClCompile Include="src\md5.cpp" />
+    <ClCompile Include="src\roomHasher.cpp" />
+    <ClCompile Include="src\roomsContainer.cpp" />
+    <ClCompile Include="src\roomsWave.cpp" />
+    <ClCompile Include="src\roomObjects.cpp" />
+    <ClCompile Include="src\dirObjects.cpp" />
     <ClCompile Include="src\mapperRender.cpp" />
     <ClCompile Include="src\mapperRoomRender.cpp" />
     <ClCompile Include="src\mapper_export.cpp" />
     <ClCompile Include="src\MenuXP.cpp" />
+    <ClCompile Include="src\roomsZone.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -143,6 +162,7 @@
   <ItemGroup>
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
+    <Image Include="res\bmp00001.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mapper.rc" />
@@ -153,4 +173,9 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="res\mapper.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>

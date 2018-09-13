@@ -7,10 +7,12 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <vector>
+#include <set>
 
 #include "api/api.h"
 
 typedef std::wstring tstring;
+typedef wchar_t tchar;
 typedef unsigned int uint;
 
 #include <assert.h>
@@ -35,8 +37,12 @@ typedef unsigned int uint;
 #include <atlctrlx.h>
 
 #include "resource.h"
+#include "logger.h"
 
 #include <vector>
+#include <deque>
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <algorithm>
+#include <memory>

@@ -32,6 +32,7 @@ public:
     void processSecondTick();
     void processDebugTick();
     void processPluginsMethod(const char* method, int args);
+    void processPluginsMethodCopyArgs(const char* method, int args);
     void processPluginMethod(Plugin *p, char* method, int args);
     MsdpNetwork* getMsdp() { return &m_msdp_network; }
     bool processMouseWheel(const POINT& pt, DWORD param);
