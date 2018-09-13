@@ -133,7 +133,7 @@ bool MsdpNetwork::run_plugins_msdp(const tbyte* data, int len)
             { lua_pop(L, 1); return false; }
     }
     // run plugins
-    tortilla::getPluginsManager()->processPluginsMethod("msdp", 1);
+    tortilla::getPluginsManager()->processPluginsMethodCopyArgs("msdp", 1);
     return true;
 }
 

@@ -443,7 +443,41 @@ void PluginsManager::processDebugTick()
 
 void PluginsManager::processPluginsMethod(const char* method, int args)
 {
-     doPluginsMethod(method, args);
+    doPluginsMethod(method, args);
+}
+
+void PluginsManager::processPluginsMethodCopyArgs(const char* method, int args)
+{
+    // save args
+    std::deque<lua_ref> refs;
+    for (int i = 0; i < args; ++i) {
+        lua_ref ref;
+        ref.createRef(L);
+        refs.push_front(ref);
+    }
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
+    {
+        Plugin *p = m_plugins[i];
+        if (!p->state() || p->isErrorState()) continue;
+        // restore args
+        for (lua_ref &r : refs) {
+            r.pushValue(L);
+        }
+        bool not_supported = false;
+        if (!p->runMethod(method, args, 0, &not_supported))
+        {
+            // restart plugins
+            turnoffPlugin(NULL, i);
+            lua_settop(L, 0);
+            i = 0;
+        }
+        if (not_supported)
+            lua_settop(L, 0);
+    }
+    // remove args
+    for (lua_ref &r : refs){
+        r.unref(L);
+    }
 }
 
 void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
