@@ -156,7 +156,7 @@ void MapInstance::saveMaps(const tstring& dir)
 					if (!r) continue;
 					xml::node rn = s.createsubnode(L"room");
 					rn.set(L"x", x); rn.set(L"y", y); rn.set(L"z", z);
-					rn.set(L"name", r->roomdata.name);
+					rn.set(L"name", r->roomdata.roomname);
 					rn.set(L"vnum", r->roomdata.vnum);
 					//rn.set(L"exits", r->roomdata.exits);
 					if (r->use_color) {
@@ -271,7 +271,7 @@ void MapInstance::loadMaps(const tstring& dir)
 				if (err.empty() && (!r.get(L"x", &x) || !r.get(L"y", &y) || !r.get(L"z", &z))) {
 					err = L"неполные координаты vnum=" + rd.vnum;
 				}
-                if (err.empty() && !r.get(L"name", &rd.name)) {
+                if (err.empty() && !r.get(L"name", &rd.roomname)) {
                     err = L"не задано имя(name) vnum=" + rd.vnum;
                 }
                 /*if (err.empty() && !r.get(L"exits", &rd.exits)) {

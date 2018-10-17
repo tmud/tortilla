@@ -18,6 +18,17 @@ Mapper::~Mapper()
 
 void Mapper::processMsdp(const RoomData& rd)
 {
+    if (!m_pCurrentRoom)
+    {
+        Rooms3dCube *zone = m_map.findZone(rd.areaname);
+        Room* room = zone->findRoom(rd.hash());
+        if (!room)
+        {
+            Room *newroom = 
+        }
+    }
+
+
 }
 
 void Mapper::updateZonesList()
@@ -82,7 +93,7 @@ void Mapper::redrawPositionByRoom(const Room *room)
     if (current->valid() && current->room(current->pos()) == room) 
         color = RCC_NORMAL;
     MapTools tools(&m_map);
-    Room *r = tools.findRoom(room->hash());   
+    Room *r = tools.findRoom(room->roomdata.hash());
     MapCursor c = tools.createCursor( r, color );
     redrawPosition(c, true);
 }

@@ -8,7 +8,7 @@ Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
     if (rooms.get(p))
         return AR_BUSY;
     rooms.add(p, r, z_id);
-    m_hashmap[r->hash()] = r;
+    m_hashmap[r->roomdata.hash()] = r;
     return AR_OK;
 }
 
@@ -29,7 +29,7 @@ Room* Rooms3dCube::detachRoom(const Rooms3dCubePos& p)
     Room *r = rooms.detach(p);
     if (r)
     {
-        hashmap_iterator it = m_hashmap.find(r->hash());
+        hashmap_iterator it = m_hashmap.find(r->roomdata.hash());
         if (it != m_hashmap.end()) {
             m_hashmap.erase(it);
         } else {       

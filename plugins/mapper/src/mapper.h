@@ -60,7 +60,7 @@ private:
     MappeZoneControl m_zones_control;
 
     // logic
-    MapperDirsVector m_dirs;
+    //MapperDirsVector m_dirs;
     Room *m_pCurrentRoom;
 
     tstring m_mapsFolder;

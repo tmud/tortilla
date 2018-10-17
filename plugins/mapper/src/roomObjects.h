@@ -8,11 +8,11 @@ struct Room;
 struct RoomData
 {
     tstring vnum;
-    tstring zonename;
-    tstring name;
-    //tstring descr;
-    //tstring exits;
-    std::map<tstring, tstring> exits; // dir -> vnum
+    tstring areaname;
+    tstring roomname;
+    tstring zone;
+    std::map<tstring, tstring> exits;
+    tstring hash() const { return vnum; }
 };
 
 struct RoomExit
@@ -63,17 +63,14 @@ struct Rooms3dCubePos
 
 struct Room
 {
-    Room() : icon(0), use_color(0), color(0), selected(false) 
-    {
-    }
+    Room() : icon(0), use_color(0), color(0), selected(false) {}
     RoomData roomdata;              // room key data
     RoomExit dirs[ROOM_DIRS_COUNT]; // room exits
     Rooms3dCubePos pos;             // relative position in the level x,y,level,zoneid. all >= 0
     mutable int icon;               // icon if exist
     mutable int use_color;          // flag for use background color
     mutable COLORREF color;         // background color
-    mutable bool selected;          // to render selection flag
-    const tstring hash() const { return roomdata.vnum; }
+    mutable bool selected;          // to render selection flag    
 };
 
 class RoomDirHelper
