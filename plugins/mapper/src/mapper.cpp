@@ -74,6 +74,8 @@ void Mapper::processMsdp(const RoomData& rd)
     }
     else
     {
+        assert(room->roomdata.vnum == rd.vnum);
+        room->roomdata = rd;
         fillExits(room);
     }
     if (movement != RD_UNKNOWN)
