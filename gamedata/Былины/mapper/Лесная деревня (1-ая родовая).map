@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <room x="2" y="-4" z="0" name="Базарная улица" vnum="4008">
+    <exit dir="north"/>
+    <exit dir="south" vnum="4009"/>
+  </room>
+  <room x="2" y="-3" z="0" name="Базарная улица" vnum="4009">
+    <exit dir="north" vnum="4008"/>
+    <exit dir="south" vnum="4010"/>
+    <exit dir="west"/>
+  </room>
+  <room x="2" y="-2" z="0" name="Базарная улица" vnum="4010">
+    <exit dir="north" vnum="4009"/>
+    <exit dir="south" vnum="4012"/>
+  </room>
+  <room x="3" y="-2" z="0" name="Харчевня" vnum="4054">
+    <exit dir="south" vnum="4015"/>
+  </room>
+  <room x="-4" y="-1" z="0" name="Слезная гора" vnum="4045">
+    <exit dir="north"/>
+    <exit dir="east" vnum="4026"/>
+  </room>
+  <room x="-3" y="-1" z="0" name="Бабичья улица" vnum="4026">
+    <exit dir="north"/>
+    <exit dir="south"/>
+    <exit dir="west" vnum="4045"/>
+    <exit dir="east" vnum="4025"/>
+  </room>
+  <room x="-2" y="-1" z="0" name="Бабичья улица" vnum="4025">
+    <exit dir="north"/>
+    <exit dir="west" vnum="4026"/>
+    <exit dir="east" vnum="4024"/>
+  </room>
+  <room x="-1" y="-1" z="0" name="Бабичья улица" vnum="4024">
+    <exit dir="south"/>
+    <exit dir="west" vnum="4025"/>
+    <exit dir="east" vnum="4023"/>
+  </room>
+  <room x="0" y="-1" z="0" name="Бабичья улица" vnum="4023">
+    <exit dir="west" vnum="4024"/>
+    <exit dir="east" vnum="4011"/>
+  </room>
+  <room x="1" y="-1" z="0" name="Базарная площадь" vnum="4011">
+    <exit dir="south" vnum="4014"/>
+    <exit dir="west" vnum="4023"/>
+    <exit dir="east" vnum="4012"/>
+  </room>
+  <room x="2" y="-1" z="0" name="Базарная площадь" vnum="4012">
+    <exit dir="north" vnum="4010"/>
+    <exit dir="south" vnum="4013"/>
+    <exit dir="west" vnum="4011"/>
+    <exit dir="east" vnum="4015"/>
+  </room>
+  <room x="3" y="-1" z="0" name="Базарная площадь" vnum="4015">
+    <exit dir="north" vnum="4054"/>
+    <exit dir="south" vnum="4016"/>
+    <exit dir="west" vnum="4012"/>
+  </room>
+  <room x="4" y="-1" z="0" name="Церковь" vnum="4062">
+    <exit dir="south" vnum="4017"/>
+  </room>
+  <room x="5" y="-1" z="0" name="Лавка скорняка" vnum="4031">
+    <exit dir="south" vnum="4018"/>
+  </room>
+  <room x="0" y="0" z="0" name="Гостиный двор" vnum="4056">
+    <exit dir="east" vnum="4014"/>
+  </room>
+  <room x="1" y="0" z="0" name="Базарная площадь" vnum="4014">
+    <exit dir="north" vnum="4011"/>
+    <exit dir="south" vnum="4020"/>
+    <exit dir="west" vnum="4056"/>
+    <exit dir="east" vnum="4013"/>
+  </room>
+  <room x="2" y="0" z="0" name="Базарная площадь" vnum="4013">
+    <exit dir="north" vnum="4012"/>
+    <exit dir="west" vnum="4014"/>
+    <exit dir="east" vnum="4016"/>
+  </room>
+  <room x="3" y="0" z="0" name="Базарная площадь" vnum="4016">
+    <exit dir="north" vnum="4015"/>
+    <exit dir="west" vnum="4013"/>
+    <exit dir="east" vnum="4017"/>
+  </room>
+  <room x="4" y="0" z="0" name="Мастеровая улица" vnum="4017">
+    <exit dir="north" vnum="4062"/>
+    <exit dir="south" vnum="4030"/>
+    <exit dir="west" vnum="4016"/>
+    <exit dir="east" vnum="4018"/>
+  </room>
+  <room x="5" y="0" z="0" name="Мастеровая улица" vnum="4018">
+    <exit dir="north" vnum="4031"/>
+    <exit dir="south" vnum="4071"/>
+    <exit dir="west" vnum="4017"/>
+    <exit dir="east" vnum="4019"/>
+  </room>
+  <room x="6" y="0" z="0" name="Лавка ремесленника" vnum="4019">
+    <exit dir="west" vnum="4018"/>
+  </room>
+  <room x="-2" y="1" z="0" name="Хижина пахаря" vnum="4035">
+    <exit dir="south" vnum="4034"/>
+  </room>
+  <room x="1" y="1" z="0" name="Скаковая улица" vnum="4020">
+    <exit dir="north" vnum="4014"/>
+    <exit dir="south" vnum="4021"/>
+    <exit dir="east" vnum="4002"/>
+  </room>
+  <room x="2" y="1" z="0" name="Хижина охотника" vnum="4002">
+    <exit dir="west" vnum="4020"/>
+  </room>
+  <room x="4" y="1" z="0" name="Кузня" vnum="4030">
+    <exit dir="north" vnum="4017"/>
+  </room>
+  <room x="5" y="1" z="0" name="Склад" vnum="4071">
+    <exit dir="north" vnum="4018"/>
+  </room>
+  <room x="-3" y="2" z="0" name="Хижина пахаря" vnum="4037">
+    <exit dir="east" vnum="4034"/>
+  </room>
+  <room x="-2" y="2" z="0" name="Пахарская слобода" vnum="4034">
+    <exit dir="north" vnum="4035"/>
+    <exit dir="south" vnum="4064"/>
+    <exit dir="west" vnum="4037"/>
+    <exit dir="east" vnum="4033"/>
+  </room>
+  <room x="-1" y="2" z="0" name="Пахарская слобода" vnum="4033">
+    <exit dir="south"/>
+    <exit dir="west" vnum="4034"/>
+    <exit dir="east" vnum="4032"/>
+  </room>
+  <room x="0" y="2" z="0" name="Пахарская слобода" vnum="4032">
+    <exit dir="west" vnum="4033"/>
+    <exit dir="east" vnum="4021"/>
+  </room>
+  <room x="1" y="2" z="0" name="Скаковая улица" vnum="4021">
+    <exit dir="north" vnum="4020"/>
+    <exit dir="south" vnum="4022"/>
+    <exit dir="west" vnum="4032"/>
+  </room>
+  <room x="-2" y="3" z="0" name="На лугу" vnum="4064">
+    <exit dir="north" vnum="4034"/>
+  </room>
+  <room x="1" y="3" z="0" name="Скаковая улица" vnum="4022">
+    <exit dir="north" vnum="4021"/>
+    <exit dir="east" vnum="4038"/>
+  </room>
+  <room x="2" y="3" z="0" name="Застава у ворот" vnum="4038">
+    <exit dir="south" vnum="4029"/>
+    <exit dir="west" vnum="4022"/>
+  </room>
+  <room x="2" y="4" z="0" name="За воротами" vnum="4029">
+    <exit dir="north" vnum="4038"/>
+    <exit dir="south" vnum="4100"/>
+  </room>
+</zone>
