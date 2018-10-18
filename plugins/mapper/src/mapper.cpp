@@ -18,17 +18,68 @@ Mapper::~Mapper()
 
 void Mapper::processMsdp(const RoomData& rd)
 {
-    if (!m_pCurrentRoom)
+    RoomDirHelper dh;
+    RoomDir movement = RD_UNKNOWN;
+    if (m_pCurrentRoom)
     {
-        Rooms3dCube *zone = m_map.findZone(rd.areaname);
-        Room* room = zone->findRoom(rd.hash());
-        if (!room)
-        {
-            Room *newroom = 
+        const tstring& vn = m_pCurrentRoom->roomdata.vnum;
+        for (const std::pair<tstring, tstring>& e : rd.exits) {
+            if (e.second == vn) {
+                RoomDir dir = dh.getDirFromMsdp(e.first);
+                movement = dh.revertDir(dir);
+                break;
+            }
         }
     }
-
-
+    auto fillExits = [](Room* room) 
+    {
+        RoomDirHelper dh;
+        for (const std::pair<tstring, tstring>& p : room->roomdata.exits) {
+            RoomDir dir = dh.getDirFromMsdp(p.first);
+            if (dir == RD_UNKNOWN) {
+                assert(false);
+            }
+            else {
+                room->dirs[dir].exist = true;
+            }
+        }
+    };
+    Rooms3dCube *zone = m_map.findZone(rd.areaname);
+    if (!zone)
+        zone = m_map.createNewZone(rd.areaname);
+    Room* room = zone->findRoom(rd.hash());
+    if (!room)
+    {
+        Rooms3dCubePos p;
+        if (m_pCurrentRoom)
+        {
+            if (movement != RD_UNKNOWN && m_pCurrentRoom->pos.zid == zone->id())
+            {
+                p = m_pCurrentRoom->pos;
+                p.move(movement);
+            }
+        }
+        Room *newroom = new Room();
+        newroom->roomdata = rd;
+        fillExits(newroom);
+        Rooms3dCube::AR_STATUS result = (movement != RD_UNKNOWN) ?
+            zone->addRoom(p, newroom) : zone->addRoomWithUnknownPosition(newroom);
+        if (result != Rooms3dCube::AR_OK) {
+            delete newroom;
+            lostPosition();
+            assert(false);
+            return;
+        }
+        room = newroom;
+    }
+    else
+    {
+        fillExits(room);
+    }
+    if (movement != RD_UNKNOWN)
+        m_pCurrentRoom->dirs[movement].next_room = room;
+    m_pCurrentRoom = room;
+    redrawPositionByRoom(m_pCurrentRoom);
 }
 
 void Mapper::updateZonesList()
@@ -77,6 +128,12 @@ void Mapper::loadMaps()
     }
 }
 
+void Mapper::lostPosition()
+{
+    m_pCurrentRoom = nullptr;
+    redrawPositionByRoom(nullptr);
+}
+
 void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
 {
     m_view.showPosition(cursor, resetScrolls);
@@ -88,9 +145,10 @@ void Mapper::redrawPositionByRoom(const Room *room)
 {
     updateZonesList();
     MapCursorColor color = RCC_NONE;
-    MapCursor current = m_view.getCurrentPosition();
+    //MapCursor current = m_view.getCurrentPosition();
     m_view.clearSelection();
-    if (current->valid() && current->room(current->pos()) == room) 
+    //if (current->valid() && current->room(current->pos()) == room) 
+    if (room)
         color = RCC_NORMAL;
     MapTools tools(&m_map);
     Room *r = tools.findRoom(room->roomdata.hash());

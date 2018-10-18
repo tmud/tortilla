@@ -45,6 +45,7 @@ private:
     void redrawPosition(MapCursor cursor, bool resetScrolls);
     void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
+    void lostPosition();
 private:
     // map
     MapInstance m_map;

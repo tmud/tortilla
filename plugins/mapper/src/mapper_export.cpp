@@ -193,10 +193,11 @@ int msdp(lua_State *L)
         lua_gettable(L, -2);
         if (lua_istable(L, -1))
         {
-            if (popString(L, "AREA", &rd.areaname) &&
-                popString(L, "VNUM", &rd.vnum) &&
-                popString(L, "NAME", &rd.roomname) &&
-                popString(L, "ZONE", &rd.zone))
+            if (popString(L, "AREA", &rd.areaname)
+                && popString(L, "VNUM", &rd.vnum)
+                && popString(L, "NAME", &rd.roomname)
+                //&& popString(L, "ZONE", &rd.zone)
+               )
             {
                 lua_pushstring(L, "EXITS");
                 lua_gettable(L, -2);

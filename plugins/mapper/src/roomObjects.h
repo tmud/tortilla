@@ -10,8 +10,8 @@ struct RoomData
     tstring vnum;
     tstring areaname;
     tstring roomname;
-    tstring zone;
-    std::map<tstring, tstring> exits;
+    //tstring zone;
+    std::map<tstring, tstring> exits;   // dir -> room
     tstring hash() const { return vnum; }
 };
 
@@ -81,5 +81,6 @@ public:
     RoomDir revertDir(RoomDir dir);
     const wchar_t* getDirName(RoomDir dir);
     RoomDir getDirByName(const wchar_t* dirname);
+    RoomDir getDirFromMsdp(const tstring& msdpdir);
 };
 

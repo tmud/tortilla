@@ -12,6 +12,12 @@ Rooms3dCube::AR_STATUS Rooms3dCube::addRoom(const Rooms3dCubePos& p, Room* r)
     return AR_OK;
 }
 
+Rooms3dCube::AR_STATUS Rooms3dCube::addRoomWithUnknownPosition(Room* r)
+{
+    Rooms3dCubePos p; // todo!
+    return addRoom(p, r);
+}
+
 const Room* Rooms3dCube::getRoom(const Rooms3dCubePos& p) const
 {
     return rooms.get(p);
