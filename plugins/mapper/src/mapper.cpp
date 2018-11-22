@@ -146,14 +146,10 @@ void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
 void Mapper::redrawPositionByRoom(const Room *room)
 {
     updateZonesList();
-    MapCursorColor color = RCC_NONE;
-    //MapCursor current = m_view.getCurrentPosition();
     m_view.clearSelection();
-    //if (current->valid() && current->room(current->pos()) == room) 
-    if (room)
-        color = RCC_NORMAL;
+    MapCursorColor color = (room) ? RCC_NORMAL : RCC_NONE;    
     MapTools tools(&m_map);
-    Room *r = tools.findRoom(room->roomdata.hash());
+    Room *r = (room) ? tools.findRoom(room->roomdata.hash()) : nullptr;
     MapCursor c = tools.createCursor( r, color );
     redrawPosition(c, true);
 }

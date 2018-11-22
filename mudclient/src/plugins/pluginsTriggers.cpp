@@ -102,7 +102,7 @@ struct triggeredData : TriggerActionHook {
     triggerParseVector data;
     void run() {
         assert(tr);
-        if (tr)
+        if (tr && tr->isEnabled())  // trigger can be disabled in actions
             tr->run(&data);
         tr = NULL;
     }
