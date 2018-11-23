@@ -8,7 +8,7 @@ extern "C" {
 class luaT_State
 {
 public:
-    luaT_State() { L = luaL_newstate(); }
+    luaT_State();
     ~luaT_State() { if (L) lua_close(L); L = NULL; }
     operator lua_State*() { return L; }
 private:

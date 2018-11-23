@@ -22,3 +22,9 @@ bool luaT_script::run(const tstring& script, tstring* error)
     lua_pop(L, 1);
     return false;
 }
+
+luaT_State::luaT_State()
+{
+	L = luaL_newstate();
+	luaL_openlibs(L);
+}
