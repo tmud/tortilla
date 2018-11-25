@@ -18,6 +18,36 @@ local room_tags = {
     color=colors.red,
     sign="Ж",
     priority=1  -- Если ячейка имеет несколько тегов, то приоритет будет определять обозначение клетки (чем меньше значение - тем выше приоритет)
+  },
+  quest={
+    color=colors.yellow,
+    sign="Q",
+    priority=2
+  },
+  dealer={
+    color=colors.white,
+    sign="$",
+    priority=4
+  },
+  bank={
+    color=colors.white,
+    sign="B",
+    priority=5
+  },
+  rent={
+    color=colors.white,
+    sign="R",
+    priority=3
+  },
+  teacher={
+    color=colors.white,
+    sign="T",
+    priority=6
+  },
+  safe={
+    color=colors.grey,
+    sign="~",
+    priority=7
   }
 }
 
@@ -71,6 +101,15 @@ wide_rooms.draw = function(x, y, cell, renderer)
     room_picture[4][2] = {"]", colors.grey}
     if msdpmapper.current_room == cell then
       room_picture[3][2] = {"@", colors.white}
+    elseif nil ~= room["tags"] then
+      local tag = nil
+      for t, _ in pairs(room["tags"]) do
+        if nil ~= room_tags[t] and nil == tag or room_tags[t].priority < tag.priority then
+          tag = room_tags[t]
+        end
+      end
+
+      room_picture[3][2] = {tag.sign, tag.color}
     end
     if nil ~= room.exits["e"] then room_picture[5][2] = {"-", colors.green} end
     if nil ~= room.exits["w"] then room_picture[1][2] = {"-", colors.green} end
@@ -78,16 +117,6 @@ wide_rooms.draw = function(x, y, cell, renderer)
     if nil ~= room.exits["s"] then room_picture[3][3] = {"|", colors.green} end
     if nil ~= room.exits["u"] then room_picture[1][1] = {"^", colors.yellow} end
     if nil ~= room.exits["d"] then room_picture[4][3] = {"v", colors.red} end
-    if nil ~= room["tags"] then
-      local tag = nil
-      for t, _ in pairs(room["tags"]) do
-        if nil ~= room_tags[t] and nil == tag or room_tags[t].priority < tag.priority then
-          tag = room_tags[t]
-        end
-      end
-      
-      room_picture[3][2] = {tag.sign, tag.color}
-    end
   end
 
   for py=1,room_height do
