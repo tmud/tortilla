@@ -1,13 +1,93 @@
 ﻿-- msdpmapper
 -- Плагин Tortilla mud client
 
+local colors = {
+  white=0xffffff,
+  lime=0x00ff00,
+  green=0x008800,
+  red=0x0000ff,
+  light_blue=0x000088,
+  blue=0xff0000,
+  yellow=0x00ffff,
+  grey=0x888888,
+  black=0x000000
+}
+
+local function draw_tight_room(x, y, cell, renderer)
+  local line = " "
+  if UNDEFINED == cell then
+    line = "#"
+  elseif NOWHERE == cell then
+    line = "?"
+  elseif msdpmapper.current_room == cell then
+    line = "@"
+  end
+  renderer:print((x - 1)*renderer:textWidth(' '), (y - 1)*renderer:fontHeight(), line)
+end
+
+local tight_rooms = {
+  width = 1,
+  height = 1,
+  draw = draw_tight_room
+}
+
+local wide_rooms = {
+  width = 5,
+  height = 3
+}
+
+wide_rooms.draw = function(x, y, cell, renderer)
+  local room = msdpmapper.rooms[cell]
+  if nil == room then
+    return
+  end
+
+  local room_width = wide_rooms.width
+  local room_height = wide_rooms.height
+  local room_picture = {}
+  for px=1,room_width do
+    room_picture[px] = {}
+    for py=1,room_height do
+      room_picture[px][py] = {" ", colors.white}
+    end
+  end
+
+  local char_width = renderer:textWidth(' ')
+  local char_height = renderer:fontHeight()
+
+  if UNDEFINED == cell then
+  elseif NOWHERE == cell then
+    room_picture[3][2] = {"?", colors.white}
+  else
+    room_picture[2][2] = {"[", colors.grey}
+    room_picture[4][2] = {"]", colors.grey}
+    if msdpmapper.current_room == cell then
+      room_picture[3][2] = {"@", colors.white}
+    end
+    if nil ~= room.exits["e"] then room_picture[5][2] = {"-", colors.green} end
+    if nil ~= room.exits["w"] then room_picture[1][2] = {"-", colors.green} end
+    if nil ~= room.exits["n"] then room_picture[3][1] = {"|", colors.green} end
+    if nil ~= room.exits["s"] then room_picture[3][3] = {"|", colors.green} end
+    if nil ~= room.exits["u"] then room_picture[1][1] = {"^", colors.yellow} end
+    if nil ~= room.exits["d"] then room_picture[4][3] = {"v", colors.red} end
+  end
+
+  for py=1,room_height do
+    for px=1,room_width do
+      renderer:textColor(room_picture[px][py][2])
+      renderer:print((x - 1)*char_width*room_width + px*char_width, (y - 1)*char_height*room_height + py*char_height, room_picture[px][py][1])
+    end
+  end
+end
+
 local msdpmapper = {
   ["rooms"] = {},
   ["zones"] = {},
   current_room = nil,
   current_map = nil,
   renderer = nil,
-  window = nil
+  window = nil,
+  draw_room = wide_rooms
 }
 
 local zones_filename = "msdpmapper.zones.lua"
@@ -85,76 +165,16 @@ local function transpose(m)
   return rotated
 end
 
-local function draw_tight_room(x, y, cell, renderer)
-  local line = " "
-  if UNDEFINED == cell then
-    line = "#"
-  elseif NOWHERE == cell then
-    line = "?"
-  elseif msdpmapper.current_room == cell then
-    line = "@"
-  end
-  renderer:print((x - 1)*renderer:textWidth(' '), (y - 1)*renderer:fontHeight(), line)
-end
-
-local function draw_room(x, y, cell, renderer)
-  local room = msdpmapper.rooms[cell]
-  if nil == room then
-    return
-  end
-
-  local room_width = 5
-  local room_height = 3
-  local room_picture = {}
-  for px=1,room_width do
-    room_picture[px] = {}
-    for py=1,room_height do
-      room_picture[px][py] = " "
-    end
-  end
-
-  local char_width = renderer:textWidth(' ')
-  local char_height = renderer:fontHeight()
-
-  log(string.format("room at (%d, %d)", x, y))
-  if UNDEFINED == cell then
-  elseif NOWHERE == cell then
-    room_picture[3][2] = "?"
-  else
-    room_picture[2][2] = "["
-    room_picture[4][2] = "]"
-    if msdpmapper.current_room == cell then
-      room_picture[3][2] = "@"
-    end
-    if nil ~= room.exits["e"] then room_picture[5][2] = "-" end
-    if nil ~= room.exits["w"] then room_picture[1][2] = "-" end
-    if nil ~= room.exits["n"] then room_picture[3][1] = "|" end
-    if nil ~= room.exits["s"] then room_picture[3][3] = "|" end
-    if nil ~= room.exits["u"] then room_picture[1][1] = "^" end
-    if nil ~= room.exits["d"] then room_picture[4][3] = "v" end
-  end
-
-  for py=1,room_height do
-    line = ""
-    for px=1,room_width do
-      line = line .. room_picture[px][py]
-    end
-    renderer:print((x - 1)*char_width*room_width, (y - 1)*char_height*room_height + py*char_height, line)
-  end
-end
-
 local function unprotected_render()
   local renderer = msdpmapper.renderer
   if nil == msdpmapper.current_map then
     return
   end
 
-  local c = 2
-  renderer:textColor(props.paletteColor(c))
   map = transpose(msdpmapper.current_map)
   for y, row in pairs(map) do
     for x, cell in pairs(row) do
-      draw_room(x, y, cell, renderer)
+      msdpmapper.draw_room.draw(x, y, cell, renderer)
     end
   end
 end
@@ -237,13 +257,14 @@ end
 
 function msdpmapper.draw_map(width, height)
   if nil == width then
-    width = default_map_width
+    width = math.floor(msdpmapper.renderer:width()/(msdpmapper.renderer:textWidth(' ')*msdpmapper.draw_room.width))
   end
 
   if nil == height then
-    height = default_map_height
+    height = math.floor(msdpmapper.renderer:height()/(msdpmapper.renderer:fontHeight()*msdpmapper.draw_room.height))
   end
 
+  -- log(string.format("width: %d; height: %d", width, height))
   local map = {}
   for x=1,width do
     map[x] = {}     -- create a new row
@@ -252,8 +273,8 @@ function msdpmapper.draw_map(width, height)
     end
   end
 
-  local cx = width / 2
-  local cy = height / 2
+  local cx = math.floor(width / 2)
+  local cy = math.floor(height / 2)
 
   queue = {}
   if nil == msdpmapper.current_room then
@@ -457,7 +478,7 @@ function msdpmapper.msdp(t)
     msdpmapper.renderer:update()
   end
 
-  dump_table(0, t)
+--  dump_table(0, t)
 end
 
 return msdpmapper
