@@ -59,6 +59,8 @@ local room_tags = {
   }
 }
 
+local avoid_tags = {dt=true}
+
 local function draw_tight_room(x, y, cell, renderer)
   local line = " "
   if UNDEFINED == cell then
@@ -505,6 +507,22 @@ function msdpmapper.get_path(vnum_from, vnum_to)
   local step = 1
   local reverse_path = {[vnum_from]=NOWHERE}
   local next_queue = {}
+
+  local avoid = function(vnum)
+    local room = msdpmapper.rooms[vnum]
+    if nil == room or nil == room["tags"] then
+      return false
+    end
+
+    for tag, _ in pairs(room["tags"]) do
+      if nil ~= avoid_tags[tag] then
+        return true
+      end
+    end
+
+    return false
+  end
+
   while 0 ~= #queue do
     next_vnum = queue[current]
     --log("Processing room " .. next_vnum)
@@ -515,7 +533,7 @@ function msdpmapper.get_path(vnum_from, vnum_to)
     room = msdpmapper.rooms[next_vnum]
     if nil ~= room then
       for d, v in pairs(room.exits) do
-        if nil == reverse_path[v] then
+        if nil == reverse_path[v] and not avoid(v) then
           reverse_path[v] = next_vnum
           table.insert(next_queue, v)
           --log("Enqueue room " .. v .. " at step " .. step)
@@ -579,7 +597,7 @@ function msdpmapper.set_path(arguments)
   local vnum_from = arguments[1]
   local vnum_to = arguments[2]
   if nil == msdpmapper.rooms[vnum_from] then
-    log(string.format("Start room with VNUM %d not found.", vnum_from))
+    log(string.format("Starting room with VNUM %d not found.", vnum_from))
     return
   end
   if nil == msdpmapper.rooms[vnum_to] then
@@ -588,6 +606,10 @@ function msdpmapper.set_path(arguments)
   end
 
   local path = msdpmapper.get_path(vnum_from, vnum_to)
+  if nil == path then
+    log("Path not found")
+    return
+  end
   msdpmapper.path = join_path(path)
   msdpmapper.renderer:update()
 end
@@ -596,7 +618,7 @@ function msdpmapper.print_path(arguments)
   local vnum_from = arguments[1]
   local vnum_to = arguments[2]
   if nil == msdpmapper.rooms[vnum_from] then
-    log(string.format("Start room with VNUM %d not found.", vnum_from))
+    log(string.format("Starting room with VNUM %d not found.", vnum_from))
     return
   end
   if nil == msdpmapper.rooms[vnum_to] then
