@@ -410,6 +410,7 @@ function msdpmapper.msdpon()
 end
 
 function msdpmapper.msdpoff()
+  msdpmapper.save()
   log("OFF")
   msdp.unreport("ROOM")
   msdp.unreport("MOVEMENT")
