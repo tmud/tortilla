@@ -18,7 +18,8 @@ local map_colors = {
   exit=colors.green,
   bracket=colors.grey,
   path=0xff8888,
-  me=colors.white
+  me=colors.white,
+  status=colors.yellow
 }
 
 local room_tags = {
@@ -108,8 +109,8 @@ wide_rooms.draw = function(x, y, cell, renderer)
     room_picture[3][2] = {"?", map_colors.unknown_position}
   else
     local path = {}
-    if nil ~= msdpmapper.path then
-      path = msdpmapper.path
+    if nil ~= msdpmapper.display_path then
+      path = msdpmapper.display_path
     end
     local bracket_color = function()
       if nil ~= path[cell] then
@@ -175,7 +176,9 @@ local msdpmapper = {
   current_map = nil,
   renderer = nil,
   window = nil,
-  draw_room = wide_rooms
+  draw_room = wide_rooms,
+  walk_speed = 12,  -- commands per second
+  max_walk_attempts = 12
 }
 
 local zones_filename = "msdpmapper.zones.lua"
@@ -265,6 +268,20 @@ local function unprotected_render()
       msdpmapper.draw_room.draw(x, y, cell, renderer)
     end
   end
+
+  local auto_path = "off"
+  if nil ~= msdpmapper.auto_path then
+    auto_path = string.format("on (to room %s)", msdpmapper.auto_path)
+  end
+
+  local speedwalk = "off"
+  if msdpmapper.speedwalk_on then
+    speedwalk = "on"
+  end
+
+  local status = string.format("Auto path: %s; Speed walk: %s", auto_path, speedwalk)
+  renderer:textColor(map_colors.status)
+  renderer:print(0, 0, status)
 end
 
 function msdpmapper.render()
@@ -598,20 +615,23 @@ function msdpmapper.set_path(arguments)
   local vnum_to = arguments[2]
   if nil == msdpmapper.rooms[vnum_from] then
     log(string.format("Starting room with VNUM %d not found.", vnum_from))
-    return
+    return false
   end
   if nil == msdpmapper.rooms[vnum_to] then
     log(string.format("Target room with VNUM %d not found.", vnum_to))
-    return
+    return false
   end
 
   local path = msdpmapper.get_path(vnum_from, vnum_to)
   if nil == path then
     log("Path not found")
-    return
+    return false
   end
-  msdpmapper.path = join_path(path)
+
+  msdpmapper.path = path
+  msdpmapper.display_path = join_path(path)
   msdpmapper.renderer:update()
+  return true
 end
 
 function msdpmapper.print_path(arguments)
@@ -629,9 +649,106 @@ function msdpmapper.print_path(arguments)
   local path = msdpmapper.get_path(vnum_from, vnum_to)
   if nil == path then
     log("Path not found")
+    return false
+  end
+
+  local flat_path = flatten_path(path, vnum_from)
+  log(table.concat(flat_path, ", "))
+  return true
+end
+
+function msdpmapper.update_auto_path()
+  if nil ~= msdpmapper.current_room and nil ~= msdpmapper.auto_path then
+    return msdpmapper.set_path({msdpmapper.current_room, msdpmapper.auto_path})
+  end
+
+  return false
+end
+
+function msdpmapper.set_auto_path(arguments)
+  local destination = table.concat(arguments, "")
+  if nil == msdpmapper.rooms[destination] then
+    log(string.format("Room with VNUM %d does not exist. Setting auto path cancelled.", destination))
+
+    return false
+  end
+
+  msdpmapper.auto_path = destination
+  return msdpmapper.update_auto_path()
+end
+
+local expected_command = nil
+function msdpmapper.walk()
+  local from = msdpmapper.current_room
+  local room = msdpmapper.rooms[from]
+  local to = msdpmapper.path[from]
+  if nil == from then
+    log("Speed walk failed because current room is undefined.")
+    return
+  elseif nil == room then
+    log("Speed walk failed because current room not found in the world (most likely that is an internal error).")
+    return
+  elseif nil == to then
+    log("Speed walk failed because current room not found in the path (most likely that is an internal error).")
+    return
+  end
+
+  local counter = msdpmapper.walk_speed
+  local commands = {}
+  repeat
+    for d, r in pairs(room.exits) do
+      if r == to then
+        table.insert(commands, d)
+
+        room = msdpmapper.rooms[to]
+        if nil == msdpmapper.path[to] or nil == room or msdpmapper.auto_path == to then
+          break
+        end
+
+        msdpmapper.expected_room = to
+        to = msdpmapper.path[to]
+      end
+    end
+
+    if 0 < counter then
+      counter = counter - 1
+    end
+  until 0 == counter
+
+  if 0 == #commands then
+    log(string.format("Couldn't find exit to room %d (most likely that is an internal error)", to))
+    return
+  end
+
+  dump(commands)
+  for _, command in pairs(commands) do
+    expected_command = command
+    runCommand(command)
+  end
+end
+
+function msdpmapper.speedwalk(arguments)
+  if 0 == #arguments then
+    if nil == msdpmapper.auto_path then
+      log("Speedwalk available only with auto path.")
+      return
+    elseif nil == msdpmapper.path then
+      log("No route to destination.")
+      return
+    end
   else
-    local flat_path = flatten_path(path, vnum_from)
-    log(table.concat(flat_path, ", "))
+    if not msdpmapper.set_auto_path(arguments) then
+      log("Failed to set auto path to " .. table.concat(arguments, ""))
+      return
+    end
+  end
+
+  if msdpmapper.current_room ~= msdpmapper.auto_path then
+    msdpmapper.speedwalk_on = true
+    msdpmapper.walk_wait_counter = 0
+    msdpmapper.walk()
+  else
+    log("You are already there.")
   end
 end
 
@@ -663,7 +780,9 @@ local commands = {
   ["tag_room"] = msdpmapper.tag_room,
   ["untag_room"] = msdpmapper.untag_room,
   ["print_path"] = msdpmapper.print_path,
-  ["show_path"] = msdpmapper.set_path
+  ["show_path"] = msdpmapper.set_path,
+  ["auto_path"] = msdpmapper.set_auto_path,
+  ["speedwalk"] = msdpmapper.speedwalk
 }
 
 function msdpmapper.syscmd(cmd)
@@ -675,6 +794,17 @@ function msdpmapper.syscmd(cmd)
         return xpcall(call, message_handler)
       end
     end
+  end
+
+  return cmd
+end
+
+function msdpmapper.gamecmd(cmd)
+  -- log(table.concat(cmd, " "))
+  if msdpmapper.speedwalk_on and cmd[1] ~= expected_command then
+    log("Speedwalk interrupted by user command.")
+    msdpmapper.speedwalk_on = false
+    msdpmapper.renderer:update()
   end
 
   return cmd
@@ -719,6 +849,25 @@ function msdpmapper.msdpoff()
   log("OFF")
   msdp.unreport("ROOM")
   msdp.unreport("MOVEMENT")
+end
+
+function msdpmapper.tick()
+  if msdpmapper.speedwalk_on then
+    if msdpmapper.current_room == msdpmapper.expected_room then
+      msdpmapper.walk_wait_counter = 0
+      msdpmapper.walk()
+    elseif nil ~= msdpmapper.walk_wait_counter and msdpmapper.max_walk_attempts > msdpmapper.walk_wait_counter then
+      msdpmapper.walk_wait_counter = 1 + msdpmapper.walk_wait_counter
+      log(string.format("Speed walk expected us to be in room '%s' but we are in '%s'. Check %d of %d.",
+          msdpmapper.expected_room,
+          msdpmapper.current_room,
+          msdpmapper.walk_wait_counter,
+          msdpmapper.max_walk_attempts))
+    else
+      msdpmapper.speedwalk_on = false
+      log(string.format("Speedwalk turned off because it stuck (wait counter: %d).", msdpmapper.walk_wait_counter))
+    end
+  end
 end
 
 local function dump_table(level,t)
@@ -769,6 +918,16 @@ function msdpmapper.set_current_room(vnum)
   end
 
   msdpmapper.current_room = vnum
+
+  if vnum == msdpmapper.auto_path then
+    log(string.format("You have reached your destination (%s: %s)",
+        vnum, msdpmapper.rooms[vnum]["name"]))
+    msdpmapper.speedwalk_on = false
+    msdpmapper.auto_path = nil
+    msdpmapper.display_path = nil
+  end
+
+  msdpmapper.update_auto_path()
 end
 
 function msdpmapper.msdp(t)
