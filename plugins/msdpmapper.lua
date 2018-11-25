@@ -178,7 +178,7 @@ local msdpmapper = {
   window = nil,
   draw_room = wide_rooms,
   walk_speed = 12,  -- commands per second
-  max_walk_attempts = 12
+  max_walk_attempts = 24
 }
 
 local zones_filename = "msdpmapper.zones.lua"
@@ -514,6 +514,21 @@ function msdpmapper.untag_room(arguments)
   log(string.format("Tag '%s' successfully remove from room %d.", tag, vnum))
 end
 
+local function avoid(vnum)
+  local room = msdpmapper.rooms[vnum]
+  if nil == room or nil == room["tags"] then
+    return false
+  end
+
+  for tag, _ in pairs(room["tags"]) do
+    if nil ~= avoid_tags[tag] then
+      return true
+    end
+  end
+
+  return false
+end
+
 function msdpmapper.get_path(vnum_from, vnum_to)
   if vnum_from == vnum_to then
     return {} -- empty path means that we already in the target room
@@ -524,21 +539,6 @@ function msdpmapper.get_path(vnum_from, vnum_to)
   local step = 1
   local reverse_path = {[vnum_from]=NOWHERE}
   local next_queue = {}
-
-  local avoid = function(vnum)
-    local room = msdpmapper.rooms[vnum]
-    if nil == room or nil == room["tags"] then
-      return false
-    end
-
-    for tag, _ in pairs(room["tags"]) do
-      if nil ~= avoid_tags[tag] then
-        return true
-      end
-    end
-
-    return false
-  end
 
   while 0 ~= #queue do
     next_vnum = queue[current]
@@ -720,7 +720,6 @@ function msdpmapper.walk()
     return
   end
 
-  dump(commands)
   for _, command in pairs(commands) do
     expected_command = command
     runCommand(command)
@@ -785,6 +784,47 @@ local commands = {
   ["speedwalk"] = msdpmapper.speedwalk
 }
 
+local move_commands = {
+  ["с"]="n",
+  ["ю"]="s",
+  ["в"]="e",
+  ["з"]="w",
+  ["вв"]="u",
+  ["вн"]="d"
+}
+local check_directions={
+  n=true,
+  s=true,
+  e=true,
+  w=true,
+  u=true,
+  d=true
+}
+
+function msdpmapper.get_destination(command)
+  if nil == msdpmapper.current_room then
+    return nil
+  end
+
+  local room = msdpmapper.rooms[msdpmapper.current_room]
+  if nil == room or nil == room["exits"] then
+    return nil
+  end
+
+  local destination = nil
+  if nil ~= check_directions[command[1]] then
+    destination = room["exits"][command[1]]
+  elseif nil ~= move_commands[command[1]] and check_directions[move_commands[command[1]]] then
+    destination = room["exits"][move_commands[command[1]]]
+  end
+
+  if nil == destination then
+    return nil
+  end
+
+  return destination
+end
+
 function msdpmapper.syscmd(cmd)
   if nil ~= cmd then
     arguments = subrange(cmd, 2, #cmd)
@@ -805,6 +845,14 @@ function msdpmapper.gamecmd(cmd)
     log("Speedwalk interrupted by user command.")
     msdpmapper.speedwalk_on = false
     msdpmapper.renderer:update()
+  end
+
+  local destination = msdpmapper.get_destination(cmd)
+  if nil ~= destination then
+    if avoid(destination) then
+      log(string.format("MSDP mapper blocked movement to dangerous room %s (%s).", destination, msdpmapper.rooms[destination]["name"]))
+      return false
+    end
   end
 
   return cmd
