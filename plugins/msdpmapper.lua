@@ -6,11 +6,19 @@ local colors = {
   lime=0x00ff00,
   green=0x008800,
   red=0x0000ff,
-  light_blue=0x000088,
+  dark_blue=0x880000,
   blue=0xff0000,
   yellow=0x00ffff,
   grey=0x888888,
   black=0x000000
+}
+
+local map_colors = {
+  unknown_position=colors.grey,
+  exit=colors.green,
+  bracket=colors.grey,
+  path=0xff8888,
+  me=colors.white
 }
 
 local room_tags = {
@@ -95,12 +103,23 @@ wide_rooms.draw = function(x, y, cell, renderer)
 
   if UNDEFINED == cell then
   elseif NOWHERE == cell then
-    room_picture[3][2] = {"?", colors.white}
+    room_picture[3][2] = {"?", map_colors.unknown_position}
   else
-    room_picture[2][2] = {"[", colors.grey}
-    room_picture[4][2] = {"]", colors.grey}
+    local path = {}
+    if nil ~= msdpmapper.path then
+      path = msdpmapper.path
+    end
+    local bracket_color = function()
+      if nil ~= path[cell] then
+        return map_colors.path
+      end
+      return map_colors.bracket
+    end
+
+    room_picture[2][2] = {"[", bracket_color()}
+    room_picture[4][2] = {"]", bracket_color()}
     if msdpmapper.current_room == cell then
-      room_picture[3][2] = {"@", colors.white}
+      room_picture[3][2] = {"@", map_colors.me}
     elseif nil ~= room["tags"] then
       local tag = nil
       for t, _ in pairs(room["tags"]) do
@@ -111,12 +130,32 @@ wide_rooms.draw = function(x, y, cell, renderer)
 
       room_picture[3][2] = {tag.sign, tag.color}
     end
-    if nil ~= room.exits["e"] then room_picture[5][2] = {"-", colors.green} end
-    if nil ~= room.exits["w"] then room_picture[1][2] = {"-", colors.green} end
-    if nil ~= room.exits["n"] then room_picture[3][1] = {"|", colors.green} end
-    if nil ~= room.exits["s"] then room_picture[3][3] = {"|", colors.green} end
-    if nil ~= room.exits["u"] then room_picture[1][1] = {"^", colors.yellow} end
-    if nil ~= room.exits["d"] then room_picture[4][3] = {"v", colors.red} end
+
+    local color = function(d) local result = map_colors.exit
+      if nil ~= path[cell] and path[cell][room.exits[d]] then
+        result = map_colors.path
+      end
+      return result
+    end
+
+    if nil ~= room.exits["e"] then
+      room_picture[5][2] = {"-", color("e")}
+    end
+    if nil ~= room.exits["w"] then
+      room_picture[1][2] = {"-", color("w")}
+    end
+    if nil ~= room.exits["n"] then
+      room_picture[3][1] = {"|", color("n")}
+    end
+    if nil ~= room.exits["s"] then
+      room_picture[3][3] = {"|", color("s")}
+    end
+    if nil ~= room.exits["u"] then
+      room_picture[1][1] = {"^", color("u")}
+    end
+    if nil ~= room.exits["d"] then
+      room_picture[4][3] = {"v", color("d")}
+    end
   end
 
   for py=1,room_height do
@@ -230,7 +269,8 @@ function msdpmapper.render()
   xpcall(unprotected_render, message_handler)
 end
 
-function exec(code)
+function exec(arguments)
+  local code = table.concat(arguments, " ")
   local call = load(code)
   if nil ~= call then
     log("Execution...")
@@ -331,7 +371,7 @@ function msdpmapper.draw_map(width, height)
 
   local seen = {}
   while 0 ~= #queue do
-    local next_room = table.remove(queue, 1)  -- TODO: удаление не эффективно, т. к. удаление из начала массива ведёт к сдвигу хвоста массива в начало
+    local next_room = table.remove(queue, 1)  -- TODO: удаление не эффективно, т. к. удаление из начала массива ведёт к сдвигу всего остатка массива в начало
     local x = next_room.x
     local y = next_room.y
     if nil == seen[next_room.vnum] and UNDEFINED == map[x][y] then
@@ -385,7 +425,7 @@ local function keys_concat(t)
     n = n + 1
   end
 
-  return table.concat(keys, ",")
+  return table.concat(keys, ", ")
 end
 
 function msdpmapper.tag_room(arguments)
@@ -455,8 +495,126 @@ function msdpmapper.untag_room(arguments)
   log(string.format("Tag '%s' successfully remove from room %d.", tag, vnum))
 end
 
-commands = {
-  ["lua"] = function (code) return exec(table.concat(code, " ")) end,
+function msdpmapper.get_path(vnum_from, vnum_to)
+  if vnum_from == vnum_to then
+    return {} -- empty path means that we already in the target room
+  end
+  local queue = {vnum_from}
+  local current = 1
+
+  local step = 1
+  local reverse_path = {[vnum_from]=NOWHERE}
+  local next_queue = {}
+  while 0 ~= #queue do
+    next_vnum = queue[current]
+    --log("Processing room " .. next_vnum)
+    if vnum_to == next_vnum then
+      break
+    end
+
+    room = msdpmapper.rooms[next_vnum]
+    if nil ~= room then
+      for d, v in pairs(room.exits) do
+        if nil == reverse_path[v] then
+          reverse_path[v] = next_vnum
+          table.insert(next_queue, v)
+          --log("Enqueue room " .. v .. " at step " .. step)
+        end
+      end
+    end
+
+    current = 1 + current
+    if current > #queue then
+      --log("Switching to step " .. (1 + step))
+      current = 1
+      queue = next_queue
+      next_queue = {}
+      step = 1 + step
+    end
+  end
+
+  if 0 == #queue then
+    return nil -- path not found
+  end
+
+  local path = {}
+  local current = vnum_to
+  while current ~= vnum_from do
+    path[reverse_path[current]] = current
+    current = reverse_path[current]
+  end
+  return path
+end
+
+local function flatten_path(path, from)
+  local passed = {}
+  local result = {}
+  while nil ~= from do
+    table.insert(result, path[from])
+    passed[from] = true
+    from = path[from]
+  end
+
+  return result
+end
+
+local function join_path(path)
+  local result = {}
+  for f, t in pairs(path) do
+    if nil == result[f] then
+      result[f] = {}
+    end
+    result[f][t] = true
+
+    if nil == result[t] then
+      result[t] = {}
+    end
+    result[t][f] = true
+  end
+
+  return result
+end
+
+function msdpmapper.set_path(arguments)
+  local vnum_from = arguments[1]
+  local vnum_to = arguments[2]
+  if nil == msdpmapper.rooms[vnum_from] then
+    log(string.format("Start room with VNUM %d not found.", vnum_from))
+    return
+  end
+  if nil == msdpmapper.rooms[vnum_to] then
+    log(string.format("Target room with VNUM %d not found.", vnum_to))
+    return
+  end
+
+  local path = msdpmapper.get_path(vnum_from, vnum_to)
+  msdpmapper.path = join_path(path)
+  msdpmapper.renderer:update()
+end
+
+function msdpmapper.print_path(arguments)
+  local vnum_from = arguments[1]
+  local vnum_to = arguments[2]
+  if nil == msdpmapper.rooms[vnum_from] then
+    log(string.format("Start room with VNUM %d not found.", vnum_from))
+    return
+  end
+  if nil == msdpmapper.rooms[vnum_to] then
+    log(string.format("Target room with VNUM %d not found.", vnum_to))
+    return
+  end
+
+  local path = msdpmapper.get_path(vnum_from, vnum_to)
+  if nil == path then
+    log("Path not found")
+  else
+    local flat_path = flatten_path(path, vnum_from)
+    log(table.concat(flat_path, ", "))
+  end
+end
+
+local commands = {
+  ["lua"] = exec,
   ["reload"] = function(code)
     local call = function ()
       local window = msdpmapper.window
@@ -481,7 +639,9 @@ commands = {
   ["loadmaps"] = msdpmapper.load,
   ["savemaps"] = msdpmapper.save,
   ["tag_room"] = msdpmapper.tag_room,
-  ["untag_room"] = msdpmapper.untag_room
+  ["untag_room"] = msdpmapper.untag_room,
+  ["print_path"] = msdpmapper.print_path,
+  ["show_path"] = msdpmapper.set_path
 }
 
 function msdpmapper.syscmd(cmd)
