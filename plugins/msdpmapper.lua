@@ -13,6 +13,14 @@ local colors = {
   black=0x000000
 }
 
+local room_tags = {
+  dt={
+    color=colors.red,
+    sign="Ж",
+    priority=1  -- Если ячейка имеет несколько тегов, то приоритет будет определять обозначение клетки (чем меньше значение - тем выше приоритет)
+  }
+}
+
 local function draw_tight_room(x, y, cell, renderer)
   local line = " "
   if UNDEFINED == cell then
@@ -70,6 +78,16 @@ wide_rooms.draw = function(x, y, cell, renderer)
     if nil ~= room.exits["s"] then room_picture[3][3] = {"|", colors.green} end
     if nil ~= room.exits["u"] then room_picture[1][1] = {"^", colors.yellow} end
     if nil ~= room.exits["d"] then room_picture[4][3] = {"v", colors.red} end
+    if nil ~= room["tags"] then
+      local tag = nil
+      for t, _ in pairs(room["tags"]) do
+        if nil ~= room_tags[t] and nil == tag or room_tags[t].priority < tag.priority then
+          tag = room_tags[t]
+        end
+      end
+      
+      room_picture[3][2] = {tag.sign, tag.color}
+    end
   end
 
   for py=1,room_height do
@@ -93,7 +111,7 @@ local msdpmapper = {
 local zones_filename = "msdpmapper.zones.lua"
 local rooms_filename = "msdpmapper.rooms.lua"
 
--- workaround to make loadTable/saveTable to work
+-- Следующие две переменные нужны для обхода ошибки в функциях saveTable/loadTable: они некорректно созраняют ключи-числа
 local vnum_prefix = "vnum_"
 local zone_id_prefix = "zone_id_"
 
@@ -264,10 +282,9 @@ function msdpmapper.draw_map(width, height)
     height = math.floor(msdpmapper.renderer:height()/(msdpmapper.renderer:fontHeight()*msdpmapper.draw_room.height))
   end
 
-  -- log(string.format("width: %d; height: %d", width, height))
   local map = {}
   for x=1,width do
-    map[x] = {}     -- create a new row
+    map[x] = {}
     for y=1,height do
       map[x][y] = UNDEFINED
     end
@@ -285,17 +302,17 @@ function msdpmapper.draw_map(width, height)
 
   local seen = {}
   while 0 ~= #queue do
-    local next_room = table.remove(queue, 1)  -- TODO: removing is not efficient
+    local next_room = table.remove(queue, 1)  -- TODO: удаление не эффективно, т. к. удаление из начала массива ведёт к сдвигу хвоста массива в начало
     local x = next_room.x
     local y = next_room.y
     if nil == seen[next_room.vnum] and UNDEFINED == map[x][y] then
-      -- process unseen room
+      -- Обработка ещё не обработанной комнаты
       map[x][y] = next_room.vnum
 
       local room = msdpmapper.rooms[next_room.vnum]
-      if nil ~= room then -- room where some exit leads to, may be not explored yet
+      if nil ~= room then -- Комната, в которую ведёт выход может ещё не присутствовать в данных маппера
         for d, v in pairs(room.exits) do
-          -- don't enqueue rooms in up and down directions
+          -- Наша карта - плоская. Поэтому нет необходимости помещать в очередь комнаты сверху и снизу
           if 'e' == d then
             if x < width then
               table.insert(queue, {vnum=v, x=1 + x, y=y})
@@ -331,11 +348,86 @@ local function protected_draw_map()
   return result
 end
 
+local function keys_concat(t)
+  local keys = {}
+  local n = 1
+  for key, _ in pairs(t) do
+    keys[n] = key
+    n = n + 1
+  end
+
+  return table.concat(keys, ",")
+end
+
+function msdpmapper.tag_room(arguments)
+  if 2 > #arguments then
+    log("Not enough arguments.")
+    log("Usage: #tag_room <vnum> <tag>")
+    log("Allowed tags: " .. keys_concat(room_tags))
+    return
+  end
+
+  local vnum = arguments[1]
+  local tag = table.concat(subrange(arguments, 2, #arguments), " ")
+
+  local error = false
+  if nil == msdpmapper.rooms[vnum] then
+    log(string.format("Room with vnum %d not found.", vnum))
+    error = true
+  end
+
+  if nil == room_tags[tag] then
+    local allowed = keys_concat(room_tags)
+    log(string.format("Tag '%s' is not allowed. Allowed tags: %s.", tag, allowed))
+    error = true
+  end
+
+  if error then
+    return
+  end
+
+  if nil == msdpmapper.rooms[vnum]["tags"] then
+    msdpmapper.rooms[vnum]["tags"] = {}
+  end
+  msdpmapper.rooms[vnum]["tags"][tag] = 1
+
+  log(string.format("Tag '%s' successfully added to room %d.", tag, vnum))
+end
+
+function msdpmapper.untag_room(arguments)
+  if 2 > #arguments then
+    log("Not enough arguments.")
+    log("Usage: #untag_room <vnum> <tag>")
+    return
+  end
+
+  local vnum = arguments[1]
+  local tag = table.concat(subrange(arguments, 2, #arguments), " ")
+
+  local error = false
+  if nil == msdpmapper.rooms[vnum] then
+    log(string.format("Room with vnum %d not found.", vnum))
+    error = true
+  end
+
+  if nil == msdpmapper.rooms[vnum]["tags"] then
+    msdpmapper.rooms[vnum]["tags"] = {}
+  end
+  if nil == msdpmapper.rooms[vnum]["tags"][tag] then
+    log(string.format("Room %s doesn't have tag '%s'.", vnum, tag))
+    error = true
+  end
+
+  if error then
+    return
+  end
+
+  msdpmapper.rooms[vnum]["tags"][tag] = nil
+  log(string.format("Tag '%s' successfully remove from room %d.", tag, vnum))
+end
+
 commands = {
-  ["lua"] = function(code)
-    local call = function () return exec(table.concat(code, " ")) end
-    return xpcall(call, message_handler)
-  end,
+  ["lua"] = function (code) return exec(table.concat(code, " ")) end,
   ["reload"] = function(code)
     local call = function ()
       local window = msdpmapper.window
@@ -351,15 +443,16 @@ commands = {
       protected_draw_map()
       msdpmapper.renderer:update()
     end
+
     result = xpcall(call, message_handler)
     if result then
       log("MSDP Mapper plugin has been reloaded.")
     end
-    return result
   end,
   ["loadmaps"] = msdpmapper.load,
   ["savemaps"] = msdpmapper.save,
-  ["draw"] = protected_draw_map
+  ["tag_room"] = msdpmapper.tag_room,
+  ["untag_room"] = msdpmapper.untag_room
 }
 
 function msdpmapper.syscmd(cmd)
@@ -367,7 +460,8 @@ function msdpmapper.syscmd(cmd)
     arguments = subrange(cmd, 2, #cmd)
     for k, v in pairs(commands) do
       if k == cmd[1] then
-        return v(arguments)
+        local call = function() v(arguments) end
+        return xpcall(call, message_handler)
       end
     end
   end
