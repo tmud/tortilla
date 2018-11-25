@@ -85,6 +85,64 @@ local function transpose(m)
   return rotated
 end
 
+local function draw_tight_room(x, y, cell, renderer)
+  local line = " "
+  if UNDEFINED == cell then
+    line = "#"
+  elseif NOWHERE == cell then
+    line = "?"
+  elseif msdpmapper.current_room == cell then
+    line = "@"
+  end
+  renderer:print((x - 1)*renderer:textWidth(' '), (y - 1)*renderer:fontHeight(), line)
+end
+
+local function draw_room(x, y, cell, renderer)
+  local room = msdpmapper.rooms[cell]
+  if nil == room then
+    return
+  end
+
+  local room_width = 5
+  local room_height = 3
+  local room_picture = {}
+  for px=1,room_width do
+    room_picture[px] = {}
+    for py=1,room_height do
+      room_picture[px][py] = " "
+    end
+  end
+
+  local char_width = renderer:textWidth(' ')
+  local char_height = renderer:fontHeight()
+
+  log(string.format("room at (%d, %d)", x, y))
+  if UNDEFINED == cell then
+  elseif NOWHERE == cell then
+    room_picture[3][2] = "?"
+  else
+    room_picture[2][2] = "["
+    room_picture[4][2] = "]"
+    if msdpmapper.current_room == cell then
+      room_picture[3][2] = "@"
+    end
+    if nil ~= room.exits["e"] then room_picture[5][2] = "-" end
+    if nil ~= room.exits["w"] then room_picture[1][2] = "-" end
+    if nil ~= room.exits["n"] then room_picture[3][1] = "|" end
+    if nil ~= room.exits["s"] then room_picture[3][3] = "|" end
+    if nil ~= room.exits["u"] then room_picture[1][1] = "^" end
+    if nil ~= room.exits["d"] then room_picture[4][3] = "v" end
+  end
+
+  for py=1,room_height do
+    line = ""
+    for px=1,room_width do
+      line = line .. room_picture[px][py]
+    end
+    renderer:print((x - 1)*char_width*room_width, (y - 1)*char_height*room_height + py*char_height, line)
+  end
+end
+
 local function unprotected_render()
   local renderer = msdpmapper.renderer
   if nil == msdpmapper.current_map then
@@ -95,19 +153,9 @@ local function unprotected_render()
   renderer:textColor(props.paletteColor(c))
   map = transpose(msdpmapper.current_map)
   for y, row in pairs(map) do
-    local line = ""
     for x, cell in pairs(row) do
-      if UNDEFINED == cell then
-        line = line .. "#"
-      elseif NOWHERE == cell then
-        line = line .. "?"
-      elseif msdpmapper.current_room == cell then
-        line = line .. "@"
-      else
-        line = line .. " "
-      end
+      draw_room(x, y, cell, renderer)
     end
-    renderer:print(0, (y - 1)*renderer:fontHeight(), line)
   end
 end
 
@@ -409,7 +457,7 @@ function msdpmapper.msdp(t)
     msdpmapper.renderer:update()
   end
 
---  dump_table(0, t)
+  dump_table(0, t)
 end
 
 return msdpmapper
