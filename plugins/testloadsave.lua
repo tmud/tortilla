@@ -18,8 +18,7 @@ local function assert(res, text)
   end
 end
 
-function loadsave.init()
-  log("Автотесты для loadTable, saveTable")
+local function test1()
   local t = {
     mode = true,
     a = { 'проверка' },
@@ -46,4 +45,17 @@ function loadsave.init()
   system.deleteFile(getPath('unittests2.lua'))
 end
 
+local function test2()
+  local b = {{["1"]={["exits"]={["w"]=10050,["s"]=1001},["name"]="фыва"}}}
+  saveTable(b, 'unittests3.lua')
+  local b2 = loadTable('unittests3.lua')
+  assert(b[1] == b2[1], "b[1] == b2[1]")
+  system.deleteFile(getPath('unittests3.lua'))
+end
+
+function loadsave.init()
+  log("Автотесты для loadTable, saveTable")
+  --test1()
+  test2()
+end
 return loadsave

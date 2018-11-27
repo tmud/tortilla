@@ -837,14 +837,24 @@ public:
         beginindex(index);
     }
 
-    void openbracket(const tstring& name) {
+    void openbracket(tstring name) {
         if (brackets_layer++ == 0) return;
         //endindex();
         beginparam();
         first_param = true;
-
         addtabs();
-        if (!name.empty()) { r.append(name); r.append(L" = "); }
+        if (!name.empty()) {
+            tchar f[2] = { name.at(0) , 0 };
+            tstring first(f);
+            if (isExistSymbols(f, L" 0123456789"))
+            {
+                tstring tmp(L"[\"");
+                tmp.append(name);
+                tmp.append(L"\"]");
+                name.swap(tmp);
+            }
+            r.append(name); r.append(L" = "); 
+        }
         r.append(L"{"); endline();
         tabs.append(tabs_size, L' ');
     }
