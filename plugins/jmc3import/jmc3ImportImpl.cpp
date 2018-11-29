@@ -287,10 +287,7 @@ bool Jmc3Import::convert(std::wstring *str)
                 std::wstring tmp;
                 varcmd.get(1, &tmp);
                 new_cmd.append(tmp);
-                new_cmd.append(L" ");
                 varcmd.get(2, &tmp);
-                new_cmd.append(tmp);
-                varcmd.get(3, &tmp);
                 if (!tmp.empty()) {
                 new_cmd.append(L" ");
                 new_cmd.append(tmp); }
@@ -452,7 +449,7 @@ void Jmc3Import::initPcre()
     base.init(L"^(\\W)(.*?) +(.*) *");
     param.init(L"\\{((?:(?>[^{}]+)|(?R))*)\\}");
     ifcmd.init(L"^.if .*");
-    varcmd.init(L"^.var {?([^ }]+)}? *=? *{?([^}]+)}?(.*)");
+    varcmd.init(L"^.var {?([^ }]+)}? *=? *{?([^}]*)}?");
     disable_group.init(L"disable (.*)");
     params.init(L"(%[0-9]){1}");
 }
