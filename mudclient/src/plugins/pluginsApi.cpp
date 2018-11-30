@@ -732,6 +732,9 @@ int loadTable(lua_State *L)
        { //can be number index
          if (n.get(L"index", &array_index))
              it_array = true;
+         tstring string_index;
+         if (n.get(L"string", &string_index))
+             name = string_index;
        }
        if (n.get(L"value", &val))
        {   // it is simple value
@@ -802,6 +805,14 @@ int loadTable(lua_State *L)
    return 1;
 }
 
+bool beginFromSpaceOrDigit(const tstring& s)
+{
+    if (s.empty())
+        return false;
+    tchar f[2] = { s.at(0) , 0 };
+    return isExistSymbols(f, L" 0123456789");
+}
+
  // make lua file
 class LuaRecorder
 {
@@ -826,8 +837,17 @@ public:
     void named(const tstring& k, const tstring& v, bool itstring) {
         //endindex();
         beginparam();
-        addtabs(); 
-        r.append(k); r.append(L"="); 
+        addtabs();
+        bool add_braces = beginFromSpaceOrDigit(k);
+        if (add_braces)
+        {
+            if (brackets_layer == 1) { r.append(L"_i"); }
+            r.append(L"[\"");
+        }
+        r.append(k);
+        if (add_braces)
+            r.append(L"\"]");
+        r.append(L"=");
         val(v, itstring);
         if (brackets_layer == 1) { first_param = true; endline(); }
     }
@@ -844,9 +864,7 @@ public:
         first_param = true;
         addtabs();
         if (!name.empty()) {
-            tchar f[2] = { name.at(0) , 0 };
-            tstring first(f);
-            if (isExistSymbols(f, L" 0123456789"))
+            if (beginFromSpaceOrDigit(name))
             {
                 tstring tmp(L"[\"");
                 tmp.append(name);
@@ -1145,13 +1163,21 @@ int saveTable(lua_State *L)
             std::vector<saveDataNode*>&n = v.first->childnodes;
             for (int i = 0, e = n.size(); i < e; ++i)
             {
-                tstring name(n[i]->name); bool index = false;
+                bool index = false, string_index = false;
+                tstring name(n[i]->name);
                 if (name.empty() && n[i]->index > 0) {
                     name = L"array"; index = true;
+                }
+                else if (!name.empty()) {
+                    if (beginFromSpaceOrDigit(name)) {
+                        name = L"array"; string_index = true;
+                    }
                 }
                 xml::node new_node = node.createsubnode(name.c_str());
                 if (index)
                     new_node.set(L"index", n[i]->index);
+                if (string_index)
+                    new_node.set(L"string", n[i]->name);
                 xmlstack.push_back(_xmlstack(n[i], new_node));
             }
         }
