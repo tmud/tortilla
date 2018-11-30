@@ -279,7 +279,12 @@ local function unprotected_render()
     speedwalk = "on"
   end
 
-  local status = string.format("Auto path: %s; Speed walk: %s", auto_path, speedwalk)
+  local current_room = "<undefined>"
+  if nil ~= msdpmapper.current_room then
+    current_room = msdpmapper.current_room
+  end
+
+  local status = string.format("Current room: %s; Auto path: %s; Speed walk: %s", current_room, auto_path, speedwalk)
   renderer:textColor(map_colors.status)
   renderer:print(0, 0, status)
 end
@@ -751,39 +756,6 @@ function msdpmapper.speedwalk(arguments)
   end
 end
 
-local commands = {
-  ["lua"] = exec,
-  ["reload"] = function(code)
-    local call = function ()
-      local window = msdpmapper.window
-      local current_room = msdpmapper.current_room
-      msdpmapper = dofile("plugins/msdpmapper.lua")
-      _G["msdpmapper"] = msdpmapper
-      msdpmapper.current_room = current_room
-      msdpmapper.window = window
-      msdpmapper.renderer = window:setRender(msdpmapper.render)
-      msdpmapper.renderer:setBackground(props.backgroundColor())
-      msdpmapper.renderer:select(props.currentFont())
-      msdpmapper.load()
-      protected_draw_map()
-      msdpmapper.renderer:update()
-    end
-
-    result = xpcall(call, message_handler)
-    if result then
-      log("MSDP Mapper plugin has been reloaded.")
-    end
-  end,
-  ["loadmaps"] = msdpmapper.load,
-  ["savemaps"] = msdpmapper.save,
-  ["tag_room"] = msdpmapper.tag_room,
-  ["untag_room"] = msdpmapper.untag_room,
-  ["print_path"] = msdpmapper.print_path,
-  ["show_path"] = msdpmapper.set_path,
-  ["auto_path"] = msdpmapper.set_auto_path,
-  ["speedwalk"] = msdpmapper.speedwalk
-}
-
 local move_commands = {
   ["с"]="n",
   ["ю"]="s",
@@ -825,13 +797,48 @@ function msdpmapper.get_destination(command)
   return destination
 end
 
+local commands = {
+  ["lua"] = exec,
+  ["reload"] = function(code)
+    local call = function ()
+      local window = msdpmapper.window
+      local current_room = msdpmapper.current_room
+      msdpmapper = dofile("plugins/msdpmapper.lua")
+      _G["msdpmapper"] = msdpmapper
+      msdpmapper.current_room = current_room
+      msdpmapper.window = window
+      msdpmapper.renderer = window:setRender(msdpmapper.render)
+      msdpmapper.renderer:setBackground(props.backgroundColor())
+      msdpmapper.renderer:select(props.currentFont())
+      msdpmapper.load()
+      protected_draw_map()
+      msdpmapper.renderer:update()
+    end
+
+    result = xpcall(call, message_handler)
+    if result then
+      log("MSDP Mapper plugin has been reloaded.")
+    end
+  end,
+  ["loadmaps"] = msdpmapper.load,
+  ["savemaps"] = msdpmapper.save,
+  ["tag_room"] = msdpmapper.tag_room,
+  ["untag_room"] = msdpmapper.untag_room,
+  ["print_path"] = msdpmapper.print_path,
+  ["show_path"] = msdpmapper.set_path,
+  ["auto_path"] = msdpmapper.set_auto_path,
+  ["speedwalk"] = msdpmapper.speedwalk
+}
+
 function msdpmapper.syscmd(cmd)
   if nil ~= cmd then
-    arguments = subrange(cmd, 2, #cmd)
-    for k, v in pairs(commands) do
-      if k == cmd[1] then
-        local call = function() v(arguments) end
-        return xpcall(call, message_handler)
+    if "msdpmapper" == cmd[1] then
+      arguments = subrange(cmd, 3, #cmd)
+      for k, v in pairs(commands) do
+        if k == cmd[2] then
+          local call = function() v(arguments) end
+          return xpcall(call, message_handler)
+        end
       end
     end
   end
