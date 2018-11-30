@@ -132,7 +132,8 @@ bool Jmc3Import::processAction()
     if (!parseParams(4, 4, &p))
         return false;
     convert(&p[1]);
-    replaceDoubles(&p[0]);
+    if (!replaceRegular(&p[0]))
+        replaceDoubles(&p[0]);
     return (rewrite_mode) ? m_actions.replace(p[0].c_str(), p[1].c_str(), p[3].c_str()) :
         m_actions.add(p[0].c_str(), p[1].c_str(), p[3].c_str());
 }
@@ -142,7 +143,8 @@ bool Jmc3Import::processSubs()
     std::vector<std::wstring> p;
     if (!parseParams(2, 2, &p))
         return false;
-    replaceDoubles(&p[0]);
+    if (!replaceRegular(&p[0]))
+        replaceDoubles(&p[0]);
     return (rewrite_mode) ? m_subs.replace(p[0].c_str(), p[1].c_str(), L"default") :
         m_subs.add(p[0].c_str(), p[1].c_str(), L"default");
 }
@@ -152,7 +154,8 @@ bool Jmc3Import::processAntisub()
     std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
-    replaceParams(&p[0]);
+    if (!replaceRegular(&p[0]))
+        replaceParams(&p[0]);
     return (rewrite_mode) ? m_antisubs.replace(p[0].c_str(), NULL, L"default") :
         m_antisubs.add(p[0].c_str(), NULL, L"default");
 }
@@ -176,6 +179,7 @@ bool Jmc3Import::processGags()
     std::vector<std::wstring> p;
     if (!parseParams(1, 1, &p))
         return false;
+    if (!replaceRegular(&p[0]))
     replaceParams(&p[0]);
     return (rewrite_mode) ? m_gags.replace(p[0].c_str(), NULL, L"default") :
         m_gags.add(p[0].c_str(), NULL, L"default");
@@ -375,6 +379,18 @@ void Jmc3Import::replaceDoubles(std::wstring* str)
     str->swap(result);
 }
 
+bool Jmc3Import::replaceRegular(std::wstring* str)
+{
+    if (!regul.find(str->c_str()))
+        return false;
+    std::wstring regular;
+    if (!regul.get(1, &regular))
+        return false;
+    str->assign(L"$"); // regexp prefix in client
+    str->append(regular);
+    return true;
+}
+
 void Jmc3Import::replaceParams(std::wstring* str)
 {
     params.findall(str->c_str());
@@ -452,6 +468,7 @@ void Jmc3Import::initPcre()
     varcmd.init(L"^.var {?([^ }]+)}? *=? *{?([^}]*)}?");
     disable_group.init(L"disable (.*)");
     params.init(L"(%[0-9]){1}");
+    regul.init(L"^/(.*)/$");
 }
 
 void Jmc3Import::initCmdSymbols()
