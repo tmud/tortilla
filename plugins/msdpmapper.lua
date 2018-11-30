@@ -130,7 +130,7 @@ wide_rooms.draw = function(x, y, cell, renderer)
       room_picture[3][2] = {"?", map_colors.unexplored}
     elseif msdpmapper.current_room == cell then
       room_picture[3][2] = {"@", map_colors.me}
-    elseif nil ~= room["tags"] then
+    elseif nil ~= room["tags"]then
       local tag = nil
       for t, _ in pairs(room["tags"]) do
         if nil ~= room_tags[t] and nil == tag or room_tags[t].priority < tag.priority then
@@ -138,7 +138,9 @@ wide_rooms.draw = function(x, y, cell, renderer)
         end
       end
 
-      room_picture[3][2] = {tag.sign, tag.color}
+      if nil ~= tag then
+        room_picture[3][2] = {tag.sign, tag.color}
+      end
     end
 
     local color = function(d) local result = map_colors.exit
@@ -590,15 +592,22 @@ local function keys_concat(t)
 end
 
 function msdpmapper.tag_room(arguments)
-  if 2 > #arguments then
+  if 1 > #arguments then
     log("Not enough arguments.")
-    log("Usage: #tag_room <vnum> <tag>")
+    log("Usage 1: #tag <vnum> <tag>")
+    log("Usage 2 (to tag current room): #tag <tag>")
     log("Allowed tags: " .. keys_concat(room_tags))
     return
   end
 
-  local vnum = arguments[1]
-  local tag = table.concat(subrange(arguments, 2, #arguments), " ")
+  local vnum = msdpmapper.current_room
+  local tag = nil;
+  if 2 == #arguments then
+    vnum = arguments[1]
+    tag = table.concat(subrange(arguments, 2, #arguments), " ")
+  else
+    tag = arguments[1]
+  end
 
   local error = false
   if nil == msdpmapper.rooms[vnum] then
@@ -625,14 +634,21 @@ function msdpmapper.tag_room(arguments)
 end
 
 function msdpmapper.untag_room(arguments)
-  if 2 > #arguments then
+  if 1 > #arguments then
     log("Not enough arguments.")
-    log("Usage: #untag_room <vnum> <tag>")
+    log("Usage 1: #untag <vnum> <tag>")
+    log("Usage 2 (to untag current room): #untag <tag>")
     return
   end
 
-  local vnum = arguments[1]
-  local tag = table.concat(subrange(arguments, 2, #arguments), " ")
+  local vnum = msdpmapper.current_room
+  local tag = nil;
+  if 2 == #arguments then
+    vnum = arguments[1]
+    tag = table.concat(subrange(arguments, 2, #arguments), " ")
+  else
+    tag = arguments[1]
+  end
 
   local error = false
   if nil == msdpmapper.rooms[vnum] then
@@ -653,6 +669,9 @@ function msdpmapper.untag_room(arguments)
   end
 
   msdpmapper.rooms[vnum]["tags"][tag] = nil
+  if 0 == #msdpmapper.rooms[vnum]["tags"] then
+    #msdpmapper.rooms[vnum]["tags"] = nil
+  end
   log(string.format("Tag '%s' successfully remove from room %d.", tag, vnum))
 end
 
@@ -959,8 +978,8 @@ local commands = {
   end,
   ["loadmaps"] = msdpmapper.load,
   ["savemaps"] = msdpmapper.save,
-  ["tag_room"] = msdpmapper.tag_room,
-  ["untag_room"] = msdpmapper.untag_room,
+  ["tag"] = msdpmapper.tag_room,
+  ["untag"] = msdpmapper.untag_room,
   ["print_path"] = msdpmapper.print_path,
   ["show_path"] = msdpmapper.set_path,
   ["auto_path"] = msdpmapper.set_auto_path,
