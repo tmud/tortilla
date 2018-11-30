@@ -1,6 +1,11 @@
 ﻿-- msdpmapper
 -- Плагин Tortilla mud client
 
+-- Специальные константы на карте
+local UNDEFINED = 0
+local NOWHERE = -1
+local AMBIGUOUS = -2
+
 local colors = {
   white=0xffffff,
   lime=0x00ff00,
@@ -19,7 +24,9 @@ local map_colors = {
   bracket=colors.grey,
   path=0xff8888,
   me=colors.white,
-  status=colors.yellow
+  status=colors.yellow,
+  unexplored=colors.white,
+  ambiguous=colors.yellow
 }
 
 local room_tags = {
@@ -87,10 +94,6 @@ local wide_rooms = {
 
 wide_rooms.draw = function(x, y, cell, renderer)
   local room = msdpmapper.rooms[cell]
-  if nil == room then
-    return
-  end
-
   local room_width = wide_rooms.width
   local room_height = wide_rooms.height
   local room_picture = {}
@@ -107,6 +110,8 @@ wide_rooms.draw = function(x, y, cell, renderer)
   if UNDEFINED == cell then
   elseif NOWHERE == cell then
     room_picture[3][2] = {"?", map_colors.unknown_position}
+  elseif AMBIGUOUS == cell then
+    room_picture[3][2] = {"*", map_colors.ambiguous}
   else
     local path = {}
     if nil ~= msdpmapper.display_path then
@@ -121,7 +126,9 @@ wide_rooms.draw = function(x, y, cell, renderer)
 
     room_picture[2][2] = {"[", bracket_color()}
     room_picture[4][2] = {"]", bracket_color()}
-    if msdpmapper.current_room == cell then
+    if nil == room then
+      room_picture[3][2] = {"?", map_colors.unexplored}
+    elseif msdpmapper.current_room == cell then
       room_picture[3][2] = {"@", map_colors.me}
     elseif nil ~= room["tags"] then
       local tag = nil
@@ -141,23 +148,25 @@ wide_rooms.draw = function(x, y, cell, renderer)
       return result
     end
 
-    if nil ~= room.exits["e"] then
-      room_picture[5][2] = {"-", color("e")}
-    end
-    if nil ~= room.exits["w"] then
-      room_picture[1][2] = {"-", color("w")}
-    end
-    if nil ~= room.exits["n"] then
-      room_picture[3][1] = {"|", color("n")}
-    end
-    if nil ~= room.exits["s"] then
-      room_picture[3][3] = {"|", color("s")}
-    end
-    if nil ~= room.exits["u"] then
-      room_picture[1][1] = {"^", color("u")}
-    end
-    if nil ~= room.exits["d"] then
-      room_picture[4][3] = {"v", color("d")}
+    if nil ~= room then
+      if nil ~= room.exits["e"] then
+        room_picture[5][2] = {"-", color("e")}
+      end
+      if nil ~= room.exits["w"] then
+        room_picture[1][2] = {"-", color("w")}
+      end
+      if nil ~= room.exits["n"] then
+        room_picture[3][1] = {"|", color("n")}
+      end
+      if nil ~= room.exits["s"] then
+        room_picture[3][3] = {"|", color("s")}
+      end
+      if nil ~= room.exits["u"] then
+        room_picture[1][1] = {"^", color("u")}
+      end
+      if nil ~= room.exits["d"] then
+        room_picture[4][3] = {"v", color("d")}
+      end
     end
   end
 
@@ -190,9 +199,6 @@ local zone_id_prefix = "zone_id_"
 
 local default_map_width = 10
 local default_map_height = 10
-
-local UNDEFINED = 0
-local NOWHERE = -1
 
 function msdpmapper.name()
   return 'Тестовый плагин MSDP'
@@ -366,6 +372,136 @@ function msdpmapper.load()
   end
 end
 
+--[[
+Комната на карте является неоднозначной, если хотя бы один из её выходов ведёт в комнату, которая не соответствует уже находящейся в ячейке, соответствеющей направлению,
+либо если одна из соседних комнат имеет выход в данную ячейку на карте, но выход ведёт в комнату с другим VNUM.
+
+Пример 1:
+
+[?] -[3]
+ |    |
+[2]--[1]
+
+Допустим, выход на запад из [3] ведёт в [5], но мы ещё не успели нарисовать эту комнату. Зато нам уже нужно поставить комнату [4], в которую ведёт выход на север из комнаты [2]. Если бы мы нарисовали комнату [4], то получили бы следующую карту:
+
+[4] -[3]
+ |    |
+[2]--[1]
+
+Которая является неоднозначной, т. к. выглядит так, будто из [3] есть выход в [4], тогда как на самом деле - это выход в [5].
+
+Пример 2:
+
+[?]  [3]
+ |    |
+[2]--[1]
+
+Допустим, на нужно поставить в ячейку [?] комнату с VNUM 4, у которой есть выход на восток в комнату 5. Если нарисовать такую комнату, то мы получим следующую карту:
+
+[4]- [3]
+ |    |
+[2]--[1]
+
+Которая будет неоднозначной, т. к. выглядит так, будто из [4] есть выход в [3], тогда как он ведёт совсем в другую комнату.
+
+Функция filter_ambiguous проверяет такие неоднозначности и вместо неоднозначной комнаты ставит специальную пометку AMBIGUOUS
+]]
+local function filter_ambiguous(map, x, y, vnum, width, height)
+  -- проверка западного направления из комнаты vnum
+  if 1 < x then
+    -- Проверка на первый тип неоднозначности
+    local cell = map[x - 1][y]
+    if 0 < tonumber(cell) then
+      local room = msdpmapper.rooms[cell]
+      if nil ~= room then
+        local east_to = room.exits["e"]
+        if nil ~= east_to and east_to ~= vnum then  -- комната на западе имеет выход на восток и он ведёт не в ту комнату, которую мы собираемся нарисовать: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+
+      -- Проверка на второй тип неоднозначности
+      local room = msdpmapper.rooms[vnum]
+      if nil ~= room and nil ~= room.exits["w"] then
+        if cell ~= room.exits["w"] then  -- выход на запад из комнаты, которую мы собираемся нарисовать, ведёт не в ту комнату, которая там уже нарисована: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+    end
+  end
+
+  -- проверка восточного направления из комнаты vnum
+  if x < width - 1 then
+    local cell = map[x + 1][y]
+    if 0 < tonumber(cell) then
+      -- Проверка на первый тип неоднозначности
+      local room = msdpmapper.rooms[cell]
+      if nil ~= room then
+        local west_to = room.exits["w"]
+        if nil ~= west_to and west_to ~= vnum then  -- комната на востоке имеет выход на запад и он ведёт не в ту комнату, которую мы собираемся нарисовать: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+
+      -- Проверка на второй тип неоднозначности
+      local room = msdpmapper.rooms[vnum]
+      if nil ~= room and nil ~= room.exits["e"] then
+        if cell ~= room.exits["e"] then  -- выход на восток из комнаты, которую мы собираемся нарисовать, ведёт не в ту комнату, которая там уже нарисована: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+    end
+  end
+
+  -- проверка северного направления из комнаты vnum
+  if 1 < y then
+    -- Проверка на первый тип неоднозначности
+    local cell = map[x][y - 1]
+    if 0 < tonumber(cell) then
+      local room = msdpmapper.rooms[cell]
+      if nil ~= room then
+        local south_to = room.exits["s"]
+        if nil ~= south_to and south_to ~= vnum then  -- комната на севере имеет выход на юг и он ведёт не в ту комнату, которую мы собираемся нарисовать: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+
+      -- Проверка на второй тип неоднозначности
+      local room = msdpmapper.rooms[vnum]
+      if nil ~= room and nil ~= room.exits["n"] then
+        if cell ~= room.exits["n"] then  -- выход на север из комнаты, которую мы собираемся нарисовать, ведёт не в ту комнату, которая там уже нарисована: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+    end
+  end
+
+  -- проверка южного направления из комнаты vnum
+  if y < height - 1 then
+    -- Проверка на первый тип неоднозначности
+    local cell = map[x][y + 1]
+    if 0 < tonumber(cell) then
+      local room = msdpmapper.rooms[cell]
+      if nil ~= room then
+        local north_to = room.exits["n"]
+        if nil ~= north_to and north_to ~= vnum then  -- комната на юге имеет выход на север и он ведёт не в ту комнату, которую мы собираемся нарисовать: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+
+      -- Проверка на второй тип неоднозначности
+      local room = msdpmapper.rooms[vnum]
+      if nil ~= room and nil ~= room.exits["s"] then
+        if cell ~= room.exits["s"] then  -- выход на юг из комнаты, которую мы собираемся нарисовать, ведёт не в ту комнату, которая там уже нарисована: неоднозначность
+          return AMBIGUOUS
+        end
+      end
+    end
+  end
+
+  return vnum
+end
+
 function msdpmapper.draw_map(width, height)
   if nil == width then
     width = math.floor(msdpmapper.renderer:width()/(msdpmapper.renderer:textWidth(' ')*msdpmapper.draw_room.width))
@@ -400,14 +536,15 @@ function msdpmapper.draw_map(width, height)
     local y = next_room.y
     if nil == seen[next_room.vnum] and UNDEFINED == map[x][y] then
       -- Обработка ещё не обработанной комнаты
-      map[x][y] = next_room.vnum
+      local cell = filter_ambiguous(map, x, y, next_room.vnum, width, height)
+      map[x][y] = cell
 
       local room = msdpmapper.rooms[next_room.vnum]
-      if nil ~= room then -- Комната, в которую ведёт выход может ещё не присутствовать в данных маппера
+      if nil ~= room and AMBIGUOUS ~= cell then -- Комната, в которую ведёт выход может ещё не присутствовать в данных маппера, плюс не нужно рисовать маршрут из неоднозначных комнат
         for d, v in pairs(room.exits) do
           -- Наша карта - плоская. Поэтому нет необходимости помещать в очередь комнаты сверху и снизу
           if 'e' == d then
-            if x < width then
+            if x < width - 1 then
               table.insert(queue, {vnum=v, x=1 + x, y=y})
             end
           elseif 'w' == d then
@@ -419,7 +556,7 @@ function msdpmapper.draw_map(width, height)
               table.insert(queue, {vnum=v, x=x, y=y - 1})
             end
           elseif 's' == d then
-            if y < height then
+            if y < height - 1 then
               table.insert(queue, {vnum=v, x=x, y=1 + y})
             end
           end
