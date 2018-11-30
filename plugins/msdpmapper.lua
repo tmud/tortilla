@@ -143,31 +143,40 @@ wide_rooms.draw = function(x, y, cell, renderer)
       end
     end
 
-    local color = function(d) local result = map_colors.exit
+    local color = function(d, c) local result = c
       if nil ~= path[cell] and path[cell][room.exits[d]] then
         result = map_colors.path
       end
       return result
     end
+    local exit_color = function(d) return color(d, map_colors.exit) end
 
     if nil ~= room then
       if nil ~= room.exits["e"] then
-        room_picture[5][2] = {"-", color("e")}
+        room_picture[5][2] = {"-", exit_color("e")}
       end
       if nil ~= room.exits["w"] then
-        room_picture[1][2] = {"-", color("w")}
+        room_picture[1][2] = {"-", exit_color("w")}
       end
       if nil ~= room.exits["n"] then
-        room_picture[3][1] = {"|", color("n")}
+        room_picture[3][1] = {"|", exit_color("n")}
       end
       if nil ~= room.exits["s"] then
-        room_picture[3][3] = {"|", color("s")}
+        room_picture[3][3] = {"|", exit_color("s")}
       end
       if nil ~= room.exits["u"] then
-        room_picture[1][1] = {"^", color("u")}
+        if nil ~= msdpmapper.rooms[room.exits["u"]] then
+          room_picture[2][1] = {"^", exit_color("u")}
+        else
+          room_picture[2][1] = {"?", color("u", map_colors.unexplored)}
+        end
       end
       if nil ~= room.exits["d"] then
-        room_picture[4][3] = {"v", color("d")}
+        if nil ~= msdpmapper.rooms[room.exits["d"]] then
+          room_picture[2][3] = {"v", exit_color("d")}
+        else
+          room_picture[2][3] = {"?", color("d", map_colors.unexplored)}
+        end
       end
     end
   end
@@ -670,7 +679,7 @@ function msdpmapper.untag_room(arguments)
 
   msdpmapper.rooms[vnum]["tags"][tag] = nil
   if 0 == #msdpmapper.rooms[vnum]["tags"] then
-    #msdpmapper.rooms[vnum]["tags"] = nil
+    msdpmapper.rooms[vnum]["tags"] = nil
   end
   log(string.format("Tag '%s' successfully remove from room %d.", tag, vnum))
 end
