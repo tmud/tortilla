@@ -47,8 +47,7 @@ local function test1()
   system.deleteFile(getPath('unittests2.lua'))
 end
 
-local b = {{["1"]={["exits"]={["w"]=10050,["s"]=1001},["name"]="фыва"}}, { "abc" }, ["3"] = 15 }
---local b = { ["3"] = 15 }
+local b = { {["1"] = { exits={["w"]=10050, ["s"]=1001, array=200 },["name"]="фыва"}}, { "abc" }, ["3"] = 15, array = 100 }
 local function test2(file)
   saveTable(b, file)
   local b2 = loadTable(file)
@@ -56,10 +55,14 @@ local function test2(file)
   local t2 = b2[2]
   assert(t1 ~= nil and t2 ~= nil, "t1[2],t2[2] ~= nil")
   assert(t1[1] == t2[1], "t1[2][1] == t2[2][1]")
+  t1 = b[2]
+  t2 = b2[2]
+  assert(t1 ~= nil and t2 ~= nil, "t1[2],t2[2] ~= nil")
+  assert(t1[1] == t2[1], "t1[2][1] == t2[2][1]")
   t1 = b[1]
   t2 = b2[1]
   assert(t1 ~= nil and t2 ~= nil, "t1,t2 ~= nil")
-  assert(t1["1"] ~= nil and t2["1"] ~= nil, 't1["1"],t2["1"] ~= nil')
+  assert(t1["1"] ~= nil and t2["1"] ~= nil, 't1["1"],t2["1"] ~= nil')  
   t1 = t1["1"]
   t2 = t2["1"]
   assert(t1.exits ~= nil and t2.exits ~= nil, "t1.exits,t2.exits ~= nil")
@@ -70,7 +73,15 @@ local function test2(file)
     local text = "t1."..k.." == t2."..k
     assert(v == t2[k], text)
   end
-  --system.deleteFile(getPath(file))
+  t1 = b["3"]
+  t2 = b2["3"]
+  assert(t1 ~= nil and t2 ~= nil, "t1['3'],t2['3'] ~= nil")
+  assert(t1 == t2, "t1['3'] == t2['3']")
+  t1 = b["array"]
+  t2 = b2["array"]
+  assert(t1 ~= nil and t2 ~= nil, "t1['array'],t2['array'] ~= nil")
+  assert(t1 == t2, "t1['array'] == t2['array']")
+  system.deleteFile(getPath(file))
 end
 
 local function test2_lua()
@@ -85,7 +96,7 @@ end
 
 function loadsave.init()
   log("Автотесты для loadTable, saveTable")
-  --test1()
+  test1()
   test2_lua()
   test2_xml()
 end

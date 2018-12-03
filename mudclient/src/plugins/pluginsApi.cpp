@@ -1145,7 +1145,14 @@ int saveTable(lua_State *L)
             std::vector<saveDataNode::value>&a = v.first->attributes;
             for (int i = 0, e = a.size(); i < e; ++i)
             {
-                xml::node attr = node.createsubnode(a[i].first.c_str());
+                bool string_index = false;
+                tstring name(a[i].first);
+                if (beginFromSpaceOrDigit(name)) {
+                    string_index = true; name = L"array";
+                }
+                xml::node attr = node.createsubnode(name.c_str());
+                if (string_index)
+                    attr.set(L"string", a[i].first.c_str());
                 attr.set(L"value", a[i].second.first.c_str());
                 if (!a[i].second.second)
                     attr.set(L"native", 1);
