@@ -334,6 +334,9 @@
     <ClInclude Include="src\modules\extra\phrase.h">
       <Filter>Source Files\Modules\extra</Filter>
     </ClInclude>
+    <ClInclude Include="src\common\sendOrder.h">
+      <Filter>Libs</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\mudGameView.cpp">
@@ -509,6 +512,9 @@
     </ClCompile>
     <ClCompile Include="src\modules\extra\extra.cpp">
       <Filter>Source Files\Modules\extra</Filter>
+    </ClCompile>
+    <ClCompile Include="src\common\sendOrder.cpp">
+      <Filter>Libs</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
