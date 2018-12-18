@@ -145,6 +145,7 @@
 #define IDC_STATIC_GROUPNAME            1159
 #define IDC_STATIC_GROUP_NAME           1159
 #define IDC_STATIC_PROFILE_NAME         1160
+#define IDC_CHECK_CREATE_EMPTY_PROFILE  1161
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
