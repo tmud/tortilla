@@ -196,7 +196,7 @@ private:
             if (m_profile_name.GetWindowTextLength() == 0)
                 SetProfileEdit(L"player");
             updateCopyCurrent();
-            m_ok.EnableWindow(TRUE);            
+            m_ok.EnableWindow(TRUE);
             return;
         }
         if (!m_create_new_manually)
