@@ -201,8 +201,8 @@ local msdpmapper = {
   max_walk_attempts = 24
 }
 
-local zones_filename = "msdpmapper.zones.lua"
-local rooms_filename = "msdpmapper.rooms.lua"
+local zones_filename = "zones.lua"
+local rooms_filename = "rooms.lua"
 
 -- Следующие две переменные нужны для обхода ошибки в функциях saveTable/loadTable: они некорректно созраняют ключи-числа
 local vnum_prefix = "vnum_"
@@ -212,15 +212,17 @@ local default_map_width = 10
 local default_map_height = 10
 
 function msdpmapper.name()
-  return 'Тестовый плагин MSDP'
+  return 'Карта мира (msdp)'
 end
 
 function msdpmapper.description()
-  return 'Плагин используется для тестирования протокола MSDP.'
+  local s = { 'Плагин русует карту с помощью протокола MSDP.',
+  'Требуется поддержка MSDP с информацией о местоположении игрока на сервере.' }
+  return table.concat(s, '\r\n')
 end
 
 function msdpmapper.version()
-  return '-'
+  return '1.0'
 end
 
 local function log(s)
@@ -368,7 +370,8 @@ function msdpmapper.load()
     log("Файл с комнатами содержит ошибку. Загрузка отменена.")
   end
 
-  if nil ~= zones and nil ~= rooms then
+  -- zones and rooms can be false, if file is missing
+  if zones and rooms then
     msdpmapper.rooms = {}
     for r, v in pairs(rooms[1]) do
       msdpmapper.rooms[string.gsub(r, vnum_prefix, "")] = v

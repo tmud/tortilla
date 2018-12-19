@@ -55,6 +55,7 @@ xcopy ..\plugins\cmdfilter.lua tortilla\plugins /Y
 xcopy ..\plugins\speedwalk.lua tortilla\plugins /Y
 xcopy ..\plugins\faq.lua tortilla\plugins /Y
 xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
+xcopy ..\plugins\msdpmapper.lua tortilla\plugins /Y
 
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
