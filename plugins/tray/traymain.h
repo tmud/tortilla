@@ -23,7 +23,7 @@ private:
     END_MSG_MAP()
     LRESULT OnCreate(UINT, WPARAM wparam, LPARAM lparam, BOOL&) 
     {
-        SetTimer(1, 25);
+        SetTimer(1, 200);
         return 0;
     }
     LRESULT OnDestroy(UINT, WPARAM wparam, LPARAM lparam, BOOL&) 
