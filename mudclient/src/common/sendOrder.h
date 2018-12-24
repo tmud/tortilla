@@ -6,10 +6,12 @@ class SendOrder
 public:
     SendOrder();
     ~SendOrder();
-
+    bool initilize();
 private:
     void RegisterMe();
     void UnregisterMe();
 
-    SharedMemory m_shared;
+    bool m_tryinitialize;
+    bool m_initialized;
+    SharedMemory m_shared_memory;
 };

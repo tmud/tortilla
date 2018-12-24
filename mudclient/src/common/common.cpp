@@ -416,7 +416,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM)
    return TRUE;
 }
 
-void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd)
+/*void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd)
 {
     EnumWindows(EnumWindowsProc, 0);
     int window_size = window.size();
@@ -444,7 +444,7 @@ void sendCommandToWindow(HWND owner, const tstring& window, const tstring& cmd)
         SendMessage(clients[i], WM_COPYDATA, (WPARAM)owner, (LPARAM)&cd);
     delete []buffer;
     clients.clear();
-}
+}*/
 
 bool readCommandToWindow(WPARAM wparam, LPARAM lparam, tstring* window, tstring* cmd)
 {

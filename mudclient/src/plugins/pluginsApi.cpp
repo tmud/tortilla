@@ -7,6 +7,7 @@
 #include "../profiles/profilesPath.h"
 #include "plugins/pluginsParseData.h"
 #include "highlightHelper.h"
+#include "common/sendOrder.h"
 
 #define CAN_DO if (!_wndMain.IsWindow()) return 0;
 extern CMainFrame _wndMain;
@@ -212,6 +213,17 @@ int getCommand(lua_State *L)
     return pluginInvArgs(L, L"getCommand");
 }
 
+bool sendCommandToWindow(const tstring& window, const tstring& cmd)
+{
+    static SendOrder sendorder;
+    if (!sendorder.initilize())
+    {
+        pluginLogOut(L"send системная ошибка. Сообщение не отправлено");
+        return false;
+    }
+    return true;
+}
+
 int sendCommand(lua_State *L)
 {
     EXTRA_CP;
@@ -237,7 +249,8 @@ int sendCommand(lua_State *L)
         }
         if (params_ok)
         {
-            sendCommandToWindow(_wndMain, window, cmd);
+            if (!sendCommandToWindow(window, cmd))
+                pluginLogOut(L"send системная ошибка. Сообщение не отправлено");
             return 0;
         }
     }
