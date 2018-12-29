@@ -1,6 +1,14 @@
 #pragma once
 #include "api/shared.h"
 
+class SharedSendOrderData
+{
+public:
+
+
+};
+
+
 class SendOrder
 {
 public:
@@ -10,7 +18,6 @@ public:
 private:
     void RegisterMe();
     void UnregisterMe();
-
     bool m_tryinitialize;
     bool m_initialized;
     SharedMemory m_shared_memory;

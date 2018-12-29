@@ -218,7 +218,7 @@ bool sendCommandToWindow(const tstring& window, const tstring& cmd)
     static SendOrder sendorder;
     if (!sendorder.initilize())
     {
-        pluginLogOut(L"send системная ошибка. Сообщение не отправлено");
+        pluginLogOut(L"Cистемная ошибка send. Сообщение не отправлено");
         return false;
     }
     return true;

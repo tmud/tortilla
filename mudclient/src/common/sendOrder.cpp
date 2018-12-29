@@ -2,7 +2,7 @@
 #include "sendOrder.h"
 
 SendOrder::SendOrder() : m_tryinitialize(false), m_initialized(false)
-{   
+{
 }
 
 SendOrder::~SendOrder()
@@ -18,7 +18,7 @@ bool SendOrder::initilize()
     class SharedMemoryInitializer : public SharedMemoryHandler
     {
         void onInitSharedMemory(SharedMemoryData *d)
-        {            
+        {
         }
     };
     const tchar* global_share_name = L"TortillaMudClientSharedMemory";
@@ -31,6 +31,10 @@ bool SendOrder::initilize()
 
 void SendOrder::RegisterMe()
 {
+    SharedMemoryLocker lk(&m_shared_memory);
+    SharedMemoryData* sm = lk.memory();
+
+
 }
 
 void SendOrder::UnregisterMe()
