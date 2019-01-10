@@ -1165,7 +1165,8 @@ void LogicProcessor::printex(int view, const parser* p, int from, bool enable_ac
       for (int i=from; i<n; ++i)
       {
           int spaces = p->spacesBefore(i);
-          if (spaces > 1) {
+          bool notfirstparam = (from != 0 && from == i && spaces > 0);
+          if (spaces > 1 || notfirstparam) {
               tstring tmp(spaces-1, L' ');
               tmp.append(p->at(i));
               params[i].assign(tmp);
@@ -1178,6 +1179,8 @@ void LogicProcessor::printex(int view, const parser* p, int from, bool enable_ac
           tstring tmp(last-1, L' ');
           params.push_back(tmp);
       }
+      if (from != 0)
+          params.erase(params.begin(), params.begin() + from);
       printex(view, params, enable_actions_subs);
 }
 
