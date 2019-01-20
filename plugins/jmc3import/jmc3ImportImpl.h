@@ -3,7 +3,7 @@
 class Jmc3Import
 {
     HWND m_parent;
-    Pcre base, param, ifcmd, disable_group, params, varcmd;
+    Pcre base, param, ifcmd, disable_group, params, regul, varcmd;
     std::map<std::wstring, std::wstring> m_legacy;
     std::map<std::wstring, std::wstring> m_commands;
     typedef std::map<std::wstring, std::wstring>::iterator iterator;
@@ -33,6 +33,7 @@ private:
     bool processVariable();
     bool convert(std::wstring *str);
     void replaceDoubles(std::wstring* str);
+    bool replaceRegular(std::wstring* str);
     void replaceParams(std::wstring* str);
     void replaceLegacy(std::wstring *legacy);
     void replaceCommand(std::wstring *cmds);

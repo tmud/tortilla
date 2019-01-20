@@ -202,8 +202,11 @@ public:
     AliasParameters(const InputCommand cmd, bool process_not_values) : m_pCmd(cmd), m_process_not_values(process_not_values) {}
     void getParameters(std::vector<tstring>* params) const
     {
-        if (!m_pCmd->srcparameters.empty())
-            params->push_back(m_pCmd->parameters.substr(1));
+        if (!m_pCmd->parameters.empty())
+           params->push_back(m_pCmd->parameters.substr(1));
+        else
+           params->push_back(L"");
+
         const std::vector<tstring>&p = m_pCmd->parameters_list;
         std::vector<tstring>::const_iterator it = p.begin(), it_end = p.end();
         for(; it!=it_end;++it) {

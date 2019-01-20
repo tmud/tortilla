@@ -732,6 +732,9 @@ int loadTable(lua_State *L)
        { //can be number index
          if (n.get(L"index", &array_index))
              it_array = true;
+         tstring string_index;
+         if (n.get(L"string", &string_index))
+             name = string_index;
        }
        if (n.get(L"value", &val))
        {   // it is simple value
@@ -802,6 +805,14 @@ int loadTable(lua_State *L)
    return 1;
 }
 
+bool beginFromSpaceOrDigit(const tstring& s)
+{
+    if (s.empty())
+        return false;
+    tchar f[2] = { s.at(0) , 0 };
+    return isExistSymbols(f, L" 0123456789");
+}
+
  // make lua file
 class LuaRecorder
 {
@@ -826,8 +837,17 @@ public:
     void named(const tstring& k, const tstring& v, bool itstring) {
         //endindex();
         beginparam();
-        addtabs(); 
-        r.append(k); r.append(L"="); 
+        addtabs();
+        bool add_braces = beginFromSpaceOrDigit(k);
+        if (add_braces)
+        {
+            if (brackets_layer == 1) { r.append(L"_i"); }
+            r.append(L"[\"");
+        }
+        r.append(k);
+        if (add_braces)
+            r.append(L"\"]");
+        r.append(L"=");
         val(v, itstring);
         if (brackets_layer == 1) { first_param = true; endline(); }
     }
@@ -837,14 +857,22 @@ public:
         beginindex(index);
     }
 
-    void openbracket(const tstring& name) {
+    void openbracket(tstring name) {
         if (brackets_layer++ == 0) return;
         //endindex();
         beginparam();
         first_param = true;
-
         addtabs();
-        if (!name.empty()) { r.append(name); r.append(L" = "); }
+        if (!name.empty()) {
+            if (beginFromSpaceOrDigit(name))
+            {
+                tstring tmp(L"[\"");
+                tmp.append(name);
+                tmp.append(L"\"]");
+                name.swap(tmp);
+            }
+            r.append(name); r.append(L" = "); 
+        }
         r.append(L"{"); endline();
         tabs.append(tabs_size, L' ');
     }
@@ -1117,7 +1145,14 @@ int saveTable(lua_State *L)
             std::vector<saveDataNode::value>&a = v.first->attributes;
             for (int i = 0, e = a.size(); i < e; ++i)
             {
-                xml::node attr = node.createsubnode(a[i].first.c_str());
+                bool string_index = false;
+                tstring name(a[i].first);
+                if (beginFromSpaceOrDigit(name)) {
+                    string_index = true; name = L"array";
+                }
+                xml::node attr = node.createsubnode(name.c_str());
+                if (string_index)
+                    attr.set(L"string", a[i].first.c_str());
                 attr.set(L"value", a[i].second.first.c_str());
                 if (!a[i].second.second)
                     attr.set(L"native", 1);
@@ -1135,13 +1170,21 @@ int saveTable(lua_State *L)
             std::vector<saveDataNode*>&n = v.first->childnodes;
             for (int i = 0, e = n.size(); i < e; ++i)
             {
-                tstring name(n[i]->name); bool index = false;
+                bool index = false, string_index = false;
+                tstring name(n[i]->name);
                 if (name.empty() && n[i]->index > 0) {
                     name = L"array"; index = true;
+                }
+                else if (!name.empty()) {
+                    if (beginFromSpaceOrDigit(name)) {
+                        name = L"array"; string_index = true;
+                    }
                 }
                 xml::node new_node = node.createsubnode(name.c_str());
                 if (index)
                     new_node.set(L"index", n[i]->index);
+                if (string_index)
+                    new_node.set(L"string", n[i]->name);
                 xmlstack.push_back(_xmlstack(n[i], new_node));
             }
         }

@@ -15,7 +15,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.10");
+    luaT_pushwstring(L, L"1.11");
     return 1;
 }
 

@@ -210,7 +210,10 @@ void CompareObject::checkFirstSymbols(const tstring& key)
         return;
     if (s == L'^')
     {
-        m_first_symbol = key.at(1);
+        tchar s2 = key.at(1);
+        if (s2 == L'%' || s2 == L'$')
+            return;
+        m_first_symbol = s2;
         m_second_symbol = 0;
     }
     else

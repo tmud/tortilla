@@ -116,9 +116,8 @@ end
 local cmdrxp, decl
 local autoresc = {}
 function autoresc.init()
-
-  if not extra or not extra.declension then
-    terminate("Для работы плагина нужен модуль extra.declension")
+  if not checkVersion(1, 5)then
+    terminate("Для работы плагина нужен клиент версии 1.05+")
   end
   decl =  extra.declension()
   -- нормализация имен в настройках, пишем в словарь для подбора по короткому имени
@@ -226,11 +225,16 @@ end
 function autoresc.name()
   return 'Автореск для Былин'
 end
+
 function autoresc.description()
-  return 'Автореск, в этом плагине нужно указать имена кого нужно спасать.'
+  local t = { 'Автореск, в этом плагине нужно сначала указать имена тех, кого нужно уметь спасать.', 
+  'формат команд: ',
+  '[мини|миник|к]реск(+|-) цель, рескаю, нерескаю, рески, рескиочистить'
+  }
+  return table.concat(t, '\r\n')
 end
 function autoresc.version()
-  return '1.0'
+  return '1.01'
 end
 
 return autoresc
