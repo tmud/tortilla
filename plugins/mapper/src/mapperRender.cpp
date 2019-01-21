@@ -473,7 +473,7 @@ void MapperRender::createMenu()
     }
     m.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
     m.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
-    m.AppendSeparator();
+    /*m.AppendSeparator();
 
     CMenuXP *newzone = new CMenuXP();
     newzone->CreatePopupMenu();
@@ -503,7 +503,7 @@ void MapperRender::createMenu()
     moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_EAST, L"на восток"));
     moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_UP, L"вверх"));
     moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_DOWN, L"вниз"));
-    m.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));
+    m.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));*/
 
     m_multiply_rooms_menu.CreatePopupMenu();
     CMenuXP &m2 = m_multiply_rooms_menu;

@@ -82,7 +82,7 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    //todo! m_mapper_window->loadMaps();
+    m_mapper_window->loadMaps();
     return 0;
 }
 
@@ -218,12 +218,9 @@ int msdp(lua_State *L)
         }
         lua_pop(L, 1);
     }
-    if (!inconsistent_data)
-    {
-        m_mapper_window->processMsdp(rd);
+    if (inconsistent_data)
         return 0;
-    }
-    assert(false);
+    m_mapper_window->processMsdp(rd);
     return 0;
 }
 
