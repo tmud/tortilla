@@ -9,6 +9,9 @@
     <exit dir="south" vnum="4010"/>
     <exit dir="west"/>
   </room>
+  <room x="-3" y="-2" z="0" name="Хижина отшельника" vnum="4042">
+    <exit dir="south" vnum="4026"/>
+  </room>
   <room x="2" y="-2" z="0" name="Базарная улица" vnum="4010">
     <exit dir="north" vnum="4009"/>
     <exit dir="south" vnum="4012"/>
@@ -17,12 +20,12 @@
     <exit dir="south" vnum="4015"/>
   </room>
   <room x="-4" y="-1" z="0" name="Слезная гора" vnum="4045">
-    <exit dir="north"/>
+    <exit dir="north" vnum="4801"/>
     <exit dir="east" vnum="4026"/>
   </room>
   <room x="-3" y="-1" z="0" name="Бабичья улица" vnum="4026">
-    <exit dir="north"/>
-    <exit dir="south"/>
+    <exit dir="north" vnum="4042"/>
+    <exit dir="south" vnum="4063"/>
     <exit dir="west" vnum="4045"/>
     <exit dir="east" vnum="4025"/>
   </room>
@@ -61,6 +64,9 @@
   </room>
   <room x="5" y="-1" z="0" name="Лавка скорняка" vnum="4031">
     <exit dir="south" vnum="4018"/>
+  </room>
+  <room x="-3" y="0" z="0" name="Капище" vnum="4063">
+    <exit dir="north"/>
   </room>
   <room x="0" y="0" z="0" name="Гостиный двор" vnum="4056">
     <exit dir="east" vnum="4014"/>
