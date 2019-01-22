@@ -1107,7 +1107,8 @@ private:
         m_networkData.port = port;
         m_networkData.notifyMsg = WM_USER+1;
         m_networkData.wndToNotify = m_hWnd;
-        m_network.connect(m_networkData);
+        PropertiesData* pdata = tortilla::getProperties();
+        m_network.connect(m_networkData, pdata->disable_mccp);
     }
 
     bool saveViewData(int view, tstring& filename)

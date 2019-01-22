@@ -130,6 +130,7 @@
 #define IDC_CHECK_DISABLEALT            1144
 #define IDC_CHECK_MOVETOTRAY            1145
 #define IDC_CHECK_CREATELINK            1146
+#define IDC_CHECK_DISABLEMCCP           1146
 #define IDC_CHECK_C_ACTIONS             1147
 #define IDC_CHECK_C_ALIASES             1148
 #define IDC_CHECK_C_HIGHLIGHTS          1149
@@ -166,7 +167,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        228
+#define _APS_NEXT_RESOURCE_VALUE        229
 #define _APS_NEXT_COMMAND_VALUE         32803
 #define _APS_NEXT_CONTROL_VALUE         1161
 #define _APS_NEXT_SYMED_VALUE           101

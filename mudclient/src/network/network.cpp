@@ -233,7 +233,7 @@ void NetworkConnection::threadProc()
 }
 
 Network::Network() : m_connection(2048), m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
-m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
+m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false), m_disable_mccp(false)
 {
     m_input_buffer.alloc(2048);
     m_mccp_buffer.alloc(8192);
@@ -245,8 +245,9 @@ Network::~Network()
     disconnect();
 }
 
-void Network::connect(const NetworkConnectData& data)
+void Network::connect(const NetworkConnectData& data, bool disable_mccp)
 {
+    m_disable_mccp = disable_mccp;
     init_mccp();
     m_connection.connect(data);
 }
@@ -540,6 +541,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 void Network::init_mccp()
 {
     close_mccp();
+    if (m_disable_mccp) return;
     z_stream *zs = new z_stream();
     zs->next_in    =  NULL;
     zs->avail_in   =  0;

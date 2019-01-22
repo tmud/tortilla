@@ -96,7 +96,7 @@ public:
     Network();
     ~Network();
     NetworkEvent translateEvent(LPARAM event);
-    void connect(const NetworkConnectData& data);
+    void connect(const NetworkConnectData& data, bool disable_mccp);
     void disconnect();
     void send(const tbyte* data, int len);      // send with iacs processing
     void sendplain(const tbyte* data, int len); // send data directly
@@ -131,6 +131,7 @@ private:
 
     z_stream *m_pMccpStream;
     bool m_mccp_on;
+    bool m_disable_mccp;
 
     int  m_totalReaded;
     int  m_totalDecompressed;
