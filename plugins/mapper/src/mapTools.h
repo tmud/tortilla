@@ -13,6 +13,7 @@ public:
     bool  addNewRoom(Room* from, Room* newroom, RoomDir dir);
     MapCursor createCursor(Room *room, MapCursorColor color);
     MapCursor createZoneCursor(Rooms3dCube* zone);
+    MapCursor createNullCursor();
 private:
     bool setRoomOnMap(Room* from, Room* next, RoomDir dir);
 };

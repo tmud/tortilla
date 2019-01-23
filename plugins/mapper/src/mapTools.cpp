@@ -107,6 +107,11 @@ MapCursor MapTools::createZoneCursor(Rooms3dCube* zone)
     return std::make_shared<MapZoneCursorImplementation>(map, zone, 0);
 }
 
+MapCursor MapTools::createNullCursor()
+{
+    return std::make_shared<MapNullCursorImplementation>();
+}
+
 bool MapNewZoneTool::tryMakeNewZone(const Room* room, RoomDir dir)
 {
     MapTools t(map);

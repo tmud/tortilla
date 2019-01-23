@@ -79,7 +79,11 @@ void Mapper::processMsdp(const RoomData& rd)
         fillExits(room);
     }
     if (movement != RD_UNKNOWN)
+    {
         m_pCurrentRoom->dirs[movement].next_room = room;
+        RoomDir revertDir = dh.revertDir(movement);
+        room->dirs[revertDir].next_room = m_pCurrentRoom;
+    }
     m_pCurrentRoom = room;
     redrawPositionByRoom(m_pCurrentRoom);
 }
@@ -199,15 +203,16 @@ void Mapper::onSize()
 void Mapper::onZoneChanged()
 {
     MapCursor current = m_view.getCurrentPosition();
-    int zone = m_zones_control.getCurrentZone();
-    if (current->valid() && current->pos().zid == zone)
-    {
-        return redrawPosition(current, false);
-    }
+    int zone = m_zones_control.getCurrentZone();    
+    if (m_pCurrentRoom && m_pCurrentRoom->pos.zid == zone)
+        return redrawPositionByRoom(m_pCurrentRoom);
     MapTools t(&m_map);
     Rooms3dCube *ptr = m_map.findZone(zone);
     MapCursor cursor = t.createZoneCursor(ptr);
-    redrawPosition(cursor, false);
+    if (cursor->valid())
+        return redrawPosition(cursor, false);
+    assert(false);
+    return redrawPosition(t.createNullCursor(), false);
 }
 
 void Mapper::onZoneDeleted()
