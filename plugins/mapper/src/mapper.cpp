@@ -151,11 +151,11 @@ void Mapper::redrawPositionByRoom(const Room *room)
 {
     updateZonesList();
     m_view.clearSelection();
-    MapCursorColor color = (room) ? RCC_NORMAL : RCC_NONE;    
+    MapCursorColor color = (room) ? RCC_NORMAL : RCC_NONE;
     MapTools tools(&m_map);
     Room *r = (room) ? tools.findRoom(room->roomdata.hash()) : nullptr;
     MapCursor c = tools.createCursor( r, color );
-    redrawPosition(c, true);
+    redrawPosition(c, (room) ? true : false);
 }
 
 void Mapper::onCreate()

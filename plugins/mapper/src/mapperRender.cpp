@@ -45,7 +45,7 @@ void MapperRender::showPosition(MapCursor pos, bool resetScrolls)
     if (pos->valid())
         currentpos = pos;
 
-    if (pos->valid() && viewpos && viewpos->valid() && !resetScrolls)
+    if (!resetScrolls && pos->valid() && viewpos && viewpos->valid())
     {
         int id = viewpos->zone()->id();
         int newid = pos->zone()->id();
@@ -74,7 +74,7 @@ void MapperRender::showPosition(MapCursor pos, bool resetScrolls)
         scrolls s;
         s.h = getHScroll();
         s.v = getVScroll();
-        m_scrolls[id] = s;   
+        m_scrolls[id] = s;
     }
 }
 
@@ -281,15 +281,16 @@ void MapperRender::updateScrollbars(bool center)
     if (width < window_width)
     {
         h.maxpos = window_width - width - 1;
-        if (h.pos == -1)
+        //if (h.pos == -1)
             h.pos = h.maxpos / 2;
-        else if (center && !m_block_center)
-            h.pos = h.maxpos / 2;
+        //else if (center && !m_block_center)
+        //    h.pos = h.maxpos / 2;
         m_hscroll_flag = false;
     }
     else
     {
         h.maxpos = width - window_width;
+        h.pos = h.maxpos / 2;
         m_hscroll_flag = true;
         m_block_center = false;
     }
@@ -297,15 +298,16 @@ void MapperRender::updateScrollbars(bool center)
     if (height < window_height)
     {
         v.maxpos = window_height - height - 1;
-        if (v.pos == -1)
+        //if (v.pos == -1)
             v.pos = v.maxpos / 2;
-        else if (center && !m_block_center)
-            v.pos = v.maxpos / 2;
+        //else if (center && !m_block_center)
+        //    v.pos = v.maxpos / 2;
         m_vscroll_flag = false;
     }
     else
     {
         v.maxpos = height - window_height;
+        v.pos = v.maxpos / 2;
         m_vscroll_flag = true;
         m_block_center = false;
     }

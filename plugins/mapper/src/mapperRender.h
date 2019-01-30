@@ -48,7 +48,7 @@ class MapperRender : public CWindowImpl<MapperRender>
         int pos, maxpos;
     };
     struct scrolls {
-        scroll h,v;        
+        scroll h,v;
     };   
     std::map<int, scrolls> m_scrolls;
     typedef std::map<int, scrolls>::iterator siterator;
