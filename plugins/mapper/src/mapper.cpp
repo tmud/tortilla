@@ -140,9 +140,9 @@ void Mapper::lostPosition()
     redrawPositionByRoom(nullptr);
 }
 
-void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
+void Mapper::redrawPosition(MapCursor cursor, bool centreScreen)
 {
-    m_view.showPosition(cursor, resetScrolls, false);
+    m_view.showPosition(cursor, centreScreen, false);
     const Rooms3dCube* zone = cursor->zone();
     m_zones_control.setCurrentZone(zone);
 }

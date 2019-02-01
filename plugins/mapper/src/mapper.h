@@ -42,7 +42,7 @@ private:
     void onToolbar(int id);
 private:
 	void updateZonesList();
-    void redrawPosition(MapCursor cursor, bool resetScrolls);
+    void redrawPosition(MapCursor cursor, bool centreScreen);
     void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
     void lostPosition();
