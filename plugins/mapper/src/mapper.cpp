@@ -122,7 +122,7 @@ void Mapper::loadMaps()
         if (!last.empty() && last == zone->name()) {
             MapTools t(&m_map);
             MapCursor c = t.createZoneCursor(zone);
-            redrawPosition(c, false);
+            redrawPosition(c, true);
             last_found = true;
             break;
         }
@@ -130,7 +130,7 @@ void Mapper::loadMaps()
     if (!last_found && !zones.empty()) {
         MapTools t(&m_map);
         MapCursor c = t.createZoneCursor(zones[0]);
-        redrawPosition(c, false);
+        redrawPosition(c, true);
     }
 }
 
@@ -142,7 +142,7 @@ void Mapper::lostPosition()
 
 void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
 {
-    m_view.showPosition(cursor, resetScrolls);
+    m_view.showPosition(cursor, resetScrolls, false);
     const Rooms3dCube* zone = cursor->zone();
     m_zones_control.setCurrentZone(zone);
 }
@@ -151,11 +151,11 @@ void Mapper::redrawPositionByRoom(const Room *room)
 {
     updateZonesList();
     m_view.clearSelection();
-    MapCursorColor color = (room) ? RCC_NORMAL : RCC_NONE;
     MapTools tools(&m_map);
     Room *r = (room) ? tools.findRoom(room->roomdata.hash()) : nullptr;
+    MapCursorColor color = (r) ? RCC_NORMAL : RCC_NONE;
     MapCursor c = tools.createCursor( r, color );
-    redrawPosition(c, (room) ? true : false);
+    m_view.showPosition(c, (r) ? true : false, (r) ? true : false);
 }
 
 void Mapper::onCreate()

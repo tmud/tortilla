@@ -55,8 +55,6 @@ class MapperRender : public CWindowImpl<MapperRender>
 
     bool m_hscroll_flag;
     bool m_vscroll_flag;
-    bool m_block_center;
-
     bool m_track_mouse;
 
     enum DRAGMODE { DRAG_NONE = 0, DRAG_MAP, DRAG_ROOM };
@@ -74,8 +72,8 @@ public:
     MapperRender();
     void setMenuHandler(HWND handler_wnd);
     void setMoveToolHandler(MapperRenderRoomMoveTool *movetool);
-    void showPosition(MapCursor pos, bool resetScrolls);
-    MapCursor getCurrentPosition();        
+    void showPosition(MapCursor pos, bool centerScreen, bool currentPosition);
+    MapCursor getCurrentPosition();
     void getSelectedRooms(std::vector<const Room*>* rooms) { 
         rooms->resize(m_selected_rooms.size());
         std::copy(m_selected_rooms.begin(), m_selected_rooms.end(), rooms->begin());
@@ -156,7 +154,7 @@ private:
 private:
     void renderMap(int render_x, int render_y);
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
-    MapCursor getCursor() const;
+    MapCursor getViewPosition() const;
     const Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();
@@ -165,7 +163,8 @@ private:
     void onVScroll(DWORD position);
     int  getRenderX() const;
     int  getRenderY() const;
-    void updateScrollbars(bool center);
+    void centerScrollbars();
+    void updateScrollbars(bool center = false);
     void mouseLeftButtonDown();
     void mouseLeftButtonUp();
     void mouseMove();

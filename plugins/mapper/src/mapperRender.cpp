@@ -10,7 +10,6 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
 {
     m_hscroll_flag = false;
     m_vscroll_flag = false;
-    m_block_center = true;
     m_track_mouse = false;
     m_drag_mode = DRAG_NONE;
     m_menu_handler = NULL;
@@ -27,63 +26,85 @@ void MapperRender::setMoveToolHandler(MapperRenderRoomMoveTool *movetool)
     m_roomMoveTool = movetool;
 }
 
-MapCursor MapperRender::getCursor() const
+MapCursor MapperRender::getViewPosition() const
 {
-    MapCursor cursor = viewpos; // ? viewpos : currentpos;
-    return (cursor && cursor->valid()) ? cursor : MapCursor();
-}
-
-void MapperRender::onCreate()
-{
-    createMenu();
-    m_background.CreateSolidBrush(RGB(0,90,0));
-    updateScrollbars(false);
-}
-
-void MapperRender::showPosition(MapCursor pos, bool resetScrolls)
-{
-    if (pos->valid())
-        currentpos = pos;
-
-    if (!resetScrolls && pos->valid() && viewpos && viewpos->valid())
-    {
-        int id = viewpos->zone()->id();
-        int newid = pos->zone()->id();
-        viewpos = pos;
-        scrolls s;
-        s.h = getHScroll();
-        s.v = getVScroll();
-        m_scrolls[id] = s;
-        if (id == newid) {
-            Invalidate();
-            return;
-        }
-        siterator zt = m_scrolls.find(newid);
-        if (zt != m_scrolls.end()) {
-            const scrolls &s = zt->second;
-            setHScroll(s.h);
-            setVScroll(s.v);
-            return;
-        }
-    }
-    viewpos = pos;
-    updateScrollbars(true);
-    if (resetScrolls) {
-        int id = viewpos->zone()->id();
-        viewpos = pos;
-        scrolls s;
-        s.h = getHScroll();
-        s.v = getVScroll();
-        m_scrolls[id] = s;
-    }
+    return (viewpos && viewpos->valid()) ? viewpos : std::make_shared<MapNullCursorImplementation>();
 }
 
 MapCursor MapperRender::getCurrentPosition()
 {
     if (!currentpos)
         return std::make_shared<MapNullCursorImplementation>();
-    std::shared_ptr<MapCursorInterface> cursor( currentpos->dublicate() );
-    return cursor;    
+    std::shared_ptr<MapCursorInterface> cursor(currentpos->dublicate());
+    return cursor;
+}
+
+void MapperRender::onCreate()
+{
+    createMenu();
+    m_background.CreateSolidBrush(RGB(0,90,0));
+    Invalidate();
+}
+
+void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPosition)
+{
+    if (!pos) {
+        assert(false);
+        return;
+    }
+
+    auto saveScrolls = [this](int id) {
+        scrolls s;
+        s.h = getHScroll();
+        s.v = getVScroll();
+        m_scrolls[id] = s;
+    };
+
+    if (!viewpos) {
+        viewpos = pos;
+    }
+
+    if (viewpos->valid())
+    {
+        int id = viewpos->zone()->id();
+        saveScrolls(id);
+    }
+
+    if (!pos->valid())
+        return;
+
+    int id = viewpos->zone()->id();
+    int newid = pos->zone()->id();
+    viewpos = pos;
+    if (currentPosition)
+        currentpos = pos;
+    if (id == newid)
+    {
+        if (centerScreen) {
+            centerScrollbars();
+            saveScrolls(id);
+        }
+        return;
+    } 
+    if (centerScreen)
+    {
+        centerScrollbars();
+        saveScrolls(newid);
+        return;
+    }
+    siterator zt = m_scrolls.find(newid);
+    if (zt != m_scrolls.end()) 
+    {
+        const scrolls &s = zt->second;
+        setHScroll(s.h);
+        setVScroll(s.v);
+        Invalidate();
+    }
+    else
+    {
+        centerScrollbars();
+        saveScrolls(newid);
+    }
 }
 
 void MapperRender::onPaint()
@@ -99,8 +120,8 @@ void MapperRender::onPaint()
 
 void MapperRender::renderMap(int render_x, int render_y)
 {
-    MapCursor pos = getCursor();
-    if (!pos) return;
+    MapCursor pos = getViewPosition();
+    if (!pos->valid()) return;
 
     const Rooms3dCubePos& p = pos->pos();
     const Rooms3dCubeSize& sz = pos->size();
@@ -148,8 +169,8 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
 
 const Room* MapperRender::findRoomOnScreen(int cursor_x, int cursor_y) const
 {
-    MapCursor pos = getCursor();
-    if (!pos) return NULL;
+    MapCursor pos = getViewPosition();
+    if (!pos->valid()) return NULL;
 
     const Rooms3dCubeSize& sz = pos->size();
     int sx = sz.width() * ROOM_SIZE;
@@ -174,7 +195,6 @@ void MapperRender::onHScroll(DWORD position)
     scroll s = getHScroll();
     if (s.pos < 0) return;
     int &hscroll_pos = s.pos;
-    m_block_center = true;
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
     switch (action) {
@@ -196,6 +216,7 @@ void MapperRender::onHScroll(DWORD position)
         break;
     }
     setHScroll(s);
+    Invalidate();
 }
 
 void MapperRender::onVScroll(DWORD position)
@@ -203,7 +224,6 @@ void MapperRender::onVScroll(DWORD position)
     scroll s = getVScroll();
     if (s.pos < 0) return;
     int &vscroll_pos = s.pos;
-    m_block_center = true;
     int thumbpos = HIWORD(position);
     int action = LOWORD(position);
     switch (action) {
@@ -225,18 +245,19 @@ void MapperRender::onVScroll(DWORD position)
         break;
     }
     setVScroll(s);
+    Invalidate();
 }
 
 void MapperRender::onSize()
 {
     m_scrolls.clear();
-    updateScrollbars(true);
+    updateScrollbars();
 }
 
 int MapperRender::getRenderX() const
 {
     scroll s = getHScroll();
-    int x = (m_hscroll_flag) ? -s.pos : s.maxpos - s.pos;
+    int x = (m_hscroll_flag) ? -s.pos : s.pos;
     x = x + MAP_EDGE / 2;
     return x;
 }
@@ -244,14 +265,19 @@ int MapperRender::getRenderX() const
 int MapperRender::getRenderY() const
 {
     scroll s = getVScroll();
-    int y = (m_vscroll_flag) ? -s.pos : s.maxpos - s.pos;
+    int y = (m_vscroll_flag) ? -s.pos : s.pos;
     y = y + MAP_EDGE / 2;
     return y;
 }
 
+void MapperRender::centerScrollbars()
+{
+    updateScrollbars(true);
+}
+
 void MapperRender::updateScrollbars(bool center)
 {
-/*#ifdef _DEBUG
+    /*#ifdef _DEBUG
     char buffer[64];
     int vmin = 0; int vmax = 0;
     GetScrollRange(SB_VERT, &vmin, &vmax);
@@ -262,17 +288,13 @@ void MapperRender::updateScrollbars(bool center)
     OutputDebugStringA(buffer);
 #endif*/
 
-    MapCursor pos = getCursor();
-    if (!pos) {
-        Invalidate();
+    MapCursor pos = getViewPosition();
+    if (!pos->valid())
         return;
-    }
 
     const Rooms3dCubeSize& sz = pos->size();
-
     int width = sz.width()*ROOM_SIZE + MAP_EDGE;
     int height = sz.height()*ROOM_SIZE + MAP_EDGE;
-
     RECT rc; GetClientRect(&rc);
     int window_width = rc.right;
     int window_height = rc.bottom;
@@ -281,51 +303,55 @@ void MapperRender::updateScrollbars(bool center)
     if (width < window_width)
     {
         h.maxpos = window_width - width - 1;
-        //if (h.pos == -1)
-            h.pos = h.maxpos / 2;
-        //else if (center && !m_block_center)
-        //    h.pos = h.maxpos / 2;
         m_hscroll_flag = false;
     }
     else
     {
         h.maxpos = width - window_width;
-        h.pos = h.maxpos / 2;
         m_hscroll_flag = true;
-        m_block_center = false;
     }
     scroll v;
     if (height < window_height)
     {
         v.maxpos = window_height - height - 1;
-        //if (v.pos == -1)
-            v.pos = v.maxpos / 2;
-        //else if (center && !m_block_center)
-        //    v.pos = v.maxpos / 2;
         m_vscroll_flag = false;
     }
     else
     {
         v.maxpos = height - window_height;
-        v.pos = v.maxpos / 2;
         m_vscroll_flag = true;
-        m_block_center = false;
+    }
+    if (center || !m_vscroll_flag)
+        v.pos = v.maxpos / 2;
+    else {
+        v.pos = getVScroll().pos;
+        if (v.pos > v.maxpos)
+            v.pos = v.maxpos;
+    }
+    if (center || !m_hscroll_flag)
+        h.pos = h.maxpos / 2;
+    else
+    {
+        h.pos = getHScroll().pos;
+        if (h.pos > h.maxpos)
+            h.pos = h.maxpos;
     }
     setHScroll(h);
     setVScroll(v);
+    Invalidate();
 }
 
 void MapperRender::mouseLeftButtonDown()
 {
     if (m_drag_mode == DRAG_NONE) 
-    {    
+    {
         if (!m_roomMoveTool)
                 return;
         POINT pt; GetCursorPos(&pt);
         int cursor_x = pt.x; 
         int cursor_y = pt.y;
         ScreenToClient(&pt);
-        const Room *room = findRoomOnScreen(pt.x, pt.y);        
+        const Room *room = findRoomOnScreen(pt.x, pt.y);
         bool shift = (::GetKeyState(VK_SHIFT) < 0 );
         if(shift)
         {
@@ -358,7 +384,7 @@ void MapperRender::mouseLeftButtonUp()
 
 void MapperRender::mouseMove()
 {
-    if (m_drag_mode == DRAG_NONE) return;  
+    if (m_drag_mode == DRAG_NONE) return;
     POINT pos;
     GetCursorPos(&pos);
 
@@ -375,7 +401,7 @@ void MapperRender::mouseMove()
         int y = pos.y - getRenderY();
         if (y < 0) y = y / ROOM_SIZE - 1;
         else y = y / ROOM_SIZE;
-        
+
         /*char b[64];
         sprintf(b, "x=%d,y=%d\r\n", x, y);
         OutputDebugStringA(b);*/
@@ -389,11 +415,12 @@ void MapperRender::mouseMove()
     scroll h = getHScroll();
     scroll v = getVScroll();
 
-    h.pos = h.pos - dx;
-    v.pos = v.pos - dy;
+    h.pos = h.pos + (dx * (m_hscroll_flag ? -1 : 1));
+    v.pos = v.pos + (dy * (m_vscroll_flag ? -1 : 1));
 
     setHScroll(h);
-    setVScroll(v);    
+    setVScroll(v);
+    Invalidate();
 }
 
 void MapperRender::mouseLeave()
@@ -612,20 +639,18 @@ MapperRender::scroll MapperRender::getVScroll() const
 
 void MapperRender::setHScroll(const scroll& s)
 {
-    SetScrollRange(SB_HORZ, 0, s.maxpos);
     int pos = s.pos;
     if (pos < 0) pos = 0;
     else if (pos > s.maxpos) pos = s.maxpos;
+    SetScrollRange(SB_HORZ, 0, s.maxpos);    
     SetScrollPos(SB_HORZ, pos);
-    Invalidate();
 }
 
 void MapperRender::setVScroll(const scroll& s)
 {
-    SetScrollRange(SB_VERT, 0, s.maxpos);
     int pos = s.pos;
     if (pos < 0) pos = 0;
     else if (pos > s.maxpos) pos = s.maxpos;
+    SetScrollRange(SB_VERT, 0, s.maxpos);
     SetScrollPos(SB_VERT, pos);
-    Invalidate();
 }
