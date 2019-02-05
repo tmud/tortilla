@@ -49,6 +49,7 @@ class MapperRender : public CWindowImpl<MapperRender>
     };
     struct scrolls {
         scroll h,v;
+        bool h_flag, v_flag;
     };   
     std::map<int, scrolls> m_scrolls;
     typedef std::map<int, scrolls>::iterator siterator;
@@ -152,7 +153,8 @@ private:
         return 0;
     }    
 private:
-    void renderMap(int render_x, int render_y);
+    bool isCurrentPositionOnScreen();
+    void renderMap();
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
     MapCursor getViewPosition() const;
     const Room* findRoomOnScreen(int cursor_x, int cursor_y) const;

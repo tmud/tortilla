@@ -46,17 +46,40 @@ void MapperRender::onCreate()
     Invalidate();
 }
 
+bool MapperRender::isCurrentPositionOnScreen()
+{
+    if (!currentpos)
+    {
+        assert(false);
+        return true;    // dont scroll
+    }
+    const Rooms3dCubePos &p = currentpos->pos();
+    const Room* r = currentpos->room(p);
+    if (!r) 
+    {
+        assert(false);
+        return true;    // dont scroll
+    }
+    int x = getRenderX();
+    int y = getRenderY();
+
+
+
+    return true;
+}
+
 void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPosition)
 {
     if (!pos) {
         assert(false);
         return;
     }
-
     auto saveScrolls = [this](int id) {
         scrolls s;
         s.h = getHScroll();
+        s.h_flag = m_hscroll_flag;
         s.v = getVScroll();
+        s.v_flag = m_vscroll_flag;
         m_scrolls[id] = s;
     };
 
@@ -85,7 +108,7 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
             saveScrolls(id);
         }
         return;
-    } 
+    }
     if (centerScreen)
     {
         centerScrollbars();
@@ -93,11 +116,13 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
         return;
     }
     siterator zt = m_scrolls.find(newid);
-    if (zt != m_scrolls.end()) 
+    if (zt != m_scrolls.end())
     {
         const scrolls &s = zt->second;
         setHScroll(s.h);
+        m_hscroll_flag = s.h_flag;
         setVScroll(s.v);
+        m_vscroll_flag = s.v_flag;
         Invalidate();
     }
     else
@@ -115,28 +140,30 @@ void MapperRender::onPaint()
     mdc.FillRect(&pos, m_background);
     rr.setDC(mdc);
     rr.setIcons(&m_icons);
-    renderMap(getRenderX(), getRenderY());
+    renderMap();
 }
 
-void MapperRender::renderMap(int render_x, int render_y)
+void MapperRender::renderMap()
 {
+    int render_x = getRenderX();
+    int render_y = getRenderY();
     MapCursor pos = getViewPosition();
     if (!pos->valid()) return;
 
     const Rooms3dCubePos& p = pos->pos();
     const Rooms3dCubeSize& sz = pos->size();
 
-    if (sz.minlevel <= (p.z-1))
-        renderLevel(p.z-1, render_x+6, render_y+6, 1, pos);
+    if (sz.minlevel <= (p.z - 1))
+        renderLevel(p.z - 1, render_x + 6, render_y + 6, 1, pos);
     renderLevel(p.z, render_x, render_y, 0, pos);
-    if (sz.maxlevel >= (p.z+1))
-        renderLevel(p.z+1, render_x-6, render_y-6, 2, pos);
+    if (sz.maxlevel >= (p.z + 1))
+        renderLevel(p.z + 1, render_x - 6, render_y - 6, 2, pos);
 
     if (pos->color() != RCC_NONE)
     {
         int cursor_x = (p.x - sz.left) * ROOM_SIZE + render_x;
         int cursor_y = (p.y - sz.top) * ROOM_SIZE + render_y;
-        rr.renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1 );
+        rr.renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1);
     }
 }
 
@@ -146,14 +173,18 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
     GetClientRect(&rc);
     const Rooms3dCubeSize& sz = pos->size();
     Rooms3dCubePos p; p.z = z;
-    for (int x=0; x<sz.width(); ++x)
+    for (int x = 0; x < sz.width(); ++x)
     {
         p.x = x + sz.left;
-        for (int y=0; y<sz.height(); ++y)
+        for (int y = 0; y < sz.height(); ++y)
         {
             p.y = y + sz.top;
             int px = ROOM_SIZE * x + render_x;
             int py = ROOM_SIZE * y + render_y;
+            if ((px + ROOM_SIZE) < 0 || (py + ROOM_SIZE) < 0)
+                continue;
+            if ((px > rc.right) || (py > rc.bottom))
+                continue;
             const Room *r = pos->room(p);
             if (!r)
             {
@@ -257,17 +288,17 @@ void MapperRender::onSize()
 int MapperRender::getRenderX() const
 {
     scroll s = getHScroll();
-    int x = (m_hscroll_flag) ? -s.pos : s.pos;
-    x = x + MAP_EDGE / 2;
-    return x;
+    int e2 = MAP_EDGE / 2;
+    int dx = (m_hscroll_flag) ? -s.pos : s.pos;
+    return dx + e2;
 }
 
 int MapperRender::getRenderY() const
 {
     scroll s = getVScroll();
-    int y = (m_vscroll_flag) ? -s.pos : s.pos;
-    y = y + MAP_EDGE / 2;
-    return y;
+    int e2 = MAP_EDGE / 2;
+    int dy = (m_vscroll_flag) ? -s.pos : s.pos;
+    return dy + e2;
 }
 
 void MapperRender::centerScrollbars()
@@ -550,9 +581,8 @@ void MapperRender::createMenu()
     }
     m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"÷вет..."));
     m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"—бросить цвет"));
-    m2.AppendSeparator();
-
-    m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"—оздать новую зону..."));
+    /*m2.AppendSeparator();
+    m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"—оздать новую зону..."));*/
 }
 
 bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)
@@ -642,7 +672,7 @@ void MapperRender::setHScroll(const scroll& s)
     int pos = s.pos;
     if (pos < 0) pos = 0;
     else if (pos > s.maxpos) pos = s.maxpos;
-    SetScrollRange(SB_HORZ, 0, s.maxpos);    
+    SetScrollRange(SB_HORZ, 0, s.maxpos);
     SetScrollPos(SB_HORZ, pos);
 }
 
