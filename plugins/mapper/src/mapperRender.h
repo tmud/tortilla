@@ -153,7 +153,7 @@ private:
         return 0;
     }    
 private:
-    bool isCurrentPositionOnScreen();
+    void showCurrentOnScreen(bool centerScreen);
     void renderMap();
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
     MapCursor getViewPosition() const;

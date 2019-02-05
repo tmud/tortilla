@@ -46,26 +46,46 @@ void MapperRender::onCreate()
     Invalidate();
 }
 
-bool MapperRender::isCurrentPositionOnScreen()
+void MapperRender::showCurrentOnScreen(bool centerScreen)
 {
-    if (!currentpos)
-    {
+    if (!currentpos) {
         assert(false);
-        return true;    // dont scroll
+        return;
     }
     const Rooms3dCubePos &p = currentpos->pos();
     const Room* r = currentpos->room(p);
-    if (!r) 
-    {
+    if (!r) {
         assert(false);
-        return true;    // dont scroll
+        return;
     }
-    int x = getRenderX();
-    int y = getRenderY();
+    const Rooms3dCubeSize &sz = currentpos->size();
+    int px = (p.x - sz.left) * ROOM_SIZE + getRenderX();
+    int py = (p.y - sz.top) * ROOM_SIZE + getRenderY();
+    RECT rc;
+    GetClientRect(&rc);
 
-
-
-    return true;
+    // true if room is not fully visible
+    bool not_visible_x_left = ((px + ROOM_SIZE) < ROOM_SIZE);
+    bool not_visible_x_right = (px > (rc.right - ROOM_SIZE));
+    bool not_visible_y_top = ((py + ROOM_SIZE) < ROOM_SIZE);
+    bool not_visible_y_bottom =(py > (rc.bottom - ROOM_SIZE));
+    if (centerScreen)
+    {
+        // try place current pos on the window center
+    }
+    else
+    {
+        // move room into visible part
+        if (not_visible_x_left)
+        { 
+          
+        }
+        else if (not_visible_x_right)
+        { // move room into visible part
+          
+        }
+    }
+    Invalidate();
 }
 
 void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPosition)
@@ -100,10 +120,19 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
     int newid = pos->zone()->id();
     viewpos = pos;
     if (currentPosition)
+    {
+        assert(pos);
         currentpos = pos;
+    }
     if (id == newid)
     {
-        if (centerScreen) {
+        if (currentPosition)
+        {
+            showCurrentOnScreen(centerScreen);
+            return;
+        }
+        if (centerScreen)
+        {
             centerScrollbars();
             saveScrolls(id);
         }
