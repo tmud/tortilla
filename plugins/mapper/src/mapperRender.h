@@ -165,6 +165,8 @@ private:
     void onVScroll(DWORD position);
     int  getRenderX() const;
     int  getRenderY() const;
+    int  calcRenderPosByScroll(const scroll&s, bool flag) const;
+    int  calcScrollPosByRender(int render, bool flag) const;
     void centerScrollbars();
     void updateScrollbars(bool center = false);
     void mouseLeftButtonDown();

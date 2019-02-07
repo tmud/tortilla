@@ -186,6 +186,8 @@
     <Image Include="res\bmp00001.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="mapper.bmp" />
+    <Image Include="res\mapper.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mapper.rc">

@@ -69,21 +69,75 @@ void MapperRender::showCurrentOnScreen(bool centerScreen)
     bool not_visible_x_right = (px > (rc.right - ROOM_SIZE));
     bool not_visible_y_top = ((py + ROOM_SIZE) < ROOM_SIZE);
     bool not_visible_y_bottom =(py > (rc.bottom - ROOM_SIZE));
+
+    if ((not_visible_x_left && not_visible_x_right) ||
+        (not_visible_y_top && not_visible_y_bottom))
+    {
+        return; // cant render, screen to small
+    }
     if (centerScreen)
     {
-        // try place current pos on the window center
+        // try place current pos on the window center        
+        int reqpx = (rc.right - ROOM_SIZE) / 2 - (p.x - sz.left) * ROOM_SIZE;
+        int reqpy = (rc.bottom - ROOM_SIZE) / 2 - (p.y - sz.top) * ROOM_SIZE;
+        scroll h = getHScroll();
+        scroll v = getVScroll();
+        h.pos = calcScrollPosByRender(reqpx, m_hscroll_flag);
+        v.pos = calcScrollPosByRender(reqpy, m_vscroll_flag);
+        setVScroll(v);
+        setHScroll(h);
+        Invalidate();
+        return;
     }
-    else
+
+    // move room into visible part
+    if (not_visible_x_left)
     {
-        // move room into visible part
-        if (not_visible_x_left)
-        { 
-          
+        int dx = (p.x - sz.left) * ROOM_SIZE;
+        scroll h = getHScroll();
+        int px = dx + calcRenderPosByScroll(h, m_hscroll_flag);
+        while ((px + ROOM_SIZE) >= ROOM_SIZE);
+        {
+            h.pos -= ROOM_SIZE;
+            px = dx + calcRenderPosByScroll(h, m_hscroll_flag);
+        } 
+        setHScroll(h);
+    }
+    else if (not_visible_x_right)
+    {
+        int dx = (p.x - sz.left) * ROOM_SIZE;
+        scroll h = getHScroll();
+        int px = dx + calcRenderPosByScroll(h, m_hscroll_flag);
+        while (px <= (rc.right - ROOM_SIZE));
+        {
+            h.pos += ROOM_SIZE;
+            px = dx + calcRenderPosByScroll(h, m_hscroll_flag);
         }
-        else if (not_visible_x_right)
-        { // move room into visible part
-          
+        setHScroll(h);
+    }
+    if (not_visible_y_top)
+    {
+        int dy = (p.y - sz.top) * ROOM_SIZE;
+        scroll v = getVScroll();
+        int py = dy + calcRenderPosByScroll(v, m_vscroll_flag);
+        while ((py + ROOM_SIZE) >= ROOM_SIZE);
+        {
+            v.pos -= ROOM_SIZE;
+            py = dy + calcRenderPosByScroll(v, m_vscroll_flag);
         }
+        setVScroll(v);
+    }
+    else if (not_visible_y_bottom)
+    {
+        int dy = (p.y - sz.top) * ROOM_SIZE;
+        scroll v = getVScroll();
+        int py = dy + calcRenderPosByScroll(v, m_vscroll_flag);
+        while (py <= (rc.bottom - ROOM_SIZE));
+        {
+            v.pos += ROOM_SIZE;
+            py = dy + calcRenderPosByScroll(v, m_vscroll_flag);
+        }
+        setVScroll(v);
     }
     Invalidate();
 }
@@ -316,18 +370,27 @@ void MapperRender::onSize()
 
 int MapperRender::getRenderX() const
 {
-    scroll s = getHScroll();
-    int e2 = MAP_EDGE / 2;
-    int dx = (m_hscroll_flag) ? -s.pos : s.pos;
-    return dx + e2;
+    return calcRenderPosByScroll(getHScroll(), m_hscroll_flag);
 }
 
 int MapperRender::getRenderY() const
 {
-    scroll s = getVScroll();
+    return calcRenderPosByScroll(getVScroll(), m_vscroll_flag);
+}
+
+int MapperRender::calcRenderPosByScroll(const scroll&s, bool flag) const
+{
     int e2 = MAP_EDGE / 2;
-    int dy = (m_vscroll_flag) ? -s.pos : s.pos;
-    return dy + e2;
+    int delta = (flag) ? -s.pos : s.pos;
+    return delta + e2;
+}
+
+int MapperRender::calcScrollPosByRender(int render, bool flag) const
+{
+    int e2 = MAP_EDGE / 2;
+    int delta = render - e2;
+    int pos = (flag) ? -delta : delta;
+    return pos;
 }
 
 void MapperRender::centerScrollbars()
@@ -542,9 +605,10 @@ void MapperRender::mouseRightButtonDown()
 void MapperRender::createMenu()
 {
     m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
-    HANDLE hBmp = LoadImage(NULL, L"plugins\\mapper.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
-    if (hBmp)
-        m_icons.Add((HBITMAP)hBmp, RGB(128, 0, 128));
+    CBitmap icons;
+    icons.LoadBitmap(IDB_ICONS);
+    //HANDLE hBmp = LoadImage(NULL, L"plugins\\mapper.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    m_icons.Add(icons, RGB(128, 0, 128));
     m_single_room_menu.CreatePopupMenu();
     CMenuXP &m = m_single_room_menu;
     if (m_icons.GetImageCount() > 0)
