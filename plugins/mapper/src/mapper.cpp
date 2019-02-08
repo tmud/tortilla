@@ -154,8 +154,8 @@ void Mapper::redrawPositionByRoom(const Room *room)
     MapTools tools(&m_map);
     Room *r = (room) ? tools.findRoom(room->roomdata.hash()) : nullptr;
     MapCursorColor color = (r) ? RCC_NORMAL : RCC_NONE;
-    MapCursor c = tools.createCursor( r, color );
-    m_view.showPosition(c, (r) ? true : false, (r) ? true : false);
+    MapCursor c = tools.createCursor( r, color );    
+    m_view.showPosition(c, m_propsData->center_mode, (r) ? true : false);
 }
 
 void Mapper::onCreate()
@@ -176,6 +176,7 @@ void Mapper::onCreate()
 
     m_toolbar.Create(m_container, rcDefault, style);
     m_toolbar.setControlWindow(m_hWnd, WM_USER+1);
+    m_toolbar.setCenterMode(m_propsData->center_mode);
     m_view.Create(m_container, rcDefault, NULL, style | WS_VSCROLL | WS_HSCROLL, WS_EX_STATICEDGE);
     m_view.setMenuHandler(m_hWnd);
     m_view.setMoveToolHandler(this);
@@ -382,7 +383,7 @@ void Mapper::onToolbar(int id)
     if (id == IDC_BUTTON_LEVEL0) {
         MapCursor c = m_view.getCurrentPosition();
         if (!c->valid())
-            return;        
+            return;
         const Rooms3dCubePos& pos = c->pos();
         Rooms3dCube *zone = m_map.findZone(pos.zid);
         if (!zone) {
@@ -395,6 +396,13 @@ void Mapper::onToolbar(int id)
            MapCursor cursor = t.createZoneCursor(ptr);
            redrawPosition(cursor, true);
         }
+    }
+
+    if (id == IDC_BUTTON_CENTER) 
+    {
+        bool mode = !m_propsData->center_mode;
+        m_propsData->center_mode = mode;
+        m_toolbar.setCenterMode(mode);
     }
 }
 

@@ -22,14 +22,14 @@ int get_description(lua_State *L)
         L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
         L"Предназначен для мадов с 6 стандартными выходами.\r\n"
         L"Требует для работы поддержки MSDP протокола от мад-сервера c\r\n"
-        L"данными о местоположении."
+        L"данными о местоположении игрока."
         );
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"0.03 beta");
+    luaT_pushwstring(L, L"0.03");
     return 1;
 }
 
@@ -53,9 +53,11 @@ int init(lua_State *L)
     xml::node p;
     if (p.load(path.c_str(), &error))
     {
-        int width = 0;
+        int width = 0; int center = 1;
         p.get(L"zoneslist/width", &width);
         m_props.zoneslist_width = (width > 0) ? width : -1;
+        p.get(L"center/mode", &center);
+        m_props.center_mode = (center != 0) ? 1 : 0;
 		if (p.get(L"lastzone/name", &current_zone))
             m_props.current_zone = current_zone;
 	} else {
@@ -93,6 +95,7 @@ int release(lua_State *L)
     xml::node p(L"settings");
     p.set(L"zoneslist/width", m_props.zoneslist_width);
 	p.set(L"lastzone/name", m_props.current_zone);
+    p.set(L"center/mode", m_props.center_mode ? 1 : 0);
 
     tstring path;
     base::getPath(L, L"settings.xml", &path);

@@ -5,7 +5,7 @@ class MapperToolbar : public CDialogImpl<MapperToolbar>
 {
     HWND m_controlWindow;
     UINT m_controlMessage;
-    CBitmapButtonEx m_down, m_up, m_level0;
+    CBitmapButtonEx m_down, m_up, m_level0, m_center;
     CImageList m_icons;
 public:
     enum { IDD = IDD_MAPPER_TOOLBAR };
@@ -15,14 +15,19 @@ public:
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_DOWN, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL_UP, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LEVEL0, OnButton)
-        COMMAND_ID_HANDLER(IDC_BUTTON_SAVEZONES, OnDebugButton)
-        COMMAND_ID_HANDLER(IDC_BUTTON_LOADZONES, OnDebugButton)
-        COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnDebugButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_CENTER, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_SAVEZONES, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_LOADZONES, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnButton)
     END_MSG_MAP()
     MapperToolbar() : m_controlWindow(0), m_controlMessage(0) {}
     void setControlWindow(HWND wnd, UINT msg) {
         m_controlWindow = wnd;
         m_controlMessage = msg;
+    }
+    void setCenterMode(bool centerMode)
+    {
+        m_center.SetPushed(centerMode);
     }
 private:
     void hide(UINT id) { GetDlgItem(id).ShowWindow(SW_HIDE); }
@@ -40,10 +45,11 @@ private:
         init(m_down, 1, IDC_BUTTON_LEVEL_DOWN, L"На уровень вниз");
         init(m_up, 0, IDC_BUTTON_LEVEL_UP, L"На уровень вверх");
         init(m_level0, 2, IDC_BUTTON_LEVEL0, L"Задать нулевой уровень");
+        init(m_center, 3, IDC_BUTTON_CENTER, L"Центровать текущую позицию");
 #ifndef _DEBUG
         //hide(IDC_BUTTON_SAVEZONES);
         //hide(IDC_BUTTON_LOADZONES);
-        //hide(IDC_BUTTON_CLEARZONES);
+        hide(IDC_BUTTON_CLEARZONES);
 #endif
         return 0;
 	}
@@ -55,12 +61,6 @@ private:
         return 0;
     }
     LRESULT OnButton(WORD, WORD id, HWND, BOOL&)
-    {
-        if (::IsWindow(m_controlWindow))
-            ::PostMessage(m_controlWindow, m_controlMessage, id, 0 );
-        return 0;
-    }
-    LRESULT OnDebugButton(WORD, WORD id, HWND, BOOL&)
     {
         if (::IsWindow(m_controlWindow))
             ::PostMessage(m_controlWindow, m_controlMessage, id, 0 );
