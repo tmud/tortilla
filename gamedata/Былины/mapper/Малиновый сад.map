@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <room x="1" y="-6" z="0" name="Дорожка меж малины" vnum="4819">
+    <exit dir="north"/>
+    <exit dir="south" vnum="4815"/>
+    <exit dir="east"/>
+  </room>
+  <room x="1" y="-5" z="0" name="Дорожка меж малины" vnum="4815">
+    <exit dir="north" vnum="4819"/>
+    <exit dir="south" vnum="4806"/>
+    <exit dir="east"/>
+  </room>
+  <room x="1" y="-4" z="0" name="Дорожка меж малины" vnum="4806">
+    <exit dir="north" vnum="4815"/>
+    <exit dir="south" vnum="4804"/>
+    <exit dir="east"/>
+  </room>
+  <room x="1" y="-3" z="0" name="В малиновом саду" vnum="4804">
+    <exit dir="north" vnum="4806"/>
+    <exit dir="south" vnum="4803"/>
+    <exit dir="east" vnum="4805"/>
+  </room>
+  <room x="2" y="-3" z="0" name="Дорожка меж малины" vnum="4805">
+    <exit dir="north"/>
+    <exit dir="west" vnum="4804"/>
+    <exit dir="east" vnum="4809"/>
+  </room>
+  <room x="3" y="-3" z="0" name="Дорожка меж малины" vnum="4809">
+    <exit dir="north"/>
+    <exit dir="west" vnum="4805"/>
+    <exit dir="east" vnum="4810"/>
+  </room>
+  <room x="4" y="-3" z="0" name="Дорожка меж малины" vnum="4810">
+    <exit dir="north"/>
+    <exit dir="west" vnum="4809"/>
+    <exit dir="east"/>
+  </room>
+  <room x="1" y="-2" z="0" name="Дорожка в малиновый сад" vnum="4803">
+    <exit dir="north" vnum="4804"/>
+    <exit dir="south" vnum="4802"/>
+  </room>
+  <room x="1" y="-1" z="0" name="Дорожка в малиновый сад" vnum="4802">
+    <exit dir="north" vnum="4803"/>
+    <exit dir="south" vnum="4800"/>
+  </room>
+  <room x="0" y="0" z="0" name="Дорожка в малиновый сад" vnum="4801">
+    <exit dir="south" vnum="4045"/>
+    <exit dir="east" vnum="4800"/>
+  </room>
+  <room x="1" y="0" z="0" name="Дорожка в малиновый сад" vnum="4800">
+    <exit dir="north" vnum="4802"/>
+    <exit dir="west" vnum="4801"/>
+  </room>
+</zone>

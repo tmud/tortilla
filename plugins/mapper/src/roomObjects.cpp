@@ -50,3 +50,27 @@ RoomDir RoomDirHelper::getDirByName(const wchar_t* dirname)
     }
     return RD_UNKNOWN;
 }
+
+RoomDir RoomDirHelper::getDirFromMsdp(const tstring& msdpdir)
+{
+    if (msdpdir == L"w" || msdpdir == L"W") {
+        return RD_WEST;
+    }
+    if (msdpdir == L"e" || msdpdir == L"E") {
+        return RD_EAST;
+    }
+    if (msdpdir == L"n" || msdpdir == L"N") {
+        return RD_NORTH;
+    }
+    if (msdpdir == L"s" || msdpdir == L"S") {
+        return RD_SOUTH;
+    }
+    if (msdpdir == L"u" || msdpdir == L"U") {
+        return RD_UP;
+    }
+    if (msdpdir == L"d" || msdpdir == L"D") {
+        return RD_UP;
+    }
+    assert(false);
+    return RD_UNKNOWN;
+}

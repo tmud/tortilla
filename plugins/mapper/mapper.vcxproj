@@ -67,7 +67,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)\mapper.bmp $(SolutionDir)plugins\</Command>
+      <Command>
+</Command>
     </PostBuildEvent>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -93,7 +94,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)\mapper.bmp $(SolutionDir)plugins\</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -103,7 +105,6 @@
     <ClInclude Include="..\..\libs\common\crc32.h" />
     <ClInclude Include="..\..\libs\common\dataQueue.h" />
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
-    <ClInclude Include="..\..\mudclient\src\palette256.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\bitmapButton.h" />
     <ClInclude Include="src\debugHelpers.h" />
@@ -160,9 +161,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <Image Include="mapper.bmp" />
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
     <Image Include="res\bmp00001.bmp" />
+    <Image Include="res\mapper.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mapper.rc" />

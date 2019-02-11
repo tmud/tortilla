@@ -21,7 +21,7 @@ bool MapTools::setRoomOnMap(Room* from,  Room* next, RoomDir dir)
         assert(false);
         return false;
     }
-    if (findRoom(next->hash())) {
+    if (findRoom(next->roomdata.hash())) {
         assert(false);
         return false;
     }
@@ -107,10 +107,15 @@ MapCursor MapTools::createZoneCursor(Rooms3dCube* zone)
     return std::make_shared<MapZoneCursorImplementation>(map, zone, 0);
 }
 
+MapCursor MapTools::createNullCursor()
+{
+    return std::make_shared<MapNullCursorImplementation>();
+}
+
 bool MapNewZoneTool::tryMakeNewZone(const Room* room, RoomDir dir)
 {
     MapTools t(map);
-    Room *r = t.findRoom(room->hash());
+    Room *r = t.findRoom(room->roomdata.hash());
     if (!r || dir == RD_UNKNOWN) {
         assert(false);
         return false;
@@ -202,7 +207,7 @@ bool MapMoveRoomToolToAnotherZone::tryMoveRoom(const Room* room, RoomDir dir)
     }
 
     MapTools t(map);
-    Room *r = t.findRoom(room->hash());   
+    Room *r = t.findRoom(room->roomdata.hash());   
     Rooms3dCube* srczone = map->findZone(r->pos.zid);
     if (!srczone) {
         assert(false);
@@ -325,7 +330,7 @@ bool MapConcatZonesInOne::tryConcatZones(const Room* room, RoomDir dir)
     }
 
     MapTools t(map);
-    Room *r = t.findRoom(room->hash());
+    Room *r = t.findRoom(room->roomdata.hash());
     if (!r) {
         assert(false);
         return false;

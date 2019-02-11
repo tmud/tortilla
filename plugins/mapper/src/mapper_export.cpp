@@ -22,14 +22,14 @@ int get_description(lua_State *L)
         L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
         L"Предназначен для мадов с 6 стандартными выходами.\r\n"
         L"Требует для работы поддержки MSDP протокола от мад-сервера c\r\n"
-        L"данными о местоположении."
+        L"данными о местоположении игрока."
         );
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"0.03 beta");
+    luaT_pushwstring(L, L"0.03");
     return 1;
 }
 
@@ -53,9 +53,11 @@ int init(lua_State *L)
     xml::node p;
     if (p.load(path.c_str(), &error))
     {
-        int width = 0;
+        int width = 0; int center = 1;
         p.get(L"zoneslist/width", &width);
         m_props.zoneslist_width = (width > 0) ? width : -1;
+        p.get(L"center/mode", &center);
+        m_props.center_mode = (center != 0) ? 1 : 0;
 		if (p.get(L"lastzone/name", &current_zone))
             m_props.current_zone = current_zone;
 	} else {
@@ -82,7 +84,7 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    //todo! m_mapper_window->loadMaps();
+    m_mapper_window->loadMaps();
     return 0;
 }
 
@@ -93,6 +95,7 @@ int release(lua_State *L)
     xml::node p(L"settings");
     p.set(L"zoneslist/width", m_props.zoneslist_width);
 	p.set(L"lastzone/name", m_props.current_zone);
+    p.set(L"center/mode", m_props.center_mode ? 1 : 0);
 
     tstring path;
     base::getPath(L, L"settings.xml", &path);
@@ -185,7 +188,6 @@ bool popString(lua_State *L, const char* name, tstring* val)
 
 int msdp(lua_State *L)
 {
-    luaT_showLuaStack(L, L"begin");
     RoomData rd;
     bool inconsistent_data = true;
     if (luaT_check(L, 1, LUA_TTABLE))
@@ -194,9 +196,11 @@ int msdp(lua_State *L)
         lua_gettable(L, -2);
         if (lua_istable(L, -1))
         {
-            if (popString(L, "AREA", &rd.zonename) &&
-                popString(L, "VNUM", &rd.vnum) &&
-                popString(L, "NAME", &rd.name))
+            if (popString(L, "AREA", &rd.areaname)
+                && popString(L, "VNUM", &rd.vnum)
+                && popString(L, "NAME", &rd.roomname)
+                //&& popString(L, "ZONE", &rd.zone)
+               )
             {
                 lua_pushstring(L, "EXITS");
                 lua_gettable(L, -2);
@@ -217,15 +221,10 @@ int msdp(lua_State *L)
         }
         lua_pop(L, 1);
     }
-    luaT_showLuaStack(L, L"end");
-    luaT_showTableOnTop(L, L"end");
-    if (!inconsistent_data)
-    {
-        m_mapper_window->processMsdp(rd);
-        return 1;
-    }
-    assert(false);
-    return 1;
+    if (inconsistent_data)
+        return 0;
+    m_mapper_window->processMsdp(rd);
+    return 0;
 }
 
 static const luaL_Reg mapper_methods[] = 

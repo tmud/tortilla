@@ -42,9 +42,10 @@ private:
     void onToolbar(int id);
 private:
 	void updateZonesList();
-    void redrawPosition(MapCursor cursor, bool resetScrolls);
+    void redrawPosition(MapCursor cursor, bool centreScreen);
     void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
+    void lostPosition();
 private:
     // map
     MapInstance m_map;
@@ -60,7 +61,7 @@ private:
     MappeZoneControl m_zones_control;
 
     // logic
-    MapperDirsVector m_dirs;
+    //MapperDirsVector m_dirs;
     Room *m_pCurrentRoom;
 
     tstring m_mapsFolder;
