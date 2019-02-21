@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include <sapi51.h>
 #include <sphelper.h>
 

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "popupWindow.h"
 #include "traySettings.h"
 #include "sharingController.h"

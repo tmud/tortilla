@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "api/shared.h"
 #include "sharingData.h"

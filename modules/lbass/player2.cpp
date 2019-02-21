@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "player.h"
 #include "bass/c/bass.h"
 #include <MMSystem.h>
