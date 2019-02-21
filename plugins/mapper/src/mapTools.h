@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "mapInstance.h"
 #include "roomsWave.h"
 #include "mapCursor.h"

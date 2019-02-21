@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "mapperRender.h"
 #include "mapper.h"
 
@@ -620,43 +620,43 @@ void MapperRender::createMenu()
             if (i != 0 && i % 6 == 0) pictures->Break();
             pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
         }
-        m.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m.AppendODPopup(pictures, new CMenuXPText(0, L"Р—РЅР°С‡РѕРє"));
+        m.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"РЈРґР°Р»РёС‚СЊ Р·РЅР°С‡РѕРє"));
         m.AppendSeparator();
     }
-    m.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Р¦РІРµС‚..."));
+    m.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"РЎР±СЂРѕСЃРёС‚СЊ С†РІРµС‚"));
     /*m.AppendSeparator();
 
     CMenuXP *newzone = new CMenuXP();
     newzone->CreatePopupMenu();
-    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_NORTH, L"на север"));
-    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_SOUTH, L"на юг"));
-    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_WEST, L"на запад"));
-    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_EAST, L"на восток"));
-    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_UP, L"вверх"));
-    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_DOWN, L"вниз"));
-    m.AppendODPopup(newzone, new CMenuXPText(0, L"Начать новую зону"));
+    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_NORTH, L"РЅР° СЃРµРІРµСЂ"));
+    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_SOUTH, L"РЅР° СЋРі"));
+    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_WEST, L"РЅР° Р·Р°РїР°Рґ"));
+    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_EAST, L"РЅР° РІРѕСЃС‚РѕРє"));
+    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_UP, L"РІРІРµСЂС…"));
+    newzone->AppendODMenu(new CMenuXPText(MENU_NEWZONE_DOWN, L"РІРЅРёР·"));
+    m.AppendODPopup(newzone, new CMenuXPText(0, L"РќР°С‡Р°С‚СЊ РЅРѕРІСѓСЋ Р·РѕРЅСѓ"));
 
     CMenuXP *joinzone = new CMenuXP();
     joinzone->CreatePopupMenu();
-    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_NORTH, L"на север"));
-    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_SOUTH, L"на юг"));
-    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_WEST, L"на запад"));
-    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_EAST, L"на восток"));
-    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_UP, L"вверх"));
-    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_DOWN, L"вниз"));
-    m.AppendODPopup(joinzone, new CMenuXPText(0, L"Склеить зону"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_NORTH, L"РЅР° СЃРµРІРµСЂ"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_SOUTH, L"РЅР° СЋРі"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_WEST, L"РЅР° Р·Р°РїР°Рґ"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_EAST, L"РЅР° РІРѕСЃС‚РѕРє"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_UP, L"РІРІРµСЂС…"));
+    joinzone->AppendODMenu(new CMenuXPText(MENU_JOINZONE_DOWN, L"РІРЅРёР·"));
+    m.AppendODPopup(joinzone, new CMenuXPText(0, L"РЎРєР»РµРёС‚СЊ Р·РѕРЅСѓ"));
 
     CMenuXP *moveroom = new CMenuXP();
     moveroom->CreatePopupMenu();
-    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_NORTH, L"на север"));
-    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_SOUTH, L"на юг"));
-    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_WEST, L"на запад"));
-    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_EAST, L"на восток"));
-    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_UP, L"вверх"));
-    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_DOWN, L"вниз"));
-    m.AppendODPopup(moveroom, new CMenuXPText(0, L"Перенести комнату в зону"));*/
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_NORTH, L"РЅР° СЃРµРІРµСЂ"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_SOUTH, L"РЅР° СЋРі"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_WEST, L"РЅР° Р·Р°РїР°Рґ"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_EAST, L"РЅР° РІРѕСЃС‚РѕРє"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_UP, L"РІРІРµСЂС…"));
+    moveroom->AppendODMenu(new CMenuXPText(MENU_MOVEROOM_DOWN, L"РІРЅРёР·"));
+    m.AppendODPopup(moveroom, new CMenuXPText(0, L"РџРµСЂРµРЅРµСЃС‚Рё РєРѕРјРЅР°С‚Сѓ РІ Р·РѕРЅСѓ"));*/
 
     m_multiply_rooms_menu.CreatePopupMenu();
     CMenuXP &m2 = m_multiply_rooms_menu;
@@ -668,14 +668,14 @@ void MapperRender::createMenu()
             if (i != 0 && i % 6 == 0) pictures->Break();
             pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
         }
-        m2.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m2.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m2.AppendODPopup(pictures, new CMenuXPText(0, L"Р—РЅР°С‡РѕРє"));
+        m2.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"РЈРґР°Р»РёС‚СЊ Р·РЅР°С‡РѕРє"));
         m2.AppendSeparator();
     }
-    m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Р¦РІРµС‚..."));
+    m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"РЎР±СЂРѕСЃРёС‚СЊ С†РІРµС‚"));
     /*m2.AppendSeparator();
-    m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"Создать новую зону..."));*/
+    m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"РЎРѕР·РґР°С‚СЊ РЅРѕРІСѓСЋ Р·РѕРЅСѓ..."));*/
 }
 
 bool MapperRender::runMenuPoint(DWORD wparam, LPARAM lparam)

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 enum MapCursorColor { RCC_NONE = 0, RCC_NORMAL, RCC_LOST };
 class MapCursorInterface

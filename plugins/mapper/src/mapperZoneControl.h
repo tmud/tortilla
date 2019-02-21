@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "editListBox.h"
 
 class MappeZoneControl : public CDialogImpl<MappeZoneControl>
@@ -190,7 +190,7 @@ private:
 
         if (conflict)
         {
-            MessageBox(L"Зона с таким именем уже существует!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(L"Р—РѕРЅР° СЃ С‚Р°РєРёРј РёРјРµРЅРµРј СѓР¶Рµ СЃСѓС‰РµСЃС‚РІСѓРµС‚!", L"РћС€РёР±РєР°", MB_OK | MB_ICONERROR);
             tstring name = zones[item].name;
             assert(!name.empty());
             m_list.SetItemText(item, name.c_str());

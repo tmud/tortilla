@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #define _CRT_NON_CONFORMING_SWPRINTFS
 
 #define WINVER 0x0501

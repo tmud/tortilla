@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "roomsContainer.h"
 
 Room* Rooms3dContainer::get(const Rooms3dCubePos& p) const

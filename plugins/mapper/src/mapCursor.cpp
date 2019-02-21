@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "mapInstance.h"
 #include "mapCursor.h"
 

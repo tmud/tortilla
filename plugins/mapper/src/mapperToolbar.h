@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "bitmapButton.h"
 
 class MapperToolbar : public CDialogImpl<MapperToolbar>
@@ -42,10 +42,10 @@ private:
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{
         m_icons.Create(IDB_BITMAP_TOOLBAR, 24, 0, RGB(140,140,140));
-        init(m_down, 1, IDC_BUTTON_LEVEL_DOWN, L"На уровень вниз");
-        init(m_up, 0, IDC_BUTTON_LEVEL_UP, L"На уровень вверх");
-        init(m_level0, 2, IDC_BUTTON_LEVEL0, L"Задать нулевой уровень");
-        init(m_center, 3, IDC_BUTTON_CENTER, L"Центровать текущую позицию");
+        init(m_down, 1, IDC_BUTTON_LEVEL_DOWN, L"РќР° СѓСЂРѕРІРµРЅСЊ РІРЅРёР·");
+        init(m_up, 0, IDC_BUTTON_LEVEL_UP, L"РќР° СѓСЂРѕРІРµРЅСЊ РІРІРµСЂС…");
+        init(m_level0, 2, IDC_BUTTON_LEVEL0, L"Р—Р°РґР°С‚СЊ РЅСѓР»РµРІРѕР№ СѓСЂРѕРІРµРЅСЊ");
+        init(m_center, 3, IDC_BUTTON_CENTER, L"Р¦РµРЅС‚СЂРѕРІР°С‚СЊ С‚РµРєСѓС‰СѓСЋ РїРѕР·РёС†РёСЋ");
 #ifndef _DEBUG
         //hide(IDC_BUTTON_SAVEZONES);
         //hide(IDC_BUTTON_LOADZONES);

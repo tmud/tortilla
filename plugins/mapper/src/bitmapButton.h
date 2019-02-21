@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #pragma once
 
 class CBitmapButtonEx : public CBitmapButtonImpl<CBitmapButtonEx>

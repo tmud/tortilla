@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "mapInstance.h"
 #include "roomHasher.h"
 
@@ -32,7 +32,7 @@ tstring MapInstance::getNewZoneName(const tstring& templ)
         tchar buffer[32];
         while (true)
         {
-            swprintf(buffer, L"Новая зона %d", m_nextzone_id++);
+            swprintf(buffer, L"РќРѕРІР°СЏ Р·РѕРЅР° %d", m_nextzone_id++);
             if (!findZone(buffer))
                 break;
         }
@@ -200,7 +200,7 @@ void MapInstance::saveMaps(const tstring& dir)
         path.append(fname);
         if ( !s.save( path.c_str()) )
         {
-            tstring error(L"Ошибка записи файла с зоной:");
+            tstring error(L"РћС€РёР±РєР° Р·Р°РїРёСЃРё С„Р°Р№Р»Р° СЃ Р·РѕРЅРѕР№:");
             error.append( path );
 			clientlog(error);
         }
@@ -265,22 +265,22 @@ void MapInstance::loadMaps(const tstring& dir)
 				Room *newroom = new Room();
 				RoomData &rd = newroom->roomdata;
 				if (!r.get(L"vnum", &rd.vnum)) {
-					err = L"не задан vnum комнаты (xmlnode index): " + i2s(j);
+					err = L"РЅРµ Р·Р°РґР°РЅ vnum РєРѕРјРЅР°С‚С‹ (xmlnode index): " + i2s(j);
 				}
 				int x = 0;  int y = 0; int z = 0;
 				if (err.empty() && (!r.get(L"x", &x) || !r.get(L"y", &y) || !r.get(L"z", &z))) {
-					err = L"неполные координаты vnum=" + rd.vnum;
+					err = L"РЅРµРїРѕР»РЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ vnum=" + rd.vnum;
 				}
                 if (err.empty() && !r.get(L"name", &rd.roomname)) {
-                    err = L"не задано имя(name) vnum=" + rd.vnum;
+                    err = L"РЅРµ Р·Р°РґР°РЅРѕ РёРјСЏ(name) vnum=" + rd.vnum;
                 }
                 /*if (err.empty() && !r.get(L"exits", &rd.exits)) {
-                    err = L"не заданы выходы(exits) vnum=" + rd.vnum;
+                    err = L"РЅРµ Р·Р°РґР°РЅС‹ РІС‹С…РѕРґС‹(exits) vnum=" + rd.vnum;
                 }*/
 
                 /*tstring desc;
                 if (err.empty() && !r.get(L"desc", &desc)) {
-                    err = L"не задано описание(desc) vnum=" + rd.vnum;
+                    err = L"РЅРµ Р·Р°РґР°РЅРѕ РѕРїРёСЃР°РЅРёРµ(desc) vnum=" + rd.vnum;
                 } else {
                     tstring_replace(&desc, L"\\r", L"\r" );
                     tstring_replace(&desc, L"\\n", L"\n" );
@@ -301,7 +301,7 @@ void MapInstance::loadMaps(const tstring& dir)
                             newroom->color = RGB(r,g,b);
                             newroom->use_color =  1;
                         } else {
-                              err = L"некорректный цвет vnum=" + rd.vnum;
+                              err = L"РЅРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ С†РІРµС‚ vnum=" + rd.vnum;
                         }
                     }
                 }
@@ -311,13 +311,13 @@ void MapInstance::loadMaps(const tstring& dir)
                         for (int k=0;k<exits.size();++k) {
                             tstring dir;
                             if (!exits[k].get(L"dir", &dir)) {
-                               err = L"не указано направление выхода vnum=" + rd.vnum;
+                               err = L"РЅРµ СѓРєР°Р·Р°РЅРѕ РЅР°РїСЂР°РІР»РµРЅРёРµ РІС‹С…РѕРґР° vnum=" + rd.vnum;
                                break;
                             }
                             RoomDirHelper h;
                             RoomDir roomdir = h.getDirByName(dir.c_str());
                             if (roomdir == RD_UNKNOWN) {
-                                err = L"неизвестное направление выхода (" + dir + L") vnum=" + rd.vnum;
+                                err = L"РЅРµРёР·РІРµСЃС‚РЅРѕРµ РЅР°РїСЂР°РІР»РµРЅРёРµ РІС‹С…РѕРґР° (" + dir + L") vnum=" + rd.vnum;
                                 break;
                             }
                             RoomExit &re = newroom->dirs[h.index(roomdir)];
@@ -342,14 +342,14 @@ void MapInstance::loadMaps(const tstring& dir)
                     pos.x = x; pos.y = y; pos.z = z;
                     Rooms3dCube::AR_STATUS s = zone->addRoom(pos, newroom);
                     if (s != Rooms3dCube::AR_OK ) {
-                        err = L"ошибка загрузки комнаты в зону vnum=" + rd.vnum;
+                        err = L"РѕС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РєРѕРјРЅР°С‚С‹ РІ Р·РѕРЅСѓ vnum=" + rd.vnum;
                     }
                 }
                 if (!err.empty()) {
                     exitsOnLoad.erase(std::remove_if(exitsOnLoad.begin(), exitsOnLoad.end(),
                         [&](exitdata &ed) { return (ed.room == newroom); }), exitsOnLoad.end());
                     delete newroom;
-                    clientlog(err + L" в файле: " + filepath);
+                    clientlog(err + L" РІ С„Р°Р№Р»Рµ: " + filepath);
                 } else {
                 }
             }
