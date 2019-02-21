@@ -184,7 +184,7 @@ bool PropertiesManager::loadProfileData(tstring *error)
     loadArray(sd, L"actions/action", true, true, &m_propData.actions);
     loadArray(sd, L"aliases/alias", true, true, &m_propData.aliases);
     loadArray(sd, L"hotkeys/hotkey", true, true, &m_propData.hotkeys);
-    loadArray(sd, L"subs/sub", true, true, &m_propData.subs);
+    loadArray(sd, L"subs/sub", false, true, &m_propData.subs);
     loadArray(sd, L"asubs/asub", false, true, &m_propData.antisubs);
     loadArray(sd, L"gags/gag", false, true, &m_propData.gags);
     loadArray(sd, L"highlights/highlight", true, true, &m_propData.highlights);
