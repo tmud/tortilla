@@ -1,4 +1,4 @@
-#pragma once 
+﻿#pragma once 
 
 bool isVistaOrHigher();
 void getClientExePath(tstring* path);

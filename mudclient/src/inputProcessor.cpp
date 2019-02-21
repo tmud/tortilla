@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "accessors.h"
 #include "inputProcessor.h"
 #include "logicProcessor.h"
@@ -183,7 +183,7 @@ void InputTemplateCommands::makeTemplates()
     for (int i=0,e=size(); i<e; ++i)
     {
         InputSubcmd &scmd = at(i);
-        if (scmd.system)   // маркируем только системные
+        if (scmd.system)   // РјР°СЂРєРёСЂСѓРµРј С‚РѕР»СЊРєРѕ СЃРёСЃС‚РµРјРЅС‹Рµ
         {
             bool markered = markbrackets(&scmd.templ);
             scmd.markered = markered;
@@ -245,7 +245,7 @@ void InputTemplateCommands::makeCommands(InputCommands *cmds, const InputParamet
             //    cmd->parameters.append(t.substr(from));
             //else {
             //pos = t.find(L" ", from);
-            /*from = 0; //не обрезаем ведущие пробелы для игровых команд
+            /*from = 0; //РЅРµ РѕР±СЂРµР·Р°РµРј РІРµРґСѓС‰РёРµ РїСЂРѕР±РµР»С‹ РґР»СЏ РёРіСЂРѕРІС‹С… РєРѕРјР°РЅРґ
             if (pos == -1)
                  cmd->command = t.substr(from);
             else {
@@ -333,13 +333,13 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
         const tchar *b = p;
         while (*p == L' ' && p != e) p++;
         if (p == e) 
-        {   // финальная строка из пробелов
+        {   // С„РёРЅР°Р»СЊРЅР°СЏ СЃС‚СЂРѕРєР° РёР· РїСЂРѕР±РµР»РѕРІ
             push_back( InputSubcmd (tstring(b), 0) );
             return;
         }
         if (*p == L'{')
         {
-            // игровая в фигурных скобках (можно исп.;)
+            // РёРіСЂРѕРІР°СЏ РІ С„РёРіСѓСЂРЅС‹С… СЃРєРѕР±РєР°С… (РјРѕР¶РЅРѕ РёСЃРї.;)
             tstring cmd(b, p-b);
             const tchar* bracket_begin = p++;
             int stack = 0;
@@ -374,7 +374,7 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
         }
         if (*p == syscmd)
         {
-            // системная команда - парсинг сепаратора с учетои скобок
+            // СЃРёСЃС‚РµРјРЅР°СЏ РєРѕРјР°РЅРґР° - РїР°СЂСЃРёРЅРі СЃРµРїР°СЂР°С‚РѕСЂР° СЃ СѓС‡РµС‚РѕРё СЃРєРѕР±РѕРє
             p++;
             b = p;
 
@@ -417,7 +417,7 @@ void InputTemplateCommands::parsecmd(const tstring& cmd)
             continue;
         }
 
-        // игровая, но начинается не со скобок
+        // РёРіСЂРѕРІР°СЏ, РЅРѕ РЅР°С‡РёРЅР°РµС‚СЃСЏ РЅРµ СЃРѕ СЃРєРѕР±РѕРє
         while (p != e && *p != separator)  p++;
         tstring cmd(b, p-b);
         push_back( InputSubcmd (cmd, 0) );

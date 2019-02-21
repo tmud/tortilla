@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @file tinymt32.c
  *
  * @brief Tiny Mersenne Twister only 127 bit internal state

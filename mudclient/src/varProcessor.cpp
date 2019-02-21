@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "accessors.h"
 #include "varProcessor.h"
 #include "propertiesPages/propertiesData.h"
@@ -104,8 +104,8 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"_"] = UNDERLINEVAR;
     v[L"!"] = EMPTY;
     v[L"$"] = DOLLAR;
-    m_vars_regexp.setRegExp(L"\\$[a-zA-Zа-яА-Я_][0-9a-zA-Zа-яА-Я_.]*|\\$.|\\$!|\\$\\$", true);
-    m_var_regexp.setRegExp(L"^[a-zA-Zа-яА-Я_][0-9a-zA-Zа-яА-Я_.]*$", true);
+    m_vars_regexp.setRegExp(L"\\$[a-zA-ZР°-СЏРђ-РЇ_][0-9a-zA-ZР°-СЏРђ-РЇ_.]*|\\$.|\\$!|\\$\\$", true);
+    m_var_regexp.setRegExp(L"^[a-zA-ZР°-СЏРђ-РЇ_][0-9a-zA-ZР°-СЏРђ-РЇ_.]*$", true);
 }
 
 bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result)
@@ -126,9 +126,9 @@ bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, boo
             newparam.append(var);
         else
         {
-            // ищем переменную по укороченному имени без _
+            // РёС‰РµРј РїРµСЂРµРјРµРЅРЅСѓСЋ РїРѕ СѓРєРѕСЂРѕС‡РµРЅРЅРѕРјСѓ РёРјРµРЅРё Р±РµР· _
             const tchar *p = wcschr(name.c_str(), L'_');
-            if (!p && strong_mode)  // в переменной нет _
+            if (!p && strong_mode)  // РІ РїРµСЂРµРјРµРЅРЅРѕР№ РЅРµС‚ _
                 return false;
             if (p)
             {

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsViewRender.h"
 #include "pluginSupport.h"
@@ -42,7 +42,7 @@ bool PluginsViewRender::render()
         if (luaT_check(L, 1, LUA_TSTRING))
             pluginMethodError(L"render", lua_toerror(L));
         else
-            pluginMethodError(L"render", L"неизвестная ошибка");
+            pluginMethodError(L"render", L"РЅРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°");
         lua_settop(L, 0);
     }
     m_inside_render = false;

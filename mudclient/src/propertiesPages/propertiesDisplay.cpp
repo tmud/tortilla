@@ -1,4 +1,4 @@
-#include "stdafx.h"
+Ôªø#include "stdafx.h"
 #include "propertiesData.h"
 #include "propertiesDisplay.h"
 
@@ -162,7 +162,7 @@ void PropertiesDisplay::initOutputWindows()
         if (w.name.empty())
         {
             WCHAR buffer[8];
-            swprintf(buffer, L"ŒÍÌÓ %d", i + 1);
+            swprintf(buffer, L"–û–∫–Ω–æ %d", i + 1);
             w.name.assign(buffer);
         }
         output_windows.push_back(w);

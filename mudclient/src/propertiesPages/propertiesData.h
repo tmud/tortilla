@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #define DEFAULT_CMD_HISTORY_SIZE 30
 #define DEFAULT_VIEW_HISTORY_SIZE 5000
@@ -63,9 +63,9 @@ struct PropertiesHighlight
 
     void getFlags(tstring* flags) const
     {
-        if (underlined) flags->append(L"Ï");
-        if (border) flags->append(L"Ğ");
-        if (italic) flags->append(L"Ê");
+        if (underlined) flags->append(L"ĞŸ");
+        if (border) flags->append(L"Ğ ");
+        if (italic) flags->append(L"Ğš");
         if (flags->empty())
             flags->append(L"-");
     }

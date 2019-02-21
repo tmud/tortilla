@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "pluginsViewRender.h"
 #include "pluginsMouseHandler.h"
 

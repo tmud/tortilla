@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "mudCommandBarInd.h"
 
 class MudCommandBar :  public CWindowImpl<MudCommandBar, CStatusBarCtrl>
@@ -214,7 +214,7 @@ private:
     {
         m_edit.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL, WS_EX_CLIENTEDGE);
         m_timer.Create(m_hWnd, rcDefault, NULL, WS_CHILD | WS_VISIBLE);
-        m_timer.setText(L"Таймеры:");
+        m_timer.setText(L"РўР°Р№РјРµСЂС‹:");
         bHandled = FALSE;
         return 0;
     }
@@ -487,7 +487,7 @@ private:
             {
                 m_tab_const.assign(syscmd ? cmd_prefix : L"");
                 m_tab.assign(syscmd ? text.substr(1) : text);
-                can_use_history = true; // История не работает в составных командах(;), только как полной строкой
+                can_use_history = true; // РСЃС‚РѕСЂРёСЏ РЅРµ СЂР°Р±РѕС‚Р°РµС‚ РІ СЃРѕСЃС‚Р°РІРЅС‹С… РєРѕРјР°РЅРґР°С…(;), С‚РѕР»СЊРєРѕ РєР°Рє РїРѕР»РЅРѕР№ СЃС‚СЂРѕРєРѕР№
             }
         }
         else

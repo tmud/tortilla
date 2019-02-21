@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../common/tempThread.h"
 #include "mudViewParser.h"
 #include "propertiesPages/propertiesData.h"

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "propertiesManager.h"
 #include "profiles/profilesPath.h"
 #include "profiles/profileHelpers.h"

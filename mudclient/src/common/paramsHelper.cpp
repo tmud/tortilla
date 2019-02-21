@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "paramsHelper.h"
 
 Pcre16 ParamsHelper::pcre;
@@ -215,22 +215,22 @@ void ParamsHelperUnitTests::run()  {
     assert(h4.getId(1) == 4);
 
     ParamsHelper h5(L"%(-1)1 abc", true);
-    assert(testCutParameter(h5, 0, L"тест", L"тес"));
+    assert(testCutParameter(h5, 0, L"С‚РµСЃС‚", L"С‚РµСЃ"));
 
     ParamsHelper h6(L"%(5)1 abc", true);
-    assert(testCutParameter(h6, 0, L"тест", L"тест"));
+    assert(testCutParameter(h6, 0, L"С‚РµСЃС‚", L"С‚РµСЃС‚"));
 
     ParamsHelper h7(L"%(2)1 abc", true);
-    assert(testCutParameter(h7, 0, L"тест", L"те"));
+    assert(testCutParameter(h7, 0, L"С‚РµСЃС‚", L"С‚Рµ"));
 
     ParamsHelper h8(L"%(2,2)1 abc", true);
-    assert(testCutParameter(h8, 0, L"тecт", L"ec"));
+    assert(testCutParameter(h8, 0, L"С‚ecС‚", L"ec"));
 
     ParamsHelper h9(L"%(3,-2)1 abc", true);
-    assert(testCutParameter(h9, 0, L"тест", L""));
+    assert(testCutParameter(h9, 0, L"С‚РµСЃС‚", L""));
 
     ParamsHelper h10(L"%(2,-2)1 abc", true);
-    assert(testCutParameter(h10, 0, L"тест", L"е"));
+    assert(testCutParameter(h10, 0, L"С‚РµСЃС‚", L"Рµ"));
 
     ParamsHelper h11(L"abc", true);
     assert(h11.getSize() == 0);

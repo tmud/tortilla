@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class PropertyTabwords :  public CDialogImpl<PropertyTabwords>
 {
@@ -248,7 +248,7 @@ private:
         m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_list.Attach(GetDlgItem(IDC_LIST));
-        m_list.addColumn(L"Ключевые слова", 90);        
+        m_list.addColumn(L"РљР»СЋС‡РµРІС‹Рµ СЃР»РѕРІР°", 90);        
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));

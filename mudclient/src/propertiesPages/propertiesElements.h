@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "propertiesData.h"
 #include "..\palette256.h"

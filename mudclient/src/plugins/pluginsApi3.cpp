@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "accessors.h"
 #include "pluginsApi.h"
 #include "api/api.h"

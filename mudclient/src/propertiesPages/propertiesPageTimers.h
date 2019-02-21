@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "propertiesSaveHelper.h"
 
@@ -217,10 +217,10 @@ private:
         m_cbox.Attach(GetDlgItem(IDC_COMBO_GROUP));
         m_list.Attach(GetDlgItem(IDC_LIST));
 
-        m_list.addColumn(L"Номер", 20);
-        m_list.addColumn(L"Интервал", 20);
-        m_list.addColumn(L"Действие", 40);
-        m_list.addColumn(L"Группа", 20);
+        m_list.addColumn(L"РќРѕРјРµСЂ", 20);
+        m_list.addColumn(L"РРЅС‚РµСЂРІР°Р»", 20);
+        m_list.addColumn(L"Р”РµР№СЃС‚РІРёРµ", 40);
+        m_list.addColumn(L"Р“СЂСѓРїРїР°", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));

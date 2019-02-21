@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "embedded.h"
 
 void luaopen_rnd(lua_State *L);

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "profileHelpers.h"
 #include "profilesPath.h"
 #include "profileDlgs.h"
@@ -202,7 +202,7 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
 
     if (src.group != dst.group || src.name.empty())
     {
-        // создаем каталоги в папке назначения
+        // СЃРѕР·РґР°РµРј РєР°С‚Р°Р»РѕРіРё РІ РїР°РїРєРµ РЅР°Р·РЅР°С‡РµРЅРёСЏ
         ProfileDirHelper dh;
         for (int i=1,e=fl.dirs.size();i<e;++i)
         {
@@ -214,8 +214,8 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
                 return false;
         }
     }
-    // копируем файлы из исходника
-    // меняем имя файла, если совпадает с src.name
+    // РєРѕРїРёСЂСѓРµРј С„Р°Р№Р»С‹ РёР· РёСЃС…РѕРґРЅРёРєР°
+    // РјРµРЅСЏРµРј РёРјСЏ С„Р°Р№Р»Р°, РµСЃР»Рё СЃРѕРІРїР°РґР°РµС‚ СЃ src.name
     for (int i=0,e=fl.files.size();i<e;i++)
     {
         tstring dst_file(fl.files[i].substr(path_len));
@@ -268,13 +268,13 @@ bool NewProfileHelper::createFromResource(const Profile& src, const Profile& dst
         return false;
     int type = m_groups[index].second;
 
-    // список файлов и каталогов
+    // СЃРїРёСЃРѕРє С„Р°Р№Р»РѕРІ Рё РєР°С‚Р°Р»РѕРіРѕРІ
     tstring path(L"resources\\profiles\\");
     path.append(src.group);
     FilesList fl(path);
     size_t path_len = path.length()+1;
 
-    // создаем каталоги в папке назначения
+    // СЃРѕР·РґР°РµРј РєР°С‚Р°Р»РѕРіРё РІ РїР°РїРєРµ РЅР°Р·РЅР°С‡РµРЅРёСЏ
     ProfileDirHelper dh;
     for (int i=1,e=fl.dirs.size();i<e;++i)
     {
@@ -286,8 +286,8 @@ bool NewProfileHelper::createFromResource(const Profile& src, const Profile& dst
             return false;
     }
 
-    // копируем файлы из исходника
-    // меняем имя файла, если совпадает с src.name
+    // РєРѕРїРёСЂСѓРµРј С„Р°Р№Р»С‹ РёР· РёСЃС…РѕРґРЅРёРєР°
+    // РјРµРЅСЏРµРј РёРјСЏ С„Р°Р№Р»Р°, РµСЃР»Рё СЃРѕРІРїР°РґР°РµС‚ СЃ src.name
     for (int i=0,e=fl.files.size();i<e;i++)
     {
         tstring dst_file(fl.files[i].substr(path_len));

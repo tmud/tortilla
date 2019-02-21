@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 extern "C" {
 #include "../include/lua.h"

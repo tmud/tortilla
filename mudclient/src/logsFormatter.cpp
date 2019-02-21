@@ -1,10 +1,10 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "logsFormatter.h"
 #include "mudViewString.h"
 #include "propertiesPages/propertiesData.h"
 #include "palette256.h"
 
-const tchar* month[12] = { L"Янв", L"Фев", L"Мар", L"Апр", L"Май", L"Июн", L"Июл", L"Авг", L"Сен", L"Окт", L"Ноя", L"Дек" };
+const tchar* month[12] = { L"РЇРЅРІ", L"Р¤РµРІ", L"РњР°СЂ", L"РђРїСЂ", L"РњР°Р№", L"РСЋРЅ", L"РСЋР»", L"РђРІРі", L"РЎРµРЅ", L"РћРєС‚", L"РќРѕСЏ", L"Р”РµРє" };
 LogsFormatter::LogsFormatter(PropertiesData *pd) : hfile(INVALID_HANDLE_VALUE), m_propData(pd)
 {
 }
@@ -126,7 +126,7 @@ void LogsFormatterHtml::close()
 {
     std::string finish;
     getHeader(&finish);
-    std::string closed(TW2U(L"Лог закрыт.\r\n"));
+    std::string closed(TW2U(L"Р›РѕРі Р·Р°РєСЂС‹С‚.\r\n"));
     if (hfile != INVALID_HANDLE_VALUE)
     {
         write(finish);
@@ -344,7 +344,7 @@ void LogsFormatterTxt::close()
 {
     std::string finish;
     getHeader(&finish);
-    std::string closed(TW2U(L"Лог закрыт.\r\n"));
+    std::string closed(TW2U(L"Р›РѕРі Р·Р°РєСЂС‹С‚.\r\n"));
     if (hfile != INVALID_HANDLE_VALUE)
     {
         write(finish);

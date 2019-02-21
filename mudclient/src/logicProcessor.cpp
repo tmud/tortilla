@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "accessors.h"
 #include "logicProcessor.h"
 
@@ -171,7 +171,7 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
         log.append(cmd->command);
         log.append(cmd->parameters);
         syscmdLog(log);
-        tstring error(L"Ошибка: Пустая команда [");
+        tstring error(L"РћС€РёР±РєР°: РџСѓСЃС‚Р°СЏ РєРѕРјР°РЅРґР° [");
         error.append(cmd->srccmd);
         error.append(cmd->srcparameters);
         error.append(L"] -> [");
@@ -204,7 +204,7 @@ void LogicProcessor::runCommand(InputCommand cmd, InputCommands& inserts)
             return;
         if (repeats > 100)
         {
-            tstring error(L"Ошибка: Слишком большое количество повторов [");
+            tstring error(L"РћС€РёР±РєР°: РЎР»РёС€РєРѕРј Р±РѕР»СЊС€РѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ РїРѕРІС‚РѕСЂРѕРІ [");
             error.append(cmd->srccmd);
             error.append(cmd->srcparameters);
             error.append(L"]");
@@ -269,12 +269,12 @@ bool LogicProcessor::processAliases(InputCommands& cmds)
         tstring msg;
         int size = loops.size();
         if (size == 1) {
-            msg.append(L"Макрос '"); msg.append(loops[0]); msg.append(L"' зациклен. Выполнение невозможно.");
+            msg.append(L"РњР°РєСЂРѕСЃ '"); msg.append(loops[0]); msg.append(L"' Р·Р°С†РёРєР»РµРЅ. Р’С‹РїРѕР»РЅРµРЅРёРµ РЅРµРІРѕР·РјРѕР¶РЅРѕ.");
         }
         else {
-            msg.append(L"Макросы '");
+            msg.append(L"РњР°РєСЂРѕСЃС‹ '");
             for (int i = 0; i < size; ++i) { if (i != 0) msg.append(L","); msg.append(loops[i]); }
-            msg.append(L"' зациклены. Их выполнение невозможно.");
+            msg.append(L"' Р·Р°С†РёРєР»РµРЅС‹. РС… РІС‹РїРѕР»РЅРµРЅРёРµ РЅРµРІРѕР·РјРѕР¶РЅРѕ.");
         }
         tmcLog(msg);
         return false;
@@ -323,7 +323,7 @@ void LogicProcessor::updateProps()
         bool result = m_prompt_pcre.setRegExp(tmpl, true);
         if (!result)
         {
-            MessageBox(m_pHost->getMainWindow(), L"Ошибка в шаблоне для распознавания Prompt-строки!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(m_pHost->getMainWindow(), L"РћС€РёР±РєР° РІ С€Р°Р±Р»РѕРЅРµ РґР»СЏ СЂР°СЃРїРѕР·РЅР°РІР°РЅРёСЏ Prompt-СЃС‚СЂРѕРєРё!", L"РћС€РёР±РєР°", MB_OK | MB_ICONERROR);
             pdata->recognize_prompt = 0;
         }
     }
@@ -331,22 +331,22 @@ void LogicProcessor::updateProps()
 
 void LogicProcessor::processNetworkDisconnect()
 {
-    processNetworkError(L"Соединение завершено(обрыв).");
+    processNetworkError(L"РЎРѕРµРґРёРЅРµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ(РѕР±СЂС‹РІ).");
 }
 
 void LogicProcessor::processNetworkConnectError()
 {
-    processNetworkError(L"Не удалось подключиться.");
+    processNetworkError(L"РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕРґРєР»СЋС‡РёС‚СЊСЃСЏ.");
 }
 
 void LogicProcessor::processNetworkError()
 {
-    processNetworkError(L"Ошибка сети. Соединение завершено.");
+    processNetworkError(L"РћС€РёР±РєР° СЃРµС‚Рё. РЎРѕРµРґРёРЅРµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ.");
 }
 
 void LogicProcessor::processNetworkMccpError()
 {
-    processNetworkError(L"Ошибка в протоколе сжатия. Соединение завершено.");
+    processNetworkError(L"РћС€РёР±РєР° РІ РїСЂРѕС‚РѕРєРѕР»Рµ СЃР¶Р°С‚РёСЏ. РЎРѕРµРґРёРЅРµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ.");
 }
 
 void LogicProcessor::tmcLog(const tstring& cmd)
@@ -447,7 +447,7 @@ void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
     {
        if (m_plugins_log_blocked || m_plugins_log_tocache)
        {
-           pluginLog(L"print в before, after использовать нельзя. см. справку.");
+           pluginLog(L"print РІ before, after РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РЅРµР»СЊР·СЏ. СЃРј. СЃРїСЂР°РІРєСѓ.");
        }
        else
        {
@@ -484,7 +484,7 @@ bool LogicProcessor::sendToNetwork(const tstring& cmd)
         m_pHost->sendToNetwork(cmd);
         return true;
     }
-    tmcLog(L"Нет подключения.");
+    tmcLog(L"РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.");
     return false;
 }
 

@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "hotkeyTable.h"
 #include "propertiesSaveHelper.h"
@@ -396,8 +396,8 @@ private:
         m_filter.Attach(GetDlgItem(IDC_COMBO_FILTER));
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(L"Hotkey", 20);
-        m_list.addColumn(L"Текст", 60);
-        m_list.addColumn(L"Группа", 20);
+        m_list.addColumn(L"РўРµРєСЃС‚", 60);
+        m_list.addColumn(L"Р“СЂСѓРїРїР°", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);        
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+2);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
@@ -407,9 +407,9 @@ private:
 
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
 
-        m_filter.AddString(L"Все группы");
-        m_filter.AddString(L"Текущая группа");
-        m_filter.AddString(L"Активные группы");
+        m_filter.AddString(L"Р’СЃРµ РіСЂСѓРїРїС‹");
+        m_filter.AddString(L"РўРµРєСѓС‰Р°СЏ РіСЂСѓРїРїР°");
+        m_filter.AddString(L"РђРєС‚РёРІРЅС‹Рµ РіСЂСѓРїРїС‹");
         m_filter.SetCurSel(m_filterMode);
 
         loadValues();

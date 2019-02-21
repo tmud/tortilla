@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "propertiesPagesElements.h"
 #include "propertiesSaveHelper.h"
@@ -440,11 +440,11 @@ private:
 
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.setHandler(this);
-        m_list.addColumn(L"Шаблон", 40);
-        m_list.addColumn(L"Флаги", 10);
-        m_list.addColumn(L"Цвет текста", 15);
-        m_list.addColumn(L"Цвет фона", 15);
-        m_list.addColumn(L"Группа", 20);
+        m_list.addColumn(L"РЁР°Р±Р»РѕРЅ", 40);
+        m_list.addColumn(L"Р¤Р»Р°РіРё", 10);
+        m_list.addColumn(L"Р¦РІРµС‚ С‚РµРєСЃС‚Р°", 15);
+        m_list.addColumn(L"Р¦РІРµС‚ С„РѕРЅР°", 15);
+        m_list.addColumn(L"Р“СЂСѓРїРїР°", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+3);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
@@ -456,9 +456,9 @@ private:
 
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
 
-        m_filter.AddString(L"Все группы");
-        m_filter.AddString(L"Текущая группа");
-        m_filter.AddString(L"Активные группы");
+        m_filter.AddString(L"Р’СЃРµ РіСЂСѓРїРїС‹");
+        m_filter.AddString(L"РўРµРєСѓС‰Р°СЏ РіСЂСѓРїРїР°");
+        m_filter.AddString(L"РђРєС‚РёРІРЅС‹Рµ РіСЂСѓРїРїС‹");
         m_filter.SetCurSel(m_filterMode);
 
         loadValues();

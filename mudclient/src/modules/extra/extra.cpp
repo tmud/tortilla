@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 
 int declension_new(lua_State *L);
 int dict_new(lua_State *L);

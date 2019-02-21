@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "mudViewParser.h"
 
 MudViewParser::MudViewParser() : m_current_string(NULL), m_last_finished(true), m_palette(NULL)

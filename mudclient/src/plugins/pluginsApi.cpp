@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "accessors.h"
 #include "pluginsApi.h"
 #include "api/api.h"
@@ -90,7 +90,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Некорректный тип в параметрах" ); // (_cp ? L"Некорректные параметры" : L"Параметры");
+    tstring p( L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ С‚РёРї РІ РїР°СЂР°РјРµС‚СЂР°С…" ); // (_cp ? L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹" : L"РџР°СЂР°РјРµС‚СЂС‹");
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -99,7 +99,7 @@ int pluginInvArgsValues(lua_State *L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Некорректное значение в параметрах" );
+    tstring p( L"РќРµРєРѕСЂСЂРµРєС‚РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РІ РїР°СЂР°РјРµС‚СЂР°С…" );
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -108,7 +108,7 @@ int pluginNotDeclared(lua_State* L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Вызов не из плагина" );
+    tstring p( L"Р’С‹Р·РѕРІ РЅРµ РёР· РїР»Р°РіРёРЅР°" );
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -116,14 +116,14 @@ int pluginNotDeclared(lua_State* L, const tchar* fname)
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    swprintf(plugin_buffer(), L"%s: %s Ошибка загрузки файла: %s", plugin_name(), fname, file);
+    swprintf(plugin_buffer(), L"%s: %s РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»Р°: %s", plugin_name(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginMethodError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"%s: Ошибка в методе %s: %s", plugin_name(), fname, error);
+    swprintf(plugin_buffer(), L"%s: РћС€РёР±РєР° РІ РјРµС‚РѕРґРµ %s: %s", plugin_name(), fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
@@ -143,7 +143,7 @@ int pluginOut(const tchar* msg)
 
 void pluginLoadError(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"%s: Ошибка загрузки %s", plugin_name(), msg);
+    swprintf(plugin_buffer(), L"%s: РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё %s", plugin_name(), msg);
     pluginLogOut(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -454,7 +454,7 @@ int getPath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginMethodError(L"getPath", L"Ошибка создания каталога для плагина");
+        return pluginMethodError(L"getPath", L"РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РєР°С‚Р°Р»РѕРіР° РґР»СЏ РїР»Р°РіРёРЅР°");
     }
     return pluginInvArgs(L, L"getPath");
 }
@@ -474,7 +474,7 @@ int getProfilePath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginMethodError(L"getProfilePath", L"Ошибка создания каталога для плагина");
+        return pluginMethodError(L"getProfilePath", L"РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РєР°С‚Р°Р»РѕРіР° РґР»СЏ РїР»Р°РіРёРЅР°");
     }
     return pluginInvArgs(L, L"getProfilePath");
 }
@@ -514,7 +514,7 @@ int getResource(lua_State* L)
             lua_pushwstring(L, path.c_str());
             return 1;
         }
-        return pluginMethodError(L"getResource", L"Ошибка создания каталога для плагина");
+        return pluginMethodError(L"getResource", L"РћС€РёР±РєР° СЃРѕР·РґР°РЅРёСЏ РєР°С‚Р°Р»РѕРіР° РґР»СЏ РїР»Р°РіРёРЅР°");
     }
     return pluginInvArgs(L, L"getResource");
 }
@@ -705,7 +705,7 @@ int loadTable(lua_State *L)
     xml::node doc;
     if (!doc.load(pp, &error) )
     {
-       swprintf(plugin_buffer(), L"Ошибка чтения: %s\n%s", filename.c_str(), error.c_str());
+       swprintf(plugin_buffer(), L"РћС€РёР±РєР° С‡С‚РµРЅРёСЏ: %s\n%s", filename.c_str(), error.c_str());
        tstring tmp(plugin_buffer());
        pluginMethodError(L"loadTable", tmp.c_str());
        return 0;
@@ -940,7 +940,7 @@ int saveTable(lua_State *L)
     ProfileDirHelper dh;
     if (!dh.makeDirEx(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename))
     {
-       swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
+       swprintf(plugin_buffer(), L"РћС€РёР±РєР° Р·Р°РїРёСЃРё: %s", filepath);
        tstring tmp(plugin_buffer());
        pluginMethodError(L"saveTable", tmp.c_str());
        return 0;
@@ -1198,11 +1198,11 @@ int saveTable(lua_State *L)
     list.clear();
 
     if (incorrect_data)
-        pluginMethodError(L"saveTable", L"В таблице есть неподдерживаемые для записи типы данных.");
+        pluginMethodError(L"saveTable", L"Р’ С‚Р°Р±Р»РёС†Рµ РµСЃС‚СЊ РЅРµРїРѕРґРґРµСЂР¶РёРІР°РµРјС‹Рµ РґР»СЏ Р·Р°РїРёСЃРё С‚РёРїС‹ РґР°РЅРЅС‹С….");
 
     if (!result)
     {
-       swprintf(plugin_buffer(), L"Ошибка записи: %s", filepath);
+       swprintf(plugin_buffer(), L"РћС€РёР±РєР° Р·Р°РїРёСЃРё: %s", filepath);
        tstring tmp(plugin_buffer());
        pluginMethodError(L"saveTable", tmp.c_str());
        return 0;

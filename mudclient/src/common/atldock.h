@@ -1,4 +1,4 @@
-#ifndef __ATL_DOCK_H__
+﻿#ifndef __ATL_DOCK_H__
 #define __ATL_DOCK_H__
 
 // Modified by Goncharenko Maksim (gm79@list.ru, maxim.goncharenko@gmail.com)

@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class MudSearchCmdBar : public MudCommandBarModeHandler
 {
@@ -15,7 +15,7 @@ private:
         m_target_window = window;
         tchar buffer[16];
         _itow(window, buffer, 10);
-        tstring text(L"Окно: ");
+        tstring text(L"РћРєРЅРѕ: ");
         text.append(buffer);
         m_label2.SetWindowText(text.c_str());
     }
@@ -37,7 +37,7 @@ private:
     {
         RECT pos = { 0 };
         m_label.Create(parent, pos, NULL, WS_CHILD);
-        m_label.SetWindowText(L"Поиск: ");
+        m_label.SetWindowText(L"РџРѕРёСЃРє: ");
         m_label2.Create(parent, pos, NULL, WS_CHILD);        
         setTargetWindow(0);
         m_edit.Create(parent, pos, NULL, WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | ES_AUTOHSCROLL |ES_MULTILINE, WS_EX_CLIENTEDGE);        

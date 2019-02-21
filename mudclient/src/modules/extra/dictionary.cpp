@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "phrase.h"
 #include <memory>
 
@@ -278,7 +278,7 @@ public:
     {
         if (!m_patch_file.truncate())
         {
-            error->assign(L"Не удалось сбросить патч файл.");
+            error->assign(L"РќРµ СѓРґР°Р»РѕСЃСЊ СЃР±СЂРѕСЃРёС‚СЊ РїР°С‚С‡ С„Р°Р№Р».");
             return false;
         }
 
@@ -496,11 +496,11 @@ public:
                 return false;
         }
 
-        // удаляем дубликаты
+        // СѓРґР°Р»СЏРµРј РґСѓР±Р»РёРєР°С‚С‹
         std::set<index_ptr> result;
         std::for_each(tmp.begin(), tmp.end(), [&result](position& p){ result.insert(p.idx); });
 
-        // выгружаем данные
+        // РІС‹РіСЂСѓР¶Р°РµРј РґР°РЅРЅС‹Рµ
         std::set<index_ptr>::iterator rt = result.begin(), rt_end = result.end();
         for (; rt != rt_end; ++rt)
         {
@@ -691,7 +691,7 @@ private:
            return;
        if (!m_patch_file.init(pf))
        {
-           error->assign(L"patch file не смог создаться.");
+           error->assign(L"patch file РЅРµ СЃРјРѕРі СЃРѕР·РґР°С‚СЊСЃСЏ.");
            return;
        }
        delete_old_db();
@@ -706,7 +706,7 @@ private:
             return;
         if (!lf.result)
         {
-            error->assign(L"Не загружается основной файл базы.");
+            error->assign(L"РќРµ Р·Р°РіСЂСѓР¶Р°РµС‚СЃСЏ РѕСЃРЅРѕРІРЅРѕР№ С„Р°Р№Р» Р±Р°Р·С‹.");
             return;
         }
 
@@ -763,7 +763,7 @@ private:
             return true;
         if (!pf.result)
         {
-            error->assign(L"Не загрузился патч для базы.");
+            error->assign(L"РќРµ Р·Р°РіСЂСѓР·РёР»СЃСЏ РїР°С‚С‡ РґР»СЏ Р±Р°Р·С‹.");
             return false;
         }
 
@@ -866,7 +866,7 @@ private:
         filewriter fw;
         if (!fw.open(mainfile) || !fw.truncate())
         {
-            error->assign(L"Ошибка! Не получилось записать файл базы.");
+            error->assign(L"РћС€РёР±РєР°! РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ Р·Р°РїРёСЃР°С‚СЊ С„Р°Р№Р» Р±Р°Р·С‹.");
             return;
         }
         for (index_ptr ix : setix)
@@ -902,7 +902,7 @@ private:
             out.append(L"\n\n");
             if (!fw.write(out))
             {
-                error->assign(L"Ошибка! Ошибка при записи файла базы.");
+                error->assign(L"РћС€РёР±РєР°! РћС€РёР±РєР° РїСЂРё Р·Р°РїРёСЃРё С„Р°Р№Р»Р° Р±Р°Р·С‹.");
                 return;
             }
         }
@@ -944,7 +944,7 @@ private:
             path.append(f);
             load_file lf(path);
             if (!lf.result) {
-                error->assign(L"Ошибка при загрузке файла базы: " + f);
+                error->assign(L"РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ С„Р°Р№Р»Р° Р±Р°Р·С‹: " + f);
                 return;
             }
 
@@ -983,7 +983,7 @@ private:
             return;
         if (!fr.result)
         {
-            error->assign(L"Ошибка при открытии файла: " + path);
+            error->assign(L"РћС€РёР±РєР° РїСЂРё РѕС‚РєСЂС‹С‚РёРё С„Р°Р№Р»Р°: " + path);
             return;
         }
         u8string us;

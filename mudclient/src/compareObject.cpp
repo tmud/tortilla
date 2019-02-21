@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "compareObject.h"
 #include "inputProcessor.h"
 
@@ -43,7 +43,7 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     m_key = key;
 
     const ParamsHelper& keys = getKeyHelper();
-    if (key.at(0) == L'$' && keys.getSize() == 0)      // regexp marker, нет %0, %1 и т.д.
+    if (key.at(0) == L'$' && keys.getSize() == 0)      // regexp marker, РЅРµС‚ %0, %1 Рё С‚.Рґ.
     {
         tstring regexp(key.substr(1));
         checkVars(&regexp);

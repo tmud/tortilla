@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "propertiesPages/propertiesData.h"
 #include "mudView.h"
 #pragma warning(disable: 4996)
@@ -254,7 +254,7 @@ int MudView::getSymbolsOnDisplay() const
     RECT rc;
     GetClientRect(&rc);
     int count = rc.right / font_width;
-    int dc = count / 40; // погрешность
+    int dc = count / 40; // РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ
     if (dc < 3) dc = 3;
     return count - dc;
 }
@@ -500,7 +500,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                     }
                     else if (left > right) { int t = left; left = right; right = t; }
                 }
-                else if (drag_begin < drag_end) // сверху вниз
+                else if (drag_begin < drag_end) // СЃРІРµСЂС…Сѓ РІРЅРёР·
                 {
                     if (index == drag_begin) {
                         if (left == -1) left = 0;
@@ -510,7 +510,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         left = 0;
                     }
                 }
-                else // drag_begin > drag_end  снизу вверх
+                else // drag_begin > drag_end  СЃРЅРёР·Сѓ РІРІРµСЂС…
                 {
                     if (index == drag_begin) {
                         if (left == -1) { right = last; }
@@ -522,8 +522,8 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         right = last;
                     }
                 }
-                // проверка что блок попадает в вычисленный диапазон (частью или целиком)
-                // и вычисляем в left right - что выделено, но в символьных координатах блока
+                // РїСЂРѕРІРµСЂРєР° С‡С‚Рѕ Р±Р»РѕРє РїРѕРїР°РґР°РµС‚ РІ РІС‹С‡РёСЃР»РµРЅРЅС‹Р№ РґРёР°РїР°Р·РѕРЅ (С‡Р°СЃС‚СЊСЋ РёР»Рё С†РµР»РёРєРѕРј)
+                // Рё РІС‹С‡РёСЃР»СЏРµРј РІ left right - С‡С‚Рѕ РІС‹РґРµР»РµРЅРѕ, РЅРѕ РІ СЃРёРјРІРѕР»СЊРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С… Р±Р»РѕРєР°
                 int end_sym = start_sym + str.size();
                 DragParamsChecker dpc(left, right, start_sym, end_sym);
                 if (dpc.check())
@@ -607,8 +607,8 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                     //if (drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
                 }
 
-                // проверка что блок попадает в вычисленный диапазон (частью или целиком)
-                // и вычисляем в left right - что выделено, но в символьных координатах блока
+                // РїСЂРѕРІРµСЂРєР° С‡С‚Рѕ Р±Р»РѕРє РїРѕРїР°РґР°РµС‚ РІ РІС‹С‡РёСЃР»РµРЅРЅС‹Р№ РґРёР°РїР°Р·РѕРЅ (С‡Р°СЃС‚СЊСЋ РёР»Рё С†РµР»РёРєРѕРј)
+                // Рё РІС‹С‡РёСЃР»СЏРµРј РІ left right - С‡С‚Рѕ РІС‹РґРµР»РµРЅРѕ, РЅРѕ РІ СЃРёРјРІРѕР»СЊРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С… Р±Р»РѕРєР°
                 int end_sym = start_sym + str.size();
 
                 int dsym = ld[0];

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "api/api.h"
 #include "plugin.h"
 
@@ -168,7 +168,7 @@ bool Plugin::runMethod(const char* method, int args, int results, bool *not_supp
         if (luaT_check(L, 1, LUA_TSTRING))
             pluginMethodError(m, lua_toerror(L));
         else
-            pluginMethodError(m, L"неизвестная ошибка");
+            pluginMethodError(m, L"РЅРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°");
         _cp = old;
         lua_settop(L, 0);
         return false;
@@ -281,7 +281,7 @@ bool Plugin::isAlreadyLoaded(const wchar_t* filename)
     tstring ext(e+1);
     if (isLoadedPlugin(module_name.c_str()))
     {
-        swprintf(plugin_buffer(), L"Плагин %s не загружен, так как место _G['%s'] занято модулем или другим плагином.", filename, 
+        swprintf(plugin_buffer(), L"РџР»Р°РіРёРЅ %s РЅРµ Р·Р°РіСЂСѓР¶РµРЅ, С‚Р°Рє РєР°Рє РјРµСЃС‚Рѕ _G['%s'] Р·Р°РЅСЏС‚Рѕ РјРѕРґСѓР»РµРј РёР»Рё РґСЂСѓРіРёРј РїР»Р°РіРёРЅРѕРј.", filename, 
             module_name.c_str());
         pluginOut(plugin_buffer());
         return true;

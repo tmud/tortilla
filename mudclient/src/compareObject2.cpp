@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "compareObject.h"
 #include "accessors.h"
 
@@ -37,16 +37,16 @@ void CompareObjectUnitTests::run()
     assert( co.getKeyNoCuts() == L"abc %1" );
 
     VarProcessor *vp = tortilla::getVars();
-    vp->setVar(L"var", L"ñäå");
+    vp->setVar(L"var", L"ÑĞ´Ğµ");
     vp->setVar(L"ttt", L"12");
 
     co.init(L"def %1 %($var)2 %($ttt;3)3", false);
     assert( co.getKeyNoCuts() == L"def %1 %2 %3" );
-    assert( co.compare(L"def àáâ ñäå 123") );
+    assert( co.compare(L"def Ğ°Ğ±Ğ² ÑĞ´Ğµ 123") );
     co.getParameters(&params);
     assert(params.size() == 4);
     assert(params[3].compare(L"123") == 0);
-    assert( !co.compare(L"def àáâ ñäå 124") );
+    assert( !co.compare(L"def Ğ°Ğ±Ğ² ÑĞ´Ğµ 124") );
 
     vp->setVar(L"x", L"000");
     vp->setVar(L"y", L"111");

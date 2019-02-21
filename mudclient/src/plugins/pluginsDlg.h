@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "plugin.h"
 
 class PluginsDlg :  public CDialogImpl<PluginsDlg>, PropertyListCtrlHandler
@@ -63,10 +63,10 @@ private:
 
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.setHandler(this);
-        m_list.addColumn(L"Íàçâàíèå", 50);
-        m_list.addColumn(L"Âåðñèÿ", 15);
-        m_list.addColumn(L"Ôàéë", 20);
-        m_list.addColumn(L"Ñîñòîÿíèå", 15);
+        m_list.addColumn(L"ÐÐ°Ð·Ð²Ð°Ð½Ð¸Ðµ", 50);
+        m_list.addColumn(L"Ð’ÐµÑ€ÑÐ¸Ñ", 15);
+        m_list.addColumn(L"Ð¤Ð°Ð¹Ð»", 20);
+        m_list.addColumn(L"Ð¡Ð¾ÑÑ‚Ð¾ÑÐ½Ð¸Ðµ", 15);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle()|LVS_EX_GRIDLINES|LVS_EX_FULLROWSELECT);
         m_list.supportDoubleClick();
 
@@ -77,7 +77,7 @@ private:
             m_list.addItem(pos, 0, p->get(Plugin::NAME));
             m_list.addItem(pos, 1, p->get(Plugin::VERSION));
             m_list.addItem(pos, 2, p->get(Plugin::FILE));
-            m_list.addItem(pos, 3, state[i] ? L"Âêë" : L"Âûêë");
+            m_list.addItem(pos, 3, state[i] ? L"Ð’ÐºÐ»" : L"Ð’Ñ‹ÐºÐ»");
         }
 
         CenterWindow(GetParent());
@@ -132,7 +132,7 @@ private:
         if (item_selected != -1) {
             int newstate = state[item_selected] ? 0 : 1;
             state[item_selected] = newstate;
-            m_list.setItem(item_selected, 3, newstate ? L"Âêë" : L"Âûêë");
+            m_list.setItem(item_selected, 3, newstate ? L"Ð’ÐºÐ»" : L"Ð’Ñ‹ÐºÐ»");
         }
     }
 
@@ -174,11 +174,11 @@ private:
         m_list.setItem(index1, 0, p2->get(Plugin::NAME));
         m_list.setItem(index1, 1, p2->get(Plugin::VERSION));
         m_list.setItem(index1, 2, p2->get(Plugin::FILE));
-        m_list.setItem(index1, 3, state[index2] ? L"Âêë" : L"Âûêë");
+        m_list.setItem(index1, 3, state[index2] ? L"Ð’ÐºÐ»" : L"Ð’Ñ‹ÐºÐ»");
         m_list.setItem(index2, 0, p1->get(Plugin::NAME));
         m_list.setItem(index2, 1, p1->get(Plugin::VERSION));
         m_list.setItem(index2, 2, p1->get(Plugin::FILE));
-        m_list.setItem(index2, 3, state[index1] ? L"Âêë" : L"Âûêë");
+        m_list.setItem(index2, 3, state[index1] ? L"Ð’ÐºÐ»" : L"Ð’Ñ‹ÐºÐ»");
         plugins_list->at(index1) = p2;
         plugins_list->at(index2) = p1;
         int t = state[index1]; state[index1] = state[index2]; state[index2] = t;

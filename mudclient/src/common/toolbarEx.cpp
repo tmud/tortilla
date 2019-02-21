@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "toolbarEx.h"
 
 class MenuHelper : protected CMenuHandle

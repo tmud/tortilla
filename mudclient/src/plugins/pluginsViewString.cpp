@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "pluginsViewString.h"
 #include "pluginSupport.h"
 

@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class PropertyVars :  public CDialogImpl<PropertyVars>
 {
@@ -276,8 +276,8 @@ private:
         m_reset.Attach(GetDlgItem(IDC_BUTTON_RESET));
         m_replace.Attach(GetDlgItem(IDC_BUTTON_REPLACE));
         m_list.Attach(GetDlgItem(IDC_LIST));
-        m_list.addColumn(L"Имя", 30);
-        m_list.addColumn(L"Значение", 70);
+        m_list.addColumn(L"РРјСЏ", 30);
+        m_list.addColumn(L"Р—РЅР°С‡РµРЅРёРµ", 70);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
