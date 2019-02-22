@@ -64,7 +64,7 @@ typedef std::vector<MudViewStringBlock> MudViewStringBlocks;
 struct MudViewString
 {
    MudViewString() : dropped(false), show_dropped(false), gamecmd(false), system(false), triggered(false), prompt(0),
-       next(false), prev(false), changed(true), subs_processed(false), from_output(false) {}
+       next(false), prev(false), changed(true), subs_processed(false) {}
    void moveBlocks(MudViewString* src) 
    {
        blocks.insert(blocks.end(), src->blocks.begin(), src->blocks.end());
@@ -75,7 +75,6 @@ struct MudViewString
             prompt = getTextLen();
        src->clear();
        subs_processed = false;
-	   from_output |= src->from_output;
    }
 
    void clear()
@@ -88,7 +87,6 @@ struct MudViewString
        triggered = false;
        prompt = 0;
        subs_processed = false;
-	   from_output = false;
    }
 
    void copy(MudViewString* src)
@@ -101,7 +99,6 @@ struct MudViewString
        triggered = src->triggered;
        prompt = src->prompt;
        subs_processed = src->subs_processed;
-	   from_output = src->from_output;
    }
 
    void getText(tstring *text) const

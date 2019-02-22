@@ -55,10 +55,10 @@ struct InputTemplateParameters
 
 struct InputCommandData
 {
-    InputCommandData() : dropped(false), system(false), changed(false), user(false) {}
+    InputCommandData() : dropped(false), system(false), changed(false), user(false), from_output(false) {}
                                             // full command as is = command + parameters
     tstring srccmd;                         // only command name with prefix as is
-    tstring srcparameters;                  // original parameters as is without changes    
+    tstring srcparameters;                  // original parameters as is without changes
     tstring command;                        // command without spaces and prefix
     tstring parameters;                     // only parameters (without command) as single line (without trimming)
     std::vector<tstring> parameters_list;   // list of parameters separately
@@ -68,6 +68,7 @@ struct InputCommandData
     bool system;
     bool changed;
     bool user;
+    bool from_output;
 };
 typedef std::shared_ptr<InputCommandData> InputCommand;
 

@@ -30,6 +30,7 @@ public:
     void invalidvars() { error(L"Используются неизвестные переменные."); }
     void blockedbyprops() { error(L"Команда не выполнена (открыто окно настроек)."); }
     bool isError() const { return perror->empty() ? false : true; }
+    bool isOutput() const { return cmd->from_output; }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
     InputCommand cmd;
@@ -1151,9 +1152,11 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
 
     new_string->system = true;
     data.strings.push_back(new_string);
-    int flags = GAME_LOG|WORK_OFFLINE|FROM_OUTPUT;
+    int flags = GAME_LOG|WORK_OFFLINE;
     if (!enable_actions_subs_plugins)
         flags |= (SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS);
+    else
+        flags |= FROM_OUTPUT;
     printIncoming(data, flags, view);
 }
 
@@ -1202,7 +1205,8 @@ IMPL(print)
     int n = p->size();
     if (n >= 0)
     {
-        return printex(0, p, 0, true);
+        bool isoutput = p->isOutput();
+        return printex(0, p, 0, isoutput ? false : true);
     }
     p->invalidargs();
 }

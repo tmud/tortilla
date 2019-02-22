@@ -110,14 +110,6 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parse_data.update_prev_string = false;
     }
 
-	if (flags & FROM_OUTPUT)
-	{
-		parseDataStrings& ps = parse_data.strings;
-		for (int i = 0, e = ps.size(); i < e; ++i)
-			ps[i]->from_output = true;
-		parse_data.update_prev_string = false;
-	}
-
     if (flags & NEW_LINE)
     {
         parse_data.update_prev_string = false;
@@ -605,14 +597,19 @@ void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicP
 }
 
 void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, LogicTriggered* trigg)
-{    
-    // process lua triggers or actions
-    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
+{
+    // process actions
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
         bool triggered = m_helper.processActions(&parse_data, j, &pe->commands, trigg);
         if (!triggered)
             continue;
+        if (flags & FROM_OUTPUT)
+        {
+            InputCommands &cmds = pe->commands;
+            for (int i = 0, e = cmds.size(); i < e; ++i)
+                 cmds[i]->from_output = true;
+        }
         parseData &not_processed = (pe->triggers.empty()) ? pe->not_processed : pe->lua_processed;
         MudViewString *s = parse_data.strings[j];
         s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
@@ -622,6 +619,6 @@ void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, Lo
         int from = j + 1;
         not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
         parse_data.strings.resize(from);
-        return;   
+        return;
     }
 }
