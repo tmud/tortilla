@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "common/tokenizer.h"
 
 class Phrase

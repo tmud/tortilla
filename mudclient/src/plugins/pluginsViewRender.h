@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "pluginsRenderObjects.h"
 
 class PluginsViewRender

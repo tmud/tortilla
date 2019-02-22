@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "saveSoundDlg.h"
 #include "soundPlayer.h"
 
@@ -6,7 +6,7 @@ SoundPlayer *player = NULL;
 
 int get_name(lua_State *L)
 {
-    luaT_pushwstring(L, L"Звуковой плагин");
+    luaT_pushwstring(L, L"Р—РІСѓРєРѕРІРѕР№ РїР»Р°РіРёРЅ");
     return 1;
 }
 
@@ -22,15 +22,15 @@ void wstring_replace(std::wstring *str, const std::wstring& what, const std::wst
 
 int get_description(lua_State *L)
 {
-    std::wstring s(L"Плагин предназначен для воспроизведения звуковых файлов, а также их записи с микрофона.\r\n"
-        L"Воспроизводятся wav,mp3,ogg,s3m,it,xm,mod. Запись с микрофона производится в wav.\r\n"
-        L"Добавляются две команды #sound и #play. Подробнее в справке #help sound.\r\n"
-        L"#play file [volume] - воспроизведение музыкального файла, аналог (#sound play)\r\n"
-        L"#play - останавливает воспроизведение музыкального файла, аналог (#sound stop)\r\n"
-        L"#sound play file [volume] - воспроизведение музыкального файла или плейлиста (*.lst)\r\n"
-        L"#sound playfx|fx file [volume] - воспроизведение звукового эффекта\r\n"       
-        L"#sound volume [значение] - устанавливает или показывает текущую мастер-громкость плагина\r\n"
-        L"#sound stop - останавливает воспроизведение музыкального файла\r\n");
+    std::wstring s(L"РџР»Р°РіРёРЅ РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅ РґР»СЏ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёСЏ Р·РІСѓРєРѕРІС‹С… С„Р°Р№Р»РѕРІ, Р° С‚Р°РєР¶Рµ РёС… Р·Р°РїРёСЃРё СЃ РјРёРєСЂРѕС„РѕРЅР°.\r\n"
+        L"Р’РѕСЃРїСЂРѕРёР·РІРѕРґСЏС‚СЃСЏ wav,mp3,ogg,s3m,it,xm,mod. Р—Р°РїРёСЃСЊ СЃ РјРёРєСЂРѕС„РѕРЅР° РїСЂРѕРёР·РІРѕРґРёС‚СЃСЏ РІ wav.\r\n"
+        L"Р”РѕР±Р°РІР»СЏСЋС‚СЃСЏ РґРІРµ РєРѕРјР°РЅРґС‹ #sound Рё #play. РџРѕРґСЂРѕР±РЅРµРµ РІ СЃРїСЂР°РІРєРµ #help sound.\r\n"
+        L"#play file [volume] - РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ РјСѓР·С‹РєР°Р»СЊРЅРѕРіРѕ С„Р°Р№Р»Р°, Р°РЅР°Р»РѕРі (#sound play)\r\n"
+        L"#play - РѕСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ РјСѓР·С‹РєР°Р»СЊРЅРѕРіРѕ С„Р°Р№Р»Р°, Р°РЅР°Р»РѕРі (#sound stop)\r\n"
+        L"#sound play file [volume] - РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ РјСѓР·С‹РєР°Р»СЊРЅРѕРіРѕ С„Р°Р№Р»Р° РёР»Рё РїР»РµР№Р»РёСЃС‚Р° (*.lst)\r\n"
+        L"#sound playfx|fx file [volume] - РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ Р·РІСѓРєРѕРІРѕРіРѕ СЌС„С„РµРєС‚Р°\r\n"       
+        L"#sound volume [Р·РЅР°С‡РµРЅРёРµ] - СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РёР»Рё РїРѕРєР°Р·С‹РІР°РµС‚ С‚РµРєСѓС‰СѓСЋ РјР°СЃС‚РµСЂ-РіСЂРѕРјРєРѕСЃС‚СЊ РїР»Р°РіРёРЅР°\r\n"
+        L"#sound stop - РѕСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РІРѕСЃРїСЂРѕРёР·РІРµРґРµРЅРёРµ РјСѓР·С‹РєР°Р»СЊРЅРѕРіРѕ С„Р°Р№Р»Р°\r\n");
     luaT_Props props(L);
     std::wstring p;
     props.cmdPrefix(&p);
@@ -51,12 +51,12 @@ int init(lua_State *L)
     player = new SoundPlayer(L);
     if (!player->isPlayerLoaded())
     {
-        base::log(L, L"Модуль SoundPlayer не загружен.");
+        base::log(L, L"РњРѕРґСѓР»СЊ SoundPlayer РЅРµ Р·Р°РіСЂСѓР¶РµРЅ.");
         base::terminate(L);
         return 0;
     }
     player->init();
-    base::addMenu(L, L"Плагины/Записать звук...", 1);
+    base::addMenu(L, L"РџР»Р°РіРёРЅС‹/Р—Р°РїРёСЃР°С‚СЊ Р·РІСѓРє...", 1);
     base::addCommand(L, L"sound");
     base::addCommand(L, L"play");
     return 0;
@@ -103,7 +103,7 @@ int syscmd(lua_State *L)
                 lua_gettable(L, -2);
                 if (!lua_isstring(L, -1))
                 {
-                    luaT_pushwstring(L, L"Неверные параметры");
+                    luaT_pushwstring(L, L"РќРµРІРµСЂРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹");
                     return 1;
                 }
                 else

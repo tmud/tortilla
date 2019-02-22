@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "dirObjects.h"
 
 RoomDir MapperDirCommand::check(const tstring& cmd) const

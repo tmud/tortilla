@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "resource.h"
 
@@ -122,7 +122,7 @@ private:
         }
         if (!m_pcre.init(regexp.c_str()))
         {
-            m_result.SetWindowText(L"Ошибка в регулярном выражении");
+            m_result.SetWindowText(L"РћС€РёР±РєР° РІ СЂРµРіСѓР»СЏСЂРЅРѕРј РІС‹СЂР°Р¶РµРЅРёРё");
             return;
         }
 
@@ -131,7 +131,7 @@ private:
         int n = m_pcre.size();
         if (n == 0)
         {
-            m_result.SetWindowText(L"Нет совпадений");
+            m_result.SetWindowText(L"РќРµС‚ СЃРѕРІРїР°РґРµРЅРёР№");
         }
         else
         {

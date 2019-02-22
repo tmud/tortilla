@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include <map>
 #include "api/base.h"
 #include <algorithm>
@@ -119,7 +119,7 @@ public:
                 volume = wstring_to_int(params[1].c_str(), &check);
                 if (!check)
                 {
-                    error->assign(L"Неверный набор параметров");
+                    error->assign(L"РќРµРІРµСЂРЅС‹Р№ РЅР°Р±РѕСЂ РїР°СЂР°РјРµС‚СЂРѕРІ");
                     return false;
                 }
             }
@@ -145,14 +145,14 @@ public:
              m_playing_music = lua_tointeger(L, -1);
             return true;
         }
-        error->assign(L"Неверный набор параметров");
+        error->assign(L"РќРµРІРµСЂРЅС‹Р№ РЅР°Р±РѕСЂ РїР°СЂР°РјРµС‚СЂРѕРІ");
         return false;
     }
 
     bool runCommand(const std::vector<std::wstring>& params, std::wstring* error)
     {
         if (params.empty())
-            { error->assign(L"Не заданы параметры"); return false; }
+            { error->assign(L"РќРµ Р·Р°РґР°РЅС‹ РїР°СЂР°РјРµС‚СЂС‹"); return false; }
         perror = error;
         const std::wstring &cmd = params[0];
         if (cmd == L"playfx" || cmd == L"fx")
@@ -163,7 +163,7 @@ public:
             return volume(params);
         else if (cmd == L"stop")
             return stop(params);
-        error->assign(L"Неизвестная команда: ");
+        error->assign(L"РќРµРёР·РІРµСЃС‚РЅР°СЏ РєРѕРјР°РЅРґР°: ");
         error->append(cmd);
         return false;
     }
@@ -247,7 +247,7 @@ private:
                return incorrectCall(L"getVolume");
             if (!lua_isnumber(L, -1))
                 return incorrectResult(L"getVolume");
-            std::wstring v(L"Текущая громкость: ");
+            std::wstring v(L"РўРµРєСѓС‰Р°СЏ РіСЂРѕРјРєРѕСЃС‚СЊ: ");
             v.append( luaT_towstring(L, -1) );
             print(v);
             return true;
@@ -259,7 +259,7 @@ private:
            pushPlayer();
            if (!luaT_run(L, "setVolume", "td", volume))
                return incorrectCall(L"setVolume");
-           std::wstring v(L"Новая громкость: ");
+           std::wstring v(L"РќРѕРІР°СЏ РіСЂРѕРјРєРѕСЃС‚СЊ: ");
            v.append( int_to_wstring(volume) );
            print(v);
            return true;
@@ -397,7 +397,7 @@ private:
         lua_pop(L, 1);
         if (len == 0)
         {
-            base::log(L, L"[sound] Список пуст");
+            base::log(L, L"[sound] РЎРїРёСЃРѕРє РїСѓСЃС‚");
             return false;
         }
         for (int i=1;i<=len;++i)
@@ -441,19 +441,19 @@ private:
 
     bool incorrectCall(const wchar_t* method)
     {
-        perror->assign(L"Ошибка при вызове метода soundplayer.");
+        perror->assign(L"РћС€РёР±РєР° РїСЂРё РІС‹Р·РѕРІРµ РјРµС‚РѕРґР° soundplayer.");
         perror->append(method);
         return false;
     }
     bool incorrectResult(const wchar_t* method)
     {
-        perror->assign(L"Некорректный результат из функции soundplayer.");
+        perror->assign(L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ СЂРµР·СѓР»СЊС‚Р°С‚ РёР· С„СѓРЅРєС†РёРё soundplayer.");
         perror->append(method);
         return false;
     }
     bool incorrectParameters(const wchar_t* cmd)
     {
-        perror->assign(L"Некорректные параметры для команды '");
+        perror->assign(L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹ РґР»СЏ РєРѕРјР°РЅРґС‹ '");
         perror->append(cmd);
         perror->append(L"'");
         return false;
@@ -461,7 +461,7 @@ private:
 
     bool incorrectPlaylist(const wchar_t* file)
     {
-        perror->assign(L"Некорректный файл плейлиста '");
+        perror->assign(L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ С„Р°Р№Р» РїР»РµР№Р»РёСЃС‚Р° '");
         perror->append(file);
         perror->append(L"'");
         return false;

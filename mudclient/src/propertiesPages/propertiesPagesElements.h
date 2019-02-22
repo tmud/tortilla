@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class HighlightSelectColor :  public CWindowImpl<HighlightSelectColor, CButton, CControlWinTraits>
 {
@@ -190,7 +190,7 @@ private:
 
         HFONT oldfont=dc.SelectFont(m_font);
         SIZE size = { 0, 0 };
-        tstring s(L"Пример текста");
+        tstring s(L"РџСЂРёРјРµСЂ С‚РµРєСЃС‚Р°");
         GetTextExtentPoint32(dc, s.c_str(), s.length(), &size);
         size.cx += 4;
 

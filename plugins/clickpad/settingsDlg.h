@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "resource.h"
 #include "padbutton.h"
 #include "api/api.h"
@@ -174,8 +174,8 @@ private:
         m_list.GetClientRect(&rc);
         float width_percent =  static_cast<float>(rc.right) / 100;
         m_list.InsertColumn(0, L"Hotkey", LVCFMT_LEFT, static_cast<int>(width_percent * 15));
-        m_list.InsertColumn(1, L"Команда", LVCFMT_LEFT, static_cast<int>(width_percent * 60));
-        m_list.InsertColumn(2, L"Группа", LVCFMT_LEFT, static_cast<int>(width_percent * 20));
+        m_list.InsertColumn(1, L"РљРѕРјР°РЅРґР°", LVCFMT_LEFT, static_cast<int>(width_percent * 60));
+        m_list.InsertColumn(2, L"Р“СЂСѓРїРїР°", LVCFMT_LEFT, static_cast<int>(width_percent * 20));
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
         luaT_ActiveObjects hk(getLuaState(), "hotkeys");
         std::wstring key, value, group;

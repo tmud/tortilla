@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "accessors.h"
 #include "pluginsManager.h"
 #include "pluginsDlg.h"
@@ -207,7 +207,7 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
         p = findPlugin(name);
         if (!p)
         {
-            tstring error(L"Îøèáêà ïðè çàãðóçêå ïëàãèíà '");
+            tstring error(L"ÐžÑˆÐ¸Ð±ÐºÐ° Ð¿Ñ€Ð¸ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐµ Ð¿Ð»Ð°Ð³Ð¸Ð½Ð° '");
             error.append(name);
             error.append(L"'.");
             tmcLog(error.c_str());
@@ -346,7 +346,7 @@ bool PluginsManager::processTriggers(parseData& parse_data, int string, std::vec
             if (action)
             {
                 triggers.push_back(action);
-                // ïðîâåðêà âñåõ òðèããåðîâ íà ýòó ñòðîêó
+                // Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð²ÑÐµÑ… Ñ‚Ñ€Ð¸Ð³Ð³ÐµÑ€Ð¾Ð² Ð½Ð° ÑÑ‚Ñƒ ÑÑ‚Ñ€Ð¾ÐºÑƒ
                 processed = true;
             }
         }
@@ -522,9 +522,9 @@ bool PluginsManager::loadPlugin(Plugin* p)
 {
     if (!p->reloadPlugin())
     {
-        tstring error(L"Ïëàãèí '");
+        tstring error(L"ÐŸÐ»Ð°Ð³Ð¸Ð½ '");
         error.append(p->get(Plugin::FILE));
-        error.append(L"'îòêëþ÷åí.");
+        error.append(L"'Ð¾Ñ‚ÐºÐ»ÑŽÑ‡ÐµÐ½.");
         pluginOut(error.c_str());
         return false;
     }
@@ -567,9 +567,9 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-			tstring msg(L"Íåâåðíûé òèï ðåçóëüòàòà èç ìåòîäà '");
+			tstring msg(L"ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ Ñ‚Ð¸Ð¿ Ñ€ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚Ð° Ð¸Ð· Ð¼ÐµÑ‚Ð¾Ð´Ð° '");
 			msg.append(TA2W(method));
-			msg.append(L"' Òðåáóåòñÿ string|nil");
+			msg.append(L"' Ð¢Ñ€ÐµÐ±ÑƒÐµÑ‚ÑÑ string|nil");
             turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
@@ -617,9 +617,9 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            tstring msg(L"Íåâåðíûé òèï ðåçóëüòàòà èç ìåòîäà '");
+            tstring msg(L"ÐÐµÐ²ÐµÑ€Ð½Ñ‹Ð¹ Ñ‚Ð¸Ð¿ Ñ€ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚Ð° Ð¸Ð· Ð¼ÐµÑ‚Ð¾Ð´Ð° '");
             msg.append(TA2W(method));
-            msg.append(L"'. Òðåáóåòñÿ table|nil|boolean|string");
+            msg.append(L"'. Ð¢Ñ€ÐµÐ±ÑƒÐµÑ‚ÑÑ table|nil|boolean|string");
             turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_newtable(L);
@@ -687,7 +687,7 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     _cp = p;
     if (error)
         pluginLog(error);
-    swprintf(plugin_buffer(), L"Ïëàãèí %s îòêëþ÷åí!", p->get(Plugin::FILE));
+    swprintf(plugin_buffer(), L"ÐŸÐ»Ð°Ð³Ð¸Ð½ %s Ð¾Ñ‚ÐºÐ»ÑŽÑ‡ÐµÐ½!", p->get(Plugin::FILE));
     pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;

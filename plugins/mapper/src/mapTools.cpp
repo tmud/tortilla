@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "mapTools.h"
 #include "mapSmartTools.h"
 #include "roomsZone.h"
@@ -91,7 +91,7 @@ bool MapTools::addNewRoom(Room* from, Room* newroom, RoomDir dir)
         return result;
     }
 
-    // конфликтный мультивыход
+    // РєРѕРЅС„Р»РёРєС‚РЅС‹Р№ РјСѓР»СЊС‚РёРІС‹С…РѕРґ
     st.setMultiExit(from, dir);
     return setRoomOnMap(from, newroom, dir);
 }

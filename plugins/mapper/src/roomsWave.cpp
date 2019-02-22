@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "roomsWave.h"
 
 bool RoomWaveAlgoritm::runWaveAlgoritm(const Rooms3dCube *zone, const Room* room, RoomDir dir)

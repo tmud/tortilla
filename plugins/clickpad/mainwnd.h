@@ -1,4 +1,4 @@
-#include "resource.h"
+﻿#include "resource.h"
 #include "padbutton.h"
 #include "settingsDlg.h"
 #include "selectImageDlg.h"

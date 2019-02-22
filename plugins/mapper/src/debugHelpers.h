@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #ifdef _DEBUG
 void init_debug_helpers(lua_State *_l);

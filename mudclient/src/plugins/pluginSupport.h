@@ -1,4 +1,4 @@
-#pragma  once
+﻿#pragma  once
 #include "api/api.h"
 #include "plugin.h"
 

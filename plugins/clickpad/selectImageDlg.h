@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "splitterEx.h"
 #include "resource.h"
 #include "imageCollection.h"

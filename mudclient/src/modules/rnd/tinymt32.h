@@ -1,4 +1,4 @@
-#ifndef TINYMT32_H
+﻿#ifndef TINYMT32_H
 #define TINYMT32_H
 /**
  * @file tinymt32.h

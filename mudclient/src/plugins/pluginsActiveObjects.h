@@ -1,4 +1,4 @@
-#pragma once
+ο»Ώ#pragma once
 
 #include "highlightHelper.h"
 #include "hotkeyTable.h"
@@ -618,7 +618,7 @@ public:
         const property_value &v = pdata->timers.get(selected);
         PropertiesTimer pt; pt.convertFromString(v.value);
         std::wstringstream ws;
-        ws << L"+timer #" << v.key << L" " << pt.timer << L" ρεκ: {" << pt.cmd << L"} [" << v.group << L"]";
+        ws << L"+timer #" << v.key << L" " << pt.timer << L" ΡΠµΠΊ: {" << pt.cmd << L"} [" << v.group << L"]";
         fmt->assign(ws.str());
     }
     void formatdel(tstring *fmt)

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsTriggers.h"
 #include "pluginsParseData.h"
@@ -189,8 +189,8 @@ void PluginsTrigger::run(triggerParseVector* action)
         {
             triggerParseData *tpd = action->operator[](i);
             {
-                // вызов конструктора PluginsParseData - перекодировка строк
-                // вызов деструктора - обратная перекодировка
+                // РІС‹Р·РѕРІ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР° PluginsParseData - РїРµСЂРµРєРѕРґРёСЂРѕРІРєР° СЃС‚СЂРѕРє
+                // РІС‹Р·РѕРІ РґРµСЃС‚СЂСѓРєС‚РѕСЂР° - РѕР±СЂР°С‚РЅР°СЏ РїРµСЂРµРєРѕРґРёСЂРѕРІРєР°
                 PluginsParseData ppd(tpd->getParseData(), tpd);
                 luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
                 if (lua_pcall(L, 1, 0, 0))
@@ -202,7 +202,7 @@ void PluginsTrigger::run(triggerParseVector* action)
                     }
                     else
                     {
-                        pluginLog(L"неизвестная ошибка");
+                        pluginLog(L"РЅРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°");
                     }
                     lua_settop(L, 0);
                 }

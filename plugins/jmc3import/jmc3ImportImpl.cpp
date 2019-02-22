@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "jmc3ImportImpl.h"
 #include "../mudclient/src/common/selectFileDlg.h"
 #include "paramsDlg.h"

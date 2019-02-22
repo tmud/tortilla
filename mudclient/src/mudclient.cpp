@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "MainFrm.h"
 #include "network/network_init.h"
 #include "profiles/profilesPath.h"
@@ -22,7 +22,7 @@ int Run(LPTSTR lpstrCmdLine, int nCmdShow = SW_SHOWDEFAULT)
         return 0;
     }
 
-#ifndef _DEBUG  // для запуска новых копий клиента из панели задач
+#ifndef _DEBUG  // РґР»СЏ Р·Р°РїСѓСЃРєР° РЅРѕРІС‹С… РєРѕРїРёР№ РєР»РёРµРЅС‚Р° РёР· РїР°РЅРµР»Рё Р·Р°РґР°С‡
     {
         DWORD a = GetFileAttributes(L"gamedata");
         if (a == INVALID_FILE_ATTRIBUTES || !(a&FILE_ATTRIBUTE_DIRECTORY))

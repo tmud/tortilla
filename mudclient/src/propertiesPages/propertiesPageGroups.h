@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class PropertyGroups :  public CDialogImpl<PropertyGroups>
 {
@@ -22,7 +22,7 @@ class PropertyGroups :  public CDialogImpl<PropertyGroups>
 
 public:
      enum { IDD = IDD_PROPERTY_GROUPS };
-     PropertyGroups(PropertiesData *data) : propData(data), m_OnStatus(L"Вкл"), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
+     PropertyGroups(PropertiesData *data) : propData(data), m_OnStatus(L"Р’РєР»"), m_deleted(false), m_update_mode(false), dlg_state(NULL) {}
      void setParams(PropertiesDlgPageState *state)
      {
          dlg_state = state;
@@ -100,10 +100,10 @@ private:
         loadString(IDR_MAINFRAME, &title);
         if (propData->groups.size() == 1)
         {
-            MessageBox(L"Последнюю группу удалить нельзя!", title.c_str(), MB_OK|MB_ICONSTOP);
+            MessageBox(L"РџРѕСЃР»РµРґРЅСЋСЋ РіСЂСѓРїРїСѓ СѓРґР°Р»РёС‚СЊ РЅРµР»СЊР·СЏ!", title.c_str(), MB_OK|MB_ICONSTOP);
             return 0;
         }
-        if (MessageBox(L"Вы уверены, что хотите удалить группу со всеми ее триггерами, макросами и другими элементами?", 
+        if (MessageBox(L"Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ РіСЂСѓРїРїСѓ СЃРѕ РІСЃРµРјРё РµРµ С‚СЂРёРіРіРµСЂР°РјРё, РјР°РєСЂРѕСЃР°РјРё Рё РґСЂСѓРіРёРјРё СЌР»РµРјРµРЅС‚Р°РјРё?", 
             title.c_str(), MB_YESNO|MB_ICONQUESTION) == IDYES)
         {
             m_deleted = true;
@@ -272,8 +272,8 @@ private:
         m_up.Attach(GetDlgItem(IDC_BUTTON_UP));
         m_down.Attach(GetDlgItem(IDC_BUTTON_DOWN));
         m_list.Attach(GetDlgItem(IDC_LIST));
-        m_list.addColumn(L"Группа", 50);
-        m_list.addColumn(L"Статус", 20);
+        m_list.addColumn(L"Р“СЂСѓРїРїР°", 50);
+        m_list.addColumn(L"РЎС‚Р°С‚СѓСЃ", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));

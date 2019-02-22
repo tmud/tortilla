@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "mudViewString.h"
 #include "mudViewParser.h"
@@ -215,7 +215,7 @@ public:
                     newstr[i] = new MudViewString;
                 ms.insert(ms.end(), newstr.begin(), newstr.end());
             }
-            // копируем строки
+            // РєРѕРїРёСЂСѓРµРј СЃС‚СЂРѕРєРё
             int delta = ms.size() - size;
             for (int i = 0; i < size; ++i)
             {
@@ -223,7 +223,7 @@ public:
                 MudViewString *dst = ms[i + delta];
                 dst->copy(src);
             }
-            // добавляем новые строки, если появились, при обработке массива строк
+            // РґРѕР±Р°РІР»СЏРµРј РЅРѕРІС‹Рµ СЃС‚СЂРѕРєРё, РµСЃР»Рё РїРѕСЏРІРёР»РёСЃСЊ, РїСЂРё РѕР±СЂР°Р±РѕС‚РєРµ РјР°СЃСЃРёРІР° СЃС‚СЂРѕРє
             mudViewStrings &new_ms = m_pMirror->m_strings;
             if (!new_ms.empty()) {
                 ms.insert(ms.end(), new_ms.begin(), new_ms.end());
@@ -231,7 +231,7 @@ public:
             }
             new_ms.swap(ms);
         }
-        // добавляем новые строки
+        // РґРѕР±Р°РІР»СЏРµРј РЅРѕРІС‹Рµ СЃС‚СЂРѕРєРё
         mudViewStrings &new_vs = m_pView->m_strings;
         if (!new_vs.empty()) {
             vs.insert(vs.end(), new_vs.begin(), new_vs.end());

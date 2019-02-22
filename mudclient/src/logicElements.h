@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "compareObject.h"
 #include "propertiesPages/propertiesData.h"

@@ -1,4 +1,4 @@
-/*
+﻿/*
     See http://www.boost.org for updates and documentation.
 
     Copyright (C) 2002-2003 Stanislav Baranov. Permission to copy, use,

@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "accessors.h"
 #include "propertiesPages/propertiesDlg.h"
 #include "profiles/profileDlgs.h"
@@ -426,9 +426,12 @@ private:
 
         // create find panel
         m_find_dlg.Create(m_dock);
-        m_find_dlg.SetWindowText(L"Поиск");
+        m_find_dlg.SetWindowText(L"РџРѕРёСЃРє");
         m_dock.AddWindow(m_find_dlg);
-        m_find_dlg.setWindowName(0, L"Главное окно");
+		RECT& startpos = m_dock._GetContext(m_find_dlg)->rcWindow;
+		startpos.left += 200; startpos.right += 200;
+		startpos.top += 180; startpos.bottom += 180;
+        m_find_dlg.setWindowName(0, L"Р“Р»Р°РІРЅРѕРµ РѕРєРЅРѕ");
         m_find_dlg.selectWindow(0);
 
         // create docking output windows
@@ -821,7 +824,7 @@ private:
         p.prefix = m_propData->cmd_prefix;
         p.separator = m_propData->cmd_separator;
 
-        // разбиваем команду на подкомманды для обработки в barcmd
+        // СЂР°Р·Р±РёРІР°РµРј РєРѕРјР°РЅРґСѓ РЅР° РїРѕРґРєРѕРјРјР°РЅРґС‹ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё РІ barcmd
         InputTemplateCommands tcmds;
         tcmds.init(cmds, p);
         tcmds.extract(&cmds);
@@ -854,7 +857,7 @@ private:
 
     void initCommandBar()
     {
-        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - доп. высота, чтобы Пуск не наезжал на буквы когда окно максимизировано
+        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - РґРѕРї. РІС‹СЃРѕС‚Р°, С‡С‚РѕР±С‹ РџСѓСЃРє РЅРµ РЅР°РµР·Р¶Р°Р» РЅР° Р±СѓРєРІС‹ РєРѕРіРґР° РѕРєРЅРѕ РјР°РєСЃРёРјРёР·РёСЂРѕРІР°РЅРѕ
         m_bar.setParams(m_barHeight, m_propElements.standard_font);
         m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);

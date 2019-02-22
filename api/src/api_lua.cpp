@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "../api.h"
 #include <vector>
 
@@ -219,7 +219,7 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
     {
         if (!lua_isuserdata(L, required_func_pos) && !lua_istable(L, required_func_pos))
         {
-            error_msg.append(L"Попытка вызвать функцию у объекта: ");
+            error_msg.append(L"РџРѕРїС‹С‚РєР° РІС‹Р·РІР°С‚СЊ С„СѓРЅРєС†РёСЋ Сѓ РѕР±СЉРµРєС‚Р°: ");
             TA2W type(luaT_typename(L, required_func_pos));
             error_msg.append(type);
             success = false;
@@ -253,7 +253,7 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
                 lua_getmetatable(L, required_func_pos);
                 if (!lua_istable(L, -1))
                 {
-                    error_msg.append(L"Функция у объекта не существует");
+                    error_msg.append(L"Р¤СѓРЅРєС†РёСЏ Сѓ РѕР±СЉРµРєС‚Р° РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚");
                     success = false;
                 }
                 else
@@ -269,14 +269,14 @@ bool luaT_run(lua_State *L, const char* func, const char* op, ...)
 
     if (success && !lua_isfunction(L, required_func_pos))
     {
-        error_msg.append(L"Функция у объекта не существует");
+        error_msg.append(L"Р¤СѓРЅРєС†РёСЏ Сѓ РѕР±СЉРµРєС‚Р° РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚");
         success = false;
     }
 
     if (!success)
     {
         lua_settop(L, n); // restore stack
-        std::wstring error(L"Ошибка вызова luaT_run '");
+        std::wstring error(L"РћС€РёР±РєР° РІС‹Р·РѕРІР° luaT_run '");
         error.append(TU2W(func));
         error.append(L"': ");
         error.append(error_msg);

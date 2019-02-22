@@ -1,15 +1,15 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "jmc3ImportImpl.h"
 
 int get_name(lua_State *L)
 {
-    luaT_pushwstring(L, L"Импорт из JMC3");
+    luaT_pushwstring(L, L"РРјРїРѕСЂС‚ РёР· JMC3");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Позволяет импортировать триггеры, макросы и другие игровые элементы\r\nиз игровых сетов мад-клиента Jaba Mud Client 3.x");
+    luaT_pushwstring(L, L"РџРѕР·РІРѕР»СЏРµС‚ РёРјРїРѕСЂС‚РёСЂРѕРІР°С‚СЊ С‚СЂРёРіРіРµСЂС‹, РјР°РєСЂРѕСЃС‹ Рё РґСЂСѓРіРёРµ РёРіСЂРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹\r\nРёР· РёРіСЂРѕРІС‹С… СЃРµС‚РѕРІ РјР°Рґ-РєР»РёРµРЅС‚Р° Jaba Mud Client 3.x");
     return 1;
 }
 
@@ -21,7 +21,7 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
-    base::addMenu(L, L"Плагины/Импорт из JMC3...", 1);
+    base::addMenu(L, L"РџР»Р°РіРёРЅС‹/РРјРїРѕСЂС‚ РёР· JMC3...", 1);
     return 0;
 }
 
@@ -40,17 +40,17 @@ int menucmd(lua_State *L)
         {
             if (!errors.empty())
             {
-                base::log(L, L"Ошибки импорта из JMC3 (неверный синтаксис или такой элемент уже есть):");
+                base::log(L, L"РћС€РёР±РєРё РёРјРїРѕСЂС‚Р° РёР· JMC3 (РЅРµРІРµСЂРЅС‹Р№ СЃРёРЅС‚Р°РєСЃРёСЃ РёР»Рё С‚Р°РєРѕР№ СЌР»РµРјРµРЅС‚ СѓР¶Рµ РµСЃС‚СЊ):");
                 for (int i = 0, e = errors.size(); i < e; ++i)
                 {
-                    std::wstring msg(L"Ошибка: ");
+                    std::wstring msg(L"РћС€РёР±РєР°: ");
                     msg.append(errors[i].c_str());
                     base::log(L, msg.c_str());
                 }
             }
             else
             {
-                base::log(L, L"Импорт прошел без ошибок.");
+                base::log(L, L"РРјРїРѕСЂС‚ РїСЂРѕС€РµР» Р±РµР· РѕС€РёР±РѕРє.");
             }
         }
     }

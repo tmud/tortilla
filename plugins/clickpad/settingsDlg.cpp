@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "settingsDlg.h"
 #include "mainwnd.h"
 #include "libs/common/memoryBuffer.h"

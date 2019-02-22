@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "zlib.h"
 #include "../common/tempThread.h"

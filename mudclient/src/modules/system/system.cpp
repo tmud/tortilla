@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "tasks.h"
 #include "alert.h"
 #pragma comment(lib, "lua.lib")

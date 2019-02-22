@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <assert.h>
 #include "../api.h"
 #include "../common/dataQueue.h"

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "mapperRoomRender.h"
 #include "maskDC.h"
 

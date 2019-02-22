@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "profileHelpers.h"
 #include "profilesPath.h"
 
@@ -471,7 +471,7 @@ private:
         m_edit_profile_folder.Attach(GetDlgItem(IDC_EDIT_STARTUP_FOLDER));
         m_edit_profile_name.Attach(GetDlgItem(IDC_EDIT_STARTUP_PROFILE));
         m_edit_profile_name.SetWindowText(default_profile_name);
-        m_list.AddString(L"Создать пустой профиль");
+        m_list.AddString(L"РЎРѕР·РґР°С‚СЊ РїСѓСЃС‚РѕР№ РїСЂРѕС„РёР»СЊ");
         for (int i=0,e=m_data.size();i<e;++i)
         {
             if (m_data[i]==default_profile_folder) continue;

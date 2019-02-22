@@ -1,4 +1,4 @@
-//  loaded from http://www.codeproject.com/Articles/1493/A-Powerfull-Ownerdraw-Menu
+﻿//  loaded from http://www.codeproject.com/Articles/1493/A-Powerfull-Ownerdraw-Menu
 //  Modified by me
 #pragma once
 

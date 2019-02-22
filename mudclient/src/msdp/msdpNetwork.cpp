@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "accessors.h"
 #include "network/network.h"
 #include "plugins/pluginsApi.h"

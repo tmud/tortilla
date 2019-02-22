@@ -1,4 +1,4 @@
-
+﻿
 #ifndef __TTDLG_H__
 #define __TTDLG_H__
 

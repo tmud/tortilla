@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "../res/resource.h"
 #include "properties.h"
 #include "mapper.h"
@@ -12,17 +12,17 @@ Mapper* m_mapper_window = NULL;
 //-------------------------------------------------------------------------
 int get_name(lua_State *L) 
 {
-    luaT_pushwstring(L, L"Карта");
+    luaT_pushwstring(L, L"РљР°СЂС‚Р°");
     return 1;
 }
 
 int get_description(lua_State *L) 
 {
     luaT_pushwstring(L,
-        L"Отображает схему комнат и выходов. Показывает местоположение игрока.\r\n"
-        L"Предназначен для мадов с 6 стандартными выходами.\r\n"
-        L"Требует для работы поддержки MSDP протокола от мад-сервера c\r\n"
-        L"данными о местоположении игрока."
+        L"РћС‚РѕР±СЂР°Р¶Р°РµС‚ СЃС…РµРјСѓ РєРѕРјРЅР°С‚ Рё РІС‹С…РѕРґРѕРІ. РџРѕРєР°Р·С‹РІР°РµС‚ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ РёРіСЂРѕРєР°.\r\n"
+        L"РџСЂРµРґРЅР°Р·РЅР°С‡РµРЅ РґР»СЏ РјР°РґРѕРІ СЃ 6 СЃС‚Р°РЅРґР°СЂС‚РЅС‹РјРё РІС‹С…РѕРґР°РјРё.\r\n"
+        L"РўСЂРµР±СѓРµС‚ РґР»СЏ СЂР°Р±РѕС‚С‹ РїРѕРґРґРµСЂР¶РєРё MSDP РїСЂРѕС‚РѕРєРѕР»Р° РѕС‚ РјР°Рґ-СЃРµСЂРІРµСЂР° c\r\n"
+        L"РґР°РЅРЅС‹РјРё Рѕ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРё РёРіСЂРѕРєР°."
         );
     return 1;
 }
@@ -42,7 +42,7 @@ int init(lua_State *L)
 
     DEBUGINIT(L);
 	init_clientlog(L);
-    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Окно с картой");
+    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"РћРєРЅРѕ СЃ РєР°СЂС‚РѕР№");
 
     m_props.initAllDefault();
 
@@ -66,8 +66,8 @@ int init(lua_State *L)
 	}
     p.deletenode();
 
-	if (!m_parent_window.create(L, L"Карта", 400, 400))
-		return luaT_error(L, L"Не удалось создать окно для карты");
+	if (!m_parent_window.create(L, L"РљР°СЂС‚Р°", 400, 400))
+		return luaT_error(L, L"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕР·РґР°С‚СЊ РѕРєРЅРѕ РґР»СЏ РєР°СЂС‚С‹");
 
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isVisible();
@@ -101,7 +101,7 @@ int release(lua_State *L)
     base::getPath(L, L"settings.xml", &path);
     if (!p.save(path.c_str()))
     {
-        tstring error(L"Ошибка записи настроек пользователя: ");
+        tstring error(L"РћС€РёР±РєР° Р·Р°РїРёСЃРё РЅР°СЃС‚СЂРѕРµРє РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ: ");
         error.append(path);
         base::log(L, error.c_str());
     }

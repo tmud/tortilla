@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "pluginsApi.h"
 
 int luapcre_create(lua_State *L)

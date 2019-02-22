@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "tinymt32.h"
 
 tinymt32_t random_handler;

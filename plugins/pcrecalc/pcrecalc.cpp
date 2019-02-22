@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "calcWindow.h"
 luaT_window m_parent_window;
 CalcWindowDlg m_calc_window;
@@ -10,15 +10,15 @@ LRESULT FAR PASCAL GetMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 int get_name(lua_State *L)
 {
-    luaT_pushwstring(L, L"Калькулятор PCRE");
+    luaT_pushwstring(L, L"РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ PCRE");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Плагин предназначен для написания и проверки регулярных выражений для триггеров.\r\n"
-        L"Регулярное выражение применяется к тестовой строке и выводится результат.\r\n"
-        L"Пересчет происходит на каждое изменение регулярного выражения или тестовой строки.");
+    luaT_pushwstring(L, L"РџР»Р°РіРёРЅ РїСЂРµРґРЅР°Р·РЅР°С‡РµРЅ РґР»СЏ РЅР°РїРёСЃР°РЅРёСЏ Рё РїСЂРѕРІРµСЂРєРё СЂРµРіСѓР»СЏСЂРЅС‹С… РІС‹СЂР°Р¶РµРЅРёР№ РґР»СЏ С‚СЂРёРіРіРµСЂРѕРІ.\r\n"
+        L"Р РµРіСѓР»СЏСЂРЅРѕРµ РІС‹СЂР°Р¶РµРЅРёРµ РїСЂРёРјРµРЅСЏРµС‚СЃСЏ Рє С‚РµСЃС‚РѕРІРѕР№ СЃС‚СЂРѕРєРµ Рё РІС‹РІРѕРґРёС‚СЃСЏ СЂРµР·СѓР»СЊС‚Р°С‚.\r\n"
+        L"РџРµСЂРµСЃС‡РµС‚ РїСЂРѕРёСЃС…РѕРґРёС‚ РЅР° РєР°Р¶РґРѕРµ РёР·РјРµРЅРµРЅРёРµ СЂРµРіСѓР»СЏСЂРЅРѕРіРѕ РІС‹СЂР°Р¶РµРЅРёСЏ РёР»Рё С‚РµСЃС‚РѕРІРѕР№ СЃС‚СЂРѕРєРё.");
     return 1;
 }
 
@@ -30,14 +30,14 @@ int get_version(lua_State *L)
 
 int init(lua_State *L)
 {
-    if (m_parent_window.create(L, L"Калькулятор PCRE", 200, 300))
+    if (m_parent_window.create(L, L"РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ PCRE", 200, 300))
     {
         m_calc_window.Create(m_parent_window.hwnd());
         CWindow sd(m_calc_window.m_hWnd);
         RECT rc; sd.GetClientRect(&rc);
         m_parent_window.attach(sd);
         m_parent_window.setFixedSize(rc.right, rc.bottom);
-        base::addMenu(L, L"Плагины/Калькулятор PCRE...", 1);
+        base::addMenu(L, L"РџР»Р°РіРёРЅС‹/РљР°Р»СЊРєСѓР»СЏС‚РѕСЂ PCRE...", 1);
 
         if (m_parent_window.isVisible())
         {

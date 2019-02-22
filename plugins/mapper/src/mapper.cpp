@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "mapper.h"
 #include "roomObjects.h"
 #include "debugHelpers.h"
@@ -225,10 +225,10 @@ void Mapper::onZoneDeleted()
         assert(false);
         return;
     }
-    tstring msg(L"Вы уверены, что хотите удалить зону '");
+    tstring msg(L"Р’С‹ СѓРІРµСЂРµРЅС‹, С‡С‚Рѕ С…РѕС‚РёС‚Рµ СѓРґР°Р»РёС‚СЊ Р·РѕРЅСѓ '");
     msg.append(zone_name);
-    msg.append(L"' ?\r\nОтменить удаление будет невозможно.");
-    if (MessageBox(msg.c_str(), L"Карта", MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2) == IDYES) {        
+    msg.append(L"' ?\r\nРћС‚РјРµРЅРёС‚СЊ СѓРґР°Р»РµРЅРёРµ Р±СѓРґРµС‚ РЅРµРІРѕР·РјРѕР¶РЅРѕ.");
+    if (MessageBox(msg.c_str(), L"РљР°СЂС‚Р°", MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2) == IDYES) {        
         m_map.deleteZone(zone_name);
         updateZonesList();
         Rooms3dCubeList zones;
@@ -287,10 +287,10 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryMakeNewZone(rooms[0], dir);
         if (!result)
         {
-            MessageBox(L"Невозможно создать новую зону из-за замкнутости коридоров на данную комнату!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(L"РќРµРІРѕР·РјРѕР¶РЅРѕ СЃРѕР·РґР°С‚СЊ РЅРѕРІСѓСЋ Р·РѕРЅСѓ РёР·-Р·Р° Р·Р°РјРєРЅСѓС‚РѕСЃС‚Рё РєРѕСЂРёРґРѕСЂРѕРІ РЅР° РґР°РЅРЅСѓСЋ РєРѕРјРЅР°С‚Сѓ!", L"РћС€РёР±РєР°", MB_OK | MB_ICONERROR);
             return;
         }
-        // удаляем отметку, т.к. комната не идет в другую зону
+        // СѓРґР°Р»СЏРµРј РѕС‚РјРµС‚РєСѓ, С‚.Рє. РєРѕРјРЅР°С‚Р° РЅРµ РёРґРµС‚ РІ РґСЂСѓРіСѓСЋ Р·РѕРЅСѓ
         rooms[0]->selected = false;
 #ifdef _DEBUG
         m_view.Invalidate();
@@ -323,7 +323,7 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryConcatZones(rooms[0], dir);
         if (!result)
         {
-            MessageBox(L"Склеить две зоны в одну не получилось!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(L"РЎРєР»РµРёС‚СЊ РґРІРµ Р·РѕРЅС‹ РІ РѕРґРЅСѓ РЅРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ!", L"РћС€РёР±РєР°", MB_OK | MB_ICONERROR);
             return;
         }
         redrawPositionByRoom(rooms[0]);
@@ -338,7 +338,7 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryMoveRoom(rooms[0], dir);
         if (!result)
         {
-            MessageBox(L"Невозможно переместить комнату в другую зону!", L"Ошибка", MB_OK | MB_ICONERROR);
+            MessageBox(L"РќРµРІРѕР·РјРѕР¶РЅРѕ РїРµСЂРµРјРµСЃС‚РёС‚СЊ РєРѕРјРЅР°С‚Сѓ РІ РґСЂСѓРіСѓСЋ Р·РѕРЅСѓ!", L"РћС€РёР±РєР°", MB_OK | MB_ICONERROR);
             return;
         }
         redrawPositionByRoom(rooms[0]);

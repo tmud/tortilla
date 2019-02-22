@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "memoryBuffer.h"
 #include "wideToAnsi.h"
 #include "wideToUtf8.h"
@@ -424,7 +424,7 @@ int utf8_strnlen(const utf8* str, int str_len)
     {
         int sym_len = utf8_symlen(&str[p]);
         if (sym_len == 0 || sym_len > str_len)
-            return -1;      // ошибка в строке - выходим
+            return -1;      // РѕС€РёР±РєР° РІ СЃС‚СЂРѕРєРµ - РІС‹С…РѕРґРёРј
         len++;
         str_len -= sym_len;
         p += sym_len;

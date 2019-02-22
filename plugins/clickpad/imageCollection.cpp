@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "imageCollection.h"
 #include "settingsDlg.h"
 
@@ -35,7 +35,7 @@ void ImageCollection::scanImages()
     std::wstring dir;
     getImagesDir(&dir);
     if (!(GetFileAttributes(dir.c_str()) & FILE_ATTRIBUTE_DIRECTORY))
-        return error(L"Невозможно прочитать каталог с иконками: ", dir.c_str());
+        return error(L"РќРµРІРѕР·РјРѕР¶РЅРѕ РїСЂРѕС‡РёС‚Р°С‚СЊ РєР°С‚Р°Р»РѕРі СЃ РёРєРѕРЅРєР°РјРё: ", dir.c_str());
 
     int dir_len = dir.length();
 
@@ -147,7 +147,7 @@ void ImageCollection::scanImages()
             if (!img->load(filepath.c_str(), 0))
             {
                 delete img; img = NULL;
-                error(L"Невозможно прочитать файл: ", filepath.c_str());
+                error(L"РќРµРІРѕР·РјРѕР¶РЅРѕ РїСЂРѕС‡РёС‚Р°С‚СЊ С„Р°Р№Р»: ", filepath.c_str());
             }
             else
             {
