@@ -133,8 +133,8 @@ private:
            SKIP_PLUGINS_BEFORE = 0x8, SKIP_PLUGINS_AFTER = 0x10, SKIP_PLUGINS = 0x18,
            SKIP_COMPONENT_GAGS = 0x20, SKIP_COMPONENT_SUBS = 0x40,
            SKIP_COMPONENT_ANTISUBS = 0x80, SKIP_COMPONENT_PLUGINS = 0x100,
-           WORK_OFFLINE = 0x200, GAME_LOG = 0x400, GAME_CMD = 0x800, FROM_STACK = 0x1000,
-           FROM_TIMER = 0x2000, NEW_LINE = 0x4000 };
+           WORK_OFFLINE = 0x200, GAME_LOG = 0x400, GAME_CMD = 0x800, FROM_OUTPUT = 0x1000,
+		   FROM_STACK = 0x2000, FROM_TIMER = 0x4000, NEW_LINE = 0x8000 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f, bool skip_autoset = false);

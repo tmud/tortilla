@@ -110,6 +110,14 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parse_data.update_prev_string = false;
     }
 
+	if (flags & FROM_OUTPUT)
+	{
+		parseDataStrings& ps = parse_data.strings;
+		for (int i = 0, e = ps.size(); i < e; ++i)
+			ps[i]->from_output = true;
+		parse_data.update_prev_string = false;
+	}
+
     if (flags & NEW_LINE)
     {
         parse_data.update_prev_string = false;
