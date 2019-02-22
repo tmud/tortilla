@@ -376,7 +376,7 @@ bool PropertiesManager::loadWindow(xml::node parent, OutputWindow* w)
 void PropertiesManager::saveWindow(xml::node parent, const OutputWindow& w)
 {
     xml::node xw = parent.createsubnode(L"window");
-    xw.set(L"name", w.name.c_str() );
+    xw.set(L"name", w.name );
     saveRECT(xw, w.pos);
     xw.set(L"side", w.side);
     xw.set(L"lastside", w.lastside);

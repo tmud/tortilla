@@ -428,6 +428,9 @@ private:
         m_find_dlg.Create(m_dock);
         m_find_dlg.SetWindowText(L"Поиск");
         m_dock.AddWindow(m_find_dlg);
+		RECT& startpos = m_dock._GetContext(m_find_dlg)->rcWindow;
+		startpos.left += 200; startpos.right += 200;
+		startpos.top += 180; startpos.bottom += 180;
         m_find_dlg.setWindowName(0, L"Главное окно");
         m_find_dlg.selectWindow(0);
 
