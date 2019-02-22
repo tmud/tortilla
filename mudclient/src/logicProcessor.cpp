@@ -441,7 +441,7 @@ void LogicProcessor::windowClear(int window)
         m_pHost->clearText(window);
 }
 
-void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
+void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs, bool enable_actions_subs_plugins)
 {
     if (window >= 0 && window <= OUTPUT_WINDOWS)
     {
@@ -451,7 +451,7 @@ void LogicProcessor::windowOutput(int window, const std::vector<tstring>& msgs)
        }
        else
        {
-           printex(window, msgs, false);
+           printex(window, msgs, enable_actions_subs_plugins);
        }
     }
 }

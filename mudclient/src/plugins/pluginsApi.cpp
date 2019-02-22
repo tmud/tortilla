@@ -1469,7 +1469,7 @@ int print(lua_State *L)
         tstring p(lua_towstring(L, i));
         params.push_back(p);
     }
-    lp()->windowOutput(0, params);
+    lp()->windowOutput(0, params, true);
     return 0;
 }
 
@@ -1495,7 +1495,7 @@ int vprint(lua_State *L)
         tstring p(luaT_towstring(L, i));
         params.push_back(p);
     }
-    lp()->windowOutput(view, params);
+    lp()->windowOutput(view, params, false);
     return 0;
 }
 

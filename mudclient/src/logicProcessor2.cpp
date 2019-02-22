@@ -1109,7 +1109,7 @@ IMPL(whide)
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions_subs)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions_subs_plugins)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -1152,12 +1152,12 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     new_string->system = true;
     data.strings.push_back(new_string);
     int flags = GAME_LOG|WORK_OFFLINE;
-    if (!enable_actions_subs)
-        flags |= (SKIP_ACTIONS|SKIP_SUBS);
+    if (!enable_actions_subs_plugins)
+        flags |= (SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS);
     printIncoming(data, flags, view);
 }
 
-void LogicProcessor::printex(int view, const parser* p, int from, bool enable_actions_subs)
+void LogicProcessor::printex(int view, const parser* p, int from, bool enable_actions_subs_plugins)
 {
       std::vector<tstring> params;
       int n = p->size();
@@ -1181,7 +1181,7 @@ void LogicProcessor::printex(int view, const parser* p, int from, bool enable_ac
       }
       if (from != 0)
           params.erase(params.begin(), params.begin() + from);
-      printex(view, params, enable_actions_subs);
+      printex(view, params, enable_actions_subs_plugins);
 }
 
 IMPL(wprint)

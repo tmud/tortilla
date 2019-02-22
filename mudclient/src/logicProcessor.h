@@ -47,7 +47,7 @@ public:
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
     virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
-    virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
+    virtual void windowOutput(int window, const std::vector<tstring>& msgs, bool enable_actions_subs_plugins ) = 0;
     virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
     virtual void windowClear(int window) = 0;
     virtual bool setComponent(const tstring& name, bool mode) = 0;
@@ -114,7 +114,7 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
     void windowClear(int window);
-    void windowOutput(int window, const std::vector<tstring>& msgs);
+    void windowOutput(int window, const std::vector<tstring>& msgs, bool enable_actions_subs_plugins);
     void pluginsOutput(int window, const MudViewStringBlocks& v);
 private:
     void processCommand(const tstring& cmd);
@@ -184,8 +184,8 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
-    void printex(int view, const parser* p, int from, bool enable_actions_subs);
-    void printex(int view, const std::vector<tstring>& params, bool enable_actions_subs);
+    void printex(int view, const parser* p, int from, bool enable_actions_subs_plugins);
+    void printex(int view, const std::vector<tstring>& params, bool enable_actions_subs_plugins);
     DEF(wprint);
     DEF(print);
     DEF(message);
