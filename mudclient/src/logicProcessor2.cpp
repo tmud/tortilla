@@ -1154,7 +1154,7 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     data.strings.push_back(new_string);
     int flags = GAME_LOG|WORK_OFFLINE;
     if (!enable_actions_subs_plugins)
-        flags |= (SKIP_ACTIONS|SKIP_SUBS|SKIP_PLUGINS);
+        flags |= SKIP_ACTIONS|SKIP_SUBS;
     else
         flags |= FROM_OUTPUT;
     printIncoming(data, flags, view);

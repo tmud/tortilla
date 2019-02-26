@@ -4,6 +4,7 @@ class TriggerActionHook {
 public:
     virtual ~TriggerActionHook() {}
     virtual void run() = 0;
+    virtual void triggeredOutput() = 0;
 };
 typedef std::shared_ptr<TriggerActionHook> TriggerAction;
 

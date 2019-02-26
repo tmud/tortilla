@@ -97,14 +97,26 @@ bool PluginsTrigger::getKey(int index, tstring* key)
     return false;
 }
 
+extern bool print_output_mode;
 struct triggeredData : TriggerActionHook {
     PluginsTrigger* tr;
     triggerParseVector data;
+    bool trigOnOutput;
+
+    triggeredData() : tr(NULL), trigOnOutput(false) {}
     void run() {
         assert(tr);
         if (tr && tr->isEnabled())  // trigger can be disabled in actions
+        {
+            print_output_mode = (trigOnOutput) ? false : true;
             tr->run(&data);
+            print_output_mode = true;
+        }
         tr = NULL;
+    }
+    void triggeredOutput()
+    {
+        trigOnOutput = true;
     }
 };
 

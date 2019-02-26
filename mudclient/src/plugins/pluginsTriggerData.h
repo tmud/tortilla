@@ -33,7 +33,7 @@ public:
     void reset();
     void markDeleted(int string_index);
     void markDeletedAll();
-    int getParameters(int string_index) const;
+    int  getParameters(int string_index) const;
     bool getParameter(int string_index, int parameter, tstring* p) const;
     bool getCRC(int string_index, tstring* crc) const;
     triggerParseDataString* get(int string_index) const;

@@ -1457,6 +1457,7 @@ int clearView(lua_State *L)
     return pluginInvArgs(L, L"clearView");
 }
 
+bool print_output_mode = true;
 int print(lua_State *L)
 {
     EXTRA_CP;
@@ -1469,7 +1470,7 @@ int print(lua_State *L)
         tstring p(lua_towstring(L, i));
         params.push_back(p);
     }
-    lp()->windowOutput(0, params, true);
+    lp()->windowOutput(0, params, print_output_mode);
     return 0;
 }
 

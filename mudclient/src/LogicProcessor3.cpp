@@ -485,12 +485,14 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     // final step for data
     // preprocess data via plugins
-    if (!(flags & (SKIP_PLUGINS_BEFORE|SKIP_COMPONENT_PLUGINS) ))
+    if (!(flags & (SKIP_PLUGINS_BEFORE | SKIP_COMPONENT_PLUGINS)))
     {
         m_pHost->preprocessText(window, &parse_data);
-
-        // process lua plugins triggers
-        processLuaTriggers(parse_data, flags, pe);
+        if (!(flags & SKIP_ACTIONS))
+        {
+            // process lua plugins triggers
+            processLuaTriggers(parse_data, flags, pe);
+        }
     }
 
     PropertiesData *pdata = tortilla::getProperties();
@@ -583,9 +585,15 @@ void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicP
         bool triggered = luatriggers->processTriggers(parse_data, j, pe->triggers);
         if (!triggered)
             continue;
+        if (flags & FROM_OUTPUT)
+        {
+            std::vector<TriggerAction> &t = pe->triggers;
+            for (int i = 0, e = t.size(); i < e; ++i)
+                t[i]->triggeredOutput();
+        }
         parseData &not_processed = pe->not_processed;
         MudViewString *s = parse_data.strings[j];
-        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер        
+        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
         not_processed.last_finished = parse_data.last_finished;
         parse_data.last_finished = true;
         not_processed.update_prev_string = false;
