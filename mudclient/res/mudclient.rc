@@ -563,7 +563,7 @@ BEGIN
     BEGIN
         MENUITEM "&Справка",                    ID_MUDCLIENT_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Перейти на сайт мад-клиента...", ID_CHECK_UPDATES
+        MENUITEM "&Сайт и обновления...",       ID_CHECK_UPDATES
     END
 END
 
