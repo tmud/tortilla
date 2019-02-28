@@ -276,8 +276,11 @@ private:
         {
             MudViewString* dst = strings[i];
             PluginViewString* src = plugins_strings[i];
+            int src_size = src->blocks.size();
             for (int j = 0, je = dst->blocks.size(); j < je; ++j)
             {
+                if (j >= src_size)
+                    break;
                 const u8string &text = src->blocks[j];
                 u2w.convert(&buffer, text.c_str(), text.length());
                 dst->blocks[j].string.assign( (const wchar_t*)buffer.getData() );
