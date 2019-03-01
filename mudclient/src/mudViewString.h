@@ -178,7 +178,6 @@ struct MudViewString
    bool prev;                               // flag - prev string in MudView is part of that string
    bool changed;                            // flag - to recalc string dc (changed in triggers)
    bool subs_processed;                     // flag - set after processing subs
-   bool from_output;						// flag - string from output
 };
 
 typedef std::vector<MudViewString*> mudViewStrings;
