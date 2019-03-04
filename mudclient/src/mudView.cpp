@@ -235,7 +235,7 @@ void MudView::deleteLastString()
     if (m_strings.empty())
         return;
     int last = m_strings.size() - 1;
-    delete m_strings[last];
+    m_dropped_strings.push_back(m_strings[last]);
     m_strings.pop_back();
     if (last == m_last_visible_line)
         m_last_visible_line--;
@@ -301,6 +301,8 @@ void MudView::removeDropped(parseData* parse_data)
 
 void MudView::clearDropped()
 {
+    if (m_dropped_strings.empty())
+        return;
     std::for_each(m_dropped_strings.begin(), m_dropped_strings.end(), [](MudViewString*s){delete s;} );
     m_dropped_strings.clear();
 }
