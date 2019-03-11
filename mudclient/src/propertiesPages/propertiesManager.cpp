@@ -179,17 +179,17 @@ bool PropertiesManager::loadProfileData(tstring *error)
             m_propData.font_name = font_name;
     }
 
-    loadArray(sd, L"groups/group", true, false, &m_propData.groups);
+    loadArray(sd, L"groups/group", VALUE_EXIST, GROUP_ABSENT, &m_propData.groups);
     m_propData.addDefaultGroup();
-    loadArray(sd, L"actions/action", true, true, &m_propData.actions);
-    loadArray(sd, L"aliases/alias", true, true, &m_propData.aliases);
-    loadArray(sd, L"hotkeys/hotkey", true, true, &m_propData.hotkeys);
-    loadArray(sd, L"subs/sub", false, true, &m_propData.subs);
-    loadArray(sd, L"asubs/asub", false, true, &m_propData.antisubs);
-    loadArray(sd, L"gags/gag", false, true, &m_propData.gags);
-    loadArray(sd, L"highlights/highlight", true, true, &m_propData.highlights);
+    loadArray(sd, L"actions/action", VALUE_EXIST, GROUP_EXIST, &m_propData.actions);
+    loadArray(sd, L"aliases/alias", VALUE_EXIST, GROUP_EXIST, &m_propData.aliases);
+    loadArray(sd, L"hotkeys/hotkey", VALUE_EXIST, GROUP_EXIST, &m_propData.hotkeys);
+    loadArray(sd, L"subs/sub", VALUE_EXIST_CAN_EMPTY, GROUP_EXIST, &m_propData.subs);
+    loadArray(sd, L"asubs/asub", VALUE_ABSENT, GROUP_EXIST, &m_propData.antisubs);
+    loadArray(sd, L"gags/gag", VALUE_ABSENT, GROUP_EXIST, &m_propData.gags);
+    loadArray(sd, L"highlights/highlight", VALUE_EXIST, GROUP_EXIST, &m_propData.highlights);
     PropertiesValues timers;
-    loadArray(sd, L"timers/timer", true, true, &timers);
+    loadArray(sd, L"timers/timer", VALUE_EXIST, GROUP_EXIST, &timers);
     PropertiesValues& t = m_propData.timers;
     for (int i=0,e=timers.size();i<e;++i)
     {
@@ -198,9 +198,8 @@ bool PropertiesManager::loadProfileData(tstring *error)
         if (w2int(v.key, &id) && id >= 1 && id <= TIMERS_COUNT)
             t.add(-1, v.key, v.value, v.group);
     }
-
     loadList(sd, L"tabwords/tabword", &m_propData.tabwords);
-    loadArray(sd, L"variables/var", true, false, &m_propData.variables);
+    loadArray(sd, L"variables/var", VALUE_EXIST_CAN_EMPTY, GROUP_ABSENT, &m_propData.variables);
 
     xml::request msrq(sd, L"messages");
     if (msrq.size() == 1)
@@ -278,27 +277,27 @@ bool PropertiesManager::saveProfileData()
     f.set(L"name", m_propData.font_name);
 
     xml::node actions = sd.createsubnode(L"actions");
-    saveArray(actions, L"action", m_propData.actions);
+    saveArray(actions, L"action", VALUE_EXIST, m_propData.actions);
     xml::node aliases = sd.createsubnode(L"aliases");
-    saveArray(aliases, L"alias", m_propData.aliases);
+    saveArray(aliases, L"alias", VALUE_EXIST, m_propData.aliases);
     xml::node hotkeys = sd.createsubnode(L"hotkeys");
-    saveArray(hotkeys, L"hotkey", m_propData.hotkeys);
+    saveArray(hotkeys, L"hotkey", VALUE_EXIST, m_propData.hotkeys);
     xml::node subs = sd.createsubnode(L"subs");
-    saveArray(subs, L"sub", m_propData.subs);
+    saveArray(subs, L"sub", VALUE_EXIST_CAN_EMPTY, m_propData.subs);
     xml::node asubs = sd.createsubnode(L"asubs");
-    saveArray(asubs, L"asub", m_propData.antisubs);
+    saveArray(asubs, L"asub", VALUE_ABSENT, m_propData.antisubs);
     xml::node gags = sd.createsubnode(L"gags");
-    saveArray(gags, L"gag", m_propData.gags);
+    saveArray(gags, L"gag", VALUE_ABSENT, m_propData.gags);
     xml::node hl = sd.createsubnode(L"highlights");
-    saveArray(hl, L"highlight", m_propData.highlights);
+    saveArray(hl, L"highlight", VALUE_EXIST, m_propData.highlights);
     xml::node timers = sd.createsubnode(L"timers");
-    saveArray(timers, L"timer", m_propData.timers);
+    saveArray(timers, L"timer", VALUE_EXIST, m_propData.timers);
     xml::node groups = sd.createsubnode(L"groups");
-    saveArray(groups, L"group", m_propData.groups);
+    saveArray(groups, L"group", VALUE_EXIST, m_propData.groups);
     xml::node tabwords = sd.createsubnode(L"tabwords");
     saveList(tabwords, L"tabword", m_propData.tabwords);
     xml::node vars = sd.createsubnode(L"variables");
-    saveArray(vars, L"var", m_propData.variables);
+    saveArray(vars, L"var", VALUE_EXIST_CAN_EMPTY, m_propData.variables);
 
     xml::node ms = sd.createsubnode(L"messages");
     PropertiesData::message_data& d = m_propData.messages;
@@ -384,7 +383,7 @@ void PropertiesManager::saveWindow(xml::node parent, const OutputWindow& w)
     xw.set(L"height", w.size.cy);
 }
 //----------------------------------------------------------------------------
-void PropertiesManager::loadArray(xml::node parent, const tstring& name, bool values_req, bool groups_req, PropertiesValues* values)
+void PropertiesManager::loadArray(xml::node parent, const tstring& name, ValueReq values_req, GroupReq groups_req, PropertiesValues* values)
 {
     xml::request r(parent, name.c_str());
     for (int i=0,e=r.size(); i<e; ++i)
@@ -392,13 +391,15 @@ void PropertiesManager::loadArray(xml::node parent, const tstring& name, bool va
         tstring key, val, grp;
         if (r[i].get(L"key", &key) && !key.empty())
         {
-            if (values_req)
+            if (values_req == VALUE_EXIST || values_req == VALUE_EXIST_CAN_EMPTY)
             {
                 bool value_exists = r[i].get(L"value", &val);
-                if (!value_exists || val.empty())
+                if (!value_exists)
+                    continue;
+                if (values_req == VALUE_EXIST && val.empty())
                     continue;
             }
-            if (groups_req)
+            if (groups_req == GROUP_EXIST)
             {
                 bool group_exists = r[i].get(L"group", &grp);
                 if (!group_exists || grp.empty())
@@ -418,15 +419,22 @@ void PropertiesManager::loadArray(xml::node parent, const tstring& name, bool va
     }
 }
 
-void PropertiesManager::saveArray(xml::node parent, const tstring& name, const PropertiesValues& values)
+void PropertiesManager::saveArray(xml::node parent, const tstring& name, ValueReq values_req, const PropertiesValues& values)
 {
     for (int i=0,e=values.size(); i<e; ++i)
     {
         const property_value &data = values.get(i);
         xml::node data_node = parent.createsubnode(name.c_str());
         data_node.set(L"key", data.key.c_str());
-        if (!data.value.empty())
+        if (values_req == VALUE_EXIST)
+        {
+            if (!data.value.empty())
+                data_node.set(L"value", data.value.c_str());
+        }
+        if (values_req == VALUE_EXIST_CAN_EMPTY)
+        {
             data_node.set(L"value", data.value.c_str());
+        }
         if (!data.group.empty())
             data_node.set(L"group", data.group.c_str());
     }
