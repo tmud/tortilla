@@ -1783,7 +1783,8 @@ int string_strstr_impl(lua_State *L, const tchar* fname)
             lua_pushinteger(L, find_pos);
             return 1;
          }
-         return 0;
+         lua_pushnil(L);
+         return 1;
      }
      return pluginInvArgs(L,fname);
 }
