@@ -1,6 +1,7 @@
 ﻿-- Модуль отбора строк от ключевой строки до prompt.
 -- Функция создает объект, который будет собирать все строки от ключевой до промпт строки.
 -- Функция-фильтр (необязательно) позволяет отбирать нужные строки - запоминать или не запоминать.
+-- Если в пачку данных попадает несколько блоков строк, которые подходят под поиск, то будет сохранен последний блок
 
 --[[ Как использовать:
 
@@ -53,9 +54,10 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
 
   local trigger = { pcre = pcre, filter = filter_function, skip_prompt = skip_prompt_function, collect_mode = false, strings ={} }
 
-  function trigger:check(vd)
+  local function stepcheck(vd, from)
+    local self = trigger
     if not self.collect_mode then
-      if vd:find(self.pcre) then
+      if vd:find(self.pcre, from) then
         self.collect_mode = true
         self.strings = {}
         local vs = vd:createViewString()
@@ -102,6 +104,21 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
       end
     end
     return false
+  end
+
+  function trigger:check(vd)
+    local status = false
+    local result = stepcheck(vd, 1)
+    while result do
+      status = true
+      local last = vd:getIndex()
+      if last < vd:size() then
+        result = stepcheck(vd, last+1)
+      else
+        break
+      end
+    end
+    return status
   end
 
   function trigger:disconnect()
