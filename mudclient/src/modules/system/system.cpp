@@ -159,6 +159,7 @@ int system_dbglog(lua_State *L)
     {
         formatByType(L, i, &msg);
     }
+    msg.append(L"\r\n");
     OutputDebugString(msg.c_str());
     return 0;
 }
