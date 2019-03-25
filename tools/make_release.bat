@@ -1,6 +1,7 @@
 @echo off
 
 set windbg=0
+if "%1" == "debug" set windbg=1
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
@@ -68,6 +69,7 @@ xcopy ..\%prod%\tortilla.exe tortilla /Y
 xcopy ..\%prod%\api.dll tortilla /Y
 xcopy ..\%prod%\lua.dll tortilla /Y
 if %windbg% == 1 xcopy ..\sdk\decoda\dbghelp.dll tortilla /Y
+if %windbg% == 1 xcopy ..\Debug\*.pdb tortilla /Y
 xcopy ..\mudclient\readme.txt tortilla /Y
 xcopy ..\mudclient\changelog.txt tortilla /Y
 
