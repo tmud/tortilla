@@ -222,7 +222,7 @@ end
 print("Тест embedded rnd: "..rnd.string(10,20))
 --system.alert("Unittest Alert message!")
 --system.msgbox("message title", "message text", "error")
-system.beep(5000,500)
+--system.beep(5000,500)
 
 
 local s,m,h = system.getTime()
