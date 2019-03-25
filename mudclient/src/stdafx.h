@@ -1,8 +1,14 @@
 ﻿#pragma once
 
-#define TORTILLA_VERSION L"1.11"
+#define TORTILLA_VERSION_BASE L"1.11"
 #define TORTILLA_VERSION_MAJOR 1
 #define TORTILLA_VERSION_MINOR 11
+
+#ifdef _DEBUG
+#define TORTILLA_VERSION TORTILLA_VERSION_BASE" debug"
+#else
+#define TORTILLA_VERSION TORTILLA_VERSION_BASE
+#endif
 
 #ifndef _UNICODE
 #error("Support only unicode version!")
@@ -19,7 +25,7 @@
 // only for debug (debuging text formatting)
 #ifdef _DEBUG
 //#define MARKERS_IN_VIEW
-//#define _WINDBG
+#define _WINDBG
 #endif
 
 // Visual Studio Leak Detector
