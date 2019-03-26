@@ -53,6 +53,7 @@ void LogicProcessor::processStackTick()
  
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
+    m_pHost->clearDropped(window);
     if (window == 0 && m_prompt_mode != OFF && (flags & (GAME_LOG | GAME_CMD)) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
@@ -475,7 +476,6 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
         }
         m_pipeline.freeElement(e);
     }
-    m_pHost->clearDropped(window);
 }
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
