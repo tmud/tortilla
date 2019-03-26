@@ -31,7 +31,7 @@ MapCursor MapperRender::getViewPosition() const
     return (viewpos && viewpos->valid()) ? viewpos : std::make_shared<MapNullCursorImplementation>();
 }
 
-MapCursor MapperRender::getCurrentPosition()
+MapCursor MapperRender::getCurrentPosition() const
 {
     if (!currentpos)
         return std::make_shared<MapNullCursorImplementation>();
@@ -77,7 +77,7 @@ void MapperRender::showCurrentOnScreen(bool centerScreen)
     }
     if (centerScreen)
     {
-        // try place current pos on the window center        
+        // try place current pos on the window center
         int reqpx = (rc.right - ROOM_SIZE) / 2 - (p.x - sz.left) * ROOM_SIZE;
         int reqpy = (rc.bottom - ROOM_SIZE) / 2 - (p.y - sz.top) * ROOM_SIZE;
         scroll h = getHScroll();
@@ -88,6 +88,22 @@ void MapperRender::showCurrentOnScreen(bool centerScreen)
         setHScroll(h);
         Invalidate();
         return;
+    }
+
+    if (!m_hscroll_flag && !not_visible_x_left && !not_visible_x_right )
+    {
+        int reqpx = (rc.right - ROOM_SIZE) / 2 - (p.x - sz.left) * ROOM_SIZE;
+        scroll h = getHScroll();
+        h.pos = calcScrollPosByRender(reqpx, m_hscroll_flag);
+        setHScroll(h);
+    }
+
+    if (!m_vscroll_flag && !not_visible_y_top && !not_visible_y_bottom)
+    {
+        int reqpy = (rc.bottom - ROOM_SIZE) / 2 - (p.y - sz.top) * ROOM_SIZE;
+        scroll v = getVScroll();
+        v.pos = calcScrollPosByRender(reqpy, m_vscroll_flag);
+        setVScroll(v);
     }
 
     // move room into visible part
@@ -148,6 +164,7 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
         assert(false);
         return;
     }
+
     auto saveScrolls = [this](int id) {
         scrolls s;
         s.h = getHScroll();
@@ -157,45 +174,42 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
         m_scrolls[id] = s;
     };
 
-    if (!viewpos) {
+    if (!viewpos)
+    {
         viewpos = pos;
     }
-
-    if (viewpos->valid())
+    if (viewpos->valid() && !pos->valid())
     {
         int id = viewpos->zone()->id();
         saveScrolls(id);
     }
-
     if (!pos->valid())
+    {
+        Invalidate();
         return;
+    }
 
     int id = viewpos->zone()->id();
     int newid = pos->zone()->id();
     viewpos = pos;
+    if (newid != id) {
+        saveScrolls(id);
+    }
     if (currentPosition)
     {
         assert(pos);
         currentpos = pos;
     }
-    if (id == newid)
+    if (currentPosition)
     {
-        if (currentPosition)
-        {
-            showCurrentOnScreen(centerScreen);
-            return;
-        }
-        if (centerScreen)
-        {
-            centerScrollbars();
-            saveScrolls(id);
-        }
+        updateScrollbars();
+        showCurrentOnScreen(centerScreen);
         return;
     }
     if (centerScreen)
     {
         centerScrollbars();
-        saveScrolls(newid);
+        saveScrolls(id);
         return;
     }
     siterator zt = m_scrolls.find(newid);
@@ -458,6 +472,16 @@ void MapperRender::updateScrollbars(bool center)
         h.pos = getHScroll().pos;
         if (h.pos > h.maxpos)
             h.pos = h.maxpos;
+    }
+
+    if (!center)
+    {
+        int chpos = GetScrollPos(SB_HORZ);
+        if (chpos >= 0 && chpos <= h.maxpos)
+            h.pos = chpos;
+        int cvpos = GetScrollPos(SB_VERT);
+        if (cvpos >= 0 && cvpos <= v.maxpos)
+            v.pos = cvpos;
     }
     setHScroll(h);
     setVScroll(v);

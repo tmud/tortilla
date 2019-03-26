@@ -74,7 +74,8 @@ public:
     void setMenuHandler(HWND handler_wnd);
     void setMoveToolHandler(MapperRenderRoomMoveTool *movetool);
     void showPosition(MapCursor pos, bool centerScreen, bool currentPosition);
-    MapCursor getCurrentPosition();
+    MapCursor getCurrentPosition() const;
+    MapCursor getViewPosition() const;
     void getSelectedRooms(std::vector<const Room*>* rooms) { 
         rooms->resize(m_selected_rooms.size());
         std::copy(m_selected_rooms.begin(), m_selected_rooms.end(), rooms->begin());
@@ -156,7 +157,6 @@ private:
     void showCurrentOnScreen(bool centerScreen);
     void renderMap();
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
-    MapCursor getViewPosition() const;
     const Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();

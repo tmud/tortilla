@@ -36,7 +36,8 @@ public:
         Rooms3dCubeList z(zoneslist.begin(), zoneslist.end());
         std::sort(z.begin(), z.end(), [](Rooms3dCube *z1, Rooms3dCube* z2) { return z1->name() <  z2->name(); } );
         zones.clear();
-        for (Rooms3dCube* zone : z) {
+        for (Rooms3dCube* zone : z) 
+        {
             zonedata zd; zd.id = zone->id(); zd.name = zone->name();
             zones.push_back(zd);
         }
@@ -84,7 +85,20 @@ public:
            return;
         }
         int index = findZone(zone->id());
-        assert(index != -1);
+        if (index == -1)
+        {
+            zonedata zd; zd.id = zone->id(); zd.name = zone->name();
+            int insert_pos = 0;
+            for (int i = 0, e = zones.size(); i < e; ++i)
+            {
+                if (zones[i].name > zd.name) {
+                    insert_pos = i; break;
+                }
+            }
+            zones.insert(zones.begin()+insert_pos, zd);
+            m_list.InsertItem(insert_pos, zd.name.c_str());
+            index = insert_pos;
+        }
         m_list.SelectItem(index);
     }
 

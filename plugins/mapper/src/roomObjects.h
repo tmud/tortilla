@@ -10,7 +10,6 @@ struct RoomData
     tstring vnum;
     tstring areaname;
     tstring roomname;
-    //tstring zone;
     std::map<tstring, tstring> exits;   // dir -> room
     tstring hash() const { return vnum; }
 };

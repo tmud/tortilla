@@ -163,7 +163,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="mapper.bmp" />
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
     <Image Include="res\bmp00001.bmp" />

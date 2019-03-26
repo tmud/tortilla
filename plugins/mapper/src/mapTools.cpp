@@ -102,7 +102,7 @@ MapCursor MapTools::createCursor(Room *room, MapCursorColor color)
     return std::make_shared<MapCursorImplementation>(map, room, color);
 }
 
-MapCursor MapTools::createZoneCursor(Rooms3dCube* zone)
+MapCursor MapTools::createZoneCursor(const Rooms3dCube* zone)
 {
     return std::make_shared<MapZoneCursorImplementation>(map, zone, 0);
 }
