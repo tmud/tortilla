@@ -43,7 +43,7 @@
     <hotkey key="NUM7" value="вв" group="default"/>
     <hotkey key="NUM1" value="вн" group="default"/>
     <hotkey key="NUM0" value="см" group="default"/>
-    <hotkey key="F12" value="#connect rmud.ru 3040" group="default"/>
+    <hotkey key="F12" value="#connect rmud.org 3040" group="default"/>
   </hotkeys>
   <subs/>
   <asubs/>
