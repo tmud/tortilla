@@ -1,5 +1,20 @@
 ﻿#pragma once
 
+struct CommandBarExImage
+{
+    CommandBarExImage() : image(0), commandid(0) {}
+    HBITMAP image;
+    UINT commandid;
+};
+
+struct ToolbarExButton
+{
+    ToolbarExButton() : image(0), commandid(ID_SEPARATOR) {}
+    HBITMAP image;
+    UINT commandid;
+    tstring hover;
+};
+
 class CommandBarEx
 {
     int m_lastpos;                     // last position
@@ -8,7 +23,7 @@ class CommandBarEx
 public:
     CommandBarEx();
     ~CommandBarEx();
-    HWND CreateMenu(HWND parent, UINT images);
+    HWND CreateMenu(HWND parent, const std::vector<CommandBarExImage>& items);
     bool addMenuItem(const TCHAR* menuitem, int pos, UINT id, HBITMAP image);
     void deleteMenuItem(const wchar_t* menuitem, std::vector<UINT> *ids);
     void deleteMenuItem(UINT id);
@@ -25,8 +40,8 @@ class ToolBar
 {
 public:
     ToolBar() : m_button_size(0) {}
-    void attach(HWND toolbar);
-    HWND create(HWND parent, int image_size);
+    HWND create(HWND parent, const std::vector<ToolbarExButton>& items);
+    HWND createEmpty(HWND parent, int imagesize);
     void addButton(HBITMAP bmp, UINT id, const TCHAR* hover);
     void delButton(UINT id);
     void checkButton(UINT id, BOOL state);
@@ -63,11 +78,11 @@ public:
         m_rebar = m_parent->CreateSimpleReBarCtrl(m_parent->m_hWnd, ATL_SIMPLE_REBAR_NOBORDER_STYLE);
         m_parent->m_hWndToolBar = m_rebar;
     }
-    void createCmdBar(UINT images) 
+    void createCmdBar(const std::vector<CommandBarExImage>& items)
     {
-        HWND cmdbar = m_cmdbar.CreateMenu(m_parent->m_hWnd, images);
+        HWND cmdbar = m_cmdbar.CreateMenu(m_parent->m_hWnd, items);
         m_parent->AddSimpleReBarBand(cmdbar, NULL, TRUE);
-        m_cmdbar_band = m_bandsCount++;        
+        m_cmdbar_band = m_bandsCount++;
     }
     bool addMenuItem(const TCHAR* menuitem, int pos, UINT id, HBITMAP image)
     {
@@ -90,11 +105,12 @@ public:
     {
         m_cmdbar.enableMenuItem(id, state);
     }
-    void createToolbar(UINT images) 
+    void createToolbar(const std::vector<ToolbarExButton>& items)
     {
-        HWND hWndToolBar = m_parent->CreateSimpleToolBarCtrl(m_parent->m_hWnd, images, FALSE, ATL_SIMPLE_TOOLBAR_PANE_STYLE);
-        tb t; t.toolbar = new ToolBar(); t.band = m_bandsCount++;
-        t.toolbar->attach(hWndToolBar);
+        tb t;
+        t.toolbar = new ToolBar();
+        HWND hWndToolBar = t.toolbar->create(m_parent->m_hWnd, items);
+        t.band = m_bandsCount++;
         m_toolbars.push_back(t);
         m_parent->AddSimpleReBarBand(hWndToolBar, NULL, TRUE, t.toolbar->width());
         m_currentToolbar = m_toolbars.size() - 1;
@@ -141,7 +157,7 @@ public:
         tb t;
         t.toolbar = new ToolBar();
         t.name = toolbar; t.band = m_bandsCount++;
-        HWND hWndToolBar = t.toolbar->create(m_parent->m_hWnd, image_size);
+        HWND hWndToolBar = t.toolbar->createEmpty(m_parent->m_hWnd, image_size);
         m_toolbars.push_back(t);
         m_parent->AddSimpleReBarBand(hWndToolBar, NULL, FALSE, t.toolbar->width());
         m_currentToolbar = m_toolbars.size() - 1;

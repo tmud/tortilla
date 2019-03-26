@@ -608,27 +608,10 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Toolbar
-//
-
-IDR_MAINFRAME TOOLBAR 16, 16
-BEGIN
-    BUTTON      ID_SELECTPROFILE
-    SEPARATOR
-    BUTTON      ID_SETTINGS
-    BUTTON      ID_PLUGINS
-    BUTTON      ID_MODE
-    SEPARATOR
-    BUTTON      ID_MUDCLIENT_HELP
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Bitmap
 //
 
-IDR_MAINFRAME           BITMAP                  "Toolbar.bmp"
+IDR_MAINFRAME           BITMAP                  "toolbar.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////
