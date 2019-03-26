@@ -107,6 +107,9 @@
     <Manifest />
     <Manifest />
     <Manifest />
+    <Manifest>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -155,6 +158,9 @@ copy ..\libs\lua\src\lauxlib.h ..\sdk\api
 copy ..\libs\lua\src\luaconf.h ..\sdk\api</Command>
     </PostBuildEvent>
     <Manifest />
+    <Manifest>
+      <EnableDpiAwareness>true</EnableDpiAwareness>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\libs\common\dataQueue.h" />
