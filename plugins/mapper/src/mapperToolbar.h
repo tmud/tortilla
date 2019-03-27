@@ -5,7 +5,7 @@ class MapperToolbar : public CDialogImpl<MapperToolbar>
 {
     HWND m_controlWindow;
     UINT m_controlMessage;
-    CBitmapButtonEx m_down, m_up, m_level0, m_center;
+    CToolbarButton m_down, m_up, m_level0, m_center, m_home;
     CImageList m_icons;
 public:
     enum { IDD = IDD_MAPPER_TOOLBAR };
@@ -19,9 +19,11 @@ public:
         COMMAND_ID_HANDLER(IDC_BUTTON_SAVEZONES, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_LOADZONES, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnButton)
+        COMMAND_ID_HANDLER(IDC_BUTTON_HOME, OnButton)
     END_MSG_MAP()
     MapperToolbar() : m_controlWindow(0), m_controlMessage(0) {}
-    void setControlWindow(HWND wnd, UINT msg) {
+    void setControlWindow(HWND wnd, UINT msg) 
+    {
         m_controlWindow = wnd;
         m_controlMessage = msg;
     }
@@ -31,21 +33,26 @@ public:
     }
 private:
     void hide(UINT id) { GetDlgItem(id).ShowWindow(SW_HIDE); }
-    void init(CBitmapButtonEx& b, int image, UINT id, const tstring& tooltip) { 
-        b.SetImageList(m_icons);
-        b.SetImages(image);
-        b.SetBitmapButtonExtendedStyle(BMPBTN_AUTO3D_DOUBLE|BMPBTN_SHAREIMAGELISTS|BMPBTN_HOVER, 
-            BMPBTN_AUTO3D_DOUBLE|BMPBTN_AUTOSIZE|BMPBTN_SHAREIMAGELISTS|BMPBTN_HOVER);
-        b.SubclassWindow(GetDlgItem(id));
-        b.SetToolTipText(tooltip.c_str());
+    void button(CToolbarButton& b, int image, UINT id, const tstring& tooltip)
+    { 
+        RECT rc;
+        CWindow cb(GetDlgItem(id));
+        cb.GetWindowRect(&rc);
+        ScreenToClient(&rc);
+        cb.ShowWindow(SW_HIDE);
+        b.Create(m_hWnd, id, rc, m_icons.GetIcon(image), tooltip.c_str());
     }
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{
-        m_icons.Create(IDB_BITMAP_TOOLBAR, 24, 0, RGB(140,140,140));
-        init(m_down, 1, IDC_BUTTON_LEVEL_DOWN, L"На уровень вниз");
-        init(m_up, 0, IDC_BUTTON_LEVEL_UP, L"На уровень вверх");
-        init(m_level0, 2, IDC_BUTTON_LEVEL0, L"Задать нулевой уровень");
-        init(m_center, 3, IDC_BUTTON_CENTER, L"Центровать текущую позицию");
+        m_icons.Create(32, 32, ILC_COLOR24 | ILC_MASK, 0, 0);
+        CBitmap icons;
+        icons.LoadBitmap(IDB_BITMAP_TOOLBAR);
+        m_icons.Add(icons, RGB(255, 255, 255));
+        button(m_down, 0, IDC_BUTTON_LEVEL_DOWN, L"На уровень вниз");
+        button(m_up, 1, IDC_BUTTON_LEVEL_UP, L"На уровень вверх");
+        button(m_level0, 2, IDC_BUTTON_LEVEL0, L"Задать нулевой уровень");
+        button(m_center, 3, IDC_BUTTON_CENTER, L"Центровать текущую позицию");
+        button(m_home, 4, IDC_BUTTON_HOME, L"Вернуться на текущую позицию");
 #ifndef _DEBUG
         //hide(IDC_BUTTON_SAVEZONES);
         //hide(IDC_BUTTON_LOADZONES);
@@ -74,7 +81,8 @@ class ToolbarViewContainer : public CWindowImpl<ToolbarViewContainer>
     CWindow m_first, m_second;
 public:
     ToolbarViewContainer() : m_size(0) {}
-    void attach(int size, HWND first, HWND second) {
+    void attach(int size, HWND first, HWND second)
+    {
         m_size = size;
         m_first.Attach(first);
         m_second.Attach(second);
@@ -87,7 +95,8 @@ private:
     END_MSG_MAP()
     LRESULT OnEraseBkgnd(UINT, WPARAM, LPARAM, BOOL&){ return 1; }
     LRESULT OnSize(UINT, WPARAM, LPARAM, BOOL&){ onSize();  return 0; }
-    void onSize() {
+    void onSize()
+    {
         RECT rc; GetClientRect(&rc);
         int bottom = rc.bottom;
         rc.bottom = m_size;

@@ -14,6 +14,8 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
     m_drag_mode = DRAG_NONE;
     m_menu_handler = NULL;
     m_roomMoveTool = NULL;
+    currentpos = std::make_shared<MapNullCursorImplementation>();
+    viewpos = std::make_shared<MapNullCursorImplementation>();
 }
 
 void MapperRender::setMenuHandler(HWND handler_wnd)
@@ -28,15 +30,12 @@ void MapperRender::setMoveToolHandler(MapperRenderRoomMoveTool *movetool)
 
 MapCursor MapperRender::getViewPosition() const
 {
-    return (viewpos && viewpos->valid()) ? viewpos : std::make_shared<MapNullCursorImplementation>();
+    return viewpos;
 }
 
 MapCursor MapperRender::getCurrentPosition() const
 {
-    if (!currentpos)
-        return std::make_shared<MapNullCursorImplementation>();
-    std::shared_ptr<MapCursorInterface> cursor(currentpos->dublicate());
-    return cursor;
+    return currentpos;
 }
 
 void MapperRender::onCreate()
@@ -631,7 +630,6 @@ void MapperRender::createMenu()
     m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
     CBitmap icons;
     icons.LoadBitmap(IDB_ICONS);
-    //HANDLE hBmp = LoadImage(NULL, L"plugins\\mapper.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
     m_icons.Add(icons, RGB(128, 0, 128));
     m_single_room_menu.CreatePopupMenu();
     CMenuXP &m = m_single_room_menu;

@@ -1,5 +1,4 @@
 ﻿#pragma once
-
 #include "roomObjects.h"
 
 class MapperRoomRender

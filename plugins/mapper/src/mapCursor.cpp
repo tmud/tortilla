@@ -21,14 +21,12 @@ const Rooms3dCubeSize& MapCursorImplementation::size() const
 
 const Rooms3dCubePos& MapCursorImplementation::pos() const
 {
-    if (m_use_alter_zone)
-        return m_alter_zone_pos;
     return (room_ptr) ? room_ptr->pos : m_empty_pos;
 }
 
 MapCursorColor MapCursorImplementation::color() const
 {
-    return (m_use_alter_zone) ? RCC_NONE : ccolor;
+    return ccolor;
 }
 
 const Room* MapCursorImplementation::room(const Rooms3dCubePos& p) const
@@ -48,32 +46,20 @@ bool MapCursorImplementation::valid() const
      return map_zone ? true : false;
 }
 
-MapCursorInterface* MapCursorImplementation::dublicate()
-{
-    MapCursorImplementation *cursor = new MapCursorImplementation( map_ptr, room_ptr, ccolor);
-    if (m_use_alter_zone) {
-        cursor->m_alter_zone_pos = m_alter_zone_pos;
-        cursor->m_use_alter_zone = true;
-    }
-    return cursor;
-}
-
-bool MapCursorImplementation::move(RoomDir dir)
+MapCursor MapCursorImplementation::move(RoomDir dir)
 {
     if (!room_ptr)
-        return false;
+        return nullptr;
     if (dir == RD_UP || dir == RD_DOWN) 
     {
-        Rooms3dCubePos pos(m_use_alter_zone ? m_alter_zone_pos : room_ptr->pos);
+        Rooms3dCubePos pos(room_ptr->pos);
         pos.move(dir);
         if (pos.valid(size()))
         {
-            m_alter_zone_pos = pos;
-            m_use_alter_zone = (pos.z != room_ptr->pos.z);
-            return true;
+            return std::make_shared<MapZoneCursorImplementation>(map_ptr, map_zone, pos.z);
         }
     }
-     return false;
+    return nullptr;
 }
 //-----------------------------------------------------------
 Rooms3dCubeSize MapZoneCursorImplementation::m_empty;
@@ -118,21 +104,16 @@ bool MapZoneCursorImplementation::valid() const
     return map_zone ? true : false;
 }
 
- MapCursorInterface* MapZoneCursorImplementation::dublicate()
+ MapCursor MapZoneCursorImplementation::move(RoomDir dir)
  {
-    return new MapZoneCursorImplementation(map_ptr, map_zone, m_zone_pos.z); 
- }
-
- bool MapZoneCursorImplementation::move(RoomDir dir)
- {
-     if (dir == RD_UP || dir == RD_DOWN) {
+     if (dir == RD_UP || dir == RD_DOWN) 
+     {
          Rooms3dCubePos pos(m_zone_pos);
          pos.move(dir);
          if (pos.valid( size() )) 
          {
-             m_zone_pos = pos;
-             return true;         
+             return std::make_shared<MapZoneCursorImplementation>(map_ptr, map_zone, pos.z);              
          }
      }
-     return false;
+     return nullptr;
 }

@@ -202,7 +202,8 @@ void Mapper::onCreate()
     m_view.setMenuHandler(m_hWnd);
     m_view.setMoveToolHandler(this);
 
-    m_container.attach(32, m_toolbar, m_view);
+    m_toolbar.GetClientRect(&rc);
+    m_container.attach(rc.bottom, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
 
     m_zones_control.setNotifications(m_hWnd, WM_USER, WM_USER+2);
@@ -371,10 +372,12 @@ void Mapper::onToolbar(int id)
 {
     if (id == IDC_BUTTON_SAVEZONES) {
         saveMaps();
+        return;
     }
 
     if (id == IDC_BUTTON_LOADZONES) {
         loadMaps();
+        return;
     }
 
     if (id == IDC_BUTTON_CLEARZONES) {
@@ -382,6 +385,7 @@ void Mapper::onToolbar(int id)
         m_map.clearMaps();
         m_zones_control.deleteAllZones();
         redrawPositionByRoom(nullptr);
+        return;
     }
 
     if (id == IDC_BUTTON_LEVEL_DOWN || id == IDC_BUTTON_LEVEL_UP) 
@@ -390,8 +394,25 @@ void Mapper::onToolbar(int id)
         if (!v->valid())
             return;
         RoomDir d = (id == IDC_BUTTON_LEVEL_DOWN) ? RD_DOWN : RD_UP;
-        if (v->move(d))
-            redrawPosition(v, false);
+        MapCursor newv = v->move(d);
+        if (newv)
+        {
+            MapCursor c = m_view.getCurrentPosition();
+            if (c->valid())
+            {
+                const Rooms3dCubePos& p = newv->pos();
+                const Rooms3dCubePos& cp = c->pos();
+                if (p.zid == cp.zid && p.z == cp.z)
+                {
+                    const Room* r = c->room(c->pos());
+                    if (r != nullptr) {
+                        redrawPositionByRoom(r);
+                        return;
+                    }
+                }
+            }
+            redrawPosition(newv, false);
+        }
     }
 
     if (id == IDC_BUTTON_LEVEL0) {
@@ -410,6 +431,7 @@ void Mapper::onToolbar(int id)
            MapCursor cursor = t.createZoneCursor(ptr);
            redrawPosition(cursor, true);
         }
+        return;
     }
 
     if (id == IDC_BUTTON_CENTER) 
@@ -417,6 +439,18 @@ void Mapper::onToolbar(int id)
         bool mode = !m_propsData->center_mode;
         m_propsData->center_mode = mode;
         m_toolbar.setCenterMode(mode);
+        return;
+    }
+
+    if (id == IDC_BUTTON_HOME)
+    {
+        MapCursor c = m_view.getCurrentPosition();
+        if (!c->valid())
+            return;
+        const Room* r = c->room(c->pos());
+        if (r != nullptr)
+            redrawPositionByRoom(r);
+        return;
     }
 }
 

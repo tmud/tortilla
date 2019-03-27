@@ -61,9 +61,6 @@ private:
     CSplitterWindowExT<true, 1, 4> m_vSplitter;
     MappeZoneControl m_zones_control;
 
-    // logic
-    //MapperDirsVector m_dirs;
     Room *m_pCurrentRoom;
-
     tstring m_mapsFolder;
 };
