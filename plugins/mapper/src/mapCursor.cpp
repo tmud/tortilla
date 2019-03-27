@@ -21,12 +21,14 @@ const Rooms3dCubeSize& MapCursorImplementation::size() const
 
 const Rooms3dCubePos& MapCursorImplementation::pos() const
 {
+    if (m_use_alter_zone)
+        return m_alter_zone_pos;
     return (room_ptr) ? room_ptr->pos : m_empty_pos;
 }
 
 MapCursorColor MapCursorImplementation::color() const
 {
-    return ccolor;
+    return (m_use_alter_zone) ? RCC_NONE : ccolor;
 }
 
 const Room* MapCursorImplementation::room(const Rooms3dCubePos& p) const
@@ -48,11 +50,29 @@ bool MapCursorImplementation::valid() const
 
 MapCursorInterface* MapCursorImplementation::dublicate()
 {
-    return new MapCursorImplementation( map_ptr, room_ptr, ccolor); 
+    MapCursorImplementation *cursor = new MapCursorImplementation( map_ptr, room_ptr, ccolor);
+    if (m_use_alter_zone) {
+        cursor->m_alter_zone_pos = m_alter_zone_pos;
+        cursor->m_use_alter_zone = true;
+    }
+    return cursor;
 }
 
 bool MapCursorImplementation::move(RoomDir dir)
 {
+    if (!room_ptr)
+        return false;
+    if (dir == RD_UP || dir == RD_DOWN) 
+    {
+        Rooms3dCubePos pos(m_use_alter_zone ? m_alter_zone_pos : room_ptr->pos);
+        pos.move(dir);
+        if (pos.valid(size()))
+        {
+            m_alter_zone_pos = pos;
+            m_use_alter_zone = (pos.z != room_ptr->pos.z);
+            return true;
+        }
+    }
      return false;
 }
 //-----------------------------------------------------------

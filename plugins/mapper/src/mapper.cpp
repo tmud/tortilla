@@ -377,28 +377,14 @@ void Mapper::onToolbar(int id)
         redrawPositionByRoom(nullptr);
     }
 
-    if (id == IDC_BUTTON_LEVEL_DOWN) {
-        MapCursor c = m_view.getCurrentPosition();
-        if (!c->valid())
-        {
-            c = m_view.getViewPosition();
-            if (!c->valid())
-                return;
-        }
-        if (c->move(RD_DOWN))
-            redrawPosition(c, false);
-    }
-
-    if (id == IDC_BUTTON_LEVEL_UP) {
-        MapCursor c = m_view.getCurrentPosition();
-        if (!c->valid())
-        {
-            c = m_view.getViewPosition();
-            if (!c->valid())
-                return;
-        }
-        if (c->move(RD_UP))
-            redrawPosition(c, false);
+    if (id == IDC_BUTTON_LEVEL_DOWN || id == IDC_BUTTON_LEVEL_UP) 
+    {
+        MapCursor v = m_view.getViewPosition();
+        if (!v->valid())
+            return;
+        RoomDir d = (id == IDC_BUTTON_LEVEL_DOWN) ? RD_DOWN : RD_UP;
+        if (v->move(d))
+            redrawPosition(v, false);
     }
 
     if (id == IDC_BUTTON_LEVEL0) {

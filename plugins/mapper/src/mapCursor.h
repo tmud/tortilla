@@ -21,7 +21,8 @@ class MapInstance;
 class MapCursorImplementation : public MapCursorInterface
 {
 public:
-    MapCursorImplementation(MapInstance* m, Room *r, MapCursorColor c) : map_ptr(m), room_ptr(r), ccolor(c)
+    MapCursorImplementation(MapInstance* m, Room *r, MapCursorColor c) : map_ptr(m), room_ptr(r), ccolor(c),
+         m_use_alter_zone(false)
     {
         assert(m);
         init();
@@ -42,6 +43,8 @@ private:
     Room *room_ptr;
     MapCursorColor ccolor;
     Rooms3dCube* map_zone;
+    bool m_use_alter_zone;
+    Rooms3dCubePos m_alter_zone_pos;
     static Rooms3dCubeSize m_empty;
     static Rooms3dCubePos m_empty_pos;
 };
