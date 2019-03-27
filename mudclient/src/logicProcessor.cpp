@@ -18,6 +18,13 @@ LogicProcessor::~LogicProcessor()
 
 void LogicProcessor::processTick()
 {
+    static int window_to_clear = 0;
+    if (window_to_clear <= OUTPUT_WINDOWS)
+         m_pHost->clearDropped(window_to_clear);
+    window_to_clear++;
+    if (window_to_clear == (OUTPUT_WINDOWS * 2))
+        window_to_clear = 0;
+
     std::vector<tstring> cmds;
     m_waitcmds.tick(&cmds);
     if (!cmds.empty())

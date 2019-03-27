@@ -53,7 +53,6 @@ void LogicProcessor::processStackTick()
  
 void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags, int window)
 {
-    m_pHost->clearDropped(window);
     if (window == 0 && m_prompt_mode != OFF && (flags & (GAME_LOG | GAME_CMD)) && !(flags & FROM_STACK))
     {
        MudViewString *last = m_pHost->getLastString(0);
