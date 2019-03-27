@@ -15,6 +15,14 @@ Mapper::~Mapper()
 {
 }
 
+void Mapper::setActiveMode(bool mode)
+{
+    if (!mode)
+    {
+        lostPosition();
+    }
+}
+
 void Mapper::processMsdp(const RoomData& rd)
 {
     RoomDirHelper dh;
@@ -150,13 +158,12 @@ void Mapper::redrawPosition(MapCursor cursor, bool centreScreen)
 
 void Mapper::redrawPositionByRoom(const Room *room)
 {
-    //updateZonesList();
     m_view.clearSelection();
     MapTools tools(&m_map);
     Room *r = (room) ? tools.findRoom(room->roomdata.hash()) : nullptr;
     if (!r)
     {
-        MapCursor c = m_view.getCurrentPosition();
+        MapCursor c = m_view.getViewPosition();
         if (c->valid()) {
             const Rooms3dCube* zone = c->zone();
             redrawPosition( tools.createZoneCursor(zone),false) ;

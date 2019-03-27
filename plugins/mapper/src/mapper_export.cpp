@@ -86,6 +86,7 @@ int init(lua_State *L)
         luaT_run(L, "checkMenu", "d", 1);
 
     m_mapper_window->loadMaps();
+    m_mapper_window->setActiveMode(map_active);
     return 0;
 }
 
@@ -118,7 +119,9 @@ int menucmd(lua_State *L)
     lua_pop(L, 1);
     if (id == 1)
     {
-        if (map_active)
+        map_active = !map_active;
+        m_mapper_window->setActiveMode(map_active);
+        if (!map_active)
         {
             luaT_run(L, "uncheckMenu", "d", 1);
             m_parent_window.hide();
@@ -128,7 +131,6 @@ int menucmd(lua_State *L)
             luaT_run(L, "checkMenu", "d", 1);
             m_parent_window.show();
         }
-        map_active = !map_active;
     }
     return 0;
 }
@@ -141,6 +143,7 @@ int closewindow(lua_State *L)
     if (hwnd == m_parent_window.hwnd())
     {
         luaT_run(L, "uncheckMenu", "d", 1);
+        m_mapper_window->setActiveMode(false);
         m_parent_window.hide();
         map_active = false;
     }
@@ -189,6 +192,8 @@ bool popString(lua_State *L, const char* name, tstring* val)
 
 int msdp(lua_State *L)
 {
+    if (!map_active)
+        return 0;
     RoomData rd;
     bool inconsistent_data = true;
     if (luaT_check(L, 1, LUA_TTABLE))
