@@ -164,7 +164,10 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
         return;
     }
 
-    auto saveScrolls = [this](int id) {
+    auto saveScrolls = [this](int id) 
+    {
+        if (id < 0)
+            return;
         scrolls s;
         s.h = getHScroll();
         s.h_flag = m_hscroll_flag;
@@ -188,7 +191,7 @@ void MapperRender::showPosition(MapCursor pos, bool centerScreen, bool currentPo
         return;
     }
 
-    int id = viewpos->zone()->id();
+    int id = (viewpos->valid()) ? viewpos->zone()->id() : -1;
     int newid = pos->zone()->id();
     viewpos = pos;
     if (newid != id) {

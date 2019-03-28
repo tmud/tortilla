@@ -81,7 +81,10 @@ public:
         std::copy(m_selected_rooms.begin(), m_selected_rooms.end(), rooms->begin());
     }
     void clearSelection() { unselectAllRooms(); }
-    void clear() { m_scrolls.clear(); viewpos = nullptr; currentpos = nullptr; }
+    void clear() { m_scrolls.clear();
+        viewpos = std::make_shared<MapNullCursorImplementation>();
+        currentpos = std::make_shared<MapNullCursorImplementation>();
+    }
 private:
     void selectRoom(const Room* room) {
         unselectRoom(room);
