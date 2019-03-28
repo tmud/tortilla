@@ -105,6 +105,11 @@ void Mapper::updateZonesList()
 	m_zones_control.updateList(zones);
 }
 
+void Mapper::saveProps()
+{
+    m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
+}
+
 void Mapper::saveMaps()
 {
     const tstring&dir = m_mapsFolder;

@@ -136,15 +136,18 @@ void  luaT_showTableOnTop(lua_State* L, const wchar_t* label = NULL);
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
 namespace base {
+    inline bool checkFunction(lua_State *L, const char* name)
+    {
+        lua_getglobal(L, name);
+        bool result = (lua_type(L, -1) == LUA_TFUNCTION);
+        lua_pop(L, 1);
+        return result;
+    }
+
     inline float getDpi(lua_State *L) 
     {
-        lua_getglobal(L, "getDpi");
-        if (lua_type(L, -1) != LUA_TFUNCTION)
-        {
-            lua_pop(L, 1);
+        if (!checkFunction(L, "getDpi"))
             return 1.0f;
-        }
-        lua_pop(L, 1);
         luaT_run(L, "getDpi", "");
         if (!lua_isnumber(L, 1))
             return 1.0f;
@@ -336,6 +339,8 @@ public:
     {
         if (!pL)
             return false;
+        if (!base::checkFunction(pL, "createWindowDpi"))
+            return create(pL, caption, width, height, visible);
         L = pL;
         luaT_run(L, "createWindowDpi", "sddb", caption, width, height, visible);
         void *wnd = luaT_toobject(L, -1);
@@ -348,6 +353,8 @@ public:
     {
         if (!pL)
             return false;
+        if (!base::checkFunction(pL, "createWindowDpi"))
+            return create(pL, caption, width, height);
         L = pL;
         luaT_run(L, "createWindowDpi", "sdd", caption, width, height);
         void *wnd = luaT_toobject(L, -1);
@@ -449,6 +456,8 @@ public:
     {
         if (!pL)
             return false;
+        if (!base::checkFunction(pL, "createPanelDpi"))
+            return create(pL, side, size);
         L = pL;
         luaT_run(L, "createPanelDpi", "sd", side, size);
         void *p = luaT_toobject(L, -1);
