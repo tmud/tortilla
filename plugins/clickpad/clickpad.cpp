@@ -37,7 +37,7 @@ int get_description(lua_State *L)
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.04");
+    luaT_pushwstring(L, L"1.05");
     return 1;
 }
 
@@ -103,7 +103,8 @@ int init(lua_State *L)
     if (m_parent_window.create(L, L"Игровая панель Clickpad", 400, 100, true))
     {
         HWND parent = m_parent_window.hwnd();
-        m_clickpad = new ClickpadMainWnd();
+        float dpi = base::getDpi(L);
+        m_clickpad = new ClickpadMainWnd(dpi);
         RECT rc; ::GetClientRect(parent, &rc);
         HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
         m_clickpad->load(ld);
