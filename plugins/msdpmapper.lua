@@ -222,7 +222,7 @@ function msdpmapper.description()
 end
 
 function msdpmapper.version()
-  return '1.0'
+  return '1.01'
 end
 
 local function log(s)
@@ -1034,7 +1034,11 @@ function msdpmapper.gamecmd(cmd)
 end
 
 function msdpmapper.init()
-  msdpmapper.window = createWindow('MSDP автомаппер', 300, 300, true)
+  if createWindowDpi then
+    msdpmapper.window = createWindowDpi('MSDP автомаппер', 300, 300, true)
+  else
+    msdpmapper.window = createWindow('MSDP автомаппер', 300, 300, true)
+  end
   if not msdpmapper.window then
     terminate('Ошибка при создании окна.')
   end

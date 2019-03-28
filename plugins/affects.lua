@@ -2,7 +2,7 @@
 -- Плагин для Tortilla mud client
 
 -- ширина панели в пикселях
-local panel_width = 150
+local panel_width = 180
 
 -- сторона расположение панели left или right
 local panel_side = 'right'
@@ -19,7 +19,7 @@ function affects.description()
   return 'Плагин отображает аффекты, которые висят на персонаже.'
 end
 function affects.version()
-  return '1.01'
+  return '1.02'
 end
 
 -- рендер
@@ -106,7 +106,12 @@ end
 
 function affects.init()
   colors = { good_active = 10, good_inactive = 2, bad_active = 9, bad_inactive = 1 }
-  local p = createPanel(panel_side, panel_width)
+  local p
+  if createPanelDpi then
+        p = createPanelDpi(panel_side, panel_width)
+  else
+        p = createPanel(panel_side, panel_width)
+  end
   r = p:setRender(render)
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())
