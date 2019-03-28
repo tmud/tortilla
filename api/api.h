@@ -1339,6 +1339,7 @@ typedef void* image;
 image image_load(const wchar_t* file, int extra_option);
 void  image_unload(image img);
 image image_cut(image img, int x, int y, int w, int h);
+image image_resize(image fi, int x, int y);
 int   image_width(image img);
 int   image_height(image img);
 int   image_getpixelcolor(image img, int x, int y, COLORREF *c); // return 0-false/not 0-true

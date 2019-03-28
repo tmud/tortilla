@@ -17,6 +17,11 @@ image image_cut(image img, int x, int y, int w, int h)
     return fimage_cut(img, x, y, w, h);
 }
 
+image image_resize(image img, int w, int h)
+{
+    return fimage_rescale(img, w, h);
+}
+
 int image_width(image img)
 {
     return fimage_width(img);

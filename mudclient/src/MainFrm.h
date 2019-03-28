@@ -3,6 +3,7 @@
 #include "mudGameView.h"
 #include "helpManager.h"
 #include "plugins/pluginsApi.h"
+#include "resource.h"
 
 template <class T> // stub for DECLARE_FRAME_WND_CLASS macro (without stub not working)
 class ATL_NO_VTABLE CCommonFrameImpl : public CMessageMap {
@@ -123,10 +124,47 @@ private:
         }
 
         setTaskbarName();
-
         m_toolBar.create(this);
-        m_toolBar.createCmdBar(IDR_MAINFRAME);
-        m_toolBar.createToolbar(IDR_MAINFRAME);
+
+        const int count = 5;
+        UINT ti[count] = { ID_SELECTPROFILE, ID_SETTINGS, ID_PLUGINS, ID_MODE, ID_MUDCLIENT_HELP };
+        HBITMAP images = LoadBitmap(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MAINFRAME));
+        BitmapMethods bmpm(images);
+        BITMAP bm;
+        GetObject(images, sizeof(BITMAP), &bm);
+
+        HDC dc = GetDC();
+        float logpy = static_cast<float>(GetDeviceCaps(dc, LOGPIXELSY));
+        ReleaseDC(dc);
+        logpy /= 96;
+
+        int src_size = bm.bmHeight;
+        float float_size = static_cast<float>(src_size);
+        float_size = float_size * logpy;
+        int size = static_cast<int>(float_size);
+
+        std::vector<CommandBarExImage> items;
+        std::vector<ToolbarExButton> buttons;
+        for (int i = 0; i < count; ++i)
+        {
+            CommandBarExImage im;
+            int imageindex = i;
+            im.image = bmpm.cutNewBitmap(src_size * imageindex, 0, src_size, src_size, size, size);
+            im.commandid = ti[i];
+            items.push_back(im);
+            ToolbarExButton b;
+            b.image = bmpm.cutNewBitmap(src_size * imageindex, 0, src_size, src_size, size, size);
+            b.commandid = im.commandid;
+            loadString(b.commandid, &b.hover);
+            tstring_trimsymbols(&b.hover, L"\n");
+            buttons.push_back(b);
+        }
+        ToolbarExButton separator;
+        buttons.insert(buttons.begin() + 4, separator);
+        buttons.insert(buttons.begin() + 1, separator);
+        m_toolBar.createCmdBar(items);
+        m_toolBar.createToolbar(buttons);
+        DeleteObject(images);
 
         CReBarCtrl rebar = m_hWndToolBar;
         CReBarSettings rbs;
