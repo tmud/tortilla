@@ -46,6 +46,7 @@ int init(lua_State *L)
     luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Окно с картой");
 
     m_props.initAllDefault();
+    m_props.dpi = base::getDpi(L);
 
 	tstring error;
     tstring path;

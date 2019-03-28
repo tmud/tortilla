@@ -99,14 +99,6 @@
       <Command>
       </Command>
     </PostBuildEvent>
-    <Manifest />
-    <Manifest />
-    <Manifest />
-    <Manifest />
-    <Manifest />
-    <Manifest />
-    <Manifest />
-    <Manifest />
     <Manifest>
       <EnableDpiAwareness>true</EnableDpiAwareness>
     </Manifest>

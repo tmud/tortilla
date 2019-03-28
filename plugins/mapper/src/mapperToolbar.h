@@ -7,6 +7,7 @@ class MapperToolbar : public CDialogImpl<MapperToolbar>
     UINT m_controlMessage;
     CToolbarButton m_down, m_up, m_level0, m_center, m_home;
     CImageList m_icons;
+    float dpi;
 public:
     enum { IDD = IDD_MAPPER_TOOLBAR };
     BEGIN_MSG_MAP(MapperToolbar)
@@ -21,11 +22,15 @@ public:
         COMMAND_ID_HANDLER(IDC_BUTTON_CLEARZONES, OnButton)
         COMMAND_ID_HANDLER(IDC_BUTTON_HOME, OnButton)
     END_MSG_MAP()
-    MapperToolbar() : m_controlWindow(0), m_controlMessage(0) {}
+    MapperToolbar() : m_controlWindow(0), m_controlMessage(0), dpi(1.0f){}
     void setControlWindow(HWND wnd, UINT msg) 
     {
         m_controlWindow = wnd;
         m_controlMessage = msg;
+    }
+    void setDpi(float sdpi)
+    {
+        dpi = sdpi;
     }
     void setCenterMode(bool centerMode)
     {
@@ -40,7 +45,7 @@ private:
         cb.GetWindowRect(&rc);
         ScreenToClient(&rc);
         cb.ShowWindow(SW_HIDE);
-        b.Create(m_hWnd, id, rc, m_icons.GetIcon(image), tooltip.c_str());
+        b.Create(m_hWnd, id, rc, m_icons.GetIcon(image), tooltip.c_str(), dpi);
     }
 	LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&bHandled)
 	{

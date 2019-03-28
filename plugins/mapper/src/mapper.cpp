@@ -200,6 +200,7 @@ void Mapper::onCreate()
     m_zones_control.Create(m_vSplitter, pane_left, style);
     m_container.Create(m_vSplitter, pane_right, L"", style);
 
+    m_toolbar.setDpi(m_propsData->dpi);
     m_toolbar.Create(m_container, rcDefault, style);
     m_toolbar.setControlWindow(m_hWnd, WM_USER+1);
     m_toolbar.setCenterMode(m_propsData->center_mode);

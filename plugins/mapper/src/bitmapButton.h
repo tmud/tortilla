@@ -6,7 +6,7 @@ public:
     DECLARE_WND_CLASS(NULL)
 
     CIcon m_icon;
-    CPoint m_render_icon_position;
+    CSize m_icon_size;
     UINT m_id;
 
     CToolTipCtrl m_tip;
@@ -33,7 +33,7 @@ public:
         delete[] m_lpstrToolTipText;
     }
 
-    HWND Create(HWND parent, UINT id, RECT rc, HICON image, LPCTSTR tooltip)
+    HWND Create(HWND parent, UINT id, RECT rc, HICON image, LPCTSTR tooltip, float dpi)
     {
         m_id = id;
         if (tooltip != NULL) {
@@ -48,11 +48,8 @@ public:
         CBitmapHandle bh(info.hbmColor);
         SIZE size = { 0, 0 };
         bh.GetSize(size);
-
-        int width = rc.right - rc.left;
-        int height = rc.bottom - rc.top;
-        m_render_icon_position.x = (width - size.cx) / 2;
-        m_render_icon_position.y = (height - size.cy) / 2;
+        m_icon_size.cx = static_cast<int>(size.cx * dpi);
+        m_icon_size.cy = static_cast<int>(size.cy * dpi);
         return CWindowImpl::Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
     }
 
@@ -122,7 +119,11 @@ public:
         CPaintDC dc(m_hWnd);
         CMemoryDC mdc(dc, pos);
         mdc.FillRect(&pos, m_backgroundBrush);
-        POINT icon_point = m_render_icon_position;
+
+
+        int iconx = (pos.right - m_icon_size.cx) / 2;
+        int icony = (pos.bottom - m_icon_size.cy) / 2;
+
         if (m_fChecked == 1)
         {
             if (m_fPressed == 1)
@@ -131,8 +132,8 @@ public:
             }
             else
             {
-                icon_point.x++;
-                icon_point.y++;
+                iconx++;
+                icony++;
                 mdc.DrawEdge(&pos, EDGE_SUNKEN, BF_RECT);
             }
         }
@@ -140,14 +141,14 @@ public:
         {
             if (m_fPressed == 1) 
             {
-                icon_point.x++;
-                icon_point.y++;
+                iconx++;
+                icony++;
                 mdc.DrawEdge(&pos, EDGE_SUNKEN, BF_RECT);
             }
             else
                 mdc.DrawEdge(&pos, EDGE_ETCHED, BF_RECT);
         }
-        m_icon.DrawIcon(mdc, icon_point);
+        m_icon.DrawIcon(mdc, iconx, icony);
         return 0;
     }
 
