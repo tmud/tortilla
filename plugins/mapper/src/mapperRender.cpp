@@ -21,6 +21,12 @@ MapperRender::MapperRender(int room_size, int corridor_size, int deflate_size, f
     m_roomMoveTool = NULL;
     currentpos = std::make_shared<MapNullCursorImplementation>();
     viewpos = std::make_shared<MapNullCursorImplementation>();
+
+    m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
+    CBitmap icons;
+    icons.LoadBitmap(IDB_ICONS);
+    m_icons.Add(icons, RGB(128, 0, 128));
+    rr->setIcons(&m_icons);
 }
 
 MapperRender::~MapperRender()
@@ -248,7 +254,6 @@ void MapperRender::onPaint()
     CMemoryDC mdc(dc, pos);
     mdc.FillRect(&pos, m_background);
     rr->setDC(mdc);
-    rr->setIcons(&m_icons);
     renderMap();
 }
 
@@ -640,11 +645,7 @@ void MapperRender::mouseRightButtonDown()
 
 void MapperRender::createMenu()
 {
-    m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
     int size = menu_size;
-    CBitmap icons;
-    icons.LoadBitmap(IDB_ICONS);
-    m_icons.Add(icons, RGB(128, 0, 128));
     m_single_room_menu.CreatePopupMenu();
     CMenuXP &m = m_single_room_menu;
     if (m_icons.GetImageCount() > 0)
@@ -654,7 +655,7 @@ void MapperRender::createMenu()
         for (int i = 0, e = m_icons.GetImageCount(); i < e; i++)
         {
             if (i != 0 && i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.GetIcon(i)));
         }
         m.AppendODPopup(pictures, new CMenuXPText(size, 0, L"Значок"));
         m.AppendODMenu(new CMenuXPText(size, MENU_RESETICON, L"Удалить значок"));
@@ -702,7 +703,7 @@ void MapperRender::createMenu()
         pictures->CreatePopupMenu();
         for (int i = 0, e = m_icons.GetImageCount(); i < e; i++) {
             if (i != 0 && i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.GetIcon(i)));
         }
         m2.AppendODPopup(pictures, new CMenuXPText(size, 0, L"Значок"));
         m2.AppendODMenu(new CMenuXPText(size, MENU_RESETICON, L"Удалить значок"));
