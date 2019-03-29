@@ -93,95 +93,135 @@ void MapperRoomRender::renderShadow(int x, int y)
 void MapperRoomRender::renderHole(int x, int y, const Room *r)
 {
    CRect rp(x, y, x + m_size, y + m_size);
-   int cs = m_csize;
-   int rs = (cs-2) * 2;
+   int cs = m_csize;        // corridor size to draw (included)
+   int ds = 2;              // doors offset to draw (included) -  x= lefx - ds, len = cs + ds + ds
+   int rs = (cs - m_roomsizeDeflate) * 2;
    rp.DeflateRect(cs, cs, rs, rs);
-   
-   int w = rp.right-rp.left;
-   int h = rp.bottom-rp.top;
-   int de = (m_size - 3 * m_csize) / 2 - 1;
+
+   // start points for corridors - top, bottom, left, right
+   int offset = (rp.right - rp.left - cs) / 2;
+   int leftx = rp.left + offset;
+   int topy = rp.top + offset;
+   POINT ct = { leftx, rp.top };
+   POINT cb = { leftx, rp.bottom };
+   POINT cl = { rp.left, topy };
+   POINT cr = { rp.right, topy };
+
+   int w = rp.right-rp.left + 1;
+   int h = rp.bottom-rp.top + 1;
 
    HPEN old = m_hdc.SelectPen(m_white);
    if (r->dirs[RD_NORTH].exist)
    {
-       int x = rp.left + de; int y = rp.top;
-       renderLine(x-de,y,de,0);
-       renderLine(x+cs,y,de+2,0);
-       renderLine(x,y,0,-cs-1);
-       renderLine(x+cs,y,0,-cs-1);
-
        if (anotherZone(r, RD_NORTH))
        {
-           int x = rp.left + cs;
-           int y = rp.top - 3;
-           renderLine(x,y,de+3,0);
-           renderLine(x,y-1,de+3,0);
-           renderLine(x,y-2,de+3,0);
+           int x = ct.x - 1;
+           int y = ct.y;
+           int len = cs + 4;
+           renderLine(x,y,len,0);
+           renderLine(x,y-1,len,0);
+           renderLine(x,y-2,len,0);
+           renderLine(rp.left, rp.top, w, 0);
+       }
+       else
+       {
+           int x = ct.x;
+           int x2 = ct.x + cs;
+           int y = ct.y;
+           int len = x - rp.left+1;
+           renderLine(x, y, -len, 0);
+           renderLine(x, y, 0, -len);
+           renderLine(x2, y, len, 0);
+           renderLine(x2, y, 0, -len);
        }
    }
-   else  {  renderLine(rp.left,rp.top,w,0); }
+   else  { renderLine(rp.left,rp.top,w,0); }
 
    if (r->dirs[RD_SOUTH].exist)
    {
-       int x = rp.left + de;
-       int y = rp.bottom;
-       renderLine(x-de,y,de,0);
-       renderLine(x+cs,y,de+2,0);
-       renderLine(x,y,0,cs+1);
-       renderLine(x+cs,y,0,cs+1);
-
        if (anotherZone(r, RD_SOUTH))
        {
-           int x = rp.left + cs;
-           int y = rp.bottom + 3;
-           renderLine(x,y,de+3,0);
-           renderLine(x,y+1,de+3,0);
-           renderLine(x,y+2,de+3,0);
+           int x = cb.x - 1;
+           int y = cb.y;
+           int len = cs + 4;
+           renderLine(x, y, len, 0);
+           renderLine(x, y + 1, len, 0);
+           renderLine(x, y + 2, len, 0);
+           renderLine(rp.left, rp.bottom, w, 0);
+       }
+       else
+       {
+           int x = cb.x;
+           int x2 = cb.x + cs;
+           int y = cb.y;
+           int len = x - rp.left + 1;
+           renderLine(x, y, -len, 0);
+           renderLine(x, y, 0, len);
+           renderLine(x2, y, len, 0);
+           renderLine(x2, y, 0, len);
        }
    }
-   else { renderLine(rp.left,rp.bottom,w,0);  }
+   else
+        { renderLine(rp.left, rp.bottom, w, 0);  }
 
+   
    if (r->dirs[RD_WEST].exist)
    {
-       int x = rp.left;
-       int y = rp.top + de;
-       renderLine(x,y-de,0,de);
-       renderLine(x,y+cs,0,de+2);
-       renderLine(x,y,-cs-1,0);
-       renderLine(x,y+cs,-cs-1,0);
-
        if (anotherZone(r, RD_WEST))
        {
-           int x = rp.left - 3;
-           int y = rp.top + cs;
-           renderLine(x,y,0,de+3);
-           renderLine(x-1,y,0,de+3);
-           renderLine(x-2,y,0,de+3);
+           int x = cl.x;
+           int y = cl.y - 1;
+           int len = cs + 4;
+           renderLine(x, y, 0, len);
+           renderLine(x-1, y, 0, len);
+           renderLine(x-2, y, 0, len);
+           renderLine(rp.left, rp.top, 0, h);
+       }
+       else
+       {
+           int x = cl.x;
+           int y = cl.y;
+           int y2 = cl.y + cs;
+           int len = y - rp.top + 1;
+           renderLine(x, y, 0, -len);
+           renderLine(x, y, -len, 0);
+           renderLine(x, y2, 0, len);
+           renderLine(x, y2, -len, 0);
        }
    }
-   else { renderLine(rp.left,rp.top,0,h);  }
+   else
+        { renderLine(rp.left,rp.top,0,h);  }
 
    if (r->dirs[RD_EAST].exist)
    {
-       int x = rp.right;
-       int y = rp.top + de;
-       renderLine(x,y-de,0,de);
-       renderLine(x,y+cs,0,de+3);
-       renderLine(x,y,cs+1,0);
-       renderLine(x,y+cs,cs+1,0);
-
        if (anotherZone(r, RD_EAST))
        {
-           int x = rp.right + 3;
-           int y = rp.top + cs;
-           renderLine(x,y,0,de+3);
-           renderLine(x+1,y,0,de+3);
-           renderLine(x+2,y,0,de+3);
+           int x = cr.x;
+           int y = cr.y - 1;
+           int len = cs + 4;
+           renderLine(x, y, 0, len);
+           renderLine(x + 1, y, 0, len);
+           renderLine(x + 2, y, 0, len);
+           renderLine(rp.right, rp.top, 0, h);
+       }
+       else
+       {
+           int x = cr.x;
+           int y = cr.y;
+           int y2 = cr.y + cs;
+           int len = y - rp.top + 1;
+           renderLine(x, y, 0, -len);
+           renderLine(x, y, len, 0);
+           renderLine(x, y2, 0, len);
+           renderLine(x, y2, len, 0);
        }
    }
-   else { renderLine(rp.right,rp.bottom,0,-h);  }
+   else
+   {
+       renderLine(rp.right, rp.top, 0, h);
+   }
 
-   de = cs + 1;
+   int de = cs + 1;
    if (r->dirs[RD_UP].exist)
    {
        int x = rp.left + 3;
@@ -202,7 +242,7 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
 void MapperRoomRender::renderRoom(int x, int y, const Room *r)
 {
    CRect rp( x, y, x+m_size, y+m_size );
-   CRect base(rp);
+   //CRect base(rp);
    int cs = m_csize;        // corridor size to draw (included)
    int ds = 2;              // doors offset to draw (included) -  x= lefx - ds, len = cs + ds + ds
    int rs = (cs- m_roomsizeDeflate) * 2;
@@ -218,7 +258,6 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
    m_hdc.SelectPen(m_white);
    renderRect(rp.left,rp.top,rp.right-rp.left,rp.bottom-rp.top);
 
-   
    int offset = (rp.right - rp.left - cs) / 2;
 
    // start points for corridors - top, bottom, left, right
