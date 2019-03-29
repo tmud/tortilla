@@ -39,6 +39,7 @@ public:
 class MapperRender : public CWindowImpl<MapperRender>
 {
     int ROOM_SIZE, MAP_EDGE;
+    int menu_size;
 
     CBrush m_background;
     MapCursor viewpos;

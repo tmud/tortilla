@@ -567,7 +567,7 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
    if (r->icon > 0)
    {
        int icons_count = m_plist->GetImageCount();
-       int icon_size = 16;
+       int icon_size = bk.Width();
        int x = bk.left + (bk.Width() - icon_size) / 2 - 1;
        int y = bk.top + (bk.Height() - icon_size) / 2 - 1;
        if (r->icon <= icons_count)

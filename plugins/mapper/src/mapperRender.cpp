@@ -6,6 +6,7 @@ extern Mapper* m_mapper_window;
 
 MapperRender::MapperRender(int room_size, int corridor_size, int deflate_size, float dpi)
 {
+    menu_size = static_cast<int>(16 * dpi);
     ROOM_SIZE = static_cast<int>(room_size * dpi);
     corridor_size = static_cast<int>(corridor_size * dpi);
     deflate_size = static_cast<int>(deflate_size * dpi);
@@ -640,6 +641,7 @@ void MapperRender::mouseRightButtonDown()
 void MapperRender::createMenu()
 {
     m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
+    int size = menu_size;
     CBitmap icons;
     icons.LoadBitmap(IDB_ICONS);
     m_icons.Add(icons, RGB(128, 0, 128));
@@ -652,14 +654,14 @@ void MapperRender::createMenu()
         for (int i = 0, e = m_icons.GetImageCount(); i < e; i++)
         {
             if (i != 0 && i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
         }
-        m.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m.AppendODPopup(pictures, new CMenuXPText(size, 0, L"Значок"));
+        m.AppendODMenu(new CMenuXPText(size, MENU_RESETICON, L"Удалить значок"));
         m.AppendSeparator();
     }
-    m.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m.AppendODMenu(new CMenuXPText(size, MENU_SETCOLOR, L"Цвет..."));
+    m.AppendODMenu(new CMenuXPText(size, MENU_RESETCOLOR, L"Сбросить цвет"));
     /*m.AppendSeparator();
 
     CMenuXP *newzone = new CMenuXP();
@@ -700,14 +702,14 @@ void MapperRender::createMenu()
         pictures->CreatePopupMenu();
         for (int i = 0, e = m_icons.GetImageCount(); i < e; i++) {
             if (i != 0 && i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
         }
-        m2.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m2.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m2.AppendODPopup(pictures, new CMenuXPText(size, 0, L"Значок"));
+        m2.AppendODMenu(new CMenuXPText(size, MENU_RESETICON, L"Удалить значок"));
         m2.AppendSeparator();
     }
-    m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m2.AppendODMenu(new CMenuXPText(size, MENU_SETCOLOR, L"Цвет..."));
+    m2.AppendODMenu(new CMenuXPText(size, MENU_RESETCOLOR, L"Сбросить цвет"));
     /*m2.AppendSeparator();
     m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"Создать новую зону..."));*/
 }
