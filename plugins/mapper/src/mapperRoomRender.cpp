@@ -3,7 +3,7 @@
 #include "maskDC.h"
 
 MapperRoomRender::MapperRoomRender(int room_size, int corridor_size, int deflate_size) : m_size(room_size), m_csize(corridor_size), 
-m_roomsizeDeflate(deflate_size), m_plist(NULL)
+m_roomsizeDeflate(deflate_size), m_plist(NULL), m_icons_size(0)
 {
     assert(room_size > 0 && corridor_size > 0);
     if (room_size % 2 != corridor_size % 2)
@@ -35,9 +35,10 @@ void MapperRoomRender::setDC(HDC dc)
     m_hdc = dc;
 }
 
-void MapperRoomRender::setIcons(CImageList *icons)
+void MapperRoomRender::setIcons(CImageList *icons, int icons_size)
 {
     m_plist = icons;
+    m_icons_size = icons_size;
 }
 
 void MapperRoomRender::render(int dc_x, int dc_y, const Room *r, int type)
@@ -567,13 +568,14 @@ void MapperRoomRender::renderRoom(int x, int y, const Room *r)
    if (r->icon > 0)
    {
        int icons_count = m_plist->GetImageCount();
-       int cx = 0; int cy = 0;
-       m_plist->GetIconSize(cx, cy);
-       int icon_size = cx;
+       int icon_size = m_icons_size;
        int x = bk.left + (bk.Width() - icon_size) / 2 - 1;
        int y = bk.top + (bk.Height() - icon_size) / 2 - 1;
        if (r->icon <= icons_count)
-           m_plist->Draw(m_hdc, r->icon - 1, x, y, ILD_TRANSPARENT);
+       {
+           HICON icon = m_plist->GetIcon(r->icon - 1);
+           ::DrawIconEx(m_hdc, x, y, icon, icon_size, icon_size, 1, NULL, DI_NORMAL);
+       }
    }
 
    int de = cs + 1;  // size up/down corridor

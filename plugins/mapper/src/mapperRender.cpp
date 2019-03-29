@@ -26,7 +26,7 @@ MapperRender::MapperRender(int room_size, int corridor_size, int deflate_size, f
     CBitmap icons;
     icons.LoadBitmap(IDB_ICONS);
     m_icons.Add(icons, RGB(128, 0, 128));
-    rr->setIcons(&m_icons);
+    rr->setIcons(&m_icons, menu_size);
 }
 
 MapperRender::~MapperRender()
