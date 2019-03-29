@@ -17,7 +17,7 @@ function miner.description()
 end
 
 function miner.version()
-    return '1.0'
+    return '1.01'
 end
 
 local w, r, p, br, br2, msgwnd --окно, рендер, и др.
@@ -332,11 +332,19 @@ end
 
 -- Генерация поля мин, цифр у мин, пустых ячеек
 function miner.init()
-  w = createWindow("Сапер",m+2*gap,n+2*gap)
-  w:setFixedSize(m+2*gap,n+2*gap)
+  if getDpi then
+    shag = shag * getDpi()
+    m = m * getDpi()
+    n = n * getDpi()
+    gap = gap * getDpi()
+  end
+  local ww = m+2*gap
+  local h = n+2*gap
+  w = createWindow("Сапер",ww,h)
   if not w then
     terminate("Error on window creating!")
   end
+  w:setFixedSize(ww,h)
   r = w:setRender(render)
   r:setBackground(props.backgroundColor())
   p = r:createPen{ width=2, color=maincolor }
