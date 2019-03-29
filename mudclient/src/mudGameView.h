@@ -891,7 +891,7 @@ private:
 
         bool font_updated = false;
         PropertiesDlg propDlg(&tmp);
-        if (propDlg.DoModal() == IDOK)
+        if (propDlg.DoModal(m_hWnd) == IDOK)
         {
             if (data.font_name != tmp.font_name || data.font_bold != tmp.font_bold ||
                 data.font_heigth != tmp.font_heigth || data.font_italic != tmp.font_italic)
