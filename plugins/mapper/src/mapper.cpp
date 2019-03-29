@@ -7,7 +7,7 @@
 #include "mapSmartTools.h"
 
 Mapper::Mapper(PropertiesMapper *props, const tstring& mapsFolder) : m_propsData(props), 
-m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
+m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder), m_view(32, 6, 4, props->dpi)
 {
 }
 
@@ -105,6 +105,11 @@ void Mapper::updateZonesList()
 	m_zones_control.updateList(zones);
 }
 
+void Mapper::saveProps()
+{
+    m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
+}
+
 void Mapper::saveMaps()
 {
     const tstring&dir = m_mapsFolder;
@@ -195,6 +200,7 @@ void Mapper::onCreate()
     m_zones_control.Create(m_vSplitter, pane_left, style);
     m_container.Create(m_vSplitter, pane_right, L"", style);
 
+    m_toolbar.setDpi(m_propsData->dpi);
     m_toolbar.Create(m_container, rcDefault, style);
     m_toolbar.setControlWindow(m_hWnd, WM_USER+1);
     m_toolbar.setCenterMode(m_propsData->center_mode);
@@ -416,7 +422,7 @@ void Mapper::onToolbar(int id)
     }
 
     if (id == IDC_BUTTON_LEVEL0) {
-        MapCursor c = m_view.getCurrentPosition();
+        MapCursor c = m_view.getViewPosition();
         if (!c->valid())
             return;
         const Rooms3dCubePos& pos = c->pos();

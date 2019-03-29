@@ -136,6 +136,25 @@ void  luaT_showTableOnTop(lua_State* L, const wchar_t* label = NULL);
 #define ST(L,n) luaT_showTableOnTop(L,n)
 
 namespace base {
+    inline bool checkFunction(lua_State *L, const char* name)
+    {
+        lua_getglobal(L, name);
+        bool result = (lua_type(L, -1) == LUA_TFUNCTION);
+        lua_pop(L, 1);
+        return result;
+    }
+
+    inline float getDpi(lua_State *L) 
+    {
+        if (!checkFunction(L, "getDpi"))
+            return 1.0f;
+        luaT_run(L, "getDpi", "");
+        if (!lua_isnumber(L, 1))
+            return 1.0f;
+        float dpi = static_cast<float>(lua_tonumber(L, -1));
+        lua_pop(L, 1);
+        return dpi;
+    }
     inline void addMenu(lua_State* L, const wchar_t* path, int id, int pos = -1, int bitmap = -1) {
         luaT_run(L, "addMenu", "sddd", path, id, pos, bitmap);
     }
@@ -316,6 +335,34 @@ public:
         window = wnd;
         return true;
     }
+    bool createDpi(lua_State *pL, const wchar_t* caption, int width, int height, bool visible)
+    {
+        if (!pL)
+            return false;
+        if (!base::checkFunction(pL, "createWindowDpi"))
+            return create(pL, caption, width, height, visible);
+        L = pL;
+        luaT_run(L, "createWindowDpi", "sddb", caption, width, height, visible);
+        void *wnd = luaT_toobject(L, -1);
+        if (!wnd)
+            return false;
+        window = wnd;
+        return true;
+    }
+    bool createDpi(lua_State *pL, const wchar_t* caption, int width, int height)
+    {
+        if (!pL)
+            return false;
+        if (!base::checkFunction(pL, "createWindowDpi"))
+            return create(pL, caption, width, height);
+        L = pL;
+        luaT_run(L, "createWindowDpi", "sdd", caption, width, height);
+        void *wnd = luaT_toobject(L, -1);
+        if (!wnd)
+            return false;
+        window = wnd;
+        return true;
+    }
     HWND hwnd()
     {
         luaT_pushobject(L, window, LUAT_WINDOW);
@@ -399,6 +446,20 @@ public:
             return false;
         L = pL;
         luaT_run(L, "createPanel", "sd", side, size);
+        void *p = luaT_toobject(L, -1);
+        if (!p)
+            return false;
+        panel = p;
+        return true;
+    }
+    bool createDpi(lua_State *pL, const wchar_t* side, int size)
+    {
+        if (!pL)
+            return false;
+        if (!base::checkFunction(pL, "createPanelDpi"))
+            return create(pL, side, size);
+        L = pL;
+        luaT_run(L, "createPanelDpi", "sd", side, size);
         void *p = luaT_toobject(L, -1);
         if (!p)
             return false;

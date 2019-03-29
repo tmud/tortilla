@@ -1,5 +1,9 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <settings>
-  <zoneslist width="212"/>
-  <lastzone name="Новая зона 1"/>
+  <lastzone name=""/>
+  <center mode="1"/>
+  <zoneswnd>
+    <display width="1536" height="864" size="202"/>
+    <display width="3840" height="2160" size="506"/>
+  </zoneswnd>
 </settings>

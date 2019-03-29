@@ -46,6 +46,7 @@ int init(lua_State *L)
     luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Окно с картой");
 
     m_props.initAllDefault();
+    m_props.dpi = base::getDpi(L);
 
 	tstring error;
     tstring path;
@@ -54,20 +55,36 @@ int init(lua_State *L)
     xml::node p;
     if (p.load(path.c_str(), &error))
     {
-        int width = 0; int center = 1;
-        p.get(L"zoneslist/width", &width);
-        m_props.zoneslist_width = (width > 0) ? width : -1;
+        int center = 1;
         p.get(L"center/mode", &center);
         m_props.center_mode = (center != 0) ? 1 : 0;
 		if (p.get(L"lastzone/name", &current_zone))
             m_props.current_zone = current_zone;
+
+        DWORD screen_width = GetSystemMetrics(SM_CXSCREEN);
+        DWORD screen_height = GetSystemMetrics(SM_CYSCREEN);
+        int size = 0;
+        xml::request d(p, L"zoneswnd/display");
+        for (int i=0; i<d.size(); ++i)
+        {
+            int width = 0; int height = 0;
+            if (d[i].get(L"width", &width) &&
+                d[i].get(L"height", &height) &&
+                width == screen_width &&
+                height == screen_height)
+            {
+                d[i].get(L"size", &size);
+                break;
+            }
+        }
+        m_props.zoneslist_width = (size > 0) ? size : -1;
 	} else {
 		if (!error.empty())
 			base::log(L, error.c_str());
 	}
     p.deletenode();
 
-	if (!m_parent_window.create(L, L"Карта", 400, 400))
+	if (!m_parent_window.createDpi(L, L"Карта", 400, 400))
 		return luaT_error(L, L"Не удалось создать окно для карты");
 
     HWND parent = m_parent_window.hwnd();    
@@ -92,15 +109,60 @@ int init(lua_State *L)
 
 int release(lua_State *L)
 {
+    m_mapper_window->saveProps();
+
     //todo! m_mapper_window->saveMaps();
 
-    xml::node p(L"settings");
-    p.set(L"zoneslist/width", m_props.zoneslist_width);
-	p.set(L"lastzone/name", m_props.current_zone);
-    p.set(L"center/mode", m_props.center_mode ? 1 : 0);
-
-    tstring path;
+    tstring error, path;
     base::getPath(L, L"settings.xml", &path);
+    xml::node p;
+    if (!p.load(path.c_str(), &error))
+    {
+        p = xml::node(L"settings");
+    }
+    p.set(L"lastzone/name", m_props.current_zone);
+    p.set(L"center/mode", m_props.center_mode ? 1 : 0);
+    xml::request d(p, L"zoneslist");
+    for (int i = 0; i < d.size(); ++i)
+        d[i].deletenode();
+
+    DWORD screen_width = GetSystemMetrics(SM_CXSCREEN);
+    DWORD screen_height = GetSystemMetrics(SM_CYSCREEN);
+    xml::request zr(p, L"zoneswnd");
+    xml::node z;
+    if (zr.size() == 0)
+    {
+        xml::node zl = p.createsubnode(L"zoneswnd");
+        z = zl.createsubnode(L"display");
+        z.set(L"width", screen_width);
+        z.set(L"height", screen_height);
+    }
+    else
+    {
+        xml::node zl = zr[0];
+        xml::request displays(zl, L"display");
+        int index = -1;
+        for (int i = 0, e = displays.size(); i < e; ++i)
+        {
+            int width = 0; int height = 0;
+            if (displays[i].get(L"width", &width) &&
+                displays[i].get(L"height", &height) &&
+                width == screen_width && 
+                height == screen_height)
+            {
+                z = displays[i];
+                index = i; break;
+            }
+        }
+        if (index == -1)
+        {
+            z = zl.createsubnode(L"display");
+            z.set(L"width", screen_width);
+            z.set(L"height", screen_height);
+        }
+    }
+    z.set(L"size", m_props.zoneslist_width);
+
     if (!p.save(path.c_str()))
     {
         tstring error(L"Ошибка записи настроек пользователя: ");

@@ -16,6 +16,7 @@ public:
 	void saveMaps();
 	void loadMaps();
     void setActiveMode(bool mode);
+    void saveProps();
 private:
     BEGIN_MSG_MAP(Mapper)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)

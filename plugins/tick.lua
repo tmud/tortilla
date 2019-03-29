@@ -74,7 +74,11 @@ end
 
 function ticker.init()
   -- создаем окошко
-  w = createWindow("Тик", 80, 80, true)
+  if createWindowDpi then
+    w = createWindowDpi("Тик", 80, 80, true)
+  else
+    w = createWindow("Тик", 80, 80, true)
+  end
   -- если не создалось - сообщаем пользователю
   if not w then terminate("Ошибка при создании окна") end
   -- создаем рендер для окошка

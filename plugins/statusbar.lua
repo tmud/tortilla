@@ -55,7 +55,7 @@ function statusbar.description()
 end
 
 function statusbar.version()
-    return '1.11'
+    return '1.12'
 end
 
 function statusbar.render()
@@ -474,7 +474,12 @@ function statusbar.init()
     end
   end
 
-  local p = createPanel(position, 28)
+  local p
+  if createPanelDpi then
+    p = createPanelDpi(position, 28)
+  else
+    p = createPanel(position, 28)
+  end
   r = p:setRender(statusbar.render)
   r:setBackground(props.backgroundColor())
   r:textColor(props.paletteColor(7))

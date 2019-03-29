@@ -2,10 +2,11 @@
 
 struct PropertiesMapper
 {
-    PropertiesMapper() { initAllDefault();  }
+    PropertiesMapper() { initAllDefault(); dpi = 1.0f; }
     int  zoneslist_width;
 	tstring current_zone;
     bool center_mode;
+    float dpi;
 
     void initAllDefault()
     {

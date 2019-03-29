@@ -4,9 +4,9 @@
 class MapperRoomRender
 {
 public:
-    MapperRoomRender(int room_size, int corridor_size);
+    MapperRoomRender(int room_size, int corridor_size, int deflate_size);
     void setDC(HDC dc);
-    void setIcons(CImageList *icons);
+    void setIcons(CImageList *icons, int icons_size);
     void render(int dc_x, int dc_y, const Room *r, int type);
     void renderCursor(int dc_x, int dc_y, int color);
     void renderDummy(int dc_x, int dc_y);
@@ -32,10 +32,12 @@ private:
 private:
     int m_size;
     int m_csize;
+    int m_roomsizeDeflate;
     CDCHandle m_dc;
     CDCHandle m_hdc;
     CBrush m_roomBkg, m_blackBkg, m_whiteBkg, m_exitBkg;
-    CPen m_white, m_black, m_exit, m_exitL, m_yellow;
+    CPen m_white, m_black, m_bkg, m_exit, m_door, m_exitL, m_yellow;
     CBrush m_shadowBrush;
     CImageList *m_plist;
+    int m_icons_size;
 };

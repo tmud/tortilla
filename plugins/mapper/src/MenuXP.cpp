@@ -13,7 +13,7 @@ const DWORD DT_MYSTANDARD = DT_SINGLELINE | DT_LEFT | DT_VCENTER;
 class CMenuXPSeparator : public CMenuXPItem
 {
 public:
-    CMenuXPSeparator() {  m_bSeparator = true; }
+    CMenuXPSeparator() : CMenuXPItem(16) {  m_bSeparator = true; }
 };
 
 CMenuXP::CMenuXP()

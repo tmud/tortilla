@@ -123,6 +123,13 @@ private:
             return 0;
         }
 
+        HDC dc = GetDC();
+        float logpy = static_cast<float>(GetDeviceCaps(dc, LOGPIXELSY));
+        ReleaseDC(dc);
+        float dpi = logpy / 96;
+        PropertiesData *pdata = m_gameview.getPropData();
+        pdata->dpi = dpi;
+
         setTaskbarName();
         m_toolBar.create(this);
 
@@ -133,14 +140,9 @@ private:
         BITMAP bm;
         GetObject(images, sizeof(BITMAP), &bm);
 
-        HDC dc = GetDC();
-        float logpy = static_cast<float>(GetDeviceCaps(dc, LOGPIXELSY));
-        ReleaseDC(dc);
-        logpy /= 96;
-
         int src_size = bm.bmHeight;
         float float_size = static_cast<float>(src_size);
-        float_size = float_size * logpy;
+        float_size = float_size * dpi;
         int size = static_cast<int>(float_size);
 
         std::vector<CommandBarExImage> items;
@@ -168,7 +170,6 @@ private:
 
         CReBarCtrl rebar = m_hWndToolBar;
         CReBarSettings rbs;
-        PropertiesData *pdata = m_gameview.getPropData();
         rbs.Load(rebar, pdata->rebar);
 
         bool toolbar = rbs.IsVisible(rebar, ATL_IDW_BAND_FIRST+1);

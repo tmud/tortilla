@@ -38,10 +38,13 @@ public:
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
+    int ROOM_SIZE, MAP_EDGE;
+    int menu_size;
+
     CBrush m_background;
     MapCursor viewpos;
     MapCursor currentpos;
-    MapperRoomRender rr;
+    MapperRoomRender* rr;
 
     struct scroll {
         scroll() : pos(-1), maxpos(0) {}
@@ -70,7 +73,8 @@ class MapperRender : public CWindowImpl<MapperRender>
     HWND m_menu_handler;
     MapperRenderRoomMoveTool *m_roomMoveTool;
 public:
-    MapperRender();
+    MapperRender(int room_size, int corridor_size, int deflate_size, float dpi);
+    ~MapperRender();
     void setMenuHandler(HWND handler_wnd);
     void setMoveToolHandler(MapperRenderRoomMoveTool *movetool);
     void showPosition(MapCursor pos, bool centerScreen, bool currentPosition);

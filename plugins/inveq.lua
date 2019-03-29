@@ -8,7 +8,7 @@ function inveq.description()
   return 'Плагин отображает экипировку, которая одета на персонаже и инвентарь\r\nперсонажа в отдельном окне.'
 end
 function inveq.version()
-  return '1.01'
+  return '1.02'
 end
 
 local initialized = false
@@ -305,7 +305,12 @@ function inveq.init()
   initialized = false
   colors = { header = 80, tegs = 150, equipment = 180, inventory = 180 }
   if not db.load() then return end
-  local p = createPanel("right", 250)
+  local p
+  if createPanelDpi then
+    p = createPanelDpi("right", 250)
+  else
+    p = createPanel("right", 250)
+  end
   r = p:setRender(render)
   r:setBackground(props.backgroundColor())
   r:select(props.currentFont())

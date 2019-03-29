@@ -1217,11 +1217,11 @@ void initVisible(lua_State *L, int index, OutputWindow *w)
       w->initVisible(lua_toboolean(L, index) ? true : false);
 }
 
-int createWindow(lua_State *L)
+int createWindowImpl(lua_State *L, float dpi, const tchar* funcname)
 {
     EXTRA_CP;
     if (!_cp)
-        return pluginNotDeclared(L, L"createWindow");
+        return pluginNotDeclared(L, funcname);
     PluginData &p = find_plugin();
     OutputWindow w;
 
@@ -1230,7 +1230,9 @@ int createWindow(lua_State *L)
         tstring name( luaT_towstring(L, 1) );
         if (!p.findWindow(name, &w))
         {
-            p.initDefaultPos(300, 300, &w);
+            int width = static_cast<int>(350 * dpi);
+            int height = static_cast<int>(250 * dpi);
+            p.initDefaultPos(width, height, &w);
             initVisible(L, 2, &w);
             w.name = name;
             p.windows.push_back(w);
@@ -1243,8 +1245,8 @@ int createWindow(lua_State *L)
         tstring name( luaT_towstring(L, 1) );
         if (!p.findWindow(name, &w))
         {
-            int height = lua_tointeger(L, 3);
-            int width = lua_tointeger(L, 2);
+            int height = static_cast<int>(lua_tointeger(L, 3) * dpi);
+            int width = static_cast<int>(lua_tointeger(L, 2) * dpi);
             p.initDefaultPos(width, height, &w);
             initVisible(L, 4, &w);
             w.name = name;
@@ -1253,7 +1255,7 @@ int createWindow(lua_State *L)
         else { initVisible(L, 4, &w); }
     }
     else {
-        return pluginInvArgs(L, L"createWindow"); 
+        return pluginInvArgs(L, funcname);
     }
 
     PluginsView *window =  _wndMain.m_gameview.createDockPane(w, _cp);
@@ -1261,6 +1263,30 @@ int createWindow(lua_State *L)
         _cp->dockpanes.push_back(window);
     luaT_pushobject(L, window, LUAT_WINDOW);
     return 1;
+}
+
+int createWindow(lua_State *L)
+{
+    return createWindowImpl(L, 1.0f, L"createWindow");
+}
+
+int createWindowDpi(lua_State *L)
+{
+    PropertiesData* pdata = tortilla::getProperties();
+    float dpi = pdata->dpi;
+    return createWindowImpl(L, dpi, L"createWindowDpi");
+}
+
+int getDpi(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        PropertiesData* pdata = tortilla::getProperties();
+        float dpi = pdata->dpi;
+        lua_pushnumber(L, dpi);
+        return 1;
+    }
+    return pluginInvArgs(L, L"getDpi");
 }
 
 int pluginLog(lua_State *L)
@@ -1646,7 +1672,9 @@ bool initPluginsSystem()
     lua_register(L, "getParent", getParent);
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);
+    lua_register(L, "getDpi", getDpi);
     lua_register(L, "createWindow", createWindow);
+    lua_register(L, "createWindowDpi", createWindowDpi);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);

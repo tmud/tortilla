@@ -488,6 +488,7 @@ public:
        , show_system_commands(0), newline_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
        , soft_scroll(0), unknown_cmd(0), any_font(0), disable_alt(0), move_totray(0), disable_mccp(0)
+       , dpi(1.0f)
     {
         initDefaultColorsAndFont();
         initDisplay();
@@ -553,6 +554,7 @@ public:
 
         //skip title
         rebar = p.rebar;
+        dpi = p.dpi;
     }
 
 public:
@@ -650,6 +652,7 @@ public:
     int      disable_mccp;
 
     tstring title;        // name of main window (dont need to save)
+    float   dpi;          // dpi multiplier (dont need to save)
     tstring rebar;
 
     void initDefaultColorsAndFont()

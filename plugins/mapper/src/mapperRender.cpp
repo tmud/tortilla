@@ -2,12 +2,17 @@
 #include "mapperRender.h"
 #include "mapper.h"
 
-#define ROOM_SIZE 32
-#define MAP_EDGE 16
 extern Mapper* m_mapper_window;
 
-MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
+MapperRender::MapperRender(int room_size, int corridor_size, int deflate_size, float dpi)
 {
+    menu_size = static_cast<int>(16 * dpi);
+    ROOM_SIZE = static_cast<int>(room_size * dpi);
+    corridor_size = static_cast<int>(corridor_size * dpi);
+    deflate_size = static_cast<int>(deflate_size * dpi);
+    MAP_EDGE = ROOM_SIZE / 2;
+    rr = new MapperRoomRender(ROOM_SIZE, corridor_size, deflate_size);
+
     m_hscroll_flag = false;
     m_vscroll_flag = false;
     m_track_mouse = false;
@@ -16,6 +21,17 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
     m_roomMoveTool = NULL;
     currentpos = std::make_shared<MapNullCursorImplementation>();
     viewpos = std::make_shared<MapNullCursorImplementation>();
+
+    m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
+    CBitmap icons;
+    icons.LoadBitmap(IDB_ICONS);
+    m_icons.Add(icons, RGB(128, 0, 128));
+    rr->setIcons(&m_icons, menu_size);
+}
+
+MapperRender::~MapperRender()
+{
+    delete rr;
 }
 
 void MapperRender::setMenuHandler(HWND handler_wnd)
@@ -237,8 +253,7 @@ void MapperRender::onPaint()
     CPaintDC dc(m_hWnd);
     CMemoryDC mdc(dc, pos);
     mdc.FillRect(&pos, m_background);
-    rr.setDC(mdc);
-    rr.setIcons(&m_icons);
+    rr->setDC(mdc);
     renderMap();
 }
 
@@ -262,7 +277,7 @@ void MapperRender::renderMap()
     {
         int cursor_x = (p.x - sz.left) * ROOM_SIZE + render_x;
         int cursor_y = (p.y - sz.top) * ROOM_SIZE + render_y;
-        rr.renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1);
+        rr->renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1);
     }
 }
 
@@ -292,7 +307,7 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
 #endif
                 continue;
             }
-            rr.render(px, py, r, type);
+            rr->render(px, py, r, type);
         }
     }
 }
@@ -630,10 +645,7 @@ void MapperRender::mouseRightButtonDown()
 
 void MapperRender::createMenu()
 {
-    m_icons.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
-    CBitmap icons;
-    icons.LoadBitmap(IDB_ICONS);
-    m_icons.Add(icons, RGB(128, 0, 128));
+    int size = menu_size;
     m_single_room_menu.CreatePopupMenu();
     CMenuXP &m = m_single_room_menu;
     if (m_icons.GetImageCount() > 0)
@@ -643,14 +655,14 @@ void MapperRender::createMenu()
         for (int i = 0, e = m_icons.GetImageCount(); i < e; i++)
         {
             if (i != 0 && i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.GetIcon(i)));
         }
-        m.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m.AppendODPopup(pictures, new CMenuXPText(size, 0, L"Значок"));
+        m.AppendODMenu(new CMenuXPText(size, MENU_RESETICON, L"Удалить значок"));
         m.AppendSeparator();
     }
-    m.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m.AppendODMenu(new CMenuXPText(size, MENU_SETCOLOR, L"Цвет..."));
+    m.AppendODMenu(new CMenuXPText(size, MENU_RESETCOLOR, L"Сбросить цвет"));
     /*m.AppendSeparator();
 
     CMenuXP *newzone = new CMenuXP();
@@ -691,14 +703,14 @@ void MapperRender::createMenu()
         pictures->CreatePopupMenu();
         for (int i = 0, e = m_icons.GetImageCount(); i < e; i++) {
             if (i != 0 && i % 6 == 0) pictures->Break();
-            pictures->AppendODMenu(new CMenuXPButton(i + MENU_SETICON_FIRST, m_icons.ExtractIcon(i)));            
+            pictures->AppendODMenu(new CMenuXPButton(size, i + MENU_SETICON_FIRST, m_icons.GetIcon(i)));
         }
-        m2.AppendODPopup(pictures, new CMenuXPText(0, L"Значок"));
-        m2.AppendODMenu(new CMenuXPText(MENU_RESETICON, L"Удалить значок"));
+        m2.AppendODPopup(pictures, new CMenuXPText(size, 0, L"Значок"));
+        m2.AppendODMenu(new CMenuXPText(size, MENU_RESETICON, L"Удалить значок"));
         m2.AppendSeparator();
     }
-    m2.AppendODMenu(new CMenuXPText(MENU_SETCOLOR, L"Цвет..."));
-    m2.AppendODMenu(new CMenuXPText(MENU_RESETCOLOR, L"Сбросить цвет"));
+    m2.AppendODMenu(new CMenuXPText(size, MENU_SETCOLOR, L"Цвет..."));
+    m2.AppendODMenu(new CMenuXPText(size, MENU_RESETCOLOR, L"Сбросить цвет"));
     /*m2.AppendSeparator();
     m2.AppendODMenu(new CMenuXPText(MENU_NEWZONE, L"Создать новую зону..."));*/
 }
