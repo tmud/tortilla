@@ -69,7 +69,7 @@ RoomDir RoomDirHelper::getDirFromMsdp(const tstring& msdpdir)
         return RD_UP;
     }
     if (msdpdir == L"d" || msdpdir == L"D") {
-        return RD_UP;
+        return RD_DOWN;
     }
     assert(false);
     return RD_UNKNOWN;
