@@ -7,7 +7,7 @@
 #include "mapSmartTools.h"
 
 Mapper::Mapper(PropertiesMapper *props, const tstring& mapsFolder) : m_propsData(props), 
-m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
+m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder), m_view(32, 6, 4, props->dpi)
 {
 }
 

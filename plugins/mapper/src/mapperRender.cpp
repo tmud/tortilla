@@ -2,12 +2,16 @@
 #include "mapperRender.h"
 #include "mapper.h"
 
-#define ROOM_SIZE 32
-#define MAP_EDGE 16
 extern Mapper* m_mapper_window;
 
-MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
+MapperRender::MapperRender(int room_size, int corridor_size, int deflate_size, float dpi)
 {
+    ROOM_SIZE = static_cast<int>(room_size * dpi);
+    corridor_size = static_cast<int>(corridor_size * dpi);
+    deflate_size = static_cast<int>(deflate_size * dpi);
+    MAP_EDGE = ROOM_SIZE / 2;
+    rr = new MapperRoomRender(ROOM_SIZE, corridor_size, deflate_size);
+
     m_hscroll_flag = false;
     m_vscroll_flag = false;
     m_track_mouse = false;
@@ -16,6 +20,11 @@ MapperRender::MapperRender() : rr(ROOM_SIZE, 5)
     m_roomMoveTool = NULL;
     currentpos = std::make_shared<MapNullCursorImplementation>();
     viewpos = std::make_shared<MapNullCursorImplementation>();
+}
+
+MapperRender::~MapperRender()
+{
+    delete rr;
 }
 
 void MapperRender::setMenuHandler(HWND handler_wnd)
@@ -237,8 +246,8 @@ void MapperRender::onPaint()
     CPaintDC dc(m_hWnd);
     CMemoryDC mdc(dc, pos);
     mdc.FillRect(&pos, m_background);
-    rr.setDC(mdc);
-    rr.setIcons(&m_icons);
+    rr->setDC(mdc);
+    rr->setIcons(&m_icons);
     renderMap();
 }
 
@@ -262,7 +271,7 @@ void MapperRender::renderMap()
     {
         int cursor_x = (p.x - sz.left) * ROOM_SIZE + render_x;
         int cursor_y = (p.y - sz.top) * ROOM_SIZE + render_y;
-        rr.renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1);
+        rr->renderCursor(cursor_x, cursor_y, (pos->color() == RCC_NORMAL) ? 0 : 1);
     }
 }
 
@@ -292,7 +301,7 @@ void MapperRender::renderLevel(int z, int render_x, int render_y, int type, MapC
 #endif
                 continue;
             }
-            rr.render(px, py, r, type);
+            rr->render(px, py, r, type);
         }
     }
 }
