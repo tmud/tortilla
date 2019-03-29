@@ -111,6 +111,7 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
    int h = rp.bottom-rp.top + 1;
 
    HPEN old = m_hdc.SelectPen(m_white);
+   bool skip_north_line = false;
    if (r->dirs[RD_NORTH].exist)
    {
        if (anotherZone(r, RD_NORTH))
@@ -121,9 +122,8 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x,y,len,0);
            renderLine(x,y-1,len,0);
            renderLine(x,y-2,len,0);
-           renderLine(rp.left, rp.top, w, 0);
        }
-       else
+       else if (neighbor(r, RD_NORTH))
        {
            int x = ct.x;
            int x2 = ct.x + cs;
@@ -133,10 +133,20 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, 0, -len);
            renderLine(x2, y, len, 0);
            renderLine(x2, y, 0, -len);
+           skip_north_line = true;
+       }
+       else
+       {
+           int x = ct.x + cs / 2;
+           int y = ct.y;
+           renderLine(x, y, 0, -3);
+           renderLine(x + 1, y, 0, -3);
        }
    }
-   else  { renderLine(rp.left,rp.top,w,0); }
+   if (!skip_north_line)
+        { renderLine(rp.left,rp.top,w,0); }
 
+   bool skip_south_line = false;
    if (r->dirs[RD_SOUTH].exist)
    {
        if (anotherZone(r, RD_SOUTH))
@@ -147,9 +157,8 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, len, 0);
            renderLine(x, y + 1, len, 0);
            renderLine(x, y + 2, len, 0);
-           renderLine(rp.left, rp.bottom, w, 0);
        }
-       else
+       else if (neighbor(r, RD_SOUTH))
        {
            int x = cb.x;
            int x2 = cb.x + cs;
@@ -159,12 +168,21 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, 0, len);
            renderLine(x2, y, len, 0);
            renderLine(x2, y, 0, len);
+           skip_south_line = true;
+       }
+       else
+       {
+           int x = cb.x + cs / 2;
+           int y = cb.y;
+           renderLine(x, y, 0, 3);
+           renderLine(x + 1, y, 0, 3);
        }
    }
-   else
+   
+   if (!skip_south_line)
         { renderLine(rp.left, rp.bottom, w, 0);  }
 
-   
+   bool skip_west_line = false;
    if (r->dirs[RD_WEST].exist)
    {
        if (anotherZone(r, RD_WEST))
@@ -175,9 +193,8 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, 0, len);
            renderLine(x-1, y, 0, len);
            renderLine(x-2, y, 0, len);
-           renderLine(rp.left, rp.top, 0, h);
        }
-       else
+       else if (neighbor(r, RD_WEST))
        {
            int x = cl.x;
            int y = cl.y;
@@ -187,11 +204,20 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, -len, 0);
            renderLine(x, y2, 0, len);
            renderLine(x, y2, -len, 0);
+           skip_west_line = true;
+       }
+       else
+       {
+           int x = cl.x;
+           int y = cl.y + cs / 2;
+           renderLine(x, y, -3, 0);
+           renderLine(x, y+1, -3, 0);
        }
    }
-   else
+   if (!skip_west_line)
         { renderLine(rp.left,rp.top,0,h);  }
 
+   bool skip_east_line = false;
    if (r->dirs[RD_EAST].exist)
    {
        if (anotherZone(r, RD_EAST))
@@ -202,9 +228,8 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, 0, len);
            renderLine(x + 1, y, 0, len);
            renderLine(x + 2, y, 0, len);
-           renderLine(rp.right, rp.top, 0, h);
        }
-       else
+       else if (neighbor(r, RD_EAST))
        {
            int x = cr.x;
            int y = cr.y;
@@ -214,9 +239,17 @@ void MapperRoomRender::renderHole(int x, int y, const Room *r)
            renderLine(x, y, len, 0);
            renderLine(x, y2, 0, len);
            renderLine(x, y2, len, 0);
+           skip_east_line = true;
+       } 
+       else
+       {
+           int x = cr.x;
+           int y = cr.y + cs / 2;
+           renderLine(x, y, 3, 0);
+           renderLine(x, y + 1, 3, 0);
        }
    }
-   else
+   if (!skip_east_line)
    {
        renderLine(rp.right, rp.top, 0, h);
    }
