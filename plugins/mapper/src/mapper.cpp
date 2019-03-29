@@ -422,7 +422,7 @@ void Mapper::onToolbar(int id)
     }
 
     if (id == IDC_BUTTON_LEVEL0) {
-        MapCursor c = m_view.getCurrentPosition();
+        MapCursor c = m_view.getViewPosition();
         if (!c->valid())
             return;
         const Rooms3dCubePos& pos = c->pos();
