@@ -693,11 +693,6 @@ public:
         runcmd("getTextLen");
         return intresult();
     }
-    bool getHash(std::wstring* str)
-    {
-        runcmd("getHash");
-        return strresult(str);
-    }
     int blocks()            // count of blocks for selected string
     { 
         runcmd("blocks");

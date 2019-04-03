@@ -620,7 +620,6 @@ Cм. <a href="#props" class="cmd">props.component()</a>, <a href="#setComponent"
 <div class="cmd">void getPrompt(std::wstring *str)</div> - возвращает prompt-строку (без возможных команд в строке).
 <div class="cmd">void getText(std::wstring* str)</div> - полный текст строки (без учета расцветки).
 <div class="cmd">int  getTextLen()</div> - длина всей строки в символах (без учета расцветки).
-<div class="cmd">bool getHash(std::wstring* str)</div> - хэш сумма строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество отдельных блоков в текущей строке.
 <div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в текущей строке. Удаляет лишние или добавляет новые.
 <div class="cmd">bool get(int block, int param, unsigned int *value)</div> - значение параметра блока текущей строки. Допустимые значения параметра:
@@ -1508,7 +1507,6 @@ r:solidCircle{ x=100, y=100, r=60, color={r=100,g=200,b=100} }
 <div class="cmd">string getPrompt()</div> - содежимое prompt-строки (без игровых команд).
 <div class="cmd">string getText()</div> - полный текст строки (без учета расцветок отдельных блоков).
 <div class="cmd">int  getTextLen()</div> - длина полного текста строки.
-<div class="cmd">string getHash()</div> - хэш строки. Используется для быстрого сравнения строк.
 <div class="cmd">int  blocks()</div> - количество блоков в текущей строке.
 <div class="cmd">bool setBlocksCount(int count)</div> - устанавливает количество блоков в текущей строке. Удаляет лишние или добавляет новые.
 <div class="cmd">uint|nil get(int index, string attr)</div> - получает значение атрибута блока. Возможные варианты атрибута: 
