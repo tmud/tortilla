@@ -99,5 +99,6 @@ function loadsave.init()
   test1()
   test2_lua()
   test2_xml()
+  runCommand("#wait 2 { #plugin testloadsave off }")
 end
 return loadsave
