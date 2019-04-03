@@ -346,7 +346,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
     parseDataStrings &pds = parse_data.strings;
     if (parse_data.update_prev_string)
     {
-        MudViewString *s = parse_data.strings[0];
+        MudViewString *s = pds[0];
         if (s->prompt && s->gamecmd)
         {
             pds.erase(pds.begin());

@@ -6,7 +6,7 @@
 --[[ Как использовать:
 
 local function filter(vs)
-  -- функция фильтр для отбора нужных строк, vs - это viewstring
+  -- функция фильтр для отбора нужных строк, vs - это viewstring (см. SDK)
   -- 1 результат - false - строку не сохранять в триггере, true - строку сохранить/запомнить.
   -- 2 результат - false - строку оставить в исходном окне, true - удалить (дропнуть) из исходного окна.
   return true, false
@@ -38,6 +38,7 @@ function plugin.disconnect()
     t:disconnect()
   end
 end
+
 ]]
 
 function prompt_trigger(key_string, filter_function, skip_prompt_function)
@@ -82,6 +83,9 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
     local index,size = vd:getIndex(),vd:size()
     for i=index,size do
       vd:select(i)
+      if i == size and not vd:isLast() then
+        goto next
+      end
       if vd:isPrompt() then
         local skip = false
         if self.skip_prompt then
@@ -102,6 +106,7 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
         local s = self.strings
         s[#s+1] = vs
       end
+      ::next::
     end
     return false
   end
