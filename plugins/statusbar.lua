@@ -30,6 +30,7 @@ local tegs = { 'hp','mn','mv','xp','dsu','xpv' }
 local r, values, cfg
 local round = math.floor
 local scorecmd
+local dpi
 
 local XPVOld
 -- XPCurrentSession глобальная, чтобы хранить суммарный опыт независимо от перезапуска плагина
@@ -55,7 +56,7 @@ function statusbar.description()
 end
 
 function statusbar.version()
-    return '1.12'
+    return '1.13'
 end
 
 function statusbar.render()
@@ -143,28 +144,29 @@ function statusbar.drawbars()
   local pos = { x=4, y=(r:height()-h)/2, width=w, height=h }
   local poshp, posmn, posmv, posxp
 
+  local delta = 50 * dpi
   local hpbar = {val=values.hp,maxval=values.maxhp,text="HP:",brush1=objs.hpbrush1,brush2=objs.hpbrush2,color=colors.hp1}
   if statusbar.drawbar(hpbar, pos) then
-    poshp = pos.x + 50
+    poshp = pos.x + delta
     pos.x = pos.x + pos.width + delta_bars
   end
 
   local mnbar = {val=values.mn, maxval=values.maxmn,text="MA:",brush1=objs.mnbrush1,brush2=objs.mnbrush2,color=colors.mn1}
   if statusbar.drawbar(mnbar, pos) then
-    posmn = pos.x + 50
+    posmn = pos.x + delta
     pos.x = pos.x + pos.width + delta_bars
   end
 
   local mvbar = {val=values.mv,maxval=values.maxmv,text="MV:",brush1=objs.mvbrush1,brush2=objs.mvbrush2,color=colors.mv1}
   if statusbar.drawbar(mvbar, pos) then
-    posmv = pos.x + 50
+    posmv = pos.x + delta
     pos.x = pos.x + pos.width + delta_bars
   end
 
   if values.xpv and values.xpm then
     local expbar = {val=values.xpv,maxval=values.xpm,text="XP:",brush1=objs.expbrush1,brush2=objs.expbrush2,color=colors.exp1}
     if statusbar.drawbar(expbar, pos) then
-      posxp = pos.x + 50
+      posxp = pos.x + delta
       pos.x = pos.x + pos.width + delta_bars
     end
 
@@ -416,6 +418,7 @@ local function initmax(teg)
 end
 
 function statusbar.init()
+  dpi = getDpi()
   local file = loadTable('config.xml')
   if not file then
     cfg = nil
