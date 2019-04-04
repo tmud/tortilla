@@ -79,6 +79,8 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
       else
         return false
       end
+    else
+      vd:select(from)
     end
     local index,size = vd:getIndex(),vd:size()
     for i=index,size do

@@ -234,7 +234,7 @@ end
 
 local levels_trigger, levels_string_filter, levels_string_sep, level_prompt_filter_pcre
 local function levels_prompt_filter(s)
-  if level_prompt_filter_pcre:find(s) then
+  if level_prompt_filter_pcre and level_prompt_filter_pcre:find(s) then
     return true
   end
   return false
@@ -466,7 +466,7 @@ function statusbar.init()
           terminate('Настройка обновления уровней опыта levregexp.skipprompt задана неверно.')
         end
       end
-      levels_trigger = prompt_trigger(r.key, levels_filter, level_prompt_filter_pcre and levels_prompt_filter or nil)
+      levels_trigger = prompt_trigger(r.key, levels_filter, levels_prompt_filter)
       if not levels_trigger then
         terminate('Настройка обновления уровней опыта levregexp.key задана неверно.')
       end
