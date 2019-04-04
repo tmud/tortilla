@@ -227,21 +227,26 @@ bool CompareObject::compareFirstSymbols(const tstring& str)
 {
     if (!m_first_symbol || str.empty())
         return true;
-    if (m_second_symbol == 0)
+    if (m_second_symbol == 0) // working only with ^text key, check first string symbol
     {
         if (str.at(0) != m_first_symbol)
             return false;
         return true;
     }
-    size_t pos = str.find(m_first_symbol);
-    if (pos == tstring::npos)
-        return false;
-    pos++;
-    if (str.length() <= pos)
-        return false;
-    if (str.at(pos) != m_second_symbol)
-        return false;
-    return true;
+    size_t pos = 0;
+    size_t end = str.length();
+    while (true)
+    {
+        pos = str.find(m_first_symbol, pos);
+        if (pos == tstring::npos)
+            break;
+        pos++;
+        if (pos == end)
+            break;
+        if (str.at(pos) == m_second_symbol)
+            return true;
+    }
+    return false;
 }
 
 void CompareObject::getParameters(std::vector<tstring>* params) const

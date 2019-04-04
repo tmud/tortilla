@@ -1217,7 +1217,7 @@ int vd_translate(lua_State *L)
     if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TSTRING))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        tstring translate(luaT_towstring(L, 2));      
+        tstring translate(luaT_towstring(L, 2));
         if (!pdata->translate(&translate))
             return pluginInvArgsValues(L, L"viewdata:translate");
         luaT_pushwstring(L, translate.c_str());
@@ -1231,27 +1231,22 @@ int vd_replace(lua_State *L)
     if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TSTRING))
     {
         PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        tstring replace(luaT_towstring(L, 2));
-        if (!pdata->replace(replace))
+        tstring color(luaT_towstring(L, 2));
+        if (!pdata->replace(color, L"", true))
+            return pluginInvArgsValues(L, L"viewdata:replace");
+        return 0;
+    }
+    if (luaT_check(L, 3, LUAT_VIEWDATA, LUA_TSTRING, LUA_TSTRING))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        tstring color(luaT_towstring(L, 2));
+        tstring str(luaT_towstring(L, 3));
+        if (!pdata->replace(color, str, false))
             return pluginInvArgsValues(L, L"viewdata:replace");
         return 0;
     }
     return pluginInvArgs(L, L"viewdata:replace");
 }
-
-int vd_color(lua_State* L)
-{
-    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TSTRING))
-    {
-        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        tstring color(luaT_towstring(L, 2));
-        if (!pdata->color(color))
-            return pluginInvArgsValues(L, L"viewdata:color");
-        return 0;
-    }
-    return pluginInvArgs(L, L"viewdata:color");
-}
-
 
 int vd_createViewString(lua_State *L)
 {
@@ -1386,7 +1381,6 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "getKey", vd_getKey);
     regFunction(L, "translate", vd_translate);
     regFunction(L, "replace", vd_replace);
-    regFunction(L, "color", vd_color);
     regFunction(L, "createViewString", vd_createViewString);
     regFunction(L, "print", vd_print);
     regFunction(L, "__towatch", vd_toWatch);

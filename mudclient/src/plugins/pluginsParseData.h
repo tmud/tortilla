@@ -241,42 +241,44 @@ public:
         }
         return false;
     }
-    
-    bool replace(const tstring& string)
+
+    bool replace(const tstring& color, const tstring& string, bool skip_string)
     {
         if (tdata && isselected())
         {
+            if (color.empty() && skip_string)
+                return true;
             CompareRange range;
             if (tdata->getCompareRange(selected, &range))
             {
                 MudViewString *s = getselected();
                 CompareData cdata(s);
                 int pos = cdata.fold(range);
-                if (pos == -1) return false;
-                MudViewStringBlock &b = s->blocks[pos];
-                if (string.empty())
-                    s->blocks.erase(s->blocks.begin() + pos);
-                else
-                    b.string = string;
-                PluginViewString *pvs = getselected_pvs();
-                convert(s, pvs);
+                if (pos == -1)
+                    return false;
                 s->changed = true;
                 s->subs_processed = true;
-                if (s->getTextLen() == 0) {
-                    s->dropped = true;
-                    s->show_dropped = false;
+                if (!skip_string)
+                {
+                    MudViewStringBlock &b = s->blocks[pos];
+                    b.string = string;
+                    PluginViewString *pvs = getselected_pvs();
+                    convert(s, pvs);
+                }
+                if (!color.empty())
+                {
+                    PropertiesHighlight ph;
+                    ph.convertFromString(color);
+                    MudViewStringParams &p = s->blocks[pos].params;
+                    p.use_ext_colors = 1;
+                    p.ext_text_color = ph.textcolor;
+                    p.ext_bkg_color = ph.bkgcolor;
+                    p.underline_status = ph.underlined;
+                    p.blink_status = ph.border;
+                    p.italic_status = ph.italic;
                 }
                 return true;
             }
-        }
-        return false;
-    }
-
-    bool color(const tstring& color)
-    {
-        if (tdata && isselected())
-        {
-           // return tdata->color(string);
         }
         return false;
     }

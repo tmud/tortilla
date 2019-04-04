@@ -454,7 +454,6 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
         {
             // выполняем команды actions триггеров
             runCommands(e->commands);
-            int x = 1;
         }
 
         // eсли еще есть и триггеры, то дообрабатываем в actions

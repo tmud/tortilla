@@ -1546,6 +1546,21 @@ int translateColors(lua_State *L)
     return pluginInvArgs(L, L"translateColors");
 }
 
+int createColor(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring p(luaT_towstring(L, 1));
+        HighlightHelper hh;
+        if (!hh.translateColor(&p))
+            return 0;
+        luaT_pushwstring(L, p.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"createColor");
+}
+
 int getVersion(lua_State *L)
 {
     EXTRA_CP;
@@ -1690,6 +1705,7 @@ bool initPluginsSystem()
     lua_register(L, "vprint", vprint);
     lua_register(L, "clearView", clearView);
     lua_register(L, "translateColors", translateColors);
+    lua_register(L, "createColor", createColor);
     lua_register(L, "getVersion", getVersion);
     lua_register(L, "checkVersion", checkVersion);
     lua_register(L, "isGroupActive", isGroupActive);

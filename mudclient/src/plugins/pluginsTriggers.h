@@ -33,7 +33,7 @@ class PluginsTrigger : public triggerKeyData
 public:
     PluginsTrigger();
     ~PluginsTrigger();
-    bool init(lua_State *pl, Plugin *pp);
+    bool init(lua_State *pl, Plugin *pp, bool endline_mode);
     void enable(bool enable);
     bool isEnabled() const;
     int  getLen() const;

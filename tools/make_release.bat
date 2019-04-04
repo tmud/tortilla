@@ -35,6 +35,7 @@ xcopy ..\modules\modules.lua tortilla\modules /Y
 xcopy ..\modules\soundplayer.lua tortilla\modules /Y
 xcopy ..\modules\voice.dll tortilla\modules /Y
 xcopy ..\modules\trprompt.lua tortilla\modules /Y
+xcopy ..\modules\generic.lua tortilla\modules /Y
 
 xcopy ..\plugins\jmc3import.dll tortilla\plugins /Y
 xcopy ..\plugins\tray.dll tortilla\plugins /Y
@@ -57,8 +58,8 @@ xcopy ..\plugins\speedwalk.lua tortilla\plugins /Y
 xcopy ..\plugins\faq.lua tortilla\plugins /Y
 xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 xcopy ..\plugins\msdpmapper.lua tortilla\plugins /Y
-xcopy ..\plugins\mapper.lua tortilla\plugins /Y
 xcopy ..\plugins\mapper.dll tortilla\plugins /Y
+xcopy ..\plugins\generic.lua tortilla\plugins /Y
 
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
 xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
