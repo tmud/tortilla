@@ -1,6 +1,9 @@
 ﻿-- modules.lua
 -- загрузчик модулей
 
+if modules then return end
+modules = "loaded"
+
 function pairsByKeys (t, f)
   local a = {}
   for n in pairs(t) do table.insert(a, n) end
@@ -69,20 +72,6 @@ function array_class:set(x,y,v)
   end
   self:logerr(x, y, 'set')
 end
-------------------------------------------------------------------
-off = {}
-local t = system.loadTextFile('../off.txt')
-if not t then
-  t = system.loadTextFile('../resources/off.txt')
-  if t then
-    system.saveTextFile('../off.txt', t)
-  end
-end
-if t then
-  for _,s in ipairs(t) do 
-    if not s:contain('# ') then off[s] = true end
-  end
-end
 
 local function prequire(m)
   local ok, mod = pcall(require, m)
@@ -90,33 +79,28 @@ local function prequire(m)
   return mod
 end
 
-if not off.sound then
+local res, err
+bass,err = prequire('lbass')
 if not bass then
-  local res, err
-  bass,err = prequire('lbass')
-  if not bass then
+  print (err)
+else
+  res, err = bass.init()
+  if not res then
     print (err)
+    bass = nil
   else
-    res, err = bass.init()
-    if not res then
-      print (err)
-    else
-      regUnloadFunction(bass.free)
-    end
+    regUnloadFunction(bass.free)
   end
 end
-end
 
-if not off.voice then
 lvoice,err = prequire ('voice')
 if lvoice then
   if lvoice.init() then
     regUnloadFunction(lvoice.release)
   else
-    lvoice = nil
     print("[lvoice] Ошибка при инициализации модуля.")
+    lvoice = nil
   end
 else
   print("[lvoice] Ошибка при загрузке модуля: "..err)
-end
 end

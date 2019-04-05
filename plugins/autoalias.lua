@@ -3,7 +3,7 @@
 
 local autoalias = {}
 function autoalias.name() 
-  return 'Плагин авто подбора макросов.'
+  return 'Плагин авто подбора макросов'
 end
 
 function autoalias.description()
