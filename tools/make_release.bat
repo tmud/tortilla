@@ -23,8 +23,15 @@ cd resources
 md sound
 cd ..
 cd ..
-
 md sdk
+
+md profiles
+xcopy ..\resources\profiles\*.* profiles\ /E /Y
+cd profiles
+..\7za.exe a -mcu -tzip ..\profiles.pak *
+cd ..
+rd profiles /s /q
+move profiles.pak tortilla/
 
 xcopy ..\help\*.* tortilla\help /Y
 
@@ -79,7 +86,6 @@ xcopy ..\plugins\miner.lua tortilla\plugins /Y
 xcopy ..\plugins\miner.bmp tortilla\plugins /Y
 
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
-xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y
 xcopy ..\%prod%\api.dll tortilla /Y
