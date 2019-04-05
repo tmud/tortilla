@@ -314,7 +314,7 @@ int trigger_towatch(lua_State *L)
 void reg_mt_trigger(lua_State *L)
 {
     lua_register(L, "createTrigger", trigger_create);
-    lua_register(L, "createSubTrigger", trigger_create_sub);
+    //lua_register(L, "createSubTrigger", trigger_create_sub);
     luaL_newmetatable(L, "trigger");
     regFunction(L, "enable", trigger_enable);
     regFunction(L, "disable", trigger_disable);

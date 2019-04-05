@@ -262,8 +262,6 @@ public:
                 {
                     MudViewStringBlock &b = s->blocks[pos];
                     b.string = string;
-                    PluginViewString *pvs = getselected_pvs();
-                    convert(s, pvs);
                 }
                 if (!color.empty())
                 {
@@ -277,6 +275,8 @@ public:
                     p.blink_status = ph.border;
                     p.italic_status = ph.italic;
                 }
+                PluginViewString *pvs = getselected_pvs();
+                convert(s, pvs);
                 return true;
             }
         }

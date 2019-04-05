@@ -55,7 +55,7 @@ function gentr.sub(macro, substring, color)
     local scolor = ""
     if color then  scolor = createColor(color) end
     if scolor then
-      createSubTrigger(macro, function(vd) dosub(vd, substring, scolor) end)
+      createTrigger(macro, function(vd) dosub(vd, substring, scolor) end)
       return
     end
   end
@@ -64,7 +64,7 @@ end
 
 function gentr.gag(macro)
   if str_ne(macro) then
-    createSubTrigger(macro, function(vd) dosub(vd) end)
+    createTrigger(macro, function(vd) dosub(vd, "") end)
     return
   end
   err("gag(", macro,  ")")
@@ -74,7 +74,7 @@ function gentr.highlight(macro, color)
   if str_ne(macro) and str_ne(color) then
     local scolor = createColor(color)
     if scolor then
-      createSubTrigger(macro, function(vd) dosub(vd, nil, scolor) end)
+      createTrigger(macro, function(vd) dosub(vd, nil, scolor) end)
       return
     end
   end
