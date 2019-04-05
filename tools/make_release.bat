@@ -75,7 +75,6 @@ xcopy ..\mudclient\readme.txt tortilla\help /Y
 xcopy ..\mudclient\changelog.txt tortilla\help /Y
 
 xcopy ..\sdk\*.* sdk /E /Y
-xcopy ..\modules\modules.txt sdk /Y
 
 7za.exe a -mcu -tzip %filename% tortilla
 7za.exe a -mcu -tzip %sdk% sdk -xr!.gitignore
