@@ -378,7 +378,7 @@ struct PanelWindow
 struct PluginData
 {
     enum State { PDS_OFF, PDS_ON, PDS_HIDDEN };
-    PluginData() : state(PluginData::PDS_HIDDEN) {}
+    PluginData() : state(PluginData::PDS_OFF) {}
     tstring name;
     PluginData::State state;
     std::vector<OutputWindow> windows;

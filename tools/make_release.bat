@@ -31,7 +31,7 @@ cd profiles
 ..\7za.exe a -mcu -tzip ..\profiles.pak *
 cd ..
 rd profiles /s /q
-move profiles.pak tortilla/
+move profiles.pak tortilla/resources
 
 xcopy ..\help\*.* tortilla\help /Y
 
