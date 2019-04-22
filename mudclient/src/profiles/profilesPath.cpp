@@ -1,5 +1,47 @@
 ﻿#include "stdafx.h"
 #include "profilesPath.h"
+#include "zip.h"
+
+#ifdef _DEBUG
+#pragma comment(lib, "libzipd.lib")
+#else
+#pragma comment(lib, "libzip.lib")
+#endif
+
+ProfilesInZipHelper::ProfilesInZipHelper(const char* file)
+{
+    struct zip_t *zip = zip_open(file, 0, 'r');
+    if (!zip)
+        return;
+    int elements = zip_total_entries(zip);
+    for (int i = 0; i < elements; ++i)
+    {
+        zip_entry_openbyindex(zip, i);
+        if (!zip_entry_isdir(zip))
+        {
+            zip_entry_close(zip);
+            continue;
+        }
+        tstring dir(TU2W(zip_entry_name(zip)));
+        zip_entry_close(zip);
+        if (dir.empty())
+        {
+            assert(false);
+            continue;
+        }
+        int last = dir.size() - 1;
+        if (dir[last] != L'/')
+        {
+            assert(false);
+            continue;
+        }
+        dir = dir.substr(0, last);
+        if (dir.find(L'/') != tstring::npos)
+            continue;
+        dirs.push_back(dir);
+    }
+    zip_close(zip);
+}
 
 ProfilesDirsListHelper::ProfilesDirsListHelper(const tstring& dir)
 {

@@ -1,5 +1,12 @@
 ﻿#pragma once
 
+class ProfilesInZipHelper
+{
+public:
+    ProfilesInZipHelper( const char* file);
+    std::vector<tstring> dirs;
+};
+
 class ProfileDirHelper
 {
 public:

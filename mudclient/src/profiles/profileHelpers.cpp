@@ -137,10 +137,22 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
     ChangeDir cd;
     if (cd.changeDir(L"resources"))
     {
-        ProfilesDirsListHelper ph(L"profiles");
-        for (int i=0,e=ph.dirs.size();i<e;++i)
+        std::vector<tstring> templates;
+        ProfilesInZipHelper zip("profiles.pak");
+        if (zip.dirs.empty())
         {
-            const tstring& d = ph.dirs[i];
+#ifdef _DEBUG
+            ProfilesDirsListHelper ph(L"profiles");
+            templates.swap(ph.dirs);
+#endif
+        }
+        else
+        {
+            templates.swap(zip.dirs);
+        }
+        for (int i=0,e=templates.size();i<e;++i)
+        {
+            const tstring& d = templates[i];
             int index = -1;
             for (int j=0,je=m_groups.size();j<je;++j) {
                 if (m_groups[j].first == d) { index = j; break; }
