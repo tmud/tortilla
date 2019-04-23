@@ -5,7 +5,8 @@ if "%1" == "debug" set windbg=1
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
-set sdk="sdk_%ver%.zip"
+set sdk="sdk.zip"
+set decoda="decoda.zip"
 
 set prod=Release
 if %windbg% == 1 set prod=Debug
@@ -31,7 +32,7 @@ cd profiles
 ..\7za.exe a -mcu -tzip ..\profiles.pak *
 cd ..
 rd profiles /s /q
-move profiles.pak tortilla/resources
+move profiles.pak tortilla\resources
 
 xcopy ..\help\*.* tortilla\help /Y
 
@@ -97,10 +98,12 @@ xcopy ..\mudclient\changelog.txt tortilla\help /Y
 
 xcopy ..\sdk\*.* sdk /E /Y
 
+7za.exe a -mcu -tzip %sdk% sdk -xr!.gitignore -xr!decoda
+7za.exe a -mcu -tzip %decoda% sdk/decoda
+move %sdk% tortilla\resources
+rd sdk /s /q
 7za.exe a -mcu -tzip %filename% tortilla
-7za.exe a -mcu -tzip %sdk% sdk -xr!.gitignore
 
 rd tortilla /s /q
-rd sdk /s /q
 
 pause
