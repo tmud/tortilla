@@ -142,8 +142,8 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
         if (zip.dirs.empty())
         {
 #ifdef _DEBUG
-            ProfilesDirsListHelper ph(L"profiles");
-            templates.swap(ph.dirs);
+         //   ProfilesDirsListHelper ph(L"profiles");
+         //   templates.swap(ph.dirs);
 #endif
         }
         else
@@ -174,7 +174,7 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
     dlg.getProfile(&dst);
     cd.restoreDir();
     m_created_profile = dst;
-    if (createFromResource(src, dst))
+    if (createFromResourcePak(src, dst))
     {
         return createSettingsFile(dst);
     }
@@ -191,7 +191,6 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
     }
 
     ProfilesList srcprofiles;
-
     tstring srcpath;
     if (src.name.empty())
     {
@@ -218,7 +217,7 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
         ProfileDirHelper dh;
         for (int i=1,e=fl.dirs.size();i<e;++i)
         {
-            tstring srcdir(fl.dirs[i]);      
+            tstring srcdir(fl.dirs[i]);
             srcdir = srcdir.substr(path_len);
             if (srcdir.empty())
                 continue;
@@ -270,16 +269,23 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
     return true;
 }
 
-bool NewProfileHelper::createFromResource(const Profile& src, const Profile& dst)
+bool NewProfileHelper::createFromResourcePak(const Profile& src, const Profile& dst)
 {
-    int index = -1;
-    for (int i=0,e=m_groups.size();i<e;++i) {
-       if (m_groups[i].first == src.group) { index = i; break; }
-    }
-    if (index == -1)
+    CopyProfileFromZipHelper zip;
+    if (!zip.copyProfile("resources\\profiles.pak", src.group, dst.group))
+    {
+#ifdef _DEBUG
+       // return createFromResourceFolder(src, dst);
         return false;
-    int type = m_groups[index].second;
+#else
+        return false;
+#endif
+    }
+    return true;
+}
 
+bool NewProfileHelper::createFromResourceFolder(const Profile& src, const Profile& dst)
+{
     // список файлов и каталогов
     tstring path(L"resources\\profiles\\");
     path.append(src.group);

@@ -3,8 +3,14 @@
 class ProfilesInZipHelper
 {
 public:
-    ProfilesInZipHelper( const char* file);
+    ProfilesInZipHelper(const char* file);
     std::vector<tstring> dirs;
+};
+
+class CopyProfileFromZipHelper
+{
+public:
+    bool copyProfile(const char* file, const tstring& profile, const tstring& targetdir);
 };
 
 class ProfileDirHelper

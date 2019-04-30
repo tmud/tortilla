@@ -43,6 +43,100 @@ ProfilesInZipHelper::ProfilesInZipHelper(const char* file)
     zip_close(zip);
 }
 
+class filewriter {
+    HANDLE file;
+    static filewriter* callback;
+public:
+    filewriter() : file(INVALID_HANDLE_VALUE) {
+        assert(callback == nullptr);
+        callback = this;
+    }
+    ~filewriter() {
+        callback = nullptr;
+        if (file != INVALID_HANDLE_VALUE)
+            CloseHandle(file);
+    }
+    bool init(const tstring filename) {
+        file = CreateFile(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file == INVALID_HANDLE_VALUE)
+            return false;
+        return true;
+    }
+    size_t on_extract(void *arg, unsigned long long offset, const void *data, size_t size)
+    {
+        if (file == INVALID_HANDLE_VALUE)
+            return 0;
+        DWORD written = 0;
+        if (!WriteFile(file, data, (DWORD)size, &written, NULL))
+            return 0;
+        return written;
+    }
+
+    static size_t clbk_on_extract(void *arg, unsigned long long offset, const void *data, size_t size)
+    {
+        if (callback)
+            return callback->on_extract(arg, offset, data, size);
+        return 0;
+    }
+};
+filewriter* filewriter::callback = nullptr;
+
+bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& profile, const tstring& targetdir)
+{
+    struct zip_t *zip = zip_open(file, 0, 'r');
+    if (!zip)
+        return false;
+    bool result = false;
+    std::vector<int> files;
+    int elements = zip_total_entries(zip);
+    for (int i = 0; i < elements; ++i)
+    {
+        zip_entry_openbyindex(zip, i);
+        if (!zip_entry_isdir(zip))
+        {
+            tstring file(TU2W(zip_entry_name(zip)));
+            if (file.find(profile) == 0)
+                files.push_back(i);
+        }
+        zip_entry_close(zip);
+    }
+    if (!files.empty()) 
+    {
+        result = true;
+        for (int i : files)
+        {
+            zip_entry_openbyindex(zip, i);
+            tstring file(TU2W(zip_entry_name(zip)));
+
+            ProfileDirHelper dh;
+            if (!dh.makeDir(targetdir, file))
+            {
+                return false;
+            }
+            filewriter fw;
+            if (!fw.init(file))
+            {
+                result = false;
+                break;
+            }
+            if (!zip_entry_extract(zip, &filewriter::clbk_on_extract, 0))
+            {
+                // success
+                zip_entry_close(zip);
+
+            }
+            else
+            {
+                zip_entry_close(zip);
+                result = false;
+                break;
+            }
+        }
+    }
+    zip_close(zip);
+    return result;
+}
+
 ProfilesDirsListHelper::ProfilesDirsListHelper(const tstring& dir)
 {
     WIN32_FIND_DATA fd;

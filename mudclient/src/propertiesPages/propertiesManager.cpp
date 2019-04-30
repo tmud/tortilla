@@ -26,7 +26,7 @@ bool PropertiesManager::init()
 
     m_first_startup = false;
     int last = groups.getLast();
-    if (last == -1)
+    //if (last == -1)
     {
         NewProfileHelper h;
         if (!h.createFromResources(groups))
