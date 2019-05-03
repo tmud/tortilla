@@ -10,7 +10,7 @@ public:
 class CopyProfileFromZipHelper
 {
 public:
-    bool copyProfile(const char* file, const tstring& profile, const tstring& targetdir);
+    bool copyProfile(const char* file, const tstring& profile, const tstring& targetdir, const tstring& profilename);
 };
 
 class ProfileDirHelper

@@ -43,20 +43,24 @@ ProfilesInZipHelper::ProfilesInZipHelper(const char* file)
     zip_close(zip);
 }
 
-class filewriter {
+class zipfilewriter
+{
     HANDLE file;
-    static filewriter* callback;
+    static zipfilewriter* callback;
 public:
-    filewriter() : file(INVALID_HANDLE_VALUE) {
-        assert(callback == nullptr);
-        callback = this;
+    zipfilewriter() : file(INVALID_HANDLE_VALUE)
+    {
     }
-    ~filewriter() {
+    ~zipfilewriter()
+    {
         callback = nullptr;
         if (file != INVALID_HANDLE_VALUE)
             CloseHandle(file);
     }
-    bool init(const tstring filename) {
+    bool init(const tstring& filename)
+    {
+        assert(callback == nullptr);
+        callback = this;
         file = CreateFile(filename.c_str(), GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file == INVALID_HANDLE_VALUE)
             return false;
@@ -79,9 +83,9 @@ public:
         return 0;
     }
 };
-filewriter* filewriter::callback = nullptr;
+zipfilewriter* zipfilewriter::callback = nullptr;
 
-bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& profile, const tstring& targetdir)
+bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& profile, const tstring& targetdir, const tstring& profilename)
 {
     struct zip_t *zip = zip_open(file, 0, 'r');
     if (!zip)
@@ -107,27 +111,35 @@ bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& prof
         {
             zip_entry_openbyindex(zip, i);
             tstring file(TU2W(zip_entry_name(zip)));
-
-            ProfileDirHelper dh;
-            if (!dh.makeDir(targetdir, file))
-            {
-                return false;
+            file = file.substr(targetdir.length()+1);
+            size_t last = file.find_last_of(L'/');
+            if (last == tstring::npos) {
+                result = false;
+                break;
             }
-            filewriter fw;
-            if (!fw.init(file))
+            tstring dir(file.substr(0, last));
+            ProfileDirHelper dh;
+            if (!dh.makeDir(targetdir, dir))
             {
                 result = false;
                 break;
             }
-            if (!zip_entry_extract(zip, &filewriter::clbk_on_extract, 0))
+            ProfilePath pp(targetdir, file);
+            tstring filepath(pp);
+            zipfilewriter fw;
+            if (!fw.init(filepath))
             {
-                // success
-                zip_entry_close(zip);
-
+                result = false;
+                break;
+            }
+            bool success = (!zip_entry_extract(zip, &zipfilewriter::clbk_on_extract, 0));
+            zip_entry_close(zip);
+            
+            if (success)
+            {
             }
             else
             {
-                zip_entry_close(zip);
                 result = false;
                 break;
             }
