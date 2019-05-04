@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "propertiesPages/propertiesData.h"
 
 class ProfilesInZipHelper
 {
@@ -10,7 +11,7 @@ public:
 class CopyProfileFromZipHelper
 {
 public:
-    bool copyProfile(const char* file, const tstring& profile, const tstring& targetdir, const tstring& profilename);
+    bool copyProfile(const char* zipfile, const Profile& src, const Profile& dst);
 };
 
 class ProfileDirHelper

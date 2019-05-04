@@ -85,9 +85,9 @@ public:
 };
 zipfilewriter* zipfilewriter::callback = nullptr;
 
-bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& profile, const tstring& targetdir, const tstring& profilename)
+bool CopyProfileFromZipHelper::copyProfile(const char* zipfile, const Profile& src, const Profile& dst)
 {
-    struct zip_t *zip = zip_open(file, 0, 'r');
+    struct zip_t *zip = zip_open(zipfile, 0, 'r');
     if (!zip)
         return false;
     bool result = false;
@@ -99,7 +99,7 @@ bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& prof
         if (!zip_entry_isdir(zip))
         {
             tstring file(TU2W(zip_entry_name(zip)));
-            if (file.find(profile) == 0)
+            if (file.find(src.group) == 0)
                 files.push_back(i);
         }
         zip_entry_close(zip);
@@ -110,21 +110,50 @@ bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& prof
         for (int i : files)
         {
             zip_entry_openbyindex(zip, i);
-            tstring file(TU2W(zip_entry_name(zip)));
-            file = file.substr(targetdir.length()+1);
-            size_t last = file.find_last_of(L'/');
-            if (last == tstring::npos) {
-                result = false;
-                break;
+            tstring dst_file(TU2W(zip_entry_name(zip)));
+            dst_file = dst_file.substr(src.group.length() + 1);
+
+            tstring filename(dst_file);
+            size_t pos = dst_file.rfind(L"/");
+            if (pos != tstring::npos)
+                filename = dst_file.substr(pos + 1);
+            tstring name(filename);
+            size_t ext_pos = filename.rfind(L".");
+            if (ext_pos != tstring::npos)
+                name = filename.substr(0, ext_pos);
+            bool name_changed = false;
+            if (name == src.name) {
+                name = dst.name; name_changed = true;
             }
-            tstring dir(file.substr(0, last));
-            ProfileDirHelper dh;
-            if (!dh.makeDir(targetdir, dir))
+            if (ext_pos != tstring::npos)
+                name.append(filename.substr(ext_pos));
+            filename = name;
+            if (pos != tstring::npos)
+            {
+                filename.assign(dst_file.substr(0, pos + 1));
+                filename.append(name);
+            }
+            ProfilePath pp(dst.group, filename);
+            DWORD a = GetFileAttributes(pp);
+            if (a != INVALID_FILE_ATTRIBUTES && !name_changed)
+            {
+                zip_entry_close(zip);
+                continue;
+            }
+
+            size_t last = filename.find_last_of(L'/');
+            if (last == tstring::npos)
             {
                 result = false;
                 break;
             }
-            ProfilePath pp(targetdir, file);
+            tstring dir(filename.substr(0, last));
+            ProfileDirHelper dh;
+            if (!dh.makeDir(dst.group, dir))
+            {
+                result = false;
+                break;
+            }
             tstring filepath(pp);
             zipfilewriter fw;
             if (!fw.init(filepath))
@@ -133,17 +162,15 @@ bool CopyProfileFromZipHelper::copyProfile(const char* file, const tstring& prof
                 break;
             }
             bool success = (!zip_entry_extract(zip, &zipfilewriter::clbk_on_extract, 0));
-            zip_entry_close(zip);
-            
-            if (success)
-            {
-            }
-            else
+            if (!success)
             {
                 result = false;
                 break;
             }
+            zip_entry_close(zip);
         }
+        if (!result)
+            zip_entry_close(zip);
     }
     zip_close(zip);
     return result;

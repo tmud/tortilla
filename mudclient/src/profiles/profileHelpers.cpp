@@ -272,7 +272,7 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
 bool NewProfileHelper::createFromResourcePak(const Profile& src, const Profile& dst)
 {
     CopyProfileFromZipHelper zip;
-    if (!zip.copyProfile("resources\\profiles.pak", src.group, dst.group, dst.name ))
+    if (!zip.copyProfile("resources\\profiles.pak", src, dst ))
     {
 #ifdef _DEBUG
        // return createFromResourceFolder(src, dst);
