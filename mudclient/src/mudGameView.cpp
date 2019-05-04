@@ -81,19 +81,23 @@ void MudGameView::onSelectProfile()
     }
     if (!profile.copy_from_src)
     {
-        if (profile.create_empty)
+        if (!profile.create_empty)
         {
-            // new empty profile
-            if (newProfile(profile.profile) && profile.create_link)
+            // new profile from resources
+            CopyProfileFromZipHelper zip;
+            Profile src; src.group = profile.profile.group; src.name = L"player";
+            if (zip.copyProfile("resources\\profiles.pak", src, profile.profile) && profile.create_link)
                 createLink(profile.profile);
+#ifdef _DEBUG
+            //Profile resources; resources.group = profile.profile.group;
+            //if (copyProfile(profile.profile, resources) && profile.create_link)
+            //    createLink(profile.profile);
+#endif
+            return;
         }
-        else
-        {
-            // new empty profile from resources
-            Profile resources; resources.group = profile.profile.group;
-            if (copyProfile(profile.profile, resources) && profile.create_link)
-                createLink(profile.profile);
-        }
+        // new empty profile
+        if (newProfile(profile.profile) && profile.create_link)
+            createLink(profile.profile);
         return;
     }
     // new profile and copy from src profile

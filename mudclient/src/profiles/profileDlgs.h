@@ -67,8 +67,8 @@ private:
             if (zip.dirs.empty())
             {
 #ifdef _DEBUG
-                ProfilesDirsListHelper ph(L"profiles");
-                templates.swap(ph.dirs);
+                //ProfilesDirsListHelper ph(L"profiles");
+                //templates.swap(ph.dirs);
 #endif
             }
             else
