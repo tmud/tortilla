@@ -1,4 +1,18 @@
 ﻿#pragma once
+#include "propertiesPages/propertiesData.h"
+
+class ProfilesInZipHelper
+{
+public:
+    ProfilesInZipHelper(const char* file);
+    std::vector<tstring> dirs;
+};
+
+class CopyProfileFromZipHelper
+{
+public:
+    bool copyProfile(const char* zipfile, const Profile& src, const Profile& dst);
+};
 
 class ProfileDirHelper
 {

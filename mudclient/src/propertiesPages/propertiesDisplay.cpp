@@ -69,9 +69,15 @@ bool PropertiesDisplay::loadOnlyPlugins(xml::node root_node)
            continue;
         PluginData pd;
         pd.name = name;
+        pd.state = PluginData::PDS_HIDDEN;
         int state = 0;
-        if (p[i].get(L"value", &state) && state == 1)
-            pd.state = 1;
+        if (p[i].get(L"value", &state))
+        {
+            if (state == 1)
+                pd.state = PluginData::PDS_ON;
+            if (state == 0)
+                pd.state = PluginData::PDS_OFF;
+        }
         xml::request pw(p[i], L"windows/window");
         if (!pw.empty())
         {
@@ -107,7 +113,12 @@ void PropertiesDisplay::save(xml::node root_node)
         PluginData &pd = plugins_data[i];
         xml::node pn = p.createsubnode(L"plugin");
         pn.set(L"key", pd.name);
-        pn.set(L"value", pd.state);
+        int state = 2;
+        if (pd.state == PluginData::PDS_OFF)
+            state = 0;
+        if (pd.state == PluginData::PDS_ON)
+            state = 1;
+        pn.set(L"value", state);
         if (!pd.windows.empty())
         {
             xml::node w = pn.createsubnode(L"windows");

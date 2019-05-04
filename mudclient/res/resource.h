@@ -104,6 +104,7 @@
 #define IDC_BUTTON_PLUGINUP             1116
 #define IDC_BUTTON_PLUGINDOWN           1117
 #define IDC_CHECK_PLUGINSLOGS           1118
+#define IDC_BUTTON_HIDE_PLUGIN          1118
 #define IDC_EDIT_PLUGINSLOGS            1119
 #define IDC_CHECK_DISABLE_OSC           1120
 #define IDC_EDIT_NEWPROFILE_GROUP       1120
@@ -147,6 +148,7 @@
 #define IDC_STATIC_GROUP_NAME           1159
 #define IDC_STATIC_PROFILE_NAME         1160
 #define IDC_CHECK_CREATE_EMPTY_PROFILE  1161
+#define IDC_CHECK_SHOW_HIDDEN           1161
 #define ID_SETTINGS                     32776
 #define ID_WINDOW_1                     32777
 #define ID_WINDOW_2                     32778
@@ -167,9 +169,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        229
+#define _APS_NEXT_RESOURCE_VALUE        230
 #define _APS_NEXT_COMMAND_VALUE         32803
-#define _APS_NEXT_CONTROL_VALUE         1161
+#define _APS_NEXT_CONTROL_VALUE         1162
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

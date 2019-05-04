@@ -71,10 +71,6 @@
     <plugin key="colorgamecmd.lua" value="1"/>
     <plugin key="clickpad.dll" value="1"/>
     <plugin key="tray.dll" value="1"/>
-    <plugin key="sound.dll" value="0"/>
-    <plugin key="bell.lua" value="0"/>
-    <plugin key="send.lua" value="0"/>
-    <plugin key="voice.lua" value="0"/>
     <plugin key="prompt.dll" value="0"/>
     <plugin key="faq.lua" value="1"/>
   </plugins>

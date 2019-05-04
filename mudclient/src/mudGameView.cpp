@@ -81,23 +81,21 @@ void MudGameView::onSelectProfile()
     }
     if (!profile.copy_from_src)
     {
-        if (profile.create_empty)
+        if (!profile.create_empty)
         {
-            // new empty profile
-            if (newProfile(profile.profile) && profile.create_link)
+            // new profile from resources
+            Profile src; src.group = profile.profile.group; src.name = L"player";
+            if (copyProfile(true, profile.profile, src) && profile.create_link)
                 createLink(profile.profile);
+            return;
         }
-        else
-        {
-            // new empty profile from resources
-            Profile resources; resources.group = profile.profile.group;
-            if (copyProfile(profile.profile, resources) && profile.create_link)
-                createLink(profile.profile);
-        }
+        // new empty profile
+        if (newProfile(profile.profile) && profile.create_link)
+            createLink(profile.profile);
         return;
     }
     // new profile and copy from src profile
-    if (copyProfile(profile.profile, profile.src) && profile.create_link)
+    if (copyProfile(false, profile.profile, profile.src) && profile.create_link)
         createLink(profile.profile);
 }
 
@@ -218,7 +216,7 @@ bool MudGameView::newProfile(const Profile& profile)
     return successed;
 }
 
-bool MudGameView::copyProfile(const Profile& profile, const Profile& src)
+bool MudGameView::copyProfile(bool fromzip, const Profile& profile, const Profile& src)
 {
     saveClientWindowPos();
     savePluginWindowPos();
@@ -233,10 +231,24 @@ bool MudGameView::copyProfile(const Profile& profile, const Profile& src)
     Profile current(m_manager.getProfile());
     bool successed = true;
     tstring error;
-    if (!m_manager.copyProfile(src, profile, &error)) 
+    if (fromzip)
+    {
+        CopyProfileFromZipHelper zip;
+        successed = zip.copyProfile("resources\\profiles.pak", src, profile);
+        if (!successed)
+            error = L"Can't create new profile";
+        if (successed) {
+            successed = m_manager.loadProfile(profile, &error);
+        }
+    }
+    else
+    {
+        successed = m_manager.copyProfile(src, profile, &error);
+    }
+
+    if (!successed)
     {
         msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, error, MB_OK | MB_ICONSTOP); 
-        successed = false;
     }    
     if (!successed) 
     {

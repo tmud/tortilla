@@ -377,11 +377,11 @@ struct PanelWindow
 
 struct PluginData
 {
-    PluginData() : state(0) {}
+    enum State { PDS_OFF, PDS_ON, PDS_HIDDEN };
+    PluginData() : state(PluginData::PDS_OFF) {}
     tstring name;
-    int state;
+    PluginData::State state;
     std::vector<OutputWindow> windows;
-    //std::vector<PanelWindow> panels;
 
     void initDefaultPos(int width, int height, OutputWindow *w)
     {
@@ -427,7 +427,8 @@ struct PluginsDataValues : public std::vector<PluginData>
     {
         for (int i = 0, e = size(); i < e; ++i) {
             PluginData &p = at(i);
-            p.state = 0;
+            if (p.state == PluginData::PDS_ON)
+                p.state = PluginData::PDS_OFF;
         }
     }
 };

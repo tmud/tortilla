@@ -63,12 +63,25 @@ private:
         ChangeDir cd;
         if (cd.changeDir(L"resources"))
         {
-            ProfilesDirsListHelper ph(L"profiles");
-            for (int i = 0, e = ph.dirs.size(); i < e; ++i)
+            ProfilesInZipHelper zip("profiles.pak");
+            if (zip.dirs.empty())
             {
-                const tstring& d = ph.dirs[i];
-                if (d == default_profile_folder) continue;
-                templates.push_back(d);
+#ifdef _DEBUG
+                //ProfilesDirsListHelper ph(L"profiles");
+                //templates.swap(ph.dirs);
+#endif
+            }
+            else
+            {
+                templates.swap(zip.dirs);
+            }
+            for (int i = 0, e = templates.size(); i < e; ++i)
+            {
+                const tstring& d = templates[i];
+                if (d == default_profile_folder) {
+                    templates.erase(templates.begin() + i);
+                    break;
+                }
             }
         }
         cd.restoreDir();

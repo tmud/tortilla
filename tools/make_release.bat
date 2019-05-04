@@ -5,7 +5,8 @@ if "%1" == "debug" set windbg=1
 
 set /P ver="Enter version number: "
 set filename="tortilla_%ver%.zip"
-set sdk="sdk_%ver%.zip"
+set sdk="sdk.zip"
+set decoda="decoda.zip"
 
 set prod=Release
 if %windbg% == 1 set prod=Debug
@@ -23,8 +24,15 @@ cd resources
 md sound
 cd ..
 cd ..
-
 md sdk
+
+md profiles
+xcopy ..\resources\profiles\*.* profiles\ /E /Y
+cd profiles
+..\7za.exe a -mcu -tzip ..\profiles.pak *
+cd ..
+rd profiles /s /q
+move profiles.pak tortilla\resources
 
 xcopy ..\help\*.* tortilla\help /Y
 
@@ -60,54 +68,42 @@ xcopy ..\plugins\bellcmd.lua tortilla\plugins /Y
 xcopy ..\plugins\msdpmapper.lua tortilla\plugins /Y
 xcopy ..\plugins\mapper.dll tortilla\plugins /Y
 xcopy ..\plugins\generic.lua tortilla\plugins /Y
+xcopy ..\plugins\autosbor.lua tortilla\plugins /Y
+xcopy ..\plugins\autoresc.lua tortilla\plugins /Y
+xcopy ..\plugins\bmap.lua tortilla\plugins /Y
+xcopy ..\plugins\spit.lua tortilla\plugins /Y
+xcopy ..\plugins\timeline.lua tortilla\plugins /Y
+xcopy ..\plugins\trswitch.lua tortilla\plugins /Y
+xcopy ..\plugins\trswitch.bmp tortilla\plugins /Y
+xcopy ..\plugins\write.lua tortilla\plugins /Y
+xcopy ..\plugins\enterb.lua tortilla\plugins /Y
+xcopy ..\plugins\enterb.bmp tortilla\plugins /Y
+xcopy ..\plugins\autoalias.lua tortilla\plugins /Y
+xcopy ..\plugins\inveq.lua tortilla\plugins /Y
+xcopy ..\plugins\helpers.lua tortilla\plugins /Y
+xcopy ..\plugins\tick.lua tortilla\plugins /Y
+xcopy ..\plugins\send.lua tortilla\plugins /Y
+xcopy ..\plugins\miner.lua tortilla\plugins /Y
+xcopy ..\plugins\miner.bmp tortilla\plugins /Y
 
 xcopy ..\resources\clickpad\*.* tortilla\resources\clickpad\ /E /Y
-xcopy ..\resources\profiles\*.* tortilla\resources\profiles\ /E /Y
-xcopy ..\resources\tmp\*.* tortilla\resources\tmp\ /E /Y
-xcopy ..\resources\off.txt tortilla\resources /Y
 
 xcopy ..\%prod%\tortilla.exe tortilla /Y
 xcopy ..\%prod%\api.dll tortilla /Y
 xcopy ..\%prod%\lua.dll tortilla /Y
 if %windbg% == 1 xcopy ..\sdk\decoda\dbghelp.dll tortilla /Y
 if %windbg% == 1 xcopy ..\Debug\*.pdb tortilla /Y
-xcopy ..\mudclient\readme.txt tortilla /Y
-xcopy ..\mudclient\changelog.txt tortilla /Y
+xcopy ..\mudclient\readme.txt tortilla\help /Y
+xcopy ..\mudclient\changelog.txt tortilla\help /Y
 
 xcopy ..\sdk\*.* sdk /E /Y
-xcopy ..\modules\modules.txt sdk /Y
 
+7za.exe a -mcu -tzip %sdk% sdk -xr!.gitignore -xr!decoda
+7za.exe a -mcu -tzip %decoda% sdk/decoda
+move %sdk% tortilla\resources
+rd sdk /s /q
 7za.exe a -mcu -tzip %filename% tortilla
-7za.exe a -mcu -tzip %sdk% sdk -xr!.gitignore
 
 rd tortilla /s /q
-rd sdk /s /q
-
-md plugins
-xcopy ..\plugins\autosbor.lua plugins /Y
-xcopy ..\plugins\autoresc.lua plugins /Y
-xcopy ..\plugins\bmap.lua plugins /Y
-
-7za.exe a -tzip bylins_plugins.zip plugins
-
-del plugins\*.* /q
-xcopy ..\plugins\spit.lua plugins /Y
-xcopy ..\plugins\timeline.lua plugins /Y
-xcopy ..\plugins\trswitch.lua plugins /Y
-xcopy ..\plugins\trswitch.bmp plugins /Y
-xcopy ..\plugins\write.lua plugins /Y
-xcopy ..\plugins\enterb.lua plugins /Y
-xcopy ..\plugins\enterb.bmp plugins /Y
-xcopy ..\plugins\autoalias.lua plugins /Y
-xcopy ..\plugins\inveq.lua plugins /Y
-xcopy ..\plugins\helpers.lua plugins /Y
-xcopy ..\plugins\tick.lua plugins /Y
-xcopy ..\plugins\send.lua plugins /Y
-xcopy ..\plugins\miner.lua plugins /Y
-xcopy ..\plugins\miner.bmp plugins /Y
-
-7za.exe a -tzip plugins_plus.zip plugins
-
-rd plugins /s /q
 
 pause

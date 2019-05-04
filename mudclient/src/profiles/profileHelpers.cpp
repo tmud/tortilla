@@ -137,10 +137,22 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
     ChangeDir cd;
     if (cd.changeDir(L"resources"))
     {
-        ProfilesDirsListHelper ph(L"profiles");
-        for (int i=0,e=ph.dirs.size();i<e;++i)
+        std::vector<tstring> templates;
+        ProfilesInZipHelper zip("profiles.pak");
+        if (zip.dirs.empty())
         {
-            const tstring& d = ph.dirs[i];
+#ifdef _DEBUG
+         //   ProfilesDirsListHelper ph(L"profiles");
+         //   templates.swap(ph.dirs);
+#endif
+        }
+        else
+        {
+            templates.swap(zip.dirs);
+        }
+        for (int i=0,e=templates.size();i<e;++i)
+        {
+            const tstring& d = templates[i];
             int index = -1;
             for (int j=0,je=m_groups.size();j<je;++j) {
                 if (m_groups[j].first == d) { index = j; break; }
@@ -162,7 +174,7 @@ bool NewProfileHelper::createFromResources(const ProfilesGroupList& groups)
     dlg.getProfile(&dst);
     cd.restoreDir();
     m_created_profile = dst;
-    if (createFromResource(src, dst))
+    if (createFromResourcePak(src, dst))
     {
         return createSettingsFile(dst);
     }
@@ -179,7 +191,6 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
     }
 
     ProfilesList srcprofiles;
-
     tstring srcpath;
     if (src.name.empty())
     {
@@ -206,7 +217,7 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
         ProfileDirHelper dh;
         for (int i=1,e=fl.dirs.size();i<e;++i)
         {
-            tstring srcdir(fl.dirs[i]);      
+            tstring srcdir(fl.dirs[i]);
             srcdir = srcdir.substr(path_len);
             if (srcdir.empty())
                 continue;
@@ -258,16 +269,23 @@ bool NewProfileHelper::copy(const Profile& src, const Profile& dst)
     return true;
 }
 
-bool NewProfileHelper::createFromResource(const Profile& src, const Profile& dst)
+bool NewProfileHelper::createFromResourcePak(const Profile& src, const Profile& dst)
 {
-    int index = -1;
-    for (int i=0,e=m_groups.size();i<e;++i) {
-       if (m_groups[i].first == src.group) { index = i; break; }
-    }
-    if (index == -1)
+    CopyProfileFromZipHelper zip;
+    if (!zip.copyProfile("resources\\profiles.pak", src, dst ))
+    {
+#ifdef _DEBUG
+       // return createFromResourceFolder(src, dst);
         return false;
-    int type = m_groups[index].second;
+#else
+        return false;
+#endif
+    }
+    return true;
+}
 
+bool NewProfileHelper::createFromResourceFolder(const Profile& src, const Profile& dst)
+{
     // список файлов и каталогов
     tstring path(L"resources\\profiles\\");
     path.append(src.group);

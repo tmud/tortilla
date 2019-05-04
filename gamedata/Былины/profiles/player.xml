@@ -15,11 +15,12 @@
   <anyfont value="0"/>
   <disablealt value="1"/>
   <tray value="0"/>
+  <disablemccp value="0"/>
   <codepage value="win"/>
   <logformat value="html"/>
   <prompt value="0"/>
   <ptemplate value=""/>
-  <rebar value=""/>
+  <rebar value="2;60160;168;1;1;60161;131;1;1;"/>
   <colors>
     <color id="background" r="0" g="0" b="0"/>
     <color id="0" r="64" g="64" b="64"/>
@@ -136,6 +137,65 @@
         <plugin key="testapi.lua" value="0"/>
         <plugin key="testmsdp.lua" value="0"/>
         <plugin key="tick.lua" value="0"/>
+      </plugins>
+    </display>
+    <display width="1920" height="1200">
+      <mainwindow left="240" right="1680" top="150" bottom="1050" fullscreen="0"/>
+      <findwindow left="200" right="584" top="180" bottom="360" visible="0"/>
+      <windows>
+        <window name="Окно 1" left="70" right="420" top="70" bottom="270" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 2" left="140" right="490" top="140" bottom="340" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 3" left="210" right="560" top="210" bottom="410" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 4" left="280" right="630" top="280" bottom="480" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 5" left="350" right="700" top="350" bottom="550" side="5" lastside="4" width="350" height="200"/>
+        <window name="Окно 6" left="420" right="770" top="420" bottom="620" side="5" lastside="4" width="350" height="200"/>
+      </windows>
+      <plugins>
+        <plugin key="affects.lua" value="0"/>
+        <plugin key="autoalias.lua" value="0"/>
+        <plugin key="autoresc.lua" value="0"/>
+        <plugin key="autosbor.lua" value="0"/>
+        <plugin key="autowrap.lua" value="0"/>
+        <plugin key="bell.lua" value="0"/>
+        <plugin key="bellcmd.lua" value="0"/>
+        <plugin key="bmap.lua" value="0"/>
+        <plugin key="clickpad.dll" value="0"/>
+        <plugin key="clocktrig.lua" value="0"/>
+        <plugin key="cmdfilter.lua" value="0"/>
+        <plugin key="colorgamecmd.lua" value="0"/>
+        <plugin key="enterb.lua" value="0"/>
+        <plugin key="faq.lua" value="0"/>
+        <plugin key="generic.lua" value="0"/>
+        <plugin key="gr.lua" value="0"/>
+        <plugin key="helpers.lua" value="0"/>
+        <plugin key="historyfilter.lua" value="0"/>
+        <plugin key="inveq.lua" value="0"/>
+        <plugin key="jmc3import.dll" value="0"/>
+        <plugin key="lor.lua" value="0"/>
+        <plugin key="mapper.dll" value="0"/>
+        <plugin key="miner.lua" value="0"/>
+        <plugin key="msdpmapper.lua" value="0"/>
+        <plugin key="pcrecalc.dll" value="0"/>
+        <plugin key="prompt.dll" value="0"/>
+        <plugin key="reconnect.lua" value="0"/>
+        <plugin key="send.lua" value="0"/>
+        <plugin key="sound.dll" value="0"/>
+        <plugin key="speedwalk.lua" value="0"/>
+        <plugin key="spit.lua" value="0"/>
+        <plugin key="status.lua" value="0"/>
+        <plugin key="statusbar.lua" value="0"/>
+        <plugin key="testapi.lua" value="0"/>
+        <plugin key="testloadsave.lua" value="0"/>
+        <plugin key="testmisc.lua" value="0"/>
+        <plugin key="testmsdp.lua" value="0"/>
+        <plugin key="testrender.lua" value="0"/>
+        <plugin key="testtray.lua" value="0"/>
+        <plugin key="tick.lua" value="0"/>
+        <plugin key="timeline.lua" value="0"/>
+        <plugin key="tray.dll" value="0"/>
+        <plugin key="trswitch.lua" value="0"/>
+        <plugin key="voice.lua" value="0"/>
+        <plugin key="write.lua" value="0"/>
       </plugins>
     </display>
   </displays>
