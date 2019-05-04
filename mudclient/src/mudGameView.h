@@ -58,7 +58,7 @@ private:
     bool loadProfile(const Profile& profile);
     bool newProfile(const Profile& profile);
     void createLink(const Profile& profile);
-    bool copyProfile(const Profile& profile, const Profile& src);
+    bool copyProfile(bool fromzip, const Profile& profile, const Profile& src);
 
 public:
     DECLARE_WND_CLASS(NULL)
