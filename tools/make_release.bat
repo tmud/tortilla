@@ -99,7 +99,9 @@ xcopy ..\mudclient\changelog.txt tortilla\help /Y
 xcopy ..\sdk\*.* sdk /E /Y
 
 7za.exe a -mcu -tzip %sdk% sdk -xr!.gitignore -xr!decoda
-7za.exe a -mcu -tzip %decoda% sdk/decoda
+cd sdk
+..\7za.exe a -mcu -tzip ..\%decoda% decoda
+cd ..
 move %sdk% tortilla\resources
 rd sdk /s /q
 7za.exe a -mcu -tzip %filename% tortilla
