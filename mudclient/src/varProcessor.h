@@ -11,4 +11,5 @@ public:
     bool delVar(const tstring& var);
     bool iterateVar(const tstring& pred, int& last, tstring* value);
     void deleteAll();
+    void setBufferVar(const tstring& buffer);
 };

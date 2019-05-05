@@ -7,9 +7,10 @@ class VarProcessorImpl
 {
     std::map<tstring, int> m_specvars;
     typedef std::map<tstring, int>::const_iterator citerator;
-    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP, POINTVAR, UNDERLINEVAR, EMPTY, DOLLAR };
+    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP, POINTVAR, UNDERLINEVAR, EMPTY, DOLLAR, BUFFER };
     Pcre16 m_vars_regexp;
     Pcre16 m_var_regexp;
+    tstring m_buffer_var;
 public:
     VarProcessorImpl();
     bool canset(const tstring& var) const
@@ -21,6 +22,7 @@ public:
     bool getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const;
     bool setVar(PropertiesValues &vars, const tstring& var, const tstring& value);
     bool delVar(PropertiesValues &vars, const tstring& var);
+    void setBufferVar(const tstring& buffer);
 private:
     void getSpecVar(int id, tstring *value) const;
 } vars_processor;
@@ -87,6 +89,11 @@ void VarProcessor::deleteAll()
     vars.clear();
 }
 
+void VarProcessor::setBufferVar(const tstring& buffer)
+{
+    vars_processor.setBufferVar(buffer);
+}
+
 VarProcessorImpl::VarProcessorImpl()
 {
     std::map<tstring, int> &v = m_specvars;
@@ -104,6 +111,7 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"_"] = UNDERLINEVAR;
     v[L"!"] = EMPTY;
     v[L"$"] = DOLLAR;
+    v[L"BUFFER"] = BUFFER;
     m_vars_regexp.setRegExp(L"\\$[a-zA-Zа-яА-Я_][0-9a-zA-Zа-яА-Я_.]*|\\$.|\\$!|\\$\\$", true);
     m_var_regexp.setRegExp(L"^[a-zA-Zа-яА-Я_][0-9a-zA-Zа-яА-Я_.]*$", true);
 }
@@ -183,6 +191,11 @@ bool VarProcessorImpl::delVar(PropertiesValues &vars, const tstring& var)
     return true;
 }
 
+void VarProcessorImpl::setBufferVar(const tstring& buffer)
+{
+    m_buffer_var = buffer;
+}
+
 bool VarProcessorImpl::getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const
 {
      citerator it = m_specvars.find(var);
@@ -235,6 +248,11 @@ void VarProcessorImpl::getSpecVar(int id, tstring *value) const
 	    // convert filetime to unix timestamp
 	    swprintf(buffer, L"%I64d", ularge.QuadPart / 10000000 - 11644473600); 
         value->assign(buffer);
+        return;
+    }
+    if (id == BUFFER)
+    {
+        value->assign(m_buffer_var);
         return;
     }
 

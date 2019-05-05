@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "propertiesPages/propertiesData.h"
 #include "mudView.h"
+#include "accessors.h"
 #pragma warning(disable: 4996)
 
 MudView::MudView(PropertiesElements *elements, int id) : 
@@ -860,6 +861,8 @@ void MudView::stopDraging()
         }
         sendToClipboard(m_hWnd, text);
         drag_begin = -1;
+        VarProcessor *vp = tortilla::getVars();
+        vp->setBufferVar(text);
         Invalidate(FALSE);
         return;
     }
@@ -924,6 +927,8 @@ void MudView::stopDraging()
 
     sendToClipboard(m_hWnd, text);
     drag_begin = -1;
+    VarProcessor *vp = tortilla::getVars();
+    vp->setBufferVar(text);
     Invalidate(FALSE);
 }
 
