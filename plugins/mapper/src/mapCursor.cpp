@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "mapInstance.h"
 #include "mapCursor.h"
 
@@ -46,14 +46,20 @@ bool MapCursorImplementation::valid() const
      return map_zone ? true : false;
 }
 
-MapCursorInterface* MapCursorImplementation::dublicate()
+MapCursor MapCursorImplementation::move(RoomDir dir)
 {
-    return new MapCursorImplementation( map_ptr, room_ptr, ccolor); 
-}
-
-bool MapCursorImplementation::move(RoomDir dir)
-{
-     return false;
+    if (!room_ptr)
+        return nullptr;
+    if (dir == RD_UP || dir == RD_DOWN) 
+    {
+        Rooms3dCubePos pos(room_ptr->pos);
+        pos.move(dir);
+        if (pos.valid(size()))
+        {
+            return std::make_shared<MapZoneCursorImplementation>(map_ptr, map_zone, pos.z);
+        }
+    }
+    return nullptr;
 }
 //-----------------------------------------------------------
 Rooms3dCubeSize MapZoneCursorImplementation::m_empty;
@@ -98,21 +104,16 @@ bool MapZoneCursorImplementation::valid() const
     return map_zone ? true : false;
 }
 
- MapCursorInterface* MapZoneCursorImplementation::dublicate()
+ MapCursor MapZoneCursorImplementation::move(RoomDir dir)
  {
-    return new MapZoneCursorImplementation(map_ptr, map_zone, m_zone_pos.z); 
- }
-
- bool MapZoneCursorImplementation::move(RoomDir dir)
- {
-     if (dir == RD_UP || dir == RD_DOWN) {
+     if (dir == RD_UP || dir == RD_DOWN) 
+     {
          Rooms3dCubePos pos(m_zone_pos);
          pos.move(dir);
          if (pos.valid( size() )) 
          {
-             m_zone_pos = pos;
-             return true;         
+             return std::make_shared<MapZoneCursorImplementation>(map_ptr, map_zone, pos.z);              
          }
      }
-     return false;
+     return nullptr;
 }

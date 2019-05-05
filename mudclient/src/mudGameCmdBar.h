@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "mudCommandBar.h"
 
@@ -381,7 +381,7 @@ private:
             {
                 m_tab_const.assign(syscmd ? cmd_prefix : L"");
                 m_tab.assign(syscmd ? text.substr(1) : text);
-                can_use_history = true; // История не работает в составных командах(;), только как полной строкой
+                can_use_history = true; // РСЃС‚РѕСЂРёСЏ РЅРµ СЂР°Р±РѕС‚Р°РµС‚ РІ СЃРѕСЃС‚Р°РІРЅС‹С… РєРѕРјР°РЅРґР°С…(;), С‚РѕР»СЊРєРѕ РєР°Рє РїРѕР»РЅРѕР№ СЃС‚СЂРѕРєРѕР№
             }
         }
         else

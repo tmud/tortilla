@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "phrase.h"
 
 void regFunction(lua_State *L, const char* name, lua_CFunction f);

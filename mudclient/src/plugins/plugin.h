@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "../propertiesPages/propertyList.h"
 #include "../propertiesPages/propertiesData.h"
@@ -10,7 +10,7 @@ class Plugin
 {
 public:
     Plugin() : empty(0), hModule(NULL), load_state(false), current_state(false), error_state(false), render_state(false) {}
-    static bool isPluginEnabled(const wchar_t* fname);
+    static bool isPluginFile(const wchar_t* fname);
     bool loadPlugin(const wchar_t* fname);
     void unloadPlugin();
     bool reloadPlugin();
@@ -37,7 +37,7 @@ public:
         case VERSION: return version.c_str();
         case DESCRIPTION: return description.c_str();
         }
-        return &empty; 
+        return &empty;
     }
 
     std::vector<PluginsView*> dockpanes;

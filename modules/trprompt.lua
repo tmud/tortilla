@@ -1,11 +1,12 @@
 ﻿-- Модуль отбора строк от ключевой строки до prompt.
 -- Функция создает объект, который будет собирать все строки от ключевой до промпт строки.
 -- Функция-фильтр (необязательно) позволяет отбирать нужные строки - запоминать или не запоминать.
+-- Если в пачку данных попадает несколько блоков строк, которые подходят под поиск, то будет сохранен последний блок
 
 --[[ Как использовать:
 
 local function filter(vs)
-  -- функция фильтр для отбора нужных строк, vs - это viewstring
+  -- функция фильтр для отбора нужных строк, vs - это viewstring (см. SDK)
   -- 1 результат - false - строку не сохранять в триггере, true - строку сохранить/запомнить.
   -- 2 результат - false - строку оставить в исходном окне, true - удалить (дропнуть) из исходного окна.
   return true, false
@@ -37,6 +38,7 @@ function plugin.disconnect()
     t:disconnect()
   end
 end
+
 ]]
 
 function prompt_trigger(key_string, filter_function, skip_prompt_function)
@@ -53,9 +55,10 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
 
   local trigger = { pcre = pcre, filter = filter_function, skip_prompt = skip_prompt_function, collect_mode = false, strings ={} }
 
-  function trigger:check(vd)
+  local function stepcheck(vd, from)
+    local self = trigger
     if not self.collect_mode then
-      if vd:find(self.pcre) then
+      if vd:find(self.pcre, from) then
         self.collect_mode = true
         self.strings = {}
         local vs = vd:createViewString()
@@ -76,10 +79,15 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
       else
         return false
       end
+    else
+      vd:select(from)
     end
     local index,size = vd:getIndex(),vd:size()
     for i=index,size do
       vd:select(i)
+      if i == size and not vd:isLast() then
+        goto next
+      end
       if vd:isPrompt() then
         local skip = false
         if self.skip_prompt then
@@ -100,8 +108,24 @@ function prompt_trigger(key_string, filter_function, skip_prompt_function)
         local s = self.strings
         s[#s+1] = vs
       end
+      ::next::
     end
     return false
+  end
+
+  function trigger:check(vd)
+    local status = false
+    local result = stepcheck(vd, 1)
+    while result do
+      status = true
+      local last = vd:getIndex()
+      if last < vd:size() then
+        result = stepcheck(vd, last+1)
+      else
+        break
+      end
+    end
+    return status
   end
 
   function trigger:disconnect()

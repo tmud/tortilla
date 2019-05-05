@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "api/api.h"
 #include "plugin.h"
 
@@ -10,26 +10,12 @@ Plugin* _cp = NULL; // current plugin in lua methods
 #include "pluginSupport.h"
 #include "pluginsApi.h"
 
-bool Plugin::isPluginEnabled(const wchar_t* fname)
+bool Plugin::isPluginFile(const wchar_t* fname)
 {
     const wchar_t *e = wcsrchr(fname, L'.');
     if (!e) return false;
-    tstring ext(e+1);
-    bool itplugin = (ext == L"lua" || ext == L"dll") ? true : false;
-    if (!itplugin)
-        return false;
-    tstring name(fname, e-fname);
-    lua_getglobal(L, "off");
-    if (lua_istable(L, -1))
-    {
-        luaT_pushwstring(L, name.c_str());
-        lua_gettable(L, -2);
-        if (!lua_isnil(L, -1))
-            itplugin = false;
-        lua_pop(L, 1);
-    }
-    lua_pop(L, 1);
-    return itplugin;
+    tstring ext(e + 1);
+    return (ext == L"lua" || ext == L"dll") ? true : false;
 }
 
 bool Plugin::loadPlugin(const wchar_t* fname)
@@ -45,12 +31,14 @@ bool Plugin::loadPlugin(const wchar_t* fname)
     else if (ext == L"dll")
         result = loadDllPlugin(fname);
     current_state = false;
-    load_state = result;
     return result;
 }
 
 void Plugin::unloadPlugin()
 {
+    if (!load_state) {
+        return;
+    }
     setOn(false);
     lua_pushnil(L);               // clear module in lua
     lua_setglobal(L, module.c_str());
@@ -76,8 +64,8 @@ bool Plugin::reloadPlugin()
     else if (ext == L"dll")
         result = loadDllPlugin(fname);
     _cp = old;
-    setOn(result);
-    load_state = result;
+    if (result)
+        setOn(result);
     return result;
 }
 
@@ -113,7 +101,13 @@ bool Plugin::processMouseWheel(const POINT& pt, DWORD param)
 void pluginDeleteResources(Plugin *plugin);
 void Plugin::setOn(bool on)
 {
-    if (!current_state && on) {
+    if (!load_state)
+    {
+        assert(false);
+        return;
+    }
+    if (!current_state && on)
+    {
         error_state = false;
         for (int i = 0, e = dockpanes.size(); i < e; ++i)
             dockpanes[i]->resetRenderErrorState();
@@ -124,7 +118,8 @@ void Plugin::setOn(bool on)
         getparam("description", &description);
         current_state = true;
     }
-    else if (current_state && !on) {
+    else if (current_state && !on) 
+    {
         current_state = false;
         runMethod("release", 0, 0);
         pluginDeleteResources(this);
@@ -146,6 +141,11 @@ void Plugin::closeWindow(HWND wnd)
 
 bool Plugin::runMethod(const char* method, int args, int results, bool *not_supported)
 {
+    if (!load_state)
+    {
+        assert(false);
+        return false;
+    }
     lua_getglobal(L, module.c_str());
     if (!lua_istable(L, -1))
         { lua_pop(L, 1); return false; }
@@ -168,7 +168,7 @@ bool Plugin::runMethod(const char* method, int args, int results, bool *not_supp
         if (luaT_check(L, 1, LUA_TSTRING))
             pluginMethodError(m, lua_toerror(L));
         else
-            pluginMethodError(m, L"неизвестная ошибка");
+            pluginMethodError(m, L"РЅРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°");
         _cp = old;
         lua_settop(L, 0);
         return false;
@@ -255,22 +255,18 @@ bool Plugin::initLoadedPlugin(const wchar_t* fname)
     }
 
     lua_setglobal(L, module.c_str());
-
-    bool loaded = isLoadedPlugin(filename.c_str());
-    if (loaded)
-    {
-        getparam("name", &name);
-        getparam("version", &version);
-        getparam("description", &description);
-        if (name.empty() || version.empty())
-            loaded = false;
-    }
-    if (!loaded)
+    load_state = true;
+    getparam("name", &name);
+    getparam("version", &version);
+    getparam("description", &description);
+    if (name.empty() || version.empty())
+        load_state = false;
+    if (!load_state)
     {
         lua_pushnil(L);
         lua_setglobal(L,module.c_str());
     }
-    return loaded;
+    return load_state;
 }
 
 bool Plugin::isAlreadyLoaded(const wchar_t* filename)
@@ -281,7 +277,7 @@ bool Plugin::isAlreadyLoaded(const wchar_t* filename)
     tstring ext(e+1);
     if (isLoadedPlugin(module_name.c_str()))
     {
-        swprintf(plugin_buffer(), L"Плагин %s не загружен, так как место _G['%s'] занято модулем или другим плагином.", filename, 
+        swprintf(plugin_buffer(), L"РџР»Р°РіРёРЅ %s РЅРµ Р·Р°РіСЂСѓР¶РµРЅ, С‚Р°Рє РєР°Рє РјРµСЃС‚Рѕ _G['%s'] Р·Р°РЅСЏС‚Рѕ РјРѕРґСѓР»РµРј РёР»Рё РґСЂСѓРіРёРј РїР»Р°РіРёРЅРѕРј.", filename, 
             module_name.c_str());
         pluginOut(plugin_buffer());
         return true;

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "resource.h"
 #include "clickpad.h"
 #include "mainwnd.h"
@@ -22,22 +22,22 @@ lua_State* getLuaState()
 
 int get_name(lua_State *L)
 {
-    luaT_pushwstring(L, L"Игровая панель Clickpad");
+    luaT_pushwstring(L, L"РРіСЂРѕРІР°СЏ РїР°РЅРµР»СЊ Clickpad");
     return 1;
 }
 
 int get_description(lua_State *L)
 {
-    luaT_pushwstring(L, L"Данный плагин позволяет играть в мад используя мышь.\r\n"
-        L"С его помощью можно создать панель кнопок-горячих клавиш с нужными командами.\r\n"
-        L"С помощью плагина можно перести часть горячих клавиш (hotkeys) на данную панель,\r\n"
-        L"тем самым освободив их под другие задачи.");
+    luaT_pushwstring(L, L"Р”Р°РЅРЅС‹Р№ РїР»Р°РіРёРЅ РїРѕР·РІРѕР»СЏРµС‚ РёРіСЂР°С‚СЊ РІ РјР°Рґ РёСЃРїРѕР»СЊР·СѓСЏ РјС‹С€СЊ.\r\n"
+        L"РЎ РµРіРѕ РїРѕРјРѕС‰СЊСЋ РјРѕР¶РЅРѕ СЃРѕР·РґР°С‚СЊ РїР°РЅРµР»СЊ РєРЅРѕРїРѕРє-РіРѕСЂСЏС‡РёС… РєР»Р°РІРёС€ СЃ РЅСѓР¶РЅС‹РјРё РєРѕРјР°РЅРґР°РјРё.\r\n"
+        L"РЎ РїРѕРјРѕС‰СЊСЋ РїР»Р°РіРёРЅР° РјРѕР¶РЅРѕ РїРµСЂРµСЃС‚Рё С‡Р°СЃС‚СЊ РіРѕСЂСЏС‡РёС… РєР»Р°РІРёС€ (hotkeys) РЅР° РґР°РЅРЅСѓСЋ РїР°РЅРµР»СЊ,\r\n"
+        L"С‚РµРј СЃР°РјС‹Рј РѕСЃРІРѕР±РѕРґРёРІ РёС… РїРѕРґ РґСЂСѓРіРёРµ Р·Р°РґР°С‡Рё.");
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"1.04");
+    luaT_pushwstring(L, L"1.05");
     return 1;
 }
 
@@ -76,7 +76,7 @@ int init(lua_State *L)
     if (client_wnd)
         m_hwnd_mudclient = client_wnd;
     else
-        return luaT_error(L, L"Не удалось получить доступ к главному окну клиента");
+        return luaT_error(L, L"РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РґРѕСЃС‚СѓРї Рє РіР»Р°РІРЅРѕРјСѓ РѕРєРЅСѓ РєР»РёРµРЅС‚Р°");
 
     m_image_collection = new ImageCollection();
     m_image_collection->scanImages();
@@ -91,7 +91,7 @@ int init(lua_State *L)
         bool result = ld.load(path.c_str(), &error);
         if (!result)
         {
-            std::wstring text(L"Ошибка загрузки списка с кнопками: ");
+            std::wstring text(L"РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё СЃРїРёСЃРєР° СЃ РєРЅРѕРїРєР°РјРё: ");
             text.append(path);
             text.append(L"\n");
             text.append(error);
@@ -100,10 +100,11 @@ int init(lua_State *L)
     }
 
     bool ok = false;
-    if (m_parent_window.create(L, L"Игровая панель Clickpad", 400, 100, true))
+    if (m_parent_window.create(L, L"РРіСЂРѕРІР°СЏ РїР°РЅРµР»СЊ Clickpad", 400, 100, true))
     {
         HWND parent = m_parent_window.hwnd();
-        m_clickpad = new ClickpadMainWnd();
+        float dpi = base::getDpi(L);
+        m_clickpad = new ClickpadMainWnd(dpi);
         RECT rc; ::GetClientRect(parent, &rc);
         HWND res = m_clickpad->Create(parent, rc, NULL, WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
         m_clickpad->load(ld);
@@ -114,7 +115,7 @@ int init(lua_State *L)
     }
     ld.deletenode();
 
-    if (ok && m_settings_window.create(L, L"Настройки Clickpad", 250, 250, false))
+    if (ok && m_settings_window.create(L, L"РќР°СЃС‚СЂРѕР№РєРё Clickpad", 250, 250, false))
     {
         m_settings = new SettingsDlg();
         m_settings->Create(m_settings_window.hwnd());
@@ -125,7 +126,7 @@ int init(lua_State *L)
         m_settings_window.setFixedSize(rc.right, rc.bottom);
 
     } else { ok = false; }
-    if (ok && m_select_image_window.create(L, L"Иконка для кнопки", 580, 500, false))
+    if (ok && m_select_image_window.create(L, L"РРєРѕРЅРєР° РґР»СЏ РєРЅРѕРїРєРё", 580, 500, false))
     {
         SIZE sz = m_select_image_window.getSize();
         RECT rc = { 0, 0, sz.cx, sz.cy };
@@ -138,10 +139,10 @@ int init(lua_State *L)
 
     if (!ok) {
         destroy();
-        return luaT_error(L, L"Не удалось запустить плагин Clickpad");
+        return luaT_error(L, L"РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РїСѓСЃС‚РёС‚СЊ РїР»Р°РіРёРЅ Clickpad");
     }
 
-    base::addMenu(L, L"Плагины/Игровая панель Clickpad...", 1);
+    base::addMenu(L, L"РџР»Р°РіРёРЅС‹/РРіСЂРѕРІР°СЏ РїР°РЅРµР»СЊ Clickpad...", 1);
 
 #ifdef _DEBUG // open all windows for edit mode (only for debugging)
     /*base::checkMenu(L, 1);
@@ -171,7 +172,7 @@ int release(lua_State *L)
         if (!result)
         {
             destroy();
-            std::wstring error(L"Ошибка записи списка кнопок: ");
+            std::wstring error(L"РћС€РёР±РєР° Р·Р°РїРёСЃРё СЃРїРёСЃРєР° РєРЅРѕРїРѕРє: ");
             error.append(path);
             return luaT_error(L, error.c_str());
         }

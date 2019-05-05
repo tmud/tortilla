@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "pluginsView.h"
 #include "plugin.h"
 extern Plugin* _cp;

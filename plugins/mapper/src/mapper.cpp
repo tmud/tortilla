@@ -1,14 +1,13 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "mapper.h"
 #include "roomObjects.h"
 #include "debugHelpers.h"
-//#include "roomMergeTool.h"
 #include "newZoneNameDlg.h"
 #include "mapTools.h"
 #include "mapSmartTools.h"
 
 Mapper::Mapper(PropertiesMapper *props, const tstring& mapsFolder) : m_propsData(props), 
-m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder)
+m_pCurrentRoom(NULL), m_mapsFolder(mapsFolder), m_view(32, 6, 4, props->dpi)
 {
 }
 
@@ -16,8 +15,87 @@ Mapper::~Mapper()
 {
 }
 
+void Mapper::setActiveMode(bool mode)
+{
+    if (!mode)
+    {
+        lostPosition();
+    }
+}
+
 void Mapper::processMsdp(const RoomData& rd)
 {
+    RoomDirHelper dh;
+    RoomDir movement = RD_UNKNOWN;
+    if (m_pCurrentRoom)
+    {
+        const tstring& vn = m_pCurrentRoom->roomdata.vnum;
+        for (const std::pair<tstring, tstring>& e : rd.exits) 
+        {
+            if (e.second == vn)
+            {
+                RoomDir dir = dh.getDirFromMsdp(e.first);
+                movement = dh.revertDir(dir);
+                break;
+            }
+        }
+    }
+    auto fillExits = [](Room* room) 
+    {
+        RoomDirHelper dh;
+        for (const std::pair<tstring, tstring>& p : room->roomdata.exits) 
+        {
+            RoomDir dir = dh.getDirFromMsdp(p.first);
+            if (dir == RD_UNKNOWN) {
+                assert(false);
+            }
+            else {
+                room->dirs[dir].exist = true;
+            }
+        }
+    };
+    Rooms3dCube *zone = m_map.findZone(rd.areaname);
+    if (!zone)
+        zone = m_map.createNewZone(rd.areaname);
+    Room* room = zone->findRoom(rd.hash());
+    if (!room)
+    {
+        Rooms3dCubePos p;
+        if (m_pCurrentRoom)
+        {
+            if (movement != RD_UNKNOWN && m_pCurrentRoom->pos.zid == zone->id())
+            {
+                p = m_pCurrentRoom->pos;
+                p.move(movement);
+            }
+        }
+        Room *newroom = new Room();
+        newroom->roomdata = rd;
+        fillExits(newroom);
+        Rooms3dCube::AR_STATUS result = (movement != RD_UNKNOWN) ?
+            zone->addRoom(p, newroom) : zone->addRoomWithUnknownPosition(newroom);
+        if (result != Rooms3dCube::AR_OK) 
+        {
+            delete newroom;
+            lostPosition();
+            return;
+        }
+        room = newroom;
+    }
+    else
+    {
+        assert(room->roomdata.vnum == rd.vnum);
+        room->roomdata = rd;
+        fillExits(room);
+    }
+    if (movement != RD_UNKNOWN)
+    {
+        m_pCurrentRoom->dirs[movement].next_room = room;
+        RoomDir revertDir = dh.revertDir(movement);
+        room->dirs[revertDir].next_room = m_pCurrentRoom;
+    }
+    m_pCurrentRoom = room;
+    redrawPositionByRoom(m_pCurrentRoom);
 }
 
 void Mapper::updateZonesList()
@@ -25,6 +103,11 @@ void Mapper::updateZonesList()
 	Rooms3dCubeList zones;
 	m_map.getZones(&zones);
 	m_zones_control.updateList(zones);
+}
+
+void Mapper::saveProps()
+{
+    m_propsData->zoneslist_width = m_vSplitter.GetSplitterPos();
 }
 
 void Mapper::saveMaps()
@@ -39,7 +122,6 @@ void Mapper::loadMaps()
     m_zones_control.deleteAllZones();
 
 	m_pCurrentRoom = nullptr;
-
     const tstring&dir = m_mapsFolder;
     bool last_found = false;
     tstring &last = m_propsData->current_zone;
@@ -54,7 +136,7 @@ void Mapper::loadMaps()
         if (!last.empty() && last == zone->name()) {
             MapTools t(&m_map);
             MapCursor c = t.createZoneCursor(zone);
-            redrawPosition(c, false);
+            redrawPosition(c, true);
             last_found = true;
             break;
         }
@@ -62,29 +144,44 @@ void Mapper::loadMaps()
     if (!last_found && !zones.empty()) {
         MapTools t(&m_map);
         MapCursor c = t.createZoneCursor(zones[0]);
-        redrawPosition(c, false);
+        redrawPosition(c, true);
     }
 }
 
-void Mapper::redrawPosition(MapCursor cursor, bool resetScrolls)
+void Mapper::lostPosition()
 {
-    m_view.showPosition(cursor, resetScrolls);
+    m_pCurrentRoom = nullptr;
+    redrawPositionByRoom(nullptr);
+}
+
+void Mapper::redrawPosition(MapCursor cursor, bool centreScreen)
+{
+    m_view.showPosition(cursor, centreScreen, false);
     const Rooms3dCube* zone = cursor->zone();
     m_zones_control.setCurrentZone(zone);
 }
 
 void Mapper::redrawPositionByRoom(const Room *room)
 {
-    updateZonesList();
-    MapCursorColor color = RCC_NONE;
-    MapCursor current = m_view.getCurrentPosition();
     m_view.clearSelection();
-    if (current->valid() && current->room(current->pos()) == room) 
-        color = RCC_NORMAL;
     MapTools tools(&m_map);
-    Room *r = tools.findRoom(room->hash());   
-    MapCursor c = tools.createCursor( r, color );
-    redrawPosition(c, true);
+    Room *r = (room) ? tools.findRoom(room->roomdata.hash()) : nullptr;
+    if (!r)
+    {
+        MapCursor c = m_view.getViewPosition();
+        if (c->valid()) {
+            const Rooms3dCube* zone = c->zone();
+            redrawPosition( tools.createZoneCursor(zone),false) ;
+        }
+        else {
+            redrawPosition(tools.createNullCursor(), false);
+        }
+        return;
+    }
+    MapCursor c = tools.createCursor( r, RCC_NORMAL );
+    m_view.showPosition(c, m_propsData->center_mode, true );
+    const Rooms3dCube* zone = c->zone();
+    m_zones_control.setCurrentZone(zone);
 }
 
 void Mapper::onCreate()
@@ -103,13 +200,16 @@ void Mapper::onCreate()
     m_zones_control.Create(m_vSplitter, pane_left, style);
     m_container.Create(m_vSplitter, pane_right, L"", style);
 
+    m_toolbar.setDpi(m_propsData->dpi);
     m_toolbar.Create(m_container, rcDefault, style);
     m_toolbar.setControlWindow(m_hWnd, WM_USER+1);
+    m_toolbar.setCenterMode(m_propsData->center_mode);
     m_view.Create(m_container, rcDefault, NULL, style | WS_VSCROLL | WS_HSCROLL, WS_EX_STATICEDGE);
     m_view.setMenuHandler(m_hWnd);
     m_view.setMoveToolHandler(this);
 
-    m_container.attach(32, m_toolbar, m_view);
+    m_toolbar.GetClientRect(&rc);
+    m_container.attach(rc.bottom, m_toolbar, m_view);
     m_vSplitter.SetSplitterPanes(m_zones_control, m_container);
 
     m_zones_control.setNotifications(m_hWnd, WM_USER, WM_USER+2);
@@ -132,15 +232,16 @@ void Mapper::onSize()
 void Mapper::onZoneChanged()
 {
     MapCursor current = m_view.getCurrentPosition();
-    int zone = m_zones_control.getCurrentZone();
-    if (current->valid() && current->pos().zid == zone)
-    {
-        return redrawPosition(current, false);
-    }
+    int zone = m_zones_control.getCurrentZone();    
+    if (m_pCurrentRoom && m_pCurrentRoom->pos.zid == zone)
+        return redrawPositionByRoom(m_pCurrentRoom);
     MapTools t(&m_map);
     Rooms3dCube *ptr = m_map.findZone(zone);
     MapCursor cursor = t.createZoneCursor(ptr);
-    redrawPosition(cursor, false);
+    if (cursor->valid())
+        return redrawPosition(cursor, false);
+    assert(false);
+    return redrawPosition(t.createNullCursor(), false);
 }
 
 void Mapper::onZoneDeleted()
@@ -152,10 +253,10 @@ void Mapper::onZoneDeleted()
         assert(false);
         return;
     }
-    tstring msg(L"Âû óâåðåíû, ÷òî õîòèòå óäàëèòü çîíó '");
+    tstring msg(L"Ð’Ñ‹ ÑƒÐ²ÐµÑ€ÐµÐ½Ñ‹, Ñ‡Ñ‚Ð¾ Ñ…Ð¾Ñ‚Ð¸Ñ‚Ðµ ÑƒÐ´Ð°Ð»Ð¸Ñ‚ÑŒ Ð·Ð¾Ð½Ñƒ '");
     msg.append(zone_name);
-    msg.append(L"' ?\r\nÎòìåíèòü óäàëåíèå áóäåò íåâîçìîæíî.");
-    if (MessageBox(msg.c_str(), L"Êàðòà", MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2) == IDYES) {        
+    msg.append(L"' ?\r\nÐžÑ‚Ð¼ÐµÐ½Ð¸Ñ‚ÑŒ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð±ÑƒÐ´ÐµÑ‚ Ð½ÐµÐ²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾.");
+    if (MessageBox(msg.c_str(), L"ÐšÐ°Ñ€Ñ‚Ð°", MB_YESNO|MB_ICONWARNING|MB_DEFBUTTON2) == IDYES) {        
         m_map.deleteZone(zone_name);
         updateZonesList();
         Rooms3dCubeList zones;
@@ -214,10 +315,10 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryMakeNewZone(rooms[0], dir);
         if (!result)
         {
-            MessageBox(L"Íåâîçìîæíî ñîçäàòü íîâóþ çîíó èç-çà çàìêíóòîñòè êîðèäîðîâ íà äàííóþ êîìíàòó!", L"Îøèáêà", MB_OK | MB_ICONERROR);
+            MessageBox(L"ÐÐµÐ²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾ ÑÐ¾Ð·Ð´Ð°Ñ‚ÑŒ Ð½Ð¾Ð²ÑƒÑŽ Ð·Ð¾Ð½Ñƒ Ð¸Ð·-Ð·Ð° Ð·Ð°Ð¼ÐºÐ½ÑƒÑ‚Ð¾ÑÑ‚Ð¸ ÐºÐ¾Ñ€Ð¸Ð´Ð¾Ñ€Ð¾Ð² Ð½Ð° Ð´Ð°Ð½Ð½ÑƒÑŽ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ñƒ!", L"ÐžÑˆÐ¸Ð±ÐºÐ°", MB_OK | MB_ICONERROR);
             return;
         }
-        // óäàëÿåì îòìåòêó, ò.ê. êîìíàòà íå èäåò â äðóãóþ çîíó
+        // ÑƒÐ´Ð°Ð»ÑÐµÐ¼ Ð¾Ñ‚Ð¼ÐµÑ‚ÐºÑƒ, Ñ‚.Ðº. ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ð° Ð½Ðµ Ð¸Ð´ÐµÑ‚ Ð² Ð´Ñ€ÑƒÐ³ÑƒÑŽ Ð·Ð¾Ð½Ñƒ
         rooms[0]->selected = false;
 #ifdef _DEBUG
         m_view.Invalidate();
@@ -250,7 +351,7 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryConcatZones(rooms[0], dir);
         if (!result)
         {
-            MessageBox(L"Ñêëåèòü äâå çîíû â îäíó íå ïîëó÷èëîñü!", L"Îøèáêà", MB_OK | MB_ICONERROR);
+            MessageBox(L"Ð¡ÐºÐ»ÐµÐ¸Ñ‚ÑŒ Ð´Ð²Ðµ Ð·Ð¾Ð½Ñ‹ Ð² Ð¾Ð´Ð½Ñƒ Ð½Ðµ Ð¿Ð¾Ð»ÑƒÑ‡Ð¸Ð»Ð¾ÑÑŒ!", L"ÐžÑˆÐ¸Ð±ÐºÐ°", MB_OK | MB_ICONERROR);
             return;
         }
         redrawPositionByRoom(rooms[0]);
@@ -265,7 +366,7 @@ void Mapper::onRenderContextMenu(int id)
         bool result = t.tryMoveRoom(rooms[0], dir);
         if (!result)
         {
-            MessageBox(L"Íåâîçìîæíî ïåðåìåñòèòü êîìíàòó â äðóãóþ çîíó!", L"Îøèáêà", MB_OK | MB_ICONERROR);
+            MessageBox(L"ÐÐµÐ²Ð¾Ð·Ð¼Ð¾Ð¶Ð½Ð¾ Ð¿ÐµÑ€ÐµÐ¼ÐµÑÑ‚Ð¸Ñ‚ÑŒ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ñƒ Ð² Ð´Ñ€ÑƒÐ³ÑƒÑŽ Ð·Ð¾Ð½Ñƒ!", L"ÐžÑˆÐ¸Ð±ÐºÐ°", MB_OK | MB_ICONERROR);
             return;
         }
         redrawPositionByRoom(rooms[0]);
@@ -277,40 +378,53 @@ void Mapper::onToolbar(int id)
 {
     if (id == IDC_BUTTON_SAVEZONES) {
         saveMaps();
+        return;
     }
 
     if (id == IDC_BUTTON_LOADZONES) {
         loadMaps();
+        return;
     }
 
     if (id == IDC_BUTTON_CLEARZONES) {
         m_view.clear();
         m_map.clearMaps();
         m_zones_control.deleteAllZones();
-        MapCursor cursor = m_view.getCurrentPosition();
-        redrawPosition(cursor, false);
+        redrawPositionByRoom(nullptr);
+        return;
     }
 
-    if (id == IDC_BUTTON_LEVEL_DOWN) {
-        MapCursor c = m_view.getCurrentPosition();
-        if (!c->valid())
+    if (id == IDC_BUTTON_LEVEL_DOWN || id == IDC_BUTTON_LEVEL_UP) 
+    {
+        MapCursor v = m_view.getViewPosition();
+        if (!v->valid())
             return;
-        if (c->move(RD_DOWN))
-            redrawPosition(c, false);
-    }
-
-    if (id == IDC_BUTTON_LEVEL_UP) {
-        MapCursor c = m_view.getCurrentPosition();
-        if (!c->valid())
-            return;
-        if (c->move(RD_UP))
-            redrawPosition(c, false);
+        RoomDir d = (id == IDC_BUTTON_LEVEL_DOWN) ? RD_DOWN : RD_UP;
+        MapCursor newv = v->move(d);
+        if (newv)
+        {
+            MapCursor c = m_view.getCurrentPosition();
+            if (c->valid())
+            {
+                const Rooms3dCubePos& p = newv->pos();
+                const Rooms3dCubePos& cp = c->pos();
+                if (p.zid == cp.zid && p.z == cp.z)
+                {
+                    const Room* r = c->room(c->pos());
+                    if (r != nullptr) {
+                        redrawPositionByRoom(r);
+                        return;
+                    }
+                }
+            }
+            redrawPosition(newv, false);
+        }
     }
 
     if (id == IDC_BUTTON_LEVEL0) {
-        MapCursor c = m_view.getCurrentPosition();
+        MapCursor c = m_view.getViewPosition();
         if (!c->valid())
-            return;        
+            return;
         const Rooms3dCubePos& pos = c->pos();
         Rooms3dCube *zone = m_map.findZone(pos.zid);
         if (!zone) {
@@ -323,6 +437,26 @@ void Mapper::onToolbar(int id)
            MapCursor cursor = t.createZoneCursor(ptr);
            redrawPosition(cursor, true);
         }
+        return;
+    }
+
+    if (id == IDC_BUTTON_CENTER) 
+    {
+        bool mode = !m_propsData->center_mode;
+        m_propsData->center_mode = mode;
+        m_toolbar.setCenterMode(mode);
+        return;
+    }
+
+    if (id == IDC_BUTTON_HOME)
+    {
+        MapCursor c = m_view.getCurrentPosition();
+        if (!c->valid())
+            return;
+        const Room* r = c->room(c->pos());
+        if (r != nullptr)
+            redrawPositionByRoom(r);
+        return;
     }
 }
 

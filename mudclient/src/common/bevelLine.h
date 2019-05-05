@@ -1,4 +1,4 @@
-#ifndef __BEVELLINE_H__
+﻿#ifndef __BEVELLINE_H__
 #define __BEVELLINE_H__
 
 #pragma once

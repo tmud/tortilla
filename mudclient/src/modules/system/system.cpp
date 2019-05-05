@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "tasks.h"
 #include "alert.h"
 #pragma comment(lib, "lua.lib")
@@ -159,6 +159,7 @@ int system_dbglog(lua_State *L)
     {
         formatByType(L, i, &msg);
     }
+    msg.append(L"\r\n");
     OutputDebugString(msg.c_str());
     return 0;
 }

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "accessors.h"
 #include "pluginsApi.h"
 #include "api/api.h"
@@ -54,7 +54,7 @@ PluginData& find_plugin()
     {
         PluginData pd;
         pd.name = plugin_name;
-        pd.state = _cp->state() ? 1 : 0;
+        pd.state = _cp->state() ? PluginData::PDS_ON : PluginData::PDS_OFF;
         pdv->push_back(pd);
         index = pdv->size() - 1;
     }
@@ -88,7 +88,7 @@ int string_format(lua_State *L)
         fregexp.getString(i, &k);
         int lastsym = k.size()-1;
         tchar op = k.at(lastsym);
-        if (op == L'%') { result.append(L"%"); from = last; continue; }        
+        if (op == L'%') { result.append(L"%"); from = last; continue; }
         int p = i + 1;
         if (p > n) continue;
         switch (op)

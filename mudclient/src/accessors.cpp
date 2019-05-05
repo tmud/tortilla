@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "accessors.h"
 #include "propertiesPages/propertiesData.h"
 #include "MainFrm.h"
@@ -36,7 +36,8 @@ int tortilla::getCurrentFontHeight()
     f->GetLogFont(&lf);
     CDC dc(_gameview->GetDC());
     int height = -MulDiv(lf.lfHeight, GetDeviceCaps(dc, LOGPIXELSY), 72);
-    return height;
+    float heightdpi = height / tortilla::getProperties()->dpi;
+    return static_cast<int>(heightdpi);
 }
 
 Palette256* tortilla::getPalette()

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "propertiesPages/propertiesData.h"
 
 class ProfilesGroupList
@@ -48,5 +48,6 @@ public:
 private:
     bool createSettingsFile(const Profile& profile);
     bool createEmptyProfile(const Profile& profile);
-    bool createFromResource(const Profile& src, const Profile& dst);
+    bool createFromResourcePak(const Profile& src, const Profile& dst);
+    bool createFromResourceFolder(const Profile& src, const Profile& dst);
 };

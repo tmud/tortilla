@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "mapSmartTools.h"
 
 bool MapSmartTools::addLink(Room* from, Room* to, RoomDir dir)

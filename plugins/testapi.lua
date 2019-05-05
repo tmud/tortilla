@@ -53,15 +53,8 @@ end
 function testapi.init()
   test1()
   test_arrayxy()
-  addCommand('testapi')
+  runCommand("#wait 2 { #plugin testapi off }")
 end
-
-function testapi.syscmd(t)
-  if t[1] ~= 'testapi' then return t end
-  test1()
-  test_arrayxy()
-end
-
 
 return testapi
 

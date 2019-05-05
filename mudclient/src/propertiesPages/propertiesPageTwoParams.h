@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "propertiesSaveHelper.h"
 #include "propertiesUpDown.h"
@@ -382,7 +382,7 @@ private:
         m_list.Attach(GetDlgItem(IDC_LIST));
         m_list.addColumn(m_config.list1, 40);
         m_list.addColumn(m_config.list2, 40);
-        m_list.addColumn(L"Группа", 20);
+        m_list.addColumn(L"Р“СЂСѓРїРїР°", 20);
         m_list.SetExtendedListViewStyle( m_list.GetExtendedListViewStyle() | LVS_EX_GRIDLINES | LVS_EX_FULLROWSELECT);       
         m_list.setKeyDownMessageHandler(m_hWnd, WM_USER+1);
         m_bl1.SubclassWindow(GetDlgItem(IDC_STATIC_BL1));
@@ -395,9 +395,9 @@ private:
         m_state_helper.init(dlg_state, &m_list);
         m_state_helper.loadGroupAndFilter(m_currentGroup, m_filterMode);
 
-        m_filter.AddString(L"Все группы");
-        m_filter.AddString(L"Текущая группа");
-        m_filter.AddString(L"Активные группы");
+        m_filter.AddString(L"Р’СЃРµ РіСЂСѓРїРїС‹");
+        m_filter.AddString(L"РўРµРєСѓС‰Р°СЏ РіСЂСѓРїРїР°");
+        m_filter.AddString(L"РђРєС‚РёРІРЅС‹Рµ РіСЂСѓРїРїС‹");
         m_filter.SetCurSel(m_filterMode);
 
         loadValues();

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "resource.h"
 
 class HighlightSelectColor : public CWindowImpl < HighlightSelectColor, CButton, CControlWinTraits >

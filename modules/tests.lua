@@ -46,14 +46,9 @@ strassert( string.format('аб%dвгде', 10.2), 'аб10вгде' )
 strassert( string.format('аб%.1fвгде', 10.2), 'аб10.2вгде' )
 strassert( string.format('аб%.3fвгде %s', 10.21, 'абра'), 'аб10.210вгде абра' )
 
-
---do
---runCommand("#wait 2 { #plugin testloadsave on }")
 runCommand("#wait 2 { #plugin testmisc off }")
 runCommand("#wait 2 { #plugin testapi on }")
 runCommand("#wait 2 { #cr;#wout 0 Selection text test }")
---return
---end
 
 dofile 'modules.lua'
 
@@ -222,7 +217,7 @@ end
 print("Тест embedded rnd: "..rnd.string(10,20))
 --system.alert("Unittest Alert message!")
 --system.msgbox("message title", "message text", "error")
-system.beep(5000,500)
+--system.beep(5000,500)
 
 
 local s,m,h = system.getTime()
@@ -230,5 +225,3 @@ print("Время: "..h..":"..m..":"..s)
 
 local day,mon,year = system.getDate()
 print("Дата: "..day.."."..mon.."."..year)
-
-

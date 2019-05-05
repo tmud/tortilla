@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "plugin.h"
 #include "msdp/msdpNetwork.h"
@@ -46,7 +46,7 @@ private:
     TableMethodResult doPluginsTableMethod(const char* method, std::vector<tstring>* table, tstring* error_msg);
     void doPluginsMethod(const char* method, int args);
     void turnoffPlugin(const tchar* error, int plugin_index);
-    void setPluginState(Plugin* p, bool state);
+    void setPluginState(Plugin* p,  PluginData::State state);
     void terminatePlugin(Plugin* p);
     bool loadPlugin(Plugin* p);
     void unloadPlugin(Plugin *p);

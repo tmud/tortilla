@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "propertiesPages/propertiesData.h"
 #include "logicElements.h"
@@ -257,17 +257,17 @@ public:
     void getStrings(tstring *str)
     {
         PropertiesData::message_data &md = propData->messages;
-        str->append(stateStr(md.actions)); str->append(L" Триггеры (actions)\r\n");
-        str->append(stateStr(md.aliases)); str->append(L" Макросы (aliases)\r\n");
-        str->append(stateStr(md.subs)); str->append(L" Замены (subs)\r\n");
-        str->append(stateStr(md.antisubs)); str->append(L" Aнтизамены (antisubs)\r\n");
-        str->append(stateStr(md.gags)); str->append(L" Фильтры (gags)\r\n");
-        str->append(stateStr(md.highlights)); str->append(L" Подсветки (highlights)\r\n");
-        str->append(stateStr(md.hotkeys)); str->append(L" Горячие клавиши (hotkeys)\r\n");
-        str->append(stateStr(md.groups)); str->append(L" Группы (groups)\r\n");
-        str->append(stateStr(md.variables)); str->append(L" Переменные (vars)\r\n");
-        str->append(stateStr(md.timers)); str->append(L" Таймеры (timers)\r\n");
-        str->append(stateStr(md.tabwords)); str->append(L" Подстановки (tabs)");
+        str->append(stateStr(md.actions)); str->append(L" РўСЂРёРіРіРµСЂС‹ (actions)\r\n");
+        str->append(stateStr(md.aliases)); str->append(L" РњР°РєСЂРѕСЃС‹ (aliases)\r\n");
+        str->append(stateStr(md.subs)); str->append(L" Р—Р°РјРµРЅС‹ (subs)\r\n");
+        str->append(stateStr(md.antisubs)); str->append(L" AРЅС‚РёР·Р°РјРµРЅС‹ (antisubs)\r\n");
+        str->append(stateStr(md.gags)); str->append(L" Р¤РёР»СЊС‚СЂС‹ (gags)\r\n");
+        str->append(stateStr(md.highlights)); str->append(L" РџРѕРґСЃРІРµС‚РєРё (highlights)\r\n");
+        str->append(stateStr(md.hotkeys)); str->append(L" Р“РѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё (hotkeys)\r\n");
+        str->append(stateStr(md.groups)); str->append(L" Р“СЂСѓРїРїС‹ (groups)\r\n");
+        str->append(stateStr(md.variables)); str->append(L" РџРµСЂРµРјРµРЅРЅС‹Рµ (vars)\r\n");
+        str->append(stateStr(md.timers)); str->append(L" РўР°Р№РјРµСЂС‹ (timers)\r\n");
+        str->append(stateStr(md.tabwords)); str->append(L" РџРѕРґСЃС‚Р°РЅРѕРІРєРё (tabs)");
     }
 
     bool setMode(const tstring& state, const tstring& mode_value)
@@ -290,15 +290,15 @@ public:
 
     bool getStateString(const tstring& state, tstring *str)
     {
-        static const tchar* cmds[] = { L"триггеров (actions)", L"макросов (aliases)", L"замен (subs)", L"антизамен (antisubs)", L"фильтров (gags)",
-            L"подсветок (highlights)", L"горячих клавиш (hotkeys)", L"групп (groups)", L"переменных (vars)", L"таймеров (timers)", L"подстановок (tabs)" };
+        static const tchar* cmds[] = { L"С‚СЂРёРіРіРµСЂРѕРІ (actions)", L"РјР°РєСЂРѕСЃРѕРІ (aliases)", L"Р·Р°РјРµРЅ (subs)", L"Р°РЅС‚РёР·Р°РјРµРЅ (antisubs)", L"С„РёР»СЊС‚СЂРѕРІ (gags)",
+            L"РїРѕРґСЃРІРµС‚РѕРє (highlights)", L"РіРѕСЂСЏС‡РёС… РєР»Р°РІРёС€ (hotkeys)", L"РіСЂСѓРїРї (groups)", L"РїРµСЂРµРјРµРЅРЅС‹С… (vars)", L"С‚Р°Р№РјРµСЂРѕРІ (timers)", L"РїРѕРґСЃС‚Р°РЅРѕРІРѕРє (tabs)" };
         static const int ids[] = { LogicHelper::UPDATE_ACTIONS, LogicHelper::UPDATE_ALIASES, LogicHelper::UPDATE_SUBS,
             LogicHelper::UPDATE_ANTISUBS, LogicHelper::UPDATE_GAGS, LogicHelper::UPDATE_HIGHLIGHTS, LogicHelper::UPDATE_HOTKEYS,
             LogicHelper::UPDATE_GROUPS, LogicHelper::UPDATE_VARS, LogicHelper::UPDATE_TIMERS, LogicHelper::UPDATE_TABS, 0 };        
         int stateid = recognizeState(state);
         if (stateid == LogicHelper::UPDATE_ALL)
         {
-            str->assign(L"Все эхо-уведомления (all) ");
+            str->assign(L"Р’СЃРµ СЌС…Рѕ-СѓРІРµРґРѕРјР»РµРЅРёСЏ (all) ");
             str->append(stateStr(getState(LogicHelper::UPDATE_ACTIONS)));
             return false;
         }
@@ -307,7 +307,7 @@ public:
         {
             if (stateid == ids[i])
             { 
-                str->assign(L"Эхо-уведомления ");
+                str->assign(L"Р­С…Рѕ-СѓРІРµРґРѕРјР»РµРЅРёСЏ ");
                 str->append(cmds[i]);
                 str->append(L" ");
                 str->append(stateStr(getState(stateid)));
@@ -328,9 +328,9 @@ private:
         const tstring& n = value;
         if (n.empty())
             return -1;
-        if (n == L"вкл" || n == L"enable" || n == L"on" || n == L"1")
+        if (n == L"РІРєР»" || n == L"enable" || n == L"on" || n == L"1")
             return 1;
-        if (n == L"выкл" || n == L"disable" || n == L"off" || n == L"0")
+        if (n == L"РІС‹РєР»" || n == L"disable" || n == L"off" || n == L"0")
             return 0;
         return -1;
     }
@@ -398,14 +398,14 @@ public:
     void getStrings(tstring *str)
     {
         PropertiesData::working_mode &md = propData->mode;
-        str->append(stateStr(md.actions)); str->append(L" Триггеры (actions)\r\n");
-        str->append(stateStr(md.aliases)); str->append(L" Макросы (aliases)\r\n");
-        str->append(stateStr(md.subs)); str->append(L" Замены (subs)\r\n");
-        str->append(stateStr(md.antisubs)); str->append(L" Aнтизамены (antisubs)\r\n");
-        str->append(stateStr(md.gags)); str->append(L" Фильтры (gags)\r\n");
-        str->append(stateStr(md.highlights)); str->append(L" Подсветки (highlights)\r\n");
-        str->append(stateStr(md.hotkeys)); str->append(L" Горячие клавиши (hotkeys)\r\n");
-        str->append(stateStr(md.plugins)); str->append(L" Плагины (plugins)");
+        str->append(stateStr(md.actions)); str->append(L" РўСЂРёРіРіРµСЂС‹ (actions)\r\n");
+        str->append(stateStr(md.aliases)); str->append(L" РњР°РєСЂРѕСЃС‹ (aliases)\r\n");
+        str->append(stateStr(md.subs)); str->append(L" Р—Р°РјРµРЅС‹ (subs)\r\n");
+        str->append(stateStr(md.antisubs)); str->append(L" AРЅС‚РёР·Р°РјРµРЅС‹ (antisubs)\r\n");
+        str->append(stateStr(md.gags)); str->append(L" Р¤РёР»СЊС‚СЂС‹ (gags)\r\n");
+        str->append(stateStr(md.highlights)); str->append(L" РџРѕРґСЃРІРµС‚РєРё (highlights)\r\n");
+        str->append(stateStr(md.hotkeys)); str->append(L" Р“РѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё (hotkeys)\r\n");
+        str->append(stateStr(md.plugins)); str->append(L" РџР»Р°РіРёРЅС‹ (plugins)");
     }
     bool setMode(const tstring& state, const tstring& mode_value)
     {
@@ -442,8 +442,8 @@ public:
     }
     void getStateString(const tstring& state, tstring *str)
     {
-        static const tchar* cmds[] = { L"триггеры (actions)", L"макросы (aliases)", L"замены (subs)", L"антизамены (antisubs)", L"фильтры (gags)",
-            L"подсветки (highlights)", L"горячие клавиши (hotkeys)", L"плагины (plugins)" };
+        static const tchar* cmds[] = { L"С‚СЂРёРіРіРµСЂС‹ (actions)", L"РјР°РєСЂРѕСЃС‹ (aliases)", L"Р·Р°РјРµРЅС‹ (subs)", L"Р°РЅС‚РёР·Р°РјРµРЅС‹ (antisubs)", L"С„РёР»СЊС‚СЂС‹ (gags)",
+            L"РїРѕРґСЃРІРµС‚РєРё (highlights)", L"РіРѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё (hotkeys)", L"РїР»Р°РіРёРЅС‹ (plugins)" };
         static const int ids[] = { LogicHelper::MODE_ACTIONS, LogicHelper::MODE_ALIASES, LogicHelper::MODE_SUBS,
             LogicHelper::MODE_ANTISUBS, LogicHelper::MODE_GAGS, LogicHelper::MODE_HIGHLIGHTS, LogicHelper::MODE_HOTKEYS,
             LogicHelper::MODE_PLUGINS, 0 };
@@ -452,7 +452,7 @@ public:
         {
             if (stateid == ids[i])
             { 
-                str->assign(L"Компонент ");
+                str->assign(L"РљРѕРјРїРѕРЅРµРЅС‚ ");
                 str->append(cmds[i]);
                 str->append(L" ");
                 str->append(stateStr(getState(stateid)));
@@ -471,11 +471,11 @@ private:
         const tstring& n = value;
         if (n.empty())
             return -1;
-        if (n == L"вкл" || n == L"enable" || n == L"on" || n == L"1")
+        if (n == L"РІРєР»" || n == L"enable" || n == L"on" || n == L"1")
             return 1;
-        if (n == L"выкл" || n == L"disable" || n == L"off" || n == L"0")
+        if (n == L"РІС‹РєР»" || n == L"disable" || n == L"off" || n == L"0")
             return 0;
-        if (n == L"перекл" || n == L"toggle" || n == L"switch")
+        if (n == L"РїРµСЂРµРєР»" || n == L"toggle" || n == L"switch")
             return 2;
         return -2;
     }
@@ -536,11 +536,11 @@ public:
     void getStrings(tstring *str)
     {
         PropertiesData::debug_data &md = propData->debug;
-        str->append(stateStr(md.actions)); str->append(L" Триггеры (actions)\r\n");
-        str->append(stateStr(md.subs)); str->append(L" Замены (subs)\r\n");
-        str->append(stateStr(md.antisubs)); str->append(L" Aнтизамены (antisubs)\r\n");
-        str->append(stateStr(md.gags)); str->append(L" Фильтры (gags)\r\n");
-        str->append(stateStr(md.highlights)); str->append(L" Подсветки (highlights)");
+        str->append(stateStr(md.actions)); str->append(L" РўСЂРёРіРіРµСЂС‹ (actions)\r\n");
+        str->append(stateStr(md.subs)); str->append(L" Р—Р°РјРµРЅС‹ (subs)\r\n");
+        str->append(stateStr(md.antisubs)); str->append(L" AРЅС‚РёР·Р°РјРµРЅС‹ (antisubs)\r\n");
+        str->append(stateStr(md.gags)); str->append(L" Р¤РёР»СЊС‚СЂС‹ (gags)\r\n");
+        str->append(stateStr(md.highlights)); str->append(L" РџРѕРґСЃРІРµС‚РєРё (highlights)");
     }
 
     bool setMode(const tstring& state, const tstring& mode_value)
@@ -581,8 +581,8 @@ public:
 
     void getStateString(const tstring& state, tstring *str)
     {
-        static const tchar* cmds[] = { L"триггеров (actions)", L"замен (subs)", L"антизамен (antisubs)", L"фильтров (gags)",
-            L"подсветок (highlights)" };
+        static const tchar* cmds[] = { L"С‚СЂРёРіРіРµСЂРѕРІ (actions)", L"Р·Р°РјРµРЅ (subs)", L"Р°РЅС‚РёР·Р°РјРµРЅ (antisubs)", L"С„РёР»СЊС‚СЂРѕРІ (gags)",
+            L"РїРѕРґСЃРІРµС‚РѕРє (highlights)" };
         static const int ids[] = { LogicHelper::MODE_ACTIONS, LogicHelper::MODE_SUBS,
             LogicHelper::MODE_ANTISUBS, LogicHelper::MODE_GAGS, LogicHelper::MODE_HIGHLIGHTS, 0 };
         int stateid = recognizeState(state);
@@ -590,7 +590,7 @@ public:
         {
             if (stateid == ids[i])
             { 
-                str->assign(L"Отладка ");
+                str->assign(L"РћС‚Р»Р°РґРєР° ");
                 str->append(cmds[i]);
                 str->append(L" ");
                 str->append(stateStr(getState(stateid)));
@@ -609,11 +609,11 @@ private:
         const tstring& n = value;
         if (n.empty())
             return -1;
-        if (n == L"вкл" || n == L"enable" || n == L"on" || n == L"1")
+        if (n == L"РІРєР»" || n == L"enable" || n == L"on" || n == L"1")
             return 1;
-        if (n == L"выкл" || n == L"disable" || n == L"off" || n == L"0")
+        if (n == L"РІС‹РєР»" || n == L"disable" || n == L"off" || n == L"0")
             return 0;
-        if (n == L"перекл" || n == L"toggle" || n == L"switch")
+        if (n == L"РїРµСЂРµРєР»" || n == L"toggle" || n == L"switch")
             return 2;
         return -2;
     }

@@ -9,7 +9,7 @@ function bmap.description()
   return 'Плагин отображает встроенную карту Былин в отдельном окне.'
 end
 function bmap.version()
-  return '1.02'
+  return '1.03'
 end
 
 local t
@@ -58,7 +58,11 @@ end
 
 function bmap.init()
   t = prompt_trigger('^:.*', filter)
-  w = createWindow('Автокарта Былин', 300, 300, true)
+  if createWindowDpi then
+     w = createWindowDpi('Автокарта Былин', 300, 300, true)
+  else
+    w = createWindow('Автокарта Былин', 300, 300, true)
+  end
   if not w then
     terminate('Ошибка при создании окна.')
   end

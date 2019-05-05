@@ -1,12 +1,12 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "mainwnd.h"
 #include "clickpad.h"
 
 extern SettingsDlg* m_settings;
 extern ImageCollection *m_image_collection;
 
-ClickpadMainWnd::ClickpadMainWnd() : m_editmode(false),
-m_button_size(64), m_rows(0), m_columns(0), m_backgroundColor(RGB(1,1,1))
+ClickpadMainWnd::ClickpadMainWnd(float clientdpi) : m_editmode(false),
+m_button_size(64), m_rows(0), m_columns(0), m_backgroundColor(RGB(1,1,1)), dpi(clientdpi)
 {
 }
 
@@ -270,9 +270,20 @@ void ClickpadMainWnd::setButtonSize(int size)
        int px = x * (m_button_size+2) + 2;
        int py = y * (m_button_size+2) + 2;
        RECT pos = { px, py, px+m_button_size, py+m_button_size };
+       updateByDpi(pos);
        b->MoveWindow(&pos);
     }}
     setWorkWindowSize();
+}
+
+void ClickpadMainWnd::updateByDpi(RECT &rc)
+{
+    int width = static_cast<int>((rc.right - rc.left)*dpi);
+    int height = static_cast<int>((rc.bottom - rc.top)*dpi);
+    rc.left = static_cast<int>(rc.left * dpi);
+    rc.top = static_cast<int>(rc.top * dpi);
+    rc.right = rc.left + width;
+    rc.bottom = rc.top + height;
 }
 
 void ClickpadMainWnd::onCreate()
@@ -409,6 +420,7 @@ void ClickpadMainWnd::load(xml::node& node)
             int px = x * (m_button_size+2) + 2;
             int py = y * (m_button_size+2) + 2;
             RECT pos = { px, py, px + m_button_size, py + m_button_size };
+            updateByDpi(pos);
             b->Create(m_hWnd, pos, L"", WS_CHILD);
             int index = y*MAX_COLUMNS + x;
             m_buttons[index] = b;
@@ -461,8 +473,10 @@ void ClickpadMainWnd::setWorkWindowSize()
 {
     CWindow wnd(getFloatWnd());
     RECT rc; wnd.GetWindowRect(&rc);
-    int width = getColumns() * (m_button_size+2) + (GetSystemMetrics(SM_CXFRAME)) * 2 + 2;
-    int height = getRows() * (m_button_size+2) + (GetSystemMetrics(SM_CYFRAME)) * 2 + GetSystemMetrics(SM_CYSMCAPTION) + 2;
+    RECT workarea = { 0, 0, getColumns() * (m_button_size + 2), getRows() * (m_button_size + 2) };
+    updateByDpi(workarea);
+    int width = workarea.right + (GetSystemMetrics(SM_CXFRAME)) * 2 + 2;
+    int height = workarea.bottom + (GetSystemMetrics(SM_CYFRAME)) * 2 + GetSystemMetrics(SM_CYSMCAPTION) + 2;
     rc.right = rc.left + width;
     rc.bottom = rc.top + height;
     wnd.MoveWindow(&rc);

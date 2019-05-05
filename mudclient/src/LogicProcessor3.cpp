@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "accessors.h"
 #include "logicProcessor.h"
 
@@ -58,7 +58,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
        MudViewString *last = m_pHost->getLastString(0);
        if (last && !last->prompt && !last->gamecmd && !last->system && !last->triggered)
        {
-           // в стек, если нельзя сразу добавить команды в окно (нет prompt/gamecmd, возможно это разрыв текста).
+           // РІ СЃС‚РµРє, РµСЃР»Рё РЅРµР»СЊР·СЏ СЃСЂР°Р·Сѓ РґРѕР±Р°РІРёС‚СЊ РєРѕРјР°РЅРґС‹ РІ РѕРєРЅРѕ (РЅРµС‚ prompt/gamecmd, РІРѕР·РјРѕР¶РЅРѕ СЌС‚Рѕ СЂР°Р·СЂС‹РІ С‚РµРєСЃС‚Р°).
            stack_el e;
            e.text.assign(text, text_len);
            e.flags = flags;
@@ -67,17 +67,17 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
        }
     }
 
-    // сюда попадаем:
-    // 1. данные, как продолжение старых данных - ок
-    // 2. команды, но после prompt/другой команды - ок
-    // 3. команды, но из стека по таймеру - попытка вставки
+    // СЃСЋРґР° РїРѕРїР°РґР°РµРј:
+    // 1. РґР°РЅРЅС‹Рµ, РєР°Рє РїСЂРѕРґРѕР»Р¶РµРЅРёРµ СЃС‚Р°СЂС‹С… РґР°РЅРЅС‹С… - РѕРє
+    // 2. РєРѕРјР°РЅРґС‹, РЅРѕ РїРѕСЃР»Рµ prompt/РґСЂСѓРіРѕР№ РєРѕРјР°РЅРґС‹ - РѕРє
+    // 3. РєРѕРјР°РЅРґС‹, РЅРѕ РёР· СЃС‚РµРєР° РїРѕ С‚Р°Р№РјРµСЂСѓ - РїРѕРїС‹С‚РєР° РІСЃС‚Р°РІРєРё
     parseData parse_data;
     if (window == 0 && !(flags & GAME_LOG) && !(flags & FROM_STACK))
     {
         MudViewParserOscPalette palette;
         m_parser.parse(text, text_len, true, &parse_data, &palette);
 
-        // Работа с OSC палитрой
+        // Р Р°Р±РѕС‚Р° СЃ OSC РїР°Р»РёС‚СЂРѕР№
         if (palette.reset_colors)
             m_pHost->resetOscColors();
         else if (!palette.colors.empty())
@@ -89,8 +89,8 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
     }
     else
     {
-        // используем отдельный parser для дополнительных окон,
-        // чтобы не сбивались данные в главном окне (в парсере инфа о прошлом блоке).
+        // РёСЃРїРѕР»СЊР·СѓРµРј РѕС‚РґРµР»СЊРЅС‹Р№ parser РґР»СЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹С… РѕРєРѕРЅ,
+        // С‡С‚РѕР±С‹ РЅРµ СЃР±РёРІР°Р»РёСЃСЊ РґР°РЅРЅС‹Рµ РІ РіР»Р°РІРЅРѕРј РѕРєРЅРµ (РІ РїР°СЂСЃРµСЂРµ РёРЅС„Р° Рѕ РїСЂРѕС€Р»РѕРј Р±Р»РѕРєРµ).
         m_parser2.parse(text, text_len, false, &parse_data, NULL);
     }
 
@@ -115,10 +115,10 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         parse_data.update_prev_string = false;
     }
 
-#ifdef MARKERS_IN_VIEW       // для отладки
+#ifdef MARKERS_IN_VIEW       // РґР»СЏ РѕС‚Р»Р°РґРєРё
     parseDataStrings &p = parse_data.strings;
-    MARKPROMPTUNDERLINE(p);  // метка на prompt
-    if (flags & FROM_STACK)  // команды из стека по таймеру отдельным цветом
+    MARKPROMPTUNDERLINE(p);  // РјРµС‚РєР° РЅР° prompt
+    if (flags & FROM_STACK)  // РєРѕРјР°РЅРґС‹ РёР· СЃС‚РµРєР° РїРѕ С‚Р°Р№РјРµСЂСѓ РѕС‚РґРµР»СЊРЅС‹Рј С†РІРµС‚РѕРј
     {
         if (flags & FROM_TIMER)
         {
@@ -135,7 +135,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
         else
             MARKINVERSED(p);
     }
-    if (!p.empty())          // скобки - блок текста от сервера
+    if (!p.empty())          // СЃРєРѕР±РєРё - Р±Р»РѕРє С‚РµРєСЃС‚Р° РѕС‚ СЃРµСЂРІРµСЂР°
     {
         MudViewString *s = p[0];
         MudViewStringBlock b;
@@ -164,7 +164,7 @@ void LogicProcessor::processIncoming(const WCHAR* text, int text_len, int flags,
 
     m_pHost->accLastString(window, &parse_data);
 
-    // попытка вставки стека по ходу данных, если это обычные данные
+    // РїРѕРїС‹С‚РєР° РІСЃС‚Р°РІРєРё СЃС‚РµРєР° РїРѕ С…РѕРґСѓ РґР°РЅРЅС‹С…, РµСЃР»Рё СЌС‚Рѕ РѕР±С‹С‡РЅС‹Рµ РґР°РЅРЅС‹Рµ
     if (window == 0 && !(flags & (GAME_LOG | GAME_CMD)))
     {
         MudViewString *last = m_pHost->getLastString(0);
@@ -241,12 +241,12 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
                m_prompt_mode = OFF; m_prompt_counter = 0; }
        }
 
-       // без iacga/заданный шаблон пробуем найти место вставки сами через универсальный шаблон
-       // параллельно делим строку по prompt если находим
+       // Р±РµР· iacga/Р·Р°РґР°РЅРЅС‹Р№ С€Р°Р±Р»РѕРЅ РїСЂРѕР±СѓРµРј РЅР°Р№С‚Рё РјРµСЃС‚Рѕ РІСЃС‚Р°РІРєРё СЃР°РјРё С‡РµСЂРµР· СѓРЅРёРІРµСЂСЃР°Р»СЊРЅС‹Р№ С€Р°Р±Р»РѕРЅ
+       // РїР°СЂР°Р»Р»РµР»СЊРЅРѕ РґРµР»РёРј СЃС‚СЂРѕРєСѓ РїРѕ prompt РµСЃР»Рё РЅР°С…РѕРґРёРј
        if (m_prompt_mode == OFF || m_prompt_mode == UNIVERSAL)
        {
            last_game_cmd.reset();
-           parseDataStrings tmp;       // временный буфер
+           parseDataStrings tmp;       // РІСЂРµРјРµРЅРЅС‹Р№ Р±СѓС„РµСЂ
            for (int i = 0, e = parse_data.strings.size(); i < e; ++i)
            {
                int last = tmp.size();
@@ -296,9 +296,9 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
        }
     }
 
-    if (m_incoming_stack.empty())   // нельзя поставить вначале, тк. требуется контроль наличия prompt в трафике
+    if (m_incoming_stack.empty())   // РЅРµР»СЊР·СЏ РїРѕСЃС‚Р°РІРёС‚СЊ РІРЅР°С‡Р°Р»Рµ, С‚Рє. С‚СЂРµР±СѓРµС‚СЃСЏ РєРѕРЅС‚СЂРѕР»СЊ РЅР°Р»РёС‡РёСЏ prompt РІ С‚СЂР°С„РёРєРµ
         return false;
-    if (last_game_cmd.index == -1)  // нет места для вставки данных из стека
+    if (last_game_cmd.index == -1)  // РЅРµС‚ РјРµСЃС‚Р° РґР»СЏ РІСЃС‚Р°РІРєРё РґР°РЅРЅС‹С… РёР· СЃС‚РµРєР°
         return false;
 
     // div current parseData at 2 parts
@@ -306,7 +306,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     pd.update_prev_string = parse_data.update_prev_string;
     pd.last_finished = true;
     pd.strings.assign(parse_data.strings.begin(), parse_data.strings.begin() + last_game_cmd.index + 1);
-    MARKITALIC(pd.strings);     // режим отладки
+    MARKITALIC(pd.strings);     // СЂРµР¶РёРј РѕС‚Р»Р°РґРєРё
     printIncoming(pd, flags, 0);
     pd.strings.clear();
 
@@ -316,7 +316,7 @@ bool LogicProcessor::processStack(parseData& parse_data, int flags)
     pd.update_prev_string = false;
     pd.last_finished = parse_data.last_finished;
     pd.strings.assign(parse_data.strings.begin() + last_game_cmd.index + 1, parse_data.strings.end());
-    MARKBLINK(pd.strings);      // режим отладки
+    MARKBLINK(pd.strings);      // СЂРµР¶РёРј РѕС‚Р»Р°РґРєРё
     printIncoming(pd, flags, 0);
     pd.strings.clear();
     parse_data.strings.clear();
@@ -346,7 +346,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
     parseDataStrings &pds = parse_data.strings;
     if (parse_data.update_prev_string)
     {
-        MudViewString *s = parse_data.strings[0];
+        MudViewString *s = pds[0];
         if (s->prompt && s->gamecmd)
         {
             pds.erase(pds.begin());
@@ -368,7 +368,7 @@ void LogicProcessor::printIncoming(parseData& parse_data, int flags, int window)
         MudViewString *s = pds[last];
         if (!s->prompt && !s->gamecmd && !s->system && !s->triggered)
         {
-            // last string not finished (игровой текст, не промпт, не команда и не лог)
+            // last string not finished (РёРіСЂРѕРІРѕР№ С‚РµРєСЃС‚, РЅРµ РїСЂРѕРјРїС‚, РЅРµ РєРѕРјР°РЅРґР° Рё РЅРµ Р»РѕРі)
             parse_data.last_finished = false;
 #ifdef MARKERS_IN_VIEW
             std::vector<MudViewStringBlock> &b = s->blocks;
@@ -452,12 +452,11 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
 
         if (!e->commands.empty())
         {
-            // выполняем команды actions триггеров
+            // РІС‹РїРѕР»РЅСЏРµРј РєРѕРјР°РЅРґС‹ actions С‚СЂРёРіРіРµСЂРѕРІ
             runCommands(e->commands);
-            int x = 1;
         }
 
-        // eсли еще есть и триггеры, то дообрабатываем в actions
+        // eСЃР»Рё РµС‰Рµ РµСЃС‚СЊ Рё С‚СЂРёРіРіРµСЂС‹, С‚Рѕ РґРѕРѕР±СЂР°Р±Р°С‚С‹РІР°РµРј РІ actions
         if (!e->triggers.empty())
         {
             if (!e->lua_processed.empty()) 
@@ -475,7 +474,6 @@ void LogicProcessor::pipelineParseData(parseData& parse_data, int flags, int win
         }
         m_pipeline.freeElement(e);
     }
-    m_pHost->clearDropped(window);
 }
 
 void LogicProcessor::printParseData(parseData& parse_data, int flags, int window, LogicPipelineElement *pe)
@@ -485,12 +483,14 @@ void LogicProcessor::printParseData(parseData& parse_data, int flags, int window
 
     // final step for data
     // preprocess data via plugins
-    if (!(flags & (SKIP_PLUGINS_BEFORE|SKIP_COMPONENT_PLUGINS) ))
+    if (!(flags & (SKIP_PLUGINS_BEFORE | SKIP_COMPONENT_PLUGINS)))
     {
         m_pHost->preprocessText(window, &parse_data);
-
-        // process lua plugins triggers
-        processLuaTriggers(parse_data, flags, pe);
+        if (!(flags & SKIP_ACTIONS))
+        {
+            // process lua plugins triggers
+            processLuaTriggers(parse_data, flags, pe);
+        }
     }
 
     PropertiesData *pdata = tortilla::getProperties();
@@ -583,9 +583,15 @@ void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicP
         bool triggered = luatriggers->processTriggers(parse_data, j, pe->triggers);
         if (!triggered)
             continue;
+        if (flags & FROM_OUTPUT)
+        {
+            std::vector<TriggerAction> &t = pe->triggers;
+            for (int i = 0, e = t.size(); i < e; ++i)
+                t[i]->triggeredOutput();
+        }
         parseData &not_processed = pe->not_processed;
         MudViewString *s = parse_data.strings[j];
-        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер        
+        s->triggered = true; //С‡С‚РѕР±С‹ РєРѕРјР°РЅРґР° РјРѕРіР»Р° РЅР°РїРµС‡Р°С‚Р°С‚СЊСЃСЏ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ СЃС‚СЂРѕС‡РєРё РЅР° РєРѕС‚РѕСЂСѓСЋ СЃСЂР°Р±РѕС‚Р°Р» С‚СЂРёРіРіРµСЂ
         not_processed.last_finished = parse_data.last_finished;
         parse_data.last_finished = true;
         not_processed.update_prev_string = false;
@@ -597,23 +603,28 @@ void LogicProcessor::processLuaTriggers(parseData& parse_data, int flags, LogicP
 }
 
 void LogicProcessor::processActionsTriggers(parseData& parse_data, int flags, LogicPipelineElement *pe, LogicTriggered* trigg)
-{    
-    // process lua triggers or actions
-    PluginsTriggersHandler *luatriggers = m_pHost->getPluginsTriggers();
+{
+    // process actions
     for (int j=0,je=parse_data.strings.size()-1; j<=je; ++j)
     {
         bool triggered = m_helper.processActions(&parse_data, j, &pe->commands, trigg);
         if (!triggered)
             continue;
+        if (flags & FROM_OUTPUT)
+        {
+            InputCommands &cmds = pe->commands;
+            for (int i = 0, e = cmds.size(); i < e; ++i)
+                 cmds[i]->from_output = true;
+        }
         parseData &not_processed = (pe->triggers.empty()) ? pe->not_processed : pe->lua_processed;
         MudViewString *s = parse_data.strings[j];
-        s->triggered = true; //чтобы команда могла напечататься сразу после строчки на которую сработал триггер
+        s->triggered = true; //С‡С‚РѕР±С‹ РєРѕРјР°РЅРґР° РјРѕРіР»Р° РЅР°РїРµС‡Р°С‚Р°С‚СЊСЃСЏ СЃСЂР°Р·Сѓ РїРѕСЃР»Рµ СЃС‚СЂРѕС‡РєРё РЅР° РєРѕС‚РѕСЂСѓСЋ СЃСЂР°Р±РѕС‚Р°Р» С‚СЂРёРіРіРµСЂ
         not_processed.last_finished = parse_data.last_finished;
         parse_data.last_finished = true;
         not_processed.update_prev_string = false;
         int from = j + 1;
         not_processed.strings.assign(parse_data.strings.begin() + from, parse_data.strings.end());
         parse_data.strings.resize(from);
-        return;   
+        return;
     }
 }

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "network.h"
 #include <winsock2.h>
  #include <Mstcpip.h>
@@ -128,8 +128,8 @@ void NetworkConnection::threadProc()
     }
     tcp_keepalive alive;
     alive.onoff = 1;
-	alive.keepalivetime = 5000;    // <- âðåìÿ ìåæäó ïîñûëêàìè keep-alive (ìñ)
-	alive.keepaliveinterval = 500; // <- âðåìÿ ìåæäó ïîñûëêàìè ïðè îòñóòñâèè îòâåòà (ìñ)
+	alive.keepalivetime = 5000;    // <- Ð²Ñ€ÐµÐ¼Ñ Ð¼ÐµÐ¶Ð´Ñƒ Ð¿Ð¾ÑÑ‹Ð»ÐºÐ°Ð¼Ð¸ keep-alive (Ð¼Ñ)
+	alive.keepaliveinterval = 500; // <- Ð²Ñ€ÐµÐ¼Ñ Ð¼ÐµÐ¶Ð´Ñƒ Ð¿Ð¾ÑÑ‹Ð»ÐºÐ°Ð¼Ð¸ Ð¿Ñ€Ð¸ Ð¾Ñ‚ÑÑƒÑ‚ÑÐ²Ð¸Ð¸ Ð¾Ñ‚Ð²ÐµÑ‚Ð° (Ð¼Ñ)
     DWORD nSize = 0;
     if  (WSAIoctl(sock, SIO_KEEPALIVE_VALS, &alive, sizeof(alive), NULL, 0, &nSize,NULL,NULL) == SOCKET_ERROR)
     {
@@ -192,7 +192,7 @@ void NetworkConnection::threadProc()
              int received = ::recv(sock, m_recive_buffer.getData(), m_recive_buffer.getSize(), 0);
              if (received == SOCKET_ERROR)
              {
-                 if (WSAGetLastError() == WSAEWOULDBLOCK) {}    // íåò äàííûõ
+                 if (WSAGetLastError() == WSAEWOULDBLOCK) {}    // Ð½ÐµÑ‚ Ð´Ð°Ð½Ð½Ñ‹Ñ…
                  else
                  {
                     sendEvent(NE_DISCONNECT);
@@ -233,7 +233,7 @@ void NetworkConnection::threadProc()
 }
 
 Network::Network() : m_connection(2048), m_pMccpStream(NULL), m_mccp_on(false), m_totalReaded(0), m_totalDecompressed(0), 
-m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false)
+m_double_iac_mode(true), m_utf8_encoding(false), m_mtts_step(-1), m_msdp_on(false), m_disable_mccp(false)
 {
     m_input_buffer.alloc(2048);
     m_mccp_buffer.alloc(8192);
@@ -245,8 +245,9 @@ Network::~Network()
     disconnect();
 }
 
-void Network::connect(const NetworkConnectData& data)
+void Network::connect(const NetworkConnectData& data, bool disable_mccp)
 {
+    m_disable_mccp = disable_mccp;
     init_mccp();
     m_connection.connect(data);
 }
@@ -540,6 +541,7 @@ int Network::processing_data(const tbyte* buffer, int len, bool *error)
 void Network::init_mccp()
 {
     close_mccp();
+    if (m_disable_mccp) return;
     z_stream *zs = new z_stream();
     zs->next_in    =  NULL;
     zs->avail_in   =  0;

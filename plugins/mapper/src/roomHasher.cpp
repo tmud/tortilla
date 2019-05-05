@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "roomHasher.h"
 #include "md5.h"
 
@@ -53,7 +53,7 @@ Rooms3dCubeHash::Rooms3dCubeHash(const Rooms3dCube* c)
 				const Room* r = c->getRoom(p);
 				if (!r) continue;
 				const RoomData &rd = r->roomdata;
-				m.add(rd.name);
+				m.add(rd.roomname);
 				m.add(rd.vnum);
 				//m.add(rd.exits);
 				//m.add(rd.descr);

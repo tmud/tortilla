@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "helpManager.h"
 
 class RegHelper
@@ -117,7 +117,7 @@ void openHelp(HWND parent, const tstring& helplabel)
     {
         WCHAR buffer[MAX_PATH];
         LoadString(_Module.GetResourceInstance(), IDR_MAINFRAME, buffer, MAX_PATH-1);
-        tstring message(L"Невозможно открыть справку! Отсутствует файл: ");
+        tstring message(L"РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС‚РєСЂС‹С‚СЊ СЃРїСЂР°РІРєСѓ! РћС‚СЃСѓС‚СЃС‚РІСѓРµС‚ С„Р°Р№Р»: ");
         message.append(helpfile);
         MessageBox(parent, message.c_str(), buffer, MB_OK|MB_ICONSTOP);
         return;
@@ -148,7 +148,7 @@ void openHelp(HWND parent, const tstring& helplabel)
     {
         WCHAR buffer[MAX_PATH];
         LoadString(_Module.GetResourceInstance(), IDR_MAINFRAME, buffer, MAX_PATH-1);
-        tstring message(L"Невозможно открыть справку! Не получилось определить браузер по умолчанию. Справка находится тут: ");
+        tstring message(L"РќРµРІРѕР·РјРѕР¶РЅРѕ РѕС‚РєСЂС‹С‚СЊ СЃРїСЂР°РІРєСѓ! РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ РѕРїСЂРµРґРµР»РёС‚СЊ Р±СЂР°СѓР·РµСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ. РЎРїСЂР°РІРєР° РЅР°С…РѕРґРёС‚СЃСЏ С‚СѓС‚: ");
         message.append(path0);
         MessageBox(parent, message.c_str(), buffer, MB_OK|MB_ICONSTOP);
         return;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "propertiesPages/propertiesData.h"
 #include "propertiesPages/propertiesManager.h"

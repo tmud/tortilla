@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "roomsContainer.h"
 
 class Rooms3dCube
@@ -15,6 +15,7 @@ public:
     int id() const { return z_id; }
     enum AR_STATUS { AR_OK = 0, AR_INVALIDROOM, AR_BUSY };
     AR_STATUS addRoom(const Rooms3dCubePos& p, Room* r);
+    AR_STATUS addRoomWithUnknownPosition(Room* r);
     const Room* getRoom(const Rooms3dCubePos& p) const;
     void  deleteRoom(const Rooms3dCubePos& p);
     Room* detachRoom(const Rooms3dCubePos& p);

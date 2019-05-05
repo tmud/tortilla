@@ -1,15 +1,16 @@
-#pragma once
+ï»¿#pragma once
 #include "profileHelpers.h"
 #include "profilesPath.h"
 
 struct ProfileData
 {
-    ProfileData() : create_link(false), create_new(false), copy_from_src(false) {}
+    ProfileData() : create_link(false), create_new(false), copy_from_src(false), create_empty(false) {}
     Profile profile;
     Profile src;
     bool create_link;
     bool create_new;
     bool copy_from_src;
+    bool create_empty;
 };
 
 class SelectProfileDlg : public CDialogImpl<SelectProfileDlg>
@@ -24,6 +25,7 @@ class SelectProfileDlg : public CDialogImpl<SelectProfileDlg>
     CButton m_create_link;
     CButton m_create_new;
     CButton m_copy_current;
+    CButton m_create_empty;
     CEdit m_group_name;
     CEdit m_profile_name;
     CStatic m_label_group_name;
@@ -46,6 +48,8 @@ private:
         COMMAND_ID_HANDLER(IDOK, OnOk)
         COMMAND_ID_HANDLER(IDCANCEL, OnCloseCmd)        
         COMMAND_ID_HANDLER(IDC_CHECK_CREATE_NEW_PROFILE, OnCheckNewProfile)
+        COMMAND_ID_HANDLER(IDC_CHECK_CREATE_EMPTY_PROFILE, OnCheckEmptyProfile)
+        COMMAND_ID_HANDLER(IDC_CHECK_COPY_CURRENT_PROFILE, OnCheckCopyProfile)
         COMMAND_HANDLER(IDC_COMBO_GROUPS, CBN_SELCHANGE, OnGroupItemChanged)
         COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_SELCHANGE, OnProfileItemChanged)
         COMMAND_HANDLER(IDC_LIST_PROFILE, LBN_DBLCLK, OnProfileItemSelect)
@@ -59,12 +63,25 @@ private:
         ChangeDir cd;
         if (cd.changeDir(L"resources"))
         {
-            ProfilesDirsListHelper ph(L"profiles");
-            for (int i = 0, e = ph.dirs.size(); i < e; ++i)
+            ProfilesInZipHelper zip("profiles.pak");
+            if (zip.dirs.empty())
             {
-                const tstring& d = ph.dirs[i];
-                if (d == default_profile_folder) continue;
-                templates.push_back(d);
+#ifdef _DEBUG
+                //ProfilesDirsListHelper ph(L"profiles");
+                //templates.swap(ph.dirs);
+#endif
+            }
+            else
+            {
+                templates.swap(zip.dirs);
+            }
+            for (int i = 0, e = templates.size(); i < e; ++i)
+            {
+                const tstring& d = templates[i];
+                if (d == default_profile_folder) {
+                    templates.erase(templates.begin() + i);
+                    break;
+                }
             }
         }
         cd.restoreDir();
@@ -74,6 +91,7 @@ private:
         m_create_link.Attach(GetDlgItem(IDC_CHECK_CREATELINK));
         m_create_new.Attach(GetDlgItem(IDC_CHECK_CREATE_NEW_PROFILE));
         m_copy_current.Attach(GetDlgItem(IDC_CHECK_COPY_CURRENT_PROFILE));
+        m_create_empty.Attach(GetDlgItem(IDC_CHECK_CREATE_EMPTY_PROFILE));
         m_group_name.Attach(GetDlgItem(IDC_EDIT_NEWPROFILE_GROUP));
         m_profile_name.Attach(GetDlgItem(IDC_EDIT_NEWPROFILE_NAME));
         m_label_group_name.Attach(GetDlgItem(IDC_STATIC_GROUP_NAME));
@@ -110,7 +128,7 @@ private:
                 }
             }
             m_groups_list.SetCurSel(current_group);
-            updateProfilesList();            
+            updateProfilesList();
         }
         SetNewProfileGroupStatus(FALSE);
         updateOk();
@@ -140,18 +158,34 @@ private:
             SetGroupEdit(L"");
             SetProfileEdit(L"");
         }
-        m_group_name.EnableWindow(status);           
+        m_group_name.EnableWindow(status);
         m_profile_name.EnableWindow(status);
         m_label_group_name.EnableWindow(status);
         m_label_profile_name.EnableWindow(status);
     }
 
     LRESULT OnCheckNewProfile(WORD, WORD, HWND, BOOL&)
-    {        
+    {
         BOOL status = m_create_new.GetCheck() ? TRUE : FALSE;
         SetNewProfileGroupStatus(status);
-        m_create_new_manually = (status) ? true : false;        
+        m_create_new_manually = (status) ? true : false;
         updateOk();
+        return 0;
+    }
+
+    LRESULT OnCheckEmptyProfile(WORD, WORD, HWND, BOOL&)
+    {
+        BOOL status = m_create_empty.GetCheck() ? TRUE : FALSE;
+        if (status)
+            m_copy_current.SetCheck(BST_UNCHECKED);
+        return 0;
+    }
+
+    LRESULT OnCheckCopyProfile(WORD, WORD, HWND, BOOL&)
+    {
+        BOOL status = m_copy_current.GetCheck() ? TRUE : FALSE;
+        if (status)
+            m_create_empty.SetCheck(BST_UNCHECKED);
         return 0;
     }
 
@@ -195,8 +229,8 @@ private:
             updateGroupEdit();
             if (m_profile_name.GetWindowTextLength() == 0)
                 SetProfileEdit(L"player");
-            updateCopyCurrent();
-            m_ok.EnableWindow(TRUE);            
+            updateCopyAndEmpty();
+            m_ok.EnableWindow(TRUE);
             return;
         }
         if (!m_create_new_manually)
@@ -204,7 +238,7 @@ private:
             m_create_new.SetCheck(BST_UNCHECKED);
             SetNewProfileGroupStatus(FALSE);
         }
-        updateCopyCurrent();
+        updateCopyAndEmpty();
         BOOL state = FALSE;
         int item = m_profiles_list.GetCurSel();
         bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
@@ -244,6 +278,7 @@ private:
         m_state.src.group.clear();
         m_state.copy_from_src = false;
         m_state.create_new = false;
+        m_state.create_empty = false;
         bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
         if (!newprofile)
         {
@@ -254,6 +289,7 @@ private:
         {
             m_state.create_new = true;
             m_state.copy_from_src = (m_copy_current.GetCheck() == TBSTATE_CHECKED);
+            m_state.create_empty = (m_create_empty.GetCheck() == TBSTATE_CHECKED);
             getGroupEditText(&m_state.profile.group);
             getProfileEditText(&m_state.profile.name);
             if (m_state.copy_from_src)
@@ -272,22 +308,27 @@ private:
 		return 0;
 	}
 
-    void updateCopyCurrent()
+    void updateCopyAndEmpty()
     {
         bool newprofile = (m_create_new.GetCheck() == TBSTATE_CHECKED);
         if (!newprofile)
         {
-            m_copy_current.SetState(BST_UNCHECKED);
+            m_copy_current.SetCheck(BST_UNCHECKED);
             m_copy_current.EnableWindow(FALSE);
+            m_create_empty.SetCheck(BST_UNCHECKED);
+            m_create_empty.EnableWindow(FALSE);
             return;
         }
         BOOL state = FALSE;
         int sel = m_profiles_list.GetCurSel();
         if (sel != -1)
             state = TRUE;
+        if (!state)
+            m_copy_current.SetCheck(BST_UNCHECKED);
         m_copy_current.EnableWindow(state);
+        m_create_empty.EnableWindow(TRUE);
     }
-    
+
     void updateProfilesList()
     {
         m_profiles_list.ResetContent();
@@ -443,7 +484,7 @@ private:
         m_edit_profile_folder.Attach(GetDlgItem(IDC_EDIT_STARTUP_FOLDER));
         m_edit_profile_name.Attach(GetDlgItem(IDC_EDIT_STARTUP_PROFILE));
         m_edit_profile_name.SetWindowText(default_profile_name);
-        m_list.AddString(L"Ñîçäàòü ïóñòîé ïðîôèëü");
+        m_list.AddString(L"Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ Ð¿ÑƒÑÑ‚Ð¾Ð¹ Ð¿Ñ€Ð¾Ñ„Ð¸Ð»ÑŒ");
         for (int i=0,e=m_data.size();i<e;++i)
         {
             if (m_data[i]==default_profile_folder) continue;

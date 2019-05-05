@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "accessors.h"
 #include "api/api.h"
 #include "pluginsApi.h"
@@ -419,42 +419,6 @@ int vd_getTextLen(lua_State *L)
         return 1;
     }
     return pluginInvArgs(L, L"viewdata:getTextLen");
-}
-
-int vd_getHash(lua_State *L)
-{
-    if (luaT_check(L, 1, LUAT_VIEWDATA))
-    {
-        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
-        PluginViewString* str = pdata->getselected_pvs();
-        if (str)
-        {
-            u8string data;
-            utf8 buffer[32];
-            MudViewString *ms = pdata->getselected();
-            for (int i = 0, e = ms->blocks.size(); i < e; ++i)
-            {
-                data.append(str->blocks[i]);
-                MudViewStringParams &p = ms->blocks[i].params;
-                sprintf(buffer, "$%d%d%d%d%d", p.underline_status, p.blink_status, p.italic_status, p.reverse_video, p.use_ext_colors);
-                data.append(buffer);
-                if (!p.use_ext_colors)
-                {
-                    int txt = p.text_color; if (txt <= 7 && p.intensive_status) txt += 8;
-                    sprintf(buffer, "%d%d", txt, p.bkg_color);
-                }
-                else
-                {
-                    sprintf(buffer, "%x%x", p.ext_text_color, p.ext_bkg_color);
-                }
-                data.append(buffer);
-            }
-            lua_pushstring(L, data.c_str());
-            return 1;
-        }
-        return pluginInvArgsValues(L, L"viewdata:getHash");
-    }
-    return pluginInvArgs(L, L"viewdata:getHash");
 }
 
 int vd_blocks(lua_State *L)
@@ -1248,6 +1212,42 @@ int vd_getKey(lua_State *L)
     return pluginInvArgs(L, L"viewdata:getKey");
 }
 
+int vd_translate(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TSTRING))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        tstring translate(luaT_towstring(L, 2));
+        if (!pdata->translate(&translate))
+            return pluginInvArgsValues(L, L"viewdata:translate");
+        luaT_pushwstring(L, translate.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"viewdata:translate");
+}
+
+int vd_replace(lua_State *L)
+{
+    if (luaT_check(L, 2, LUAT_VIEWDATA, LUA_TSTRING))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        tstring color(luaT_towstring(L, 2));
+        if (!pdata->replace(color, L"", true))
+            return pluginInvArgsValues(L, L"viewdata:replace");
+        return 0;
+    }
+    if (luaT_check(L, 3, LUAT_VIEWDATA, LUA_TSTRING, LUA_TSTRING))
+    {
+        PluginsParseData *pdata = (PluginsParseData *)luaT_toobject(L, 1);
+        tstring color(luaT_towstring(L, 2));
+        tstring str(luaT_towstring(L, 3));
+        if (!pdata->replace(color, str, false))
+            return pluginInvArgsValues(L, L"viewdata:replace");
+        return 0;
+    }
+    return pluginInvArgs(L, L"viewdata:replace");
+}
+
 int vd_createViewString(lua_State *L)
 {
     if (luaT_check(L, 1, LUAT_VIEWDATA))
@@ -1351,7 +1351,6 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "getPrompt", vd_getPrompt);
     regFunction(L, "getText", vd_getText);
     regFunction(L, "getTextLen", vd_getTextLen);
-    regFunction(L, "getHash", vd_getHash);
     regFunction(L, "blocks", vd_blocks);
     regFunction(L, "get", vd_get);
     regFunction(L, "set", vd_set);
@@ -1380,6 +1379,8 @@ void reg_mt_viewdata(lua_State *L)
     regFunction(L, "getParameter", vd_getParameter);
     regFunction(L, "isChanged", vd_isChanged);
     regFunction(L, "getKey", vd_getKey);
+    regFunction(L, "translate", vd_translate);
+    regFunction(L, "replace", vd_replace);
     regFunction(L, "createViewString", vd_createViewString);
     regFunction(L, "print", vd_print);
     regFunction(L, "__towatch", vd_toWatch);

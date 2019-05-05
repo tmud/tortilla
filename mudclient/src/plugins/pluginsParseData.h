@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "MudViewString.h"
 
@@ -27,12 +27,13 @@ struct PluginTriggerString
 class PluginsParseData
 {
 public:
+    MemoryBuffer buffer;
     parseData *pdata;
     triggerParseData *tdata;
     std::vector<PluginViewString*> plugins_strings;
     int selected;
 public:
-    PluginsParseData(parseData *data, triggerParseData *trdata) : pdata(data), tdata(trdata), selected(-1) { convert(); }
+    PluginsParseData(parseData *data, triggerParseData *trdata) : buffer(256), pdata(data), tdata(trdata), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) { delete s; }); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
@@ -229,6 +230,59 @@ public:
         return false;
     }
 
+    bool translate(tstring *string)
+    {
+        if (tdata && isselected())
+        {
+           InputTranslateParameters tp;
+           TriggerParseDataParameters params(tdata, selected);
+           tp.doit(&params, string);
+           return true;
+        }
+        return false;
+    }
+
+    bool replace(const tstring& color, const tstring& string, bool skip_string)
+    {
+        if (tdata && isselected())
+        {
+            if (color.empty() && skip_string)
+                return true;
+            CompareRange range;
+            if (tdata->getCompareRange(selected, &range))
+            {
+                MudViewString *s = getselected();
+                CompareData cdata(s);
+                int pos = cdata.fold(range);
+                if (pos == -1)
+                    return false;
+                s->changed = true;
+                s->subs_processed = true;
+                if (!skip_string)
+                {
+                    MudViewStringBlock &b = s->blocks[pos];
+                    b.string = string;
+                }
+                if (!color.empty())
+                {
+                    PropertiesHighlight ph;
+                    ph.convertFromString(color);
+                    MudViewStringParams &p = s->blocks[pos].params;
+                    p.use_ext_colors = 1;
+                    p.ext_text_color = ph.textcolor;
+                    p.ext_bkg_color = ph.bkgcolor;
+                    p.underline_status = ph.underlined;
+                    p.blink_status = ph.border;
+                    p.italic_status = ph.italic;
+                }
+                PluginViewString *pvs = getselected_pvs();
+                convert(s, pvs);
+                return true;
+            }
+        }
+        return false;
+    }
+
     enum StringChanged { ISC_UNKNOWN = 0, ISC_NOTCHANGED, ISC_CHANGED };
     StringChanged is_changed()
     {
@@ -248,36 +302,43 @@ public:
 private:
     void convert()
     {
-        MemoryBuffer buffer(256);
-        WideToUtf8Converter w2u;
         parseDataStrings &strings = pdata->strings;
         for (int i = 0, e = strings.size(); i < e; ++i)
         {
             MudViewString* src = strings[i];
             PluginViewString* dst = new PluginViewString;
-            for (int j = 0, je = src->blocks.size(); j < je; ++j)
-            {
-                const tstring &text = src->blocks[j].string;
-                w2u.convert(&buffer, text.c_str(), text.length());
-                dst->blocks.push_back( (const char*)buffer.getData() );
-            }
+            convert(src, dst);
             plugins_strings.push_back(dst);
         }
         if (!strings.empty())
             selected = 0; // select first string
     }
 
+    void convert(MudViewString* src, PluginViewString* dst)
+    {
+        WideToUtf8Converter w2u;
+        dst->blocks.resize(src->blocks.size());
+        for (int j = 0, je = src->blocks.size(); j < je; ++j)
+        {
+            const tstring &text = src->blocks[j].string;
+            w2u.convert(&buffer, text.c_str(), text.length());
+            dst->blocks[j].assign(buffer.getData());
+        }
+    }
+
     void convert_back()
     {
-        MemoryBuffer buffer(256);
         Utf8ToWideConverter u2w;
         parseDataStrings &strings = pdata->strings;
         for (int i = 0, e = strings.size(); i < e; ++i)
         {
             MudViewString* dst = strings[i];
             PluginViewString* src = plugins_strings[i];
+            int src_size = src->blocks.size();
             for (int j = 0, je = dst->blocks.size(); j < je; ++j)
             {
+                if (j >= src_size)
+                    break;
                 const u8string &text = src->blocks[j];
                 u2w.convert(&buffer, text.c_str(), text.length());
                 dst->blocks[j].string.assign( (const wchar_t*)buffer.getData() );

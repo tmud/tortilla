@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #include "propertyList.h"
 #include "propertiesData.h"
@@ -139,27 +139,27 @@ private:
         // add pages
         PropertyTwoConfig c;
         c.use_priority = true;
-        c.label1 = L"Макрос(alias)"; c.label2 = L"Текст"; c.list1 = L"Alias"; c.list2 = L"Текст"; c.title = L"Макросы (Aliases)"; c.newbutton = L"Новый";
+        c.label1 = L"РњР°РєСЂРѕСЃ(alias)"; c.label2 = L"РўРµРєСЃС‚"; c.list1 = L"Alias"; c.list2 = L"РўРµРєСЃС‚"; c.title = L"РњР°РєСЂРѕСЃС‹ (Aliases)"; c.newbutton = L"РќРѕРІС‹Р№";
         m_aliases.setParams(&propData->aliases, &propData->groups, &d.pages[0], c);
         m_aliases.Create(m_hWnd);
-        c.label1 = L"Шаблон"; c.label2 = L"Триггер(action)"; c.list1 = L"Шаблон"; c.list2 = L"Action"; c.title = L"Триггеры (Actions)"; c.newbutton = L"Новый";
+        c.label1 = L"РЁР°Р±Р»РѕРЅ"; c.label2 = L"РўСЂРёРіРіРµСЂ(action)"; c.list1 = L"РЁР°Р±Р»РѕРЅ"; c.list2 = L"Action"; c.title = L"РўСЂРёРіРіРµСЂС‹ (Actions)"; c.newbutton = L"РќРѕРІС‹Р№";
         m_actions.setParams(&propData->actions, &propData->groups, &d.pages[1], c);
         m_actions.Create(m_hWnd);
         m_highlights.setParams(&d.pages[2]);
         m_highlights.Create(m_hWnd);
         m_hotkeys.setParams(&d.pages[3]);
         m_hotkeys.Create(m_hWnd);
-        c.label1 = L"Шаблон"; c.label2 = L"Замена"; c.list1 = L"Шаблон"; c.list2 = L"Замена"; c.title = L"Замены (Subs)"; c.use_priority = true; c.newbutton = L"Новая";
+        c.label1 = L"РЁР°Р±Р»РѕРЅ"; c.label2 = L"Р—Р°РјРµРЅР°"; c.list1 = L"РЁР°Р±Р»РѕРЅ"; c.list2 = L"Р—Р°РјРµРЅР°"; c.title = L"Р—Р°РјРµРЅС‹ (Subs)"; c.use_priority = true; c.newbutton = L"РќРѕРІР°СЏ";
         m_subs.setParams(&propData->subs, &propData->groups, &d.pages[4], c);
         m_subs.Create(m_hWnd);
 
         PropertyOneConfig c0;
         c0.use_priority = true;
-        c0.title = L"Антизамены (Antisubs)"; c0.label = L"Шаблон"; c0.list = L"Шаблон"; c0.newbutton = L"Новая";
+        c0.title = L"РђРЅС‚РёР·Р°РјРµРЅС‹ (Antisubs)"; c0.label = L"РЁР°Р±Р»РѕРЅ"; c0.list = L"РЁР°Р±Р»РѕРЅ"; c0.newbutton = L"РќРѕРІР°СЏ";
         m_antisubs.setParams(&propData->antisubs, &propData->groups, &d.pages[5], c0);
         m_antisubs.Create(m_hWnd);
 
-        c0.title = L"Фильтры (Gags)"; c0.newbutton = L"Новый";
+        c0.title = L"Р¤РёР»СЊС‚СЂС‹ (Gags)"; c0.newbutton = L"РќРѕРІС‹Р№";
         m_gags.setParams(&propData->gags, &propData->groups, &d.pages[6], c0);
         m_gags.Create(m_hWnd);
 
@@ -243,7 +243,7 @@ private:
         if (wID == IDOK) {
           if (checkOrUpdate(true))
           {
-              int result = msgBox(m_hWnd, L"Шаблон текущего элемента был изменен, но не сохранен. Сохранить его?", MB_YESNOCANCEL|MB_ICONQUESTION);
+              int result = msgBox(m_hWnd, L"РЁР°Р±Р»РѕРЅ С‚РµРєСѓС‰РµРіРѕ СЌР»РµРјРµРЅС‚Р° Р±С‹Р» РёР·РјРµРЅРµРЅ, РЅРѕ РЅРµ СЃРѕС…СЂР°РЅРµРЅ. РЎРѕС…СЂР°РЅРёС‚СЊ РµРіРѕ?", MB_YESNOCANCEL|MB_ICONQUESTION);
               if (result == IDCANCEL)
                   return 0;
               if (result == IDYES)

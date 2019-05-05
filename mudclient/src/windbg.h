@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 #ifdef _WINDBG
 
@@ -18,7 +18,7 @@ LONG WINAPI CustomUnhandledExceptionFilter( PEXCEPTION_POINTERS pExInfo )
     MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpNormal, &eInfo, NULL, NULL);
     CloseHandle(hFile);
     MessageBox(NULL, 
-        L"Фатальная ошибка!!! Отправьте файл crash.dmp(в папке программы) автору, чтобы исправить проблему. Он содержит только системную информацию о падении программы.", 
+        L"Crash!!! РћС‚РїСЂР°РІСЊС‚Рµ С„Р°Р№Р» crash.dmp(РІ РїР°РїРєРµ РїСЂРѕРіСЂР°РјРјС‹) Р°РІС‚РѕСЂСѓ, С‡С‚РѕР±С‹ РёСЃРїСЂР°РІРёС‚СЊ РїСЂРѕР±Р»РµРјСѓ. РћРЅ СЃРѕРґРµСЂР¶РёС‚ РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ РїР°РґРµРЅРёРё РїСЂРѕРіСЂР°РјРјС‹.", 
         L"Tortilla mud client", MB_OK|MB_ICONERROR);
     return EXCEPTION_EXECUTE_HANDLER;
 }

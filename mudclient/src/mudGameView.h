@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include "accessors.h"
 #include "propertiesPages/propertiesDlg.h"
 #include "profiles/profileDlgs.h"
@@ -58,7 +58,7 @@ private:
     bool loadProfile(const Profile& profile);
     bool newProfile(const Profile& profile);
     void createLink(const Profile& profile);
-    bool copyProfile(const Profile& profile, const Profile& src);
+    bool copyProfile(bool fromzip, const Profile& profile, const Profile& src);
 
 public:
     DECLARE_WND_CLASS(NULL)
@@ -426,9 +426,12 @@ private:
 
         // create find panel
         m_find_dlg.Create(m_dock);
-        m_find_dlg.SetWindowText(L"Ïîèñê");
+        m_find_dlg.SetWindowText(L"ÐŸÐ¾Ð¸ÑÐº");
         m_dock.AddWindow(m_find_dlg);
-        m_find_dlg.setWindowName(0, L"Ãëàâíîå îêíî");
+		RECT& startpos = m_dock._GetContext(m_find_dlg)->rcWindow;
+		startpos.left += 200; startpos.right += 200;
+		startpos.top += 180; startpos.bottom += 180;
+        m_find_dlg.setWindowName(0, L"Ð“Ð»Ð°Ð²Ð½Ð¾Ðµ Ð¾ÐºÐ½Ð¾");
         m_find_dlg.selectWindow(0);
 
         // create docking output windows
@@ -821,7 +824,7 @@ private:
         p.prefix = m_propData->cmd_prefix;
         p.separator = m_propData->cmd_separator;
 
-        // ðàçáèâàåì êîìàíäó íà ïîäêîììàíäû äëÿ îáðàáîòêè â barcmd
+        // Ñ€Ð°Ð·Ð±Ð¸Ð²Ð°ÐµÐ¼ ÐºÐ¾Ð¼Ð°Ð½Ð´Ñƒ Ð½Ð° Ð¿Ð¾Ð´ÐºÐ¾Ð¼Ð¼Ð°Ð½Ð´Ñ‹ Ð´Ð»Ñ Ð¾Ð±Ñ€Ð°Ð±Ð¾Ñ‚ÐºÐ¸ Ð² barcmd
         InputTemplateCommands tcmds;
         tcmds.init(cmds, p);
         tcmds.extract(&cmds);
@@ -854,7 +857,7 @@ private:
 
     void initCommandBar()
     {
-        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - äîï. âûñîòà, ÷òîáû Ïóñê íå íàåçæàë íà áóêâû êîãäà îêíî ìàêñèìèçèðîâàíî
+        m_barHeight = m_propElements.font_height + 4 + 7; // +7 - Ð´Ð¾Ð¿. Ð²Ñ‹ÑÐ¾Ñ‚Ð°, Ñ‡Ñ‚Ð¾Ð±Ñ‹ ÐŸÑƒÑÐº Ð½Ðµ Ð½Ð°ÐµÐ·Ð¶Ð°Ð» Ð½Ð° Ð±ÑƒÐºÐ²Ñ‹ ÐºÐ¾Ð³Ð´Ð° Ð¾ÐºÐ½Ð¾ Ð¼Ð°ÐºÑÐ¸Ð¼Ð¸Ð·Ð¸Ñ€Ð¾Ð²Ð°Ð½Ð¾
         m_bar.setParams(m_barHeight, m_propElements.standard_font);
         m_dock.SetStatusBarHeight(m_barHeight);
         RECT pos; GetClientRect(&pos);
@@ -888,7 +891,7 @@ private:
 
         bool font_updated = false;
         PropertiesDlg propDlg(&tmp);
-        if (propDlg.DoModal() == IDOK)
+        if (propDlg.DoModal(m_hWnd) == IDOK)
         {
             if (data.font_name != tmp.font_name || data.font_bold != tmp.font_bold ||
                 data.font_heigth != tmp.font_heigth || data.font_italic != tmp.font_italic)
@@ -1107,7 +1110,8 @@ private:
         m_networkData.port = port;
         m_networkData.notifyMsg = WM_USER+1;
         m_networkData.wndToNotify = m_hWnd;
-        m_network.connect(m_networkData);
+        PropertiesData* pdata = tortilla::getProperties();
+        m_network.connect(m_networkData, pdata->disable_mccp);
     }
 
     bool saveViewData(int view, tstring& filename)

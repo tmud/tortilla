@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "trigger.h"
 
 const findpos not_found(-1, 0);
@@ -198,7 +198,7 @@ int Trigger::datalen()
 
 Trigger::block_data Trigger::getdata()
 {
-    int len = m_key_end.getBegin(); // end расчитывался уже за begin, это длина блока между begin/end
+    int len = m_key_end.getBegin(); // end СЂР°СЃС‡РёС‚С‹РІР°Р»СЃСЏ СѓР¶Рµ Р·Р° begin, СЌС‚Рѕ РґР»РёРЅР° Р±Р»РѕРєР° РјРµР¶РґСѓ begin/end
     const utf8* p = (const utf8*)m_data.getData();
     p = p + m_key_begin.getLen();
     return block_data(p, len);

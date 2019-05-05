@@ -1,4 +1,4 @@
-// In that file - Code for scripting
+п»ї// In that file - Code for scripting
 #include "stdafx.h"
 #include "accessors.h"
 #include "logicProcessor.h"
@@ -25,11 +25,12 @@ public:
     int toInteger(int index) const { const tstring& p = cmd->parameters_list[index]; return _wtoi(p.c_str()); }
     bool isNumber(int index) const { const tstring& p = cmd->parameters_list[index]; return isItNumber(p); }
     double toNumber(int index) const { const tstring& p = cmd->parameters_list[index]; double v = 0; w2double(p, &v); return v; }
-    void invalidargs() { error(L"Некорректный набор параметров."); }
-    void invalidoperation() { error(L"Невозможно вычислить."); }
-    void invalidvars() { error(L"Используются неизвестные переменные."); }
-    void blockedbyprops() { error(L"Команда не выполнена (открыто окно настроек)."); }
+    void invalidargs() { error(L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РЅР°Р±РѕСЂ РїР°СЂР°РјРµС‚СЂРѕРІ."); }
+    void invalidoperation() { error(L"РќРµРІРѕР·РјРѕР¶РЅРѕ РІС‹С‡РёСЃР»РёС‚СЊ."); }
+    void invalidvars() { error(L"РСЃРїРѕР»СЊР·СѓСЋС‚СЃСЏ РЅРµРёР·РІРµСЃС‚РЅС‹Рµ РїРµСЂРµРјРµРЅРЅС‹Рµ."); }
+    void blockedbyprops() { error(L"РљРѕРјР°РЅРґР° РЅРµ РІС‹РїРѕР»РЅРµРЅР° (РѕС‚РєСЂС‹С‚Рѕ РѕРєРЅРѕ РЅР°СЃС‚СЂРѕРµРє)."); }
     bool isError() const { return perror->empty() ? false : true; }
+    bool isOutput() const { return cmd->from_output; }
 private:
     void error(const tstring& errmsg) { perror->assign(errmsg); }
     InputCommand cmd;
@@ -50,17 +51,17 @@ void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
    iterator it_end = m_syscmds.end();
    if (it == it_end)
    {
-       // команда в системных не найдена - ищем в плагинах
+       // РєРѕРјР°РЅРґР° РІ СЃРёСЃС‚РµРјРЅС‹С… РЅРµ РЅР°Р№РґРµРЅР° - РёС‰РµРј РІ РїР»Р°РіРёРЅР°С…
        piterator p_end = m_plugins_cmds.end();
        piterator p = std::find(m_plugins_cmds.begin(), p_end, main_cmd);
        if (p != p_end)
            main_cmd.assign(*p);
        else
        {
-           //пробуем подобрать по сокращенному имени
+           //РїСЂРѕР±СѓРµРј РїРѕРґРѕР±СЂР°С‚СЊ РїРѕ СЃРѕРєСЂР°С‰РµРЅРЅРѕРјСѓ РёРјРµРЅРё
            int len = main_cmd.size();
            if (len < 3)
-               error->append(L"Короткое имя для команды");
+               error->append(L"РљРѕСЂРѕС‚РєРѕРµ РёРјСЏ РґР»СЏ РєРѕРјР°РЅРґС‹");
            else
            {
                std::vector<tstring> cmds;
@@ -77,9 +78,9 @@ void LogicProcessor::recognizeSystemCommand(tstring* cmd, tstring* error)
                int count = cmds.size();
                if (count == 1)
                    main_cmd.assign(cmds[0]);
-               else if (count != 0)    // count = 0 в словаре команды нет - все равно пробуем пройти через syscmd
+               else if (count != 0)    // count = 0 РІ СЃР»РѕРІР°СЂРµ РєРѕРјР°РЅРґС‹ РЅРµС‚ - РІСЃРµ СЂР°РІРЅРѕ РїСЂРѕР±СѓРµРј РїСЂРѕР№С‚Рё С‡РµСЂРµР· syscmd
                {
-                   error->append(L"Уточните команду (варианты): ");
+                   error->append(L"РЈС‚РѕС‡РЅРёС‚Рµ РєРѕРјР°РЅРґСѓ (РІР°СЂРёР°РЅС‚С‹): ");
                    for (int i = 0; i < count; ++i) { if (i != 0) error->append(L", "); error->append(cmds[i]); }
                }
            }
@@ -155,7 +156,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
                 if (p == p_end)
                 {
                     unknown_cmd = true;
-                    error.append(L"Неизвестная команда");
+                    error.append(L"РќРµРёР·РІРµСЃС‚РЅР°СЏ РєРѕРјР°РЅРґР°");
                 }
             }
         }
@@ -174,7 +175,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
 
         if (unknown_cmd && pdata->unknown_cmd && !cmd->user) {}
         else {
-            tstring msg(L"Ошибка: ");
+            tstring msg(L"РћС€РёР±РєР°: ");
             msg.append(error);
             msg.append(L" [");
             bool usesrc = (cmd->alias.empty() && !cmd->changed ) ? true : false;
@@ -186,7 +187,7 @@ void LogicProcessor::processSystemCommand(InputCommand cmd)
             msg.append(L"]");
             if (!cmd->alias.empty())
             {
-                msg.append(L", макрос: ");
+                msg.append(L", РјР°РєСЂРѕСЃ: ");
                 msg.append(cmd->alias);
             }
             tmcLog(msg);
@@ -215,7 +216,7 @@ void LogicProcessor::processGameCommand(InputCommand cmd)
         tstring tmp(L"-");
         tmp.append(cmd->srccmd);
         tmp.append(cmd->srcparameters);
-        syscmdLog(tmp);  // шлем через метод (отключается как вывод системых команд)
+        syscmdLog(tmp);  // С€Р»РµРј С‡РµСЂРµР· РјРµС‚РѕРґ (РѕС‚РєР»СЋС‡Р°РµС‚СЃСЏ РєР°Рє РІС‹РІРѕРґ СЃРёСЃС‚РµРјС‹С… РєРѕРјР°РЅРґ)
         return;
     }
     if (cmd->changed && cmd->command.empty())
@@ -293,7 +294,7 @@ IMPL(action)
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
     int update = script.process(p, &pdata->actions, &pdata->groups, 
-            L"Триггеры(actions)", L"Триггеры", L"action", &ph);
+            L"РўСЂРёРіРіРµСЂС‹(actions)", L"РўСЂРёРіРіРµСЂС‹", L"action", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
@@ -303,7 +304,7 @@ IMPL(unaction)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ACTIONS);
-    int update = script.process(p, &pdata->actions, L"Удаление триггера", L"action", &ph);
+    int update = script.process(p, &pdata->actions, L"РЈРґР°Р»РµРЅРёРµ С‚СЂРёРіРіРµСЂР°", L"action", &ph);
     updateProps(update, LogicHelper::UPDATE_ACTIONS);
 }
 
@@ -315,7 +316,7 @@ IMPL(alias)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
     AliasTestControl control;
     int update = script.process(p, &pdata->aliases, &pdata->groups,
-        L"Макросы(aliases)", L"Макросы", L"alias", &ph, &control);
+        L"РњР°РєСЂРѕСЃС‹(aliases)", L"РњР°РєСЂРѕСЃС‹", L"alias", &ph, &control);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -325,7 +326,7 @@ IMPL(unalias)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_ALIASES);
-    int update = script.process(p, &pdata->aliases, L"Удаление макроса", L"alias", &ph);
+    int update = script.process(p, &pdata->aliases, L"РЈРґР°Р»РµРЅРёРµ РјР°РєСЂРѕСЃР°", L"alias", &ph);
     updateProps(update, LogicHelper::UPDATE_ALIASES);
 }
 
@@ -336,7 +337,7 @@ IMPL(sub)
     PropertiesData *pdata = tortilla::getProperties();
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
     int update = script.process(p, &pdata->subs, &pdata->groups,
-        L"Замены(subs)", L"Замены", L"sub", &ph);
+        L"Р—Р°РјРµРЅС‹(subs)", L"Р—Р°РјРµРЅС‹", L"sub", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
@@ -346,7 +347,7 @@ IMPL(unsub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_SUBS);
-    int update = script.process(p, &pdata->subs, L"Удаление замены", L"sub", &ph);
+    int update = script.process(p, &pdata->subs, L"РЈРґР°Р»РµРЅРёРµ Р·Р°РјРµРЅС‹", L"sub", &ph);
     updateProps(update, LogicHelper::UPDATE_SUBS);
 }
 
@@ -358,7 +359,7 @@ IMPL(hotkey)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
     HotkeyTestControl control;
     int update = script.process(p, &pdata->hotkeys, &pdata->groups,
-        L"Горячие клавиши(hotkeys)", L"Горячие клавиши", L"hotkey", &ph,
+        L"Р“РѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё(hotkeys)", L"Р“РѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё", L"hotkey", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
@@ -369,7 +370,7 @@ IMPL(unhotkey)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HOTKEYS);
-    int update = script.process(p, &pdata->hotkeys, L"Удаление горячей клавиши", L"hotkey", &ph);
+    int update = script.process(p, &pdata->hotkeys, L"РЈРґР°Р»РµРЅРёРµ РіРѕСЂСЏС‡РµР№ РєР»Р°РІРёС€Рё", L"hotkey", &ph);
     updateProps(update, LogicHelper::UPDATE_HOTKEYS);
 }
 
@@ -381,7 +382,7 @@ IMPL(highlight)
     AddParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
     HighlightTestControl control;
     int update = script.process(p, &pdata->highlights, &pdata->groups,
-        L"Подсветки(highlights)", L"Подсветка", L"highlight", &ph,
+        L"РџРѕРґСЃРІРµС‚РєРё(highlights)", L"РџРѕРґСЃРІРµС‚РєР°", L"highlight", &ph,
         &control);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
@@ -392,7 +393,7 @@ IMPL(unhighlight)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams3 script; ElementsHelper ph(this, LogicHelper::UPDATE_HIGHLIGHTS);
-    int update = script.process(p, &pdata->highlights, L"Удаление подсветки", L"highlight", &ph);
+    int update = script.process(p, &pdata->highlights, L"РЈРґР°Р»РµРЅРёРµ РїРѕРґСЃРІРµС‚РєРё", L"highlight", &ph);
     updateProps(update, LogicHelper::UPDATE_HIGHLIGHTS);
 }
 
@@ -402,7 +403,7 @@ IMPL(gag)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &pdata->gags, &pdata->groups, L"Фильтры (gags)", L"gag", &ph);
+    int update = script.process(p, &pdata->gags, &pdata->groups, L"Р¤РёР»СЊС‚СЂС‹ (gags)", L"gag", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
@@ -412,7 +413,7 @@ IMPL(ungag)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_GAGS);
-    int update = script.process(p, &pdata->gags, L"Удаление фильтра", L"gag", &ph);
+    int update = script.process(p, &pdata->gags, L"РЈРґР°Р»РµРЅРёРµ С„РёР»СЊС‚СЂР°", L"gag", &ph);
     updateProps(update, LogicHelper::UPDATE_GAGS);
 }
 
@@ -422,7 +423,7 @@ IMPL(antisub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     AddParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"Антизамены (antisubs)", L"antisub", &ph);
+    int update = script.process(p, &pdata->antisubs, &pdata->groups, L"РђРЅС‚РёР·Р°РјРµРЅС‹ (antisubs)", L"antisub", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -432,7 +433,7 @@ IMPL(unantisub)
         return p->blockedbyprops();
     PropertiesData *pdata = tortilla::getProperties();
     DeleteParams2 script; ElementsHelper ph(this, LogicHelper::UPDATE_ANTISUBS);
-    int update = script.process(p, &pdata->antisubs, L"Удаление антизамены", L"antisub", &ph);
+    int update = script.process(p, &pdata->antisubs, L"РЈРґР°Р»РµРЅРёРµ Р°РЅС‚РёР·Р°РјРµРЅС‹", L"antisub", &ph);
     updateProps(update, LogicHelper::UPDATE_ANTISUBS);
 }
 
@@ -445,7 +446,7 @@ IMPL(math)
         ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
         if (!vp->canSetVar(p->at(0)))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅСѓСЋ $%s РёР·РјРµРЅРёС‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ", p->c_str(0));
             ph.tmcLog(pb.buffer);
             return;
         }
@@ -460,7 +461,7 @@ IMPL(math)
         if (vp->setVar(p->at(0), result))
             swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
         else
-            swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РќРµРґРѕРїСѓСЃС‚РёРјРѕРµ РёРјСЏ РїРµСЂРµРјРµРЅРЅРѕР№: $%s", p->c_str(0));
         ph.tmcLog(pb.buffer);
         return;
     }
@@ -476,7 +477,7 @@ IMPL(strop)
         ElementsHelper ph(this, LogicHelper::UPDATE_VARS);
         if (!vp->canSetVar(p->at(0)))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅСѓСЋ $%s РёР·РјРµРЅРёС‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ", p->c_str(0));
             ph.tmcLog(pb.buffer);
             return;
         }
@@ -517,7 +518,7 @@ IMPL(strop)
             if (vp->setVar(p->at(0), result))
                 swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), result.c_str());
             else
-                swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
+                swprintf(pb.buffer, pb.buffer_len, L"РќРµРґРѕРїСѓСЃС‚РёРјРѕРµ РёРјСЏ РїРµСЂРµРјРµРЅРЅРѕР№: $%s", p->c_str(0));
             ph.tmcLog(pb.buffer);
         }
         return;
@@ -535,10 +536,10 @@ IMPL(var)
         helper->skipCheckMode();
         bool found = false;
         if (n == 0)
-            helper->tmcLog(L"Переменные(vars):");
+            helper->tmcLog(L"РџРµСЂРµРјРµРЅРЅС‹Рµ(vars):");
         else
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменные с '%s':", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅС‹Рµ СЃ '%s':", p->c_str(0));
             helper->tmcLog(pb.buffer);
         }
 
@@ -554,7 +555,7 @@ IMPL(var)
             found = true;
         }
         if (!found)
-            helper->tmcLog(L"Список пуст");
+            helper->tmcLog(L"РЎРїРёСЃРѕРє РїСѓСЃС‚");
         return;
     }
 
@@ -562,13 +563,13 @@ IMPL(var)
     {
         VarProcessor *vp = tortilla::getVars();
         if (!vp->canSetVar(p->at(0)))
-            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s изменить невозможно", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅСѓСЋ $%s РёР·РјРµРЅРёС‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ", p->c_str(0));
         else
         {
             if (vp->setVar(p->at(0), p->at(1)))
                 swprintf(pb.buffer, pb.buffer_len, L"$%s='%s'", p->c_str(0), p->c_str(1));
             else
-                swprintf(pb.buffer, pb.buffer_len, L"Недопустимое имя переменной: $%s", p->c_str(0));
+                swprintf(pb.buffer, pb.buffer_len, L"РќРµРґРѕРїСѓСЃС‚РёРјРѕРµ РёРјСЏ РїРµСЂРµРјРµРЅРЅРѕР№: $%s", p->c_str(0));
         }
         helper->tmcLog(pb.buffer);
         return;
@@ -586,14 +587,14 @@ IMPL(unvar)
         VarProcessor *vp = tortilla::getVars();
         if (!vp->canSetVar(p->at(0)))
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Переменную $%s удалить невозможно.", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅСѓСЋ $%s СѓРґР°Р»РёС‚СЊ РЅРµРІРѕР·РјРѕР¶РЅРѕ.", p->c_str(0));
             helper->tmcLog(pb.buffer);
             return;
         }
         if (!vp->delVar(p->at(0)))
-            swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s не существует.", p->c_str(0));
+            swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅР°СЏ $%s РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.", p->c_str(0));
 		else
-        	swprintf(pb.buffer, pb.buffer_len, L"Переменная $%s удалена.", p->c_str(0));
+        	swprintf(pb.buffer, pb.buffer_len, L"РџРµСЂРµРјРµРЅРЅР°СЏ $%s СѓРґР°Р»РµРЅР°.", p->c_str(0));
         helper->tmcLog(pb.buffer);
         return;
     }
@@ -630,11 +631,11 @@ IMPL(group)
     if (n == 0)
     {
         helper->skipCheckMode();
-        helper->tmcLog(L"Группы:");
+        helper->tmcLog(L"Р“СЂСѓРїРїС‹:");
         for (int i=0,e=pdata->groups.size(); i<e; ++i)
         {
             const property_value &v = pdata->groups.get(i);
-            tstring value = (v.value == L"1") ? L"Вкл" : L"";
+            tstring value = (v.value == L"1") ? L"Р’РєР»" : L"";
             swprintf(pb.buffer, pb.buffer_len, L"%s %s", v.key.c_str(), value.c_str());
             helper->simpleLog(pb.buffer);
         }
@@ -650,17 +651,17 @@ IMPL(group)
     }
     if (index == -1)
     {
-        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} не существует.", group.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Р“СЂСѓРїРїР° {%s} РЅРµ СЃСѓС‰РµСЃС‚РІСѓРµС‚.", group.c_str());
         helper->tmcLog(pb.buffer);
         return;
     }
 
     tstring op; 
     if (n == 2) op = p->at(0);
-    if (n == 1 || (op == L"info" || op == L"инф" || op == L"list" || op == L"список"))
+    if (n == 1 || (op == L"info" || op == L"РёРЅС„" || op == L"list" || op == L"СЃРїРёСЃРѕРє"))
     {
         helper->skipCheckMode();
-        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s}:", group.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Р“СЂСѓРїРїР° {%s}:", group.c_str());
         helper->tmcLog(pb.buffer);
         GroupCollector gc(group);
         int aliases = gc.count(pdata->aliases);
@@ -670,33 +671,33 @@ IMPL(group)
         int subs = gc.count(pdata->subs);
         int gags = gc.count(pdata->gags);
         int antisubs = gc.count(pdata->antisubs);
-        swprintf(pb.buffer, pb.buffer_len, L"Макросы(aliases): %d\nТриггеры(actions): %d\nПодсветки(highlights): %d\nГорячие клавиши(hotkeys): %d\nЗамены(subs): %d\nФильтры(gags): %d\nАнтизамены(antisubs): %d",
+        swprintf(pb.buffer, pb.buffer_len, L"РњР°РєСЂРѕСЃС‹(aliases): %d\nРўСЂРёРіРіРµСЂС‹(actions): %d\nРџРѕРґСЃРІРµС‚РєРё(highlights): %d\nР“РѕСЂСЏС‡РёРµ РєР»Р°РІРёС€Рё(hotkeys): %d\nР—Р°РјРµРЅС‹(subs): %d\nР¤РёР»СЊС‚СЂС‹(gags): %d\nРђРЅС‚РёР·Р°РјРµРЅС‹(antisubs): %d",
             aliases, actions, highlights, hotkeys, subs, gags, antisubs);
         helper->simpleLog(pb.buffer);
         return;
     }
 
-    if (op == L"вкл" || op == L"enable" || op == L"on" || op == L"1")
+    if (op == L"РІРєР»" || op == L"enable" || op == L"on" || op == L"1")
     {
         property_value &v = pdata->groups.getw(index);
         v.value = L"1";
         updateProps(1, LogicHelper::UPDATE_GROUPS);
-        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} включена.", v.key.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Р“СЂСѓРїРїР° {%s} РІРєР»СЋС‡РµРЅР°.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
     }
 
-    if (op == L"выкл" || op == L"disable" || op == L"off" || op == L"0")
+    if (op == L"РІС‹РєР»" || op == L"disable" || op == L"off" || op == L"0")
     {
         property_value &v = pdata->groups.getw(index);
         v.value = L"0";
         updateProps(1, LogicHelper::UPDATE_GROUPS);
-        swprintf(pb.buffer, pb.buffer_len, L"Группа {%s} выключена.", v.key.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Р“СЂСѓРїРїР° {%s} РІС‹РєР»СЋС‡РµРЅР°.", v.key.c_str());
         helper->tmcLog(pb.buffer);
         return;
     }
 
-    swprintf(pb.buffer, pb.buffer_len, L"Неизвестная операция %s.", op.c_str());
+    swprintf(pb.buffer, pb.buffer_len, L"РќРµРёР·РІРµСЃС‚РЅР°СЏ РѕРїРµСЂР°С†РёСЏ %s.", op.c_str());
     helper->tmcLog(pb.buffer);
     return;
 }
@@ -727,15 +728,15 @@ IMPL(connect)
     {
         if (m_connected)
         {
-            tmcLog(L"Уже есть подключение! Нужно сначала отключиться от текущего сервера.");
+            tmcLog(L"РЈР¶Рµ РµСЃС‚СЊ РїРѕРґРєР»СЋС‡РµРЅРёРµ! РќСѓР¶РЅРѕ СЃРЅР°С‡Р°Р»Р° РѕС‚РєР»СЋС‡РёС‚СЊСЃСЏ РѕС‚ С‚РµРєСѓС‰РµРіРѕ СЃРµСЂРІРµСЂР°.");
             return;
         }
         if (m_connecting)
         {
-            tmcLog(L"Подключение уже устанавливается...");
+            tmcLog(L"РџРѕРґРєР»СЋС‡РµРЅРёРµ СѓР¶Рµ СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚СЃСЏ...");
             return;
         }
-        swprintf(pb.buffer, pb.buffer_len, L"Подключение '%s:%d'...", p->at(0).c_str(), p->toInteger(1));
+        swprintf(pb.buffer, pb.buffer_len, L"РџРѕРґРєР»СЋС‡РµРЅРёРµ '%s:%d'...", p->at(0).c_str(), p->toInteger(1));
         tmcLog(pb.buffer);
         m_connecting = true;
         m_pHost->connectToNetwork( p->at(0), p->toInteger(1) );
@@ -862,10 +863,10 @@ IMPL(disconnect)
     {
         if (!m_connected && !m_connecting)
         {
-            tmcLog(L"Нет подключения.");
+            tmcLog(L"РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.");
             return;
         }
-        processNetworkError(L"Соединение завершено.");
+        processNetworkError(L"РЎРѕРµРґРёРЅРµРЅРёРµ Р·Р°РІРµСЂС€РµРЅРѕ.");
         m_pHost->disconnectFromNetwork();
         return;
     }
@@ -880,7 +881,7 @@ IMPL(mccp)
         m_pHost->getMccpStatus(&status);
         if (!status.status)
         {
-            tmcLog(L"Сжатие трафика не работает.");
+            tmcLog(L"РЎР¶Р°С‚РёРµ С‚СЂР°С„РёРєР° РЅРµ СЂР°Р±РѕС‚Р°РµС‚.");
             return;
         }
 
@@ -889,7 +890,7 @@ IMPL(mccp)
         float ratio = 0; 
         if (d > 0)
             ratio = 100 - ((c / d) * 100);
-        swprintf(pb.buffer, pb.buffer_len, L"Трафик: %.2f Кб, Игровые данные: %.2f Кб, Сжатие: %.2f%%", c/1024, d/1024, ratio);
+        swprintf(pb.buffer, pb.buffer_len, L"РўСЂР°С„РёРє: %.2f РљР±, РРіСЂРѕРІС‹Рµ РґР°РЅРЅС‹Рµ: %.2f РљР±, РЎР¶Р°С‚РёРµ: %.2f%%", c/1024, d/1024, ratio);
         tmcLog(pb.buffer);
         return;
     }
@@ -903,9 +904,9 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     {
          tstring oldfile(m_logs.getLogFile(id));
          if (log == 0)
-            swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі Р·Р°РєСЂС‹С‚: '%s'.", oldfile.c_str());
          else
-             swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d закрыт: '%s'.", log, oldfile.c_str());
+             swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РІ РѕРєРЅРµ %d Р·Р°РєСЂС‹С‚: '%s'.", log, oldfile.c_str());
          tmcLog(pb.buffer);
          m_wlogs[log] = -1;
          m_logs.closeLog(id);
@@ -917,9 +918,9 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
         if (file.empty())
         {
             if (log == 0)
-                swprintf(pb.buffer, pb.buffer_len, L"Лог открыт не был.");
+                swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РѕС‚РєСЂС‹С‚ РЅРµ Р±С‹Р».");
             else
-                swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d открыт не был.", log);
+                swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РІ РѕРєРЅРµ %d РѕС‚РєСЂС‹С‚ РЅРµ Р±С‹Р».", log);
             tmcLog(pb.buffer);
             return; 
         }
@@ -930,16 +931,16 @@ void LogicProcessor::wlogf_main(int log, const tstring& file, bool newlog)
     if (id == -1)
     {
         if (log == 0)
-            swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"РћС€РёР±РєР°! Р›РѕРі РѕС‚РєСЂС‹С‚СЊ РЅРµ СѓРґР°Р»РѕСЃСЊ: '%s'.", logfile.c_str());
         else
-            swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог в окне %d открыть не удалось: '%s'.", log, logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"РћС€РёР±РєР°! Р›РѕРі РІ РѕРєРЅРµ %d РѕС‚РєСЂС‹С‚СЊ РЅРµ СѓРґР°Р»РѕСЃСЊ: '%s'.", log, logfile.c_str());
     }
     else
     {
         if (log == 0)
-            swprintf(pb.buffer, pb.buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РѕС‚РєСЂС‹С‚: '%s'.", logfile.c_str());
         else
-            swprintf(pb.buffer, pb.buffer_len, L"Лог в окне %d открыт: '%s'.", log, logfile.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РІ РѕРєРЅРµ %d РѕС‚РєСЂС‹С‚: '%s'.", log, logfile.c_str());
         m_wlogs[log] = id;
     }
     tmcLog(pb.buffer);
@@ -992,7 +993,7 @@ void LogicProcessor::clogf_main(const tstring& file, bool newlog)
     if (m_clog != -1)
     {
         tstring oldfile(m_logs.getLogFile(m_clog));
-        swprintf(pb.buffer, pb.buffer_len, L"Лог закрыт: '%s'.", oldfile.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі Р·Р°РєСЂС‹С‚: '%s'.", oldfile.c_str());
         tmcLog(pb.buffer);
         m_logs.closeLog(m_clog);
         m_clog = -1;
@@ -1003,7 +1004,7 @@ void LogicProcessor::clogf_main(const tstring& file, bool newlog)
     {
         if (file.empty())
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Лог открыт не был.");
+            swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РѕС‚РєСЂС‹С‚ РЅРµ Р±С‹Р».");
             tmcLog(pb.buffer);
             return;
         }
@@ -1013,11 +1014,11 @@ void LogicProcessor::clogf_main(const tstring& file, bool newlog)
     int id = m_logs.openLog(logfile, newlog, 1);
     if (id == -1)
     {
-        swprintf(pb.buffer, pb.buffer_len, L"Ошибка! Лог открыть не удалось: '%s'.", logfile.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"РћС€РёР±РєР°! Р›РѕРі РѕС‚РєСЂС‹С‚СЊ РЅРµ СѓРґР°Р»РѕСЃСЊ: '%s'.", logfile.c_str());
     }
     else
     {
-        swprintf(pb.buffer, pb.buffer_len, L"Лог открыт: '%s'.", logfile.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"Р›РѕРі РѕС‚РєСЂС‹С‚: '%s'.", logfile.c_str());
         m_clog = id;
     }
     tmcLog(pb.buffer);
@@ -1068,7 +1069,7 @@ IMPL(plugin)
 //-------------------------------------------------------------------
 void LogicProcessor::invalidwindow(parser *p, int view0, int view)
 {
-    swprintf(pb.buffer, pb.buffer_len, L"Недопустимый номер окна: %d (корректные значения: %d-%d)", view, view0, OUTPUT_WINDOWS);
+    swprintf(pb.buffer, pb.buffer_len, L"РќРµРґРѕРїСѓСЃС‚РёРјС‹Р№ РЅРѕРјРµСЂ РѕРєРЅР°: %d (РєРѕСЂСЂРµРєС‚РЅС‹Рµ Р·РЅР°С‡РµРЅРёСЏ: %d-%d)", view, view0, OUTPUT_WINDOWS);
     tmcLog(pb.buffer);
     p->invalidargs();
 }
@@ -1085,7 +1086,7 @@ IMPL(wshow)
             m_pHost->showWindow(window, true);
             return;
         }
-        swprintf(pb.buffer, pb.buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
+        swprintf(pb.buffer, pb.buffer_len, L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РїР°СЂР°РјРµС‚СЂ: '%s'.", p->c_str(0));
         tmcLog(pb.buffer);
     }
     p->invalidargs();
@@ -1103,13 +1104,13 @@ IMPL(whide)
             m_pHost->showWindow(window, false);
             return;
         }
-        swprintf(pb.buffer, pb.buffer_len, L"Некорректный параметр: '%s'.", p->c_str(0));
+        swprintf(pb.buffer, pb.buffer_len, L"РќРµРєРѕСЂСЂРµРєС‚РЅС‹Р№ РїР°СЂР°РјРµС‚СЂ: '%s'.", p->c_str(0));
         tmcLog(pb.buffer);
     }
     p->invalidargs();
 }
 
-void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions_subs)
+void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool enable_actions_subs_plugins)
 {
     parseData data;
     MudViewString *new_string = new MudViewString();
@@ -1152,12 +1153,14 @@ void LogicProcessor::printex(int view, const std::vector<tstring>& params, bool 
     new_string->system = true;
     data.strings.push_back(new_string);
     int flags = GAME_LOG|WORK_OFFLINE;
-    if (!enable_actions_subs)
-        flags |= (SKIP_ACTIONS|SKIP_SUBS);
+    if (!enable_actions_subs_plugins)
+        flags |= SKIP_ACTIONS|SKIP_SUBS;
+    else
+        flags |= FROM_OUTPUT;
     printIncoming(data, flags, view);
 }
 
-void LogicProcessor::printex(int view, const parser* p, int from, bool enable_actions_subs)
+void LogicProcessor::printex(int view, const parser* p, int from, bool enable_actions_subs_plugins)
 {
       std::vector<tstring> params;
       int n = p->size();
@@ -1165,7 +1168,8 @@ void LogicProcessor::printex(int view, const parser* p, int from, bool enable_ac
       for (int i=from; i<n; ++i)
       {
           int spaces = p->spacesBefore(i);
-          if (spaces > 1) {
+          bool notfirstparam = (from != 0 && from == i && spaces > 0);
+          if (spaces > 1 || notfirstparam) {
               tstring tmp(spaces-1, L' ');
               tmp.append(p->at(i));
               params[i].assign(tmp);
@@ -1178,7 +1182,9 @@ void LogicProcessor::printex(int view, const parser* p, int from, bool enable_ac
           tstring tmp(last-1, L' ');
           params.push_back(tmp);
       }
-      printex(view, params, enable_actions_subs);
+      if (from != 0)
+          params.erase(params.begin(), params.begin() + from);
+      printex(view, params, enable_actions_subs_plugins);
 }
 
 IMPL(wprint)
@@ -1199,7 +1205,8 @@ IMPL(print)
     int n = p->size();
     if (n >= 0)
     {
-        return printex(0, p, 0, true);
+        bool isoutput = p->isOutput();
+        return printex(0, p, 0, isoutput ? false : true);
     }
     p->invalidargs();
 }
@@ -1215,7 +1222,7 @@ IMPL(tab)
     if (n == 0)
     {
         helper->skipCheckMode();
-        helper->tmcLog(L"Автоподстановки(tabs):");
+        helper->tmcLog(L"РђРІС‚РѕРїРѕРґСЃС‚Р°РЅРѕРІРєРё(tabs):");
         int size = pdata->tabwords.size();
         for (int i=0; i<size; ++i)
         {
@@ -1223,7 +1230,7 @@ IMPL(tab)
             helper->simpleLog(v.c_str());
         }
         if (size == 0)
-            helper->tmcLog(L"Список пуст.");
+            helper->tmcLog(L"РЎРїРёСЃРѕРє РїСѓСЃС‚.");
         return;
     }
 
@@ -1253,7 +1260,7 @@ IMPL(untab)
         const tstring &tab = p->at(0);
         int index = pdata->tabwords.find(tab);
         if (index == -1) {
-            helper->tmcLog(L"Варианты не найдены.");
+            helper->tmcLog(L"Р’Р°СЂРёР°РЅС‚С‹ РЅРµ РЅР°Р№РґРµРЅС‹.");
             return;
         }
         else
@@ -1281,13 +1288,13 @@ IMPL(timer)
         const PropertiesValues &t  = pdata->timers;
         if (t.size() == 0)
         {
-            helper->tmcLog(L"Не создано ни одного таймера.");
+            helper->tmcLog(L"РќРµ СЃРѕР·РґР°РЅРѕ РЅРё РѕРґРЅРѕРіРѕ С‚Р°Р№РјРµСЂР°.");
             return;
         }
         if (!pdata->timers_on)
-            helper->tmcLog(L"Таймеры (выключены):");
+            helper->tmcLog(L"РўР°Р№РјРµСЂС‹ (РІС‹РєР»СЋС‡РµРЅС‹):");
         else
-            helper->tmcLog(L"Таймеры:");
+            helper->tmcLog(L"РўР°Р№РјРµСЂС‹:");
 
         std::map<tstring, int> sorted_map;
         for (int i=0,e=t.size(); i<e; ++i)
@@ -1304,14 +1311,14 @@ IMPL(timer)
             PropertiesTimer pt; pt.convertFromString(v.value);
             if (!pdata->timers_on)
             {
-                swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
+                swprintf(pb.buffer, pb.buffer_len, L"#%s %s СЃРµРє: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
                   pt.cmd.c_str(), v.group.c_str());
             }
             else
             {
                 int left = m_helper.getLeftTime(v.key);
                 double dleft = static_cast<double>(left); dleft /= 1000.0f;
-                swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
+                swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s СЃРµРє: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
                     pt.cmd.c_str(), v.group.c_str());
             }
             helper->simpleLog(pb.buffer);
@@ -1323,20 +1330,20 @@ IMPL(timer)
     {
         helper->skipCheckMode();
         tstring op(p->at(0));
-        if (op == L"disable" || op == L"off" || op == L"выкл") {
+        if (op == L"disable" || op == L"off" || op == L"РІС‹РєР»") {
             pdata->timers_on = 0;
-            helper->tmcLog(L"Таймеры выключены.");
+            helper->tmcLog(L"РўР°Р№РјРµСЂС‹ РІС‹РєР»СЋС‡РµРЅС‹.");
             return;
         }
-        if (op == L"enable" || op == L"on" || op == L"вкл") {
+        if (op == L"enable" || op == L"on" || op == L"РІРєР»") {
             if (!m_connected)
             {
-                helper->tmcLog(L"Нет подключения.");
+                helper->tmcLog(L"РќРµС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ.");
                 return;
             }
             m_helper.resetTimers();
             pdata->timers_on = 1;
-            helper->tmcLog(L"Таймеры включены.");
+            helper->tmcLog(L"РўР°Р№РјРµСЂС‹ РІРєР»СЋС‡РµРЅС‹.");
             return;
         }
     }
@@ -1354,7 +1361,7 @@ IMPL(timer)
         int index = pdata->timers.find(id);
         if (index == -1)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"РўР°Р№РјРµСЂ #%s РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ.", id.c_str());
             helper->tmcLog(pb.buffer);
             return;
         }
@@ -1364,14 +1371,14 @@ IMPL(timer)
 
         if (!pdata->timers_on)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %s СЃРµРє: {%s} [%s]", v.key.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), v.group.c_str());
         }
         else
         {
             int left = m_helper.getLeftTime(v.key);
             double dleft = static_cast<double>(left); dleft /= 1000.0f;
-            swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s сек: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
+            swprintf(pb.buffer, pb.buffer_len, L"#%s %.1f/%s СЃРµРє: {%s} [%s]", v.key.c_str(), dleft, pt.timer.c_str(),
                 pt.cmd.c_str(), v.group.c_str());
         }
         helper->simpleLog(pb.buffer);
@@ -1393,7 +1400,7 @@ IMPL(timer)
         int index = pdata->timers.find(id);
         if (index == -1 && n == 2)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не cоздан.", id.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"РўР°Р№РјРµСЂ #%s РЅРµ cРѕР·РґР°РЅ.", id.c_str());
             helper->skipCheckMode();
             helper->tmcLog(pb.buffer);
             return;
@@ -1431,7 +1438,7 @@ IMPL(timer)
         tstring value;
         pt.convertToString(&value);
         pdata->timers.add(index, id, value, group);
-        swprintf(pb.buffer, pb.buffer_len, L"#%s %s сек: {%s} [%s]", id.c_str(), pt.timer.c_str(), 
+        swprintf(pb.buffer, pb.buffer_len, L"#%s %s СЃРµРє: {%s} [%s]", id.c_str(), pt.timer.c_str(), 
               pt.cmd.c_str(), group.c_str());
         helper->simpleLog(pb.buffer);
 
@@ -1462,12 +1469,12 @@ IMPL(untimer)
         int index = pdata->timers.find(id);
         if (index == -1)
         {
-            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s не используется.", id.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"РўР°Р№РјРµСЂ #%s РЅРµ РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ.", id.c_str());
             helper->tmcLog(pb.buffer);
             return;
         }
         pdata->timers.del(index);
-        swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s удален.", id.c_str());
+        swprintf(pb.buffer, pb.buffer_len, L"РўР°Р№РјРµСЂ #%s СѓРґР°Р»РµРЅ.", id.c_str());
         helper->tmcLog(pb.buffer);
 
         int timer_id = LogicHelper::UPDATE_TIMER1+key-1;
@@ -1494,7 +1501,7 @@ IMPL(uptimer)
         {
             ElementsHelper ph(this, LogicHelper::UPDATE_TIMERS);
             MethodsHelper* helper = ph;
-            swprintf(pb.buffer, pb.buffer_len, L"Таймер #%s перезапущен.", id.c_str());
+            swprintf(pb.buffer, pb.buffer_len, L"РўР°Р№РјРµСЂ #%s РїРµСЂРµР·Р°РїСѓС‰РµРЅ.", id.c_str());
             helper->tmcLog(pb.buffer);
             return;
         }
@@ -1534,7 +1541,7 @@ IMPL(message)
         MessageCmdHelper mh(pdata);
         tstring str;
         mh.getStrings(&str);
-        tmcLog(L"Эхо-уведомления:");
+        tmcLog(L"Р­С…Рѕ-СѓРІРµРґРѕРјР»РµРЅРёСЏ:");
         simpleLog(str);
         return;
     }
@@ -1579,7 +1586,7 @@ IMPL(debug_tr)
         DebugCmdHelper mh(pdata);
         tstring str;
         mh.getStrings(&str);
-        tmcLog(L"Debug-уведомления:");
+        tmcLog(L"Debug-СѓРІРµРґРѕРјР»РµРЅРёСЏ:");
         simpleLog(str);
         return;
     }
@@ -1620,7 +1627,7 @@ IMPL(wlock)
         if (window < 1 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 1, window);
         m_pHost->lockWindow(window, true);
-        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл отключен.", window);
+        swprintf(pb.buffer, pb.buffer_len, L"Р’ РѕРєРЅРµ #%d Р°РІС‚РѕСЃРєСЂРѕР»Р» РѕС‚РєР»СЋС‡РµРЅ.", window);
         tmcLog(pb.buffer);
         return;
     }
@@ -1636,7 +1643,7 @@ IMPL(wunlock)
         if (window < 1 || window > OUTPUT_WINDOWS)
             return invalidwindow(p, 1, window);
         m_pHost->lockWindow(window, false);
-        swprintf(pb.buffer, pb.buffer_len, L"В окне #%d автоскролл включен.", window);
+        swprintf(pb.buffer, pb.buffer_len, L"Р’ РѕРєРЅРµ #%d Р°РІС‚РѕСЃРєСЂРѕР»Р» РІРєР»СЋС‡РµРЅ.", window);
         tmcLog(pb.buffer);
         return;
     }
@@ -1652,7 +1659,7 @@ IMPL(component)
         ModeCmdHelper mh(pdata);
         tstring str;
         mh.getStrings(&str);
-        tmcLog(L"Компоненты:");
+        tmcLog(L"РљРѕРјРїРѕРЅРµРЅС‚С‹:");
         simpleLog(str);
         return;
     }
@@ -1723,15 +1730,15 @@ IMPL(savelog)
         {
             if (!m_pHost->saveViewData(v, filename))
             {
-                tstring error(L"Ошибка при сохранении лог-файла: ");
+                tstring error(L"РћС€РёР±РєР° РїСЂРё СЃРѕС…СЂР°РЅРµРЅРёРё Р»РѕРі-С„Р°Р№Р»Р°: ");
                 error.append(filename);
                 tmcLog(error);
             }
             else
             {
-                tstring msg(L"Лог ");
+                tstring msg(L"Р›РѕРі ");
                 msg.append(filename);
-                msg.append(L" сохранен.");
+                msg.append(L" СЃРѕС…СЂР°РЅРµРЅ.");
                 tmcLog(msg);
             }
             return;
@@ -1760,7 +1767,7 @@ bool LogicProcessor::init()
 {
     g_lprocessor = this;
 
-    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXCжэбом] +){2,}.*[СЮЗВПОv^()]*>", true);
+    m_univ_prompt_pcre.setRegExp(L"(?:[0-9]+[HMVXCР¶СЌР±РѕРј] +){2,}.*[РЎР®Р—Р’РџРћv^()]*>", true);
 
     if (!m_logs.init())
         return false;

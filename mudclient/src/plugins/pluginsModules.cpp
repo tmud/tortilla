@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "pluginsApi.h"
 #include "modules/embedded.h"
 extern luaT_State L;
@@ -68,7 +68,7 @@ bool loadModules()
         TW2A w2a(files[j].c_str());
         if (luaL_dofile(L, w2a))
         {
-            tstring error(L"Ошибка при загрузке модуля: '");
+            tstring error(L"РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ РјРѕРґСѓР»СЏ: '");
             error.append(files[j]);
             error.append(L"' - ");
             error.append(luaT_towstring(L, -1));

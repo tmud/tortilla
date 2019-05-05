@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <room x="-2" y="-4" z="0" name="Жилище охотника" vnum="5029">
+    <exit dir="east" vnum="5027"/>
+  </room>
+  <room x="-1" y="-4" z="0" name="Лесная улица" vnum="5027">
+    <exit dir="north"/>
+    <exit dir="south" vnum="5026"/>
+    <exit dir="west" vnum="5029"/>
+    <exit dir="east" vnum="5042"/>
+  </room>
+  <room x="0" y="-4" z="0" name="Жилище гадалки" vnum="5042">
+    <exit dir="west" vnum="5027"/>
+  </room>
+  <room x="2" y="-4" z="0" name="В церкви" vnum="5041">
+    <exit dir="south" vnum="5040"/>
+  </room>
+  <room x="-1" y="-3" z="0" name="Лесная улица" vnum="5026">
+    <exit dir="north" vnum="5027"/>
+    <exit dir="south" vnum="5012"/>
+  </room>
+  <room x="0" y="-3" z="0" name="Заброшенный дом" vnum="5024">
+    <exit dir="south" vnum="5013"/>
+  </room>
+  <room x="2" y="-3" z="0" name="К церквушке" vnum="5040">
+    <exit dir="north" vnum="5041"/>
+    <exit dir="south" vnum="5015"/>
+  </room>
+  <room x="4" y="-3" z="0" name="На берегу реки" vnum="5018">
+    <exit dir="north" vnum="29275"/>
+    <exit dir="south" vnum="5017"/>
+  </room>
+  <room x="-1" y="-2" z="0" name="Центральная улица" vnum="5012">
+    <exit dir="north" vnum="5026"/>
+    <exit dir="south" vnum="5006"/>
+    <exit dir="east" vnum="5013"/>
+  </room>
+  <room x="0" y="-2" z="0" name="Речная улица" vnum="5013">
+    <exit dir="north" vnum="5024"/>
+    <exit dir="south" vnum="5043"/>
+    <exit dir="west" vnum="5012"/>
+    <exit dir="east" vnum="5014"/>
+  </room>
+  <room x="1" y="-2" z="0" name="Речная улица" vnum="5014">
+    <exit dir="west" vnum="5013"/>
+    <exit dir="east" vnum="5015"/>
+  </room>
+  <room x="2" y="-2" z="0" name="Речная улица" vnum="5015">
+    <exit dir="north" vnum="5040"/>
+    <exit dir="south" vnum="5021"/>
+    <exit dir="west" vnum="5014"/>
+    <exit dir="east" vnum="5016"/>
+  </room>
+  <room x="3" y="-2" z="0" name="У берега реки" vnum="5016">
+    <exit dir="south" vnum="5020"/>
+    <exit dir="west" vnum="5015"/>
+    <exit dir="east" vnum="5017"/>
+  </room>
+  <room x="4" y="-2" z="0" name="На берегу реки" vnum="5017">
+    <exit dir="north" vnum="5018"/>
+    <exit dir="south" vnum="5019"/>
+    <exit dir="west" vnum="5016"/>
+  </room>
+  <room x="-2" y="-1" z="0" name="Заброшенный дом" vnum="5023">
+    <exit dir="west" vnum="5100"/>
+    <exit dir="east" vnum="5006"/>
+  </room>
+  <room x="-1" y="-1" z="0" name="К центру деревни" vnum="5006">
+    <exit dir="north" vnum="5012"/>
+    <exit dir="south" vnum="5005"/>
+    <exit dir="west" vnum="5023"/>
+    <exit dir="east" vnum="5043"/>
+  </room>
+  <room x="0" y="-1" z="0" name="К дороге" vnum="5043">
+    <exit dir="north" vnum="5013"/>
+    <exit dir="west" vnum="5006"/>
+    <exit dir="east" vnum="5044"/>
+  </room>
+  <room x="1" y="-1" z="0" name="К дороге" vnum="5044">
+    <exit dir="south" vnum="5045"/>
+    <exit dir="west" vnum="5043"/>
+  </room>
+  <room x="2" y="-1" z="0" name="Двор перед домом" vnum="5021">
+    <exit dir="north" vnum="5015"/>
+    <exit dir="east" vnum="5020"/>
+  </room>
+  <room x="3" y="-1" z="0" name="Дом рыбака" vnum="5020">
+    <exit dir="north" vnum="5016"/>
+    <exit dir="west" vnum="5021"/>
+    <exit dir="east" vnum="5019"/>
+  </room>
+  <room x="4" y="-1" z="0" name="На берегу реки" vnum="5019">
+    <exit dir="north" vnum="5017"/>
+    <exit dir="south" vnum="5022"/>
+    <exit dir="west" vnum="5020"/>
+  </room>
+  <room x="-2" y="0" z="0" name="Яма" vnum="5070">
+    <exit dir="east" vnum="5005"/>
+  </room>
+  <room x="-1" y="0" z="0" name="Перед постоялым двором" vnum="5005">
+    <exit dir="north" vnum="5006"/>
+    <exit dir="south" vnum="5004"/>
+    <exit dir="west" vnum="5070"/>
+    <exit dir="east" vnum="5001"/>
+  </room>
+  <room x="0" y="0" z="0" name="Постоялый двор" vnum="5001">
+    <exit dir="west" vnum="5005"/>
+    <exit dir="up" vnum="5000"/>
+  </room>
+  <room x="4" y="0" z="0" name="На берегу реки" vnum="5022">
+    <exit dir="north" vnum="5019"/>
+  </room>
+  <room x="-2" y="1" z="0" name="У колодца" vnum="5011">
+    <exit dir="east" vnum="5004"/>
+  </room>
+  <room x="-1" y="1" z="0" name="Центр деревни" vnum="5004">
+    <exit dir="north" vnum="5005"/>
+    <exit dir="south" vnum="5003"/>
+    <exit dir="west" vnum="5011"/>
+  </room>
+  <room x="1" y="1" z="0" name="К дороге" vnum="5045">
+    <exit dir="north" vnum="5044"/>
+    <exit dir="east" vnum="5047"/>
+  </room>
+  <room x="2" y="1" z="0" name="По дороге" vnum="5047">
+    <exit dir="south" vnum="5050"/>
+    <exit dir="west" vnum="5045"/>
+    <exit dir="east" vnum="5048"/>
+  </room>
+  <room x="3" y="1" z="0" name="По дороге" vnum="5048">
+    <exit dir="south" vnum="5054"/>
+    <exit dir="west" vnum="5047"/>
+    <exit dir="east" vnum="5049"/>
+  </room>
+  <room x="4" y="1" z="0" name="По дороге" vnum="5049">
+    <exit dir="west" vnum="5048"/>
+    <exit dir="east" vnum="5046"/>
+  </room>
+  <room x="5" y="1" z="0" name="По дороге" vnum="5046">
+    <exit dir="west" vnum="5049"/>
+    <exit dir="east" vnum="5838"/>
+  </room>
+  <room x="-2" y="2" z="0" name="Лавка" vnum="5007">
+    <exit dir="east" vnum="5003"/>
+  </room>
+  <room x="-1" y="2" z="0" name="Перед конюшней" vnum="5003">
+    <exit dir="north" vnum="5004"/>
+    <exit dir="south" vnum="5009"/>
+    <exit dir="west" vnum="5007"/>
+    <exit dir="east" vnum="5002"/>
+  </room>
+  <room x="0" y="2" z="0" name="Конюшня" vnum="5002">
+    <exit dir="west" vnum="5003"/>
+  </room>
+  <room x="2" y="2" z="0" name="На тропинке" vnum="5050">
+    <exit dir="north" vnum="5047"/>
+    <exit dir="south" vnum="5051"/>
+  </room>
+  <room x="3" y="2" z="0" name="У шалаша" vnum="5054">
+    <exit dir="north" vnum="5048"/>
+  </room>
+  <room x="-2" y="3" z="0" name="Кузница" vnum="5025">
+    <exit dir="east" vnum="5009"/>
+  </room>
+  <room x="-1" y="3" z="0" name="Центр деревни" vnum="5009">
+    <exit dir="north" vnum="5003"/>
+    <exit dir="south" vnum="5010"/>
+    <exit dir="west" vnum="5025"/>
+    <exit dir="east" vnum="5030"/>
+  </room>
+  <room x="0" y="3" z="0" name="Двор старейшины" vnum="5030">
+    <exit dir="west" vnum="5009"/>
+    <exit dir="east" vnum="5031"/>
+  </room>
+  <room x="1" y="3" z="0" name="В доме старейшины" vnum="5031">
+    <exit dir="south" vnum="5032"/>
+    <exit dir="west" vnum="5030"/>
+  </room>
+  <room x="2" y="3" z="0" name="На капище" vnum="5051">
+    <exit dir="north" vnum="5050"/>
+  </room>
+  <room x="-2" y="4" z="0" name="Знахарская" vnum="5008">
+    <exit dir="east" vnum="5010"/>
+  </room>
+  <room x="-1" y="4" z="0" name="Центр деревни" vnum="5010">
+    <exit dir="north" vnum="5009"/>
+    <exit dir="south" vnum="5035"/>
+    <exit dir="west" vnum="5008"/>
+    <exit dir="east" vnum="5053"/>
+  </room>
+  <room x="0" y="4" z="0" name="Склад" vnum="5053">
+    <exit dir="west" vnum="5010"/>
+  </room>
+  <room x="1" y="4" z="0" name="В светлой комнате" vnum="5032">
+    <exit dir="north" vnum="5031"/>
+  </room>
+  <room x="-3" y="5" z="0" name="Тихий дом" vnum="5038">
+    <exit dir="south" vnum="5036"/>
+  </room>
+  <room x="-1" y="5" z="0" name="К центру деревни" vnum="5035">
+    <exit dir="north" vnum="5010"/>
+    <exit dir="south" vnum="5034"/>
+  </room>
+  <room x="-3" y="6" z="0" name="В южной части деревни" vnum="5036">
+    <exit dir="north" vnum="5038"/>
+    <exit dir="south" vnum="5039"/>
+    <exit dir="east" vnum="5033"/>
+  </room>
+  <room x="-2" y="6" z="0" name="В южной части деревни" vnum="5033">
+    <exit dir="west" vnum="5036"/>
+    <exit dir="east" vnum="5034"/>
+  </room>
+  <room x="-1" y="6" z="0" name="В южной части деревни" vnum="5034">
+    <exit dir="north" vnum="5035"/>
+    <exit dir="south" vnum="5052"/>
+    <exit dir="west" vnum="5033"/>
+    <exit dir="east" vnum="5037"/>
+  </room>
+  <room x="0" y="6" z="0" name="В покосившейся избе" vnum="5037">
+    <exit dir="west" vnum="5034"/>
+  </room>
+  <room x="-3" y="7" z="0" name="Светлый дом" vnum="5039">
+    <exit dir="north" vnum="5036"/>
+  </room>
+  <room x="-1" y="7" z="0" name="На лугу" vnum="5052">
+    <exit dir="north" vnum="5034"/>
+  </room>
+  <room x="0" y="0" z="1" name="Комнаты отдыха" vnum="5000">
+    <exit dir="down" vnum="5001"/>
+  </room>
+</zone>

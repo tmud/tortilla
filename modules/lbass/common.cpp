@@ -1,11 +1,11 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "common.h"
 
 float volume_ToFloat(int volume)
 {
     float v = static_cast<float>(volume);
     v = v / 100.0f;
-    v = v + 0.005f;     // компенсация погрешности окгругления
+    v = v + 0.005f;     // РєРѕРјРїРµРЅСЃР°С†РёСЏ РїРѕРіСЂРµС€РЅРѕСЃС‚Рё РѕРєРіСЂСѓРіР»РµРЅРёСЏ
     if (v < 0) v = 0;
     if (v > 1) v = 1;
     return v;

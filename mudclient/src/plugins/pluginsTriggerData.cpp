@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsTriggerData.h"
 
@@ -6,7 +6,7 @@ triggerParseData::triggerParseData(triggerKeyData *t) : tr(t), m_current_compare
 {
     int count = t->getLen();
     m_strings.resize(count, NULL);
-    for (int i=0;i<count;++i) { m_strings[i] = new triggerParseDataString;  }        
+    for (int i=0;i<count;++i) { m_strings[i] = new triggerParseDataString;  }
     resetindex();
 }
 
@@ -43,6 +43,7 @@ void triggerParseData::pushString(const CompareData& cd, const CompareObject &co
     m_parseData.last_finished = !incompl_flag;
     triggerParseDataString* tpd = m_strings[m_current_compare_pos];
     co.getParameters(&tpd->params);
+    co.getRange(&tpd->range);
     cd.string->getMd5(&tpd->crc);
 }
 
@@ -101,4 +102,15 @@ bool triggerParseData::getKey(int string_index, tstring* key) const
        return tr->getKey(s, key);
     }
     return false;
+}
+
+bool triggerParseData::getCompareRange(int string_index, CompareRange* range) const
+{
+    if (correctindex(string_index)) {
+        int s = m_indexes[string_index];
+        *range = m_strings[s]->range;
+        return true;
+    }
+    return false;
+
 }

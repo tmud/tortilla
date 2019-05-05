@@ -1,18 +1,18 @@
-﻿-- trexam - название плагина.
+﻿-- trexample - название плагина.
 -- Своему плагину нужно дать другое имя (любое), которое 
 -- еще не используется другим плагином.
 -- Для этого нужно заменить trexam на свое имя, а 
 -- также заменить имя файла плагина.
 
-local trexam = {}
+local trexample = {}
 
 -- название плагина
-function trexam.name()
+function trexample.name()
   return 'Пример использования trprompt.'
 end
 
 -- многострочное описание плагина
-function trexam.description()
+function trexample.description()
   local d = {
     'Пример плагина с модулем trprompt.',
     'Отбор строк от ключевой строки до промпт-строки.'
@@ -21,7 +21,7 @@ function trexam.description()
 end
 
 -- версия плагина
-function trexam.version()
+function trexample.version()
   return '-'
 end
 
@@ -56,7 +56,7 @@ end
 local t
 
 -- метод инициализации плагина
-function trexam.init()
+function trexample.init()
   -- создаем триггер с помощью модуля trprompt
   -- первый параметр - ключевая строка, причем это регулярное выражение PCRE! В клиенте есть калькулятор PCRE, где можно проверять их.
   -- второй параметр - функция фильтр, она должна быть определена выше этой строки.
@@ -65,13 +65,13 @@ function trexam.init()
 end
 
 -- вызывается при дисконнекте
-function trexam.disconnect()
+function trexample.disconnect()
   -- при обрыве нужно обязательно сбросить триггер
   if t then t:disconnect() end 
 end
 
 -- вызывается при игре, сюда попадают все строки мада, до обработки в триггерах, сабах и прочем.
-function trexam.before(v, vd)
+function trexample.before(v, vd)
   -- работаем только с главным (0) окном мада
   if v ~= 0 then return t end
 
@@ -85,4 +85,4 @@ function trexam.before(v, vd)
 end
 
 -- возвращаем плагин-объект в клиент
-return trexam
+return trexample

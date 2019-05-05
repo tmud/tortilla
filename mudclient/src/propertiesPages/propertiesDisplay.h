@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 struct PropertiesWindow
 {
@@ -12,6 +12,7 @@ typedef std::vector<OutputWindow> OutputWindowsCollection;
 class PropertiesDisplay
 {
     int display_width, display_height;
+    float resdpi;
     PropertiesWindow main_window;
     PropertiesWindow find_window;
     OutputWindowsCollection output_windows;
@@ -22,15 +23,15 @@ public:
     OutputWindowsCollection* outputWindows() { return &output_windows; }
     PluginsDataValues* pluginsData() { return &plugins_data; }
 
-    PropertiesDisplay();
+    PropertiesDisplay(float dpi);
     ~PropertiesDisplay();
     void initDefault();
     bool load(xml::node root_node);
     bool loadOnlyPlugins(xml::node root_node);
     void save(xml::node root_node);
     bool current(int width, int height) const;
-    int width() const { return display_width; }
-    int height() const { return display_height; }
+    int  width() const { return display_width; }
+    int  height() const { return display_height; }
     void setres(int width, int height) { display_width = width; display_height = height; }
 private:
     void initMainWindow();
@@ -49,6 +50,7 @@ class PropertiesDisplayManager
 public:
     PropertiesDisplayManager();
     ~PropertiesDisplayManager();
+    void setDpi(float dpi);
     void initDefault();
     void clear();
     void resetDisplaysData();
@@ -67,6 +69,7 @@ public:
         return current_display->pluginsData();
     }
 private:
+    float resdpi;
     int findCurrentDisplay();
     int findDisplay(int cx, int cy);
     PropertiesDisplay *current_display;

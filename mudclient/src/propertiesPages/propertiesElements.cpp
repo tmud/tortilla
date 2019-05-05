@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "propertiesElements.h"
 
 PropertiesElements::PropertiesElements(PropertiesData *data) : propData(data), palette(data),

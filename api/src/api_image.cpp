@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "../api.h"
 #include "fimage.h"
 
@@ -15,6 +15,11 @@ void image_unload(image img)
 image image_cut(image img, int x, int y, int w, int h)
 {
     return fimage_cut(img, x, y, w, h);
+}
+
+image image_resize(image img, int w, int h)
+{
+    return fimage_rescale(img, w, h);
 }
 
 int image_width(image img)

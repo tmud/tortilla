@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "roomObjects.h"
 
 RoomDir RoomDirHelper::cast(int index)
@@ -48,5 +48,29 @@ RoomDir RoomDirHelper::getDirByName(const wchar_t* dirname)
         if (!name.compare(RoomDirName[index]))
             return static_cast<RoomDir>(index);
     }
+    return RD_UNKNOWN;
+}
+
+RoomDir RoomDirHelper::getDirFromMsdp(const tstring& msdpdir)
+{
+    if (msdpdir == L"w" || msdpdir == L"W") {
+        return RD_WEST;
+    }
+    if (msdpdir == L"e" || msdpdir == L"E") {
+        return RD_EAST;
+    }
+    if (msdpdir == L"n" || msdpdir == L"N") {
+        return RD_NORTH;
+    }
+    if (msdpdir == L"s" || msdpdir == L"S") {
+        return RD_SOUTH;
+    }
+    if (msdpdir == L"u" || msdpdir == L"U") {
+        return RD_UP;
+    }
+    if (msdpdir == L"d" || msdpdir == L"D") {
+        return RD_DOWN;
+    }
+    assert(false);
     return RD_UNKNOWN;
 }

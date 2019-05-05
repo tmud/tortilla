@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "splitterEx.h"
 #include "mapperRender.h"
@@ -15,6 +15,8 @@ public:
     void processMsdp(const RoomData& rd);
 	void saveMaps();
 	void loadMaps();
+    void setActiveMode(bool mode);
+    void saveProps();
 private:
     BEGIN_MSG_MAP(Mapper)
       MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -42,9 +44,10 @@ private:
     void onToolbar(int id);
 private:
 	void updateZonesList();
-    void redrawPosition(MapCursor cursor, bool resetScrolls);
+    void redrawPosition(MapCursor cursor, bool centreScreen);
     void redrawPositionByRoom(const Room *room);
     void roomMoveTool(std::vector<const Room*>& rooms, int x, int y);
+    void lostPosition();
 private:
     // map
     MapInstance m_map;
@@ -59,9 +62,6 @@ private:
     CSplitterWindowExT<true, 1, 4> m_vSplitter;
     MappeZoneControl m_zones_control;
 
-    // logic
-    MapperDirsVector m_dirs;
     Room *m_pCurrentRoom;
-
     tstring m_mapsFolder;
 };

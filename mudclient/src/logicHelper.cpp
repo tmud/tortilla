@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "accessors.h"
 #include "mudViewParser.h"
 #include "logicHelper.h"
@@ -36,7 +36,6 @@ bool LogicHelper::processActions(parseData *parse_data, int index, InputCommands
     {
         MudViewString *s = parse_data->strings[j];
         if (s->dropped) return false;
-
         bool incomplstr = (!s->prompt && j==je && !parse_data->last_finished);
         bool processed = false;
         for (int i=0, e=m_actions.size(); i<e; ++i)

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "inputProcessor.h"
 
 #ifdef _DEBUG
@@ -140,12 +140,12 @@ void InputCommandTemplateUnitTests::run()
     assert(test2(L" ", 0, &g1));
 
     InputCommands g2;
-    g2.push_back(makecmd(false, L"тест", L"  123 456  789", L"тест", 3, L"  123", L" 456", L"  789" ));
-    assert(test2(L"тест  123 456  789", 3, &g2));
+    g2.push_back(makecmd(false, L"С‚РµСЃС‚", L"  123 456  789", L"С‚РµСЃС‚", 3, L"  123", L" 456", L"  789" ));
+    assert(test2(L"С‚РµСЃС‚  123 456  789", 3, &g2));
 
     InputCommands g3;
-    g3.push_back(makecmd(false, L"тест2", L" aaa  bbb  ccc  ", L"тест2", 4, L" aaa", L"  bbb", L"  ccc", L"  "));
-    assert(test2(L"тест2 aaa  bbb  ccc  ", 4, &g3));
+    g3.push_back(makecmd(false, L"С‚РµСЃС‚2", L" aaa  bbb  ccc  ", L"С‚РµСЃС‚2", 4, L" aaa", L"  bbb", L"  ccc", L"  "));
+    assert(test2(L"С‚РµСЃС‚2 aaa  bbb  ccc  ", 4, &g3));
 
     InputCommands t1;
     t1.push_back( makecmd(true, L"# wout", L" 1 test test2", L" wout", 3, L"1", L"test", L"test2") );
@@ -171,8 +171,8 @@ void InputCommandTemplateUnitTests::run()
     assert(test2(L"#test '%1%2' %3 %4 %0", 4, &t5));
 
     InputCommands t6;
-    t6.push_back(makecmd(true, L"#wait", L" 1.2 {#out {light red} {Время идти!};встать}", L"wait", 2, L"1.2", L"#out {light red} {Время идти!};встать"));
-    assert(test2(L"#wait 1.2 {#out {light red} {Время идти!};встать}", 2, &t6));
+    t6.push_back(makecmd(true, L"#wait", L" 1.2 {#out {light red} {Р’СЂРµРјСЏ РёРґС‚Рё!};РІСЃС‚Р°С‚СЊ}", L"wait", 2, L"1.2", L"#out {light red} {Р’СЂРµРјСЏ РёРґС‚Рё!};РІСЃС‚Р°С‚СЊ"));
+    assert(test2(L"#wait 1.2 {#out {light red} {Р’СЂРµРјСЏ РёРґС‚Рё!};РІСЃС‚Р°С‚СЊ}", 2, &t6));
 }
 
 #endif

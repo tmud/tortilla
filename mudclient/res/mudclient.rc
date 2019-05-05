@@ -33,18 +33,18 @@ BEGIN
     EDITTEXT        IDC_EDIT_PATTERN_TEXT,5,202,225,13,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_GROUP,241,180,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO_FILTER,241,202,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,217,46,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,217,47,14
-    PUSHBUTTON      "Новый",IDC_BUTTON_RESET,148,217,46,14
-    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,217,61,14
-    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,217,61,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,218,46,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,218,47,14
+    PUSHBUTTON      "Новый",IDC_BUTTON_RESET,148,218,46,14
+    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,218,61,14
+    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,218,61,14
     CTEXT           "",IDC_STATIC_TITLE,128,6,84,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,129,8
     LTEXT           "-",IDC_STATIC_BL2,211,6,129,8
     GROUPBOX        "Параметры",IDC_STATIC,0,162,340,73
-    LTEXT           "",IDC_STATIC_LABEL1,7,171,221,8
-    LTEXT           "",IDC_STATIC_LABEL2,7,193,221,8
+    LTEXT           "",IDC_STATIC_LABEL1,6,172,221,8
+    LTEXT           "",IDC_STATIC_LABEL2,6,194,221,8
     LTEXT           "Группа",IDC_STATIC,241,171,26,8
     LTEXT           "Фильтр",IDC_STATIC,241,193,26,8
 END
@@ -81,18 +81,18 @@ BEGIN
     EDITTEXT        IDC_EDIT_HOTKEY_TEXT,5,202,225,13,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_GROUP,241,180,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO_FILTER,241,202,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,217,46,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,217,47,14
-    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,217,46,14
-    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,217,61,14
-    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,217,61,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,218,46,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,218,47,14
+    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,218,46,14
+    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,218,61,14
+    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,218,61,14
     CTEXT           "Горячие клавиши (Hotkeys)",IDC_STATIC,123,6,94,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,119,8
     LTEXT           "-",IDC_STATIC_BL2,220,6,120,8
     GROUPBOX        "Параметры",IDC_STATIC,0,162,340,73
     LTEXT           "Hotkey",IDC_STATIC,7,171,24,8
-    LTEXT           "Текст",IDC_STATIC,7,193,22,8
+    LTEXT           "Текст",IDC_STATIC,7,194,22,8
     LTEXT           "Группа",IDC_STATIC,241,171,26,8
     LTEXT           "Фильтр",IDC_STATIC,241,193,26,8
 END
@@ -110,12 +110,12 @@ BEGIN
     EDITTEXT        IDC_EDIT_HIGHLIGHT_TEXT,5,202,225,13,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_GROUP,241,180,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO_FILTER,241,202,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,217,46,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,217,47,14
-    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,217,46,14
-    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,217,61,14
-    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,217,61,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,218,46,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,218,47,14
+    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,218,46,14
+    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,218,61,14
+    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,218,61,14
     CTEXT           "Подсветки (Highlights)",IDC_STATIC,137,6,75,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,133,8
     LTEXT           "-",IDC_STATIC_BL2,215,6,125,8
@@ -123,7 +123,7 @@ BEGIN
     LTEXT           "Шаблон",IDC_STATIC,7,193,28,8
     LTEXT           "Цвет текста:",IDC_STATIC,7,145,47,8
     LTEXT           "Цвет фона:",IDC_STATIC,7,164,42,10
-    LTEXT           "",IDC_STATIC_HIGHLIGHTS_EXAMPLE,170,139,159,31,WS_BORDER
+    LTEXT           "",IDC_STATIC_HIGHLIGHTS_EXAMPLE,170,139,159,29,WS_BORDER
     LTEXT           "Группа",IDC_STATIC,241,171,26,8
     LTEXT           "Фильтр",IDC_STATIC,241,193,26,8
 END
@@ -155,8 +155,8 @@ BEGIN
     CONTROL         "Очищать строку ввода команд",IDC_CHECK_CLEAR_BAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,119,8
     CONTROL         "Игровые команды всегда с новой строки",IDC_CHECK_NEWLINECMD,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,77,156,8
-    CONTROL         "Не показывать для триггеров ошибку Неизвестная команда",IDC_CHECK_UNKNOWNCMD,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,88,225,8
+    CONTROL         "Не показывать ошибку Неизвестная команда",IDC_CHECK_UNKNOWNCMD,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,88,170,8
     CONTROL         "Использовать историю команд в автоподстановках",IDC_CHECK_HISTORYTAB,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,99,189,8
     CONTROL         "Не удваивать букву 'я' при отправке на сервер",IDC_CHECK_DISABLE_DOUBLE_YA,
@@ -169,12 +169,15 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,143,156,8
     EDITTEXT        IDC_EDIT_PLUGINSLOGS,162,142,26,12,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Не переходить в меню по клавише Alt",IDC_CHECK_DISABLEALT,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,154,143,8
-    CONTROL         "Сворачивать клиент в трей",IDC_CHECK_MOVETOTRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,165,143,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,154,148,8
+    CONTROL         "Сворачивать клиент в трей",IDC_CHECK_MOVETOTRAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,165,113,8
     CONTROL         "Использовать IAC GA сервера",IDC_RADIO_PROMT_GA,"Button",BS_AUTORADIOBUTTON,6,189,117,8
     CONTROL         "Автопоиск по шаблону:",IDC_RADIO_PROMT_PCRE,"Button",BS_AUTORADIOBUTTON,6,199,90,10
     EDITTEXT        IDC_EDIT_PROMPT_PCRE,18,210,160,12,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_CODEPAGE,283,21,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_LOGFORMAT,283,38,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Не использовать сжатие трафика",IDC_CHECK_DISABLEMCCP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,199,55,131,8
     CTEXT           "Общие настройки",IDC_STATIC,135,6,70,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,134,8
     LTEXT           "-",IDC_STATIC_BL2,204,6,136,8
@@ -185,7 +188,6 @@ BEGIN
     LTEXT           "Кодировка клиента:",IDC_STATIC,207,23,70,9
     GROUPBOX        "Распознавание Prompt-строки",IDC_STATIC,0,178,197,51
     LTEXT           "Формат записи логов:",IDC_STATIC,201,40,76,9
-    COMBOBOX        IDC_COMBO_LOGFORMAT,283,38,50,40,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_PROPERTY_GROUPS DIALOGEX 0, 0, 340, 235
@@ -194,17 +196,17 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,19,339,140
     EDITTEXT        IDC_EDIT_GROUP,5,202,330,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,53,217,46,14
-    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,100,217,46,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,53,218,46,14
+    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,100,218,46,14
     CONTROL         "Включена",IDC_CHECK_GROUP_ON,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,283,186,49,8
-    PUSHBUTTON      "Переименовать",IDC_BUTTON_RENAME,147,217,62,14
-    PUSHBUTTON      "+выше(^)",IDC_BUTTON_UP,249,217,42,14
-    PUSHBUTTON      "-ниже(v)",IDC_BUTTON_DOWN,292,217,42,14
+    PUSHBUTTON      "Переименовать",IDC_BUTTON_RENAME,147,218,62,14
+    PUSHBUTTON      "+выше(^)",IDC_BUTTON_UP,249,218,42,14
+    PUSHBUTTON      "-ниже(v)",IDC_BUTTON_DOWN,292,218,42,14
     LTEXT           "Группы",IDC_STATIC,155,6,28,8
     LTEXT           "-",IDC_STATIC_BL2,186,6,154,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,153,8
-    LTEXT           "Имя группы",IDC_STATIC,7,192,40,8
+    LTEXT           "Имя группы",IDC_STATIC,7,192,42,8
     GROUPBOX        "Параметры",IDC_STATIC,0,166,340,69
 END
 
@@ -216,17 +218,17 @@ BEGIN
     EDITTEXT        IDC_EDIT_PATTERN,5,180,225,13,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_GROUP,241,180,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     COMBOBOX        IDC_COMBO_FILTER,241,202,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,217,46,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,217,47,14
-    PUSHBUTTON      "Новый",IDC_BUTTON_RESET,148,217,46,14
-    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,217,61,14
-    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,217,61,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,218,46,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,218,47,14
+    PUSHBUTTON      "Новый",IDC_BUTTON_RESET,148,218,46,14
+    PUSHBUTTON      "+приоритет(^)",IDC_BUTTON_UP,214,218,61,14
+    PUSHBUTTON      "-приоритет(v)",IDC_BUTTON_DOWN,276,218,61,14
     CTEXT           "",IDC_STATIC_TITLE,128,6,84,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,129,8
     LTEXT           "-",IDC_STATIC_BL2,211,6,129,8
     GROUPBOX        "Параметры",IDC_STATIC,0,162,340,73
-    LTEXT           "",IDC_STATIC_LABEL1,7,171,221,8
+    LTEXT           "",IDC_STATIC_LABEL1,6,172,221,8
     LTEXT           "Группа",IDC_STATIC,241,171,26,8
     LTEXT           "Фильтр",IDC_STATIC,241,193,26,8
 END
@@ -237,15 +239,15 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,19,340,154
     EDITTEXT        IDC_EDIT_PATTERN,5,202,329,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,217,46,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,217,47,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,218,46,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,218,47,14
     CTEXT           "Автоподстановки (Tabs)",IDC_STATIC_TITLE,122,6,94,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,118,8
     LTEXT           "-",IDC_STATIC_BL2,217,6,123,8
     GROUPBOX        "Параметры",IDC_STATIC,0,179,340,56
-    LTEXT           "Ключевое слово:",IDC_STATIC,6,192,61,9
-    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,217,46,14
+    LTEXT           "Ключевое слово",IDC_STATIC,6,192,61,9
+    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,218,46,14
 END
 
 IDD_PROPERTY_TIMERS DIALOGEX 0, 0, 340, 235
@@ -256,31 +258,33 @@ BEGIN
     EDITTEXT        IDC_EDIT_PATTERN,86,180,144,13,ES_AUTOHSCROLL
     COMBOBOX        IDC_COMBO_GROUP,241,180,90,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_EDIT_PATTERN_TEXT,5,202,225,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "Сбросить",IDC_BUTTON_DEL,5,217,46,14
+    PUSHBUTTON      "Сбросить",IDC_BUTTON_DEL,5,218,46,14
     CTEXT           "Таймеры (Timers)",IDC_STATIC_TITLE,135,6,68,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,136,8
     LTEXT           "-",IDC_STATIC_BL2,201,6,139,8
     GROUPBOX        "Параметры",IDC_STATIC,0,162,340,73
-    LTEXT           "Интервал (сек):",IDC_STATIC_LABEL1,87,171,59,8
+    LTEXT           "Интервал (сек)",IDC_STATIC_LABEL1,87,171,59,8
     LTEXT           "Группа",IDC_STATIC,241,171,26,8
-    LTEXT           "Действие таймера:",IDC_STATIC_LABEL2,7,193,71,8
-    LTEXT           "Номер:",IDC_STATIC,7,171,28,8
+    LTEXT           "Действие таймера",IDC_STATIC_LABEL2,6,193,71,8
+    LTEXT           "Номер",IDC_STATIC,6,171,28,8
     EDITTEXT        IDC_EDIT_NUMBER,5,180,76,13,ES_AUTOHSCROLL | ES_READONLY
 END
 
-IDD_PLUGINS DIALOGEX 0, 0, 369, 210
+IDD_PLUGINS DIALOGEX 0, 0, 526, 227
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Менеджер плагинов"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,355,98
-    PUSHBUTTON      "-Приоритет (v)",IDC_BUTTON_PLUGINDOWN,68,192,61,14
-    PUSHBUTTON      "Вкл/Выкл",IDC_BUTTON_ONOFF,129,192,61,14
-    DEFPUSHBUTTON   "OK",IDOK,261,192,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,312,192,50,14
-    EDITTEXT        IDC_EDIT_PLUGIN_DESC,7,116,355,71,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_VSCROLL | NOT WS_TABSTOP,WS_EX_STATICEDGE
-    LTEXT           "Описание:",IDC_STATIC,8,107,40,8
-    PUSHBUTTON      "+Приоритет (^)",IDC_BUTTON_PLUGINUP,7,192,61,14
+    CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,178,201
+    CONTROL         "Показать скрытые плагины",IDC_CHECK_SHOW_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,214,106,9
+    EDITTEXT        IDC_EDIT_PLUGIN_DESC,188,22,331,186,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | WS_HSCROLL | NOT WS_TABSTOP,WS_EX_STATICEDGE
+    PUSHBUTTON      "Скрыть",IDC_BUTTON_HIDE_PLUGIN,396,7,61,14
+    PUSHBUTTON      "Вкл/Выкл",IDC_BUTTON_ONOFF,458,7,61,14
+    PUSHBUTTON      "+Приоритет (^)",IDC_BUTTON_PLUGINUP,188,209,61,14
+    PUSHBUTTON      "-Приоритет (v)",IDC_BUTTON_PLUGINDOWN,251,209,61,14
+    DEFPUSHBUTTON   "OK",IDOK,417,209,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,469,209,50,14
+    LTEXT           "Описание:",IDC_STATIC,189,13,40,8
 END
 
 IDD_PASSWORD DIALOGEX 0, 0, 228, 46
@@ -348,16 +352,16 @@ BEGIN
     CONTROL         "",IDC_LIST,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,19,340,140
     EDITTEXT        IDC_EDIT_PATTERN,5,180,163,13,ES_AUTOHSCROLL
     EDITTEXT        IDC_EDIT_VARVALUE,5,202,330,13,ES_AUTOHSCROLL
-    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,217,47,14
-    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,217,46,14
-    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,217,47,14
-    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,217,46,14
+    PUSHBUTTON      "Добавить",IDC_BUTTON_ADD,5,218,47,14
+    PUSHBUTTON      "Заменить",IDC_BUTTON_REPLACE,53,218,46,14
+    PUSHBUTTON      "Удалить",IDC_BUTTON_DEL,100,218,47,14
+    PUSHBUTTON      "Новая",IDC_BUTTON_RESET,148,218,46,14
     CTEXT           "Переменные (Vars)",IDC_STATIC_TITLE,130,6,73,8
     LTEXT           "-",IDC_STATIC_BL1,0,6,132,8
     LTEXT           "-",IDC_STATIC_BL2,199,6,141,8
     GROUPBOX        "Параметры",IDC_STATIC,0,162,340,73
-    LTEXT           "Значение:",IDC_STATIC,7,193,46,8
-    LTEXT           "Имя:",IDC_STATIC_LABEL1,7,171,26,8
+    LTEXT           "Значение",IDC_STATIC,6,194,46,8
+    LTEXT           "Имя",IDC_STATIC_LABEL1,6,171,26,8
 END
 
 IDD_ALERT DIALOGEX 0, 0, 268, 77
@@ -368,27 +372,29 @@ BEGIN
     LTEXT           "Editpos",IDC_STATIC_EDIT,7,7,254,49,0,WS_EX_STATICEDGE
 END
 
-IDD_PROFILES DIALOGEX 0, 0, 344, 126
+IDD_PROFILES DIALOGEX 0, 0, 345, 142
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Выбор профиля игры"
+CAPTION "Выбор профиля для игры"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    COMBOBOX        IDC_COMBO_GROUPS,7,14,104,94,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LISTBOX         IDC_LIST_PROFILE,7,41,104,81,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_GROUPS,7,15,104,94,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LISTBOX         IDC_LIST_PROFILE,7,41,104,97,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Создать ярлык профиля на рабочем столе",IDC_CHECK_CREATELINK,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,15,163,9
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,16,163,9
     CONTROL         "Создать новый профиль",IDC_CHECK_CREATE_NEW_PROFILE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,52,99,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,53,99,8
     CONTROL         "Скопировать в новый профиль выбранный",IDC_CHECK_COPY_CURRENT_PROFILE,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,64,163,8
-    EDITTEXT        IDC_EDIT_NEWPROFILE_GROUP,237,75,99,12,ES_AUTOHSCROLL
-    EDITTEXT        IDC_EDIT_NEWPROFILE_NAME,237,90,99,12,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,233,108,50,14
-    PUSHBUTTON      "Отмена",IDCANCEL,286,108,50,14
+    CONTROL         "Создать новый профиль пустым",IDC_CHECK_CREATE_EMPTY_PROFILE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,75,130,8
+    EDITTEXT        IDC_EDIT_NEWPROFILE_GROUP,238,90,99,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_EDIT_NEWPROFILE_NAME,238,105,99,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,233,124,50,14
+    PUSHBUTTON      "Отмена",IDCANCEL,287,124,50,14
     LTEXT           "Список миров:",IDC_STATIC,8,6,58,8
     LTEXT           "Профили персонажей:",IDC_STATIC,7,32,84,8
-    LTEXT           "Название мира:",IDC_STATIC_GROUP_NAME,125,78,54,8
-    LTEXT           "Название профиля персонажа:",IDC_STATIC_PROFILE_NAME,125,93,107,8
+    LTEXT           "Название мира:",IDC_STATIC_GROUP_NAME,125,93,54,8
+    LTEXT           "Название профиля персонажа:",IDC_STATIC_PROFILE_NAME,125,108,107,8
 END
 
 
@@ -462,9 +468,9 @@ BEGIN
     IDD_PLUGINS, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 362
+        RIGHTMARGIN, 519
         TOPMARGIN, 7
-        BOTTOMMARGIN, 206
+        BOTTOMMARGIN, 223
     END
 
     IDD_PASSWORD, DIALOG
@@ -514,9 +520,9 @@ BEGIN
     IDD_PROFILES, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 336
+        RIGHTMARGIN, 337
         TOPMARGIN, 7
-        BOTTOMMARGIN, 122
+        BOTTOMMARGIN, 138
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -559,7 +565,7 @@ BEGIN
     BEGIN
         MENUITEM "&Справка",                    ID_MUDCLIENT_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&Перейти на сайт мад-клиента...", ID_CHECK_UPDATES
+        MENUITEM "&Сайт и обновления...",       ID_CHECK_UPDATES
     END
 END
 
@@ -570,8 +576,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,6,0
- PRODUCTVERSION 1,0,6,0
+ FILEVERSION 1,14,0,0
+ PRODUCTVERSION 1,14,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -587,12 +593,12 @@ BEGIN
         BLOCK "080004b0"
         BEGIN
             VALUE "FileDescription", "Tortilla Mud Client"
-            VALUE "FileVersion", "1.0.6.0"
+            VALUE "FileVersion", "1.14.0.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.github.io"
             VALUE "OriginalFilename", "tortilla.exe"
             VALUE "ProductName", "Tortilla Mud Client"
-            VALUE "ProductVersion", "1.0.6.0"
+            VALUE "ProductVersion", "1.14.0.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -604,27 +610,10 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Toolbar
-//
-
-IDR_MAINFRAME TOOLBAR 16, 16
-BEGIN
-    BUTTON      ID_SELECTPROFILE
-    SEPARATOR
-    BUTTON      ID_SETTINGS
-    BUTTON      ID_PLUGINS
-    BUTTON      ID_MODE
-    SEPARATOR
-    BUTTON      ID_MUDCLIENT_HELP
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Bitmap
 //
 
-IDR_MAINFRAME           BITMAP                  "Toolbar.bmp"
+IDR_MAINFRAME           BITMAP                  "toolbar.bmp"
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -659,6 +648,56 @@ BEGIN
     0
 END
 
+IDD_PROPERTY_COMMON AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_VARS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_GROUPS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_HIGHLIGHTS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_HOTKEYS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_TABWORDS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_TWOPARAMS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_ONEPARAM AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PROPERTY_TIMERS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_PLUGINS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -681,7 +720,7 @@ BEGIN
     IDS_ERROR_COPYPROFILE_FAILED 
                             "Ошибка при копировании профиля. Проверьте права на запись в каталог программы. Возможно исходный профиль поврежден."
     IDS_ERROR_INITPROFILES_FAILED 
-                            "Ошибка при инициализации профилей! Проверьте права на запись в каталог клиента. Для игры необходимо создать хотя бы один профиль."
+                            "Ошибка при cоздании нового профиля! Для игры необходимо создать хотя бы один профиль. Проверьте права на запись в каталог клиента."
     IDS_ERROR_SAVEPROFILE_FAILED 
                             "Ошибка при сохранении профиля! Проверьте права на запись в каталог программы."
     IDS_ERROR_CURRENTSAVEPROFILE_FAILED 

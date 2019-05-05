@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "roomsZone.h"
 #include "mapCursor.h"
@@ -38,25 +38,27 @@ public:
 
 class MapperRender : public CWindowImpl<MapperRender>
 {
+    int ROOM_SIZE, MAP_EDGE;
+    int menu_size;
+
     CBrush m_background;
     MapCursor viewpos;
     MapCursor currentpos;
-    MapperRoomRender rr;
+    MapperRoomRender* rr;
 
     struct scroll {
         scroll() : pos(-1), maxpos(0) {}
         int pos, maxpos;
     };
     struct scrolls {
-        scroll h,v;        
+        scroll h,v;
+        bool h_flag, v_flag;
     };   
     std::map<int, scrolls> m_scrolls;
     typedef std::map<int, scrolls>::iterator siterator;
 
     bool m_hscroll_flag;
     bool m_vscroll_flag;
-    bool m_block_center;
-
     bool m_track_mouse;
 
     enum DRAGMODE { DRAG_NONE = 0, DRAG_MAP, DRAG_ROOM };
@@ -71,17 +73,22 @@ class MapperRender : public CWindowImpl<MapperRender>
     HWND m_menu_handler;
     MapperRenderRoomMoveTool *m_roomMoveTool;
 public:
-    MapperRender();
+    MapperRender(int room_size, int corridor_size, int deflate_size, float dpi);
+    ~MapperRender();
     void setMenuHandler(HWND handler_wnd);
     void setMoveToolHandler(MapperRenderRoomMoveTool *movetool);
-    void showPosition(MapCursor pos, bool resetScrolls);
-    MapCursor getCurrentPosition();        
+    void showPosition(MapCursor pos, bool centerScreen, bool currentPosition);
+    MapCursor getCurrentPosition() const;
+    MapCursor getViewPosition() const;
     void getSelectedRooms(std::vector<const Room*>* rooms) { 
         rooms->resize(m_selected_rooms.size());
         std::copy(m_selected_rooms.begin(), m_selected_rooms.end(), rooms->begin());
     }
     void clearSelection() { unselectAllRooms(); }
-    void clear() { m_scrolls.clear(); viewpos = nullptr; currentpos = nullptr; }
+    void clear() { m_scrolls.clear();
+        viewpos = std::make_shared<MapNullCursorImplementation>();
+        currentpos = std::make_shared<MapNullCursorImplementation>();
+    }
 private:
     void selectRoom(const Room* room) {
         unselectRoom(room);
@@ -154,9 +161,9 @@ private:
         return 0;
     }    
 private:
-    void renderMap(int render_x, int render_y);
+    void showCurrentOnScreen(bool centerScreen);
+    void renderMap();
     void renderLevel(int z, int render_x, int render_y, int type, MapCursor pos);
-    MapCursor getCursor() const;
     const Room* findRoomOnScreen(int cursor_x, int cursor_y) const;
     void onCreate();
     void onPaint();
@@ -165,7 +172,10 @@ private:
     void onVScroll(DWORD position);
     int  getRenderX() const;
     int  getRenderY() const;
-    void updateScrollbars(bool center);
+    int  calcRenderPosByScroll(const scroll&s, bool flag) const;
+    int  calcScrollPosByRender(int render, bool flag) const;
+    void centerScrollbars();
+    void updateScrollbars(bool center = false);
     void mouseLeftButtonDown();
     void mouseLeftButtonUp();
     void mouseMove();

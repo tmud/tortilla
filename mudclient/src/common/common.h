@@ -1,4 +1,4 @@
-#pragma once 
+﻿#pragma once 
 
 bool isVistaOrHigher();
 void getClientExePath(tstring* path);
@@ -147,4 +147,44 @@ class CreateLink
 {
 public:
     bool create(const tstring& group, const tstring& profile);
+};
+
+class BitmapMethods
+{
+    HBITMAP src;
+    BITMAP srcparams;
+public:
+    BitmapMethods(HBITMAP srcbitmap) : src(srcbitmap) {
+        GetObject(src, sizeof(BITMAP), &srcparams);
+    }
+    HBITMAP createNewResized(int w, int h) 
+    {
+        HDC dc = GetDC(GetDesktopWindow());
+        HDC memdc = CreateCompatibleDC(dc);
+        HDC memdc2 = CreateCompatibleDC(dc);
+        HBITMAP hbm = CreateCompatibleBitmap(dc, w, h);
+        HGDIOBJ hOld = SelectObject(memdc, hbm);
+        SelectObject(memdc2, src);
+        StretchBlt(memdc, 0, 0, w, h, memdc2, 0, 0, srcparams.bmWidth, srcparams.bmHeight, SRCCOPY);
+        ReleaseDC(GetDesktopWindow(), dc);
+        SelectObject(memdc, hOld);
+        DeleteDC(memdc2);
+        DeleteDC(memdc);
+        return hbm;
+    }
+    HBITMAP cutNewBitmap(int x, int y, int w, int h, int new_w, int new_h)
+    {
+        HDC dc = GetDC(GetDesktopWindow());
+        HDC memdc = CreateCompatibleDC(dc);
+        HDC memdc2 = CreateCompatibleDC(dc);
+        HBITMAP hbm = CreateCompatibleBitmap(dc, new_w, new_h);
+        HGDIOBJ hOld = SelectObject(memdc, hbm);
+        SelectObject(memdc2, src);
+        StretchBlt(memdc, 0, 0, new_w, new_h, memdc2, x, y, w, h, SRCCOPY);
+        ReleaseDC(GetDesktopWindow(), dc);
+        SelectObject(memdc, hOld);
+        DeleteDC(memdc2);
+        DeleteDC(memdc);
+        return hbm;
+    }
 };

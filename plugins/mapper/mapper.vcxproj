@@ -59,6 +59,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;MAPPER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\wtl\include;res</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -67,7 +68,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)\mapper.bmp $(SolutionDir)plugins\</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -83,6 +85,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;MAPPER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>..\..\;..\..\libs;..\..\libs\include;..\..\libs\wtl\include;res</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -93,7 +96,8 @@
       <AdditionalLibraryDirectories>$(SolutionDir)\$(Configuration)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(ProjectDir)\mapper.bmp $(SolutionDir)plugins\</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
     <ResourceCompile>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -103,7 +107,6 @@
     <ClInclude Include="..\..\libs\common\crc32.h" />
     <ClInclude Include="..\..\libs\common\dataQueue.h" />
     <ClInclude Include="..\..\libs\common\memoryBuffer.h" />
-    <ClInclude Include="..\..\mudclient\src\palette256.h" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="src\bitmapButton.h" />
     <ClInclude Include="src\debugHelpers.h" />
@@ -163,6 +166,7 @@
     <Image Include="res\bitmap1.bmp" />
     <Image Include="res\bitmap2.bmp" />
     <Image Include="res\bmp00001.bmp" />
+    <Image Include="res\mapper.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\mapper.rc" />

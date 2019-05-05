@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "sharingController.h"
 
 const wchar_t *global_share_name = L"TortillaTray";

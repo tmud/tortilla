@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #define DEFAULT_CMD_HISTORY_SIZE 30
 #define DEFAULT_VIEW_HISTORY_SIZE 5000
@@ -63,9 +63,9 @@ struct PropertiesHighlight
 
     void getFlags(tstring* flags) const
     {
-        if (underlined) flags->append(L"Ï");
-        if (border) flags->append(L"Ð");
-        if (italic) flags->append(L"Ê");
+        if (underlined) flags->append(L"ÐŸ");
+        if (border) flags->append(L"Ð ");
+        if (italic) flags->append(L"Ðš");
         if (flags->empty())
             flags->append(L"-");
     }
@@ -377,11 +377,11 @@ struct PanelWindow
 
 struct PluginData
 {
-    PluginData() : state(0) {}
+    enum State { PDS_OFF, PDS_ON, PDS_HIDDEN };
+    PluginData() : state(PluginData::PDS_OFF) {}
     tstring name;
-    int state;
+    PluginData::State state;
     std::vector<OutputWindow> windows;
-    //std::vector<PanelWindow> panels;
 
     void initDefaultPos(int width, int height, OutputWindow *w)
     {
@@ -427,7 +427,8 @@ struct PluginsDataValues : public std::vector<PluginData>
     {
         for (int i = 0, e = size(); i < e; ++i) {
             PluginData &p = at(i);
-            p.state = 0;
+            if (p.state == PluginData::PDS_ON)
+                p.state = PluginData::PDS_OFF;
         }
     }
 };
@@ -487,7 +488,8 @@ public:
        , cmd_history_size(DEFAULT_CMD_HISTORY_SIZE)
        , show_system_commands(0), newline_commands(0), clear_bar(1), disable_ya(0), disable_osc(1)
        , history_tab(1), timers_on(0), plugins_logs(1), plugins_logs_window(0), recognize_prompt(0)
-       , soft_scroll(0), unknown_cmd(0), any_font(0), disable_alt(0), move_totray(0)
+       , soft_scroll(0), unknown_cmd(0), any_font(0), disable_alt(0), move_totray(0), disable_mccp(0)
+       , dpi(1.0f)
     {
         initDefaultColorsAndFont();
         initDisplay();
@@ -549,9 +551,11 @@ public:
         any_font = p.any_font;
         disable_alt = p.disable_alt;
         move_totray = p.move_totray;
+        disable_mccp = p.disable_mccp;
 
         //skip title
         rebar = p.rebar;
+        dpi = p.dpi;
     }
 
 public:
@@ -646,8 +650,10 @@ public:
     int      any_font;
     int      disable_alt;
     int      move_totray;
+    int      disable_mccp;
 
     tstring title;        // name of main window (dont need to save)
+    float   dpi;          // dpi multiplier (dont need to save)
     tstring rebar;
 
     void initDefaultColorsAndFont()

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 void init_clientlog(lua_State *L);
 void clientlog(const tstring& text);

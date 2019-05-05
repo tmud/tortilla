@@ -1,6 +1,7 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "propertiesPages/propertiesData.h"
 #include "mudView.h"
+#include "accessors.h"
 #pragma warning(disable: 4996)
 
 MudView::MudView(PropertiesElements *elements, int id) : 
@@ -235,7 +236,7 @@ void MudView::deleteLastString()
     if (m_strings.empty())
         return;
     int last = m_strings.size() - 1;
-    delete m_strings[last];
+    m_dropped_strings.push_back(m_strings[last]);
     m_strings.pop_back();
     if (last == m_last_visible_line)
         m_last_visible_line--;
@@ -254,7 +255,7 @@ int MudView::getSymbolsOnDisplay() const
     RECT rc;
     GetClientRect(&rc);
     int count = rc.right / font_width;
-    int dc = count / 40; // погрешность
+    int dc = count / 40; // РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ
     if (dc < 3) dc = 3;
     return count - dc;
 }
@@ -286,13 +287,6 @@ void MudView::removeDropped(parseData* parse_data)
         MudViewString *string = pds[i];
         if (string->dropped && !string->show_dropped)
         {
-/*
-			MudViewStringBlock mb;
-			mb.params.bkg_color=1;
-			mb.params.text_color=7;
-			mb.string=L"-";
-			string->blocks.insert(string->blocks.begin(), mb);
-*/
             pds.erase(pds.begin() + i);
             m_dropped_strings.push_back(string);
         }
@@ -301,6 +295,8 @@ void MudView::removeDropped(parseData* parse_data)
 
 void MudView::clearDropped()
 {
+    if (m_dropped_strings.empty())
+        return;
     std::for_each(m_dropped_strings.begin(), m_dropped_strings.end(), [](MudViewString*s){delete s;} );
     m_dropped_strings.clear();
 }
@@ -500,7 +496,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                     }
                     else if (left > right) { int t = left; left = right; right = t; }
                 }
-                else if (drag_begin < drag_end) // сверху вниз
+                else if (drag_begin < drag_end) // СЃРІРµСЂС…Сѓ РІРЅРёР·
                 {
                     if (index == drag_begin) {
                         if (left == -1) left = 0;
@@ -510,7 +506,7 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         left = 0;
                     }
                 }
-                else // drag_begin > drag_end  снизу вверх
+                else // drag_begin > drag_end  СЃРЅРёР·Сѓ РІРІРµСЂС…
                 {
                     if (index == drag_begin) {
                         if (left == -1) { right = last; }
@@ -522,8 +518,8 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                         right = last;
                     }
                 }
-                // проверка что блок попадает в вычисленный диапазон (частью или целиком)
-                // и вычисляем в left right - что выделено, но в символьных координатах блока
+                // РїСЂРѕРІРµСЂРєР° С‡С‚Рѕ Р±Р»РѕРє РїРѕРїР°РґР°РµС‚ РІ РІС‹С‡РёСЃР»РµРЅРЅС‹Р№ РґРёР°РїР°Р·РѕРЅ (С‡Р°СЃС‚СЊСЋ РёР»Рё С†РµР»РёРєРѕРј)
+                // Рё РІС‹С‡РёСЃР»СЏРµРј РІ left right - С‡С‚Рѕ РІС‹РґРµР»РµРЅРѕ, РЅРѕ РІ СЃРёРјРІРѕР»СЊРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С… Р±Р»РѕРєР°
                 int end_sym = start_sym + str.size();
                 DragParamsChecker dpc(left, right, start_sym, end_sym);
                 if (dpc.check())
@@ -607,8 +603,8 @@ void MudView::renderString(CDC *dc, MudViewString *s, int left_x, int bottom_y, 
                     //if (drag_left > drag_right) { int t = drag_left; drag_left = drag_right; drag_right = t; }
                 }
 
-                // проверка что блок попадает в вычисленный диапазон (частью или целиком)
-                // и вычисляем в left right - что выделено, но в символьных координатах блока
+                // РїСЂРѕРІРµСЂРєР° С‡С‚Рѕ Р±Р»РѕРє РїРѕРїР°РґР°РµС‚ РІ РІС‹С‡РёСЃР»РµРЅРЅС‹Р№ РґРёР°РїР°Р·РѕРЅ (С‡Р°СЃС‚СЊСЋ РёР»Рё С†РµР»РёРєРѕРј)
+                // Рё РІС‹С‡РёСЃР»СЏРµРј РІ left right - С‡С‚Рѕ РІС‹РґРµР»РµРЅРѕ, РЅРѕ РІ СЃРёРјРІРѕР»СЊРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С… Р±Р»РѕРєР°
                 int end_sym = start_sym + str.size();
 
                 int dsym = ld[0];
@@ -865,6 +861,8 @@ void MudView::stopDraging()
         }
         sendToClipboard(m_hWnd, text);
         drag_begin = -1;
+        VarProcessor *vp = tortilla::getVars();
+        vp->setBufferVar(text);
         Invalidate(FALSE);
         return;
     }
@@ -929,6 +927,8 @@ void MudView::stopDraging()
 
     sendToClipboard(m_hWnd, text);
     drag_begin = -1;
+    VarProcessor *vp = tortilla::getVars();
+    vp->setBufferVar(text);
     Invalidate(FALSE);
 }
 

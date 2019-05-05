@@ -1,4 +1,4 @@
-#include "resource.h"
+﻿#include "resource.h"
 #include "padbutton.h"
 #include "settingsDlg.h"
 #include "selectImageDlg.h"
@@ -34,7 +34,7 @@ class ClickpadMainWnd : public CWindowImpl < ClickpadMainWnd >, public ClickpadS
 {
 public:
     DECLARE_WND_CLASS_EX(L"Clickpad", 0, COLOR_BTNFACE)
-    ClickpadMainWnd();
+    ClickpadMainWnd(float clientdpi);
     ~ClickpadMainWnd();
     void setEditMode(bool mode);
     void save(xml::node& node);
@@ -82,6 +82,7 @@ private:
     void onClickButton(int x, int y, bool up);
     void onPaint(HDC dc);
 private:
+    void updateByDpi(RECT &rc);
     PadButton* getButton(int x, int y);
     void showButton(PadButton*b, bool show);
     void updateTooltip(PadButton*b, bool show);
@@ -105,4 +106,5 @@ private:
     COLORREF m_backgroundColor;
     LOGFONT m_logfont;
     CFont m_buttons_font;
+    float dpi;
 };

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "accessors.h"
 #include "pluginsApi.h"
 #include "api/api.h"
@@ -91,7 +91,7 @@ int pluginInvArgs(lua_State *L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Íåêîððåêòíûé òèï â ïàðàìåòðàõ" ); // (_cp ? L"Íåêîððåêòíûå ïàðàìåòðû" : L"Ïàðàìåòðû");
+    tstring p( L"ÐÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ð¹ Ñ‚Ð¸Ð¿ Ð² Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð°Ñ…" ); // (_cp ? L"ÐÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ðµ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ñ‹" : L"ÐŸÐ°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ñ‹");
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -100,7 +100,7 @@ int pluginInvArgsValues(lua_State *L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Íåêîððåêòíîå çíà÷åíèå â ïàðàìåòðàõ" );
+    tstring p( L"ÐÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð² Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð°Ñ…" );
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -109,7 +109,7 @@ int pluginNotDeclared(lua_State* L, const tchar* fname)
 {
     luaT_push_args(L, TW2A(fname));
     tstring error(luaT_towstring(L, -1));
-    tstring p( L"Âûçîâ íå èç ïëàãèíà" );
+    tstring p( L"Ð’Ñ‹Ð·Ð¾Ð² Ð½Ðµ Ð¸Ð· Ð¿Ð»Ð°Ð³Ð¸Ð½Ð°" );
     swprintf(plugin_buffer(), L"%s: %s", p.c_str(), error.c_str());
     pluginLogOut(plugin_buffer());
     return 0;
@@ -117,14 +117,14 @@ int pluginNotDeclared(lua_State* L, const tchar* fname)
 
 int pluginLoadFail(lua_State *L, const tchar* fname, const tchar* file)
 {
-    swprintf(plugin_buffer(), L"%s: %s Îøèáêà çàãðóçêè ôàéëà: %s", plugin_name(), fname, file);
+    swprintf(plugin_buffer(), L"%s: %s ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐ¸ Ñ„Ð°Ð¹Ð»Ð°: %s", plugin_name(), fname, file);
     pluginLogOut(plugin_buffer());
     return 0;
 }
 
 int pluginMethodError(const tchar* fname, const tchar* error)
 {
-    swprintf(plugin_buffer(), L"%s: Îøèáêà â ìåòîäå %s: %s", plugin_name(), fname, error);
+    swprintf(plugin_buffer(), L"%s: ÐžÑˆÐ¸Ð±ÐºÐ° Ð² Ð¼ÐµÑ‚Ð¾Ð´Ðµ %s: %s", plugin_name(), fname, error);
     pluginLogOut(plugin_buffer());
     return 0;
 }
@@ -144,7 +144,7 @@ int pluginOut(const tchar* msg)
 
 void pluginLoadError(const tchar* msg)
 {
-    swprintf(plugin_buffer(), L"%s: Îøèáêà çàãðóçêè %s", plugin_name(), msg);
+    swprintf(plugin_buffer(), L"%s: ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐ¸ %s", plugin_name(), msg);
     pluginLogOut(plugin_buffer());
 }
 //---------------------------------------------------------------------
@@ -467,7 +467,7 @@ int getPath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginMethodError(L"getPath", L"Îøèáêà ñîçäàíèÿ êàòàëîãà äëÿ ïëàãèíà");
+        return pluginMethodError(L"getPath", L"ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ ÐºÐ°Ñ‚Ð°Ð»Ð¾Ð³Ð° Ð´Ð»Ñ Ð¿Ð»Ð°Ð³Ð¸Ð½Ð°");
     }
     return pluginInvArgs(L, L"getPath");
 }
@@ -487,7 +487,7 @@ int getProfilePath(lua_State *L)
             luaT_pushwstring(L, pp);
             return 1;
         }
-        return pluginMethodError(L"getProfilePath", L"Îøèáêà ñîçäàíèÿ êàòàëîãà äëÿ ïëàãèíà");
+        return pluginMethodError(L"getProfilePath", L"ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ ÐºÐ°Ñ‚Ð°Ð»Ð¾Ð³Ð° Ð´Ð»Ñ Ð¿Ð»Ð°Ð³Ð¸Ð½Ð°");
     }
     return pluginInvArgs(L, L"getProfilePath");
 }
@@ -527,7 +527,7 @@ int getResource(lua_State* L)
             lua_pushwstring(L, path.c_str());
             return 1;
         }
-        return pluginMethodError(L"getResource", L"Îøèáêà ñîçäàíèÿ êàòàëîãà äëÿ ïëàãèíà");
+        return pluginMethodError(L"getResource", L"ÐžÑˆÐ¸Ð±ÐºÐ° ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ ÐºÐ°Ñ‚Ð°Ð»Ð¾Ð³Ð° Ð´Ð»Ñ Ð¿Ð»Ð°Ð³Ð¸Ð½Ð°");
     }
     return pluginInvArgs(L, L"getResource");
 }
@@ -718,7 +718,7 @@ int loadTable(lua_State *L)
     xml::node doc;
     if (!doc.load(pp, &error) )
     {
-       swprintf(plugin_buffer(), L"Îøèáêà ÷òåíèÿ: %s\n%s", filename.c_str(), error.c_str());
+       swprintf(plugin_buffer(), L"ÐžÑˆÐ¸Ð±ÐºÐ° Ñ‡Ñ‚ÐµÐ½Ð¸Ñ: %s\n%s", filename.c_str(), error.c_str());
        tstring tmp(plugin_buffer());
        pluginMethodError(L"loadTable", tmp.c_str());
        return 0;
@@ -953,7 +953,7 @@ int saveTable(lua_State *L)
     ProfileDirHelper dh;
     if (!dh.makeDirEx(pmanager->getProfileGroup(), _cp->get(Plugin::FILENAME), filename))
     {
-       swprintf(plugin_buffer(), L"Îøèáêà çàïèñè: %s", filepath);
+       swprintf(plugin_buffer(), L"ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð¿Ð¸ÑÐ¸: %s", filepath);
        tstring tmp(plugin_buffer());
        pluginMethodError(L"saveTable", tmp.c_str());
        return 0;
@@ -1211,11 +1211,11 @@ int saveTable(lua_State *L)
     list.clear();
 
     if (incorrect_data)
-        pluginMethodError(L"saveTable", L"Â òàáëèöå åñòü íåïîääåðæèâàåìûå äëÿ çàïèñè òèïû äàííûõ.");
+        pluginMethodError(L"saveTable", L"Ð’ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ðµ ÐµÑÑ‚ÑŒ Ð½ÐµÐ¿Ð¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÐ¼Ñ‹Ðµ Ð´Ð»Ñ Ð·Ð°Ð¿Ð¸ÑÐ¸ Ñ‚Ð¸Ð¿Ñ‹ Ð´Ð°Ð½Ð½Ñ‹Ñ….");
 
     if (!result)
     {
-       swprintf(plugin_buffer(), L"Îøèáêà çàïèñè: %s", filepath);
+       swprintf(plugin_buffer(), L"ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð¿Ð¸ÑÐ¸: %s", filepath);
        tstring tmp(plugin_buffer());
        pluginMethodError(L"saveTable", tmp.c_str());
        return 0;
@@ -1230,11 +1230,11 @@ void initVisible(lua_State *L, int index, OutputWindow *w)
       w->initVisible(lua_toboolean(L, index) ? true : false);
 }
 
-int createWindow(lua_State *L)
+int createWindowImpl(lua_State *L, float dpi, const tchar* funcname)
 {
     EXTRA_CP;
     if (!_cp)
-        return pluginNotDeclared(L, L"createWindow");
+        return pluginNotDeclared(L, funcname);
     PluginData &p = find_plugin();
     OutputWindow w;
 
@@ -1243,7 +1243,9 @@ int createWindow(lua_State *L)
         tstring name( luaT_towstring(L, 1) );
         if (!p.findWindow(name, &w))
         {
-            p.initDefaultPos(300, 300, &w);
+            int width = static_cast<int>(350 * dpi);
+            int height = static_cast<int>(250 * dpi);
+            p.initDefaultPos(width, height, &w);
             initVisible(L, 2, &w);
             w.name = name;
             p.windows.push_back(w);
@@ -1256,8 +1258,8 @@ int createWindow(lua_State *L)
         tstring name( luaT_towstring(L, 1) );
         if (!p.findWindow(name, &w))
         {
-            int height = lua_tointeger(L, 3);
-            int width = lua_tointeger(L, 2);
+            int height = static_cast<int>(lua_tointeger(L, 3) * dpi);
+            int width = static_cast<int>(lua_tointeger(L, 2) * dpi);
             p.initDefaultPos(width, height, &w);
             initVisible(L, 4, &w);
             w.name = name;
@@ -1266,7 +1268,7 @@ int createWindow(lua_State *L)
         else { initVisible(L, 4, &w); }
     }
     else {
-        return pluginInvArgs(L, L"createWindow"); 
+        return pluginInvArgs(L, funcname);
     }
 
     PluginsView *window =  _wndMain.m_gameview.createDockPane(w, _cp);
@@ -1274,6 +1276,30 @@ int createWindow(lua_State *L)
         _cp->dockpanes.push_back(window);
     luaT_pushobject(L, window, LUAT_WINDOW);
     return 1;
+}
+
+int createWindow(lua_State *L)
+{
+    return createWindowImpl(L, 1.0f, L"createWindow");
+}
+
+int createWindowDpi(lua_State *L)
+{
+    PropertiesData* pdata = tortilla::getProperties();
+    float dpi = pdata->dpi;
+    return createWindowImpl(L, dpi, L"createWindowDpi");
+}
+
+int getDpi(lua_State *L)
+{
+    if (luaT_check(L, 0))
+    {
+        PropertiesData* pdata = tortilla::getProperties();
+        float dpi = pdata->dpi;
+        lua_pushnumber(L, dpi);
+        return 1;
+    }
+    return pluginInvArgs(L, L"getDpi");
 }
 
 int pluginLog(lua_State *L)
@@ -1470,6 +1496,7 @@ int clearView(lua_State *L)
     return pluginInvArgs(L, L"clearView");
 }
 
+bool print_output_mode = true;
 int print(lua_State *L)
 {
     EXTRA_CP;
@@ -1482,7 +1509,7 @@ int print(lua_State *L)
         tstring p(lua_towstring(L, i));
         params.push_back(p);
     }
-    lp()->windowOutput(0, params);
+    lp()->windowOutput(0, params, print_output_mode);
     return 0;
 }
 
@@ -1508,7 +1535,7 @@ int vprint(lua_State *L)
         tstring p(luaT_towstring(L, i));
         params.push_back(p);
     }
-    lp()->windowOutput(view, params);
+    lp()->windowOutput(view, params, false);
     return 0;
 }
 
@@ -1530,6 +1557,21 @@ int translateColors(lua_State *L)
         return 2;
     }
     return pluginInvArgs(L, L"translateColors");
+}
+
+int createColor(lua_State *L)
+{
+    EXTRA_CP;
+    if (luaT_check(L, 1, LUA_TSTRING))
+    {
+        tstring p(luaT_towstring(L, 1));
+        HighlightHelper hh;
+        if (!hh.translateColor(&p))
+            return 0;
+        luaT_pushwstring(L, p.c_str());
+        return 1;
+    }
+    return pluginInvArgs(L, L"createColor");
 }
 
 int getVersion(lua_State *L)
@@ -1658,7 +1700,9 @@ bool initPluginsSystem()
     lua_register(L, "getParent", getParent);
     lua_register(L, "loadTable", loadTable);
     lua_register(L, "saveTable", saveTable);
+    lua_register(L, "getDpi", getDpi);
     lua_register(L, "createWindow", createWindow);
+    lua_register(L, "createWindowDpi", createWindowDpi);
     lua_register(L, "log", pluginLog);
     lua_register(L, "terminate", terminatePlugin);
     lua_register(L, "updateView", updateView);
@@ -1674,6 +1718,7 @@ bool initPluginsSystem()
     lua_register(L, "vprint", vprint);
     lua_register(L, "clearView", clearView);
     lua_register(L, "translateColors", translateColors);
+    lua_register(L, "createColor", createColor);
     lua_register(L, "getVersion", getVersion);
     lua_register(L, "checkVersion", checkVersion);
     lua_register(L, "isGroupActive", isGroupActive);
@@ -1795,7 +1840,8 @@ int string_strstr_impl(lua_State *L, const tchar* fname)
             lua_pushinteger(L, find_pos);
             return 1;
          }
-         return 0;
+         lua_pushnil(L);
+         return 1;
      }
      return pluginInvArgs(L,fname);
 }

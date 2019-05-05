@@ -1,4 +1,4 @@
-#ifndef __ATL_DOCK_H__
+﻿#ifndef __ATL_DOCK_H__
 #define __ATL_DOCK_H__
 
 // Modified by Goncharenko Maksim (gm79@list.ru, maxim.goncharenko@gmail.com)
@@ -2162,9 +2162,9 @@ public:
       if (IsDocked(ctx->Side))
       {
           if (IsDockedVertically(ctx->Side))
-              ctx->sizeFloat.cx = ctx->rcWindow.right-ctx->rcWindow.left;
+              ctx->sizeFloat.cx = ctx->rcWindow.right-ctx->rcWindow.left + DEFAULT_SPLITTER_SIZE;
           else
-              ctx->sizeFloat.cy = ctx->rcWindow.bottom-ctx->rcWindow.top;
+              ctx->sizeFloat.cy = ctx->rcWindow.bottom-ctx->rcWindow.top + DEFAULT_SPLITTER_SIZE;
       }
    }
 

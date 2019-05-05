@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "resource.h"
 #include "soundPlayer.h"
 
@@ -137,7 +137,7 @@ private:
         }
         else
         {
-            m_error_label.SetWindowText(L"Запись...");
+            m_error_label.SetWindowText(L"Р—Р°РїРёСЃСЊ...");
             m_start.EnableWindow(FALSE);
             m_stop.EnableWindow(TRUE);
             m_save.EnableWindow(FALSE);            
@@ -196,7 +196,7 @@ private:
         int len = m_recording_file.GetWindowTextLength();
         if (len == 0)
         {
-            MessageBox(L"Введите имя файла для записи!", L"Запись звука", MB_ICONSTOP|MB_OK);
+            MessageBox(L"Р’РІРµРґРёС‚Рµ РёРјСЏ С„Р°Р№Р»Р° РґР»СЏ Р·Р°РїРёСЃРё!", L"Р—Р°РїРёСЃСЊ Р·РІСѓРєР°", MB_ICONSTOP|MB_OK);
             m_recording_file.SetFocus();
             return 0;
         }
@@ -208,11 +208,11 @@ private:
         saveParameters();
         bool result = player->saveFile(m_temp_file.c_str(), filname.c_str());       
         if (!result)
-             MessageBox(L"Не удалось сохранить файл!", L"Запись звука", MB_ICONSTOP|MB_OK);
+             MessageBox(L"РќРµ СѓРґР°Р»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ С„Р°Р№Р»!", L"Р—Р°РїРёСЃСЊ Р·РІСѓРєР°", MB_ICONSTOP|MB_OK);
         else
         {
             deleteTempFile();
-            m_error_label.SetWindowText(L"Успешно сохранено.");
+            m_error_label.SetWindowText(L"РЈСЃРїРµС€РЅРѕ СЃРѕС…СЂР°РЅРµРЅРѕ.");
             m_recording_file.SetWindowText(L"");
         }
         return 0;

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "accessors.h"
 #include "pluginsManager.h"
 #include "pluginsDlg.h"
@@ -48,7 +48,7 @@ void PluginsManager::initPlugins()
             {
                 if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                 {
-                    if (Plugin::isPluginEnabled(fd.cFileName))
+                    if (Plugin::isPluginFile(fd.cFileName))
                         files.push_back(fd.cFileName);
                 }
             } while (::FindNextFile(file, &fd));
@@ -94,7 +94,7 @@ void PluginsManager::initPlugins()
         bool exist = false;
         for (int j = 0, je = new_modules.size(); j < je; ++j)
             if (new_modules[j].name == name) { exist = true; break; }
-        if (!exist) { PluginData pd; pd.name = name; pd.state = 0; new_modules.push_back(pd); }
+        if (!exist) { PluginData pd; pd.name = name; pd.state = PluginData::PDS_HIDDEN; new_modules.push_back(pd); }
     }
     modules->swap(new_modules);
 
@@ -108,7 +108,7 @@ void PluginsManager::initPlugins()
         {
             new_plugins.push_back(m_plugins[j]); break;
         }
-        bool state = (v.state == 1) ? true : false;
+        bool state = (v.state == PluginData::PDS_ON);
         new_plugins[i]->setOn(state);
     }
     m_plugins.swap(new_plugins);
@@ -126,45 +126,64 @@ void PluginsManager::unloadPlugins()
 bool PluginsManager::pluginsPropsDlg()
 {
     initPlugins();
-    PluginsDlg dlg(&m_plugins);
-    if (dlg.DoModal() != IDOK)
-        return false;
-
-    // grouping plugins to turning off and turning on
-    PluginsList turn_on, turn_off;
-    for (int i=0,e=m_plugins.size(); i<e; ++i)
-    {
-        Plugin *p = m_plugins[i];
-        bool new_state = dlg.getNewState(i);
-        if (p->state() != new_state)
-        {
-            if (new_state)
-                turn_on.push_back(p);
-            else
-                turn_off.push_back(p);
-        }
-    }
-
-    // turn off plugins first
-    for (int i = 0, e = turn_off.size(); i < e; ++i)
-        unloadPlugin(turn_off[i]);
-
-    // turn on new plugins
-    for (int i=0,e=turn_on.size(); i<e; ++i)
-        loadPlugin(turn_on[i]);
-
     PluginsDataValues* modules = tortilla::pluginsData();
-    PluginsDataValues new_modules;
-    for (int i=0,e=m_plugins.size(); i<e; ++i)
+    PluginDlgParametes params(m_plugins.size());
+    for (int i = 0, e = m_plugins.size(); i < e; ++i)
     {
         Plugin *p = m_plugins[i];
+        params[i].p = p;
+        params[i].state = PluginData::PDS_HIDDEN;
         tstring name = p->get(Plugin::FILE);
         for (int j = 0, je = modules->size(); j < je; ++j)
         {
             if (modules->at(j).name == name)
             {
                 PluginData& v = modules->at(j);
-                v.state = p->state() ? 1 : 0;
+                params[i].state = v.state;
+                break;
+            }
+        }
+    }
+
+    PluginsDlg dlg(&params);
+    if (dlg.DoModal() != IDOK)
+        return false;
+
+    // grouping plugins to turning off and turning on
+    PluginsList turn_on, turn_off;
+    for (int i=0,e=params.size(); i<e; ++i)
+    {
+        Plugin *p = params[i].p;
+        PluginData::State new_state = params[i].state;
+        bool new_state_b = (new_state == PluginData::PDS_ON) ? true : false;
+        if (p->state() != new_state_b)
+        {
+            if (new_state_b)
+                turn_on.push_back(p);
+            else
+                turn_off.push_back(p);
+        }
+        m_plugins[i] = p;
+    }
+
+    // turn off plugins first
+    for (int i = 0, e = turn_off.size(); i < e; ++i)
+        unloadPlugin(turn_off[i]);
+    // turn on new plugins
+    for (int i=0,e=turn_on.size(); i<e; ++i)
+        loadPlugin(turn_on[i]);
+
+    PluginsDataValues new_modules;
+    for (int i=0,e=params.size(); i<e; ++i)
+    {
+        Plugin *p = params[i].p;
+        tstring name = p->get(Plugin::FILE);
+        for (int j = 0, je = modules->size(); j < je; ++j)
+        {
+            if (modules->at(j).name == name)
+            {
+                PluginData& v = modules->at(j);
+                v.state = params[i].state;
                 new_modules.push_back(v);
                 break;
             }
@@ -207,19 +226,36 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
         p = findPlugin(name);
         if (!p)
         {
-            tstring error(L"Ошибка при загрузке плагина '");
+            tstring error(L"РћС€РёР±РєР° РїСЂРё Р·Р°РіСЂСѓР·РєРµ РїР»Р°РіРёРЅР° '");
             error.append(name);
             error.append(L"'.");
             tmcLog(error.c_str());
             return true;
         }
     }
+
+    int index = -1;
+    for (int i = 0, e = m_plugins.size(); i < e; ++i) {
+        if (p == m_plugins[i]) { index = i; break; }
+    }
+    if (index == -1) {
+        return false;
+    }
+    PluginsDataValues* modules = tortilla::pluginsData();
+    if (modules->at(index).state == PluginData::PDS_HIDDEN)
+    {
+        tstring error(L"РџР»Р°РіРёРЅ '");
+        error.append(name);
+        error.append(L"' СЃРєСЂС‹С‚.");
+        tmcLog(error.c_str());
+        return true;
+    }
     if (state == L"on" || state == L"1" || state == L"load")
     {
         if (!p->state())
         {
             loadPlugin(p);
-            setPluginState(p, true);
+            setPluginState(p, PluginData::PDS_ON);
         }
         return true;
     }
@@ -227,8 +263,17 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
     {
         if (p->state())
         {
+            p->setOn(false);
+            setPluginState(p, PluginData::PDS_OFF);
+        }
+        return true;
+    }
+    if (state == L"unload")
+    {
+        if (p->state())
+        {
             unloadPlugin(p);
-            setPluginState(p, false);
+            setPluginState(p, PluginData::PDS_OFF);
         }
         return true;
     }
@@ -236,8 +281,9 @@ bool PluginsManager::setPluginState(const tstring& name, const tstring& state)
     {
         if (p->state())
             unloadPlugin(p);
-        loadPlugin(p);
-        setPluginState(p, true);
+        setPluginState(p, PluginData::PDS_OFF);
+        if (loadPlugin(p))
+            setPluginState(p, PluginData::PDS_ON);
         return true;
     }
     return false;
@@ -346,7 +392,7 @@ bool PluginsManager::processTriggers(parseData& parse_data, int string, std::vec
             if (action)
             {
                 triggers.push_back(action);
-                // проверка всех триггеров на эту строку
+                // РїСЂРѕРІРµСЂРєР° РІСЃРµС… С‚СЂРёРіРіРµСЂРѕРІ РЅР° СЌС‚Сѓ СЃС‚СЂРѕРєСѓ
                 processed = true;
             }
         }
@@ -497,9 +543,10 @@ void PluginsManager::processPluginMethod(Plugin *p, char* method, int args)
     }
 }
 
-void PluginsManager::setPluginState(Plugin* p, bool state)
+void PluginsManager::setPluginState(Plugin* p, PluginData::State state)
 {
-    if (!p) return;
+    if (!p)
+        return;
     int index = -1;
     for (int i = 0, e = m_plugins.size(); i < e; ++i) {
         if (p == m_plugins[i])  { index = i; break; }
@@ -507,7 +554,7 @@ void PluginsManager::setPluginState(Plugin* p, bool state)
     if (index != -1)
     {
         PluginsDataValues* modules = tortilla::pluginsData();
-        modules->at(index).state = (state) ? 1 : 0;
+        modules->at(index).state = state;
     }
 }
 
@@ -515,16 +562,16 @@ void PluginsManager::terminatePlugin(Plugin* p)
 {
     if (!p) return;
     p->setOn(false);
-    setPluginState(p, false);
+    setPluginState(p, PluginData::PDS_OFF);
 }
 
 bool PluginsManager::loadPlugin(Plugin* p)
 {
     if (!p->reloadPlugin())
     {
-        tstring error(L"Плагин '");
+        tstring error(L"РџР»Р°РіРёРЅ '");
         error.append(p->get(Plugin::FILE));
-        error.append(L"'отключен.");
+        error.append(L"'РѕС‚РєР»СЋС‡РµРЅ.");
         pluginOut(error.c_str());
         return false;
     }
@@ -567,9 +614,9 @@ bool PluginsManager::doPluginsStringMethod(const char* method, tstring *str)
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_isstring(L, -1) && !lua_isnil(L, -1)))
         {
             // restart plugins
-			tstring msg(L"Неверный тип результата из метода '");
+			tstring msg(L"РќРµРІРµСЂРЅС‹Р№ С‚РёРї СЂРµР·СѓР»СЊС‚Р°С‚Р° РёР· РјРµС‚РѕРґР° '");
 			msg.append(TA2W(method));
-			msg.append(L"' Требуется string|nil");
+			msg.append(L"' РўСЂРµР±СѓРµС‚СЃСЏ string|nil");
             turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_pushstring(L, w2u);
@@ -617,9 +664,9 @@ PluginsManager::TableMethodResult PluginsManager::doPluginsTableMethod(const cha
         if (!p->runMethod(method, 1, 1, &not_supported) || (!lua_istable(L, -1) && !lua_isnil(L, -1) && !lua_isboolean(L, -1) && !lua_isstring(L, -1)) )
         {
             // restart plugins
-            tstring msg(L"Неверный тип результата из метода '");
+            tstring msg(L"РќРµРІРµСЂРЅС‹Р№ С‚РёРї СЂРµР·СѓР»СЊС‚Р°С‚Р° РёР· РјРµС‚РѕРґР° '");
             msg.append(TA2W(method));
-            msg.append(L"'. Требуется table|nil|boolean|string");
+            msg.append(L"'. РўСЂРµР±СѓРµС‚СЃСЏ table|nil|boolean|string");
             turnoffPlugin(msg.c_str(), i);
             lua_settop(L, 0);
             lua_newtable(L);
@@ -687,12 +734,12 @@ void PluginsManager::turnoffPlugin(const tchar* error, int plugin_index)
     _cp = p;
     if (error)
         pluginLog(error);
-    swprintf(plugin_buffer(), L"Плагин %s отключен!", p->get(Plugin::FILE));
+    swprintf(plugin_buffer(), L"РџР»Р°РіРёРЅ %s РѕС‚РєР»СЋС‡РµРЅ!", p->get(Plugin::FILE));
     pluginOut(plugin_buffer());
     p->setOn(false);
     _cp = old;
     PluginsDataValues* modules = tortilla::pluginsData();
-    modules->at(plugin_index).state = 0;
+    modules->at(plugin_index).state = PluginData::PDS_OFF;
 }
 
 void PluginsManager::concatCommand(std::vector<tstring>& parts, bool system, InputCommand cmd)

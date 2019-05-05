@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginSupport.h"
 #include "plugin.h"
@@ -7,13 +7,13 @@
 extern CMainFrame _wndMain;
 extern Plugin* _cp;
 
-int createpanel(lua_State *L)
+int createpanelImpl(lua_State *L, float dpi, const tchar* funcname)
 {
     PluginData &p = find_plugin();
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TNUMBER))
     {
         PanelWindow w;
-        w.size = lua_tointeger(L, 2);
+        w.size = static_cast<int>(lua_tonumber(L, 2) * dpi);
         w.side = _wndMain.m_gameview.convertSideFromString(luaT_towstring(L, 1));
         if (IsDocked(w.side))
         {
@@ -23,9 +23,21 @@ int createpanel(lua_State *L)
             luaT_pushobject(L, window, LUAT_PANEL);
             return 1;
         }
-        return pluginInvArgsValues(L, L"createPanel");
+        return pluginInvArgsValues(L, funcname);
     }
-    return pluginInvArgs(L, L"createPanel");
+    return pluginInvArgs(L, funcname);
+}
+
+int createpanel(lua_State *L)
+{
+    return createpanelImpl(L, 1.0f, L"createPanel");
+}
+
+int createpanelDpi(lua_State *L)
+{
+    PropertiesData* pdata = tortilla::getProperties();
+    float dpi = pdata->dpi;
+    return createpanelImpl(L, dpi, L"createPanelDpi");
 }
 
 int pn_attach(lua_State *L)
@@ -85,6 +97,7 @@ int pn_hwnd(lua_State *L)
 void reg_mt_panels(lua_State *L)
 {
     lua_register(L, "createPanel", createpanel);
+    lua_register(L, "createPanelDpi", createpanelDpi);
     luaL_newmetatable(L, "panel");
     regFunction(L, "attach", pn_attach);
     regFunction(L, "setRender", pn_setRender);

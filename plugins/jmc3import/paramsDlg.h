@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 #include "resource.h"
 
 class AutoCloseHandle {
@@ -78,7 +78,7 @@ private:
         {
             std::wstring wstr( strings[i].c_str() );
             std::wstring symbol( wstr.substr(0, 1) );
-            int pos = wcsspn(symbol.c_str(), L"#$%&*!@~`:;'π^|\\/_=.,");
+            int pos = wcsspn(symbol.c_str(), L"#$%&*!@~`:;'‚Ññ^|\\/_=.,");
             if (pos != symbol.length()) 
                 continue;
             iterator it = counter.find(symbol);
@@ -95,7 +95,7 @@ private:
         if (maxsymbol.empty())
         {
             enableControls(FALSE);
-            m_error_msg.SetWindowText(L"‘‡ÈÎ ÔÓ‚ÂÊ‰ÂÌ ËÎË ÌÂ ˇ‚ÎˇÂÚÒˇ Ù‡ÈÎÓÏ Jmc3!");
+            m_error_msg.SetWindowText(L"–§–∞–π–ª –ø–æ–≤—Ä–µ–∂–¥–µ–Ω –∏–ª–∏ –Ω–µ —è–≤–ª—è–µ—Ç—Å—è —Ñ–∞–π–ª–æ–º Jmc3!");
             return 0;
         }
         enableControls(TRUE);
@@ -153,7 +153,7 @@ private:
         HANDLE hfile = CreateFile(file, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (hfile == INVALID_HANDLE_VALUE)
         {
-            error->assign(L"ÕÂ‚ÓÁÏÓÊÌÓ ÔÓ˜ËÚ‡Ú¸ ‰‡ÌÌ˚È Ù‡ÈÎ!");
+            error->assign(L"–ù–µ–≤–æ–∑–º–æ–∂–Ω–æ –ø—Ä–æ—á–∏—Ç–∞—Ç—å –¥–∞–Ω–Ω—ã–π —Ñ–∞–π–ª!");
             return false;
         }
 
@@ -163,12 +163,12 @@ private:
         DWORD size = GetFileSize(hfile, &high);
         if (high != 0 || size > (512 * 1024))
         {
-            error->assign(L"‘‡ÈÎ ÒÎË¯ÍÓÏ ·ÓÎ¸¯Ó„Ó ‡ÁÏÂ‡!");
+            error->assign(L"–§–∞–π–ª —Å–ª–∏—à–∫–æ–º –±–æ–ª—å—à–æ–≥–æ —Ä–∞–∑–º–µ—Ä–∞!");
             return false; 
         }
         if (size == 0)
         {
-            error->assign(L"‘‡ÈÎ ÔÛÒÚÓÈ!");
+            error->assign(L"–§–∞–π–ª –ø—É—Å—Ç–æ–π!");
             return false;
         }
         std::vector <std::string> config;
@@ -182,7 +182,7 @@ private:
             DWORD readed = 0;
             if (!ReadFile(hfile, buffer.getData(), toread, &readed, NULL) || readed != toread)
             {
-                error->assign(L"Œ¯Ë·Í‡ ˜ÚÂÌËˇ Ù‡ÈÎ‡!");
+                error->assign(L"–û—à–∏–±–∫–∞ —á—Ç–µ–Ω–∏—è —Ñ–∞–π–ª–∞!");
                 return false;
             }
             dq.write(buffer.getData(), toread);

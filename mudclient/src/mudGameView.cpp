@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "mudGameView.h"
 
 bool MudGameView::initialize(const tstring& profile)
@@ -81,13 +81,21 @@ void MudGameView::onSelectProfile()
     }
     if (!profile.copy_from_src)
     {
+        if (!profile.create_empty)
+        {
+            // new profile from resources
+            Profile src; src.group = profile.profile.group; src.name = L"player";
+            if (copyProfile(true, profile.profile, src) && profile.create_link)
+                createLink(profile.profile);
+            return;
+        }
         // new empty profile
         if (newProfile(profile.profile) && profile.create_link)
             createLink(profile.profile);
         return;
     }
     // new profile and copy from src profile
-    if (copyProfile(profile.profile, profile.src) && profile.create_link)
+    if (copyProfile(false, profile.profile, profile.src) && profile.create_link)
         createLink(profile.profile);
 }
 
@@ -97,7 +105,7 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
     Profile current(m_manager.getProfile());
     if ((current.group == group || group.empty()) && current.name == name)
     {
-        error->assign(L"Попытка загрузить текущий профиль.");
+        error->assign(L"РџРѕРїС‹С‚РєР° Р·Р°РіСЂСѓР·РёС‚СЊ С‚РµРєСѓС‰РёР№ РїСЂРѕС„РёР»СЊ.");
         return;
     }
     Profile profile;
@@ -107,7 +115,7 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
         profile.group = group;
     if (!m_manager.checkProfile(profile))
     {
-        error->assign(L"Нет такого профиля.");
+        error->assign(L"РќРµС‚ С‚Р°РєРѕРіРѕ РїСЂРѕС„РёР»СЏ.");
         return;
     }
     saveClientWindowPos();
@@ -115,14 +123,14 @@ void MudGameView::loadProfile(const tstring& name, const tstring& group, tstring
     unloadPlugins();
     if (!m_manager.saveProfile())
     {
-        error->assign(L"Не получилось сохранить текущий профиль, чтобы загрузить новый.");
+        error->assign(L"РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ СЃРѕС…СЂР°РЅРёС‚СЊ С‚РµРєСѓС‰РёР№ РїСЂРѕС„РёР»СЊ, С‡С‚РѕР±С‹ Р·Р°РіСЂСѓР·РёС‚СЊ РЅРѕРІС‹Р№.");
         loadClientWindowPos();
         loadPlugins();
         return;
     }
     if (!m_manager.loadProfile(profile, error))
     {
-        //error->assign(L"Не получилось загрузить профиль.");
+        //error->assign(L"РќРµ РїРѕР»СѓС‡РёР»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ РїСЂРѕС„РёР»СЊ.");
         tstring dummy;
         m_manager.loadProfile(current, &dummy);
     }
@@ -138,7 +146,7 @@ bool MudGameView::loadProfile(const Profile& profile)
     Profile current(m_manager.getProfile());
     if (current.group == profile.group && current.name == profile.name)
     {
-        int result = msgBox(m_hWnd, L"Вы действительно хотите перечитать текущий профиль ?", MB_YESNO|MB_ICONQUESTION);
+        int result = msgBox(m_hWnd, L"Р’С‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ С…РѕС‚РёС‚Рµ РїРµСЂРµС‡РёС‚Р°С‚СЊ С‚РµРєСѓС‰РёР№ РїСЂРѕС„РёР»СЊ ?", MB_YESNO|MB_ICONQUESTION);
         if (result != IDYES)
             return false;
         reload_same_profile = true;
@@ -208,7 +216,7 @@ bool MudGameView::newProfile(const Profile& profile)
     return successed;
 }
 
-bool MudGameView::copyProfile(const Profile& profile, const Profile& src)
+bool MudGameView::copyProfile(bool fromzip, const Profile& profile, const Profile& src)
 {
     saveClientWindowPos();
     savePluginWindowPos();
@@ -223,10 +231,24 @@ bool MudGameView::copyProfile(const Profile& profile, const Profile& src)
     Profile current(m_manager.getProfile());
     bool successed = true;
     tstring error;
-    if (!m_manager.copyProfile(src, profile, &error)) 
+    if (fromzip)
+    {
+        CopyProfileFromZipHelper zip;
+        successed = zip.copyProfile("resources\\profiles.pak", src, profile);
+        if (!successed)
+            error = L"Can't create new profile";
+        if (successed) {
+            successed = m_manager.loadProfile(profile, &error);
+        }
+    }
+    else
+    {
+        successed = m_manager.copyProfile(src, profile, &error);
+    }
+
+    if (!successed)
     {
         msgBox(m_hWnd, IDS_ERROR_COPYPROFILE_FAILED, error, MB_OK | MB_ICONSTOP); 
-        successed = false;
     }    
     if (!successed) 
     {
@@ -317,7 +339,7 @@ void MudGameView::findText()
 
     int count = v->getStringsCount();
     int delta = v->getStringsOnDisplay() / 2;  // center on the screen
-    int center_vs = new_find + delta;          // пробуем найденную строку поставить по центру
+    int center_vs = new_find + delta;          // РїСЂРѕР±СѓРµРј РЅР°Р№РґРµРЅРЅСѓСЋ СЃС‚СЂРѕРєСѓ РїРѕСЃС‚Р°РІРёС‚СЊ РїРѕ С†РµРЅС‚СЂСѓ
     if (center_vs < count)
         new_find = center_vs;
     else

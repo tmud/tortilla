@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "pluginsApi.h"
 #include "pluginsTriggers.h"
 #include "pluginsParseData.h"
@@ -14,7 +14,7 @@ PluginsTrigger::~PluginsTrigger()
     m_trigger_func_ref.unref(L);
 }
 
-bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
+bool PluginsTrigger::init(lua_State *pl, Plugin *pp, bool endline_mode)
 {
     assert(pl && pp);
     L = pl;
@@ -27,7 +27,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
         {
             m_compare_objects.resize(1);
             tstring key(luaT_towstring(L, 1));
-            if (!m_compare_objects[0].init(key, true))
+            if (!m_compare_objects[0].init(key, endline_mode))
                 return false;
         }
         else
@@ -53,7 +53,7 @@ bool PluginsTrigger::init(lua_State *pl, Plugin *pp)
             {
                 tstring k = keys[i];
                 if (k.empty()) { k.assign(L"%%"); }
-                if (!m_compare_objects[i].init(k, true))
+                if (!m_compare_objects[i].init(k, endline_mode))
                     return false;
             }
         }
@@ -97,14 +97,26 @@ bool PluginsTrigger::getKey(int index, tstring* key)
     return false;
 }
 
+extern bool print_output_mode;
 struct triggeredData : TriggerActionHook {
     PluginsTrigger* tr;
     triggerParseVector data;
+    bool trigOnOutput;
+
+    triggeredData() : tr(NULL), trigOnOutput(false) {}
     void run() {
         assert(tr);
         if (tr && tr->isEnabled())  // trigger can be disabled in actions
+        {
+            print_output_mode = (trigOnOutput) ? false : true;
             tr->run(&data);
+            print_output_mode = true;
+        }
         tr = NULL;
+    }
+    void triggeredOutput()
+    {
+        trigOnOutput = true;
     }
 };
 
@@ -189,8 +201,8 @@ void PluginsTrigger::run(triggerParseVector* action)
         {
             triggerParseData *tpd = action->operator[](i);
             {
-                // âûçîâ êîíñòðóêòîðà PluginsParseData - ïåðåêîäèðîâêà ñòðîê
-                // âûçîâ äåñòðóêòîðà - îáðàòíàÿ ïåðåêîäèðîâêà
+                // Ð²Ñ‹Ð·Ð¾Ð² ÐºÐ¾Ð½ÑÑ‚Ñ€ÑƒÐºÑ‚Ð¾Ñ€Ð° PluginsParseData - Ð¿ÐµÑ€ÐµÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ° ÑÑ‚Ñ€Ð¾Ðº
+                // Ð²Ñ‹Ð·Ð¾Ð² Ð´ÐµÑÑ‚Ñ€ÑƒÐºÑ‚Ð¾Ñ€Ð° - Ð¾Ð±Ñ€Ð°Ñ‚Ð½Ð°Ñ Ð¿ÐµÑ€ÐµÐºÐ¾Ð´Ð¸Ñ€Ð¾Ð²ÐºÐ°
                 PluginsParseData ppd(tpd->getParseData(), tpd);
                 luaT_pushobject(L, &ppd, LUAT_VIEWDATA);
                 if (lua_pcall(L, 1, 0, 0))
@@ -202,7 +214,7 @@ void PluginsTrigger::run(triggerParseVector* action)
                     }
                     else
                     {
-                        pluginLog(L"íåèçâåñòíàÿ îøèáêà");
+                        pluginLog(L"Ð½ÐµÐ¸Ð·Ð²ÐµÑÑ‚Ð½Ð°Ñ Ð¾ÑˆÐ¸Ð±ÐºÐ°");
                     }
                     lua_settop(L, 0);
                 }
@@ -215,22 +227,32 @@ void PluginsTrigger::run(triggerParseVector* action)
     _cp = oldcp;
 }
 
-int trigger_create(lua_State *L)
+int trigger_create_impl(lua_State *L, bool endline_mode, const tchar* funcname)
 {
     if (luaT_check(L, 2, LUA_TSTRING, LUA_TFUNCTION) ||
         luaT_check(L, 2, LUA_TTABLE, LUA_TFUNCTION))
     {
         PluginsTrigger *t = new PluginsTrigger();
-        if (t->init(L, _cp))
+        if (t->init(L, _cp, endline_mode))
         {
             _cp->triggers.push_back(t);
             luaT_pushobject(L, t, LUAT_TRIGGER);
             return 1;
         }
         delete t;
-        return pluginInvArgsValues(L, L"createTrigger");
+        return pluginInvArgsValues(L, funcname);
     }
-    return pluginInvArgs(L, L"createTrigger");
+    return pluginInvArgs(L, funcname);
+}
+
+int trigger_create(lua_State *L)
+{
+    return trigger_create_impl(L, true, L"createTrigger");
+}
+
+int trigger_create_sub(lua_State *L)
+{
+    return trigger_create_impl(L, false, L"createSubTrigger");
 }
 
 int trigger_enable(lua_State *L)
@@ -292,6 +314,7 @@ int trigger_towatch(lua_State *L)
 void reg_mt_trigger(lua_State *L)
 {
     lua_register(L, "createTrigger", trigger_create);
+    //lua_register(L, "createSubTrigger", trigger_create_sub);
     luaL_newmetatable(L, "trigger");
     regFunction(L, "enable", trigger_enable);
     regFunction(L, "disable", trigger_disable);

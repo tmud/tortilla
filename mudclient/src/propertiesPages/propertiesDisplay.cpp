@@ -1,8 +1,8 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "propertiesData.h"
 #include "propertiesDisplay.h"
 
-PropertiesDisplay::PropertiesDisplay() : display_width(0), display_height(0)
+PropertiesDisplay::PropertiesDisplay(float dpi) : display_width(0), display_height(0), resdpi(dpi)
 {
     initOutputWindows();
 }
@@ -69,9 +69,15 @@ bool PropertiesDisplay::loadOnlyPlugins(xml::node root_node)
            continue;
         PluginData pd;
         pd.name = name;
+        pd.state = PluginData::PDS_HIDDEN;
         int state = 0;
-        if (p[i].get(L"value", &state) && state == 1)
-            pd.state = 1;
+        if (p[i].get(L"value", &state))
+        {
+            if (state == 1)
+                pd.state = PluginData::PDS_ON;
+            if (state == 0)
+                pd.state = PluginData::PDS_OFF;
+        }
         xml::request pw(p[i], L"windows/window");
         if (!pw.empty())
         {
@@ -107,7 +113,12 @@ void PropertiesDisplay::save(xml::node root_node)
         PluginData &pd = plugins_data[i];
         xml::node pn = p.createsubnode(L"plugin");
         pn.set(L"key", pd.name);
-        pn.set(L"value", pd.state);
+        int state = 2;
+        if (pd.state == PluginData::PDS_OFF)
+            state = 0;
+        if (pd.state == PluginData::PDS_ON)
+            state = 1;
+        pn.set(L"value", state);
         if (!pd.windows.empty())
         {
             xml::node w = pn.createsubnode(L"windows");
@@ -140,8 +151,8 @@ void PropertiesDisplay::initMainWindow()
 void PropertiesDisplay::initFindWindow()
 {
     RECT &pos = find_window.pos;
-    pos.left = 200;
-    pos.top = 100;
+    pos.left = static_cast<LONG>(200 * resdpi);
+    pos.top = static_cast<LONG>(100 * resdpi);
     pos.right = pos.left;
     pos.bottom = pos.top;
     find_window.visible = false;
@@ -153,8 +164,9 @@ void PropertiesDisplay::initOutputWindows()
     for (int i = 0; i < OUTPUT_WINDOWS; ++i)
     {
         OutputWindow w;
-        w.size.cx = 350; w.size.cy = 200;
-        int d = (i + 1) * 70;
+        w.size.cx = static_cast<LONG>(350 * resdpi); 
+        w.size.cy = static_cast<LONG>(200 * resdpi);
+        int d = (i + 1) * static_cast<int>(70 * resdpi);
         RECT defpos = { d, d, d + w.size.cx, d + w.size.cy };
         w.pos = defpos;
         w.side = DOCK_HIDDEN;
@@ -162,7 +174,7 @@ void PropertiesDisplay::initOutputWindows()
         if (w.name.empty())
         {
             WCHAR buffer[8];
-            swprintf(buffer, L"Îêíî %d", i + 1);
+            swprintf(buffer, L"ÐžÐºÐ½Ð¾ %d", i + 1);
             w.name.assign(buffer);
         }
         output_windows.push_back(w);
@@ -264,7 +276,7 @@ bool PropertiesDisplay::loadWindow(xml::node parent, OutputWindow* w)
     return false;
 }
 
-PropertiesDisplayManager::PropertiesDisplayManager() : current_display(NULL)
+PropertiesDisplayManager::PropertiesDisplayManager() : current_display(NULL), resdpi(1.0f)
 {
 }
 
@@ -278,6 +290,11 @@ void PropertiesDisplayManager::clear()
     std::for_each(m_displays.begin(), m_displays.end(), [](PropertiesDisplay* d) { delete d; });
     m_displays.clear();
     current_display = NULL;
+}
+
+void PropertiesDisplayManager::setDpi(float dpi)
+{
+    resdpi = dpi;
 }
 
 void PropertiesDisplayManager::resetDisplaysData()
@@ -308,7 +325,7 @@ void PropertiesDisplayManager::initDefault()
     }
     if (!current_display)
     {
-        current_display = new PropertiesDisplay();
+        current_display = new PropertiesDisplay(resdpi);
         m_displays.push_back(current_display);
     }
     current_display->initDefault();
@@ -320,7 +337,7 @@ void PropertiesDisplayManager::load(xml::node root_node)
     xml::request disp(root_node, L"displays/display");
     for (int i=0,e=disp.size();i<e;++i)
     {
-        PropertiesDisplay *d = new PropertiesDisplay();
+        PropertiesDisplay *d = new PropertiesDisplay(resdpi);
         if (!d->load(disp[i]))
             { delete d; continue; }
         int index = findDisplay(d->width(), d->height());
@@ -337,7 +354,7 @@ void PropertiesDisplayManager::load(xml::node root_node)
        current_display =  m_displays[index];
     else
     {
-        PropertiesDisplay *d = new PropertiesDisplay();
+        PropertiesDisplay *d = new PropertiesDisplay(resdpi);
         if (!d->load(root_node))
         {
             d->initDefault();
@@ -348,6 +365,18 @@ void PropertiesDisplayManager::load(xml::node root_node)
             int display_width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
             int display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
             d->setres(display_width, display_height);
+        }
+        if (d->pluginsData()->empty() && !m_displays.empty())
+        {
+            PluginsDataValues* newdv = d->pluginsData();
+            PluginsDataValues* dv = m_displays[0]->pluginsData();
+            for (const PluginData& pd : *dv)
+            {
+                PluginData newpd;
+                newpd.name = pd.name;
+                newpd.state = pd.state;
+                newdv->push_back(newpd);
+            }
         }
         current_display = d;
         m_displays.push_back(d);

@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "compareObject.h"
 #include "inputProcessor.h"
 
@@ -43,7 +43,7 @@ bool CompareObject::init(const tstring& key, bool endline_mode)
     m_key = key;
 
     const ParamsHelper& keys = getKeyHelper();
-    if (key.at(0) == L'$' && keys.getSize() == 0)      // regexp marker, íåò %0, %1 è ò.ä.
+    if (key.at(0) == L'$' && keys.getSize() == 0)      // regexp marker, Ð½ÐµÑ‚ %0, %1 Ð¸ Ñ‚.Ð´.
     {
         tstring regexp(key.substr(1));
         checkVars(&regexp);
@@ -210,7 +210,10 @@ void CompareObject::checkFirstSymbols(const tstring& key)
         return;
     if (s == L'^')
     {
-        m_first_symbol = key.at(1);
+        tchar s2 = key.at(1);
+        if (s2 == L'%' || s2 == L'$')
+            return;
+        m_first_symbol = s2;
         m_second_symbol = 0;
     }
     else
@@ -224,21 +227,26 @@ bool CompareObject::compareFirstSymbols(const tstring& str)
 {
     if (!m_first_symbol || str.empty())
         return true;
-    if (m_second_symbol == 0)
+    if (m_second_symbol == 0) // working only with ^text key, check first string symbol
     {
         if (str.at(0) != m_first_symbol)
             return false;
         return true;
     }
-    size_t pos = str.find(m_first_symbol);
-    if (pos == tstring::npos)
-        return false;
-    pos++;
-    if (str.length() <= pos)
-        return false;
-    if (str.at(pos) != m_second_symbol)
-        return false;
-    return true;
+    size_t pos = 0;
+    size_t end = str.length();
+    while (true)
+    {
+        pos = str.find(m_first_symbol, pos);
+        if (pos == tstring::npos)
+            break;
+        pos++;
+        if (pos == end)
+            break;
+        if (str.at(pos) == m_second_symbol)
+            return true;
+    }
+    return false;
 }
 
 void CompareObject::getParameters(std::vector<tstring>* params) const

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<zone>
+  <room x="-2" y="0" z="0" name="В сенях" vnum="5102">
+    <exit dir="north"/>
+    <exit dir="south"/>
+    <exit dir="east" vnum="5101"/>
+  </room>
+  <room x="-1" y="0" z="0" name="В сенях" vnum="5101">
+    <exit dir="west" vnum="5102"/>
+    <exit dir="east" vnum="5100"/>
+  </room>
+  <room x="0" y="0" z="0" name="На крыльце" vnum="5100">
+    <exit dir="west" vnum="5101"/>
+    <exit dir="east" vnum="5023"/>
+  </room>
+</zone>

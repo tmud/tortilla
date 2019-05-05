@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "mudViewParser.h"
 #include "logicHelper.h"
@@ -47,7 +47,7 @@ public:
     virtual bool deleteSystemCommand(const tstring& cmd) = 0;
     virtual void processPluginCommand(const tstring& cmd) = 0;
     virtual bool getConnectionState() = 0;
-    virtual void windowOutput(int window, const std::vector<tstring>& msgs) = 0;
+    virtual void windowOutput(int window, const std::vector<tstring>& msgs, bool enable_actions_subs_plugins ) = 0;
     virtual void pluginsOutput(int window, const MudViewStringBlocks& v) = 0;
     virtual void windowClear(int window) = 0;
     virtual bool setComponent(const tstring& name, bool mode) = 0;
@@ -114,7 +114,7 @@ public:
     bool deleteSystemCommand(const tstring& cmd);
     bool getConnectionState() { return m_connected; }
     void windowClear(int window);
-    void windowOutput(int window, const std::vector<tstring>& msgs);
+    void windowOutput(int window, const std::vector<tstring>& msgs, bool enable_actions_subs_plugins);
     void pluginsOutput(int window, const MudViewStringBlocks& v);
 private:
     void processCommand(const tstring& cmd);
@@ -133,8 +133,8 @@ private:
            SKIP_PLUGINS_BEFORE = 0x8, SKIP_PLUGINS_AFTER = 0x10, SKIP_PLUGINS = 0x18,
            SKIP_COMPONENT_GAGS = 0x20, SKIP_COMPONENT_SUBS = 0x40,
            SKIP_COMPONENT_ANTISUBS = 0x80, SKIP_COMPONENT_PLUGINS = 0x100,
-           WORK_OFFLINE = 0x200, GAME_LOG = 0x400, GAME_CMD = 0x800, FROM_STACK = 0x1000,
-           FROM_TIMER = 0x2000, NEW_LINE = 0x4000 };
+           WORK_OFFLINE = 0x200, GAME_LOG = 0x400, GAME_CMD = 0x800, FROM_OUTPUT = 0x1000,
+		   FROM_STACK = 0x2000, FROM_TIMER = 0x4000, NEW_LINE = 0x8000 };
     void updateLog(const tstring& msg);
     void updateProps(int update, int options);
     void regCommand(const char* name, syscmd_fun f, bool skip_autoset = false);
@@ -184,8 +184,8 @@ public: // system commands
     DEF(wshow);
     DEF(whide);
     DEF(wpos);
-    void printex(int view, const parser* p, int from, bool enable_actions_subs);
-    void printex(int view, const std::vector<tstring>& params, bool enable_actions_subs);
+    void printex(int view, const parser* p, int from, bool enable_actions_subs_plugins);
+    void printex(int view, const std::vector<tstring>& params, bool enable_actions_subs_plugins);
     DEF(wprint);
     DEF(print);
     DEF(message);

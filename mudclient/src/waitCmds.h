@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 
 class WaitCommands
 {
@@ -10,7 +10,7 @@ public:
     {
         assert (timeout_msec > 0);
         wait_cmd c(timeout_msec, cmd);
-        // поиск позиции для вставки
+        // РїРѕРёСЃРє РїРѕР·РёС†РёРё РґР»СЏ РІСЃС‚Р°РІРєРё
         for (int i=0,e=m_commands.size();i<e;++i) 
         {
             if (timeout_msec <= m_commands[i].first) {

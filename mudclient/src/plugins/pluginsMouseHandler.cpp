@@ -1,4 +1,4 @@
-#include "stdafx.h"
+п»ї#include "stdafx.h"
 #include "pluginsMouseHandler.h"
 #include "pluginsApi.h"
 
@@ -136,7 +136,7 @@ void PluginsMouseHandler::run(const char* method, int params)
             if (luaT_check(L, 1, LUA_TSTRING))
                 pluginMethodError(m, lua_toerror(L));
             else
-                pluginMethodError(m, L"неизвестная ошибка");
+                pluginMethodError(m, L"РЅРµРёР·РІРµСЃС‚РЅР°СЏ РѕС€РёР±РєР°");
             lua_settop(L, 0);
         }
     }

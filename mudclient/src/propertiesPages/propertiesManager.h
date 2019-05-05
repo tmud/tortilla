@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "PropertiesData.h"
 
 class PropertiesManager
@@ -29,8 +29,10 @@ private:
     bool saveSettings();
     bool loadWindow(xml::node parent, OutputWindow* w);
     void saveWindow(xml::node parent, const OutputWindow& w);
-    void loadArray(xml::node parent, const tstring& name, bool values_req, bool groups_req, PropertiesValues* values);
-    void saveArray(xml::node parent, const tstring& name, const PropertiesValues& values);
+    enum ValueReq { VALUE_ABSENT, VALUE_EXIST, VALUE_EXIST_CAN_EMPTY };
+    enum GroupReq { GROUP_ABSENT, GROUP_EXIST };
+    void loadArray(xml::node parent, const tstring& name, ValueReq values_req, GroupReq groups_req, PropertiesValues* values);
+    void saveArray(xml::node parent, const tstring& name, ValueReq values_req, const PropertiesValues& values);
     void loadList(xml::node parent, const tstring& name, PropertiesList* values);
     void saveList(xml::node parent, const tstring& name, const PropertiesList& values);
     bool loadValue(xml::node parent, const tstring& name, int min, int max, int *value);

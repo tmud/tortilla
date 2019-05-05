@@ -1,4 +1,4 @@
-//  loaded from http://www.codeproject.com/Articles/1493/A-Powerfull-Ownerdraw-Menu
+﻿//  loaded from http://www.codeproject.com/Articles/1493/A-Powerfull-Ownerdraw-Menu
 //  Modified by me
 #pragma once
 
@@ -17,14 +17,14 @@ public:
     CMenuXP    *m_pSubmenu;     //Submenu
 
 public:
-	CMenuXPItem() 
+	CMenuXPItem(int size) 
 	{
 		m_dwMagicNum = 0x0505a0a0;
 		m_dwID = 0;
 		m_bSeparator = false;
 		m_bButtonOnly = false;
 		m_hIcon = NULL;
-		m_nSize = 16;
+		m_nSize = size;
         m_pSubmenu = NULL;
 	};
 
@@ -43,7 +43,7 @@ public:
 class CMenuXPText : public CMenuXPItem	//Normal item with text and an optional icon
 {
 public:
-    CMenuXPText(DWORD dwID, LPCTSTR strText, HICON icon = NULL)
+    CMenuXPText(int size, DWORD dwID, LPCTSTR strText, HICON icon = NULL) : CMenuXPItem(size)
 	{
 		m_dwID = dwID;
 		m_strText = strText;
@@ -54,7 +54,7 @@ public:
 class CMenuXPButton : public CMenuXPItem    //A button only item
 {
 public:
-	CMenuXPButton(DWORD dwID, HICON icon)
+	CMenuXPButton(int size, DWORD dwID, HICON icon) : CMenuXPItem(size)
 	{
 		m_dwID = dwID;
 		m_bButtonOnly = true;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "resource.h"
 
 void tokenize(const std::wstring& s, const std::wstring& tokens, std::vector<std::wstring>& parts)

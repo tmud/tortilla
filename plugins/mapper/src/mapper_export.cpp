@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "../res/resource.h"
 #include "properties.h"
 #include "mapper.h"
@@ -12,24 +12,25 @@ Mapper* m_mapper_window = NULL;
 //-------------------------------------------------------------------------
 int get_name(lua_State *L) 
 {
-    luaT_pushwstring(L, L"Êàðòà");
+    luaT_pushwstring(L, L"ÐšÐ°Ñ€Ñ‚Ð°");
     return 1;
 }
 
 int get_description(lua_State *L) 
 {
     luaT_pushwstring(L,
-        L"Îòîáðàæàåò ñõåìó êîìíàò è âûõîäîâ. Ïîêàçûâàåò ìåñòîïîëîæåíèå èãðîêà.\r\n"
-        L"Ïðåäíàçíà÷åí äëÿ ìàäîâ ñ 6 ñòàíäàðòíûìè âûõîäàìè.\r\n"
-        L"Òðåáóåò äëÿ ðàáîòû ïîääåðæêè MSDP ïðîòîêîëà îò ìàä-ñåðâåðà c\r\n"
-        L"äàííûìè î ìåñòîïîëîæåíèè."
+        L"ÐžÑ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°ÐµÑ‚ ÑÑ…ÐµÐ¼Ñƒ ÐºÐ¾Ð¼Ð½Ð°Ñ‚ Ð¸ Ð²Ñ‹Ñ…Ð¾Ð´Ð¾Ð², Ð¿Ð¾ÐºÐ°Ð·Ñ‹Ð²Ð°ÐµÑ‚ Ð¼ÐµÑÑ‚Ð¾Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ðµ Ð¸Ð³Ñ€Ð¾ÐºÐ°.\r\n"
+        L"ÐŸÑ€ÐµÐ´Ð½Ð°Ð·Ð½Ð°Ñ‡ÐµÐ½ Ð´Ð»Ñ Ð¼Ð°Ð´Ð¾Ð² Ñ 6 ÑÑ‚Ð°Ð½Ð´Ð°Ñ€Ñ‚Ð½Ñ‹Ð¼Ð¸ Ð²Ñ‹Ñ…Ð¾Ð´Ð°Ð¼Ð¸.\r\n"
+        L"Ð¢Ñ€ÐµÐ±ÑƒÐµÑ‚ Ð´Ð»Ñ Ñ€Ð°Ð±Ð¾Ñ‚Ñ‹ Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶ÐºÐ¸ MSDP Ð¿Ñ€Ð¾Ñ‚Ð¾ÐºÐ¾Ð»Ð° ÑÐ¾ ÑÑ‚Ð¾Ñ€Ð¾Ð½Ñ‹ Ð¼Ð°Ð´-ÑÐµÑ€Ð²ÐµÑ€Ð°\r\n"
+        L"Ñ Ð´Ð°Ð½Ð½Ñ‹Ð¼Ð¸ Ð¾ ÐºÐ¾Ð¼Ð½Ð°Ñ‚Ð°Ñ…, Ð¿ÐµÑ€ÐµÑ…Ð¾Ð´Ð°Ñ… Ð¸ Ð¼ÐµÑÑ‚Ð¾Ð¿Ð¾Ð»Ð¾Ð¶ÐµÐ½Ð¸Ð¸ Ð¸Ð³Ñ€Ð¾ÐºÐ°.\r\n"
+        L"Ð­Ñ‚Ð¾ Ñ‚ÐµÑÑ‚Ð¾Ð²Ð°Ñ Ð²ÐµÑ€ÑÐ¸Ñ Ð¿Ð»Ð°Ð³Ð¸Ð½Ð°, Ñ‚Ð°Ðº Ñ‡Ñ‚Ð¾ Ð¾Ð½ Ð¼Ð¾Ð¶ÐµÑ‚ Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ñ‚ÑŒ Ð½ÐµÐ¿Ñ€Ð°Ð²Ð¸Ð»ÑŒÐ½Ð¾!"
         );
     return 1;
 }
 
 int get_version(lua_State *L)
 {
-    luaT_pushwstring(L, L"0.03 beta");
+    luaT_pushwstring(L, L"0.04");
     return 1;
 }
 
@@ -42,9 +43,10 @@ int init(lua_State *L)
 
     DEBUGINIT(L);
 	init_clientlog(L);
-    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"Îêíî ñ êàðòîé");
+    luaT_run(L, "addButton", "dds", IDB_MAP, 1, L"ÐžÐºÐ½Ð¾ Ñ ÐºÐ°Ñ€Ñ‚Ð¾Ð¹");
 
     m_props.initAllDefault();
+    m_props.dpi = base::getDpi(L);
 
 	tstring error;
     tstring path;
@@ -53,19 +55,37 @@ int init(lua_State *L)
     xml::node p;
     if (p.load(path.c_str(), &error))
     {
-        int width = 0;
-        p.get(L"zoneslist/width", &width);
-        m_props.zoneslist_width = (width > 0) ? width : -1;
+        int center = 1;
+        p.get(L"center/mode", &center);
+        m_props.center_mode = (center != 0) ? 1 : 0;
 		if (p.get(L"lastzone/name", &current_zone))
             m_props.current_zone = current_zone;
+
+        DWORD screen_width = GetSystemMetrics(SM_CXSCREEN);
+        DWORD screen_height = GetSystemMetrics(SM_CYSCREEN);
+        int size = 0;
+        xml::request d(p, L"zoneswnd/display");
+        for (int i=0; i<d.size(); ++i)
+        {
+            int width = 0; int height = 0;
+            if (d[i].get(L"width", &width) &&
+                d[i].get(L"height", &height) &&
+                width == screen_width &&
+                height == screen_height)
+            {
+                d[i].get(L"size", &size);
+                break;
+            }
+        }
+        m_props.zoneslist_width = (size > 0) ? size : -1;
 	} else {
 		if (!error.empty())
 			base::log(L, error.c_str());
 	}
     p.deletenode();
 
-	if (!m_parent_window.create(L, L"Êàðòà", 400, 400))
-		return luaT_error(L, L"Íå óäàëîñü ñîçäàòü îêíî äëÿ êàðòû");
+	if (!m_parent_window.createDpi(L, L"ÐšÐ°Ñ€Ñ‚Ð°", 400, 400))
+		return luaT_error(L, L"ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ ÑÐ¾Ð·Ð´Ð°Ñ‚ÑŒ Ð¾ÐºÐ½Ð¾ Ð´Ð»Ñ ÐºÐ°Ñ€Ñ‚Ñ‹");
 
     HWND parent = m_parent_window.hwnd();    
     map_active = m_parent_window.isVisible();
@@ -82,23 +102,70 @@ int init(lua_State *L)
     if (map_active)
         luaT_run(L, "checkMenu", "d", 1);
 
-    //todo! m_mapper_window->loadMaps();
+    m_mapper_window->loadMaps();
+    m_mapper_window->setActiveMode(map_active);
     return 0;
 }
 
 int release(lua_State *L)
 {
+    m_mapper_window->saveProps();
+
     //todo! m_mapper_window->saveMaps();
 
-    xml::node p(L"settings");
-    p.set(L"zoneslist/width", m_props.zoneslist_width);
-	p.set(L"lastzone/name", m_props.current_zone);
-
-    tstring path;
+    tstring error, path;
     base::getPath(L, L"settings.xml", &path);
+    xml::node p;
+    if (!p.load(path.c_str(), &error))
+    {
+        p = xml::node(L"settings");
+    }
+    p.set(L"lastzone/name", m_props.current_zone);
+    p.set(L"center/mode", m_props.center_mode ? 1 : 0);
+    xml::request d(p, L"zoneslist");
+    for (int i = 0; i < d.size(); ++i)
+        d[i].deletenode();
+
+    DWORD screen_width = GetSystemMetrics(SM_CXSCREEN);
+    DWORD screen_height = GetSystemMetrics(SM_CYSCREEN);
+    xml::request zr(p, L"zoneswnd");
+    xml::node z;
+    if (zr.size() == 0)
+    {
+        xml::node zl = p.createsubnode(L"zoneswnd");
+        z = zl.createsubnode(L"display");
+        z.set(L"width", screen_width);
+        z.set(L"height", screen_height);
+    }
+    else
+    {
+        xml::node zl = zr[0];
+        xml::request displays(zl, L"display");
+        int index = -1;
+        for (int i = 0, e = displays.size(); i < e; ++i)
+        {
+            int width = 0; int height = 0;
+            if (displays[i].get(L"width", &width) &&
+                displays[i].get(L"height", &height) &&
+                width == screen_width && 
+                height == screen_height)
+            {
+                z = displays[i];
+                index = i; break;
+            }
+        }
+        if (index == -1)
+        {
+            z = zl.createsubnode(L"display");
+            z.set(L"width", screen_width);
+            z.set(L"height", screen_height);
+        }
+    }
+    z.set(L"size", m_props.zoneslist_width);
+
     if (!p.save(path.c_str()))
     {
-        tstring error(L"Îøèáêà çàïèñè íàñòðîåê ïîëüçîâàòåëÿ: ");
+        tstring error(L"ÐžÑˆÐ¸Ð±ÐºÐ° Ð·Ð°Ð¿Ð¸ÑÐ¸ Ð½Ð°ÑÑ‚Ñ€Ð¾ÐµÐº Ð¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÐµÐ»Ñ: ");
         error.append(path);
         base::log(L, error.c_str());
     }
@@ -114,7 +181,9 @@ int menucmd(lua_State *L)
     lua_pop(L, 1);
     if (id == 1)
     {
-        if (map_active)
+        map_active = !map_active;
+        m_mapper_window->setActiveMode(map_active);
+        if (!map_active)
         {
             luaT_run(L, "uncheckMenu", "d", 1);
             m_parent_window.hide();
@@ -124,7 +193,6 @@ int menucmd(lua_State *L)
             luaT_run(L, "checkMenu", "d", 1);
             m_parent_window.show();
         }
-        map_active = !map_active;
     }
     return 0;
 }
@@ -137,6 +205,7 @@ int closewindow(lua_State *L)
     if (hwnd == m_parent_window.hwnd())
     {
         luaT_run(L, "uncheckMenu", "d", 1);
+        m_mapper_window->setActiveMode(false);
         m_parent_window.hide();
         map_active = false;
     }
@@ -185,7 +254,8 @@ bool popString(lua_State *L, const char* name, tstring* val)
 
 int msdp(lua_State *L)
 {
-    luaT_showLuaStack(L, L"begin");
+    if (!map_active)
+        return 0;
     RoomData rd;
     bool inconsistent_data = true;
     if (luaT_check(L, 1, LUA_TTABLE))
@@ -194,10 +264,21 @@ int msdp(lua_State *L)
         lua_gettable(L, -2);
         if (lua_istable(L, -1))
         {
-            if (popString(L, "AREA", &rd.zonename) &&
-                popString(L, "VNUM", &rd.vnum) &&
-                popString(L, "NAME", &rd.name))
+            if (popString(L, "AREA", &rd.areaname)
+                && popString(L, "VNUM", &rd.vnum)
+                && popString(L, "NAME", &rd.roomname)
+               )
             {
+                tstring zone;
+                popString(L, "ZONE", &zone);
+                if (!zone.empty())
+                {
+                    tstring suffix(L" [");
+                    suffix.append(zone);
+                    suffix.append(L"]");
+                    rd.areaname.append(suffix);
+                }
+
                 lua_pushstring(L, "EXITS");
                 lua_gettable(L, -2);
                 if (lua_istable(L, -1))
@@ -217,15 +298,10 @@ int msdp(lua_State *L)
         }
         lua_pop(L, 1);
     }
-    luaT_showLuaStack(L, L"end");
-    luaT_showTableOnTop(L, L"end");
-    if (!inconsistent_data)
-    {
-        m_mapper_window->processMsdp(rd);
-        return 1;
-    }
-    assert(false);
-    return 1;
+    if (inconsistent_data)
+        return 0;
+    m_mapper_window->processMsdp(rd);
+    return 0;
 }
 
 static const luaL_Reg mapper_methods[] = 

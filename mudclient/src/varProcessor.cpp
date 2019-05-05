@@ -1,4 +1,4 @@
-#include "stdafx.h"
+ï»¿#include "stdafx.h"
 #include "accessors.h"
 #include "varProcessor.h"
 #include "propertiesPages/propertiesData.h"
@@ -7,9 +7,10 @@ class VarProcessorImpl
 {
     std::map<tstring, int> m_specvars;
     typedef std::map<tstring, int>::const_iterator citerator;
-    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP, POINTVAR, UNDERLINEVAR, EMPTY, DOLLAR };
+    enum { DATE = 0, TIME, DAY, MONTH, YEAR, HOUR, MINUTE, SECOND, MILLISECOND, TIMESTAMP, POINTVAR, UNDERLINEVAR, EMPTY, DOLLAR, BUFFER };
     Pcre16 m_vars_regexp;
     Pcre16 m_var_regexp;
+    tstring m_buffer_var;
 public:
     VarProcessorImpl();
     bool canset(const tstring& var) const
@@ -21,6 +22,7 @@ public:
     bool getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const;
     bool setVar(PropertiesValues &vars, const tstring& var, const tstring& value);
     bool delVar(PropertiesValues &vars, const tstring& var);
+    void setBufferVar(const tstring& buffer);
 private:
     void getSpecVar(int id, tstring *value) const;
 } vars_processor;
@@ -87,6 +89,11 @@ void VarProcessor::deleteAll()
     vars.clear();
 }
 
+void VarProcessor::setBufferVar(const tstring& buffer)
+{
+    vars_processor.setBufferVar(buffer);
+}
+
 VarProcessorImpl::VarProcessorImpl()
 {
     std::map<tstring, int> &v = m_specvars;
@@ -104,8 +111,9 @@ VarProcessorImpl::VarProcessorImpl()
     v[L"_"] = UNDERLINEVAR;
     v[L"!"] = EMPTY;
     v[L"$"] = DOLLAR;
-    m_vars_regexp.setRegExp(L"\\$[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*|\\$.|\\$!|\\$\\$", true);
-    m_var_regexp.setRegExp(L"^[a-zA-Zà-ÿÀ-ß_][0-9a-zA-Zà-ÿÀ-ß_.]*$", true);
+    v[L"BUFFER"] = BUFFER;
+    m_vars_regexp.setRegExp(L"\\$[a-zA-ZÐ°-ÑÐ-Ð¯_][0-9a-zA-ZÐ°-ÑÐ-Ð¯_.]*|\\$.|\\$!|\\$\\$", true);
+    m_var_regexp.setRegExp(L"^[a-zA-ZÐ°-ÑÐ-Ð¯_][0-9a-zA-ZÐ°-ÑÐ-Ð¯_.]*$", true);
 }
 
 bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, bool strong_mode, bool vars_absent_result)
@@ -126,9 +134,9 @@ bool VarProcessorImpl::processVars(tstring *p, const PropertiesValues &vars, boo
             newparam.append(var);
         else
         {
-            // èùåì ïåðåìåííóþ ïî óêîðî÷åííîìó èìåíè áåç _
+            // Ð¸Ñ‰ÐµÐ¼ Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½ÑƒÑŽ Ð¿Ð¾ ÑƒÐºÐ¾Ñ€Ð¾Ñ‡ÐµÐ½Ð½Ð¾Ð¼Ñƒ Ð¸Ð¼ÐµÐ½Ð¸ Ð±ÐµÐ· _
             const tchar *p = wcschr(name.c_str(), L'_');
-            if (!p && strong_mode)  // â ïåðåìåííîé íåò _
+            if (!p && strong_mode)  // Ð² Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ð¾Ð¹ Ð½ÐµÑ‚ _
                 return false;
             if (p)
             {
@@ -183,6 +191,11 @@ bool VarProcessorImpl::delVar(PropertiesValues &vars, const tstring& var)
     return true;
 }
 
+void VarProcessorImpl::setBufferVar(const tstring& buffer)
+{
+    m_buffer_var = buffer;
+}
+
 bool VarProcessorImpl::getVar(const PropertiesValues &vars, const tstring& var, tstring *value) const
 {
      citerator it = m_specvars.find(var);
@@ -235,6 +248,11 @@ void VarProcessorImpl::getSpecVar(int id, tstring *value) const
 	    // convert filetime to unix timestamp
 	    swprintf(buffer, L"%I64d", ularge.QuadPart / 10000000 - 11644473600); 
         value->assign(buffer);
+        return;
+    }
+    if (id == BUFFER)
+    {
+        value->assign(m_buffer_var);
         return;
     }
 

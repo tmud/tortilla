@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "hotkeyTable.h"
 #include "highlightHelper.h"
@@ -84,7 +84,7 @@ public:
             }
             if (values->size() == 0)
             {
-                helper->tmcLog(L"Ñïèñîê ïóñò");
+                helper->tmcLog(L"Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð¿ÑƒÑÑ‚");
             }
             return 0;
         }
@@ -92,12 +92,12 @@ public:
         {
             helper->skipCheckMode();
             tstring pattern(p->at(0));
-            swprintf(buffer, buffer_len, L"%s ñ {%s}:", label2.c_str(), pattern.c_str());
+            swprintf(buffer, buffer_len, L"%s Ñ {%s}:", label2.c_str(), pattern.c_str());
             helper->tmcLog(buffer);
             Pcre16 pcre; 
             if (!pcre.setRegExp(pattern))
             {
-                helper->tmcLog(L"Íåêîððåêòíûé ïàðàìåòð.");
+                helper->tmcLog(L"ÐÐµÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ð¹ Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€.");
             }
             else
             {
@@ -114,7 +114,7 @@ public:
                     }
                 }
                 if (!count)
-                    helper->tmcLog(L"Âàðèàíòû íå íàéäåíû.");
+                    helper->tmcLog(L"Ð’Ð°Ñ€Ð¸Ð°Ð½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹.");
             }
             return 0;
         }
@@ -128,7 +128,7 @@ public:
                 bool t = control->checkText(&text);
                 if (!p || !t)
                 {
-                    swprintf(buffer, buffer_len, L"Íåäîïóñòèìîå çíà÷åíèå: %s", p ? text.c_str() : pattern.c_str());
+                    swprintf(buffer, buffer_len, L"ÐÐµÐ´Ð¾Ð¿ÑƒÑÑ‚Ð¸Ð¼Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ: %s", p ? text.c_str() : pattern.c_str());
                     helper->tmcLog(buffer);
                     return 0;
                 }
@@ -174,7 +174,7 @@ public:
 
             if (control && !control->checkPattern(&pattern))
             {
-                swprintf(buffer, buffer_len, L"Íåäîïóñòèìîå çíà÷åíèå: %s", pattern.c_str());
+                swprintf(buffer, buffer_len, L"ÐÐµÐ´Ð¾Ð¿ÑƒÑÑ‚Ð¸Ð¼Ð¾Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ: %s", pattern.c_str());
                 helper->tmcLog(buffer);
                 return 0;
             }
@@ -189,7 +189,7 @@ public:
             }
             else
             {
-                helper->tmcLog(L"Âàðèàíòû íå íàéäåíû.");
+                helper->tmcLog(L"Ð’Ð°Ñ€Ð¸Ð°Ð½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹.");
                 return 0;
             }
             return 1;
@@ -219,7 +219,7 @@ public:
             }
             if (values->size() == 0)
             {
-                helper->tmcLog(L"Ñïèñîê ïóñò");
+                helper->tmcLog(L"Ð¡Ð¿Ð¸ÑÐ¾Ðº Ð¿ÑƒÑÑ‚");
             }
             return 0;
         }
@@ -272,7 +272,7 @@ public:
            }
            else
            {
-               helper->tmcLog(L"Âàðèàíòû íå íàéäåíû.");
+               helper->tmcLog(L"Ð’Ð°Ñ€Ð¸Ð°Ð½Ñ‚Ñ‹ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ñ‹.");
                return 0;
            }
            return 1;

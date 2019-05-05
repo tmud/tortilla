@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "pluginSupport.h"
 
 PluginsIdTableControl::PluginsIdTableControl(int firstid, int lastid) : first_id(firstid), last_id(lastid)

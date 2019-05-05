@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 void setFocusToMudClient();
 void processGameCommand(const std::wstring& cmd, bool template_cmd);

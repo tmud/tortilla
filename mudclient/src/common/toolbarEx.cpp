@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "toolbarEx.h"
 
 class MenuHelper : protected CMenuHandle
@@ -125,14 +125,22 @@ CommandBarEx::~CommandBarEx()
 {
 }
 
-HWND CommandBarEx::CreateMenu(HWND parent, UINT images)
+HWND CommandBarEx::CreateMenu(HWND parent, const std::vector<CommandBarExImage>& items)
 {
     HWND toolbar = m_cmdbar.Create(parent, CWindow::rcDefault, NULL, ATL_SIMPLE_CMDBAR_PANE_STYLE);
     m_cmdbar.AttachMenu(::GetMenu(parent));
     ::SetMenu(parent, NULL);
-    m_cmdbar.SetImageSize(16, 16);
+    if (items.empty())
+        return toolbar;
+    BITMAP bm;
+    GetObject(items[0].image, sizeof(BITMAP), &bm);
+    int size = bm.bmHeight;
+    int count = items.size();
+    m_cmdbar.SetImageSize(size, size);
+    m_cmdbar.SetButtonSize(size, size);
     m_cmdbar.SetImageMaskColor(RGB(192, 192, 192));
-    m_cmdbar.LoadImages(images);    
+    for (const CommandBarExImage& im : items)
+        m_cmdbar.AddBitmap(im.image, im.commandid);
     return toolbar;
 }
 
@@ -296,36 +304,64 @@ int CommandBarEx::getMenuWidth() const
     return rc.right;
 }
 
-void ToolBar::attach(HWND toolbar)
+HWND ToolBar::createEmpty(HWND parent, int imagesize)
 {
-    m_toolbar.Attach(toolbar);
-    CImageList il = m_toolbar.GetImageList();
-    m_toolbar.SetImageList(il);
-    SIZE sz; m_toolbar.GetButtonSize(sz);
-    m_button_size = sz.cx;
-}
-
-HWND ToolBar::create(HWND parent, int image_size)
-{
-    int cxyButtonMargin = image_size + 7;
+    int cxyButtonMargin = imagesize + 7;
     RECT rc = { 0, 0, 0, cxyButtonMargin };
     HWND hWnd = m_toolbar.Create(parent, rc, NULL, ATL_SIMPLE_TOOLBAR_PANE_STYLE | TBSTYLE_LIST, TBSTYLE_EX_MIXEDBUTTONS);
     ::SendMessage(hWnd, TB_BUTTONSTRUCTSIZE, sizeof(TBBUTTON), 0L);
-    ::SendMessage(hWnd, TB_SETBITMAPSIZE, 0, MAKELONG(image_size, image_size));
+    ::SendMessage(hWnd, TB_SETBITMAPSIZE, 0, MAKELONG(imagesize, imagesize));
     ::SendMessage(hWnd, TB_SETBUTTONSIZE, 0, MAKELONG(cxyButtonMargin, cxyButtonMargin));
     m_button_size = cxyButtonMargin;
     return hWnd;
 }
 
+HWND ToolBar::create(HWND parent, const std::vector<ToolbarExButton>& items)
+{
+    int imagesize = 16;
+    if (!items.empty())
+    {
+        BITMAP bm;
+        GetObject(items[0].image, sizeof(BITMAP), &bm);
+        imagesize = bm.bmHeight;
+    }
+    HWND hWnd = createEmpty(parent, imagesize);
+    for (const ToolbarExButton& tb : items)
+    {
+        if (tb.commandid == ID_SEPARATOR)
+        {
+            m_toolbar.AddButton(ID_SEPARATOR, TBSTYLE_SEP, 0, 0, NULL, NULL);
+            continue;
+        }
+
+        addButton(tb.image, tb.commandid, tb.hover.c_str());
+    }
+    return hWnd;
+}
+
 void ToolBar::addButton(HBITMAP bmp, UINT id, const TCHAR* hover)
-{    
+{
+    BITMAP bm;
+    GetObject(bmp, sizeof(BITMAP), &bm);
     CImageList il = m_toolbar.GetImageList();
     if (!il.m_hImageList)
-    {        
-        il.Create(16, 16, ILC_COLOR24 | ILC_MASK, 0, 0);
+    {
+        il.Create(bm.bmWidth, bm.bmHeight, ILC_COLOR24 | ILC_MASK, 0, 0);
         m_toolbar.SetImageList(il);
-        m_toolbar.SetButtonSize(16, 16);
     }
+    else
+    {
+        int cx = 0; int cy = 0;
+        il.GetIconSize(cx, cy);
+        if (bm.bmWidth != cx || bm.bmHeight != cy)
+        {
+            BitmapMethods bm(bmp);
+            HBITMAP resized = bm.createNewResized(cx, cy);
+            DeleteObject(bmp);
+            bmp = resized;
+        }
+    }
+
     il.Add(bmp, RGB(192, 192, 192));
     int image = il.GetImageCount() - 1;
     if (m_toolbar.AddButton(id, TBSTYLE_BUTTON | BTNS_SHOWTEXT , TBSTATE_ENABLED, image, 0, 0))
@@ -344,21 +380,21 @@ void ToolBar::delButton(UINT id)
     ttip.DelTool(m_toolbar, id);
     TBBUTTON tb; int index = -1;
     for (int i = 0, e = m_toolbar.GetButtonCount(); i < e; ++i)
-    {        
+    {
         m_toolbar.GetButton(i, &tb);
         if (tb.idCommand == id)
             {  m_toolbar.DeleteButton(i); break; }
-    }    
+    }
 }
 
 void ToolBar::checkButton(UINT id, BOOL state)
 {
-    m_toolbar.CheckButton(id, state);    
+    m_toolbar.CheckButton(id, state);
 }
 
 void ToolBar::enableButton(UINT id, BOOL state)
 {
-    m_toolbar.EnableButton(id, state);    
+    m_toolbar.EnableButton(id, state);
 }
 
 int ToolBar::width() const
