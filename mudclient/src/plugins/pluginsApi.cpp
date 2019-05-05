@@ -218,7 +218,7 @@ bool sendCommandToWindow(const tstring& window, const tstring& cmd)
     static SendOrder sendorder;
     if (!sendorder.initilize())
     {
-        pluginLogOut(L"Cистемная ошибка send. Сообщение не отправлено");
+        pluginLogOut(L"РЎРёСЃС‚РµРјРЅР°СЏ РѕС€РёР±РєР° send. РљРѕРјР°РЅРґР° РЅРµ РѕС‚РїСЂР°РІР»РµРЅР°.");
         return false;
     }
     return true;
@@ -250,7 +250,7 @@ int sendCommand(lua_State *L)
         if (params_ok)
         {
             if (!sendCommandToWindow(window, cmd))
-                pluginLogOut(L"send системная ошибка. Сообщение не отправлено");
+                pluginLogOut(L"send пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
             return 0;
         }
     }
