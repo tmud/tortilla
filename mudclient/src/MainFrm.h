@@ -115,6 +115,14 @@ private:
 
     LRESULT OnCreate(UINT, WPARAM, LPARAM, BOOL&)
     {
+        HDC dc = GetDC();
+        float logpy = static_cast<float>(GetDeviceCaps(dc, LOGPIXELSY));
+        ReleaseDC(dc);
+        float dpi = logpy / 96;
+        PropertiesData *pdata = m_gameview.getPropData();
+        pdata->dpi = dpi;
+        pdata->displays.setDpi(dpi);
+
         processCmdline();
         if (!m_gameview.initialize(m_cmdLine))
         {
@@ -122,13 +130,6 @@ private:
             PostQuitMessage(0);
             return 0;
         }
-
-        HDC dc = GetDC();
-        float logpy = static_cast<float>(GetDeviceCaps(dc, LOGPIXELSY));
-        ReleaseDC(dc);
-        float dpi = logpy / 96;
-        PropertiesData *pdata = m_gameview.getPropData();
-        pdata->dpi = dpi;
 
         setTaskbarName();
         m_toolBar.create(this);
