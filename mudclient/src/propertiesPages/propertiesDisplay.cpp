@@ -366,6 +366,18 @@ void PropertiesDisplayManager::load(xml::node root_node)
             int display_height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
             d->setres(display_width, display_height);
         }
+        if (d->pluginsData()->empty() && !m_displays.empty())
+        {
+            PluginsDataValues* newdv = d->pluginsData();
+            PluginsDataValues* dv = m_displays[0]->pluginsData();
+            for (const PluginData& pd : *dv)
+            {
+                PluginData newpd;
+                newpd.name = pd.name;
+                newpd.state = pd.state;
+                newdv->push_back(newpd);
+            }
+        }
         current_display = d;
         m_displays.push_back(d);
     }
