@@ -102,6 +102,7 @@ private:
     LRESULT OnShowHidden(WORD, WORD, HWND, BOOL&)
     {
         UpdateList();
+        UpdateControls();
         return 0;
     }
 
@@ -123,7 +124,13 @@ private:
         }
     }
 
-    LRESULT OnListItemChanged(int , LPNMHDR , BOOL&)
+    LRESULT OnListItemChanged(int, LPNMHDR, BOOL&)
+    {
+        UpdateControls();
+        return 0;
+    }
+
+    void UpdateControls()
     {
         int item_selected = m_list.GetSelectedIndex();
         if (item_selected == -1)
@@ -154,7 +161,6 @@ private:
             text.append(L"\r\n\r\n"); text.append(p->get(Plugin::DESCRIPTION));
             m_description.SetWindowText(text.c_str());
         }
-        return 0;
     }
 
     LRESULT OnItemDblClick(int, LPNMHDR, BOOL&)
