@@ -94,7 +94,7 @@ void PluginsManager::initPlugins()
         bool exist = false;
         for (int j = 0, je = new_modules.size(); j < je; ++j)
             if (new_modules[j].name == name) { exist = true; break; }
-        if (!exist) { PluginData pd; pd.name = name; new_modules.push_back(pd); }
+        if (!exist) { PluginData pd; pd.name = name; pd.state = PluginData::PDS_HIDDEN; new_modules.push_back(pd); }
     }
     modules->swap(new_modules);
 
