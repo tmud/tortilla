@@ -72,6 +72,8 @@
     <plugin key="prompt.dll" value="0"/>
     <plugin key="affects.lua" value="1"/>
     <plugin key="faq.lua" value="1"/>
+    <plugin key="bmap.lua" value="1"/>
+    <plugin key="autosbor.lua" value="0"/>
   </plugins>
   <messages>
     <actions value="0"/>
