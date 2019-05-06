@@ -4,21 +4,50 @@
 -- Максимальная длина задается в параметрах ( 0 - автоперенос выключен, -1 - авторасчет максимальной длины по ширине окна ).
 -- Авторасчет ширины окна приблизительный (различная ширина букв).
 
--- Максимально допустимая длина строк для главного окна
-local autowrap_maxlen_main = -1
--- Максимально допустимая длина строк для output-окон
-local autowrap_maxlen_out = -1
--- Минимальная длина строки
-local autowrap_minlen = 25
+-- Значения по умолчанию, если нет файла настроек для плагина
+local default_blocking_symbols = '[]<>*#-'
+local default_blocking_strings = {}
+
+-- Максимально допустимая длина строк для главного окна, для output-окон. Минимальная длина строки
+local autowrap_maxlen_main, autowrap_maxlen_out, autowrap_minlen
+
 -- Склеивать параграфы (возможность тестируется)
 local concat_paragraphs = true
+local block_color = '7;0;;'
+local blocking_symbols, blocking_strings
 
 local autowrap = {}
+function autowrap.init()
+  autowrap_maxlen_main = -1
+  autowrap_maxlen_out = -1
+  autowrap_minlen = 25
+  blocking_symbols = default_blocking_symbols
+  blocking_strings = default_blocking_strings
+  local vars = loadTable("config.lua")
+  if vars then
+    if vars.autowrap_maxlen_main then
+        autowrap_maxlen_main = vars.autowrap_maxlen_main
+    end
+    if vars.autowrap_maxlen_out then
+        autowrap_maxlen_out = vars.autowrap_maxlen_out
+    end
+    if vars.autowrap_minlen then
+        autowrap_minlen = vars.autowrap_minlen
+    end
+    if vars.blocking_symbols then
+        blocking_symbols = vars.blocking_symbols
+    end
+    if vars.blocking_strings then
+        blocking_strings = vars.blocking_strings
+    end
+  end
+end
+
 function autowrap.name()
   return 'Автоперенос строк'
 end
 function autowrap.version()
-  return '1.08'
+  return '1.09'
 end
 function autowrap.description()
   local p = ''
@@ -87,25 +116,37 @@ local function div(v, maxlen)
   v:setPrev(true)
 end
 
-local block_color = '7;0;;'
-local blocking_symbols = '[]<>*#-'
+local skip_before_prompt = false
 local function paragraph(v)
   local i,size = 1,v:size()
   while i < size do
     v:select(i)
-    if v:blocks() == 1 and v:getBlockColor(1) == block_color then
+    if skip_before_prompt then
+      if v:isPrompt() then
+        skip_before_prompt = false
+      end
+      goto next
+    end
+    if v:blocks() == 1 then --and v:getBlockColor(1) == block_color then
       if v:isDropped() or v:isGameCmd() or v:isSystem() or v:isPrompt() then goto next end
+      local t0 = v:getText()
+      for _,s in ipairs(blocking_strings) do
+        if t0 == s then
+          skip_before_prompt = true
+          goto next
+        end
+      end
       v:select(i+1)
       if v:blocks() == 1 and v:getBlockColor(1) == block_color then
         if v:isDropped() or v:isGameCmd() or v:isSystem() or v:isPrompt() then goto next end
         local t = v:getText()
         local first = t:substr(1, 1)
-        if first:only('абвгдеёжзийклмнопрстуфкцчшщъыьэюя') and not t:contain(blocking_symbols) and not t:find('  ')  then
+        if first:only('абвгдеёжзийклмнопрстуфкцчшщъыьэюя') and not t:contain(blocking_symbols) and not t:find('  ') then
           v:select(i)
           local t0 = v:getBlockText(1)
           if not t0:contain(blocking_symbols) then
             local last = t0:substr(t0:len(), 1)
-            if last ~= ' ' then 
+            if last ~= ' ' then
               v:setBlockText(1, t0..' '..t)
             else
               v:setBlockText(1, t0..t)
@@ -117,8 +158,8 @@ local function paragraph(v)
           end
         end
       end
-      ::next::
     end
+    ::next::
     i = i + 1
     ::again::
   end
