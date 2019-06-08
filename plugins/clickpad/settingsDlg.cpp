@@ -19,12 +19,14 @@ void SettingsDlg::setSettings(ClickpadSettings *settings)
     int rows = m_settings->getRows();
     if (rows <= 0) 
         { rows = 1; m_settings->setRows(rows); }
-    else if (rows > 5)
-        { rows = 5; m_settings->setRows(rows); }
+    else if (rows > MAX_ROWS)
+        { rows = MAX_ROWS; m_settings->setRows(rows); }
     m_rows.SetCurSel(rows-1);
     int columns = m_settings->getColumns();
-    if (columns <= 0 || columns > 10)
-        { columns = 8; m_settings->setColumns(columns); }
+    if (columns <= 0)
+        { columns = 1; m_settings->setColumns(columns); }
+    else if (columns > MAX_COLUMNS)
+        { columns = MAX_COLUMNS; m_settings->setColumns(columns); }
     m_columns.SetCurSel(columns-1);
 
     ButtonSizeTranslator bt;
