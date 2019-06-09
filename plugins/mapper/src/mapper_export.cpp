@@ -252,6 +252,24 @@ bool popString(lua_State *L, const char* name, tstring* val)
     return (val->empty()) ? false : true;
 }
 
+void tstring_trimsymbols(tstring *str, const tstring& symbols)
+{
+    if (str->empty() || symbols.empty()) return;
+
+    tstring newstr;
+    const tchar *b = str->c_str();
+    const tchar *e = b + str->length();
+    const tchar *p = b + wcscspn(b, symbols.c_str());
+    while (p != e)
+    {
+        newstr.append(b, p - b);
+        b = p + 1;
+        p = b + wcscspn(b, symbols.c_str());
+    }
+    newstr.append(b);
+    str->swap(newstr);
+}
+
 int msdp(lua_State *L)
 {
     if (!map_active)
@@ -269,6 +287,8 @@ int msdp(lua_State *L)
                 && popString(L, "NAME", &rd.roomname)
                )
             {
+                tstring_trimsymbols(&rd.areaname, L"\"'");
+
                 tstring zone;
                 popString(L, "ZONE", &zone);
                 if (!zone.empty())
