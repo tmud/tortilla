@@ -213,6 +213,7 @@ public: // system commands
     DEF(var);
     DEF(unvar);
     DEF(wait);
+    DEF(waitclear);
     DEF(plugin);
     DEF(load);
     DEF(savelog);

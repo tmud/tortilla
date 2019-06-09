@@ -1700,6 +1700,19 @@ IMPL(wait)
      }
      p->invalidargs();
 }
+
+IMPL(waitclear)
+{
+    if (p->size() == 0)
+    {
+        m_waitcmds.clear();
+        swprintf(pb.buffer, pb.buffer_len, L"Очередь команд с задержкой (wait) очищена.");
+        tmcLog(pb.buffer);
+        return;
+    }
+    p->invalidargs();
+
+}
 //-------------------------------------------------------------------
 IMPL(load)
 {
@@ -1846,5 +1859,6 @@ bool LogicProcessor::init()
     regCommand("debug", debug_tr);
     regCommand("strop", strop);
 
+    regCommand("waitclear", waitclear);
     return true;
 }
