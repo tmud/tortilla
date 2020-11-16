@@ -17,10 +17,10 @@
 #define _CRT_SECURE_NO_DEPRECATE         // Disable the CRT deprecation warnings 4996
 #define _CRT_NONSTDC_NO_DEPRECATE
 #define _CRT_NON_CONFORMING_SWPRINTFS
-#define WINVER		0x0501
-#define _WIN32_WINNT	0x0501
-#define _WIN32_IE	0x0501
-#define _RICHEDIT_VER	0x0200
+#define WINVER		0x0601
+#define _WIN32_WINNT	0x0601
+#define _WIN32_IE	0x0A00
+#define _RICHEDIT_VER	0x0300
 
 // only for debug (debuging text formatting)
 #ifdef _DEBUG

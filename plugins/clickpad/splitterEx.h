@@ -3,11 +3,13 @@
 #include <atlsplit.h>
 
 template <bool t_bVertical = true, int divider1 = 1, int divider2 = 2>
-class CSplitterWindowExT : public CSplitterWindowImpl<CSplitterWindowExT<t_bVertical>, t_bVertical>
+class CSplitterWindowExT : public CSplitterWindowImpl<CSplitterWindowExT<>>
 {
 public:
 	DECLARE_WND_CLASS_EX(_T("WTL_SplitterWindowEx"), CS_DBLCLKS, COLOR_WINDOW)
-    typedef CSplitterWindowImpl<CSplitterWindowExT<t_bVertical>, t_bVertical> _baseClass;
+    typedef CSplitterWindowImpl<CSplitterWindowExT<>> _baseClass;
+
+    CSplitterWindowExT() : _baseClass(t_bVertical) {}
 
     BEGIN_MSG_MAP(CSplitterWindowExT)        
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDoubleClick)
