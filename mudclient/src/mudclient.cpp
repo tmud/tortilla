@@ -54,6 +54,12 @@ int Run(LPTSTR lpstrCmdLine, int nCmdShow = SW_SHOWDEFAULT)
 #endif
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, LPTSTR lpstrCmdLine, int nCmdShow)
 {
+    if ( !isWin7OrHigher() ) 
+    {
+        msgBox(NULL, IDS_INVALID_OS, MB_OK|MB_ICONERROR);
+        return 0;
+    }
+
     initWinDbg();
 
 #ifdef _DEBUG

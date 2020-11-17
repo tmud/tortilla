@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#define TORTILLA_VERSION_BASE L"1.15"
+#define TORTILLA_VERSION_BASE L"1.20"
 #define TORTILLA_VERSION_MAJOR 1
-#define TORTILLA_VERSION_MINOR 15
+#define TORTILLA_VERSION_MINOR 20
 
 #ifdef _DEBUG
 #define TORTILLA_VERSION TORTILLA_VERSION_BASE" debug"
@@ -19,8 +19,8 @@
 #define _CRT_NON_CONFORMING_SWPRINTFS
 #define WINVER		0x0601
 #define _WIN32_WINNT	0x0601
-#define _WIN32_IE	0x0A00
-#define _RICHEDIT_VER	0x0300
+//#define _WIN32_IE	0x0A00
+//#define _RICHEDIT_VER	0x0300
 
 // only for debug (debuging text formatting)
 #ifdef _DEBUG

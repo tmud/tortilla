@@ -1,6 +1,6 @@
 ﻿#pragma once 
 
-bool isVistaOrHigher();
+bool isWin7OrHigher();
 void getClientExePath(tstring* path);
 void loadString(UINT id, tstring* string);
 int msgBox(HWND parent, const tstring& msg, UINT options);

@@ -8,6 +8,7 @@
 #define IDS_NETWORK_FAILED              130
 #define IDS_RESET_OSC_CONFIRM           130
 #define IDS_NEW_PROFILE                 131
+#define IDS_INVALID_OS                  131
 #define IDS_NEW_WORLD                   132
 #define IDI_WARNINGMY                   133
 #define IDS_ERROR_INIT_NETWORK          200

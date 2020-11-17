@@ -1,14 +1,16 @@
 ﻿#include "stdafx.h"
 #include "common.h"
 
-bool isVistaOrHigher()
+bool isWin7OrHigher()
 {
     OSVERSIONINFOEX os;
     ZeroMemory(&os, sizeof(OSVERSIONINFOEX));
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     GetVersionEx((OSVERSIONINFO*)&os);
     if ((os.wProductType != VER_NT_WORKSTATION) ||
-        (os.dwMajorVersion < 6)) // if less Vista/7/8
+        (os.dwMajorVersion < 6))                          // if less Vista/7/8
+        return false;
+    if (os.dwMajorVersion == 6 && os.dwMinorVersion == 0) // Vista 
         return false;
     return true;
 }
