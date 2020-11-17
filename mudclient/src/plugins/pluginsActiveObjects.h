@@ -418,7 +418,6 @@ private:
         if (index != -1 && !replace_mode)
             return false;
         tstring color(value);
-        tstring_replace(&color, L",", L" "); 
         if (!hh.translateColor(&color))  // Highlight helper
             return false;
         add3group(index, key, color.c_str(), group);
