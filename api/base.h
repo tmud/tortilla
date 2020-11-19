@@ -14,6 +14,8 @@ extern "C" {
 #include <string>
 #include <vector>
 
+const int kUseAnsiCodePage = 1251;
+
 class lua_pushwstring
 {
 public:
@@ -206,9 +208,9 @@ public:
 private:
     void convert_ansi(const std::string& s, std::wstring& res)
     {
-       int buffer_required = MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length(), NULL, 0);
+       int buffer_required = MultiByteToWideChar(kUseAnsiCodePage, 0, s.c_str(), s.length(), NULL, 0);
        res.resize(buffer_required);
-       MultiByteToWideChar(CP_ACP, 0, s.c_str(), s.length(), &res[0], buffer_required);
+       MultiByteToWideChar(kUseAnsiCodePage, 0, s.c_str(), s.length(), &res[0], buffer_required);
     }
     void convert_utf8(const std::string& s, std::wstring& res)
     {
