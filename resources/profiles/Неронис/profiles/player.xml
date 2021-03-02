@@ -32,7 +32,6 @@
     <color id="14" r="0" g="255" b="255"/>
     <color id="15" r="255" g="255" b="255"/>
   </colors>
-  <font italic="0" bold="400" height="10" name="Fixedsys"/>
   <actions>
     <action key="^Select your codepage:$" value="4" group="default"/>
   </actions>

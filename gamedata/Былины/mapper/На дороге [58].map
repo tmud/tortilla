@@ -1,6 +1,0 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-<zone>
-  <room x="0" y="0" z="0" name="На дороге" vnum="5838">
-    <exit dir="west" vnum="5046"/>
-  </room>
-</zone>

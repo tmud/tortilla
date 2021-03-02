@@ -676,10 +676,10 @@ public:
         colors[14] = RGB(0, 255, 255);
         colors[15] = RGB(255, 255, 255);
         resetOSCColors();
-        font_heigth = 10;
+        font_heigth = 11;
         font_italic = 0;
-        font_name.assign(L"Fixedsys");
-        font_bold = FW_NORMAL;
+        font_name.assign(L"Consolas");
+        font_bold = FW_BOLD;
     }
 
     void resetOSCColors()
