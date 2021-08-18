@@ -117,6 +117,7 @@ bool w2int(const tstring& str, int *value)
     *value = _wtoi(str.c_str());
     return true;
 }
+
 void int2w(int value, tstring* str)
 {
     wchar_t buffer[16];

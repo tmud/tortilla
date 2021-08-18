@@ -6,7 +6,7 @@
 LogicHelper::LogicHelper()
 {
      m_if_regexp.setRegExp(L"^([^ =~!<>]*) *(=|==|!=|~=|<>|<|>|<=|>=) *([^ =~!<>]*)$", true);     
-     m_math_regexp.setRegExp(L"^([^+-/*]*) *([+-/*]) *([^+-/*]*)$", true);
+     m_math_regexp.setRegExp(L"^([^+/*%]*) *([+-/*%]) *([^+/*%]*)$", true);
      m_params_regexp.setRegExp(L"['{\"]?(.*['}\"]?[^'}\"])", true);
 }
 
@@ -282,6 +282,32 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
      tstring_trim(&p2);
      }
 
+     if ( op == L"%" && p1.empty() && isInt( p2 ) )
+     {
+         result->clear();
+         int len = p2.length();
+         const tchar* p = p2.c_str();
+         if (*p == L'-') { p++; len--; }
+
+         int first = len % 3;
+         result->append(p, first);
+         p += first;
+         
+         for (int count = len/3; count > 0; count--)
+         {
+             if ( !result->empty() )
+                 result->append(L" ");
+             result->append( p, 3 );
+             p += 3;
+         }
+         
+         p = p2.c_str();
+         if ( *p == L'-' ) 
+             result->insert(0, L"-");
+
+         return LogicHelper::MATH_SUCCESS;
+     }
+
      if (tortilla::getVars()->processVarsStrong(&p1, true) && tortilla::getVars()->processVarsStrong(&p2, true))
      {
          if (isInt(p1) && isInt(p2))
@@ -301,6 +327,7 @@ LogicHelper::MathResult LogicHelper::mathOp(const tstring& expr, tstring* result
              result->assign(buffer);
              return LogicHelper::MATH_SUCCESS;
          }
+
          return LogicHelper::MATH_ERROR;
      }
      return LogicHelper::MATH_VARNOTEXIST;

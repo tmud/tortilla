@@ -1259,16 +1259,20 @@ off<br>
 <li><div class="t">/</div> деление</li>
 <li><div class="t">+</div> сложение</li>
 <li><div class="t">-</div> вычитание</li>
+<li><div class="t">%</div> деление на разряды</li>
 </ul>
 Синтаксис команды:<br>
 <div class="t">#math targetvar 'operand1 op operand2'</div><br>
 - targetvar - имя переменной, куда нужно записать результат.<br>
-- operand1 и operand2 - это число или имя переменной, начинающейся со знака $.<br>
-- op - сама операция умножения, деления, сложения или вычитания.<br><br>
+- operand1 и operand2 - это число или имя переменной, начинающейся со знака $. ( Для <div class="t">%</div> operand1 не указывается )<br>
+- op - сама операция умножения, деления, сложения, вычитания или деления на разряды.<br><br>
 Примеры:
 <div class="ee">#math a $b+1<br>
-#math d $c/$b
+#math d $c/$b<br><br>
+#math f %$x - если $x=12345678, в f запишется строка '12 345 678'
 </div>
+<div class="cmd">Важно!</div> Часть с операндами и операцией не должна содержать пробелы. Она должна быть единым блоком.<br>
+
 См.также: <a href="#var" class="cmd">#var</a>, <a href="#if" class="cmd">#if</a>, <a href="#strop" class="cmd">#strop</a>.
 <hr>
 <a name="mccp"></a>

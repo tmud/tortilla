@@ -33,7 +33,7 @@ public:
     std::vector<PluginViewString*> plugins_strings;
     int selected;
 public:
-    PluginsParseData(parseData *data, triggerParseData *trdata) : buffer(256), pdata(data), tdata(trdata), selected(-1) { convert(); }
+    PluginsParseData(parseData *data, triggerParseData *trdata) : buffer(1024), pdata(data), tdata(trdata), selected(-1) { convert(); }
     ~PluginsParseData() { convert_back(); std::for_each(plugins_strings.begin(), plugins_strings.end(), [](PluginViewString*s) { delete s; }); }
     int size() const { return plugins_strings.size(); }
     int getindex() const { return selected+1; }
