@@ -694,7 +694,10 @@ Cм. <a href="#props" class="cmd">props.component()</a>, <a href="#setComponent"
 <div class="m">KEY</div>, <div class="m">VALUE</div>, <div class="m">GROUP</div>.
 <div class="cmd">bool set(int param, const wchar_t* value)</div> - установка нужного параметра у текущего элемента.
 <div class="cmd">bool isGroupActive()</div> - возвращает активна ли группа, в которой находится текущий элемент.
+<br>
+<div class="m">Важно!</div>
 <div class="cmd">bool update()</div> - применить все изменения. Только после вызова этого оператора все изменения вступят в силу.
+Нужно сначала добавить все изменения, если их несколько, и только потом вызвать данную функцию.
 </pre>
 <hr>
 <a name="cppprops"></a>
@@ -1488,9 +1491,15 @@ r:solidCircle{ x=100, y=100, r=60, color={r=100,g=200,b=100} }
 <div class="cmd">int  getIndex()</div> - возвращает индекс-приоритет текущего элемента.
 <div class="cmd">bool isGroupActive()</div> - возвращает активна ли группа, в которой находится текущий элемент.
 <div class="cmd">bool setIndex(int index)</div> - установка текущего приоритета у текущего элемента.
+
+<div class="m">Важно!</div>
+<div class="cmd">bool update()</div> - применить все изменения. Только после вызова этого оператора все изменения вступят в силу.
+Нужно сначала добавить все изменения, если их несколько, и только потом вызвать данную функцию.
 </pre>
 Пример (добавить макрос есть), функция должна вызываться через двоеточие:
 <pre><div class="ee">aliases:add("есть", "съесть хлеб", "default")
+aliases:replace(...)  -- еще могут быть команды
+aliases:update()      -- применяем измененения
 </div></pre>
 <hr>
 <a name="viewdata"></a>
