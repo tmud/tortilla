@@ -7,7 +7,7 @@ bool isWin7OrHigher()
     ZeroMemory(&os, sizeof(OSVERSIONINFOEX));
     os.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
     GetVersionEx((OSVERSIONINFO*)&os);
-    if ( (os.wProductType != VER_NT_WORKSTATION ) && ( os.wProductType != VER_NT_SERVER ) && ( os.wProductType != VER_NT_DOMAIN_CONTROLLER ) )
+    if ( ( os.wProductType != VER_NT_WORKSTATION ) && ( os.wProductType != VER_NT_SERVER ) && ( os.wProductType != VER_NT_DOMAIN_CONTROLLER ) )
         return false;
     if (os.dwMajorVersion < 6)                            // if less Vista/7/8
         return false;

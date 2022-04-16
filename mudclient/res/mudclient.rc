@@ -576,8 +576,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,21,0,0
- PRODUCTVERSION 1,21,0,0
+ FILEVERSION 1,22,0,0
+ PRODUCTVERSION 1,22,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -593,12 +593,12 @@ BEGIN
         BLOCK "080004b0"
         BEGIN
             VALUE "FileDescription", "Tortilla Mud Client"
-            VALUE "FileVersion", "1.21.0.0"
+            VALUE "FileVersion", "1.22.0.0"
             VALUE "InternalName", "Tortilla"
             VALUE "LegalCopyright", "http://tmud.github.io"
             VALUE "OriginalFilename", "tortilla.exe"
             VALUE "ProductName", "Tortilla Mud Client"
-            VALUE "ProductVersion", "1.21.0.0"
+            VALUE "ProductVersion", "1.22.0.0"
         END
     END
     BLOCK "VarFileInfo"
